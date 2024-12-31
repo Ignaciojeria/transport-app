@@ -74,6 +74,18 @@ func TestSaveTransportOrder(t *testing.T) {
 				Commerce:     "UNIMARC",
 				Consumer:     "CROSS-COMMERCE-API",
 			},
+			Origin: domain.Origin{
+				AddressInfo: domain.AddressInfo{
+					State:        "Santiago",
+					County:       "La florida",
+					District:     "La florida",
+					ZipCode:      "12345",
+					Latitude:     1.1,
+					Longitude:    1.1,
+					TimeZone:     "America/Santiago",
+					AddressLine1: "Inglaterra 59, la florida",
+				},
+			},
 			ReferenceID: "1234",
 		}
 		orderStatuses := NewLoadOrderStatuses(tiDBConn)

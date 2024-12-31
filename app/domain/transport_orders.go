@@ -59,6 +59,7 @@ type AddressInfo struct {
 	Contact      Contact `json:"contact"`
 	State        string  `json:"state"`
 	County       string  `json:"county"`
+	Province     string  `json:"province"`
 	District     string  `json:"district"`
 	AddressLine1 string  `json:"addressLine1"`
 	AddressLine2 string  `json:"addressLine2"`

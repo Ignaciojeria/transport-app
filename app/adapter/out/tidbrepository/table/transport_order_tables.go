@@ -101,7 +101,7 @@ type Contact struct {
 
 type Origin struct {
 	ID            int64       `gorm:"primaryKey"`
-	NodeInfoID    int64       `gorm:"not null"`
+	NodeInfoID    int64       `gorm:"default:null"`
 	NodeInfo      NodeInfo    `gorm:"foreignKey:NodeInfoID"`
 	AddressInfoID int64       `gorm:"not null"` // Clave foránea para AddressInfo
 	AddressInfo   AddressInfo `gorm:"foreignKey:AddressInfoID"`
@@ -109,23 +109,25 @@ type Origin struct {
 
 type Destination struct {
 	ID            int64       `gorm:"primaryKey"`
-	NodeInfoID    int64       `gorm:"not null"`
+	NodeInfoID    int64       `gorm:"default:null"`
 	NodeInfo      NodeInfo    `gorm:"foreignKey:NodeInfoID"`
 	AddressInfoID int64       `gorm:"not null"` // Clave foránea para AddressInfo
 	AddressInfo   AddressInfo `gorm:"foreignKey:AddressInfoID"`
 }
 
 type AddressInfo struct {
-	ID          int64   `gorm:"primaryKey"`
-	Contact     Contact `gorm:"embedded"`
-	State       string  `gorm:"not null"`
-	County      string  `gorm:"not null"`
-	District    string  `gorm:"not null"`
-	FullAddress string  `gorm:"not null"`
-	Latitude    float64 `gorm:"not null"`
-	Longitude   float64 `gorm:"not null"`
-	ZipCode     string  `gorm:"not null"`
-	TimeZone    string  `gorm:"not null"`
+	ID           int64   `gorm:"primaryKey"`
+	Contact      Contact `gorm:"embedded"`
+	State        string  `gorm:"not null"`
+	County       string  `gorm:"not null"`
+	District     string  `gorm:"not null"`
+	AddressLine1 string  `gorm:"not null"`
+	AddressLine2 string  `gorm:"default:null"`
+	AddressLine3 string  `gorm:"default:null"`
+	Latitude     float64 `gorm:"not null"`
+	Longitude    float64 `gorm:"not null"`
+	ZipCode      string  `gorm:"not null"`
+	TimeZone     string  `gorm:"not null"`
 }
 
 type Quantity struct {

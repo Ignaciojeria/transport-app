@@ -18,7 +18,9 @@ func MapTransportOrderToTable(order domain.TransportOrder) table.TransportOrder 
 		TransportOrderReferences:          mapReferencesToTable(order.References),
 		DeliveryInstructions:              order.Destination.DeliveryInstructions,
 		OriginID:                          0,
+		Origin:                            mapOriginToTable(order.Origin),
 		DestinationID:                     0,
+		Destination:                       mapDestinationToTable(order.Destination),
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.Start,
 		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.End,
@@ -162,5 +164,36 @@ func mapOrderTypeToTable(t domain.OrderType) table.OrderType {
 	return table.OrderType{
 		Type:        t.Type,
 		Description: t.Description,
+	}
+}
+
+func mapOriginToTable(origin domain.Origin) table.Origin {
+	return table.Origin{
+		NodeInfoID:    0, // This would depend on the domain logic for NodeInfo mapping
+		AddressInfoID: 0, // This can be replaced with actual logic to map AddressInfo
+		AddressInfo:   mapAddressInfoToTable(origin.AddressInfo),
+	}
+}
+
+func mapDestinationToTable(destination domain.Destination) table.Destination {
+	return table.Destination{
+		NodeInfoID:    0, // This would depend on the domain logic for NodeInfo mapping
+		AddressInfoID: 0, // This can be replaced with actual logic to map AddressInfo
+		AddressInfo:   mapAddressInfoToTable(destination.AddressInfo),
+	}
+}
+
+func mapAddressInfoToTable(address domain.AddressInfo) table.AddressInfo {
+	return table.AddressInfo{
+		State:        address.State,
+		County:       address.County,
+		District:     address.District,
+		AddressLine1: address.AddressLine1,
+		AddressLine2: address.AddressLine2,
+		AddressLine3: address.AddressLine3,
+		Latitude:     address.Latitude,
+		Longitude:    address.Longitude,
+		ZipCode:      address.ZipCode,
+		TimeZone:     address.TimeZone,
 	}
 }
