@@ -16,6 +16,7 @@ import (
 	_ "transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	_ "transport-app/app/onload"
 )
 
 //go:embed .version

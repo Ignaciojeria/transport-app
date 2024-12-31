@@ -33,6 +33,10 @@
         {
             "kind": "usecase",
             "name": "create-transport-order"
+        },
+        {
+            "kind": "onload-job",
+            "name": "application-loader"
         }
     ]
 }

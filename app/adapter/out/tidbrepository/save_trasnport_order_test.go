@@ -58,9 +58,10 @@ func TestSaveTransportOrder(t *testing.T) {
 	}
 
 	// Migrate tables
-	err = table.MigrateTables(tiDBConn, configuration.TiDBConfiguration{
+	err = table.NewRunMigrations(tiDBConn, configuration.TiDBConfiguration{
 		TIDB_RUN_MIGRATIONS: "true",
-	})
+	})()
+
 	if err != nil {
 		t.Fatalf("Failed running migrations: %v", err)
 	}
@@ -75,10 +76,7 @@ func TestSaveTransportOrder(t *testing.T) {
 			},
 			ReferenceID: "1234",
 		}
-		orderStatuses, err := NewLoadOrderStatuses(tiDBConn)
-		if err != nil {
-			t.Fatalf("error loading order statuses: %v", err)
-		}
+		orderStatuses := NewLoadOrderStatuses(tiDBConn)
 		// Save transport order
 		saveOrderFunc := NewSaveTransportOrder(tiDBConn, orderStatuses)
 		_, err = saveOrderFunc(ctx, order)

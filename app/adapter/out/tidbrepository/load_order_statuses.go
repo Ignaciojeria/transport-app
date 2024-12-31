@@ -2,7 +2,8 @@ package tidbrepository
 
 import (
 	"context"
-	"fmt"
+	"log"
+	"sync"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
@@ -27,28 +28,32 @@ const (
 
 type LoadOrderStatuses func() orderStatuses
 
-func NewLoadOrderStatuses(conn tidb.TIDBConnection) (LoadOrderStatuses, error) {
-	var records = []table.OrderStatus{
-		{ID: 1, Status: statusAvailable},
-		{ID: 2, Status: statusScanned},
-		{ID: 3, Status: statusPlanned},
-		{ID: 4, Status: statusInTransit},
-		{ID: 5, Status: statusCancelled},
-		{ID: 6, Status: statusFinished},
-	}
-	if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
-		return nil, fmt.Errorf("failed to upsert order statuses: %w", err)
-	}
+func NewLoadOrderStatuses(conn tidb.TIDBConnection) LoadOrderStatuses {
+	var once sync.Once
 	statuses := make(orderStatuses)
-	for _, record := range records {
-		statuses[record.Status] = domain.OrderStatus{
-			ID:     record.ID,
-			Status: record.Status,
-		}
-	}
 	return func() orderStatuses {
+		once.Do(func() {
+			var records = []table.OrderStatus{
+				{ID: 1, Status: statusAvailable},
+				{ID: 2, Status: statusScanned},
+				{ID: 3, Status: statusPlanned},
+				{ID: 4, Status: statusInTransit},
+				{ID: 5, Status: statusCancelled},
+				{ID: 6, Status: statusFinished},
+			}
+			if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
+				log.Fatalf("failed to upsert order statuses: %s", err)
+			}
+			statuses := make(orderStatuses)
+			for _, record := range records {
+				statuses[record.Status] = domain.OrderStatus{
+					ID:     record.ID,
+					Status: record.Status,
+				}
+			}
+		})
 		return statuses
-	}, nil
+	}
 }
 
 type orderStatuses map[string]domain.OrderStatus
