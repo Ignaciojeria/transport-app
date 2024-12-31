@@ -1,31 +1,37 @@
 package tidb
 
 import (
-	"transport-app/app/shared/configuration"
 	"crypto/tls"
-	"database/sql"
 	"fmt"
+	"transport-app/app/shared/configuration"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/go-sql-driver/mysql"
+	tidbmysql "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 func init() {
-	ioc.Registry(NewTiDBConnection, configuration.NewTiDBConfiguration)
+	ioc.Registry(NewTIDBConnection, configuration.NewTiDBConfiguration)
 }
 
-func NewTiDBConnection(env configuration.TiDBConfiguration) (*sql.DB, error) {
+type TIDBConnection struct {
+	*gorm.DB
+}
 
-	err := mysql.RegisterTLSConfig("tidb", &tls.Config{
+func NewTIDBConnection(env configuration.TiDBConfiguration) (TIDBConnection, error) {
+	// Register the custom TLS configuration
+	err := tidbmysql.RegisterTLSConfig("tidb", &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		ServerName: env.TIDB_HOSTNAME,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to register TLS config: %w", err)
+		return TIDBConnection{}, fmt.Errorf("failed to register TLS config: %w", err)
 	}
 
+	// Create the DSN (Data Source Name)
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?tls=tidb",
+		"%s:%s@tcp(%s:%s)/%s?tls=tidb&parseTime=true&charset=utf8mb4&loc=Local",
 		env.TIDB_USERNAME,
 		env.TIDB_PASSWORD,
 		env.TIDB_HOSTNAME,
@@ -33,14 +39,21 @@ func NewTiDBConnection(env configuration.TiDBConfiguration) (*sql.DB, error) {
 		env.TIDB_DATABASE,
 	)
 
-	db, err := sql.Open("mysql", dsn)
+	// Open a GORM connection
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to open connection: %w", err)
+		return TIDBConnection{}, fmt.Errorf("failed to open GORM connection: %w", err)
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
+	// Optional: Ping the database to ensure the connection works
+	sqlDB, err := db.DB()
+	if err != nil {
+		return TIDBConnection{}, fmt.Errorf("failed to retrieve raw DB connection: %w", err)
 	}
 
-	return db, nil
+	if err := sqlDB.Ping(); err != nil {
+		return TIDBConnection{}, fmt.Errorf("failed to ping database: %w", err)
+	}
+
+	return TIDBConnection{db}, nil
 }

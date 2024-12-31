@@ -38,7 +38,7 @@ type NodeInfo struct {
 	References  []References `json:"references"`
 }
 
-type Contacts struct {
+type ContactMethods struct {
 	Value string `json:"value"`
 	Type  string `json:"type"`
 }
@@ -49,9 +49,9 @@ type Documents struct {
 }
 
 type Contact struct {
-	FullName  string      `json:"fullName"`
-	Contacts  []Contacts  `json:"contacts"`
-	Documents []Documents `json:"documents"`
+	FullName       string           `json:"fullName"`
+	ContactMethods []ContactMethods `json:"contactmethods"`
+	Documents      []Documents      `json:"documents"`
 }
 
 type AddressInfo struct {
@@ -146,11 +146,6 @@ type CollectAvailabilityDate struct {
 	TimeRange TimeRange `json:"timeRange"`
 }
 
-type PlannedDispatchDate struct {
-	Date      string    `json:"date"`
-	TimeRange TimeRange `json:"timeRange"`
-}
-
 type TimeRange struct {
 	Start string `json:"start" validate:"required,datetime=15:04" example:"9:00"`
 	End   string `json:"end" validate:"required,datetime=15:04" example:"23:00"`
@@ -162,11 +157,12 @@ type DateRange struct {
 }
 
 type Visit struct {
-	CreatedBy           string              `json:"createdBy"`
-	PlannedDispatchDate PlannedDispatchDate `json:"plannedDispatchDate"`
+	Date      string    `json:"date"`
+	TimeRange TimeRange `json:"timeRange"`
 }
 
 type BusinessIdentifiers struct {
-	Commerce string `json:"commerce"`
-	Consumer string `json:"consumer"`
+	Organization string `json:"organization"`
+	Commerce     string `json:"commerce"`
+	Consumer     string `json:"consumer"`
 }
