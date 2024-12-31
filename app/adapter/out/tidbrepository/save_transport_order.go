@@ -49,6 +49,12 @@ func NewSaveTransportOrder(
 			}
 			table.ConsumerID = consumerID
 
+			orderTypeID, err := ensureOrderTypeExists(tx, organizationID, table.OrderType)
+			if err != nil {
+				return err
+			}
+			table.OrderTypeID = orderTypeID
+
 			/*
 				if err := tx.Save(&table).Error; err != nil {
 					return err
@@ -109,6 +115,22 @@ func ensureConsumerExists(tx *gorm.DB, organizationID int64, consumer table.Cons
 			return 0, err
 		}
 		return con.ID, nil
+	}
+	return 0, err
+}
+
+func ensureOrderTypeExists(tx *gorm.DB, organizationID int64, orderType table.OrderType) (int64, error) {
+	var ot table.OrderType
+	err := tx.Where("type = ? AND organization_id = ?", orderType.Type, organizationID).First(&ot).Error
+	if err == nil {
+		return ot.ID, nil
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		ot = table.OrderType{Type: orderType.Type, Description: orderType.Description, OrganizationID: organizationID}
+		if err := tx.Create(&ot).Error; err != nil {
+			return 0, err
+		}
+		return ot.ID, nil
 	}
 	return 0, err
 }

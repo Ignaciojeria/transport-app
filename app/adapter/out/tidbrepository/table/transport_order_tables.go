@@ -101,7 +101,7 @@ type Contact struct {
 
 type Origin struct {
 	ID            int64       `gorm:"primaryKey"`
-	NodeInfoID    int64       `gorm:"default:null"`
+	NodeInfoID    int64       `gorm:"not null"`
 	NodeInfo      NodeInfo    `gorm:"foreignKey:NodeInfoID"`
 	AddressInfoID int64       `gorm:"not null"` // Clave foránea para AddressInfo
 	AddressInfo   AddressInfo `gorm:"foreignKey:AddressInfoID"`
@@ -109,7 +109,7 @@ type Origin struct {
 
 type Destination struct {
 	ID            int64       `gorm:"primaryKey"`
-	NodeInfoID    int64       `gorm:"default:null"`
+	NodeInfoID    int64       `gorm:"not null"`
 	NodeInfo      NodeInfo    `gorm:"foreignKey:NodeInfoID"`
 	AddressInfoID int64       `gorm:"not null"` // Clave foránea para AddressInfo
 	AddressInfo   AddressInfo `gorm:"foreignKey:AddressInfoID"`

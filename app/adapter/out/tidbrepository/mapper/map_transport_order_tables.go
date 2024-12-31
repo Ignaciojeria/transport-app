@@ -14,6 +14,7 @@ func MapTransportOrderToTable(order domain.TransportOrder) table.TransportOrder 
 		ConsumerID:                        0,
 		OrderStatusID:                     0,
 		OrderTypeID:                       0,
+		OrderType:                         mapOrderTypeToTable(order.OrderType),
 		TransportOrderReferences:          mapReferencesToTable(order.References),
 		DeliveryInstructions:              order.Destination.DeliveryInstructions,
 		OriginID:                          0,
@@ -150,5 +151,16 @@ func mapCommerceToTable(tenant domain.Tenant) table.Commerce {
 func mapConsumerToTable(tenant domain.Tenant) table.Consumer {
 	return table.Consumer{
 		Name: tenant.Consumer,
+	}
+}
+
+func mapOrderTypeToTable(t domain.OrderType) table.OrderType {
+	if t.Type == "" {
+		t.Type = "UNSPECIFIED"
+		t.Description = "Order type not specified"
+	}
+	return table.OrderType{
+		Type:        t.Type,
+		Description: t.Description,
 	}
 }
