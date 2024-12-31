@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/biter777/countries"
+
 type TransportOrder struct {
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"id" validate:"required"`
@@ -165,7 +167,8 @@ type Visit struct {
 }
 
 type Tenant struct {
-	Organization string `json:"organization"`
-	Commerce     string `json:"commerce"`
-	Consumer     string `json:"consumer"`
+	Country      countries.CountryCode `json:"country"`
+	Organization string                `json:"organization"`
+	Commerce     string                `json:"commerce"`
+	Consumer     string                `json:"consumer"`
 }

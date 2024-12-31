@@ -7,6 +7,7 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -29,6 +30,7 @@ func createTransportOrder(s httpserver.Server, createTo usecase.CreateTransportO
 			mappedTO.Tenant.Organization = c.Header("organization")
 			mappedTO.Tenant.Consumer = c.Header("consumer")
 			mappedTO.Tenant.Commerce = c.Header("commerce")
+			mappedTO.Tenant.Country = countries.ByName(c.Header("country"))
 			createdTo, err := createTo(c.Context(), mappedTO)
 			return model.CreateTransportOrderResponse{
 				ID:      createdTo.ID,
@@ -38,5 +40,6 @@ func createTransportOrder(s httpserver.Server, createTo usecase.CreateTransportO
 		option.Header("organization", "api organization key", param.Required()),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
+		option.Header("country", "api country", param.Required()),
 	)
 }

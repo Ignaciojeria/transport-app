@@ -1,5 +1,7 @@
 package table
 
+import "github.com/biter777/countries"
+
 type TransportOrder struct {
 	ID                                int64                             `gorm:"primaryKey"`
 	ReferenceID                       string                            `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
@@ -118,16 +120,16 @@ type Destination struct {
 type AddressInfo struct {
 	ID           int64   `gorm:"primaryKey"`
 	Contact      Contact `gorm:"embedded"`
-	State        string  `gorm:"not null"`
-	County       string  `gorm:"not null"`
-	District     string  `gorm:"not null"`
+	State        string  `gorm:"default:null"`
+	County       string  `gorm:"default:null"`
+	District     string  `gorm:"default:null"`
 	AddressLine1 string  `gorm:"not null"`
 	AddressLine2 string  `gorm:"default:null"`
 	AddressLine3 string  `gorm:"default:null"`
-	Latitude     float64 `gorm:"not null"`
-	Longitude    float64 `gorm:"not null"`
-	ZipCode      string  `gorm:"not null"`
-	TimeZone     string  `gorm:"not null"`
+	Latitude     float64 `gorm:"default:null"`
+	Longitude    float64 `gorm:"default:null"`
+	ZipCode      string  `gorm:"default:null"`
+	TimeZone     string  `gorm:"default:null"`
 }
 
 type Quantity struct {
@@ -207,6 +209,7 @@ type Commerce struct {
 }
 
 type Organization struct {
-	ID   int64
-	Name string `gorm:"type:varchar(255);not null;uniqueIndex"`
+	ID      int64
+	Country countries.CountryCode
+	Name    string `gorm:"type:varchar(255);not null;uniqueIndex"`
 }

@@ -140,7 +140,8 @@ func mapTransportRequirementsToTable(requirements []domain.References) []table.T
 
 func mapOrganizationToTable(tenant domain.Tenant) table.Organization {
 	return table.Organization{
-		Name: tenant.Organization,
+		Name:    tenant.Organization,
+		Country: tenant.Country,
 	}
 }
 
