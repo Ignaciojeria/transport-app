@@ -39,14 +39,14 @@ func NewLoadOrderStatuses(conn tidb.TIDBConnection) (LoadOrderStatuses, error) {
 	if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
 		return nil, fmt.Errorf("failed to upsert order statuses: %w", err)
 	}
-	return func() orderStatuses {
-		statuses := make(orderStatuses)
-		for _, record := range records {
-			statuses[record.Status] = domain.OrderStatus{
-				ID:     record.ID,
-				Status: record.Status,
-			}
+	statuses := make(orderStatuses)
+	for _, record := range records {
+		statuses[record.Status] = domain.OrderStatus{
+			ID:     record.ID,
+			Status: record.Status,
 		}
+	}
+	return func() orderStatuses {
 		return statuses
 	}, nil
 }
