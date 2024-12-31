@@ -5,6 +5,9 @@ import (
 	"log"
 	"testing"
 	"time"
+	"transport-app/app/adapter/out/tidbrepository/table"
+	"transport-app/app/domain"
+	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
 
 	"github.com/testcontainers/testcontainers-go"
@@ -30,7 +33,11 @@ func TestSaveTransportOrder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to start MySQL container: %v", err)
 	}
-	defer mysqlContainer.Terminate(ctx)
+	defer func() {
+		if err := mysqlContainer.Terminate(ctx); err != nil {
+			t.Logf("Failed to terminate MySQL container: %v", err)
+		}
+	}()
 
 	// Get connection string
 	dsn, err := mysqlContainer.ConnectionString(ctx)
@@ -43,11 +50,37 @@ func TestSaveTransportOrder(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to initialize GORM: %v", err)
 	}
-
 	log.Printf("Connected to database: %s", dsn)
 
-	// Pass the GORM DB instance to your repository function
-	NewSaveTransportOrder(tidb.TIDBConnection{
+	// Set up TiDB connection
+	tiDBConn := tidb.TIDBConnection{
 		DB: db,
+	}
+
+	// Migrate tables
+	err = table.MigrateTables(tiDBConn, configuration.TiDBConfiguration{
+		TIDB_RUN_MIGRATIONS: "true",
 	})
+	if err != nil {
+		t.Fatalf("Failed running migrations: %v", err)
+	}
+
+	// Run subtests
+	t.Run("InsertTransportOrder", func(t *testing.T) {
+		order := domain.TransportOrder{
+			Tenant: domain.Tenant{
+				Organization: "my-org-name",
+				Commerce:     "UNIMARC",
+				Consumer:     "CROSS-COMMERCE-API",
+			},
+			ReferenceID: "1234",
+		}
+		// Save transport order
+		saveOrderFunc := NewSaveTransportOrder(tiDBConn)
+		_, err := saveOrderFunc(ctx, order)
+		if err != nil {
+			t.Fatalf("Failed to save transport order: %v", err)
+		}
+	})
+
 }

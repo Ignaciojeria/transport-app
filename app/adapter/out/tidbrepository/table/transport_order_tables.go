@@ -5,9 +5,9 @@ type TransportOrder struct {
 	ReferenceID                       string                            `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
 	OrganizationID                    int64                             `gorm:"not null;uniqueIndex:idx_reference_organization"`
 	Organization                      Organization                      `gorm:"foreignKey:OrganizationID"`
-	CommerceID                        int64                             `gorm:"not null"`
+	CommerceID                        int                               `gorm:"not null"`
 	Commerce                          Commerce                          `gorm:"foreignKey:CommerceID"`
-	ConsumerID                        int64                             `gorm:"not null"`
+	ConsumerID                        int                               `gorm:"not null"`
 	Consumer                          Consumer                          `gorm:"foreignKey:ConsumerID"`
 	OrderStatusID                     int                               `gorm:"not null"`
 	OrderStatus                       OrderStatus                       `gorm:"foreignKey:OrderStatusID"`

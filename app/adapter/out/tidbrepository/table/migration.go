@@ -9,12 +9,12 @@ import (
 
 func init() {
 	ioc.Registry(
-		migrateTables,
+		MigrateTables,
 		tidb.NewTIDBConnection,
 		configuration.NewTiDBConfiguration)
 }
 
-func migrateTables(
+func MigrateTables(
 	conn tidb.TIDBConnection,
 	conf configuration.TiDBConfiguration) error {
 	if conf.TIDB_RUN_MIGRATIONS != "true" {
