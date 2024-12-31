@@ -1,0 +1,34 @@
+{
+    "project": "transport-app",
+    "template": {
+        "tag": "v2.9.6",
+        "url": "https://github.com/Ignaciojeria/einar-cli-fuego-template"
+    },
+    "installations": [
+        {
+            "name": "fuego",
+            "unique": "http-server",
+            "libraries": null
+        },
+        {
+            "name": "postgresql",
+            "unique": "",
+            "libraries": [
+                "gorm.io/gorm",
+                "gorm.io/driver/postgres",
+                "gorm.io/plugin/opentelemetry/tracing"
+            ]
+        },
+        {
+            "name": "tidb",
+            "unique": "",
+            "libraries": null
+        }
+    ],
+    "components": [
+        {
+            "kind": "post-controller",
+            "name": "create-transport-order"
+        }
+    ]
+}
