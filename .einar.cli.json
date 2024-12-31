@@ -29,6 +29,10 @@
         {
             "kind": "post-controller",
             "name": "create-transport-order"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-transport-order"
         }
     ]
 }

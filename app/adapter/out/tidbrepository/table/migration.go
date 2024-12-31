@@ -1,16 +1,25 @@
 package table
 
 import (
+	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 func init() {
-	ioc.Registry(migrateTables, tidb.NewTIDBConnection)
+	ioc.Registry(
+		migrateTables,
+		tidb.NewTIDBConnection,
+		configuration.NewTiDBConfiguration)
 }
 
-func migrateTables(conn tidb.TIDBConnection) error {
+func migrateTables(
+	conn tidb.TIDBConnection,
+	conf configuration.TiDBConfiguration) error {
+	if conf.TIDB_RUN_MIGRATIONS != "true" {
+		return nil
+	}
 	// Lista de tablas que tienen un campo ID como clave primaria
 	tables := []interface{}{
 		&TransportOrder{},

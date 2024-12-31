@@ -1,8 +1,9 @@
 package domain
 
 type TransportOrder struct {
+	ID                      int64
 	ReferenceID             ReferenceID             `json:"id" validate:"required"`
-	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
+	Tenant                  Tenant                  `json:"tenant"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
 	References              []References            `json:"references"`
@@ -161,7 +162,7 @@ type Visit struct {
 	TimeRange TimeRange `json:"timeRange"`
 }
 
-type BusinessIdentifiers struct {
+type Tenant struct {
 	Organization string `json:"organization"`
 	Commerce     string `json:"commerce"`
 	Consumer     string `json:"consumer"`

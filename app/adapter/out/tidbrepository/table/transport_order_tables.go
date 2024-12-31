@@ -191,13 +191,17 @@ type Visit struct {
 }
 
 type Consumer struct {
-	ID   int    `gorm:"primaryKey"`
-	Name string `gorm:"type:varchar(255);not null;uniqueIndex"`
+	ID             int          `gorm:"primaryKey"`
+	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex"`
+	OrganizationID int64        `gorm:"not null;index"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 type Commerce struct {
-	ID   int    `gorm:"primaryKey"`
-	Name string `gorm:"type:varchar(255);not null;uniqueIndex"`
+	ID             int          `gorm:"primaryKey"`
+	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex"`
+	OrganizationID int64        `gorm:"not null;index"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 type Organization struct {
