@@ -75,9 +75,13 @@ func TestSaveTransportOrder(t *testing.T) {
 			},
 			ReferenceID: "1234",
 		}
+		orderStatuses, err := NewLoadOrderStatuses(tiDBConn)
+		if err != nil {
+			t.Fatalf("error loading order statuses: %v", err)
+		}
 		// Save transport order
-		saveOrderFunc := NewSaveTransportOrder(tiDBConn)
-		_, err := saveOrderFunc(ctx, order)
+		saveOrderFunc := NewSaveTransportOrder(tiDBConn, orderStatuses)
+		_, err = saveOrderFunc(ctx, order)
 		if err != nil {
 			t.Fatalf("Failed to save transport order: %v", err)
 		}

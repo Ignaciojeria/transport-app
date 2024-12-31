@@ -13,15 +13,23 @@ import (
 )
 
 func init() {
-	ioc.Registry(NewSaveTransportOrder, tidb.NewTIDBConnection)
+	ioc.Registry(
+		NewSaveTransportOrder,
+		tidb.NewTIDBConnection,
+		NewLoadOrderStatuses)
 }
 
-type SaveTransportOrder func(context.Context, domain.TransportOrder) (domain.TransportOrder, error)
+type SaveTransportOrder func(
+	context.Context,
+	domain.TransportOrder) (domain.TransportOrder, error)
 
-func NewSaveTransportOrder(conn tidb.TIDBConnection) SaveTransportOrder {
+func NewSaveTransportOrder(
+	conn tidb.TIDBConnection,
+	loadOrderSorderStatuses LoadOrderStatuses,
+) SaveTransportOrder {
 	return func(ctx context.Context, to domain.TransportOrder) (domain.TransportOrder, error) {
+		to.OrderStatus = loadOrderSorderStatuses().Available()
 		table := mapper.MapTransportOrderToTable(to)
-
 		err := conn.Transaction(func(tx *gorm.DB) error {
 			organizationID, err := ensureOrganizationExists(tx, table.Organization)
 			if err != nil {

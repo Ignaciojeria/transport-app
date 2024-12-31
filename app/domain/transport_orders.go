@@ -132,6 +132,7 @@ type OrderType struct {
 }
 
 type OrderStatus struct {
+	ID        int
 	Status    string `json:"status"`
 	CreatedAt string `json:"createdAt"`
 }
