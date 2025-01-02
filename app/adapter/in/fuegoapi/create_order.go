@@ -20,7 +20,7 @@ func init() {
 		usecase.NewCreateOrder)
 }
 func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
-	fuego.Post(s.Manager, "/transport-order",
+	fuego.Post(s.Manager, "/order",
 		func(c fuego.ContextWithBody[model.CreateOrderRequest]) (model.CreateOrderResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
