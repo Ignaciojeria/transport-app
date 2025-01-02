@@ -4,7 +4,7 @@ import "github.com/biter777/countries"
 
 type Order struct {
 	ID                      int64
-	ReferenceID             ReferenceID             `json:"id" validate:"required"`
+	ReferenceID             ReferenceID             `json:"id"`
 	Tenant                  Tenant                  `json:"tenant"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
@@ -22,15 +22,15 @@ type Order struct {
 type ReferenceID string
 
 type References struct {
-	Type  string `json:"type" validate:"required"`
+	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
 type Operator struct {
 	ReferenceID ReferenceID `json:"referenceId"`
 	NationalID  string      `json:"nationalId"`
-	Type        string      `json:"type" validate:"required"`
-	Name        string      `json:"name" validate:"required"`
+	Type        string      `json:"type"`
+	Name        string      `json:"name"`
 }
 
 type NodeInfo struct {
@@ -152,13 +152,13 @@ type CollectAvailabilityDate struct {
 }
 
 type TimeRange struct {
-	Start string `json:"start" validate:"required,datetime=15:04" example:"9:00"`
-	End   string `json:"end" validate:"required,datetime=15:04" example:"23:00"`
+	StartTime string `json:"startTime"`
+	EndTime   string `json:"endTime"`
 }
 
 type DateRange struct {
-	StartDate string `json:"startDate" validate:"required,datetime=2006-01-02"`
-	EndDate   string `json:"endDate" validate:"required,datetime=2006-01-02"`
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
 }
 
 type Visit struct {

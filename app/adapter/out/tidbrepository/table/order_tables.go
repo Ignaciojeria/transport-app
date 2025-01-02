@@ -1,7 +1,5 @@
 package table
 
-import "github.com/biter777/countries"
-
 type Order struct {
 	ID                                int64                             `gorm:"primaryKey"`
 	ReferenceID                       string                            `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
@@ -66,10 +64,10 @@ type TransportRequirementsReferences struct {
 
 type NodeInfo struct {
 	ID             int64            `gorm:"primaryKey"`
-	OrganizationID int64            `gorm:"not null;index:idx_nodeinfo_organization"` // Índice para organización
+	ReferenceID    string           `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
+	OrganizationID int64            `gorm:"not null;uniqueIndex:idx_reference_organization"`
 	Organization   Organization     `gorm:"foreignKey:OrganizationID"`
-	ReferenceID    string           `gorm:"type:varchar(191);not null;uniqueIndex:idx_nodeinfo_organization_referenceid"` // Único por organización
-	Name           string           `gorm:"type:varchar(191);not null;uniqueIndex:idx_nodeinfo_organization_name"`        // Único por organización
+	Name           string           `gorm:"type:varchar(191);not null;uniqueIndex:idx_nodeinfo_organization_name"` // Único por organización
 	Type           string           `gorm:"not null"`
 	OperatorID     int64            `gorm:"not null"`
 	Operator       Operator         `gorm:"foreignKey:OperatorID"`
@@ -78,21 +76,21 @@ type NodeInfo struct {
 
 type NodeReferences struct {
 	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"not null;index"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Type           string       `gorm:"not null"`
-	Value          string       `gorm:"not null"`
-	NodeInfoID     int64        `gorm:"not null;index"` // Clave foránea a NodeInfo
+	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_type_value_org_node"`
+	Type           string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_value_org_node"`
+	Value          string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_value_org_node"`
+	NodeInfoID     int64        `gorm:"not null;uniqueIndex:idx_type_value_org_node"`
 }
 
 type Operator struct {
 	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"not null;index"` // Solo si pertenece a una organización
+	ReferenceID    string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"` // Límite de longitud
+	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_reference_organization"`                   // Parte del índice compuesto
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	ReferenceID    string       `gorm:"unique;not null"`
-	NationalID     string       `gorm:"unique;not null"`
-	Type           string       `gorm:"not null"`
-	Name           string       `gorm:"not null"`
+	NationalID     string       `gorm:"type:varchar(191);default:null"` // Cambio de TEXT a VARCHAR
+	Type           string       `gorm:"type:varchar(191);not null"`     // Cambio de TEXT a VARCHAR
+	Name           string       `gorm:"type:varchar(191);not null"`     // Cambio de TEXT a VARCHAR
 }
 
 type Contact struct {
@@ -175,10 +173,10 @@ type ItemReferences struct {
 
 type OrderType struct {
 	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"not null;index"`
+	Type           string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_organization"` // Cambiar a varchar(191)
+	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_type_organization"`                   // Parte del índice compuesto
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Type           string       `gorm:"not null"`
-	Description    string       `gorm:"type:text"`
+	Description    string       `gorm:"type:text"` // Puede permanecer como TEXT porque no está en un índice
 }
 
 type OrderStatus struct {
@@ -196,20 +194,20 @@ type Visit struct {
 
 type Consumer struct {
 	ID             int          `gorm:"primaryKey"`
-	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex"`
-	OrganizationID int64        `gorm:"not null;index"`
+	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
+	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 type Commerce struct {
 	ID             int          `gorm:"primaryKey"`
-	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex"`
-	OrganizationID int64        `gorm:"not null;index"`
+	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
+	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 type Organization struct {
-	ID      int64
-	Country countries.CountryCode
-	Name    string `gorm:"type:varchar(255);not null;uniqueIndex"`
+	ID      int64  `gorm:"primaryKey"`
+	Country string `gorm:"not null;index:idx_country_name,unique"`
+	Name    string `gorm:"type:varchar(255);not null;index:idx_country_name,unique"`
 }

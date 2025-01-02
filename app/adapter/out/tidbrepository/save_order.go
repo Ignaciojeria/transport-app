@@ -72,17 +72,18 @@ func NewSaveOrder(
 }
 
 func ensureOrganizationExists(tx *gorm.DB, organization table.Organization) (int64, error) {
-	var org table.Organization
-	err := tx.Where("name = ?", organization.Name).First(&org).Error
+	err := tx.
+		Where("name = ?", organization.Name).
+		Where("country = ?", organization.Country).
+		First(&organization).Error
 	if err == nil {
-		return org.ID, nil
+		return organization.ID, nil
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		org = table.Organization{Name: organization.Name}
-		if err := tx.Create(&org).Error; err != nil {
+		if err := tx.Create(&organization).Error; err != nil {
 			return 0, err
 		}
-		return org.ID, nil
+		return organization.ID, nil
 	}
 	return 0, err
 }

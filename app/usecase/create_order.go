@@ -16,8 +16,8 @@ func init() {
 		tidbrepository.NewSaveOrder)
 }
 
-func NewCreateOrder(saveTO tidbrepository.SaveOrder) CreateOrder {
+func NewCreateOrder(saveOrder tidbrepository.SaveOrder) CreateOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
-		return saveTO(ctx, to)
+		return saveOrder(ctx, to)
 	}
 }

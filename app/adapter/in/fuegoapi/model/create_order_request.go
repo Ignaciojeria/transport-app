@@ -3,7 +3,7 @@ package model
 import "transport-app/app/domain"
 
 type CreateOrderRequest struct {
-	ReferenceID             domain.ReferenceID             `json:"referenceID"`
+	ReferenceID             domain.ReferenceID             `json:"referenceID" validate:"required"`
 	OrderType               domain.OrderType               `json:"orderType"`
 	References              []domain.References            `json:"references"`
 	Origin                  domain.Origin                  `json:"origin"`

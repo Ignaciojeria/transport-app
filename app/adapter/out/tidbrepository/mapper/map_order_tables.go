@@ -22,12 +22,12 @@ func MapOrderToTable(order domain.Order) table.Order {
 		DestinationID:                     0,
 		Destination:                       mapDestinationToTable(order.Destination),
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
-		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.Start,
-		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.End,
+		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
+		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
 		PromisedDateRangeStart:            order.PromisedDate.DateRange.StartDate,
 		PromisedDateRangeEnd:              order.PromisedDate.DateRange.EndDate,
-		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.Start,
-		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.End,
+		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
+		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		Items:                             mapItemsToTable(order.Items),
 		Packages:                          mapPackagesToTable(order.Packages),
 		Visit:                             mapVisitToTable(order.Visit),
@@ -122,8 +122,8 @@ func mapItemReferencesToTable(references []domain.ItemReferences) []table.ItemRe
 func mapVisitToTable(visit domain.Visit) table.Visit {
 	return table.Visit{
 		Date:           visit.Date,
-		TimeRangeStart: visit.TimeRange.Start,
-		TimeRangeEnd:   visit.TimeRange.End,
+		TimeRangeStart: visit.TimeRange.StartTime,
+		TimeRangeEnd:   visit.TimeRange.EndTime,
 	}
 }
 
@@ -141,7 +141,7 @@ func mapTransportRequirementsToTable(requirements []domain.References) []table.T
 func mapOrganizationToTable(tenant domain.Tenant) table.Organization {
 	return table.Organization{
 		Name:    tenant.Organization,
-		Country: tenant.Country,
+		Country: tenant.Country.Alpha2(),
 	}
 }
 

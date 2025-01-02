@@ -34,7 +34,7 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 			createdTo, err := createTo(c.Context(), mappedTO)
 			return model.CreateOrderResponse{
 				ID:      createdTo.ID,
-				Message: "transport order created",
+				Message: "order created",
 			}, err
 		}, option.Summary("createOrder"),
 		option.Header("organization", "api organization key", param.Required()),
