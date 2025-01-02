@@ -2,7 +2,7 @@ package table
 
 import "github.com/biter777/countries"
 
-type TransportOrder struct {
+type Order struct {
 	ID                                int64                             `gorm:"primaryKey"`
 	ReferenceID                       string                            `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
 	OrganizationID                    int64                             `gorm:"not null;uniqueIndex:idx_reference_organization"`

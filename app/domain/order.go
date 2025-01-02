@@ -2,7 +2,7 @@ package domain
 
 import "github.com/biter777/countries"
 
-type TransportOrder struct {
+type Order struct {
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"id" validate:"required"`
 	Tenant                  Tenant                  `json:"tenant"`

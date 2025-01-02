@@ -5,8 +5,8 @@ import (
 	"transport-app/app/domain"
 )
 
-func MapCreateTransportOrderRequest(request model.CreateTransportOrderRequest) domain.TransportOrder {
-	return domain.TransportOrder{
+func MapCreateOrderRequest(request model.CreateOrderRequest) domain.Order {
+	return domain.Order{
 		ReferenceID:             request.ReferenceID,
 		OrderType:               request.OrderType,
 		References:              request.References,

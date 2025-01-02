@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,7 +11,6 @@ import (
 	"transport-app/app/shared/configuration"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
@@ -35,28 +33,29 @@ func New(conf configuration.Conf) Server {
 		conf:    conf,
 	}
 	server.healthCheck()
-	fuego.Use(s, func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			countryCode := r.Header.Get("country")
-			country := countries.ByName(countryCode)
-			if country == countries.Unknown {
-				// Crear una instancia de BadRequestError
-				err := fuego.BadRequestError{
-					Err: errors.New("invalid country code"),
+	/*
+		fuego.Use(s, func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				countryCode := r.Header.Get("country")
+				country := countries.ByName(countryCode)
+				if country == countries.Unknown {
+					// Crear una instancia de BadRequestError
+					err := fuego.BadRequestError{
+						Err: errors.New("invalid country code"),
+					}
+
+					// Escribir la respuesta HTTP
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(err.StatusCode())
+					fmt.Fprintf(w, `{"type": "%s", "title": "%s", "status": %d, "detail": "%s"}`,
+						err.Type, err.Title, err.StatusCode(), err)
+					return
 				}
 
-				// Escribir la respuesta HTTP
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(err.StatusCode())
-				fmt.Fprintf(w, `{"type": "%s", "title": "%s", "status": %d, "detail": "%s"}`,
-					err.Type, err.Title, err.StatusCode(), err)
-				return
-			}
-
-			// Continuar con el flujo si no hay error
-			next.ServeHTTP(w, r)
-		})
-	})
+				// Continuar con el flujo si no hay error
+				next.ServeHTTP(w, r)
+			})
+		})*/
 
 	ctx, cancel := context.WithCancel(context.Background())
 	sigChan := make(chan os.Signal, 1)

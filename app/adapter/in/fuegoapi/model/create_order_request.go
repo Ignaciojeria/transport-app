@@ -2,7 +2,7 @@ package model
 
 import "transport-app/app/domain"
 
-type CreateTransportOrderRequest struct {
+type CreateOrderRequest struct {
 	ReferenceID             domain.ReferenceID             `json:"referenceID"`
 	OrderType               domain.OrderType               `json:"orderType"`
 	References              []domain.References            `json:"references"`

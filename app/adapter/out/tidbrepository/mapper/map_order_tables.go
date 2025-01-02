@@ -5,8 +5,8 @@ import (
 	"transport-app/app/domain"
 )
 
-func MapTransportOrderToTable(order domain.TransportOrder) table.TransportOrder {
-	return table.TransportOrder{
+func MapOrderToTable(order domain.Order) table.Order {
+	return table.Order{
 		ID:                                order.ID,
 		ReferenceID:                       string(order.ReferenceID),
 		OrganizationID:                    0,

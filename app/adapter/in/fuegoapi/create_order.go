@@ -15,28 +15,28 @@ import (
 
 func init() {
 	ioc.Registry(
-		createTransportOrder,
+		createOrder,
 		httpserver.New,
-		usecase.NewCreateTransportOrder)
+		usecase.NewCreateOrder)
 }
-func createTransportOrder(s httpserver.Server, createTo usecase.CreateTransportOrder) {
+func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 	fuego.Post(s.Manager, "/transport-order",
-		func(c fuego.ContextWithBody[model.CreateTransportOrderRequest]) (model.CreateTransportOrderResponse, error) {
+		func(c fuego.ContextWithBody[model.CreateOrderRequest]) (model.CreateOrderResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return model.CreateTransportOrderResponse{}, err
+				return model.CreateOrderResponse{}, err
 			}
-			mappedTO := mapper.MapCreateTransportOrderRequest(requestBody)
+			mappedTO := mapper.MapCreateOrderRequest(requestBody)
 			mappedTO.Tenant.Organization = c.Header("organization")
 			mappedTO.Tenant.Consumer = c.Header("consumer")
 			mappedTO.Tenant.Commerce = c.Header("commerce")
 			mappedTO.Tenant.Country = countries.ByName(c.Header("country"))
 			createdTo, err := createTo(c.Context(), mappedTO)
-			return model.CreateTransportOrderResponse{
+			return model.CreateOrderResponse{
 				ID:      createdTo.ID,
 				Message: "transport order created",
 			}, err
-		}, option.Summary("createTransportOrder"),
+		}, option.Summary("createOrder"),
 		option.Header("organization", "api organization key", param.Required()),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),

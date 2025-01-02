@@ -14,22 +14,22 @@ import (
 
 func init() {
 	ioc.Registry(
-		NewSaveTransportOrder,
+		NewSaveOrder,
 		tidb.NewTIDBConnection,
 		NewLoadOrderStatuses)
 }
 
-type SaveTransportOrder func(
+type SaveOrder func(
 	context.Context,
-	domain.TransportOrder) (domain.TransportOrder, error)
+	domain.Order) (domain.Order, error)
 
-func NewSaveTransportOrder(
+func NewSaveOrder(
 	conn tidb.TIDBConnection,
 	loadOrderSorderStatuses LoadOrderStatuses,
-) SaveTransportOrder {
-	return func(ctx context.Context, to domain.TransportOrder) (domain.TransportOrder, error) {
+) SaveOrder {
+	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
 		to.OrderStatus = loadOrderSorderStatuses().Available()
-		table := mapper.MapTransportOrderToTable(to)
+		table := mapper.MapOrderToTable(to)
 		err := conn.Transaction(func(tx *gorm.DB) error {
 			organizationID, err := ensureOrganizationExists(tx, table.Organization)
 			if err != nil {
@@ -64,10 +64,10 @@ func NewSaveTransportOrder(
 		})
 
 		if err != nil {
-			return domain.TransportOrder{}, err
+			return domain.Order{}, err
 		}
 
-		return domain.TransportOrder{}, err
+		return domain.Order{}, err
 	}
 }
 

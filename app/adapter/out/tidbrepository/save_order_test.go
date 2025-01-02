@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TestSaveTransportOrder(t *testing.T) {
+func TestSaveOrder(t *testing.T) {
 	ctx := context.Background()
 
 	// Start MySQL container
@@ -68,7 +68,7 @@ func TestSaveTransportOrder(t *testing.T) {
 
 	// Run subtests
 	t.Run("InsertTransportOrder", func(t *testing.T) {
-		order := domain.TransportOrder{
+		order := domain.Order{
 			Tenant: domain.Tenant{
 				Organization: "my-org-name",
 				Commerce:     "UNIMARC",
@@ -90,7 +90,7 @@ func TestSaveTransportOrder(t *testing.T) {
 		}
 		orderStatuses := NewLoadOrderStatuses(tiDBConn)
 		// Save transport order
-		saveOrderFunc := NewSaveTransportOrder(tiDBConn, orderStatuses)
+		saveOrderFunc := NewSaveOrder(tiDBConn, orderStatuses)
 		_, err = saveOrderFunc(ctx, order)
 		if err != nil {
 			t.Fatalf("Failed to save transport order: %v", err)
