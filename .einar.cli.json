@@ -49,6 +49,10 @@
         {
             "kind": "post-controller",
             "name": "create-account"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account"
         }
     ]
 }

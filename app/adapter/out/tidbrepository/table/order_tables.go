@@ -1,6 +1,9 @@
 package table
 
+import "gorm.io/gorm"
+
 type Order struct {
+	gorm.Model
 	ID                                int64                             `gorm:"primaryKey"`
 	ReferenceID                       string                            `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
 	OrganizationCountryID             int64                             `gorm:"not null;uniqueIndex:idx_reference_org_country"`
@@ -19,7 +22,6 @@ type Order struct {
 	Origin                            Origin                            `gorm:"foreignKey:OriginID"`
 	DestinationID                     int64                             `gorm:"not null"`
 	Destination                       Destination                       `gorm:"foreignKey:DestinationID"`
-	DestinationAddressInfo            AddressInfo                       `gorm:"embedded"`
 	Items                             []Items                           `gorm:"foreignKey:TransportOrderID"`
 	Packages                          []Packages                        `gorm:"foreignKey:TransportOrderID"`
 	CollectAvailabilityDate           string                            `gorm:"default:null"`
@@ -34,6 +36,7 @@ type Order struct {
 }
 
 type Packages struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	TransportOrderID      int64               `gorm:"not null;uniqueIndex:idx_transport_order_lpn"`
 	OrganizationCountryID int64               `gorm:"not null;index"`
@@ -47,6 +50,7 @@ type Packages struct {
 }
 
 type TransportOrderReferences struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	OrganizationCountryID int64               `gorm:"not null;index"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
@@ -56,6 +60,7 @@ type TransportOrderReferences struct {
 }
 
 type TransportRequirementsReferences struct {
+	gorm.Model
 	ID               int64  `gorm:"primaryKey"`
 	Type             string `gorm:"not null"`
 	Value            string `gorm:"not null"`
@@ -63,6 +68,7 @@ type TransportRequirementsReferences struct {
 }
 
 type NodeInfo struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_org_country"`
@@ -75,6 +81,7 @@ type NodeInfo struct {
 }
 
 type NodeReferences struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	OrganizationCountryID int64               `gorm:"not null;index"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
@@ -84,6 +91,7 @@ type NodeReferences struct {
 }
 
 type Operator struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"` // Límite de longitud
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_org_country"`
@@ -100,6 +108,7 @@ type Contact struct {
 }
 
 type Origin struct {
+	gorm.Model
 	ID            int64       `gorm:"primaryKey"`
 	NodeInfoID    int64       `gorm:"default:null"`
 	NodeInfo      NodeInfo    `gorm:"foreignKey:NodeInfoID"`
@@ -108,6 +117,7 @@ type Origin struct {
 }
 
 type Destination struct {
+	gorm.Model
 	ID            int64       `gorm:"primaryKey"`
 	NodeInfoID    int64       `gorm:"default:null"`
 	NodeInfo      NodeInfo    `gorm:"foreignKey:NodeInfoID"`
@@ -116,6 +126,7 @@ type Destination struct {
 }
 
 type AddressInfo struct {
+	gorm.Model
 	ID           int64   `gorm:"primaryKey"`
 	Contact      Contact `gorm:"embedded"`
 	State        string  `gorm:"default:null"`
@@ -153,6 +164,7 @@ type Weight struct {
 }
 
 type Items struct {
+	gorm.Model
 	ID                int64      `gorm:"primaryKey"`
 	ReferenceID       string     `gorm:"not null"`
 	LogisticCondition string     `gorm:"default:null"`
@@ -165,6 +177,7 @@ type Items struct {
 }
 
 type ItemReferences struct {
+	gorm.Model
 	ID          int64    `gorm:"primaryKey"`
 	ReferenceID string   `gorm:"not null"`
 	Quantity    Quantity `gorm:"embedded"`
@@ -172,6 +185,7 @@ type ItemReferences struct {
 }
 
 type OrderType struct {
+	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
 	Type           string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_organization"` // Cambiar a varchar(191)
 	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_type_organization"`                   // Parte del índice compuesto
@@ -180,11 +194,13 @@ type OrderType struct {
 }
 
 type OrderStatus struct {
+	gorm.Model
 	ID     int    `gorm:"primaryKey"`
 	Status string `gorm:"not null"`
 }
 
 type Visit struct {
+	gorm.Model
 	ID               int64  `gorm:"primaryKey"`
 	TransportOrderID int64  `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
 	Date             string `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
@@ -193,6 +209,7 @@ type Visit struct {
 }
 
 type Consumer struct {
+	gorm.Model
 	ID             int          `gorm:"primaryKey"`
 	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
 	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto
@@ -200,6 +217,7 @@ type Consumer struct {
 }
 
 type Commerce struct {
+	gorm.Model
 	ID             int          `gorm:"primaryKey"`
 	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
 	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto

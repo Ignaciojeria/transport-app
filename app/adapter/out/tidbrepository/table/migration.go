@@ -45,6 +45,8 @@ func NewRunMigrations(
 			&OrderType{},
 			&ApiKey{},
 			&OrganizationCountry{},
+			&Account{},
+			&AccountOrganization{},
 		}
 
 		// Opcional: Eliminar tablas si existen
