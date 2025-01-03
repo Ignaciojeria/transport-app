@@ -1,7 +1,6 @@
 package fuegoapi
 
 import (
-	"transport-app/app/adapter/in/fuegoapi/mapper"
 	"transport-app/app/adapter/in/fuegoapi/model"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
@@ -26,7 +25,7 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 			if err != nil {
 				return model.CreateOrderResponse{}, err
 			}
-			mappedTO := mapper.MapCreateOrderRequest(requestBody)
+			mappedTO := requestBody.Map()
 			mappedTO.Organization.Email = "TODO" //c.Header("api-key")
 			mappedTO.Organization.Name = "TODO"
 			mappedTO.Organization.Country = countries.ByName(c.Header("country"))

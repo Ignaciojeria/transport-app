@@ -45,6 +45,10 @@
         {
             "kind": "usecase",
             "name": "create-organization-key"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-account"
         }
     ]
 }

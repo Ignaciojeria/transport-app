@@ -2,7 +2,6 @@ package domain
 
 type Order struct {
 	ID                      int64
-	ApiKey                  ApiKey                  `json:"apiKey"`
 	ReferenceID             ReferenceID             `json:"id"`
 	Organization            Organization            `json:"organization"`
 	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
@@ -26,19 +25,17 @@ type References struct {
 	Value string `json:"value"`
 }
 
-type Operator struct {
-	ReferenceID ReferenceID `json:"referenceId"`
-	NationalID  string      `json:"nationalId"`
-	Type        string      `json:"type"`
-	Name        string      `json:"name"`
-}
-
 type NodeInfo struct {
 	ReferenceID ReferenceID  `json:"referenceId"`
 	Name        string       `json:"name"`
 	Type        string       `json:"type"`
 	Operator    Operator     `json:"operator"`
 	References  []References `json:"references"`
+}
+
+type Origin struct {
+	NodeInfo    NodeInfo    `json:"nodeInfo"`
+	AddressInfo AddressInfo `json:"addressInfo"`
 }
 
 type ContactMethods struct {
@@ -72,9 +69,11 @@ type AddressInfo struct {
 	TimeZone     string  `json:"timeZone"`
 }
 
-type Origin struct {
-	NodeInfo    NodeInfo    `json:"nodeInfo"`
-	AddressInfo AddressInfo `json:"addressInfo"`
+type Operator struct {
+	ReferenceID ReferenceID `json:"referenceId"`
+	NationalID  string      `json:"nationalId"`
+	Type        string      `json:"type"`
+	Name        string      `json:"name"`
 }
 
 type Destination struct {
@@ -170,5 +169,3 @@ type BusinessIdentifiers struct {
 	Commerce string `json:"commerce"`
 	Consumer string `json:"consumer"`
 }
-
-type ApiKey string
