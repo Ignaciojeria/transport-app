@@ -1,11 +1,11 @@
 package domain
 
-import "github.com/biter777/countries"
-
 type Order struct {
 	ID                      int64
+	ApiKey                  ApiKey                  `json:"apiKey"`
 	ReferenceID             ReferenceID             `json:"id"`
-	Tenant                  Tenant                  `json:"tenant"`
+	Organization            Organization            `json:"organization"`
+	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
 	References              []References            `json:"references"`
@@ -166,9 +166,9 @@ type Visit struct {
 	TimeRange TimeRange `json:"timeRange"`
 }
 
-type Tenant struct {
-	Country      countries.CountryCode `json:"country"`
-	Organization string                `json:"organization"`
-	Commerce     string                `json:"commerce"`
-	Consumer     string                `json:"consumer"`
+type BusinessIdentifiers struct {
+	Commerce string `json:"commerce"`
+	Consumer string `json:"consumer"`
 }
+
+type ApiKey string

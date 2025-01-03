@@ -10,6 +10,7 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
 
+	"github.com/biter777/countries"
 	"github.com/testcontainers/testcontainers-go"
 	tidbmysql "github.com/testcontainers/testcontainers-go/modules/mysql"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -69,10 +70,14 @@ func TestSaveOrder(t *testing.T) {
 	// Run subtests
 	t.Run("InsertTransportOrder", func(t *testing.T) {
 		order := domain.Order{
-			Tenant: domain.Tenant{
-				Organization: "my-org-name",
-				Commerce:     "UNIMARC",
-				Consumer:     "CROSS-COMMERCE-API",
+			BusinessIdentifiers: domain.BusinessIdentifiers{
+				Commerce: "UNIMARC",
+				Consumer: "CROSS-COMMERCE-API",
+			},
+			Organization: domain.Organization{
+				Country: countries.CL,
+				Name:    "my-org-name",
+				Email:   "my-org@gmail.com",
 			},
 			Origin: domain.Origin{
 				AddressInfo: domain.AddressInfo{

@@ -27,19 +27,20 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 				return model.CreateOrderResponse{}, err
 			}
 			mappedTO := mapper.MapCreateOrderRequest(requestBody)
-			mappedTO.Tenant.Organization = c.Header("organization")
-			mappedTO.Tenant.Consumer = c.Header("consumer")
-			mappedTO.Tenant.Commerce = c.Header("commerce")
-			mappedTO.Tenant.Country = countries.ByName(c.Header("country"))
+			mappedTO.Organization.Email = "TODO" //c.Header("api-key")
+			mappedTO.Organization.Name = "TODO"
+			mappedTO.Organization.Country = countries.ByName(c.Header("country"))
+			mappedTO.BusinessIdentifiers.Consumer = c.Header("consumer")
+			mappedTO.BusinessIdentifiers.Commerce = c.Header("commerce")
 			createdTo, err := createTo(c.Context(), mappedTO)
 			return model.CreateOrderResponse{
 				ID:      createdTo.ID,
 				Message: "order created",
 			}, err
 		}, option.Summary("createOrder"),
-		option.Header("organization", "api organization key", param.Required()),
-		option.Header("consumer", "api consumer key", param.Required()),
-		option.Header("commerce", "api commerce key", param.Required()),
+		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
+		option.Header("consumer", "api consumer key"),
+		option.Header("commerce", "api commerce key"),
 	)
 }

@@ -31,12 +31,20 @@
             "name": "create-transport-order"
         },
         {
+            "kind": "post-controller",
+            "name": "create-organization"
+        },
+        {
             "kind": "usecase",
             "name": "create-transport-order"
         },
         {
             "kind": "onload-job",
             "name": "application-loader"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-organization-key"
         }
     ]
 }
