@@ -9,7 +9,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 	return table.Order{
 		ID:                                order.ID,
 		ReferenceID:                       string(order.ReferenceID),
-		OrganizationID:                    0,
+		OrganizationCountryID:             0,
 		CommerceID:                        0,
 		ConsumerID:                        0,
 		OrderStatusID:                     0,
@@ -32,9 +32,9 @@ func MapOrderToTable(order domain.Order) table.Order {
 		Packages:                          mapPackagesToTable(order.Packages),
 		Visit:                             mapVisitToTable(order.Visit),
 		TransportRequirementsReferences:   mapTransportRequirementsToTable(order.TransportRequirements),
-		Organization:                      MapOrganizationToTable(order.Organization),
-		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
-		Consumer:                          mapConsumerToTable(order.BusinessIdentifiers),
+		//	OrganizationCountry:               MapOrganizationToTable(order.Organization),
+		Commerce: mapCommerceToTable(order.BusinessIdentifiers),
+		Consumer: mapConsumerToTable(order.BusinessIdentifiers),
 	}
 }
 

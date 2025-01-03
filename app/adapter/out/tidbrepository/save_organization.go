@@ -3,10 +3,12 @@ package tidbrepository
 import (
 	"context"
 	"transport-app/app/adapter/out/tidbrepository/mapper"
+	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -26,9 +28,36 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		// Mapear la entidad del dominio a la tabla
 		tableOrg := mapper.MapOrganizationToTable(o)
 
-		// Intentar guardar la organización en la base de datos
-		if err := conn.DB.Create(&tableOrg).Error; err != nil {
-			return domain.Organization{}, ErrOrganizationDatabase.New(err.Error())
+		// Iniciar la transacción
+		err := conn.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+			// Guardar la organización
+			if err := tx.Create(&tableOrg).Error; err != nil {
+				return ErrOrganizationDatabase.New(err.Error())
+			}
+			// Guardar la API key asociada
+			apiKeyRecord := table.ApiKey{
+				OrganizationID: tableOrg.ID,
+				Key:            o.Key,
+				Status:         "active",
+			}
+			if err := tx.Create(&apiKeyRecord).Error; err != nil {
+				return ErrOrganizationDatabase.New(err.Error())
+			}
+
+			orgCountry := table.OrganizationCountry{
+				OrganizationID: tableOrg.ID,
+				Country:        o.Country.Alpha2(),
+			}
+
+			if err := tx.Create(&orgCountry).Error; err != nil {
+				return ErrOrganizationDatabase.New(err.Error())
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			return domain.Organization{}, err
 		}
 
 		// Mapear de vuelta a la entidad de dominio
@@ -36,7 +65,7 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 			Country: o.Country,
 			Name:    o.Name,
 			Email:   o.Email,
-			Key:     o.Key, // Si el key viene de otro lugar, podrías usar el generado en la DB si es necesario
+			Key:     o.Key,
 		}
 
 		return savedOrg, nil

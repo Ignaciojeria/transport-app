@@ -6,6 +6,7 @@ import (
 	"transport-app/app/domain"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 	"github.com/joomcode/errorx"
 )
 
@@ -35,7 +36,7 @@ func NewCreateOrganizationKey(
 		if !errorx.IsOfType(err, tidbrepository.ErrOrganizationNotFound) {
 			return domain.Organization{}, err
 		}
-
+		org.Key = uuid.NewString() + "-" + uuid.NewString()
 		// Crear la organización si no existe
 		return saveOrg(ctx, org)
 	}

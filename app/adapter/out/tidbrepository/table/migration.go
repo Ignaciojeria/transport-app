@@ -43,6 +43,8 @@ func NewRunMigrations(
 			&Consumer{},
 			&Organization{},
 			&OrderType{},
+			&ApiKey{},
+			&OrganizationCountry{},
 		}
 
 		// Opcional: Eliminar tablas si existen

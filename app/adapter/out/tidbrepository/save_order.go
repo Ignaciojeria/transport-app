@@ -3,7 +3,6 @@ package tidbrepository
 import (
 	"context"
 	"errors"
-	"transport-app/app/adapter/out/tidbrepository/mapper"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
@@ -29,32 +28,33 @@ func NewSaveOrder(
 ) SaveOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
 		to.OrderStatus = loadOrderSorderStatuses().Available()
-		table := mapper.MapOrderToTable(to)
+		//	table := mapper.MapOrderToTable(to)
 		err := conn.Transaction(func(tx *gorm.DB) error {
-			organizationID, err := ensureOrganizationExists(tx, table.Organization)
-			if err != nil {
-				return err
-			}
-			table.OrganizationID = organizationID
+			/*
+				organizationID, err := ensureOrganizationExists(tx, table.Organization)
+				if err != nil {
+					return err
+				}
+				table.OrganizationID = organizationID*/
+			/*
+				commerceID, err := ensureCommerceExists(tx, organizationID, table.Commerce)
+				if err != nil {
+					return err
+				}
+				table.CommerceID = commerceID
 
-			commerceID, err := ensureCommerceExists(tx, organizationID, table.Commerce)
-			if err != nil {
-				return err
-			}
-			table.CommerceID = commerceID
+				consumerID, err := ensureConsumerExists(tx, organizationID, table.Consumer)
+				if err != nil {
+					return err
+				}
+				table.ConsumerID = consumerID
 
-			consumerID, err := ensureConsumerExists(tx, organizationID, table.Consumer)
-			if err != nil {
-				return err
-			}
-			table.ConsumerID = consumerID
-
-			orderTypeID, err := ensureOrderTypeExists(tx, organizationID, table.OrderType)
-			if err != nil {
-				return err
-			}
-			table.OrderTypeID = orderTypeID
-
+				orderTypeID, err := ensureOrderTypeExists(tx, organizationID, table.OrderType)
+				if err != nil {
+					return err
+				}
+				table.OrderTypeID = orderTypeID
+			*/
 			/*
 				if err := tx.Save(&table).Error; err != nil {
 					return err
@@ -73,8 +73,8 @@ func NewSaveOrder(
 
 func ensureOrganizationExists(tx *gorm.DB, organization table.Organization) (int64, error) {
 	err := tx.
-		Where("name = ?", organization.Name).
-		Where("country = ?", organization.Country).
+		Where("email = ?", organization.Email).
+		//	Where("country = ?", organization.Country).
 		First(&organization).Error
 	if err == nil {
 		return organization.ID, nil
