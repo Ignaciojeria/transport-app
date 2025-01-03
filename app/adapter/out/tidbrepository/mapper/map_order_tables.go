@@ -32,7 +32,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		Packages:                          mapPackagesToTable(order.Packages),
 		Visit:                             mapVisitToTable(order.Visit),
 		TransportRequirementsReferences:   mapTransportRequirementsToTable(order.TransportRequirements),
-		Organization:                      mapOrganizationToTable(order.Organization),
+		Organization:                      MapOrganizationToTable(order.Organization),
 		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
 		Consumer:                          mapConsumerToTable(order.BusinessIdentifiers),
 	}
@@ -136,13 +136,6 @@ func mapTransportRequirementsToTable(requirements []domain.References) []table.T
 		}
 	}
 	return mapped
-}
-
-func mapOrganizationToTable(org domain.Organization) table.Organization {
-	return table.Organization{
-		Name:    org.Name,
-		Country: org.Country.Alpha2(),
-	}
 }
 
 func mapCommerceToTable(bi domain.BusinessIdentifiers) table.Commerce {

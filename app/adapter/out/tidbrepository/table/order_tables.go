@@ -205,9 +205,3 @@ type Commerce struct {
 	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
-
-type Organization struct {
-	ID      int64  `gorm:"primaryKey"`
-	Country string `gorm:"not null;index:idx_country_name,unique"`
-	Name    string `gorm:"type:varchar(255);not null;index:idx_country_name,unique"`
-}

@@ -1,6 +1,7 @@
 package fuegoapi
 
 import (
+	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/model"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -33,7 +34,11 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 			}
 			org, err = createOrg(c.Context(), org)
 			if err != nil {
-				return model.CreateOrganizationKeyResponse{}, err
+				return model.CreateOrganizationKeyResponse{}, fuego.HTTPError{
+					Title:  "error creating organization",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
 			}
 			return model.CreateOrganizationKeyResponse{
 				OrganizationKey: org.Key,
