@@ -26,8 +26,6 @@ func NewRunMigrations(
 		// Lista de tablas que tienen un campo ID como clave primaria
 		tables := []interface{}{
 			&Order{},
-			&Origin{},
-			&Destination{},
 			&AddressInfo{},
 			&TransportOrderReferences{},
 			&TransportRequirementsReferences{},

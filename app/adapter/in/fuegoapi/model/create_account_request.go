@@ -3,27 +3,27 @@ package model
 import "transport-app/app/domain"
 
 type CreateAccountRequest struct {
-	NationalID string `json:"nationalID"`
-	Email      string `json:"email"`
+	NationalID string `json:"nationalID" validate:"required" example:"18666636-4"`
+	Email      string `json:"email" validate:"required" example:"ignaciovl.j@gmail.com"`
 	Origin     struct {
 		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
+			AddressLine1 string `json:"addressLine1" validate:"required" example:"Inglaterra 59"`
+			AddressLine2 string `json:"addressLine2" example:"La Florida, Región Metropolitana, Chile"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
-			Name     string `json:"name"`
+			Name     string `json:"name" example:"IGNACIO HUB"`
 			Operator struct {
-				Name        string `json:"name"`
-				NationalID  string `json:"nationalId"`
-				ReferenceID string `json:"referenceId"`
-				Type        string `json:"type"`
+				Name        string `json:"name" example:"Ignacio Jeria"`
+				NationalID  string `json:"nationalId" example:"18666636-4"`
+				ReferenceID string `json:"referenceId" example:"18666636-4"`
+				Type        string `json:"type" example:"ARRENDATARIO"`
 			} `json:"operator"`
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceId" example:"BODEGA_2214"`
 			References  []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
+				Type  string `json:"type" example:""`
+				Value string `json:"value" example:""`
 			} `json:"references"`
-			Type string `json:"type"`
+			Type string `json:"type" example:"BODEGA_DEPARTAMENTO"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
 }

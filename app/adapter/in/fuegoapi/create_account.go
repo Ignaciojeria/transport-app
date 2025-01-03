@@ -9,6 +9,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
@@ -38,5 +39,8 @@ func createAccount(
 			return model.CreateAccountResponse{
 				Message: "account created",
 			}, nil
-		}, option.Summary("createAccount"))
+		}, option.Summary("createAccount"),
+		option.Header("organization-key", "api organization key", param.Required()),
+		option.Header("country", "api country", param.Required()),
+	)
 }

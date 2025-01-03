@@ -7,20 +7,29 @@ import (
 
 func MapOrderToTable(order domain.Order) table.Order {
 	return table.Order{
-		ID:                                order.ID,
-		ReferenceID:                       string(order.ReferenceID),
-		OrganizationCountryID:             0,
-		CommerceID:                        0,
-		ConsumerID:                        0,
-		OrderStatusID:                     0,
-		OrderTypeID:                       0,
-		OrderType:                         mapOrderTypeToTable(order.OrderType),
-		TransportOrderReferences:          mapReferencesToTable(order.References),
-		DeliveryInstructions:              order.Destination.DeliveryInstructions,
-		OriginID:                          0,
-		Origin:                            mapOriginToTable(order.Origin),
-		DestinationID:                     0,
-		Destination:                       mapDestinationToTable(order.Destination),
+		ID:                       order.ID,
+		ReferenceID:              string(order.ReferenceID),
+		OrganizationCountryID:    0, // Completar según la lógica de negocio
+		CommerceID:               0, // Completar según la lógica de negocio
+		ConsumerID:               0, // Completar según la lógica de negocio
+		OrderStatusID:            0, // Completar según la lógica de negocio
+		OrderTypeID:              0, // Completar según la lógica de negocio
+		OrderType:                mapOrderTypeToTable(order.OrderType),
+		TransportOrderReferences: mapReferencesToTable(order.References),
+		DeliveryInstructions:     order.Destination.DeliveryInstructions,
+
+		// Origen
+		OriginNodeInfoID:    0, // Completar según la lógica de negocio
+		OriginNodeInfo:      mapNodeInfoToTable(order.Origin.NodeInfo),
+		OriginAddressInfoID: 0, // Completar según la lógica de negocio
+		OriginAddressInfo:   mapAddressInfoToTable(order.Origin.AddressInfo),
+
+		// Destino
+		DestinationNodeInfoID:    0, // Completar según la lógica de negocio
+		DestinationNodeInfo:      mapNodeInfoToTable(order.Destination.NodeInfo),
+		DestinationAddressInfoID: 0, // Completar según la lógica de negocio
+		DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo),
+
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
 		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
@@ -32,9 +41,8 @@ func MapOrderToTable(order domain.Order) table.Order {
 		Packages:                          mapPackagesToTable(order.Packages),
 		Visit:                             mapVisitToTable(order.Visit),
 		TransportRequirementsReferences:   mapTransportRequirementsToTable(order.TransportRequirements),
-		//	OrganizationCountry:               MapOrganizationToTable(order.Organization),
-		Commerce: mapCommerceToTable(order.BusinessIdentifiers),
-		Consumer: mapConsumerToTable(order.BusinessIdentifiers),
+		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
+		Consumer:                          mapConsumerToTable(order.BusinessIdentifiers),
 	}
 }
 
@@ -151,29 +159,27 @@ func mapConsumerToTable(bi domain.BusinessIdentifiers) table.Consumer {
 }
 
 func mapOrderTypeToTable(t domain.OrderType) table.OrderType {
-	if t.Type == "" {
-		t.Type = "UNSPECIFIED"
-		t.Description = "Order type not specified"
-	}
 	return table.OrderType{
 		Type:        t.Type,
 		Description: t.Description,
 	}
 }
 
-func mapOriginToTable(origin domain.Origin) table.Origin {
-	return table.Origin{
-		NodeInfoID:    0, // This would depend on the domain logic for NodeInfo mapping
-		AddressInfoID: 0, // This can be replaced with actual logic to map AddressInfo
-		AddressInfo:   mapAddressInfoToTable(origin.AddressInfo),
+func mapNodeInfoToTable(node domain.NodeInfo) table.NodeInfo {
+	return table.NodeInfo{
+		ReferenceID: string(node.ReferenceID),
+		Name:        node.Name,
+		Type:        node.Type,
+		Operator:    mapOperatorToTable(node.Operator),
 	}
 }
 
-func mapDestinationToTable(destination domain.Destination) table.Destination {
-	return table.Destination{
-		NodeInfoID:    0, // This would depend on the domain logic for NodeInfo mapping
-		AddressInfoID: 0, // This can be replaced with actual logic to map AddressInfo
-		AddressInfo:   mapAddressInfoToTable(destination.AddressInfo),
+func mapOperatorToTable(operator domain.Operator) table.Operator {
+	return table.Operator{
+		ReferenceID: string(operator.ReferenceID),
+		NationalID:  operator.NationalID,
+		Type:        operator.Type,
+		Name:        operator.Name,
 	}
 }
 
