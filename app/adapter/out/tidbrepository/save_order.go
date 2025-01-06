@@ -88,7 +88,7 @@ func ensureOrganizationExists(tx *gorm.DB, organization table.Organization) (int
 	return 0, err
 }
 
-func ensureCommerceExists(tx *gorm.DB, organizationID int64, commerce table.Commerce) (int, error) {
+func ensureCommerceExists(tx *gorm.DB, organizationID int64, commerce table.Commerce) (int64, error) {
 	var com table.Commerce
 	err := tx.Where("name = ? AND organization_id = ?", commerce.Name, organizationID).First(&com).Error
 	if err == nil {
@@ -104,7 +104,7 @@ func ensureCommerceExists(tx *gorm.DB, organizationID int64, commerce table.Comm
 	return 0, err
 }
 
-func ensureConsumerExists(tx *gorm.DB, organizationID int64, consumer table.Consumer) (int, error) {
+func ensureConsumerExists(tx *gorm.DB, organizationID int64, consumer table.Consumer) (int64, error) {
 	var con table.Consumer
 	err := tx.Where("name = ? AND organization_id = ?", consumer.Name, organizationID).First(&con).Error
 	if err == nil {

@@ -38,20 +38,17 @@ type Origin struct {
 	AddressInfo AddressInfo `json:"addressInfo"`
 }
 
-type ContactMethods struct {
-	Value string `json:"value"`
-	Type  string `json:"type"`
-}
-
 type Documents struct {
 	Value string `json:"value"`
 	Type  string `json:"type"`
 }
 
 type Contact struct {
-	FullName       string           `json:"fullName"`
-	ContactMethods []ContactMethods `json:"contactmethods"`
-	Documents      []Documents      `json:"documents"`
+	FullName   string      `json:"fullName"`
+	Email      string      `json:"email"`
+	Phone      string      `json:"phone"`
+	NationalID string      `json:"nationalID"`
+	Documents  []Documents `json:"documents"`
 }
 
 type AddressInfo struct {
@@ -70,10 +67,8 @@ type AddressInfo struct {
 }
 
 type Operator struct {
-	ReferenceID ReferenceID `json:"referenceId"`
-	NationalID  string      `json:"nationalId"`
-	Type        string      `json:"type"`
-	Name        string      `json:"name"`
+	Contact Contact `json:"contact"`
+	Type    string  `json:"type"`
 }
 
 type Destination struct {
@@ -134,7 +129,7 @@ type OrderType struct {
 }
 
 type OrderStatus struct {
-	ID        int
+	ID        int64
 	Status    string `json:"status"`
 	CreatedAt string `json:"createdAt"`
 }

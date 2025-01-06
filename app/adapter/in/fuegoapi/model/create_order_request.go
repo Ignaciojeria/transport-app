@@ -17,11 +17,10 @@ type CreateOrderRequest struct {
 			AddressLine2 string `json:"addressLine2"`
 			AddressLine3 string `json:"addressLine3"`
 			Contact      struct {
-				Contactmethods []struct {
-					Type  string `json:"type"`
-					Value string `json:"value"`
-				} `json:"contactmethods"`
-				Documents []struct {
+				Email      string `json:"email"`
+				Phone      string `json:"phone"`
+				NationalID string `json:"nationalID"`
+				Documents  []struct {
 					Type  string `json:"type"`
 					Value string `json:"value"`
 				} `json:"documents"`
@@ -40,10 +39,17 @@ type CreateOrderRequest struct {
 		NodeInfo             struct {
 			Name     string `json:"name"`
 			Operator struct {
-				Name        string `json:"name"`
-				NationalID  string `json:"nationalId"`
-				ReferenceID string `json:"referenceId"`
-				Type        string `json:"type"`
+				Contact struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					Documents  []struct {
+						Type  string `json:"type"`
+						Value string `json:"value"`
+					} `json:"documents"`
+					FullName string `json:"fullName"`
+				} `json:"contact"`
+				Type string `json:"type"`
 			} `json:"operator"`
 			ReferenceID string `json:"referenceId"`
 			References  []struct {
@@ -86,11 +92,10 @@ type CreateOrderRequest struct {
 			AddressLine2 string `json:"addressLine2"`
 			AddressLine3 string `json:"addressLine3"`
 			Contact      struct {
-				Contactmethods []struct {
-					Type  string `json:"type"`
-					Value string `json:"value"`
-				} `json:"contactmethods"`
-				Documents []struct {
+				Email      string `json:"email"`
+				Phone      string `json:"phone"`
+				NationalID string `json:"nationalID"`
+				Documents  []struct {
 					Type  string `json:"type"`
 					Value string `json:"value"`
 				} `json:"documents"`
@@ -108,10 +113,17 @@ type CreateOrderRequest struct {
 		NodeInfo struct {
 			Name     string `json:"name"`
 			Operator struct {
-				Name        string `json:"name"`
-				NationalID  string `json:"nationalId"`
-				ReferenceID string `json:"referenceId"`
-				Type        string `json:"type"`
+				Contact struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					Documents  []struct {
+						Type  string `json:"type"`
+						Value string `json:"value"`
+					} `json:"documents"`
+					FullName string `json:"fullName"`
+				} `json:"contact"`
+				Type string `json:"type"`
 			} `json:"operator"`
 			ReferenceID string `json:"referenceId"`
 			References  []struct {
@@ -229,10 +241,17 @@ func (req CreateOrderRequest) mapDestination() domain.Destination {
 func (req CreateOrderRequest) mapNodeInfo(nodeInfo struct {
 	Name     string `json:"name"`
 	Operator struct {
-		Name        string `json:"name"`
-		NationalID  string `json:"nationalId"`
-		ReferenceID string `json:"referenceId"`
-		Type        string `json:"type"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			Documents  []struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			} `json:"documents"`
+			FullName string `json:"fullName"`
+		} `json:"contact"`
+		Type string `json:"type"`
 	} `json:"operator"`
 	ReferenceID string `json:"referenceId"`
 	References  []struct {
@@ -246,10 +265,13 @@ func (req CreateOrderRequest) mapNodeInfo(nodeInfo struct {
 		Name:        nodeInfo.Name,
 		Type:        nodeInfo.Type,
 		Operator: domain.Operator{
-			Name:        nodeInfo.Operator.Name,
-			NationalID:  nodeInfo.Operator.NationalID,
-			ReferenceID: domain.ReferenceID(nodeInfo.Operator.ReferenceID),
-			Type:        nodeInfo.Operator.Type,
+			Contact: domain.Contact{
+				FullName:   nodeInfo.Operator.Contact.FullName,
+				Email:      nodeInfo.Operator.Contact.Email,
+				Phone:      nodeInfo.Operator.Contact.Phone,
+				NationalID: nodeInfo.Operator.Contact.NationalID,
+			},
+			Type: nodeInfo.Operator.Type,
 		},
 		References: req.mapReferences(nodeInfo.References),
 	}
@@ -260,11 +282,10 @@ func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
 	AddressLine2 string `json:"addressLine2"`
 	AddressLine3 string `json:"addressLine3"`
 	Contact      struct {
-		Contactmethods []struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
-		} `json:"contactmethods"`
-		Documents []struct {
+		Email      string `json:"email"`
+		Phone      string `json:"phone"`
+		NationalID string `json:"nationalID"`
+		Documents  []struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"documents"`
@@ -281,9 +302,10 @@ func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
 }) domain.AddressInfo {
 	return domain.AddressInfo{
 		Contact: domain.Contact{
-			FullName:       addressInfo.Contact.FullName,
-			ContactMethods: req.mapContactMethods(addressInfo.Contact.Contactmethods),
-			Documents:      req.mapDocuments(addressInfo.Contact.Documents),
+			FullName:  addressInfo.Contact.FullName,
+			Email:     addressInfo.Contact.Email,
+			Phone:     addressInfo.Contact.Phone,
+			Documents: req.mapDocuments(addressInfo.Contact.Documents),
 		},
 		State:        addressInfo.State,
 		County:       addressInfo.County,
@@ -297,20 +319,6 @@ func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
 		ZipCode:      addressInfo.ZipCode,
 		TimeZone:     addressInfo.TimeZone,
 	}
-}
-
-func (req CreateOrderRequest) mapContactMethods(methods []struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}) []domain.ContactMethods {
-	mapped := make([]domain.ContactMethods, len(methods))
-	for i, method := range methods {
-		mapped[i] = domain.ContactMethods{
-			Type:  method.Type,
-			Value: method.Value,
-		}
-	}
-	return mapped
 }
 
 func (req CreateOrderRequest) mapDocuments(docs []struct {

@@ -10,9 +10,10 @@ type Account struct {
 	OriginID   *int64 `gorm:"default:null"`                           // Cambia a puntero para permitir valores nulos
 	IsActive   bool   `gorm:"not null;index"`
 
-	// Origen de la orden
-	OriginNodeInfoID    int64       `gorm:"default:null"` // ID del NodeInfo de origen
-	OriginNodeInfo      NodeInfo    `gorm:"foreignKey:OriginNodeInfoID"`
+	// Dirección Origen Cuenta
+	OriginNodeInfoID int64    `gorm:"default:null"` // ID del NodeInfo de origen
+	OriginNodeInfo   NodeInfo `gorm:"foreignKey:OriginNodeInfoID"`
+
 	OriginAddressInfoID int64       `gorm:"not null"` // ID de AddressInfo de origen
 	OriginAddressInfo   AddressInfo `gorm:"foreignKey:OriginAddressInfoID"`
 

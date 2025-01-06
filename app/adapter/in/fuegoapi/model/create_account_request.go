@@ -13,10 +13,17 @@ type CreateAccountRequest struct {
 		NodeInfo struct {
 			Name     string `json:"name" example:"IGNACIO HUB"`
 			Operator struct {
-				Name        string `json:"name" example:"Ignacio Jeria"`
-				NationalID  string `json:"nationalId" example:"18666636-4"`
-				ReferenceID string `json:"referenceId" example:"18666636-4"`
-				Type        string `json:"type" example:"ARRENDATARIO"`
+				Contact struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					Documents  []struct {
+						Type  string `json:"type"`
+						Value string `json:"value"`
+					} `json:"documents"`
+					FullName string `json:"fullName"`
+				} `json:"contact"`
+				Type string `json:"type" example:"ARRENDATARIO"`
 			} `json:"operator"`
 			ReferenceID string `json:"referenceId" example:"BODEGA_2214"`
 			References  []struct {
@@ -30,8 +37,9 @@ type CreateAccountRequest struct {
 
 func (req CreateAccountRequest) Map() domain.Account {
 	return domain.Account{
+		NationalID: req.NationalID,
 		Contact: domain.Contact{
-			FullName: req.Email, // Assuming email represents the user’s name or contact identifier
+			Email: req.Email,
 		},
 		Origin: domain.Origin{
 			AddressInfo: domain.AddressInfo{
@@ -41,10 +49,12 @@ func (req CreateAccountRequest) Map() domain.Account {
 			NodeInfo: domain.NodeInfo{
 				Name: req.Origin.NodeInfo.Name,
 				Operator: domain.Operator{
-					Name:        req.Origin.NodeInfo.Operator.Name,
-					NationalID:  req.Origin.NodeInfo.Operator.NationalID,
-					ReferenceID: domain.ReferenceID(req.Origin.NodeInfo.Operator.ReferenceID),
-					Type:        req.Origin.NodeInfo.Operator.Type,
+					Contact: domain.Contact{
+						FullName: req.Origin.NodeInfo.Operator.Contact.FullName,
+						Email:    req.Origin.NodeInfo.Operator.Contact.Email,
+						Phone:    req.Origin.NodeInfo.Operator.Contact.Phone,
+					},
+					Type: req.Origin.NodeInfo.Operator.Type,
 				},
 				ReferenceID: domain.ReferenceID(req.Origin.NodeInfo.ReferenceID),
 				References: func() []domain.References {

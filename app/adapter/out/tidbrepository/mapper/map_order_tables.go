@@ -19,17 +19,25 @@ func MapOrderToTable(order domain.Order) table.Order {
 		DeliveryInstructions:     order.Destination.DeliveryInstructions,
 
 		// Origen
-		OriginNodeInfoID:    0, // Completar según la lógica de negocio
-		OriginNodeInfo:      mapNodeInfoToTable(order.Origin.NodeInfo),
-		OriginAddressInfoID: 0, // Completar según la lógica de negocio
-		OriginAddressInfo:   mapAddressInfoToTable(order.Origin.AddressInfo),
+		OriginNodeInfoID: 0, // Completar según la lógica de negocio
+		OriginNodeInfo:   mapNodeInfoToTable(order.Origin.NodeInfo),
+		/*
+			OriginAddressInfoID: 0, // Completar según la lógica de negocio
+			OriginAddressInfo:   mapAddressInfoToTable(order.Origin.AddressInfo),
 
+			OriginContactID: 0,
+			OriginContact:   MapContactToTable(order.Destination.AddressInfo.Contact),
+
+			DestinationContactID: 0,
+			DestinationContact:   MapContactToTable(order.Destination.AddressInfo.Contact),
+		*/
 		// Destino
-		DestinationNodeInfoID:    0, // Completar según la lógica de negocio
-		DestinationNodeInfo:      mapNodeInfoToTable(order.Destination.NodeInfo),
-		DestinationAddressInfoID: 0, // Completar según la lógica de negocio
-		DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo),
-
+		DestinationNodeInfoID: 0, // Completar según la lógica de negocio
+		DestinationNodeInfo:   mapNodeInfoToTable(order.Destination.NodeInfo),
+		/*
+			DestinationAddressInfoID: 0, // Completar según la lógica de negocio
+			DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo),
+		*/
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
 		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
@@ -176,10 +184,14 @@ func mapNodeInfoToTable(node domain.NodeInfo) table.NodeInfo {
 
 func mapOperatorToTable(operator domain.Operator) table.Operator {
 	return table.Operator{
-		ReferenceID: string(operator.ReferenceID),
-		NationalID:  operator.NationalID,
-		Type:        operator.Type,
-		Name:        operator.Name,
+		ID:   0,
+		Type: operator.Type,
+		Contact: table.Contact{
+			ID:       0,
+			FullName: operator.Contact.FullName,
+			Email:    operator.Contact.Email,
+			Phone:    operator.Contact.Phone,
+		},
 	}
 }
 
