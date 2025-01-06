@@ -8,14 +8,18 @@ import (
 
 func MapAccountTable(e domain.Account) table.Account {
 	return table.Account{
-		ID:         0, // Establecer ID en 0
-		NationalID: e.NationalID,
-		IsActive:   true, // Ejemplo de valor predeterminado para IsActive
+		ID: 0, // Establecer ID en 0
+		Contact: table.Contact{
+			ID:         0,
+			FullName:   e.Contact.FullName,
+			Email:      e.Contact.Email,
+			Phone:      e.Contact.Phone,
+			NationalID: e.Contact.NationalID,
+		},
+		IsActive: true, // Ejemplo de valor predeterminado para IsActive
 		// Mapear el origen
-		OriginNodeInfoID:    0, // ID inicializado en 0
-		OriginNodeInfo:      MapNodeInfoTable(e.Origin.NodeInfo),
-		OriginAddressInfoID: 0, // ID inicializado en 0
-		OriginAddressInfo:   MapAddressInfoTable(e.Origin.AddressInfo),
+		OriginNodeInfoID: 0, // ID inicializado en 0
+		OriginNodeInfo:   MapNodeInfoTable(e.Origin.NodeInfo),
 	}
 }
 

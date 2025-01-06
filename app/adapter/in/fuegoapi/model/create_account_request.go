@@ -3,9 +3,13 @@ package model
 import "transport-app/app/domain"
 
 type CreateAccountRequest struct {
-	NationalID string `json:"nationalID" validate:"required" example:"18666636-4"`
-	Email      string `json:"email" validate:"required" example:"ignaciovl.j@gmail.com"`
-	Origin     struct {
+	Contact struct {
+		Email      string `json:"email"`
+		Phone      string `json:"phone"`
+		NationalID string `json:"nationalID"`
+		FullName   string `json:"fullName"`
+	} `json:"contact"`
+	Origin struct {
 		AddressInfo struct {
 			AddressLine1 string `json:"addressLine1" validate:"required" example:"Inglaterra 59"`
 			AddressLine2 string `json:"addressLine2" example:"La Florida, Región Metropolitana, Chile"`
@@ -17,11 +21,7 @@ type CreateAccountRequest struct {
 					Email      string `json:"email"`
 					Phone      string `json:"phone"`
 					NationalID string `json:"nationalID"`
-					Documents  []struct {
-						Type  string `json:"type"`
-						Value string `json:"value"`
-					} `json:"documents"`
-					FullName string `json:"fullName"`
+					FullName   string `json:"fullName"`
 				} `json:"contact"`
 				Type string `json:"type" example:"ARRENDATARIO"`
 			} `json:"operator"`
@@ -37,9 +37,9 @@ type CreateAccountRequest struct {
 
 func (req CreateAccountRequest) Map() domain.Account {
 	return domain.Account{
-		NationalID: req.NationalID,
 		Contact: domain.Contact{
-			Email: req.Email,
+			Email:      req.Contact.Email,
+			NationalID: req.Contact.NationalID,
 		},
 		Origin: domain.Origin{
 			AddressInfo: domain.AddressInfo{
