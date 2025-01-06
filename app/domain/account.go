@@ -1,10 +1,11 @@
 package domain
 
 type Account struct {
-	ID       int64
-	Origin   Origin
-	Contact  Contact
-	Profiles []Profile
+	ID           int64
+	Organization Organization `json:"organization"`
+	Origin       Origin
+	Contact      Contact
+	Profiles     []Profile
 }
 
 type Profile struct {

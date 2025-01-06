@@ -45,6 +45,7 @@ func NewRunMigrations(
 			&OrganizationCountry{},
 			&Account{},
 			&AccountOrganization{},
+			&Contact{},
 		}
 
 		// Opcional: Eliminar tablas si existen

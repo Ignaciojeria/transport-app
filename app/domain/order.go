@@ -66,6 +66,23 @@ type AddressInfo struct {
 	TimeZone     string  `json:"timeZone"`
 }
 
+func (addr AddressInfo) RawAddress() string {
+	return concatenateWithCommas(addr.AddressLine1, addr.AddressLine2, addr.AddressLine3)
+}
+
+func concatenateWithCommas(values ...string) string {
+	result := ""
+	for _, value := range values {
+		if value != "" {
+			if result != "" {
+				result += ", "
+			}
+			result += value
+		}
+	}
+	return result
+}
+
 type Operator struct {
 	Contact Contact `json:"contact"`
 	Type    string  `json:"type"`

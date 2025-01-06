@@ -54,7 +54,7 @@ func MapAddressInfoTable(e domain.AddressInfo) table.AddressInfo {
 		AddressLine1: e.AddressLine1,
 		AddressLine2: e.AddressLine2,
 		AddressLine3: e.AddressLine3,
-		RawAddress:   e.AddressLine1 + ", " + e.AddressLine2 + ", " + e.AddressLine3, // Generar una dirección cruda
+		RawAddress:   e.RawAddress(),
 		Latitude:     e.Latitude,
 		Longitude:    e.Longitude,
 		ZipCode:      e.ZipCode,

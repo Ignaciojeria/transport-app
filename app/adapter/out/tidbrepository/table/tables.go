@@ -49,12 +49,14 @@ type Order struct {
 }
 
 type Contact struct {
-	ID         int64  `gorm:"primaryKey"`
-	FullName   string `gorm:"not null"`
-	Email      string `gorm:"not null"`
-	Phone      string `gorm:"not null"`
-	NationalID string `gorm:"default:null"`
-	Documents  []byte `gorm:"type:json"`
+	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	FullName              string              `gorm:"not null"`
+	Email                 string              `gorm:"not null"`
+	Phone                 string              `gorm:"not null"`
+	NationalID            string              `gorm:"default:null"`
+	Documents             []byte              `gorm:"type:json"`
 }
 
 type Packages struct {
@@ -105,18 +107,20 @@ type NodeInfo struct {
 }
 
 type AddressInfo struct {
-	ID           int64   `gorm:"primaryKey"`
-	State        string  `gorm:"default:null"`
-	County       string  `gorm:"default:null"`
-	District     string  `gorm:"default:null"`
-	AddressLine1 string  `gorm:"not null"`
-	AddressLine2 string  `gorm:"default:null"`
-	AddressLine3 string  `gorm:"default:null"`
-	RawAddress   string  `gorm:"type:varchar(191);not null;uniqueIndex"`
-	Latitude     float64 `gorm:"default:null"`
-	Longitude    float64 `gorm:"default:null"`
-	ZipCode      string  `gorm:"default:null"`
-	TimeZone     string  `gorm:"default:null"`
+	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	State                 string              `gorm:"default:null"`
+	County                string              `gorm:"default:null"`
+	District              string              `gorm:"default:null"`
+	AddressLine1          string              `gorm:"not null"`
+	AddressLine2          string              `gorm:"default:null"`
+	AddressLine3          string              `gorm:"default:null"`
+	RawAddress            string              `gorm:"type:varchar(191);not null;uniqueIndex"`
+	Latitude              float64             `gorm:"default:null"`
+	Longitude             float64             `gorm:"default:null"`
+	ZipCode               string              `gorm:"default:null"`
+	TimeZone              string              `gorm:"default:null"`
 }
 
 type NodeReferences struct {
@@ -184,11 +188,11 @@ type ItemReferences struct {
 
 type OrderType struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	Type           string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_organization"` // Cambiar a varchar(191)
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_type_organization"`                   // Parte del índice compuesto
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Description    string       `gorm:"type:text"` // Puede permanecer como TEXT porque no está en un índice
+	ID                    int64               `gorm:"primaryKey"`
+	Type                  string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_organization"`
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_type_organization"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	Description           string              `gorm:"type:text"`
 }
 
 type OrderStatus struct {
@@ -208,16 +212,65 @@ type Visit struct {
 
 type Consumer struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	ID                    int64               `gorm:"primaryKey"`
+	Name                  string              `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Actualizado para el índice único compuesto
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 }
 
 type Commerce struct {
 	gorm.Model
+	ID                    int64               `gorm:"primaryKey"`
+	Name                  string              `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Actualizado para el índice único compuesto
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+}
+
+// Organization tables
+
+type ApiKey struct {
+	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
-	Name           string       `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Mismo índice único compuesto
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	OrganizationID int64        `gorm:"not null;index"`            // ID de la organización asociada
+	Organization   Organization `gorm:"foreignKey:OrganizationID"` // Relación con la tabla Organization
+	Key            string       `gorm:"not null;unique"`           // Clave única
+	Status         string       `gorm:"default:active"`            // Estado: activo, revocado, etc.
+}
+
+type Organization struct {
+	gorm.Model
+	ID        int64                 `gorm:"primaryKey"`
+	Email     string                `gorm:"type:varchar(255);not null;unique"`
+	Name      string                `gorm:"type:varchar(255);not null;"`
+	Countries []OrganizationCountry `gorm:"foreignKey:OrganizationID"` // Relación con países
+}
+
+type OrganizationCountry struct {
+	gorm.Model
+	ID             int64  `gorm:"primaryKey"`
+	OrganizationID int64  `gorm:"not null;uniqueIndex:idx_organization_country"`              // Parte del índice compuesto
+	Country        string `gorm:"type:char(5);not null;uniqueIndex:idx_organization_country"` // Código ISO de 2 caracteres
+}
+
+//Account Tables
+
+type Account struct {
+	gorm.Model
+	ID int64 `gorm:"primaryKey"`
+	// Contacto asociado a la orden
+	ContactID int64   `gorm:"not null"`             // Clave foránea al Contact
+	Contact   Contact `gorm:"foreignKey:ContactID"` // Relación con Contact
+	IsActive  bool    `gorm:"not null;index"`
+	// Dirección Origen Cuenta
+	OriginNodeInfoID     int64                 `gorm:"default:null"` // ID del NodeInfo de origen
+	OriginNodeInfo       NodeInfo              `gorm:"foreignKey:OriginNodeInfoID"`
+	AccountOrganizations []AccountOrganization `gorm:"foreignKey:AccountID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+}
+
+type AccountOrganization struct {
+	gorm.Model
+	ID                    int64  `gorm:"primaryKey"`
+	AccountID             int64  `gorm:"not null;uniqueIndex:idx_account_organization_country"` // Índice único compuesto
+	OrganizationCountryID int64  `gorm:"not null;uniqueIndex:idx_account_organization_country"` // Parte del índice compuesto
+	Country               string `gorm:"type:varchar(5);not null;uniqueIndex:idx_account_organization_country"`
 }

@@ -11,11 +11,19 @@ import (
 type CreateAccount func(ctx context.Context, account domain.Account) (domain.Account, error)
 
 func init() {
-	ioc.Registry(NewCreateAccount, tidbrepository.NewSaveAccount)
+	ioc.Registry(
+		NewCreateAccount,
+		tidbrepository.NewEnsureOrganizationForCountry,
+		tidbrepository.NewSaveAccount)
 }
 
-func NewCreateAccount(saveAccount tidbrepository.SaveAccount) CreateAccount {
+func NewCreateAccount(
+	ensureOrganizationForCountry tidbrepository.EnsureOrganizationForCountry,
+	saveAccount tidbrepository.SaveAccount) CreateAccount {
 	return func(ctx context.Context, e domain.Account) (domain.Account, error) {
+		if err := ensureOrganizationForCountry(ctx, e.Organization); err != nil {
+			return domain.Account{}, err
+		}
 		return saveAccount(ctx, e)
 	}
 }

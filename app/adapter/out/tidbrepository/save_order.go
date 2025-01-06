@@ -88,14 +88,14 @@ func ensureOrganizationExists(tx *gorm.DB, organization table.Organization) (int
 	return 0, err
 }
 
-func ensureCommerceExists(tx *gorm.DB, organizationID int64, commerce table.Commerce) (int64, error) {
+func ensureCommerceExists(tx *gorm.DB, organizationCountryID int64, commerce table.Commerce) (int64, error) {
 	var com table.Commerce
-	err := tx.Where("name = ? AND organization_id = ?", commerce.Name, organizationID).First(&com).Error
+	err := tx.Where("name = ? AND organization_country_id = ?", commerce.Name, organizationCountryID).First(&com).Error
 	if err == nil {
 		return com.ID, nil
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		com = table.Commerce{Name: commerce.Name, OrganizationID: organizationID}
+		com = table.Commerce{Name: commerce.Name, OrganizationCountryID: organizationCountryID}
 		if err := tx.Create(&com).Error; err != nil {
 			return 0, err
 		}
@@ -104,14 +104,14 @@ func ensureCommerceExists(tx *gorm.DB, organizationID int64, commerce table.Comm
 	return 0, err
 }
 
-func ensureConsumerExists(tx *gorm.DB, organizationID int64, consumer table.Consumer) (int64, error) {
+func ensureConsumerExists(tx *gorm.DB, organizationCountryID int64, consumer table.Consumer) (int64, error) {
 	var con table.Consumer
-	err := tx.Where("name = ? AND organization_id = ?", consumer.Name, organizationID).First(&con).Error
+	err := tx.Where("name = ? AND organization_country_id = ?", consumer.Name, organizationCountryID).First(&con).Error
 	if err == nil {
 		return con.ID, nil
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		con = table.Consumer{Name: consumer.Name, OrganizationID: organizationID}
+		con = table.Consumer{Name: consumer.Name, OrganizationCountryID: organizationCountryID}
 		if err := tx.Create(&con).Error; err != nil {
 			return 0, err
 		}
@@ -120,14 +120,14 @@ func ensureConsumerExists(tx *gorm.DB, organizationID int64, consumer table.Cons
 	return 0, err
 }
 
-func ensureOrderTypeExists(tx *gorm.DB, organizationID int64, orderType table.OrderType) (int64, error) {
+func ensureOrderTypeExists(tx *gorm.DB, organizationCountryID int64, orderType table.OrderType) (int64, error) {
 	var ot table.OrderType
-	err := tx.Where("type = ? AND organization_id = ?", orderType.Type, organizationID).First(&ot).Error
+	err := tx.Where("type = ? AND organization_country_id = ?", orderType.Type, organizationCountryID).First(&ot).Error
 	if err == nil {
 		return ot.ID, nil
 	}
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		ot = table.OrderType{Type: orderType.Type, Description: orderType.Description, OrganizationID: organizationID}
+		ot = table.OrderType{Type: orderType.Type, Description: orderType.Description, OrganizationCountryID: organizationCountryID}
 		if err := tx.Create(&ot).Error; err != nil {
 			return 0, err
 		}

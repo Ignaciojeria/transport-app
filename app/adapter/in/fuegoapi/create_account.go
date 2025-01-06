@@ -7,6 +7,7 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -27,8 +28,10 @@ func createAccount(
 			if err != nil {
 				return model.CreateAccountResponse{}, err
 			}
-
-			_, err = createAccount(c.Context(), requestBody.Map())
+			acc := requestBody.Map()
+			acc.Organization.Key = c.Header("organization-key")
+			acc.Organization.Country = countries.ByName(c.Header("country"))
+			_, err = createAccount(c.Context(), acc)
 			if err != nil {
 				return model.CreateAccountResponse{}, fuego.HTTPError{
 					Title:  "error creating account",
