@@ -4,19 +4,26 @@ import "gorm.io/gorm"
 
 type Order struct {
 	gorm.Model
-	ID                       int64                      `gorm:"primaryKey"`
-	ReferenceID              string                     `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
-	OrganizationCountryID    int64                      `gorm:"not null;uniqueIndex:idx_reference_org_country"`
-	OrganizationCountry      OrganizationCountry        `gorm:"foreignKey:OrganizationCountryID"`
-	CommerceID               int64                      `gorm:"not null"`
-	Commerce                 Commerce                   `gorm:"foreignKey:CommerceID"`
-	ConsumerID               int64                      `gorm:"not null"`
-	Consumer                 Consumer                   `gorm:"foreignKey:ConsumerID"`
-	OrderStatusID            int64                      `gorm:"not null"`
-	OrderStatus              OrderStatus                `gorm:"foreignKey:OrderStatusID"`
-	OrderTypeID              int64                      `gorm:"not null"`
-	OrderType                OrderType                  `gorm:"foreignKey:OrderTypeID"`
-	TransportOrderReferences []TransportOrderReferences `gorm:"foreignKey:TransportOrderID"`
+	ID int64 `gorm:"primaryKey"`
+
+	ReferenceID string `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization_country"`
+
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization_country"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+
+	CommerceID int64    `gorm:"not null"`
+	Commerce   Commerce `gorm:"foreignKey:CommerceID"`
+
+	ConsumerID int64    `gorm:"not null"`
+	Consumer   Consumer `gorm:"foreignKey:ConsumerID"`
+
+	OrderStatusID int64       `gorm:"not null"`
+	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
+
+	OrderTypeID int64     `gorm:"not null"`
+	OrderType   OrderType `gorm:"foreignKey:OrderTypeID"`
+
+	TransportOrderReferences []TransportOrderReferences `gorm:"foreignKey:OrderID"`
 	DeliveryInstructions     string                     `gorm:"type:text"`
 
 	// Contacto asociado a la orden
@@ -35,8 +42,8 @@ type Order struct {
 	DestinationNodeInfoID int64    `gorm:"default:null"`
 	DestinationNodeInfo   NodeInfo `gorm:"foreignKey:DestinationNodeInfoID"`
 
-	Items                             []Items                           `gorm:"foreignKey:TransportOrderID"`
-	Packages                          []Packages                        `gorm:"foreignKey:TransportOrderID"`
+	Items                             []Items                           `gorm:"foreignKey:OrderID"`
+	Packages                          []Packages                        `gorm:"foreignKey:OrderID"`
 	CollectAvailabilityDate           string                            `gorm:"default:null"`
 	CollectAvailabilityTimeRangeStart string                            `gorm:"default:null"`
 	CollectAvailabilityTimeRangeEnd   string                            `gorm:"default:null"`
@@ -44,25 +51,25 @@ type Order struct {
 	PromisedDateRangeEnd              string                            `gorm:"default:null"`
 	PromisedTimeRangeStart            string                            `gorm:"default:null"`
 	PromisedTimeRangeEnd              string                            `gorm:"default:null"`
-	Visit                             Visit                             `gorm:"foreignKey:TransportOrderID"`
-	TransportRequirementsReferences   []TransportRequirementsReferences `gorm:"foreignKey:TransportOrderID"`
+	Visit                             Visit                             `gorm:"foreignKey:OrderID"`
+	TransportRequirementsReferences   []TransportRequirementsReferences `gorm:"foreignKey:OrderID"`
 }
 
 type Contact struct {
 	ID                    int64               `gorm:"primaryKey"`
-	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_contact_unique"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	FullName              string              `gorm:"not null"`
-	Email                 string              `gorm:"not null"`
-	Phone                 string              `gorm:"not null"`
-	NationalID            string              `gorm:"default:null"`
+	FullName              string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
+	Email                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
+	Phone                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
+	NationalID            string              `gorm:"type:varchar(191);default:null"`
 	Documents             []byte              `gorm:"type:json"`
 }
 
 type Packages struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
-	TransportOrderID      int64               `gorm:"not null;uniqueIndex:idx_transport_order_lpn"`
+	OrderID               int64               `gorm:"not null;uniqueIndex:idx_transport_order_lpn"`
 	OrganizationCountryID int64               `gorm:"not null;index"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 	Lpn                   string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_transport_order_lpn"`
@@ -80,15 +87,15 @@ type TransportOrderReferences struct {
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 	Type                  string              `gorm:"not null"`
 	Value                 string              `gorm:"not null"`
-	TransportOrderID      int64               `gorm:"index"`
+	OrderID               int64               `gorm:"index"`
 }
 
 type TransportRequirementsReferences struct {
 	gorm.Model
-	ID               int64  `gorm:"primaryKey"`
-	Type             string `gorm:"not null"`
-	Value            string `gorm:"not null"`
-	TransportOrderID int64  `gorm:"index"`
+	ID      int64  `gorm:"primaryKey"`
+	Type    string `gorm:"not null"`
+	Value   string `gorm:"not null"`
+	OrderID int64  `gorm:"index"`
 }
 
 type NodeInfo struct {
@@ -176,7 +183,7 @@ type Items struct {
 	Description       string     `gorm:"type:text"`
 	Dimensions        Dimensions `gorm:"embedded"`
 	Weight            Weight     `gorm:"embedded"`
-	TransportOrderID  int64      `gorm:"not null"`
+	OrderID           int64      `gorm:"not null"`
 }
 
 type ItemReferences struct {
@@ -204,11 +211,11 @@ type OrderStatus struct {
 
 type Visit struct {
 	gorm.Model
-	ID               int64  `gorm:"primaryKey"`
-	TransportOrderID int64  `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
-	Date             string `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
-	TimeRangeStart   string `gorm:"default:null"`
-	TimeRangeEnd     string `gorm:"default:null"`
+	ID             int64  `gorm:"primaryKey"`
+	OrderID        int64  `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
+	Date           string `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
+	TimeRangeStart string `gorm:"default:null"`
+	TimeRangeEnd   string `gorm:"default:null"`
 }
 
 type Consumer struct {

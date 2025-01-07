@@ -27,41 +27,116 @@ func NewSaveOrder(
 	loadOrderSorderStatuses LoadOrderStatuses,
 ) SaveOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
-		to.OrderStatus = loadOrderSorderStatuses().Available()
-		//	table := mapper.MapOrderToTable(to)
-		err := conn.Transaction(func(tx *gorm.DB) error {
-			/*
-				organizationID, err := ensureOrganizationExists(tx, table.Organization)
-				if err != nil {
-					return err
-				}
-				table.OrganizationID = organizationID*/
-			/*
-				commerceID, err := ensureCommerceExists(tx, organizationID, table.Commerce)
-				if err != nil {
-					return err
-				}
-				table.CommerceID = commerceID
 
-				consumerID, err := ensureConsumerExists(tx, organizationID, table.Consumer)
-				if err != nil {
-					return err
-				}
-				table.ConsumerID = consumerID
+		var QueryResult struct {
+			OrganizationCountryID int64
+			CommerceID            int64
+			ConsumerID            int64
+			OrderTypeID           int64
+			ContactID             int64
+			AddressID             int64
+			OriginNodeInfoID      int64
+			DestinationNodeInfoID int64
+		}
 
-				orderTypeID, err := ensureOrderTypeExists(tx, organizationID, table.OrderType)
-				if err != nil {
-					return err
-				}
-				table.OrderTypeID = orderTypeID
-			*/
-			/*
-				if err := tx.Save(&table).Error; err != nil {
-					return err
-				}*/
-
-			return nil
-		})
+		err := conn.Raw(`
+			WITH 
+			  org_country AS (
+				SELECT 
+				  oc.id AS organization_country_id
+				FROM 
+				  organization_countries oc
+				INNER JOIN organizations o ON o.id = oc.organization_id
+				WHERE 
+				  oc.country = ? AND o.key = ?
+			  ),
+			  commerce AS (
+				SELECT 
+				  c.id AS commerce_id
+				FROM 
+				  commerces c
+				WHERE 
+				  c.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND c.name = ?
+			  ),
+			  consumer AS (
+				SELECT 
+				  con.id AS consumer_id
+				FROM 
+				  consumers con
+				WHERE 
+				  con.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND con.name = ?
+			  ),
+			  order_type AS (
+				SELECT 
+				  ot.id AS order_type_id
+				FROM 
+				  order_types ot
+				WHERE 
+				  ot.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND ot.type = ?
+			  ),
+			  contact AS (
+				SELECT 
+				  ct.id AS contact_id
+				FROM 
+				  contacts ct
+				WHERE 
+				  ct.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND ct.full_name = ?
+				  AND ct.email = ?
+				  AND ct.phone = ?
+			  ),
+			  address AS (
+				SELECT 
+				  ai.id AS address_id
+				FROM 
+				  address_infos ai
+				WHERE 
+				  ai.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND ai.raw_address = ?
+			  ),
+			  origin_node AS (
+				SELECT 
+				  ni.id AS origin_node_info_id
+				FROM 
+				  node_infos ni
+				WHERE 
+				  ni.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND ni.reference_id = ?
+			  ),
+			  destination_node AS (
+				SELECT 
+				  ni.id AS destination_node_info_id
+				FROM 
+				  node_infos ni
+				WHERE 
+				  ni.organization_country_id = (SELECT organization_country_id FROM org_country)
+				  AND ni.reference_id = ?
+			  )
+			SELECT 
+			  (SELECT organization_country_id FROM org_country) AS organization_country_id,
+			  (SELECT commerce_id FROM commerce) AS commerce_id,
+			  (SELECT consumer_id FROM consumer) AS consumer_id,
+			  (SELECT order_type_id FROM order_type) AS order_type_id,
+			  (SELECT contact_id FROM contact) AS contact_id,
+			  (SELECT address_id FROM address) AS address_id,
+			  (SELECT origin_node_info_id FROM origin_node) AS origin_node_info_id,
+			  (SELECT destination_node_info_id FROM destination_node) AS destination_node_info_id;
+		`,
+			to.Organization.Country,
+			to.Organization.Key,
+			to.BusinessIdentifiers.Commerce,
+			to.BusinessIdentifiers.Consumer,
+			to.OrderType.Type,
+			to.Origin.AddressInfo.Contact.FullName,
+			to.Origin.AddressInfo.Contact.Email,
+			to.Origin.AddressInfo.Contact.Phone,
+			to.Origin.AddressInfo.RawAddress,
+			to.Origin.NodeInfo.ReferenceID,
+			to.Destination.NodeInfo.ReferenceID,
+		).Scan(&QueryResult).Error
 
 		if err != nil {
 			return domain.Order{}, err
@@ -71,6 +146,35 @@ func NewSaveOrder(
 	}
 }
 
+/*
+	organizationID, err := ensureOrganizationExists(tx, table.Organization)
+	if err != nil {
+		return err
+	}
+	table.OrganizationID = organizationID*/
+/*
+	commerceID, err := ensureCommerceExists(tx, organizationID, table.Commerce)
+	if err != nil {
+		return err
+	}
+	table.CommerceID = commerceID
+
+	consumerID, err := ensureConsumerExists(tx, organizationID, table.Consumer)
+	if err != nil {
+		return err
+	}
+	table.ConsumerID = consumerID
+
+	orderTypeID, err := ensureOrderTypeExists(tx, organizationID, table.OrderType)
+	if err != nil {
+		return err
+	}
+	table.OrderTypeID = orderTypeID
+*/
+/*
+	if err := tx.Save(&table).Error; err != nil {
+		return err
+	}*/
 func ensureOrganizationExists(tx *gorm.DB, organization table.Organization) (int64, error) {
 	err := tx.
 		Where("email = ?", organization.Email).
