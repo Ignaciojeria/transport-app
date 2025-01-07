@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"fmt"
 	"transport-app/app/adapter/out/tidbrepository/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
@@ -66,29 +65,54 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 		}
 
 		contactTable := mapper.MapContactToTable(o.Contact, query.OrganizationCountryID)
-		//addressInfoTable := mapper.MapAddressInfoTable(o.Origin.AddressInfo)
-		//nodeInfoTable := mapper.MapNodeInfoTable(o.Origin.NodeInfo)
+		addressInfoTable := mapper.MapAddressInfoTable(o.Origin.AddressInfo, query.OrganizationCountryID)
 
 		if err := conn.Transaction(func(tx *gorm.DB) error {
+			// Crear o actualizar Contact
 			if query.ContactID == 0 {
-				if err := tx.Save(&contactTable).Error; err != nil {
-					fmt.Println(err.Error())
+				if err := tx.Create(&contactTable).Error; err != nil {
 					return err
 				}
+				query.ContactID = contactTable.ID // Asignar el ID generado
 			}
+
+			// Crear o actualizar AddressInfo
+			if query.AddressInfoID == 0 {
+				if err := tx.Create(&addressInfoTable).Error; err != nil {
+					return err
+				}
+				query.AddressInfoID = addressInfoTable.ID // Asignar el ID generado
+			}
+
+			// Crear o actualizar NodeInfo
+			nodeInfoTable := mapper.MapNodeInfoTable(o.Origin.NodeInfo, query.OrganizationCountryID, query.AddressInfoID)
+			if query.NodeInfoID == 0 {
+				if err := tx.Create(&nodeInfoTable).Error; err != nil {
+					return err
+				}
+				query.NodeInfoID = nodeInfoTable.ID // Asignar el ID generado
+			}
+			// Crear o actualizar Account
+			accountTable := mapper.MapAccountTable(
+				o,
+				query.NodeInfoID,
+				query.ContactID,
+				query.OrganizationCountryID)
+			if err := tx.Save(&accountTable).Error; err != nil {
+				return err
+			}
+
 			return nil
 		}); err != nil {
 			return domain.Account{}, err
 		}
 
-		// Devuelve el resultado o úsalo según tus necesidades
+		// Devolver los datos actualizados
 		return domain.Account{
 			Organization: o.Organization,
 			Origin: domain.Origin{
-				NodeInfo: o.Origin.NodeInfo,
-				AddressInfo: domain.AddressInfo{
-					Contact: o.Contact,
-				},
+				NodeInfo:    o.Origin.NodeInfo,
+				AddressInfo: o.Origin.AddressInfo,
 			},
 			Contact: o.Contact,
 		}, nil

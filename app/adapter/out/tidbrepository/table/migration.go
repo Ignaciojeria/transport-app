@@ -44,7 +44,6 @@ func NewRunMigrations(
 			&ApiKey{},
 			&OrganizationCountry{},
 			&Account{},
-			&AccountOrganization{},
 			&Contact{},
 		}
 

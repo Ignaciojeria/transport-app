@@ -94,29 +94,30 @@ type TransportRequirementsReferences struct {
 type NodeInfo struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
-	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`
-	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_org_country"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	Name                  string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_nodeinfo_organization_name"` // Único por organización
+	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`                 // Parte del índice único con OrganizationCountryID
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
+	Name                  string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_name_organization"`                      // Parte del índice único con OrganizationCountryID
 	Type                  string              `gorm:"not null"`
-	OperatorID            int64               `gorm:"not null"`
-	Operator              Operator            `gorm:"foreignKey:OperatorID"`
-	AddressID             int64               `gorm:"not null"`             // Clave foránea al AddressInfo
-	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"` // Relación con AddressInfo
-	NodeReferences        []NodeReferences    `gorm:"foreignKey:NodeInfoID"`
+	OperatorID            int64               `gorm:"default:null"`
+	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator
+	AddressID             int64               `gorm:"not null"`              // Clave foránea a AddressInfo
+	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"`  // Relación con AddressInfo
+	NodeReferences        []NodeReferences    `gorm:"foreignKey:NodeInfoID"` // Relación con NodeReferences
 }
 
 type AddressInfo struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
-	OrganizationCountryID int64               `gorm:"not null;index"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_raw_address_organization"`                   // Parte del índice único
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                    // Relación con la tabla OrganizationCountry
+	RawAddress            string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_raw_address_organization"` // Parte del índice único
 	State                 string              `gorm:"default:null"`
 	County                string              `gorm:"default:null"`
 	District              string              `gorm:"default:null"`
 	AddressLine1          string              `gorm:"not null"`
 	AddressLine2          string              `gorm:"default:null"`
 	AddressLine3          string              `gorm:"default:null"`
-	RawAddress            string              `gorm:"type:varchar(191);not null;uniqueIndex"`
 	Latitude              float64             `gorm:"default:null"`
 	Longitude             float64             `gorm:"default:null"`
 	ZipCode               string              `gorm:"default:null"`
@@ -257,20 +258,15 @@ type OrganizationCountry struct {
 type Account struct {
 	gorm.Model
 	ID int64 `gorm:"primaryKey"`
-	// Contacto asociado a la orden
-	ContactID int64   `gorm:"not null"`             // Clave foránea al Contact
-	Contact   Contact `gorm:"foreignKey:ContactID"` // Relación con Contact
-	IsActive  bool    `gorm:"not null;index"`
-	// Dirección Origen Cuenta
-	OriginNodeInfoID     int64                 `gorm:"default:null"` // ID del NodeInfo de origen
-	OriginNodeInfo       NodeInfo              `gorm:"foreignKey:OriginNodeInfoID"`
-	AccountOrganizations []AccountOrganization `gorm:"foreignKey:AccountID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-}
 
-type AccountOrganization struct {
-	gorm.Model
-	ID                    int64  `gorm:"primaryKey"`
-	AccountID             int64  `gorm:"not null;uniqueIndex:idx_account_organization_country"` // Índice único compuesto
-	OrganizationCountryID int64  `gorm:"not null;uniqueIndex:idx_account_organization_country"` // Parte del índice compuesto
-	Country               string `gorm:"type:varchar(5);not null;uniqueIndex:idx_account_organization_country"`
+	ContactID int64   `gorm:"not null;uniqueIndex:idx_organization_contact"`
+	Contact   Contact `gorm:"foreignKey:ContactID"`
+
+	IsActive bool `gorm:"not null;index"`
+
+	OriginNodeInfoID int64    `gorm:"default:null"`
+	OriginNodeInfo   NodeInfo `gorm:"foreignKey:OriginNodeInfoID"`
+
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_organization_contact"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 }
