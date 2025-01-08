@@ -37,26 +37,7 @@ type CreateOrderRequest struct {
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
-			Name     string `json:"name"`
-			Operator struct {
-				Contact struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					Documents  []struct {
-						Type  string `json:"type"`
-						Value string `json:"value"`
-					} `json:"documents"`
-					FullName string `json:"fullName"`
-				} `json:"contact"`
-				Type string `json:"type"`
-			} `json:"operator"`
 			ReferenceID string `json:"referenceId"`
-			References  []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"references"`
-			Type string `json:"type"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
 	Items []struct {
@@ -111,26 +92,7 @@ type CreateOrderRequest struct {
 			ZipCode   string `json:"zipCode"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
-			Name     string `json:"name"`
-			Operator struct {
-				Contact struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					Documents  []struct {
-						Type  string `json:"type"`
-						Value string `json:"value"`
-					} `json:"documents"`
-					FullName string `json:"fullName"`
-				} `json:"contact"`
-				Type string `json:"type"`
-			} `json:"operator"`
 			ReferenceID string `json:"referenceId"`
-			References  []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"references"`
-			Type string `json:"type"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
 	Packages []struct {
@@ -239,41 +201,10 @@ func (req CreateOrderRequest) mapDestination() domain.Destination {
 }
 
 func (req CreateOrderRequest) mapNodeInfo(nodeInfo struct {
-	Name     string `json:"name"`
-	Operator struct {
-		Contact struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			Documents  []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"documents"`
-			FullName string `json:"fullName"`
-		} `json:"contact"`
-		Type string `json:"type"`
-	} `json:"operator"`
 	ReferenceID string `json:"referenceId"`
-	References  []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"references"`
-	Type string `json:"type"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
-		Name:        nodeInfo.Name,
-		Type:        nodeInfo.Type,
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				FullName:   nodeInfo.Operator.Contact.FullName,
-				Email:      nodeInfo.Operator.Contact.Email,
-				Phone:      nodeInfo.Operator.Contact.Phone,
-				NationalID: nodeInfo.Operator.Contact.NationalID,
-			},
-			Type: nodeInfo.Operator.Type,
-		},
-		References: req.mapReferences(nodeInfo.References),
 	}
 }
 

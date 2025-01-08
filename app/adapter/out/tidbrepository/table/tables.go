@@ -27,12 +27,20 @@ type Order struct {
 	DeliveryInstructions     string                     `gorm:"type:text"`
 
 	// Contacto asociado a la orden
-	ContactID int64   `gorm:"not null"`             // Clave foránea al Contact
-	Contact   Contact `gorm:"foreignKey:ContactID"` // Relación con Contact
+	OriginContactID int64   `gorm:"not null"`                   // Clave foránea al Contact
+	OriginContact   Contact `gorm:"foreignKey:OriginContactID"` // Relación con Contact
 
-	// Dirección de la orden de compra
-	AddressID   int64       `gorm:"not null"`             // Clave foránea al AddressInfo
-	AddressInfo AddressInfo `gorm:"foreignKey:AddressID"` // Relación con AddressInfo
+	// Contacto asociado a la orden
+	DestinationContactID int64   `gorm:"not null"`                        // Clave foránea al Contact
+	DestinationContact   Contact `gorm:"foreignKey:DestinationContactID"` // Relación con Contact
+
+	// Dirección de oriden de la orden de compra
+	OriginAddressInfoID int64       `gorm:"not null"`                       // Clave foránea al AddressInfo
+	OriginAddressInfo   AddressInfo `gorm:"foreignKey:OriginAddressInfoID"` // Relación con AddressInfo
+
+	// Dirección de destino de la orden de compra
+	DestinationAddressInfoID int64       `gorm:"not null"`                            // Clave foránea al AddressInfo
+	DestinationAddressInfo   AddressInfo `gorm:"foreignKey:DestinationAddressInfoID"` // Relación con AddressInfo
 
 	// Nodo de Origen de la orden (en caso de que tenga)
 	OriginNodeInfoID int64    `gorm:"default:null"`
@@ -104,7 +112,7 @@ type NodeInfo struct {
 	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`                 // Parte del índice único con OrganizationCountryID
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
-	Name                  string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_name_organization"`                      // Parte del índice único con OrganizationCountryID
+	Name                  *string             `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
 	Type                  string              `gorm:"not null"`
 	OperatorID            int64               `gorm:"default:null"`
 	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator

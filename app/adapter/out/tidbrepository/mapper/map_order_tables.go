@@ -21,13 +21,17 @@ func MapOrderToTable(order domain.Order) table.Order {
 		// Origen
 		OriginNodeInfoID: 0, // Completar según la lógica de negocio
 		OriginNodeInfo:   mapNodeInfoToTable(order.Origin.NodeInfo),
+
+		OriginAddressInfoID: 0, // Completar según la lógica de negocio
+		OriginAddressInfo:   mapAddressInfoToTable(order.Origin.AddressInfo),
+
+		DestinationAddressInfoID: 0, // Completar según la lógica de negocio
+		DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo),
+
 		/*
-			OriginAddressInfoID: 0, // Completar según la lógica de negocio
-			OriginAddressInfo:   mapAddressInfoToTable(order.Origin.AddressInfo),
 
 			OriginContactID: 0,
 			OriginContact:   MapContactToTable(order.Destination.AddressInfo.Contact),
-
 			DestinationContactID: 0,
 			DestinationContact:   MapContactToTable(order.Destination.AddressInfo.Contact),
 		*/

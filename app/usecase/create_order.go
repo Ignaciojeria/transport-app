@@ -13,11 +13,17 @@ type CreateOrder func(ctx context.Context, input domain.Order) (domain.Order, er
 func init() {
 	ioc.Registry(
 		NewCreateOrder,
+		tidbrepository.NewEnsureOrganizationForCountry,
 		tidbrepository.NewSaveOrder)
 }
 
-func NewCreateOrder(saveOrder tidbrepository.SaveOrder) CreateOrder {
+func NewCreateOrder(
+	ensureOrganizationForCountry tidbrepository.EnsureOrganizationForCountry,
+	saveOrder tidbrepository.SaveOrder) CreateOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
+		if err := ensureOrganizationForCountry(ctx, to.Organization); err != nil {
+			return domain.Order{}, err
+		}
 		return saveOrder(ctx, to)
 	}
 }

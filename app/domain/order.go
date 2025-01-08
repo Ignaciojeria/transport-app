@@ -18,6 +18,23 @@ type Order struct {
 	TransportRequirements   []References            `json:"transportRequirements"`
 }
 
+func (o Order) IsOriginAndDestinationContactEqual() bool {
+	originContact := o.Origin.AddressInfo.Contact
+	destinationContact := o.Destination.AddressInfo.Contact
+
+	return originContact.FullName == destinationContact.FullName &&
+		originContact.Email == destinationContact.Email &&
+		originContact.Phone == destinationContact.Phone &&
+		originContact.NationalID == destinationContact.NationalID
+}
+
+func (o Order) IsOriginAndDestinationAddressEqual() bool {
+	originAddress := o.Origin.AddressInfo.RawAddress()
+	destinationAddress := o.Destination.AddressInfo.RawAddress()
+
+	return originAddress == destinationAddress
+}
+
 type ReferenceID string
 
 type References struct {
@@ -27,7 +44,7 @@ type References struct {
 
 type NodeInfo struct {
 	ReferenceID ReferenceID  `json:"referenceId"`
-	Name        string       `json:"name"`
+	Name        *string      `json:"name"`
 	Type        string       `json:"type"`
 	Operator    Operator     `json:"operator"`
 	References  []References `json:"references"`

@@ -26,11 +26,16 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 				return model.CreateOrderResponse{}, err
 			}
 			mappedTO := requestBody.Map()
-			mappedTO.Organization.Email = "TODO" //c.Header("api-key")
-			mappedTO.Organization.Name = "TODO"
+			mappedTO.Organization.Key = c.Header("organization-key")
 			mappedTO.Organization.Country = countries.ByName(c.Header("country"))
 			mappedTO.BusinessIdentifiers.Consumer = c.Header("consumer")
 			mappedTO.BusinessIdentifiers.Commerce = c.Header("commerce")
+			if c.Header("consumer") == "" {
+				mappedTO.BusinessIdentifiers.Consumer = "UNSPECIFIED"
+			}
+			if c.Header("commerce") == "" {
+				mappedTO.BusinessIdentifiers.Commerce = "UNSPECIFIED"
+			}
 			createdTo, err := createTo(c.Context(), mappedTO)
 			return model.CreateOrderResponse{
 				ID:      createdTo.ID,
