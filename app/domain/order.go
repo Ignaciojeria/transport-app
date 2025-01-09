@@ -35,6 +35,10 @@ func (o Order) IsOriginAndDestinationAddressEqual() bool {
 	return originAddress == destinationAddress
 }
 
+func (o Order) IsOriginAndDestinationNodeEqual() bool {
+	return o.Origin.NodeInfo.ReferenceID == o.Destination.NodeInfo.ReferenceID
+}
+
 type ReferenceID string
 
 type References struct {
