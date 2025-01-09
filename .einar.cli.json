@@ -53,6 +53,14 @@
         {
             "kind": "usecase",
             "name": "create-account"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-orders"
+        },
+        {
+            "kind": "post-controller",
+            "name": "search-accounts"
         }
     ]
 }
