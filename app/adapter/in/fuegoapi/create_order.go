@@ -1,6 +1,7 @@
 package fuegoapi
 
 import (
+	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/model"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
@@ -37,6 +38,15 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 				mappedTO.BusinessIdentifiers.Commerce = "UNSPECIFIED"
 			}
 			createdTo, err := createTo(c.Context(), mappedTO)
+
+			if err != nil {
+				return model.CreateOrderResponse{}, fuego.HTTPError{
+					Title:  "error creating order",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
+			}
+
 			return model.CreateOrderResponse{
 				ID:      createdTo.ID,
 				Message: "order created",

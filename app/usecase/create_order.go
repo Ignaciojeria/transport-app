@@ -21,6 +21,12 @@ func NewCreateOrder(
 	ensureOrganizationForCountry tidbrepository.EnsureOrganizationForCountry,
 	saveOrder tidbrepository.SaveOrder) CreateOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
+		if err := to.ValidateCollectAvailabilityDate(); err != nil {
+			return domain.Order{}, err
+		}
+		if err := to.ValidatePromisedDate(); err != nil {
+			return domain.Order{}, err
+		}
 		if err := ensureOrganizationForCountry(ctx, to.Organization); err != nil {
 			return domain.Order{}, err
 		}

@@ -28,21 +28,14 @@ func MapOrderToTable(order domain.Order) table.Order {
 
 		DestinationAddressInfoID: 0, // Completar según la lógica de negocio
 		DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo),
-
-		/*
-
-			OriginContactID: 0,
-			OriginContact:   MapContactToTable(order.Destination.AddressInfo.Contact),
-			DestinationContactID: 0,
-			DestinationContact:   MapContactToTable(order.Destination.AddressInfo.Contact),
-		*/
+		OriginContactID:          0,
+		OriginContact:            MapContactToTable(order.Destination.AddressInfo.Contact, 0),
+		DestinationContactID:     0,
+		DestinationContact:       MapContactToTable(order.Destination.AddressInfo.Contact, 0),
 		// Destino
 		DestinationNodeInfoID: 0, // Completar según la lógica de negocio
 		DestinationNodeInfo:   mapNodeInfoToTable(order.Destination.NodeInfo),
-		/*
-			DestinationAddressInfoID: 0, // Completar según la lógica de negocio
-			DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo),
-		*/
+
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
 		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
@@ -203,6 +196,7 @@ func mapAddressInfoToTable(address domain.AddressInfo) table.AddressInfo {
 		AddressLine1: address.AddressLine1,
 		AddressLine2: address.AddressLine2,
 		AddressLine3: address.AddressLine3,
+		RawAddress:   address.RawAddress(),
 		Latitude:     address.Latitude,
 		Longitude:    address.Longitude,
 		ZipCode:      address.ZipCode,

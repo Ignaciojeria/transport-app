@@ -100,6 +100,7 @@ func NewSaveOrder(
 			return domain.Order{}, err
 		}
 		orderTable := mapper.MapOrderToTable(to)
+		orderTable.OrganizationCountryID = result.OrganizationCountryID
 		orderTable.CommerceID = result.CommerceID
 		orderTable.ConsumerID = result.ConsumerID
 		orderTable.OriginContactID = result.OriginContactID
@@ -109,6 +110,7 @@ func NewSaveOrder(
 		orderTable.OriginNodeInfoID = result.OriginNodeInfoID
 		orderTable.DestinationNodeInfoID = result.DestinationNodeInfoID
 		orderTable.OrderTypeID = result.OrderTypeID
+		orderTable.OrderStatusID = to.OrderStatus.ID
 
 		return domain.Order{}, conn.Transaction(func(tx *gorm.DB) error {
 			// Guardar entidades que no existen y actualizar relaciones en orderTable
@@ -207,6 +209,10 @@ func NewSaveOrder(
 			orderTable.OriginNodeInfo = table.NodeInfo{}
 			orderTable.DestinationNodeInfo = table.NodeInfo{}
 			orderTable.OrderType = table.OrderType{}
+
+			if err := tx.Create(&orderTable).Error; err != nil {
+				return err
+			}
 
 			return nil
 		})

@@ -1,5 +1,11 @@
 package domain
 
+import (
+	"regexp"
+
+	"github.com/joomcode/errorx"
+)
+
 type Order struct {
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"id"`
@@ -16,6 +22,79 @@ type Order struct {
 	PromisedDate            PromisedDate            `json:"promisedDate"`
 	Visit                   Visit                   `json:"visit"`
 	TransportRequirements   []References            `json:"transportRequirements"`
+}
+
+func (o Order) ValidatePromisedDate() error {
+	// Validar formato de fecha yyyy-mm-dd
+	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
+
+	// Validar el rango de fechas
+	if o.PromisedDate.DateRange.StartDate != "" && !dateRegex.MatchString(o.PromisedDate.DateRange.StartDate) {
+		return errorx.Decorate(
+			ErrInvalidDateFormat.New("invalid startDate"),
+			"startDate: %s, expected format yyyy-mm-dd",
+			o.PromisedDate.DateRange.StartDate,
+		)
+	}
+	if o.PromisedDate.DateRange.EndDate != "" && !dateRegex.MatchString(o.PromisedDate.DateRange.EndDate) {
+		return errorx.Decorate(
+			ErrInvalidDateFormat.New("invalid endDate"),
+			"endDate: %s, expected format yyyy-mm-dd",
+			o.PromisedDate.DateRange.EndDate,
+		)
+	}
+
+	// Validar los rangos horarios
+	if o.PromisedDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.StartTime) {
+		return errorx.Decorate(
+			ErrInvalidTimeFormat.New("invalid startTime"),
+			"startTime: %s, expected format hh:mm",
+			o.PromisedDate.TimeRange.StartTime,
+		)
+	}
+	if o.PromisedDate.TimeRange.EndTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.EndTime) {
+		return errorx.Decorate(
+			ErrInvalidTimeFormat.New("invalid endTime"),
+			"endTime: %s, expected format hh:mm",
+			o.PromisedDate.TimeRange.EndTime,
+		)
+	}
+
+	return nil
+}
+
+func (o Order) ValidateCollectAvailabilityDate() error {
+	// Validar formato de fecha yyyy-mm-dd
+	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
+
+	// Validar la fecha
+	if o.CollectAvailabilityDate.Date != "" && !dateRegex.MatchString(o.CollectAvailabilityDate.Date) {
+		return errorx.Decorate(
+			ErrInvalidDateFormat.New("invalid date"),
+			"collect date: %s, expected format yyyy-mm-dd",
+			o.CollectAvailabilityDate.Date,
+		)
+	}
+
+	// Validar el rango horario
+	if o.CollectAvailabilityDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.CollectAvailabilityDate.TimeRange.StartTime) {
+		return errorx.Decorate(
+			ErrInvalidTimeFormat.New("invalid startTime"),
+			"collect startTime: %s, expected format hh:mm",
+			o.CollectAvailabilityDate.TimeRange.StartTime,
+		)
+	}
+	if o.CollectAvailabilityDate.TimeRange.EndTime != "" && !timeRegex.MatchString(o.CollectAvailabilityDate.TimeRange.EndTime) {
+		return errorx.Decorate(
+			ErrInvalidTimeFormat.New("invalid endTime"),
+			"collect endTime: %s, expected format hh:mm",
+			o.CollectAvailabilityDate.TimeRange.EndTime,
+		)
+	}
+
+	return nil
 }
 
 func (o Order) IsOriginAndDestinationContactEqual() bool {
