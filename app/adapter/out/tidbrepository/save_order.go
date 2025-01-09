@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"errors"
 	"transport-app/app/adapter/out/tidbrepository/mapper"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
@@ -28,6 +27,8 @@ func NewSaveOrder(
 	loadOrderSorderStatuses LoadOrderStatuses,
 ) SaveOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
+
+		to.OrderStatus = loadOrderSorderStatuses().Available()
 
 		type QueryResult struct {
 			OrganizationCountryID int64
@@ -98,15 +99,25 @@ func NewSaveOrder(
 		if err != nil {
 			return domain.Order{}, err
 		}
+		orderTable := mapper.MapOrderToTable(to)
+		orderTable.CommerceID = result.CommerceID
+		orderTable.ConsumerID = result.ConsumerID
+		orderTable.OriginContactID = result.OriginContactID
+		orderTable.DestinationContactID = result.DestinationContactID
+		orderTable.OriginAddressInfoID = result.OriginAddressID
+		orderTable.DestinationAddressInfoID = result.DestinationAddressID
+		orderTable.OriginNodeInfoID = result.OriginNodeInfoID
+		orderTable.DestinationNodeInfoID = result.DestinationNodeInfoID
+		orderTable.OrderTypeID = result.OrderTypeID
 
 		return domain.Order{}, conn.Transaction(func(tx *gorm.DB) error {
-			orderTable := mapper.MapOrderToTable(to)
-
+			// Guardar entidades que no existen y actualizar relaciones en orderTable
 			if result.CommerceID == 0 {
 				orderTable.Commerce.OrganizationCountryID = result.OrganizationCountryID
 				if err := tx.Save(&orderTable.Commerce).Error; err != nil {
 					return err
 				}
+				orderTable.CommerceID = orderTable.Commerce.ID
 			}
 
 			if result.ConsumerID == 0 {
@@ -114,6 +125,7 @@ func NewSaveOrder(
 				if err := tx.Save(&orderTable.Consumer).Error; err != nil {
 					return err
 				}
+				orderTable.ConsumerID = orderTable.Consumer.ID
 			}
 
 			if result.OriginContactID == 0 {
@@ -121,16 +133,18 @@ func NewSaveOrder(
 				if err := tx.Save(&orderTable.OriginContact).Error; err != nil {
 					return err
 				}
+				orderTable.OriginContactID = orderTable.OriginContact.ID
 			}
 
 			if result.DestinationContactID == 0 {
 				if to.IsOriginAndDestinationContactEqual() {
-					orderTable.DestinationContact.ID = orderTable.OriginContact.ID
+					orderTable.DestinationContactID = orderTable.OriginContactID
 				} else {
 					orderTable.DestinationContact.OrganizationCountryID = result.OrganizationCountryID
 					if err := tx.Save(&orderTable.DestinationContact).Error; err != nil {
 						return err
 					}
+					orderTable.DestinationContactID = orderTable.DestinationContact.ID
 				}
 			}
 
@@ -139,150 +153,62 @@ func NewSaveOrder(
 				if err := tx.Save(&orderTable.OriginAddressInfo).Error; err != nil {
 					return err
 				}
+				orderTable.OriginAddressInfoID = orderTable.OriginAddressInfo.ID
 			}
 
 			if result.DestinationAddressID == 0 {
 				if to.IsOriginAndDestinationAddressEqual() {
-					orderTable.DestinationAddressInfo.ID = orderTable.OriginAddressInfo.ID
+					orderTable.DestinationAddressInfoID = orderTable.OriginAddressInfoID
 				} else {
 					orderTable.DestinationAddressInfo.OrganizationCountryID = result.OrganizationCountryID
 					if err := tx.Save(&orderTable.DestinationAddressInfo).Error; err != nil {
 						return err
 					}
+					orderTable.DestinationAddressInfoID = orderTable.DestinationAddressInfo.ID
 				}
 			}
 
 			if result.OriginNodeInfoID == 0 {
 				orderTable.OriginNodeInfo.OrganizationCountryID = result.OrganizationCountryID
-				orderTable.OriginNodeInfo.AddressID = orderTable.OriginAddressInfo.ID
+				orderTable.OriginNodeInfo.AddressID = orderTable.OriginAddressInfoID
 				if err := tx.Save(&orderTable.OriginNodeInfo).Error; err != nil {
 					return err
 				}
+				orderTable.OriginNodeInfoID = orderTable.OriginNodeInfo.ID
 			}
 
 			if result.DestinationNodeInfoID == 0 {
 				if to.IsOriginAndDestinationNodeEqual() {
-					orderTable.DestinationNodeInfo.ID = orderTable.OriginNodeInfo.ID
+					orderTable.DestinationNodeInfoID = orderTable.OriginNodeInfoID
 				} else {
 					orderTable.DestinationNodeInfo.OrganizationCountryID = result.OrganizationCountryID
-					orderTable.DestinationNodeInfo.AddressID = orderTable.DestinationAddressInfo.ID
+					orderTable.DestinationNodeInfo.AddressID = orderTable.DestinationAddressInfoID
 					if err := tx.Save(&orderTable.DestinationNodeInfo).Error; err != nil {
 						return err
 					}
+					orderTable.DestinationNodeInfoID = orderTable.DestinationNodeInfo.ID
 				}
 			}
+
+			if result.OrderTypeID == 0 {
+				orderTable.OrderType.OrganizationCountryID = result.OrganizationCountryID
+				if err := tx.Create(&orderTable.OrderType).Error; err != nil {
+					return err
+				}
+				orderTable.OrderTypeID = orderTable.OrderType.ID
+			}
+
+			orderTable.Commerce = table.Commerce{}
+			orderTable.Consumer = table.Consumer{}
+			orderTable.OriginContact = table.Contact{}
+			orderTable.DestinationContact = table.Contact{}
+			orderTable.OriginAddressInfo = table.AddressInfo{}
+			orderTable.DestinationAddressInfo = table.AddressInfo{}
+			orderTable.OriginNodeInfo = table.NodeInfo{}
+			orderTable.DestinationNodeInfo = table.NodeInfo{}
+			orderTable.OrderType = table.OrderType{}
 
 			return nil
 		})
 	}
-}
-
-/*
-	if result.OriginNodeInfoID == 0 {
-		orderTable.OriginNodeInfo.OrganizationCountryID = result.OrganizationCountryID
-		orderTable.Origin
-		if err := tx.Save(&orderTable.OriginNodeInfo).Error; err != nil {
-			return err
-		}
-	}
-	if result.DestinationNodeInfoID == 0 {
-		orderTable.DestinationNodeInfo.OrganizationCountryID = result.OrganizationCountryID
-		if err := tx.Save(&orderTable.DestinationNodeInfo).Error; err != nil {
-			return err
-		}
-	}
-*/
-
-/*
-	organizationID, err := ensureOrganizationExists(tx, table.Organization)
-	if err != nil {
-		return err
-	}
-	table.OrganizationID = organizationID*/
-/*
-	commerceID, err := ensureCommerceExists(tx, organizationID, table.Commerce)
-	if err != nil {
-		return err
-	}
-	table.CommerceID = commerceID
-
-	consumerID, err := ensureConsumerExists(tx, organizationID, table.Consumer)
-	if err != nil {
-		return err
-	}
-	table.ConsumerID = consumerID
-
-	orderTypeID, err := ensureOrderTypeExists(tx, organizationID, table.OrderType)
-	if err != nil {
-		return err
-	}
-	table.OrderTypeID = orderTypeID
-*/
-/*
-	if err := tx.Save(&table).Error; err != nil {
-		return err
-	}*/
-func ensureOrganizationExists(tx *gorm.DB, organization table.Organization) (int64, error) {
-	err := tx.
-		Where("email = ?", organization.Email).
-		//	Where("country = ?", organization.Country).
-		First(&organization).Error
-	if err == nil {
-		return organization.ID, nil
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		if err := tx.Create(&organization).Error; err != nil {
-			return 0, err
-		}
-		return organization.ID, nil
-	}
-	return 0, err
-}
-
-func ensureCommerceExists(tx *gorm.DB, organizationCountryID int64, commerce table.Commerce) (int64, error) {
-	var com table.Commerce
-	err := tx.Where("name = ? AND organization_country_id = ?", commerce.Name, organizationCountryID).First(&com).Error
-	if err == nil {
-		return com.ID, nil
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		com = table.Commerce{Name: commerce.Name, OrganizationCountryID: organizationCountryID}
-		if err := tx.Create(&com).Error; err != nil {
-			return 0, err
-		}
-		return com.ID, nil
-	}
-	return 0, err
-}
-
-func ensureConsumerExists(tx *gorm.DB, organizationCountryID int64, consumer table.Consumer) (int64, error) {
-	var con table.Consumer
-	err := tx.Where("name = ? AND organization_country_id = ?", consumer.Name, organizationCountryID).First(&con).Error
-	if err == nil {
-		return con.ID, nil
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		con = table.Consumer{Name: consumer.Name, OrganizationCountryID: organizationCountryID}
-		if err := tx.Create(&con).Error; err != nil {
-			return 0, err
-		}
-		return con.ID, nil
-	}
-	return 0, err
-}
-
-func ensureOrderTypeExists(tx *gorm.DB, organizationCountryID int64, orderType table.OrderType) (int64, error) {
-	var ot table.OrderType
-	err := tx.Where("type = ? AND organization_country_id = ?", orderType.Type, organizationCountryID).First(&ot).Error
-	if err == nil {
-		return ot.ID, nil
-	}
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		ot = table.OrderType{Type: orderType.Type, Description: orderType.Description, OrganizationCountryID: organizationCountryID}
-		if err := tx.Create(&ot).Error; err != nil {
-			return 0, err
-		}
-		return ot.ID, nil
-	}
-	return 0, err
 }

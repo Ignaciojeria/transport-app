@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"encoding/json"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 )
@@ -52,7 +53,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		Items:                             mapItemsToTable(order.Items),
 		Packages:                          mapPackagesToTable(order.Packages),
 		Visit:                             mapVisitToTable(order.Visit),
-		TransportRequirementsReferences:   mapTransportRequirementsToTable(order.TransportRequirements),
+		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
 		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
 		Consumer:                          mapConsumerToTable(order.BusinessIdentifiers),
 	}
@@ -147,15 +148,10 @@ func mapVisitToTable(visit domain.Visit) table.Visit {
 	}
 }
 
-func mapTransportRequirementsToTable(requirements []domain.References) []table.TransportRequirementsReferences {
-	mapped := make([]table.TransportRequirementsReferences, len(requirements))
-	for i, req := range requirements {
-		mapped[i] = table.TransportRequirementsReferences{
-			Type:  req.Type,
-			Value: req.Value,
-		}
-	}
-	return mapped
+func mapTransportRequirementsToTable(requirements []domain.References) []byte {
+	// Serializar los requisitos en JSON
+	serialized, _ := json.Marshal(requirements)
+	return serialized
 }
 
 func mapCommerceToTable(bi domain.BusinessIdentifiers) table.Commerce {

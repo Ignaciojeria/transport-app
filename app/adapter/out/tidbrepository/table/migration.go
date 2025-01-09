@@ -28,7 +28,6 @@ func NewRunMigrations(
 			&Order{},
 			&AddressInfo{},
 			&TransportOrderReferences{},
-			&TransportRequirementsReferences{},
 			&NodeReferences{},
 			&NodeInfo{},
 			&Operator{},
