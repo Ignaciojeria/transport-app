@@ -1,6 +1,6 @@
 package domain
 
-type OrderFilters struct {
+type OrderSearchFilters struct {
 	Pagination struct {
 		Page int
 		Size int

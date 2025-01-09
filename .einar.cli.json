@@ -61,6 +61,10 @@
         {
             "kind": "post-controller",
             "name": "search-accounts"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-orders"
         }
     ]
 }
