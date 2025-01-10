@@ -18,6 +18,6 @@ func init() {
 
 func NewSearchOrders(search tidbrepository.FindOrdersByFilters) SearchOrders {
 	return func(ctx context.Context, input domain.OrderSearchFilters) ([]domain.Order, error) {
-		return nil, nil
+		return search(ctx, input)
 	}
 }

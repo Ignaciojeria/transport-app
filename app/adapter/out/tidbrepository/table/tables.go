@@ -1,6 +1,12 @@
 package table
 
-import "gorm.io/gorm"
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+
+	"gorm.io/gorm"
+)
 
 type Order struct {
 	gorm.Model
@@ -50,7 +56,7 @@ type Order struct {
 	DestinationNodeInfoID int64    `gorm:"default:null"`
 	DestinationNodeInfo   NodeInfo `gorm:"foreignKey:DestinationNodeInfoID"`
 
-	Items                             []Items    `gorm:"foreignKey:OrderID"`
+	Items                             JSONItems  `gorm:"type:json"`
 	Packages                          []Packages `gorm:"foreignKey:OrderID"`
 	CollectAvailabilityDate           string     `gorm:"default:null"`
 	CollectAvailabilityTimeRangeStart string     `gorm:"default:null"`
@@ -59,8 +65,34 @@ type Order struct {
 	PromisedDateRangeEnd              string     `gorm:"default:null"`
 	PromisedTimeRangeStart            string     `gorm:"default:null"`
 	PromisedTimeRangeEnd              string     `gorm:"default:null"`
-	Visit                             Visit      `gorm:"foreignKey:OrderID"`
+	Visits                            []Visit    `gorm:"foreignKey:OrderID"`
 	TransportRequirements             []byte     `gorm:"type:json"`
+}
+
+type Items struct {
+	ReferenceID       string     `gorm:"not null"`
+	LogisticCondition string     `gorm:"default:null"`
+	Quantity          Quantity   `gorm:"embedded"`
+	Insurance         Insurance  `gorm:"embedded"`
+	Description       string     `gorm:"type:text"`
+	Dimensions        Dimensions `gorm:"embedded"`
+	Weight            Weight     `gorm:"embedded"`
+}
+
+type JSONItems []Items
+
+// Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
+func (j *JSONItems) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONItems value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir datos a JSON al guardarlos en la base de datos
+func (j JSONItems) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 type Contact struct {
@@ -76,14 +108,36 @@ type Contact struct {
 
 type Packages struct {
 	gorm.Model
-	ID             int64            `gorm:"primaryKey"`
-	OrderID        int64            `gorm:"not null;uniqueIndex:idx_transport_order_lpn"`
-	Lpn            string           `gorm:"type:varchar(191);not null;uniqueIndex:idx_transport_order_lpn"`
-	PackageType    string           `gorm:"type:varchar(191);default:null"`
-	Dimensions     Dimensions       `gorm:"embedded"`
-	Weight         Weight           `gorm:"embedded"`
-	Insurance      Insurance        `gorm:"embedded"`
-	ItemReferences []ItemReferences `gorm:"foreignKey:PackageID"`
+	ID             int64              `gorm:"primaryKey"`
+	Order          Order              `gorm:"foreignKey:OrderID"`
+	OrderID        int64              `gorm:"not null;uniqueIndex:idx_transport_order_lpn"`
+	Lpn            string             `gorm:"type:varchar(191);not null;uniqueIndex:idx_transport_order_lpn"`
+	PackageType    string             `gorm:"type:varchar(191);default:null"`
+	Dimensions     Dimensions         `gorm:"embedded"`
+	Weight         Weight             `gorm:"embedded"`
+	Insurance      Insurance          `gorm:"embedded"`
+	ItemReferences JSONItemReferences `gorm:"type:json"`
+}
+
+type ItemReferences struct {
+	ReferenceID string   `gorm:"not null"`
+	Quantity    Quantity `gorm:"embedded"`
+}
+
+type JSONItemReferences []ItemReferences
+
+// Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
+func (j *JSONItemReferences) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONItemReferences value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
+func (j JSONItemReferences) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 type TransportOrderReferences struct {
@@ -91,6 +145,7 @@ type TransportOrderReferences struct {
 	ID      int64  `gorm:"primaryKey"`
 	Type    string `gorm:"not null"`
 	Value   string `gorm:"not null"`
+	Order   Order  `gorm:"foreignKey:OrderID"`
 	OrderID int64  `gorm:"index"`
 }
 
@@ -169,27 +224,6 @@ type Weight struct {
 	Unit  string  `gorm:"not null"`
 }
 
-type Items struct {
-	gorm.Model
-	ID                int64      `gorm:"primaryKey"`
-	ReferenceID       string     `gorm:"not null"`
-	LogisticCondition string     `gorm:"default:null"`
-	Quantity          Quantity   `gorm:"embedded"`
-	Insurance         Insurance  `gorm:"embedded"`
-	Description       string     `gorm:"type:text"`
-	Dimensions        Dimensions `gorm:"embedded"`
-	Weight            Weight     `gorm:"embedded"`
-	OrderID           int64      `gorm:"not null"`
-}
-
-type ItemReferences struct {
-	gorm.Model
-	ID          int64    `gorm:"primaryKey"`
-	ReferenceID string   `gorm:"not null"`
-	Quantity    Quantity `gorm:"embedded"`
-	PackageID   int64    `gorm:"not null"` // Foreign key reference
-}
-
 type OrderType struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
@@ -208,6 +242,7 @@ type OrderStatus struct {
 type Visit struct {
 	gorm.Model
 	ID             int64  `gorm:"primaryKey"`
+	Order          Order  `gorm:"foreignKey:OrderID"`
 	OrderID        int64  `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
 	Date           string `gorm:"not null;index:idx_transport_order_date"` // Part of composite unique index
 	TimeRangeStart string `gorm:"default:null"`

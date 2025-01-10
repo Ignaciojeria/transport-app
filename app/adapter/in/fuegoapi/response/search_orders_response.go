@@ -148,13 +148,13 @@ type SearchOrdersResponse struct {
 		Type  string `json:"type"`
 		Value string `json:"value"`
 	} `json:"transportRequirements"`
-	Visit struct {
+	Visits []struct {
 		Date      string `json:"date"`
 		TimeRange struct {
 			EndTime   string `json:"endTime"`
 			StartTime string `json:"startTime"`
 		} `json:"timeRange"`
-	} `json:"visit"`
+	} `json:"visits"`
 }
 
 func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
@@ -169,7 +169,7 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 			withOrigin(order.Origin).
 			withDestination(order.Destination).
 			withPromisedDate(order.PromisedDate).
-			withVisit(order.Visit)
+			withVisits(order.Visits)
 		responses = append(responses, response)
 	}
 	return responses
@@ -242,9 +242,33 @@ func (res *SearchOrdersResponse) withPromisedDate(promisedDate domain.PromisedDa
 	return res
 }
 
-func (res *SearchOrdersResponse) withVisit(visit domain.Visit) *SearchOrdersResponse {
-	res.Visit.Date = visit.Date
-	res.Visit.TimeRange.StartTime = visit.TimeRange.StartTime
-	res.Visit.TimeRange.EndTime = visit.TimeRange.EndTime
+func (res *SearchOrdersResponse) withVisits(visits []domain.Visit) *SearchOrdersResponse {
+	if res.Visits == nil {
+		res.Visits = make([]struct {
+			Date      string `json:"date"`
+			TimeRange struct {
+				EndTime   string `json:"endTime"`
+				StartTime string `json:"startTime"`
+			} `json:"timeRange"`
+		}, 0)
+	}
+
+	res.Visits = res.Visits[:0]
+
+	for _, visit := range visits {
+		visitData := struct {
+			Date      string `json:"date"`
+			TimeRange struct {
+				EndTime   string `json:"endTime"`
+				StartTime string `json:"startTime"`
+			} `json:"timeRange"`
+		}{
+			Date: visit.Date,
+		}
+		visitData.TimeRange.StartTime = visit.TimeRange.StartTime
+		visitData.TimeRange.EndTime = visit.TimeRange.EndTime
+		res.Visits = append(res.Visits, visitData)
+	}
+
 	return res
 }

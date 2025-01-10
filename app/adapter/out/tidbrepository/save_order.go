@@ -214,6 +214,23 @@ func NewSaveOrder(
 				return err
 			}
 
+			// **Consulta consolidada de los datos persistidos**
+			var persistedOrder table.Order
+			if err := tx.Preload("Commerce").
+				Preload("Consumer").
+				Preload("OriginContact").
+				Preload("DestinationContact").
+				Preload("OriginAddressInfo").
+				Preload("DestinationAddressInfo").
+				Preload("OriginNodeInfo").
+				Preload("DestinationNodeInfo").
+				Preload("OrderType").
+				Where("id = ?", orderTable.ID).
+				First(&persistedOrder).Error; err != nil {
+				return err
+			}
+			//TODO MAPEAR AL DOMINIO Y Guardar en transactional outbox (se utilizará luego para la ingesta de data en plataformas externas)
+
 			return nil
 		})
 	}

@@ -22,10 +22,10 @@ func init() {
 }
 func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 	fuego.Post(s.Manager, "/order",
-		func(c fuego.ContextWithBody[request.CreateOrderRequest]) (response.CreateOrderResponse, error) {
+		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return response.CreateOrderResponse{}, err
+				return response.UpsertOrderResponse{}, err
 			}
 			mappedTO := requestBody.Map()
 			mappedTO.Organization.Key = c.Header("organization-key")
@@ -41,14 +41,14 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 			createdTo, err := createTo(c.Context(), mappedTO)
 
 			if err != nil {
-				return response.CreateOrderResponse{}, fuego.HTTPError{
+				return response.UpsertOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
 
-			return response.CreateOrderResponse{
+			return response.UpsertOrderResponse{
 				ID:      createdTo.ID,
 				Message: "order created",
 			}, err

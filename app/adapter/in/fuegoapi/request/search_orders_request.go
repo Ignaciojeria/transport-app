@@ -23,18 +23,13 @@ func (r SearchOrdersRequest) Map() domain.OrderSearchFilters {
 		packages[i] = domain.Packages{Lpn: lpn}
 	}
 
-	businessIdentifiers := make([]domain.BusinessIdentifiers, len(r.Commerces))
-	for i, commerce := range r.Commerces {
-		businessIdentifiers[i] = domain.BusinessIdentifiers{Commerce: commerce}
-	}
-
 	return domain.OrderSearchFilters{
 		Pagination: domain.Pagination{
 			Page: r.Pagination.Page,
 			Size: r.Pagination.Size,
 		},
-		ReferenceIDs:        referenceIDs,
-		Packages:            packages,
-		BusinessIdentifiers: businessIdentifiers,
+		ReferenceIDs: referenceIDs,
+		Packages:     packages,
+		Commerces:    r.Commerces,
 	}
 }

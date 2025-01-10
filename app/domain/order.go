@@ -20,7 +20,7 @@ type Order struct {
 	Packages                []Packages              `json:"packages"`
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
 	PromisedDate            PromisedDate            `json:"promisedDate"`
-	Visit                   Visit                   `json:"visit"`
+	Visits                  []Visit                 `json:"visits"`
 	TransportRequirements   []References            `json:"transportRequirements"`
 }
 

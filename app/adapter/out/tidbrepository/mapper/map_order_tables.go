@@ -45,7 +45,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		Items:                             mapItemsToTable(order.Items),
 		Packages:                          mapPackagesToTable(order.Packages),
-		Visit:                             mapVisitToTable(order.Visit),
+		Visits:                            mapVisitsToTable(order.Visits),
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
 		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
 		Consumer:                          mapConsumerToTable(order.BusinessIdentifiers),
@@ -63,8 +63,8 @@ func mapReferencesToTable(references []domain.References) []table.TransportOrder
 	return mapped
 }
 
-func mapItemsToTable(items []domain.Items) []table.Items {
-	mapped := make([]table.Items, len(items))
+func mapItemsToTable(items []domain.Items) table.JSONItems {
+	mapped := make(table.JSONItems, len(items))
 	for i, item := range items {
 		mapped[i] = table.Items{
 			ReferenceID:       string(item.ReferenceID),
@@ -90,6 +90,7 @@ func mapItemsToTable(items []domain.Items) []table.Items {
 			},
 		}
 	}
+
 	return mapped
 }
 
@@ -119,8 +120,8 @@ func mapPackagesToTable(packages []domain.Packages) []table.Packages {
 	return mapped
 }
 
-func mapItemReferencesToTable(references []domain.ItemReferences) []table.ItemReferences {
-	mapped := make([]table.ItemReferences, len(references))
+func mapItemReferencesToTable(references []domain.ItemReferences) table.JSONItemReferences {
+	mapped := make(table.JSONItemReferences, len(references))
 	for i, ref := range references {
 		mapped[i] = table.ItemReferences{
 			ReferenceID: string(ref.ReferenceID),
@@ -133,12 +134,18 @@ func mapItemReferencesToTable(references []domain.ItemReferences) []table.ItemRe
 	return mapped
 }
 
-func mapVisitToTable(visit domain.Visit) table.Visit {
-	return table.Visit{
-		Date:           visit.Date,
-		TimeRangeStart: visit.TimeRange.StartTime,
-		TimeRangeEnd:   visit.TimeRange.EndTime,
+func mapVisitsToTable(visits []domain.Visit) []table.Visit {
+	mappedVisits := make([]table.Visit, len(visits))
+
+	for i, visit := range visits {
+		mappedVisits[i] = table.Visit{
+			Date:           visit.Date,
+			TimeRangeStart: visit.TimeRange.StartTime,
+			TimeRangeEnd:   visit.TimeRange.EndTime,
+		}
 	}
+
+	return mappedVisits
 }
 
 func mapTransportRequirementsToTable(requirements []domain.References) []byte {

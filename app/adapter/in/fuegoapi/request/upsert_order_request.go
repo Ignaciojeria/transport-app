@@ -4,7 +4,7 @@ import (
 	"transport-app/app/domain"
 )
 
-type CreateOrderRequest struct {
+type UpsertOrderRequest struct {
 	ReferenceID             string `json:"referenceID" validate:"required"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
@@ -141,16 +141,16 @@ type CreateOrderRequest struct {
 		Type  string `json:"type"`
 		Value string `json:"value"`
 	} `json:"transportRequirements"`
-	Visit struct {
+	Visits []struct {
 		Date      string `json:"date"`
 		TimeRange struct {
 			EndTime   string `json:"endTime"`
 			StartTime string `json:"startTime"`
 		} `json:"timeRange"`
-	} `json:"visit"`
+	} `json:"visits"`
 }
 
-func (req CreateOrderRequest) Map() domain.Order {
+func (req UpsertOrderRequest) Map() domain.Order {
 	return domain.Order{
 		ReferenceID:             domain.ReferenceID(req.ReferenceID),
 		OrderType:               req.mapOrderType(),
@@ -161,19 +161,19 @@ func (req CreateOrderRequest) Map() domain.Order {
 		Packages:                req.mapPackages(),
 		CollectAvailabilityDate: req.mapCollectAvailabilityDate(),
 		PromisedDate:            req.mapPromisedDate(),
-		Visit:                   req.mapVisit(),
+		Visits:                  req.mapVisit(),
 		TransportRequirements:   req.mapReferences(req.TransportRequirements),
 	}
 }
 
-func (req CreateOrderRequest) mapOrderType() domain.OrderType {
+func (req UpsertOrderRequest) mapOrderType() domain.OrderType {
 	return domain.OrderType{
 		Type:        req.OrderType.Type,
 		Description: req.OrderType.Description,
 	}
 }
 
-func (req CreateOrderRequest) mapReferences(refs []struct {
+func (req UpsertOrderRequest) mapReferences(refs []struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }) []domain.References {
@@ -187,14 +187,14 @@ func (req CreateOrderRequest) mapReferences(refs []struct {
 	return mapped
 }
 
-func (req CreateOrderRequest) mapOrigin() domain.Origin {
+func (req UpsertOrderRequest) mapOrigin() domain.Origin {
 	return domain.Origin{
 		NodeInfo:    req.mapNodeInfo(req.Origin.NodeInfo),
 		AddressInfo: req.mapAddressInfo(req.Origin.AddressInfo),
 	}
 }
 
-func (req CreateOrderRequest) mapDestination() domain.Destination {
+func (req UpsertOrderRequest) mapDestination() domain.Destination {
 	return domain.Destination{
 		DeliveryInstructions: req.Destination.DeliveryInstructions,
 		NodeInfo:             req.mapNodeInfo(req.Destination.NodeInfo),
@@ -202,7 +202,7 @@ func (req CreateOrderRequest) mapDestination() domain.Destination {
 	}
 }
 
-func (req CreateOrderRequest) mapNodeInfo(nodeInfo struct {
+func (req UpsertOrderRequest) mapNodeInfo(nodeInfo struct {
 	ReferenceID string `json:"referenceId"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
@@ -210,7 +210,7 @@ func (req CreateOrderRequest) mapNodeInfo(nodeInfo struct {
 	}
 }
 
-func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
+func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 	AddressLine1 string `json:"addressLine1"`
 	AddressLine2 string `json:"addressLine2"`
 	AddressLine3 string `json:"addressLine3"`
@@ -254,7 +254,7 @@ func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
 	}
 }
 
-func (req CreateOrderRequest) mapDocuments(docs []struct {
+func (req UpsertOrderRequest) mapDocuments(docs []struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }) []domain.Documents {
@@ -268,7 +268,7 @@ func (req CreateOrderRequest) mapDocuments(docs []struct {
 	return mapped
 }
 
-func (req CreateOrderRequest) mapItems() []domain.Items {
+func (req UpsertOrderRequest) mapItems() []domain.Items {
 	mapped := make([]domain.Items, len(req.Items))
 	for i, item := range req.Items {
 		mapped[i] = domain.Items{
@@ -298,7 +298,7 @@ func (req CreateOrderRequest) mapItems() []domain.Items {
 	return mapped
 }
 
-func (req CreateOrderRequest) mapPackages() []domain.Packages {
+func (req UpsertOrderRequest) mapPackages() []domain.Packages {
 	mapped := make([]domain.Packages, len(req.Packages))
 	for i, pkg := range req.Packages {
 		mapped[i] = domain.Packages{
@@ -324,7 +324,7 @@ func (req CreateOrderRequest) mapPackages() []domain.Packages {
 	return mapped
 }
 
-func (req CreateOrderRequest) mapItemReferences(itemReferences []struct {
+func (req UpsertOrderRequest) mapItemReferences(itemReferences []struct {
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
@@ -344,7 +344,7 @@ func (req CreateOrderRequest) mapItemReferences(itemReferences []struct {
 	return mapped
 }
 
-func (req CreateOrderRequest) mapCollectAvailabilityDate() domain.CollectAvailabilityDate {
+func (req UpsertOrderRequest) mapCollectAvailabilityDate() domain.CollectAvailabilityDate {
 	return domain.CollectAvailabilityDate{
 		Date: req.CollectAvailabilityDate.Date,
 		TimeRange: domain.TimeRange{
@@ -354,7 +354,7 @@ func (req CreateOrderRequest) mapCollectAvailabilityDate() domain.CollectAvailab
 	}
 }
 
-func (req CreateOrderRequest) mapPromisedDate() domain.PromisedDate {
+func (req UpsertOrderRequest) mapPromisedDate() domain.PromisedDate {
 	return domain.PromisedDate{
 		DateRange: domain.DateRange{
 			StartDate: req.PromisedDate.DateRange.StartDate,
@@ -368,12 +368,16 @@ func (req CreateOrderRequest) mapPromisedDate() domain.PromisedDate {
 	}
 }
 
-func (req CreateOrderRequest) mapVisit() domain.Visit {
-	return domain.Visit{
-		Date: req.Visit.Date,
-		TimeRange: domain.TimeRange{
-			StartTime: req.Visit.TimeRange.StartTime,
-			EndTime:   req.Visit.TimeRange.EndTime,
-		},
+func (req UpsertOrderRequest) mapVisit() []domain.Visit {
+	var visits []domain.Visit
+	for _, visit := range req.Visits {
+		visits = append(visits, domain.Visit{
+			Date: visit.Date,
+			TimeRange: domain.TimeRange{
+				StartTime: visit.TimeRange.StartTime,
+				EndTime:   visit.TimeRange.EndTime,
+			},
+		})
 	}
+	return visits
 }
