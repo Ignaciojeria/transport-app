@@ -2,7 +2,8 @@ package fuegoapi
 
 import (
 	"net/http"
-	"transport-app/app/adapter/in/fuegoapi/model"
+	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
 
@@ -21,10 +22,10 @@ func init() {
 }
 func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 	fuego.Post(s.Manager, "/order",
-		func(c fuego.ContextWithBody[model.CreateOrderRequest]) (model.CreateOrderResponse, error) {
+		func(c fuego.ContextWithBody[request.CreateOrderRequest]) (response.CreateOrderResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return model.CreateOrderResponse{}, err
+				return response.CreateOrderResponse{}, err
 			}
 			mappedTO := requestBody.Map()
 			mappedTO.Organization.Key = c.Header("organization-key")
@@ -40,14 +41,14 @@ func createOrder(s httpserver.Server, createTo usecase.CreateOrder) {
 			createdTo, err := createTo(c.Context(), mappedTO)
 
 			if err != nil {
-				return model.CreateOrderResponse{}, fuego.HTTPError{
+				return response.CreateOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
 
-			return model.CreateOrderResponse{
+			return response.CreateOrderResponse{
 				ID:      createdTo.ID,
 				Message: "order created",
 			}, err

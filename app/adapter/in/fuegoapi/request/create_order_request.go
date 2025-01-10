@@ -1,6 +1,8 @@
-package model
+package request
 
-import "transport-app/app/domain"
+import (
+	"transport-app/app/domain"
+)
 
 type CreateOrderRequest struct {
 	ReferenceID             string `json:"referenceID" validate:"required"`
@@ -26,14 +28,14 @@ type CreateOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			County    string `json:"county"`
-			District  string `json:"district"`
-			Latitude  int    `json:"latitude"`
-			Longitude int    `json:"longitude"`
-			Province  string `json:"province"`
-			State     string `json:"state"`
-			TimeZone  string `json:"timeZone"`
-			ZipCode   string `json:"zipCode"`
+			County    string  `json:"county"`
+			District  string  `json:"district"`
+			Latitude  float32 `json:"latitude"`
+			Longitude float32 `json:"longitude"`
+			Province  string  `json:"province"`
+			State     string  `json:"state"`
+			TimeZone  string  `json:"timeZone"`
+			ZipCode   string  `json:"zipCode"`
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
@@ -43,10 +45,10 @@ type CreateOrderRequest struct {
 	Items []struct {
 		Description string `json:"description"`
 		Dimensions  struct {
-			Depth  int    `json:"depth"`
-			Height int    `json:"height"`
-			Unit   string `json:"unit"`
-			Width  int    `json:"width"`
+			Depth  float64 `json:"depth"`
+			Height float64 `json:"height"`
+			Unit   string  `json:"unit"`
+			Width  float64 `json:"width"`
 		} `json:"dimensions"`
 		Insurance struct {
 			Currency  string `json:"currency"`
@@ -82,14 +84,14 @@ type CreateOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			County    string `json:"county"`
-			District  string `json:"district"`
-			Latitude  int    `json:"latitude"`
-			Longitude int    `json:"longitude"`
-			Province  string `json:"province"`
-			State     string `json:"state"`
-			TimeZone  string `json:"timeZone"`
-			ZipCode   string `json:"zipCode"`
+			County    string  `json:"county"`
+			District  string  `json:"district"`
+			Latitude  float32 `json:"latitude"`
+			Longitude float32 `json:"longitude"`
+			Province  string  `json:"province"`
+			State     string  `json:"state"`
+			TimeZone  string  `json:"timeZone"`
+			ZipCode   string  `json:"zipCode"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceId"`
@@ -97,10 +99,10 @@ type CreateOrderRequest struct {
 	} `json:"origin"`
 	Packages []struct {
 		Dimensions struct {
-			Depth  int    `json:"depth"`
-			Height int    `json:"height"`
-			Unit   string `json:"unit"`
-			Width  int    `json:"width"`
+			Depth  float64 `json:"depth"`
+			Height float64 `json:"height"`
+			Unit   string  `json:"unit"`
+			Width  float64 `json:"width"`
 		} `json:"dimensions"`
 		Insurance struct {
 			Currency  string `json:"currency"`
@@ -222,14 +224,14 @@ func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
 		} `json:"documents"`
 		FullName string `json:"fullName"`
 	} `json:"contact"`
-	County    string `json:"county"`
-	District  string `json:"district"`
-	Latitude  int    `json:"latitude"`
-	Longitude int    `json:"longitude"`
-	Province  string `json:"province"`
-	State     string `json:"state"`
-	TimeZone  string `json:"timeZone"`
-	ZipCode   string `json:"zipCode"`
+	County    string  `json:"county"`
+	District  string  `json:"district"`
+	Latitude  float32 `json:"latitude"`
+	Longitude float32 `json:"longitude"`
+	Province  string  `json:"province"`
+	State     string  `json:"state"`
+	TimeZone  string  `json:"timeZone"`
+	ZipCode   string  `json:"zipCode"`
 }) domain.AddressInfo {
 	return domain.AddressInfo{
 		Contact: domain.Contact{
@@ -245,8 +247,8 @@ func (req CreateOrderRequest) mapAddressInfo(addressInfo struct {
 		AddressLine1: addressInfo.AddressLine1,
 		AddressLine2: addressInfo.AddressLine2,
 		AddressLine3: addressInfo.AddressLine3,
-		Latitude:     float64(addressInfo.Latitude),
-		Longitude:    float64(addressInfo.Longitude),
+		Latitude:     addressInfo.Latitude,
+		Longitude:    addressInfo.Longitude,
 		ZipCode:      addressInfo.ZipCode,
 		TimeZone:     addressInfo.TimeZone,
 	}

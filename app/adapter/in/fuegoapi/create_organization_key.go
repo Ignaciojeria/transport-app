@@ -2,7 +2,8 @@ package fuegoapi
 
 import (
 	"net/http"
-	"transport-app/app/adapter/in/fuegoapi/model"
+	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
@@ -22,10 +23,10 @@ func init() {
 }
 func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizationKey) {
 	fuego.Post(s.Manager, "/organization-key",
-		func(c fuego.ContextWithBody[model.CreateOrganizationKeyRequest]) (model.CreateOrganizationKeyResponse, error) {
+		func(c fuego.ContextWithBody[request.CreateOrganizationKeyRequest]) (response.CreateOrganizationKeyResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return model.CreateOrganizationKeyResponse{}, err
+				return response.CreateOrganizationKeyResponse{}, err
 			}
 			org := domain.Organization{
 				Name:    requestBody.Email,
@@ -34,13 +35,13 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 			}
 			org, err = createOrg(c.Context(), org)
 			if err != nil {
-				return model.CreateOrganizationKeyResponse{}, fuego.HTTPError{
+				return response.CreateOrganizationKeyResponse{}, fuego.HTTPError{
 					Title:  "error creating organization",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
-			return model.CreateOrganizationKeyResponse{
+			return response.CreateOrganizationKeyResponse{
 				OrganizationKey: org.Key,
 				Message:         "Organization key created successfully. Please save it securely as it will be required for API authentication.",
 			}, nil

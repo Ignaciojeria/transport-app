@@ -1,4 +1,4 @@
-package model
+package response
 
 type SearchAccountsResponse struct {
 	Contact struct {

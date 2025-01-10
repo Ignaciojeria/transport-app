@@ -1,4 +1,4 @@
-package model
+package request
 
 type CreateOrganizationKeyRequest struct {
 	Name  string `json:"name" validate:"required" example:"org-name"`

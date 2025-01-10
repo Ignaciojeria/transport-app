@@ -8,7 +8,7 @@ import (
 
 type Order struct {
 	ID                      int64
-	ReferenceID             ReferenceID             `json:"id"`
+	ReferenceID             ReferenceID             `json:"referenceID"`
 	Organization            Organization            `json:"organization"`
 	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`

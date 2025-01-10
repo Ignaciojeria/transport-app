@@ -1,4 +1,4 @@
-package model
+package request
 
 type SearchAccountsRequest struct {
 	Pagination struct {

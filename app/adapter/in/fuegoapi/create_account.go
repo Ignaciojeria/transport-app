@@ -2,7 +2,8 @@ package fuegoapi
 
 import (
 	"net/http"
-	"transport-app/app/adapter/in/fuegoapi/model"
+	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
 
@@ -23,23 +24,23 @@ func createAccount(
 	s httpserver.Server,
 	createAccount usecase.CreateAccount) {
 	fuego.Post(s.Manager, "/account",
-		func(c fuego.ContextWithBody[model.CreateAccountRequest]) (model.CreateAccountResponse, error) {
+		func(c fuego.ContextWithBody[request.CreateAccountRequest]) (response.CreateAccountResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return model.CreateAccountResponse{}, err
+				return response.CreateAccountResponse{}, err
 			}
 			acc := requestBody.Map()
 			acc.Organization.Key = c.Header("organization-key")
 			acc.Organization.Country = countries.ByName(c.Header("country"))
 			_, err = createAccount(c.Context(), acc)
 			if err != nil {
-				return model.CreateAccountResponse{}, fuego.HTTPError{
+				return response.CreateAccountResponse{}, fuego.HTTPError{
 					Title:  "error creating account",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
-			return model.CreateAccountResponse{
+			return response.CreateAccountResponse{
 				Message: "account created",
 			}, nil
 		}, option.Summary("createAccount"),
