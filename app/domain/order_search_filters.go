@@ -1,10 +1,7 @@
 package domain
 
 type OrderSearchFilters struct {
-	Pagination struct {
-		Page int
-		Size int
-	}
+	Pagination          Pagination
 	Organization        Organization
 	ReferenceIDs        []ReferenceID
 	Packages            []Packages

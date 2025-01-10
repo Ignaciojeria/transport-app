@@ -160,8 +160,8 @@ type AddressInfo struct {
 	AddressLine1 string  `json:"addressLine1"`
 	AddressLine2 string  `json:"addressLine2"`
 	AddressLine3 string  `json:"addressLine3"`
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
+	Latitude     float32 `json:"latitude"`
+	Longitude    float32 `json:"longitude"`
 	ZipCode      string  `json:"zipCode"`
 	TimeZone     string  `json:"timeZone"`
 }

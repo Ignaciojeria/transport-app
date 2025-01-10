@@ -121,8 +121,8 @@ type AddressInfo struct {
 	AddressLine1          string              `gorm:"not null"`
 	AddressLine2          string              `gorm:"default:null"`
 	AddressLine3          string              `gorm:"default:null"`
-	Latitude              float64             `gorm:"default:null"`
-	Longitude             float64             `gorm:"default:null"`
+	Latitude              float32             `gorm:"default:null"`
+	Longitude             float32             `gorm:"default:null"`
 	ZipCode               string              `gorm:"default:null"`
 	TimeZone              string              `gorm:"default:null"`
 }
