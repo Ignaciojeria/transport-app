@@ -264,12 +264,26 @@ func extractLPNs(packages []domain.Package) []string {
 	return lpns
 }
 
-// Crear un paquete (si no existe) y asociarlo con la orden
 func createOrUpdatePackage(tx *gorm.DB, orderID int64, incomingPkg domain.Package) error {
 	var existingPkg table.Package
 
 	// Intentar obtener el paquete existente por LPN
 	if err := tx.Where("lpn = ?", incomingPkg.Lpn).First(&existingPkg).Error; err == nil {
+		// Mapear el paquete existente al dominio
+		domainExistingPkg := mapper.MapPackageDomain(existingPkg)
+
+		// Verificar si necesita actualización
+		updatedPkg, needsUpdate := domainExistingPkg.UpdateIfChanged(incomingPkg)
+		if needsUpdate {
+			// Mapear el paquete actualizado a la tabla
+			updatedTablePkg := mapper.MapPackageToTable(updatedPkg)
+
+			// Actualizar el paquete existente
+			if err := tx.Updates(&updatedTablePkg).Error; err != nil {
+				return fmt.Errorf("failed to update package LPN %s: %w", incomingPkg.Lpn, err)
+			}
+		}
+
 		// Verificar si el paquete ya está asociado con la misma orden
 		var existingOrderPkg table.OrderPackage
 		if err := tx.Where("order_id = ? AND package_id = ?", orderID, existingPkg.ID).First(&existingOrderPkg).Error; err == nil {
@@ -277,7 +291,7 @@ func createOrUpdatePackage(tx *gorm.DB, orderID int64, incomingPkg domain.Packag
 			return nil
 		}
 
-		// Asociar el paquete existente con la orden
+		// Asociar el paquete existente (actualizado o no) con la orden
 		orderPkg := table.OrderPackage{
 			OrderID:   orderID,
 			PackageID: existingPkg.ID,

@@ -7,6 +7,7 @@ import (
 
 func MapPackageDomain(pkg table.Package) domain.Package {
 	return domain.Package{
+		ID:             pkg.ID,
 		Lpn:            pkg.Lpn,
 		Dimensions:     mapTableDimensionsToDomain(pkg.Dimensions),
 		Weight:         mapTableWeightToDomain(pkg.Weight),

@@ -118,6 +118,7 @@ func MapPackagesToTable(packages []domain.Package) []table.Package {
 }
 func MapPackageToTable(pkg domain.Package) table.Package {
 	return table.Package{
+		ID:  pkg.ID,
 		Lpn: pkg.Lpn,
 		Dimensions: table.Dimensions{
 			Height: pkg.Dimensions.Height,

@@ -232,6 +232,7 @@ type ItemReference struct {
 }
 
 type Package struct {
+	ID             int64
 	Lpn            string          `json:"lpn"`
 	Dimensions     Dimensions      `json:"dimensions"`
 	Weight         Weight          `json:"weight"`
