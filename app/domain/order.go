@@ -13,15 +13,15 @@ type Order struct {
 	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
-	References              []References            `json:"references"`
+	References              []Reference             `json:"references"`
 	Origin                  Origin                  `json:"origin"`
 	Destination             Destination             `json:"destination"`
-	Items                   []Items                 `json:"items"`
-	Packages                []Packages              `json:"packages"`
+	Items                   []Item                  `json:"items"`
+	Packages                []Package               `json:"packages"`
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
 	PromisedDate            PromisedDate            `json:"promisedDate"`
 	Visits                  []Visit                 `json:"visits"`
-	TransportRequirements   []References            `json:"transportRequirements"`
+	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
 func (o Order) ValidatePromisedDate() error {
@@ -120,17 +120,17 @@ func (o Order) IsOriginAndDestinationNodeEqual() bool {
 
 type ReferenceID string
 
-type References struct {
+type Reference struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
 type NodeInfo struct {
-	ReferenceID ReferenceID  `json:"referenceId"`
-	Name        *string      `json:"name"`
-	Type        string       `json:"type"`
-	Operator    Operator     `json:"operator"`
-	References  []References `json:"references"`
+	ReferenceID ReferenceID `json:"referenceId"`
+	Name        *string     `json:"name"`
+	Type        string      `json:"type"`
+	Operator    Operator    `json:"operator"`
+	References  []Reference `json:"references"`
 }
 
 type Origin struct {
@@ -138,17 +138,17 @@ type Origin struct {
 	AddressInfo AddressInfo `json:"addressInfo"`
 }
 
-type Documents struct {
+type Document struct {
 	Value string `json:"value"`
 	Type  string `json:"type"`
 }
 
 type Contact struct {
-	FullName   string      `json:"fullName"`
-	Email      string      `json:"email"`
-	Phone      string      `json:"phone"`
-	NationalID string      `json:"nationalID"`
-	Documents  []Documents `json:"documents"`
+	FullName   string     `json:"fullName"`
+	Email      string     `json:"email"`
+	Phone      string     `json:"phone"`
+	NationalID string     `json:"nationalID"`
+	Documents  []Document `json:"documents"`
 }
 
 type AddressInfo struct {
@@ -216,7 +216,7 @@ type Weight struct {
 	Unit  string  `json:"unit"`
 }
 
-type Items struct {
+type Item struct {
 	ReferenceID       ReferenceID `json:"referenceId"`
 	LogisticCondition string      `json:"logisticCondition"`
 	Quantity          Quantity    `json:"quantity"`
@@ -226,18 +226,70 @@ type Items struct {
 	Weight            Weight      `json:"weight"`
 }
 
-type ItemReferences struct {
+type ItemReference struct {
 	ReferenceID ReferenceID `json:"referenceId"`
 	Quantity    Quantity    `json:"quantity"`
 }
 
-type Packages struct {
-	Lpn            string           `json:"lpn"`
-	PackageType    string           `json:"packageType"`
-	Dimensions     Dimensions       `json:"dimensions"`
-	Weight         Weight           `json:"weight"`
-	Insurance      Insurance        `json:"insurance"`
-	ItemReferences []ItemReferences `json:"itemReferences"`
+type Package struct {
+	Lpn            string          `json:"lpn"`
+	Dimensions     Dimensions      `json:"dimensions"`
+	Weight         Weight          `json:"weight"`
+	Insurance      Insurance       `json:"insurance"`
+	ItemReferences []ItemReference `json:"itemReferences"`
+}
+
+func (p *Package) UpdateIfChanged(newPackage Package) (updatedPackage Package, needsUpdate bool) {
+	// Crear una copia del paquete actual
+	updatedPackage = *p
+	needsUpdate = false
+
+	// Comparar y actualizar dimensiones
+	if newPackage.Dimensions != (Dimensions{}) {
+		if p.Dimensions != newPackage.Dimensions {
+			updatedPackage.Dimensions = newPackage.Dimensions
+			needsUpdate = true
+		}
+	}
+
+	// Comparar y actualizar peso
+	if newPackage.Weight != (Weight{}) {
+		if p.Weight != newPackage.Weight {
+			updatedPackage.Weight = newPackage.Weight
+			needsUpdate = true
+		}
+	}
+
+	// Comparar y actualizar seguro
+	if newPackage.Insurance != (Insurance{}) {
+		if p.Insurance != newPackage.Insurance {
+			updatedPackage.Insurance = newPackage.Insurance
+			needsUpdate = true
+		}
+	}
+
+	// Comparar y actualizar referencias de ítems
+	if len(newPackage.ItemReferences) > 0 {
+		if len(p.ItemReferences) != len(newPackage.ItemReferences) || !compareItemReferences(p.ItemReferences, newPackage.ItemReferences) {
+			updatedPackage.ItemReferences = newPackage.ItemReferences
+			needsUpdate = true
+		}
+	}
+
+	return updatedPackage, needsUpdate
+}
+
+// Función auxiliar para comparar arreglos de referencias de ítems
+func compareItemReferences(oldRefs, newRefs []ItemReference) bool {
+	if len(oldRefs) != len(newRefs) {
+		return false
+	}
+	for i := range oldRefs {
+		if oldRefs[i] != newRefs[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type OrderType struct {

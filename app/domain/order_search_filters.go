@@ -4,6 +4,6 @@ type OrderSearchFilters struct {
 	Pagination   Pagination
 	Organization Organization
 	ReferenceIDs []ReferenceID
-	Packages     []Packages
+	Packages     []Package
 	Commerces    []string `json:"commerce"`
 }

@@ -18,9 +18,9 @@ func (r SearchOrdersRequest) Map() domain.OrderSearchFilters {
 		referenceIDs[i] = domain.ReferenceID(id)
 	}
 
-	packages := make([]domain.Packages, len(r.PackageLpns))
+	packages := make([]domain.Package, len(r.PackageLpns))
 	for i, lpn := range r.PackageLpns {
-		packages[i] = domain.Packages{Lpn: lpn}
+		packages[i] = domain.Package{Lpn: lpn}
 	}
 
 	return domain.OrderSearchFilters{

@@ -115,9 +115,8 @@ type UpsertOrderRequest struct {
 			} `json:"quantity"`
 			ReferenceID string `json:"referenceId"`
 		} `json:"itemReferences"`
-		Lpn         string `json:"lpn"`
-		PackageType string `json:"packageType"`
-		Weight      struct {
+		Lpn    string `json:"lpn"`
+		Weight struct {
 			Unit  string `json:"unit"`
 			Value int    `json:"value"`
 		} `json:"weight"`
@@ -176,10 +175,10 @@ func (req UpsertOrderRequest) mapOrderType() domain.OrderType {
 func (req UpsertOrderRequest) mapReferences(refs []struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
-}) []domain.References {
-	mapped := make([]domain.References, len(refs))
+}) []domain.Reference {
+	mapped := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
-		mapped[i] = domain.References{
+		mapped[i] = domain.Reference{
 			Type:  ref.Type,
 			Value: ref.Value,
 		}
@@ -257,10 +256,10 @@ func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 func (req UpsertOrderRequest) mapDocuments(docs []struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
-}) []domain.Documents {
-	mapped := make([]domain.Documents, len(docs))
+}) []domain.Document {
+	mapped := make([]domain.Document, len(docs))
 	for i, doc := range docs {
-		mapped[i] = domain.Documents{
+		mapped[i] = domain.Document{
 			Type:  doc.Type,
 			Value: doc.Value,
 		}
@@ -268,10 +267,10 @@ func (req UpsertOrderRequest) mapDocuments(docs []struct {
 	return mapped
 }
 
-func (req UpsertOrderRequest) mapItems() []domain.Items {
-	mapped := make([]domain.Items, len(req.Items))
+func (req UpsertOrderRequest) mapItems() []domain.Item {
+	mapped := make([]domain.Item, len(req.Items))
 	for i, item := range req.Items {
-		mapped[i] = domain.Items{
+		mapped[i] = domain.Item{
 			ReferenceID:       domain.ReferenceID(item.ReferenceID),
 			LogisticCondition: item.LogisticCondition,
 			Quantity: domain.Quantity{
@@ -298,12 +297,11 @@ func (req UpsertOrderRequest) mapItems() []domain.Items {
 	return mapped
 }
 
-func (req UpsertOrderRequest) mapPackages() []domain.Packages {
-	mapped := make([]domain.Packages, len(req.Packages))
+func (req UpsertOrderRequest) mapPackages() []domain.Package {
+	mapped := make([]domain.Package, len(req.Packages))
 	for i, pkg := range req.Packages {
-		mapped[i] = domain.Packages{
-			Lpn:         pkg.Lpn,
-			PackageType: pkg.PackageType,
+		mapped[i] = domain.Package{
+			Lpn: pkg.Lpn,
 			Dimensions: domain.Dimensions{
 				Height: float64(pkg.Dimensions.Height),
 				Width:  float64(pkg.Dimensions.Width),
@@ -330,10 +328,10 @@ func (req UpsertOrderRequest) mapItemReferences(itemReferences []struct {
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
 	ReferenceID string `json:"referenceId"`
-}) []domain.ItemReferences {
-	mapped := make([]domain.ItemReferences, len(itemReferences))
+}) []domain.ItemReference {
+	mapped := make([]domain.ItemReference, len(itemReferences))
 	for i, ref := range itemReferences {
-		mapped[i] = domain.ItemReferences{
+		mapped[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(ref.ReferenceID),
 			Quantity: domain.Quantity{
 				QuantityNumber: ref.Quantity.QuantityNumber,

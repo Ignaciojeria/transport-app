@@ -29,8 +29,8 @@ type Order struct {
 	OrderTypeID int64     `gorm:"not null"`
 	OrderType   OrderType `gorm:"foreignKey:OrderTypeID"`
 
-	TransportOrderReferences []TransportOrderReferences `gorm:"foreignKey:OrderID"`
-	DeliveryInstructions     string                     `gorm:"type:text"`
+	OrderReferences      []OrderReferences `gorm:"foreignKey:OrderID"`
+	DeliveryInstructions string            `gorm:"type:text"`
 
 	// Contacto asociado a la orden
 	OriginContactID int64   `gorm:"not null"`                   // Clave foránea al Contact
@@ -56,17 +56,17 @@ type Order struct {
 	DestinationNodeInfoID int64    `gorm:"default:null"`
 	DestinationNodeInfo   NodeInfo `gorm:"foreignKey:DestinationNodeInfoID"`
 
-	Items                             JSONItems  `gorm:"type:json"`
-	Packages                          []Packages `gorm:"foreignKey:OrderID"`
-	CollectAvailabilityDate           string     `gorm:"default:null"`
-	CollectAvailabilityTimeRangeStart string     `gorm:"default:null"`
-	CollectAvailabilityTimeRangeEnd   string     `gorm:"default:null"`
-	PromisedDateRangeStart            string     `gorm:"default:null"`
-	PromisedDateRangeEnd              string     `gorm:"default:null"`
-	PromisedTimeRangeStart            string     `gorm:"default:null"`
-	PromisedTimeRangeEnd              string     `gorm:"default:null"`
-	Visits                            []Visit    `gorm:"foreignKey:OrderID"`
-	TransportRequirements             []byte     `gorm:"type:json"`
+	JSONItems JSONItems `gorm:"type:json"`
+
+	CollectAvailabilityDate           string  `gorm:"default:null"`
+	CollectAvailabilityTimeRangeStart string  `gorm:"default:null"`
+	CollectAvailabilityTimeRangeEnd   string  `gorm:"default:null"`
+	PromisedDateRangeStart            string  `gorm:"default:null"`
+	PromisedDateRangeEnd              string  `gorm:"default:null"`
+	PromisedTimeRangeStart            string  `gorm:"default:null"`
+	PromisedTimeRangeEnd              string  `gorm:"default:null"`
+	Visits                            []Visit `gorm:"foreignKey:OrderID"`
+	TransportRequirements             []byte  `gorm:"type:json"`
 }
 
 type Items struct {
@@ -96,6 +96,7 @@ func (j JSONItems) Value() (driver.Value, error) {
 }
 
 type Contact struct {
+	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_contact_unique"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
@@ -103,44 +104,47 @@ type Contact struct {
 	Email                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	Phone                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	NationalID            string              `gorm:"type:varchar(191);default:null"`
-	Documents             []byte              `gorm:"type:json"`
+	Documents             JSONDocuments       `gorm:"type:json"`
 }
 
-type Packages struct {
-	gorm.Model
-	ID             int64              `gorm:"primaryKey"`
-	Order          Order              `gorm:"foreignKey:OrderID"`
-	OrderID        int64              `gorm:"not null;uniqueIndex:idx_transport_order_lpn"`
-	Lpn            string             `gorm:"type:varchar(191);not null;uniqueIndex:idx_transport_order_lpn"`
-	PackageType    string             `gorm:"type:varchar(191);default:null"`
-	Dimensions     Dimensions         `gorm:"embedded"`
-	Weight         Weight             `gorm:"embedded"`
-	Insurance      Insurance          `gorm:"embedded"`
-	ItemReferences JSONItemReferences `gorm:"type:json"`
+type Document struct {
+	Value string `json:"value"`
+	Type  string `json:"type"`
 }
 
-type ItemReferences struct {
-	ReferenceID string   `gorm:"not null"`
-	Quantity    Quantity `gorm:"embedded"`
-}
-
-type JSONItemReferences []ItemReferences
+type JSONDocuments []Document
 
 // Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
-func (j *JSONItemReferences) Scan(value interface{}) error {
+func (j *JSONDocuments) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)
 	if !ok {
-		return fmt.Errorf("failed to unmarshal JSONItemReferences value: %v", value)
+		return fmt.Errorf("failed to unmarshal JSONDocuments value: %v", value)
 	}
 	return json.Unmarshal(bytes, j)
 }
 
 // Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
-func (j JSONItemReferences) Value() (driver.Value, error) {
+func (j JSONDocuments) Value() (driver.Value, error) {
 	return json.Marshal(j)
 }
 
-type TransportOrderReferences struct {
+type Package struct {
+	gorm.Model
+	ID         int64      `gorm:"primaryKey"`
+	Lpn        string     `gorm:"type:varchar(191);not null;uniqueIndex"`
+	Dimensions Dimensions `gorm:"embedded"`
+	Weight     Weight     `gorm:"embedded"`
+	Insurance  Insurance  `gorm:"embedded"`
+	JSONItems  JSONItems  `gorm:"type:json"`
+}
+
+type OrderPackage struct {
+	gorm.Model
+	OrderID   int64 `gorm:"not null;index"`
+	PackageID int64 `gorm:"not null;index"`
+}
+
+type OrderReferences struct {
 	gorm.Model
 	ID      int64  `gorm:"primaryKey"`
 	Type    string `gorm:"not null"`
@@ -161,7 +165,7 @@ type NodeInfo struct {
 	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator
 	AddressID             int64               `gorm:"not null"`              // Clave foránea a AddressInfo
 	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"`  // Relación con AddressInfo
-	NodeReferences        []NodeReferences    `gorm:"foreignKey:NodeInfoID"` // Relación con NodeReferences
+	NodeReferences        []NodeReference     `gorm:"foreignKey:NodeInfoID"` // Relación con NodeReferences
 }
 
 type AddressInfo struct {
@@ -182,7 +186,7 @@ type AddressInfo struct {
 	TimeZone              string              `gorm:"default:null"`
 }
 
-type NodeReferences struct {
+type NodeReference struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
 	OrganizationCountryID int64               `gorm:"not null;index"`

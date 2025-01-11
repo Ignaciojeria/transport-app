@@ -2,6 +2,7 @@ package tidbrepository
 
 import (
 	"context"
+	"fmt"
 	"transport-app/app/adapter/out/tidbrepository/mapper"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
@@ -214,24 +215,97 @@ func NewSaveOrder(
 				return err
 			}
 
-			// **Consulta consolidada de los datos persistidos**
-			var persistedOrder table.Order
-			if err := tx.Preload("Commerce").
-				Preload("Consumer").
-				Preload("OriginContact").
-				Preload("DestinationContact").
-				Preload("OriginAddressInfo").
-				Preload("DestinationAddressInfo").
-				Preload("OriginNodeInfo").
-				Preload("DestinationNodeInfo").
-				Preload("OrderType").
-				Where("id = ?", orderTable.ID).
-				First(&persistedOrder).Error; err != nil {
-				return err
+			if err := saveOrderPackages(tx, orderTable.ID, to.Packages); err != nil {
+				return fmt.Errorf("failed to save packages: %w", err)
 			}
-			//TODO MAPEAR AL DOMINIO Y Guardar en transactional outbox (se utilizará luego para la ingesta de data en plataformas externas)
 
 			return nil
 		})
 	}
+}
+
+// Guardar paquetes asociados a la orden
+func saveOrderPackages(tx *gorm.DB, orderID int64, incomingPackages []domain.Package) error {
+	// Procesar los paquetes entrantes
+	for _, incomingPkg := range incomingPackages {
+		// Usar createOrUpdatePackage para manejar cada paquete
+		if err := createOrUpdatePackage(tx, orderID, incomingPkg); err != nil {
+			return fmt.Errorf("failed to process package LPN %s: %w", incomingPkg.Lpn, err)
+		}
+	}
+
+	return nil
+}
+
+// Buscar paquetes existentes desde la base de datos
+func fetchExistingPackages(tx *gorm.DB, incomingPackages []domain.Package) (map[string]table.Package, error) {
+	lpns := extractLPNs(incomingPackages)
+
+	var existingPackages []table.Package
+	if err := tx.Where("lpn IN (?)", lpns).Find(&existingPackages).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch existing packages: %w", err)
+	}
+
+	// Convertir la lista en un mapa para acceso rápido
+	existingPackagesMap := make(map[string]table.Package)
+	for _, pkg := range existingPackages {
+		existingPackagesMap[pkg.Lpn] = pkg
+	}
+
+	return existingPackagesMap, nil
+}
+
+// Extraer LPNs de los paquetes entrantes
+func extractLPNs(packages []domain.Package) []string {
+	lpns := make([]string, len(packages))
+	for i, pkg := range packages {
+		lpns[i] = pkg.Lpn
+	}
+	return lpns
+}
+
+// Crear un paquete (si no existe) y asociarlo con la orden
+func createOrUpdatePackage(tx *gorm.DB, orderID int64, incomingPkg domain.Package) error {
+	var existingPkg table.Package
+
+	// Intentar obtener el paquete existente por LPN
+	if err := tx.Where("lpn = ?", incomingPkg.Lpn).First(&existingPkg).Error; err == nil {
+		// Verificar si el paquete ya está asociado con la misma orden
+		var existingOrderPkg table.OrderPackage
+		if err := tx.Where("order_id = ? AND package_id = ?", orderID, existingPkg.ID).First(&existingOrderPkg).Error; err == nil {
+			// Si ya está asociado con la misma orden, retornar sin error
+			return nil
+		}
+
+		// Asociar el paquete existente con la orden
+		orderPkg := table.OrderPackage{
+			OrderID:   orderID,
+			PackageID: existingPkg.ID,
+		}
+		if err := tx.Create(&orderPkg).Error; err != nil {
+			return fmt.Errorf("failed to associate existing package LPN %s with order: %w", incomingPkg.Lpn, err)
+		}
+	} else if err == gorm.ErrRecordNotFound {
+		// Si el paquete no existe, crearlo
+		newPkgTable := mapper.MapPackageToTable(incomingPkg)
+
+		// Crear el nuevo paquete
+		if err := tx.Create(&newPkgTable).Error; err != nil {
+			return fmt.Errorf("failed to create new package LPN %s: %w", incomingPkg.Lpn, err)
+		}
+
+		// Asociar el nuevo paquete con la orden
+		orderPkg := table.OrderPackage{
+			OrderID:   orderID,
+			PackageID: newPkgTable.ID,
+		}
+		if err := tx.Create(&orderPkg).Error; err != nil {
+			return fmt.Errorf("failed to create order-package relation for LPN %s: %w", incomingPkg.Lpn, err)
+		}
+	} else {
+		// Error inesperado al intentar obtener el paquete
+		return fmt.Errorf("failed to query package LPN %s: %w", incomingPkg.Lpn, err)
+	}
+
+	return nil
 }

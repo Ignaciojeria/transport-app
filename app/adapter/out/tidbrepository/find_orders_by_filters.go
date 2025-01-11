@@ -46,7 +46,7 @@ func NewFindOrdersByFilters(
 
 		// Preparar listas para consolidar las órdenes encontradas
 		var ordersByReferenceID []table.Order
-		var ordersByPackages []table.Packages
+		var ordersByPackages []table.Order
 
 		// Paso 2: Filtrar por referenceIds si están presentes
 		if len(filters.ReferenceIDs) > 0 {
@@ -64,7 +64,6 @@ func NewFindOrdersByFilters(
 				Preload("Packages").
 				Where("reference_id IN (?) AND organization_country_id IN (?)", filters.ReferenceIDs, organizationCountryIDs)
 
-			// Agregar filtro de commerces si está presente
 			if len(filters.Commerces) > 0 {
 				query = query.Where("commerce_id IN (?)", filters.Commerces)
 			}
@@ -81,24 +80,22 @@ func NewFindOrdersByFilters(
 				lpns[i] = pkg.Lpn
 			}
 
-			query := db.Model(&table.Packages{}).
-				Joins("JOIN orders ON packages.order_id = orders.id").
+			query := db.Model(&table.Order{}).
+				Joins("JOIN order_packages ON order_packages.order_id = orders.id").
+				Joins("JOIN packages ON packages.id = order_packages.package_id").
 				Where("packages.lpn IN (?) AND orders.organization_country_id IN (?)", lpns, organizationCountryIDs).
-				Preload("Order").
-				Preload("Order.OrganizationCountry").
-				Preload("Order.Commerce").
-				Preload("Order.Consumer").
-				Preload("Order.OrderStatus").
-				Preload("Order.OriginContact").
-				Preload("Order.DestinationContact").
-				Preload("Order.OriginAddressInfo").
-				Preload("Order.DestinationAddressInfo").
-				Preload("Order.OriginNodeInfo").
-				Preload("Order.DestinationNodeInfo").
-				Preload("Order.Packages").
-				Preload("Order.Items")
+				Preload("Commerce").
+				Preload("Consumer").
+				Preload("OriginContact").
+				Preload("DestinationContact").
+				Preload("OriginAddressInfo").
+				Preload("OrderStatus").
+				Preload("OrganizationCountry").
+				Preload("DestinationAddressInfo").
+				Preload("OriginNodeInfo").
+				Preload("DestinationNodeInfo").
+				Preload("Packages")
 
-			// Agregar filtro por commerces si está presente
 			if len(filters.Commerces) > 0 {
 				query = query.Where("orders.commerce_id IN (?)", filters.Commerces)
 			}
@@ -113,11 +110,8 @@ func NewFindOrdersByFilters(
 		for _, order := range ordersByReferenceID {
 			orderMap[order.ID] = order
 		}
-
-		for _, pkg := range ordersByPackages {
-			if pkg.Order.ID != 0 {
-				orderMap[pkg.Order.ID] = pkg.Order
-			}
+		for _, order := range ordersByPackages {
+			orderMap[order.ID] = order
 		}
 
 		consolidatedOrders := make([]table.Order, 0, len(orderMap))

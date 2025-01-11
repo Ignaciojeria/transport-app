@@ -8,16 +8,16 @@ import (
 
 func MapOrderToTable(order domain.Order) table.Order {
 	return table.Order{
-		ID:                       order.ID,
-		ReferenceID:              string(order.ReferenceID),
-		OrganizationCountryID:    0, // Completar según la lógica de negocio
-		CommerceID:               0, // Completar según la lógica de negocio
-		ConsumerID:               0, // Completar según la lógica de negocio
-		OrderStatusID:            0, // Completar según la lógica de negocio
-		OrderTypeID:              0, // Completar según la lógica de negocio
-		OrderType:                mapOrderTypeToTable(order.OrderType),
-		TransportOrderReferences: mapReferencesToTable(order.References),
-		DeliveryInstructions:     order.Destination.DeliveryInstructions,
+		ID:                    order.ID,
+		ReferenceID:           string(order.ReferenceID),
+		OrganizationCountryID: 0, // Completar según la lógica de negocio
+		CommerceID:            0, // Completar según la lógica de negocio
+		ConsumerID:            0, // Completar según la lógica de negocio
+		OrderStatusID:         0, // Completar según la lógica de negocio
+		OrderTypeID:           0, // Completar según la lógica de negocio
+		OrderType:             mapOrderTypeToTable(order.OrderType),
+		OrderReferences:       mapReferencesToTable(order.References),
+		DeliveryInstructions:  order.Destination.DeliveryInstructions,
 
 		// Origen
 		OriginNodeInfoID: 0, // Completar según la lógica de negocio
@@ -43,8 +43,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		PromisedDateRangeEnd:              order.PromisedDate.DateRange.EndDate,
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
-		Items:                             mapItemsToTable(order.Items),
-		Packages:                          mapPackagesToTable(order.Packages),
+		JSONItems:                         mapItemsToTable(order.Items),
 		Visits:                            mapVisitsToTable(order.Visits),
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
 		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
@@ -52,10 +51,10 @@ func MapOrderToTable(order domain.Order) table.Order {
 	}
 }
 
-func mapReferencesToTable(references []domain.References) []table.TransportOrderReferences {
-	mapped := make([]table.TransportOrderReferences, len(references))
+func mapReferencesToTable(references []domain.Reference) []table.OrderReferences {
+	mapped := make([]table.OrderReferences, len(references))
 	for i, ref := range references {
-		mapped[i] = table.TransportOrderReferences{
+		mapped[i] = table.OrderReferences{
 			Type:  ref.Type,
 			Value: ref.Value,
 		}
@@ -63,7 +62,7 @@ func mapReferencesToTable(references []domain.References) []table.TransportOrder
 	return mapped
 }
 
-func mapItemsToTable(items []domain.Items) table.JSONItems {
+func mapItemsToTable(items []domain.Item) table.JSONItems {
 	mapped := make(table.JSONItems, len(items))
 	for i, item := range items {
 		mapped[i] = table.Items{
@@ -94,12 +93,11 @@ func mapItemsToTable(items []domain.Items) table.JSONItems {
 	return mapped
 }
 
-func mapPackagesToTable(packages []domain.Packages) []table.Packages {
-	mapped := make([]table.Packages, len(packages))
+func MapPackagesToTable(packages []domain.Package) []table.Package {
+	mapped := make([]table.Package, len(packages))
 	for i, pkg := range packages {
-		mapped[i] = table.Packages{
-			Lpn:         pkg.Lpn,
-			PackageType: pkg.PackageType,
+		mapped[i] = table.Package{
+			Lpn: pkg.Lpn,
 			Dimensions: table.Dimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,
@@ -114,24 +112,28 @@ func mapPackagesToTable(packages []domain.Packages) []table.Packages {
 				UnitValue: pkg.Insurance.UnitValue,
 				Currency:  pkg.Insurance.Currency,
 			},
-			ItemReferences: mapItemReferencesToTable(pkg.ItemReferences),
 		}
 	}
 	return mapped
 }
-
-func mapItemReferencesToTable(references []domain.ItemReferences) table.JSONItemReferences {
-	mapped := make(table.JSONItemReferences, len(references))
-	for i, ref := range references {
-		mapped[i] = table.ItemReferences{
-			ReferenceID: string(ref.ReferenceID),
-			Quantity: table.Quantity{
-				QuantityNumber: ref.Quantity.QuantityNumber,
-				QuantityUnit:   ref.Quantity.QuantityUnit,
-			},
-		}
+func MapPackageToTable(pkg domain.Package) table.Package {
+	return table.Package{
+		Lpn: pkg.Lpn,
+		Dimensions: table.Dimensions{
+			Height: pkg.Dimensions.Height,
+			Width:  pkg.Dimensions.Width,
+			Depth:  pkg.Dimensions.Depth,
+			Unit:   pkg.Dimensions.Unit,
+		},
+		Weight: table.Weight{
+			Value: pkg.Weight.Value,
+			Unit:  pkg.Weight.Unit,
+		},
+		Insurance: table.Insurance{
+			UnitValue: pkg.Insurance.UnitValue,
+			Currency:  pkg.Insurance.Currency,
+		},
 	}
-	return mapped
 }
 
 func mapVisitsToTable(visits []domain.Visit) []table.Visit {
@@ -148,7 +150,7 @@ func mapVisitsToTable(visits []domain.Visit) []table.Visit {
 	return mappedVisits
 }
 
-func mapTransportRequirementsToTable(requirements []domain.References) []byte {
+func mapTransportRequirementsToTable(requirements []domain.Reference) []byte {
 	// Serializar los requisitos en JSON
 	serialized, _ := json.Marshal(requirements)
 	return serialized

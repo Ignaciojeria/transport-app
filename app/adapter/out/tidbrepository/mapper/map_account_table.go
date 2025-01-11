@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"encoding/json"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 )
@@ -47,10 +46,10 @@ func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) tabl
 	}
 }
 
-func MapReferencesTable(refs []domain.References) []table.NodeReferences {
-	var tableRefs []table.NodeReferences
+func MapReferencesTable(refs []domain.Reference) []table.NodeReference {
+	var tableRefs []table.NodeReference
 	for _, ref := range refs {
-		tableRefs = append(tableRefs, table.NodeReferences{
+		tableRefs = append(tableRefs, table.NodeReference{
 			ID:    0, // ID inicializado en 0
 			Type:  ref.Type,
 			Value: ref.Value,
@@ -59,8 +58,18 @@ func MapReferencesTable(refs []domain.References) []table.NodeReferences {
 	return tableRefs
 }
 
-func serializeToJSON(data interface{}) []byte {
-	// Serializar los métodos de contacto o documentos a JSON
-	serialized, _ := json.Marshal(data)
-	return serialized
+func mapDocuments(docs []domain.Document) table.JSONDocuments {
+	// Crear un slice para mapear los documentos
+	mapped := make(table.JSONDocuments, len(docs))
+
+	// Iterar sobre los documentos y mapearlos
+	for i, d := range docs {
+		mapped[i] = table.Document{
+			Type:  d.Type,
+			Value: d.Value,
+		}
+	}
+
+	// Retornar los documentos mapeados como table.JSONDocuments
+	return mapped
 }
