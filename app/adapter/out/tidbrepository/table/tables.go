@@ -177,6 +177,7 @@ type AddressInfo struct {
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                    // Relación con la tabla OrganizationCountry
 	RawAddress            string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_raw_address_organization"` // Parte del índice único
 	State                 string              `gorm:"default:null"`
+	Province              string              `gorm:"default:null"`
 	County                string              `gorm:"default:null"`
 	District              string              `gorm:"default:null"`
 	AddressLine1          string              `gorm:"not null"`

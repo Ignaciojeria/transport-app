@@ -7,6 +7,7 @@ import (
 
 func MapOrganizationFromTable(tableOrg table.Organization) domain.Organization {
 	return domain.Organization{
+		ID:    tableOrg.ID,
 		Name:  tableOrg.Name,
 		Email: tableOrg.Email,
 		Key:   "", // Agregar si tienes lógica para gestionar la clave
