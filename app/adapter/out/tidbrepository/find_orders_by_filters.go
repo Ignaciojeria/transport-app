@@ -57,6 +57,7 @@ func NewFindOrdersByFilters(
 				Preload("DestinationContact").
 				Preload("OriginAddressInfo").
 				Preload("OrderStatus").
+				Preload("OrderType").
 				Preload("OrganizationCountry").
 				Preload("DestinationAddressInfo").
 				Preload("OriginNodeInfo").

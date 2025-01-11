@@ -56,6 +56,8 @@ type Order struct {
 	DestinationNodeInfoID int64    `gorm:"default:null"`
 	DestinationNodeInfo   NodeInfo `gorm:"foreignKey:DestinationNodeInfoID"`
 
+	Packages []Package `gorm:"many2many:order_packages"`
+
 	JSONItems JSONItems `gorm:"type:json"`
 
 	CollectAvailabilityDate           string  `gorm:"default:null"`
