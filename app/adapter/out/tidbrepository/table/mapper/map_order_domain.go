@@ -95,7 +95,7 @@ func mapContactDomain(t table.Contact) domain.Contact {
 	}
 }
 
-func mapDocumentsDomain(docs table.JSONDocuments) []domain.Document {
+func mapDocumentsDomain(docs table.JSONReference) []domain.Document {
 	result := make([]domain.Document, len(docs))
 	for i, doc := range docs {
 		result[i] = domain.Document{
@@ -218,7 +218,17 @@ func mapVisits(visits []table.Visit) []domain.Visit {
 	return result
 }
 
-func mapTransportRequirements(req []byte) []domain.Reference {
-	// Implementa según el formato del JSON almacenado en la base de datos
-	return []domain.Reference{}
+func mapTransportRequirements(req table.JSONReference) []domain.Reference {
+	// Inicializar el slice de domain.Reference
+	var references []domain.Reference
+
+	// Recorrer cada elemento de table.JSONReference y mapearlo a domain.Reference
+	for _, r := range req {
+		references = append(references, domain.Reference{
+			Type:  r.Type,
+			Value: r.Value,
+		})
+	}
+
+	return references
 }

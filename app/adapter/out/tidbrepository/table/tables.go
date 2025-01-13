@@ -60,15 +60,15 @@ type Order struct {
 
 	JSONItems JSONItems `gorm:"type:json"`
 
-	CollectAvailabilityDate           string  `gorm:"default:null"`
-	CollectAvailabilityTimeRangeStart string  `gorm:"default:null"`
-	CollectAvailabilityTimeRangeEnd   string  `gorm:"default:null"`
-	PromisedDateRangeStart            string  `gorm:"default:null"`
-	PromisedDateRangeEnd              string  `gorm:"default:null"`
-	PromisedTimeRangeStart            string  `gorm:"default:null"`
-	PromisedTimeRangeEnd              string  `gorm:"default:null"`
-	Visits                            []Visit `gorm:"foreignKey:OrderID"`
-	TransportRequirements             []byte  `gorm:"type:json"`
+	CollectAvailabilityDate           string        `gorm:"default:null"`
+	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
+	CollectAvailabilityTimeRangeEnd   string        `gorm:"default:null"`
+	PromisedDateRangeStart            string        `gorm:"default:null"`
+	PromisedDateRangeEnd              string        `gorm:"default:null"`
+	PromisedTimeRangeStart            string        `gorm:"default:null"`
+	PromisedTimeRangeEnd              string        `gorm:"default:null"`
+	Visits                            []Visit       `gorm:"foreignKey:OrderID"`
+	TransportRequirements             JSONReference `gorm:"type:json"`
 }
 
 type Items struct {
@@ -106,18 +106,18 @@ type Contact struct {
 	Email                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	Phone                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	NationalID            string              `gorm:"type:varchar(191);default:null"`
-	Documents             JSONDocuments       `gorm:"type:json"`
+	Documents             JSONReference       `gorm:"type:json"`
 }
 
-type Document struct {
-	Value string `json:"value"`
+type Reference struct {
 	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
-type JSONDocuments []Document
+type JSONReference []Reference
 
 // Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
-func (j *JSONDocuments) Scan(value interface{}) error {
+func (j *JSONReference) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)
 	if !ok {
 		return fmt.Errorf("failed to unmarshal JSONDocuments value: %v", value)
@@ -126,7 +126,7 @@ func (j *JSONDocuments) Scan(value interface{}) error {
 }
 
 // Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
-func (j JSONDocuments) Value() (driver.Value, error) {
+func (j JSONReference) Value() (driver.Value, error) {
 	return json.Marshal(j)
 }
 
@@ -215,8 +215,8 @@ type Quantity struct {
 }
 
 type Insurance struct {
-	UnitValue int    `gorm:"not null"`
-	Currency  string `gorm:"not null"`
+	UnitValue float64 `gorm:"not null"`
+	Currency  string  `gorm:"not null"`
 }
 
 type Dimensions struct {

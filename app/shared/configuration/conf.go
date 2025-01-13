@@ -14,6 +14,7 @@ type Conf struct {
 	ENVIRONMENT       string `env:"ENVIRONMENT" envDefault:"development"`
 	PROJECT_NAME      string `env:"PROJECT_NAME,required"`
 	GOOGLE_PROJECT_ID string `env:"GOOGLE_PROJECT_ID"`
+	OUTBOX_TOPIC_NAME string `env:"OUTBOX_TOPIC_NAME,required"`
 }
 
 func NewConf() (Conf, error) {

@@ -51,8 +51,8 @@ type UpsertOrderRequest struct {
 			Width  float64 `json:"width"`
 		} `json:"dimensions"`
 		Insurance struct {
-			Currency  string `json:"currency"`
-			UnitValue int    `json:"unitValue"`
+			Currency  string  `json:"currency"`
+			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
 		LogisticCondition string `json:"logisticCondition"`
 		Quantity          struct {
@@ -105,8 +105,8 @@ type UpsertOrderRequest struct {
 			Width  float64 `json:"width"`
 		} `json:"dimensions"`
 		Insurance struct {
-			Currency  string `json:"currency"`
-			UnitValue int    `json:"unitValue"`
+			Currency  string  `json:"currency"`
+			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
 		ItemReferences []struct {
 			Quantity struct {

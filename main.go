@@ -17,6 +17,10 @@ import (
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	_ "transport-app/app/onload"
+	_ "transport-app/app/shared/infrastructure/gcppubsub"
+	_ "transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
+	_ "transport-app/mocks"
+	_ "transport-app/app/adapter/out/gcppublisher"
 )
 
 //go:embed .version

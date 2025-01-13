@@ -3,8 +3,8 @@ package tidbrepository
 import (
 	"context"
 	"errors"
-	"transport-app/app/adapter/out/tidbrepository/mapper"
 	"transport-app/app/adapter/out/tidbrepository/table"
+	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
 

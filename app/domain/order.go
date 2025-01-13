@@ -200,8 +200,8 @@ type Quantity struct {
 }
 
 type Insurance struct {
-	UnitValue int    `json:"unitValue"`
-	Currency  string `json:"currency"`
+	UnitValue float64 `json:"unitValue"`
+	Currency  string  `json:"currency"`
 }
 
 type Dimensions struct {

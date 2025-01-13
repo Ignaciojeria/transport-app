@@ -58,13 +58,13 @@ func MapReferencesTable(refs []domain.Reference) []table.NodeReference {
 	return tableRefs
 }
 
-func mapDocuments(docs []domain.Document) table.JSONDocuments {
+func mapDocuments(docs []domain.Document) table.JSONReference {
 	// Crear un slice para mapear los documentos
-	mapped := make(table.JSONDocuments, len(docs))
+	mapped := make(table.JSONReference, len(docs))
 
 	// Iterar sobre los documentos y mapearlos
 	for i, d := range docs {
-		mapped[i] = table.Document{
+		mapped[i] = table.Reference{
 			Type:  d.Type,
 			Value: d.Value,
 		}

@@ -23,6 +23,14 @@
             "name": "tidb",
             "unique": "",
             "libraries": null
+        },
+        {
+            "name": "gcp-pubsub",
+            "unique": "",
+            "libraries": [
+                "cloud.google.com/go/pubsub",
+                "github.com/heimdalr/dag@v1.4.0"
+            ]
         }
     ],
     "components": [
@@ -65,6 +73,10 @@
         {
             "kind": "usecase",
             "name": "search-orders"
+        },
+        {
+            "kind": "gcp-publisher",
+            "name": "application-events"
         }
     ]
 }

@@ -112,8 +112,8 @@ type SearchOrdersResponse struct {
 			Width  float64 `json:"width"`
 		} `json:"dimensions"`
 		Insurance struct {
-			Currency  string `json:"currency"`
-			UnitValue int    `json:"unitValue"`
+			Currency  string  `json:"currency"`
+			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
 		ItemReferences []struct {
 			Quantity struct {
@@ -284,8 +284,8 @@ func (res *SearchOrdersResponse) withPackages(packages []domain.Package) *Search
 				Width  float64 `json:"width"`
 			} `json:"dimensions"`
 			Insurance struct {
-				Currency  string `json:"currency"`
-				UnitValue int    `json:"unitValue"`
+				Currency  string  `json:"currency"`
+				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
 			ItemReferences []struct {
 				Quantity struct {
@@ -314,8 +314,8 @@ func (res *SearchOrdersResponse) withPackages(packages []domain.Package) *Search
 				Width  float64 `json:"width"`
 			} `json:"dimensions"`
 			Insurance struct {
-				Currency  string `json:"currency"`
-				UnitValue int    `json:"unitValue"`
+				Currency  string  `json:"currency"`
+				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
 			ItemReferences []struct {
 				Quantity struct {
