@@ -22,6 +22,8 @@ import (
 	_ "transport-app/mocks"
 	_ "transport-app/app/adapter/out/gcppublisher"
 	_ "transport-app/app/adapter/in/gcpsubscription"
+	_ "transport-app/app/shared/infrastructure/observability"
+	_ "transport-app/app/shared/infrastructure/observability/strategy"
 )
 
 //go:embed .version

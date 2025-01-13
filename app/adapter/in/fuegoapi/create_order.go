@@ -2,6 +2,7 @@ package fuegoapi
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
@@ -9,6 +10,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
+	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -24,15 +26,19 @@ func init() {
 		httpserver.New,
 		usecase.NewCreateOrder,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveOrderOutbox)
+		tidbrepository.NewSaveOrderOutbox,
+		observability.NewObservability)
 }
 func createOrder(
 	s httpserver.Server,
 	createTo usecase.CreateOrder,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	saveOutboxTrx tidbrepository.SaveOrderOutbox) {
+	saveOutboxTrx tidbrepository.SaveOrderOutbox,
+	obs observability.Observability) {
 	fuego.Post(s.Manager, "/order",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
+			spanCtx, span := obs.Tracer.Start(c.Context(), "createOrder")
+			defer span.End()
 			requestBody, err := c.Body()
 			if err != nil {
 				return response.UpsertOrderResponse{}, err
@@ -55,7 +61,7 @@ func createOrder(
 					Status: http.StatusBadRequest,
 				}
 			}
-			org, err := ensureOrg(c.Context(), mappedTO.Organization)
+			org, err := ensureOrg(spanCtx, mappedTO.Organization)
 			if err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",
@@ -68,7 +74,7 @@ func createOrder(
 			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
 
 			eventPayload, _ := json.Marshal(requestBody)
-			if _, err := saveOutboxTrx(c.Context(), domain.Outbox{
+			if _, err := saveOutboxTrx(spanCtx, domain.Outbox{
 				Attributes: map[string]string{
 					"entityType":            "order",
 					"eventType":             "orderSubmitted",
@@ -90,6 +96,9 @@ func createOrder(
 					Status: http.StatusInternalServerError,
 				}
 			}
+			obs.Logger.InfoContext(spanCtx,
+				"ORDER_SUBMISSION_SUCCEEDED",
+				slog.Any("payload", requestBody))
 			return response.UpsertOrderResponse{
 				Message: "Order submitted successfully",
 				Status:  "pending",

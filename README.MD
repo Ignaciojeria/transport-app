@@ -18,3 +18,13 @@ This document provides an overview of the `AddressInfo` structure and its fields
 | `Longitude`    | Geographic coordinate for geolocation.                                                          |
 | `ZipCode`      | Postal code.                                                                                    |
 | `TimeZone`     | Time zone associated with the location. 
+
+
+Enviar logs a openobserve (el paso de permisos a topico) :
+
+gcloud iam service-accounts create cloud-logs --display-name="Cloud Logs Service Account" --project=einar-404623
+
+
+gcloud pubsub topics add-iam-policy-binding transport-app-events --member=serviceAccount:cloud-logs@einar-404623.iam.gserviceaccount.com --role=roles/pubsub.publisher --project=einar-404623
+
+gcloud pubsub topics add-iam-policy-binding transport-app-events --member=serviceAccount:cloud-logs@einar-404623.iam.gserviceaccount.com --role=roles/pubsub.publisher  --project=einar-404623
