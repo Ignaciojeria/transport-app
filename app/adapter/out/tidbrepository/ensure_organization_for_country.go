@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type EnsureOrganizationForCountry func(context.Context, domain.Organization) error
+type EnsureOrganizationForCountry func(context.Context, domain.Organization) (domain.Organization, error)
 
 func init() {
 	ioc.Registry(
@@ -20,17 +20,17 @@ func init() {
 }
 
 func NewEnsureOrganizationForCountry(conn tidb.TIDBConnection) EnsureOrganizationForCountry {
-	return func(ctx context.Context, org domain.Organization) error {
+	return func(ctx context.Context, org domain.Organization) (domain.Organization, error) {
 		// Validar si el API Key existe
 		var apiKey table.ApiKey
 		err := conn.WithContext(ctx).Where("`key` = ?", org.Key).First(&apiKey).Error
 		if err != nil {
 			if err == gorm.ErrRecordNotFound {
 				// Si no existe, retornar un error
-				return fmt.Errorf("API key not found: %s", org.Key)
+				return domain.Organization{}, fmt.Errorf("API key not found: %s", org.Key)
 			}
 			// Retornar cualquier otro error de la base de datos
-			return fmt.Errorf("error querying API key: %w", err)
+			return domain.Organization{}, fmt.Errorf("error querying API key: %w", err)
 		}
 
 		// Validar si el API Key está disponible para el país
@@ -40,10 +40,12 @@ func NewEnsureOrganizationForCountry(conn tidb.TIDBConnection) EnsureOrganizatio
 			First(&orgCountry).Error
 		if err == nil {
 			// Si ya existe para el país, retornar nil (no es necesario crear uno nuevo)
-			return nil
+			return domain.Organization{
+				OrganizationCountryID: orgCountry.ID,
+			}, nil
 		} else if err != gorm.ErrRecordNotFound {
 			// Si ocurre otro error, retornarlo
-			return fmt.Errorf("error querying organization country: %w", err)
+			return domain.Organization{}, fmt.Errorf("error querying organization country: %w", err)
 		}
 
 		// Crear un nuevo registro en la tabla OrganizationCountry
@@ -52,9 +54,9 @@ func NewEnsureOrganizationForCountry(conn tidb.TIDBConnection) EnsureOrganizatio
 			Country:        org.Country.Alpha2(),
 		}
 		if err := conn.WithContext(ctx).Create(&newOrgCountry).Error; err != nil {
-			return fmt.Errorf("error creating organization country: %w", err)
+			return domain.Organization{}, fmt.Errorf("error creating organization country: %w", err)
 		}
-
-		return nil
+		org.OrganizationCountryID = orgCountry.ID
+		return org, nil
 	}
 }

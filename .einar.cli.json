@@ -77,6 +77,10 @@
         {
             "kind": "gcp-publisher",
             "name": "application-events"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "order-submitted"
         }
     ]
 }

@@ -25,13 +25,16 @@ func NewApplicationEvents(
 	topic := c.Topic(topicName)
 	return func(ctx context.Context, outbox domain.Outbox) error {
 
+		outbox.Attributes["createdAt"] = outbox.CreatedAt
+		outbox.Attributes["updatedAt"] = outbox.UpdatedAt
 		message := &pubsub.Message{
 			Attributes: map[string]string{
-				"eventType":   outbox.EventType,
-				"entityType":  outbox.EntityType,
-				"referenceId": outbox.ReferenceID,
-				"createdAt":   outbox.CreatedAt,
-				"updatedAt":   outbox.UpdatedAt,
+				"referenceId":           outbox.Attributes["referenceID"],
+				"createdAt":             outbox.CreatedAt,
+				"updatedAt":             outbox.UpdatedAt,
+				"eventType":             outbox.Attributes["eventType"],
+				"entityType":            outbox.Attributes["entityType"],
+				"organizationCountryID": outbox.Attributes["organizationCountryID"],
 			},
 			Data: outbox.Payload,
 		}

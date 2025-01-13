@@ -13,9 +13,8 @@ import (
 
 func init() {
 	ioc.Registry(
-		NewSaveOrder,
+		NewSaveOrderOutbox,
 		tidb.NewTIDBConnection,
-		NewLoadOrderStatuses,
 		gcppublisher.NewApplicationEvents)
 }
 
@@ -41,7 +40,7 @@ func NewSaveOrderOutbox(
 
 		// Manejar publicación del evento en una goroutine
 		go func() {
-			if pubErr := publishOutBoxEvent(ctx, event); pubErr != nil {
+			if pubErr := publishOutBoxEvent(context.Background(), event); pubErr != nil {
 				fmt.Printf("failed to publish event %d: %v\n", e.ID, pubErr)
 				return
 			}
