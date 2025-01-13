@@ -30,7 +30,7 @@ func NewSaveOrderOutbox(
 	return func(ctx context.Context, event domain.Outbox) (domain.Outbox, error) {
 		// Mapear al modelo de la base de datos
 		e := table.MapOrderOutbox(event)
-
+		e.Status = "pending"
 		// Guardar el evento en la base de datos
 		if err := conn.Save(&e).Error; err != nil {
 			return domain.Outbox{}, fmt.Errorf("failed to save outbox event: %w", err)
@@ -44,12 +44,6 @@ func NewSaveOrderOutbox(
 			if pubErr := publishOutBoxEvent(ctx, event); pubErr != nil {
 				fmt.Printf("failed to publish event %d: %v\n", e.ID, pubErr)
 				return
-			}
-
-			// Actualizar el estado a `Processed`
-			e.Processed = true
-			if err := conn.Save(&e).Error; err != nil {
-				fmt.Printf("failed to update processed state for event %d: %v\n", e.ID, err)
 			}
 		}()
 

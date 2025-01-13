@@ -13,7 +13,7 @@ type OrdersOutbox struct {
 	EventType             string `gorm:"not null;index:idx_orders_outbox_unique,unique"`
 	OrganizationCountryID int64  `gorm:"not null;index:idx_orders_outbox_unique,unique"`
 	Payload               []byte `gorm:"type:json"`
-	Processed             bool   `gorm:"default:false"`
+	Status                string `gorm:"default:'pending'"` // Valores posibles: pending, failed, processed
 }
 
 func MapOrderOutbox(outbox domain.Outbox) OrdersOutbox {
@@ -22,6 +22,6 @@ func MapOrderOutbox(outbox domain.Outbox) OrdersOutbox {
 		EventType:             outbox.EventType,
 		OrganizationCountryID: outbox.Organization.ID, // Suponiendo que Organization tiene un campo ID.
 		Payload:               outbox.Payload,
-		Processed:             false,
+		Status:                outbox.Status,
 	}
 }

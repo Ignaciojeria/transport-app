@@ -9,5 +9,5 @@ type Outbox struct {
 	UpdatedAt    string
 	Organization Organization
 	Payload      []byte
-	Processed    bool
+	Status       string
 }

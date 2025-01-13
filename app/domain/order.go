@@ -24,6 +24,23 @@ type Order struct {
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
+func (o Order) Validate() error {
+	// Validar fechas de disponibilidad de recolección
+	if err := o.ValidateCollectAvailabilityDate(); err != nil {
+		return errorx.Decorate(err, "validation failed for CollectAvailabilityDate")
+	}
+
+	// Validar fechas prometidas
+	if err := o.ValidatePromisedDate(); err != nil {
+		return errorx.Decorate(err, "validation failed for PromisedDate")
+	}
+
+	// Validar otras reglas de dominio (si las hay)
+	// Por ejemplo, puedes agregar reglas adicionales aquí
+
+	return nil
+}
+
 func (o Order) ValidatePromisedDate() error {
 	// Validar formato de fecha yyyy-mm-dd
 	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
