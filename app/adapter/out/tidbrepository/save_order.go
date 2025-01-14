@@ -66,7 +66,7 @@ func NewSaveOrder(
 		LEFT JOIN address_infos d_ai ON d_ai.organization_country_id = ? AND d_ai.raw_address = ?
 		LEFT JOIN node_infos o_ni ON o_ni.organization_country_id = ? AND o_ni.reference_id = ?
 		LEFT JOIN node_infos d_ni ON d_ni.organization_country_id = ? AND d_ni.reference_id = ?
-		WHERE c.organization_country_id = ? AND c.name = ?;
+		WHERE c.organization_country_id = ?;
 				`,
 			// Argumentos en el mismo orden que los placeholders en la query
 			to.Organization.OrganizationCountryID, // Para consumers
@@ -90,7 +90,6 @@ func NewSaveOrder(
 			to.Organization.OrganizationCountryID, // Para destination node
 			to.Destination.NodeInfo.ReferenceID,
 			to.Organization.OrganizationCountryID, // Para commerces en WHERE
-			to.BusinessIdentifiers.Commerce,
 		).Scan(&result).Error
 
 		if err != nil {

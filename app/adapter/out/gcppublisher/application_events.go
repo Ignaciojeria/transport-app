@@ -35,6 +35,8 @@ func NewApplicationEvents(
 				"eventType":             outbox.Attributes["eventType"],
 				"entityType":            outbox.Attributes["entityType"],
 				"organizationCountryID": outbox.Attributes["organizationCountryID"],
+				"commerce":              outbox.Attributes["commerce"],
+				"consumer":              outbox.Attributes["consumer"],
 			},
 			Data: outbox.Payload,
 		}

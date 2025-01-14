@@ -172,7 +172,8 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 			withVisits(order.Visits).
 			withPackages(order.Packages).
 			withReferences(order.References).
-			withTransportRequirements(order.TransportRequirements)
+			withTransportRequirements(order.TransportRequirements).
+			withOrderType(order.OrderType)
 		responses = append(responses, response)
 	}
 	return responses
@@ -416,5 +417,11 @@ func (res *SearchOrdersResponse) withTransportRequirements(requirements []domain
 		res.TransportRequirements = append(res.TransportRequirements, reqData)
 	}
 
+	return res
+}
+
+func (res *SearchOrdersResponse) withOrderType(orderType domain.OrderType) *SearchOrdersResponse {
+	res.OrderType.Type = orderType.Type
+	res.OrderType.Description = orderType.Description
 	return res
 }

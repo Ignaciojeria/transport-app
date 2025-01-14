@@ -95,9 +95,27 @@ func NewFindOrdersByReferenceAndFilters(conn tidb.TIDBConnection) FindOrdersByRe
         LEFT JOIN address_infos da ON o.destination_address_info_id = da.id
         LEFT JOIN node_infos dn_info ON o.destination_node_info_id = dn_info.id
         LEFT JOIN contacts dn_op ON dn_info.operator_id = dn_op.id
-        WHERE o.reference_id IN (?)`
+        WHERE 
+            o.reference_id IN (?) 
+            AND org_country.country = ? 
+            AND EXISTS (
+                SELECT 1 
+                FROM api_keys ak
+                JOIN organizations org ON ak.organization_id = org.id
+                JOIN organization_countries org_country_filter ON org.id = org_country_filter.organization_id
+                WHERE ak.key = ? 
+                AND org_country_filter.country = ?
+            )
+    `
 
-		if err := conn.Raw(query, osf.ReferenceIDs).Scan(&orders).Error; err != nil {
+		params := []interface{}{
+			osf.ReferenceIDs,
+			osf.Organization.Country.Alpha2(),
+			osf.Organization.Key,
+			osf.Organization.Country.Alpha2(),
+		}
+
+		if err := conn.Raw(query, params...).Scan(&orders).Error; err != nil {
 			return nil, fmt.Errorf("error scanning orders: %w", err)
 		}
 
