@@ -5,85 +5,112 @@ import (
 	"transport-app/app/domain"
 )
 
-type FlattenedOrder struct {
-	OrderID                     int64               `gorm:"order_id"`
-	ReferenceID                 string              `gorm:"reference_id"`
-	OrganizationCountry         string              `gorm:"organization_country"`
-	CommerceName                string              `gorm:"commerce_name"`
-	ConsumerName                string              `gorm:"consumer_name"`
-	OrderStatus                 string              `gorm:"order_status"`
-	OrderType                   string              `gorm:"order_type"`
-	DeliveryInstructions        string              `gorm:"delivery_instructions"`
-	OriginContactName           string              `gorm:"origin_contact_name"`
-	OriginContactPhone          string              `gorm:"origin_contact_phone"`
-	OriginContactDocuments      table.JSONReference `gorm:"origin_contact_documents"`
-	DestinationContactName      string              `gorm:"destination_contact_name"`
-	DestinationContactPhone     string              `gorm:"destination_contact_phone"`
-	DestinationContactDocuments table.JSONReference `gorm:"destination_contact_documents"`
-	OriginAddressLine1          string              `gorm:"origin_address_line1"`
-	OriginAddressLine2          string              `gorm:"origin_address_line2"`
-	OriginAddressLine3          string              `gorm:"origin_address_line3"`
-	OriginState                 string              `gorm:"origin_state"`
-	OriginProvince              string              `gorm:"origin_province"`
-	OriginCounty                string              `gorm:"origin_county"`
-	OriginDistrict              string              `gorm:"origin_district"`
-	OriginZipCode               string              `gorm:"origin_zipcode"`
-	OriginLatitude              float32             `gorm:"origin_latitude"`
-	OriginLongitude             float32             `gorm:"origin_longitude"`
-	OriginTimeZone              string              `gorm:"origin_timezone"`
-	OriginNodeReferenceID       string              `gorm:"origin_node_reference_id"`
-	OriginNodeName              string              `gorm:"origin_node_name"`
-	OriginNodeType              string              `gorm:"origin_node_type"`
-	OriginNodeOperatorName      string              `gorm:"origin_node_operator_name"`
-	DestinationAddressLine1     string              `gorm:"destination_address_line1"`
-	DestinationAddressLine2     string              `gorm:"destination_address_line2"`
-	DestinationAddressLine3     string              `gorm:"destination_address_line3"`
-	DestinationState            string              `gorm:"destination_state"`
-	DestinationProvince         string              `gorm:"destination_province"`
-	DestinationCounty           string              `gorm:"destination_county"`
-	DestinationDistrict         string              `gorm:"destination_district"`
-	DestinationZipCode          string              `gorm:"destination_zipcode"`
-	DestinationLatitude         float32             `gorm:"destination_latitude"`
-	DestinationLongitude        float32             `gorm:"destination_longitude"`
-	DestinationTimeZone         string              `gorm:"destination_timezone"`
-	DestinationNodeReferenceID  string              `gorm:"destination_node_reference_id"`
-	DestinationNodeName         string              `gorm:"destination_node_name"`
-	DestinationNodeType         string              `gorm:"destination_node_type"`
-	DestinationNodeOperatorName string              `gorm:"destination_node_operator_name"`
-	Packages                    []FlattenedPackage  `gorm:"packages"`
-	Items                       table.JSONItems     `gorm:"items"`
-	CollectAvailabilityDate     string              `gorm:"collect_availability_date"`
-	CollectStartTime            string              `gorm:"collect_start_time"`
-	CollectEndTime              string              `gorm:"collect_end_time"`
-	PromisedStartDate           string              `gorm:"promised_start_date"`
-	PromisedEndDate             string              `gorm:"promised_end_date"`
-	PromisedStartTime           string              `gorm:"promised_start_time"`
-	PromisedEndTime             string              `gorm:"promised_end_time"`
-	TransportRequirements       []string            `gorm:"transport_requirements"`
-	Visits                      []FlattenedVisit    `gorm:"visits"`
+type FlattenedOrderView struct {
+	OrderID                     int64               `gorm:"column:order_id"`
+	ReferenceID                 string              `gorm:"column:reference_id"`
+	OrganizationCountry         string              `gorm:"column:organization_country"`
+	CommerceName                string              `gorm:"column:commerce_name"`
+	ConsumerName                string              `gorm:"column:consumer_name"`
+	OrderStatus                 string              `gorm:"column:order_status"`
+	OrderType                   string              `gorm:"column:order_type"`
+	OrderTypeDescription        string              `gorm:"column:order_type_description"`
+	DeliveryInstructions        string              `gorm:"column:delivery_instructions"`
+	OriginContactName           string              `gorm:"column:origin_contact_name"`
+	OriginContactPhone          string              `gorm:"column:origin_contact_phone"`
+	OriginContactDocuments      table.JSONReference `gorm:"column:origin_contact_documents"`
+	DestinationContactName      string              `gorm:"column:destination_contact_name"`
+	DestinationContactPhone     string              `gorm:"column:destination_contact_phone"`
+	DestinationContactDocuments table.JSONReference `gorm:"column:destination_contact_documents"`
+	OriginAddressLine1          string              `gorm:"column:origin_address_line1"`
+	OriginAddressLine2          string              `gorm:"column:origin_address_line2"`
+	OriginAddressLine3          string              `gorm:"column:origin_address_line3"`
+	OriginState                 string              `gorm:"column:origin_state"`
+	OriginProvince              string              `gorm:"column:origin_province"`
+	OriginCounty                string              `gorm:"column:origin_county"`
+	OriginDistrict              string              `gorm:"column:origin_district"`
+	OriginZipCode               string              `gorm:"column:origin_zipcode"`
+	OriginLatitude              float32             `gorm:"column:origin_latitude"`
+	OriginLongitude             float32             `gorm:"column:origin_longitude"`
+	OriginTimeZone              string              `gorm:"column:origin_timezone"`
+	OriginNodeReferenceID       string              `gorm:"column:origin_node_reference_id"`
+	OriginNodeName              string              `gorm:"column:origin_node_name"`
+	OriginNodeType              string              `gorm:"column:origin_node_type"`
+	OriginNodeOperatorName      string              `gorm:"column:origin_node_operator_name"`
+	DestinationAddressLine1     string              `gorm:"column:destination_address_line1"`
+	DestinationAddressLine2     string              `gorm:"column:destination_address_line2"`
+	DestinationAddressLine3     string              `gorm:"column:destination_address_line3"`
+	DestinationState            string              `gorm:"column:destination_state"`
+	DestinationProvince         string              `gorm:"column:destination_province"`
+	DestinationCounty           string              `gorm:"column:destination_county"`
+	DestinationDistrict         string              `gorm:"column:destination_district"`
+	DestinationZipCode          string              `gorm:"column:destination_zipcode"`
+	DestinationLatitude         float32             `gorm:"column:destination_latitude"`
+	DestinationLongitude        float32             `gorm:"column:destination_longitude"`
+	DestinationTimeZone         string              `gorm:"column:destination_timezone"`
+	DestinationNodeReferenceID  string              `gorm:"column:destination_node_reference_id"`
+	DestinationNodeName         string              `gorm:"column:destination_node_name"`
+	DestinationNodeType         string              `gorm:"column:destination_node_type"`
+	DestinationNodeOperatorName string              `gorm:"column:destination_node_operator_name"`
+	Items                       table.JSONItems     `gorm:"column:items"`
+	CollectAvailabilityDate     string              `gorm:"column:collect_availability_date"`
+	CollectStartTime            string              `gorm:"column:collect_start_time"`
+	CollectEndTime              string              `gorm:"column:collect_end_time"`
+	PromisedStartDate           string              `gorm:"column:promised_start_date"`
+	PromisedEndDate             string              `gorm:"column:promised_end_date"`
+	PromisedStartTime           string              `gorm:"column:promised_start_time"`
+	PromisedEndTime             string              `gorm:"column:promised_end_time"`
+	TransportRequirements       table.JSONReference `gorm:"column:transport_requirements"`
 }
 
-type FlattenedPackage struct {
-	Lpn         string  `gorm:"lpn"`
-	Height      float64 `gorm:"height"`
-	Width       float64 `gorm:"width"`
-	Depth       float64 `gorm:"depth"`
-	Unit        string  `gorm:"unit"`
-	WeightValue float64 `gorm:"weight_value"`
-	WeightUnit  string  `gorm:"weight_unit"`
-	Description string  `gorm:"description"`
-	Quantity    int     `gorm:"quantity"`
-	UnitValue   float64 `gorm:"unit_value"`
-	Currency    string  `gorm:"currency"`
+type FlattenedPackageView struct {
+	OrderID     int64   `gorm:"column:order_id"`
+	Lpn         string  `gorm:"column:lpn"`
+	Height      float64 `gorm:"column:height"`
+	Width       float64 `gorm:"column:width"`
+	Depth       float64 `gorm:"column:depth"`
+	Unit        string  `gorm:"column:unit"`
+	WeightValue float64 `gorm:"column:weight_value"`
+	WeightUnit  string  `gorm:"column:weight_unit"`
+	Description string  `gorm:"column:description"`
+	Quantity    int     `gorm:"column:quantity"`
+	UnitValue   float64 `gorm:"column:unit_value"`
+	Currency    string  `gorm:"column:currency"`
+	PackageType string  `gorm:"column:package_type"`
 }
 
-type FlattenedVisit struct {
-	Date           string `gorm:"date"`
-	TimeRangeStart string `gorm:"time_range_start"`
-	TimeRangeEnd   string `gorm:"time_range_end"`
+type FlattenedOrderReferenceView struct {
+	OrderID int64  `gorm:"column:order_id"`
+	Type    string `gorm:"column:type"`
+	Value   string `gorm:"column:value"`
 }
 
-func (o FlattenedOrder) Map() domain.Order {
+type FlattenedVisitView struct {
+	OrderID        int64  `gorm:"column:order_id"`
+	Date           string `gorm:"column:date"`
+	TimeRangeStart string `gorm:"column:time_range_start"`
+	TimeRangeEnd   string `gorm:"column:time_range_end"`
+}
+
+func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []FlattenedOrderReferenceView, visits []FlattenedVisitView) domain.Order {
+	references := make([]domain.Reference, len(refs))
+	for i, ref := range refs {
+		references[i] = domain.Reference{
+			Type:  ref.Type,
+			Value: ref.Value,
+		}
+	}
+
+	var transportReqs []domain.Reference
+	if o.TransportRequirements != nil {
+		transportReqs = make([]domain.Reference, len(o.TransportRequirements))
+		for i, req := range o.TransportRequirements {
+			transportReqs[i] = domain.Reference{
+				Type:  req.Type,
+				Value: req.Value,
+			}
+		}
+	}
+
 	return domain.Order{
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
@@ -95,7 +122,8 @@ func (o FlattenedOrder) Map() domain.Order {
 			Status: o.OrderStatus,
 		},
 		OrderType: domain.OrderType{
-			Type: o.OrderType,
+			Type:        o.OrderType,
+			Description: o.OrderTypeDescription,
 		},
 		Origin: domain.Origin{
 			NodeInfo: domain.NodeInfo{
@@ -148,8 +176,10 @@ func (o FlattenedOrder) Map() domain.Order {
 				TimeZone:     o.DestinationTimeZone,
 			},
 		},
-		Packages: mapPackages(o.Packages),
-		Items:    mapJSONItems(o.Items), // Assuming domain and flattened items are compatible
+		Packages:              mapPackages(packages),
+		Items:                 mapJSONItems(o.Items),
+		References:            references,
+		TransportRequirements: transportReqs,
 		CollectAvailabilityDate: domain.CollectAvailabilityDate{
 			Date: o.CollectAvailabilityDate,
 			TimeRange: domain.TimeRange{
@@ -167,103 +197,92 @@ func (o FlattenedOrder) Map() domain.Order {
 				EndTime:   o.PromisedEndTime,
 			},
 		},
-		TransportRequirements: mapTransportRequirements(o.TransportRequirements),
-		Visits:                mapVisits(o.Visits),
+		Visits: mapVisits(visits),
 	}
 }
 
-func mapJSONItems(flattenedItems table.JSONItems) []domain.Item {
-	items := make([]domain.Item, len(flattenedItems))
-	for i, fi := range flattenedItems {
-		items[i] = domain.Item{
-			ReferenceID:       domain.ReferenceID(fi.ReferenceID),
-			LogisticCondition: fi.LogisticCondition,
+func mapJSONItems(items table.JSONItems) []domain.Item {
+	result := make([]domain.Item, len(items))
+	for i, item := range items {
+		result[i] = domain.Item{
+			ReferenceID:       domain.ReferenceID(item.ReferenceID),
+			LogisticCondition: item.LogisticCondition,
 			Quantity: domain.Quantity{
-				QuantityNumber: fi.Quantity.QuantityNumber,
-				QuantityUnit:   fi.Quantity.QuantityUnit,
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
 			},
 			Insurance: domain.Insurance{
-				UnitValue: fi.Insurance.UnitValue,
-				Currency:  fi.Insurance.Currency,
+				UnitValue: item.JSONInsurance.UnitValue,
+				Currency:  item.JSONInsurance.Currency,
 			},
-			Description: fi.Description,
+			Description: item.Description,
 			Dimensions: domain.Dimensions{
-				Height: fi.Dimensions.Height,
-				Width:  fi.Dimensions.Width,
-				Depth:  fi.Dimensions.Depth,
-				Unit:   fi.Dimensions.Unit,
+				Height: item.JSONDimensions.Height,
+				Width:  item.JSONDimensions.Width,
+				Depth:  item.JSONDimensions.Depth,
+				Unit:   item.JSONDimensions.Unit,
 			},
 			Weight: domain.Weight{
-				Value: fi.Weight.Value,
-				Unit:  fi.Weight.Unit,
+				Value: item.JSONWeight.WeightValue,
+				Unit:  item.JSONWeight.WeightUnit,
 			},
 		}
 	}
-	return items
+	return result
 }
 
-func mapPackages(flattenedPackages []FlattenedPackage) []domain.Package {
-	packages := make([]domain.Package, len(flattenedPackages))
-	for i, fp := range flattenedPackages {
-		packages[i] = domain.Package{
-			Lpn: fp.Lpn,
+func mapPackages(packages []FlattenedPackageView) []domain.Package {
+	result := make([]domain.Package, len(packages))
+	for i, p := range packages {
+		result[i] = domain.Package{
+			Lpn: p.Lpn,
 			Dimensions: domain.Dimensions{
-				Height: fp.Height,
-				Width:  fp.Width,
-				Depth:  fp.Depth,
-				Unit:   fp.Unit,
+				Height: p.Height,
+				Width:  p.Width,
+				Depth:  p.Depth,
+				Unit:   p.Unit,
 			},
 			Weight: domain.Weight{
-				Value: fp.WeightValue,
-				Unit:  fp.WeightUnit,
+				Value: p.WeightValue,
+				Unit:  p.WeightUnit,
 			},
-			ItemReferences: []domain.ItemReference{ // Assuming the item references are in flattened form
+			ItemReferences: []domain.ItemReference{
 				{
 					Quantity: domain.Quantity{
-						QuantityNumber: fp.Quantity,
+						QuantityNumber: p.Quantity,
 					},
 				},
 			},
 			Insurance: domain.Insurance{
-				UnitValue: fp.UnitValue,
-				Currency:  fp.Currency,
+				UnitValue: p.UnitValue,
+				Currency:  p.Currency,
 			},
 		}
 	}
-	return packages
+	return result
 }
 
-func mapDocuments(flattenedDocs table.JSONReference) []domain.Document {
-	docs := make([]domain.Document, len(flattenedDocs))
-	for i, doc := range flattenedDocs {
-		docs[i] = domain.Document{
+func mapVisits(visits []FlattenedVisitView) []domain.Visit {
+	result := make([]domain.Visit, len(visits))
+	for i, v := range visits {
+		result[i] = domain.Visit{
+			Date: v.Date,
+			TimeRange: domain.TimeRange{
+				StartTime: v.TimeRangeStart,
+				EndTime:   v.TimeRangeEnd,
+			},
+		}
+	}
+	return result
+}
+
+func mapDocuments(docs table.JSONReference) []domain.Document {
+	result := make([]domain.Document, len(docs))
+	for i, doc := range docs {
+		result[i] = domain.Document{
 			Value: doc.Value,
 			Type:  doc.Type,
 		}
 	}
-	return docs
-}
-
-func mapTransportRequirements(requirements []string) []domain.Reference {
-	refs := make([]domain.Reference, len(requirements))
-	for i, req := range requirements {
-		refs[i] = domain.Reference{
-			Value: req,
-		}
-	}
-	return refs
-}
-
-func mapVisits(flattenedVisits []FlattenedVisit) []domain.Visit {
-	visits := make([]domain.Visit, len(flattenedVisits))
-	for i, fv := range flattenedVisits {
-		visits[i] = domain.Visit{
-			Date: fv.Date,
-			TimeRange: domain.TimeRange{
-				StartTime: fv.TimeRangeStart,
-				EndTime:   fv.TimeRangeEnd,
-			},
-		}
-	}
-	return visits
+	return result
 }

@@ -170,7 +170,9 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 			withDestination(order.Destination).
 			withPromisedDate(order.PromisedDate).
 			withVisits(order.Visits).
-			withPackages(order.Packages)
+			withPackages(order.Packages).
+			withReferences(order.References).
+			withTransportRequirements(order.TransportRequirements)
 		responses = append(responses, response)
 	}
 	return responses
@@ -364,6 +366,54 @@ func (res *SearchOrdersResponse) withPackages(packages []domain.Package) *Search
 		pkgData.Weight.Value = int(pkg.Weight.Value)
 
 		res.Packages = append(res.Packages, pkgData)
+	}
+
+	return res
+}
+
+func (res *SearchOrdersResponse) withReferences(references []domain.Reference) *SearchOrdersResponse {
+	if res.References == nil {
+		res.References = make([]struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}, 0)
+	}
+
+	res.References = res.References[:0]
+
+	for _, ref := range references {
+		refData := struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}{
+			Type:  ref.Type,
+			Value: ref.Value,
+		}
+		res.References = append(res.References, refData)
+	}
+
+	return res
+}
+
+func (res *SearchOrdersResponse) withTransportRequirements(requirements []domain.Reference) *SearchOrdersResponse {
+	if res.TransportRequirements == nil {
+		res.TransportRequirements = make([]struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}, 0)
+	}
+
+	res.TransportRequirements = res.TransportRequirements[:0]
+
+	for _, req := range requirements {
+		reqData := struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}{
+			Type:  req.Type,
+			Value: req.Value,
+		}
+		res.TransportRequirements = append(res.TransportRequirements, reqData)
 	}
 
 	return res

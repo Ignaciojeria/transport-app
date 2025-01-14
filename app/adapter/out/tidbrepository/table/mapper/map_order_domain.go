@@ -141,23 +141,23 @@ func mapItems(items table.JSONItems) []domain.Item {
 			ReferenceID:       domain.ReferenceID(item.ReferenceID),
 			LogisticCondition: item.LogisticCondition,
 			Quantity: domain.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
 			},
 			Insurance: domain.Insurance{
-				UnitValue: item.Insurance.UnitValue,
-				Currency:  item.Insurance.Currency,
+				UnitValue: item.JSONInsurance.UnitValue,
+				Currency:  item.JSONInsurance.Currency,
 			},
 			Description: item.Description,
 			Dimensions: domain.Dimensions{
-				Height: item.Dimensions.Height,
-				Width:  item.Dimensions.Width,
-				Depth:  item.Dimensions.Depth,
-				Unit:   item.Dimensions.Unit,
+				Height: item.JSONDimensions.Height,
+				Width:  item.JSONDimensions.Width,
+				Depth:  item.JSONDimensions.Depth,
+				Unit:   item.JSONDimensions.Unit,
 			},
 			Weight: domain.Weight{
-				Value: item.Weight.Value,
-				Unit:  item.Weight.Unit,
+				Value: item.JSONWeight.WeightValue,
+				Unit:  item.JSONWeight.WeightUnit,
 			},
 		}
 	}
@@ -171,18 +171,18 @@ func mapPackages(packages []table.Package) []domain.Package {
 			ID:  pkg.ID,
 			Lpn: pkg.Lpn,
 			Dimensions: domain.Dimensions{
-				Height: pkg.Dimensions.Height,
-				Width:  pkg.Dimensions.Width,
-				Depth:  pkg.Dimensions.Depth,
-				Unit:   pkg.Dimensions.Unit,
+				Height: pkg.JSONDimensions.Height,
+				Width:  pkg.JSONDimensions.Width,
+				Depth:  pkg.JSONDimensions.Depth,
+				Unit:   pkg.JSONDimensions.Unit,
 			},
 			Weight: domain.Weight{
-				Value: pkg.Weight.Value,
-				Unit:  pkg.Weight.Unit,
+				Value: pkg.JSONWeight.WeightValue,
+				Unit:  pkg.JSONWeight.WeightUnit,
 			},
 			Insurance: domain.Insurance{
-				UnitValue: pkg.Insurance.UnitValue,
-				Currency:  pkg.Insurance.Currency,
+				UnitValue: pkg.JSONInsurance.UnitValue,
+				Currency:  pkg.JSONInsurance.Currency,
 			},
 			ItemReferences: mapItemReferences(pkg.JSONItems),
 		}
@@ -196,8 +196,8 @@ func mapItemReferences(items table.JSONItems) []domain.ItemReference {
 		result[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(item.ReferenceID),
 			Quantity: domain.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
 			},
 		}
 	}

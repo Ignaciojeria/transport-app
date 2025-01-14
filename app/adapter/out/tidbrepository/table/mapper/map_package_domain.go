@@ -9,14 +9,14 @@ func MapPackageDomain(pkg table.Package) domain.Package {
 	return domain.Package{
 		ID:             pkg.ID,
 		Lpn:            pkg.Lpn,
-		Dimensions:     mapTableDimensionsToDomain(pkg.Dimensions),
-		Weight:         mapTableWeightToDomain(pkg.Weight),
-		Insurance:      mapTableInsuranceToDomain(pkg.Insurance),
+		Dimensions:     mapTableDimensionsToDomain(pkg.JSONDimensions),
+		Weight:         mapTableWeightToDomain(pkg.JSONWeight),
+		Insurance:      mapTableInsuranceToDomain(pkg.JSONInsurance),
 		ItemReferences: mapTableItemsToDomain(pkg.JSONItems),
 	}
 }
 
-func mapTableDimensionsToDomain(dim table.Dimensions) domain.Dimensions {
+func mapTableDimensionsToDomain(dim table.JSONDimensions) domain.Dimensions {
 	return domain.Dimensions{
 		Height: dim.Height,
 		Width:  dim.Width,
@@ -25,14 +25,14 @@ func mapTableDimensionsToDomain(dim table.Dimensions) domain.Dimensions {
 	}
 }
 
-func mapTableWeightToDomain(weight table.Weight) domain.Weight {
+func mapTableWeightToDomain(weight table.JSONWeight) domain.Weight {
 	return domain.Weight{
-		Value: weight.Value,
-		Unit:  weight.Unit,
+		Value: weight.WeightValue,
+		Unit:  weight.WeightUnit,
 	}
 }
 
-func mapTableInsuranceToDomain(ins table.Insurance) domain.Insurance {
+func mapTableInsuranceToDomain(ins table.JSONInsurance) domain.Insurance {
 	return domain.Insurance{
 		UnitValue: ins.UnitValue,
 		Currency:  ins.Currency,
@@ -45,8 +45,8 @@ func mapTableItemsToDomain(items table.JSONItems) []domain.ItemReference {
 		mapped[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(item.ReferenceID),
 			Quantity: domain.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
 			},
 		}
 	}

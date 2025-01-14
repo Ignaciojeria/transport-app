@@ -72,13 +72,14 @@ type Order struct {
 }
 
 type Items struct {
-	ReferenceID       string     `gorm:"not null"`
-	LogisticCondition string     `gorm:"default:null"`
-	Quantity          Quantity   `gorm:"embedded"`
-	Insurance         Insurance  `gorm:"embedded"`
-	Description       string     `gorm:"type:text"`
-	Dimensions        Dimensions `gorm:"embedded"`
-	Weight            Weight     `gorm:"embedded"`
+	ReferenceID       string         `gorm:"not null"`
+	LogisticCondition string         `gorm:"default:null"`
+	QuantityNumber    int            `gorm:"not null"`
+	QuantityUnit      string         `gorm:"not null"`
+	JSONInsurance     JSONInsurance  `gorm:"type:json"`
+	Description       string         `gorm:"type:text"`
+	JSONDimensions    JSONDimensions `gorm:"type:json"`
+	JSONWeight        JSONWeight     `gorm:"type:json"`
 }
 
 type JSONItems []Items
@@ -132,12 +133,12 @@ func (j JSONReference) Value() (driver.Value, error) {
 
 type Package struct {
 	gorm.Model
-	ID         int64      `gorm:"primaryKey"`
-	Lpn        string     `gorm:"type:varchar(191);not null;uniqueIndex"`
-	Dimensions Dimensions `gorm:"embedded"`
-	Weight     Weight     `gorm:"embedded"`
-	Insurance  Insurance  `gorm:"embedded"`
-	JSONItems  JSONItems  `gorm:"type:json"`
+	ID             int64          `gorm:"primaryKey"`
+	Lpn            string         `gorm:"type:varchar(191);not null;uniqueIndex"`
+	JSONDimensions JSONDimensions `gorm:"type:json"`
+	JSONWeight     JSONWeight     `gorm:"type:json"`
+	JSONInsurance  JSONInsurance  `gorm:"type:json"`
+	JSONItems      JSONItems      `gorm:"type:json"`
 }
 
 type OrderPackage struct {
@@ -209,14 +210,25 @@ type Operator struct {
 	Type                  string              `gorm:"type:varchar(191);not null"`
 }
 
-type Quantity struct {
-	QuantityNumber int    `gorm:"not null"`
-	QuantityUnit   string `gorm:"not null"`
-}
-
 type Insurance struct {
 	UnitValue float64 `gorm:"not null"`
 	Currency  string  `gorm:"not null"`
+}
+
+type JSONInsurance Insurance
+
+// Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
+func (j *JSONInsurance) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONDocuments value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
+func (j JSONInsurance) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 type Dimensions struct {
@@ -226,9 +238,41 @@ type Dimensions struct {
 	Unit   string  `gorm:"not null"`
 }
 
+type JSONDimensions Dimensions
+
+// Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
+func (j *JSONDimensions) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONDocuments value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
+func (j JSONDimensions) Value() (driver.Value, error) {
+	return json.Marshal(j)
+}
+
 type Weight struct {
-	Value float64 `gorm:"not null"`
-	Unit  string  `gorm:"not null"`
+	WeightValue float64 `gorm:"not null"`
+	WeightUnit  string  `gorm:"not null"`
+}
+
+type JSONWeight Weight
+
+// Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
+func (j *JSONWeight) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONDocuments value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
+func (j JSONWeight) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 type OrderType struct {

@@ -67,24 +67,22 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 		mapped[i] = table.Items{
 			ReferenceID:       string(item.ReferenceID),
 			LogisticCondition: item.LogisticCondition,
-			Quantity: table.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
-			},
-			Insurance: table.Insurance{
+			QuantityNumber:    item.Quantity.QuantityNumber,
+			QuantityUnit:      item.Quantity.QuantityUnit,
+			JSONInsurance: table.JSONInsurance{
 				UnitValue: item.Insurance.UnitValue,
 				Currency:  item.Insurance.Currency,
 			},
 			Description: item.Description,
-			Dimensions: table.Dimensions{
+			JSONDimensions: table.JSONDimensions{
 				Height: item.Dimensions.Height,
 				Width:  item.Dimensions.Width,
 				Depth:  item.Dimensions.Depth,
 				Unit:   item.Dimensions.Unit,
 			},
-			Weight: table.Weight{
-				Value: item.Weight.Value,
-				Unit:  item.Weight.Unit,
+			JSONWeight: table.JSONWeight{
+				WeightValue: item.Weight.Value,
+				WeightUnit:  item.Weight.Unit,
 			},
 		}
 	}
@@ -97,17 +95,17 @@ func MapPackagesToTable(packages []domain.Package) []table.Package {
 	for i, pkg := range packages {
 		mapped[i] = table.Package{
 			Lpn: pkg.Lpn,
-			Dimensions: table.Dimensions{
+			JSONDimensions: table.JSONDimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,
 				Depth:  pkg.Dimensions.Depth,
 				Unit:   pkg.Dimensions.Unit,
 			},
-			Weight: table.Weight{
-				Value: pkg.Weight.Value,
-				Unit:  pkg.Weight.Unit,
+			JSONWeight: table.JSONWeight{
+				WeightValue: pkg.Weight.Value,
+				WeightUnit:  pkg.Weight.Unit,
 			},
-			Insurance: table.Insurance{
+			JSONInsurance: table.JSONInsurance{
 				UnitValue: pkg.Insurance.UnitValue,
 				Currency:  pkg.Insurance.Currency,
 			},
@@ -119,17 +117,17 @@ func MapPackageToTable(pkg domain.Package) table.Package {
 	return table.Package{
 		ID:  pkg.ID,
 		Lpn: pkg.Lpn,
-		Dimensions: table.Dimensions{
+		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
 			Width:  pkg.Dimensions.Width,
 			Depth:  pkg.Dimensions.Depth,
 			Unit:   pkg.Dimensions.Unit,
 		},
-		Weight: table.Weight{
-			Value: pkg.Weight.Value,
-			Unit:  pkg.Weight.Unit,
+		JSONWeight: table.JSONWeight{
+			WeightValue: pkg.Weight.Value,
+			WeightUnit:  pkg.Weight.Unit,
 		},
-		Insurance: table.Insurance{
+		JSONInsurance: table.JSONInsurance{
 			UnitValue: pkg.Insurance.UnitValue,
 			Currency:  pkg.Insurance.Currency,
 		},
