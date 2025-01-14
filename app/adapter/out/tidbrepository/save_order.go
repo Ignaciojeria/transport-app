@@ -28,10 +28,9 @@ func NewSaveOrder(
 	loadOrderSorderStatuses LoadOrderStatuses,
 ) SaveOrder {
 	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
-
-		to.OrderStatus = loadOrderSorderStatuses().Available()
-
+		available := loadOrderSorderStatuses().Available()
 		type QueryResult struct {
+			OrganizationCountryID int64
 			CommerceID            int64
 			ConsumerID            int64
 			OrderTypeID           int64
@@ -44,7 +43,6 @@ func NewSaveOrder(
 		}
 
 		var result QueryResult
-
 		err := conn.Raw(`
 		SELECT 
 		  c.id AS commerce_id,
@@ -57,39 +55,56 @@ func NewSaveOrder(
 		  o_ni.id AS origin_node_info_id,
 		  d_ni.id AS destination_node_info_id
 		FROM 
-		  commerces c
-		LEFT JOIN consumers con ON con.organization_country_id = ? AND con.name = ?
-		LEFT JOIN order_types ot ON ot.organization_country_id = ? AND ot.type = ?
-		LEFT JOIN contacts o_ct ON o_ct.organization_country_id = ? AND o_ct.full_name = ? AND o_ct.email = ? AND o_ct.phone = ?
-		LEFT JOIN contacts d_ct ON d_ct.organization_country_id = ? AND d_ct.full_name = ? AND d_ct.email = ? AND d_ct.phone = ?
-		LEFT JOIN address_infos o_ai ON o_ai.organization_country_id = ? AND o_ai.raw_address = ?
-		LEFT JOIN address_infos d_ai ON d_ai.organization_country_id = ? AND d_ai.raw_address = ?
-		LEFT JOIN node_infos o_ni ON o_ni.organization_country_id = ? AND o_ni.reference_id = ?
-		LEFT JOIN node_infos d_ni ON d_ni.organization_country_id = ? AND d_ni.reference_id = ?
-		WHERE c.organization_country_id = ?;
-				`,
+		  organization_countries org
+		  LEFT JOIN commerces c 
+			ON c.organization_country_id = org.id
+			AND c.name = ?
+		  LEFT JOIN consumers con 
+			ON con.organization_country_id = org.id
+			AND con.name = ?
+		  LEFT JOIN order_types ot 
+			ON ot.organization_country_id = org.id
+			AND ot.type = ?
+		  LEFT JOIN contacts o_ct 
+			ON o_ct.organization_country_id = org.id
+			AND o_ct.full_name = ? 
+			AND o_ct.email = ? 
+			AND o_ct.phone = ?
+		  LEFT JOIN contacts d_ct 
+			ON d_ct.organization_country_id = org.id
+			AND d_ct.full_name = ? 
+			AND d_ct.email = ? 
+			AND d_ct.phone = ?
+		  LEFT JOIN address_infos o_ai 
+			ON o_ai.organization_country_id = org.id
+			AND o_ai.raw_address = ?
+		  LEFT JOIN address_infos d_ai 
+			ON d_ai.organization_country_id = org.id
+			AND d_ai.raw_address = ?
+		  LEFT JOIN node_infos o_ni 
+			ON o_ni.organization_country_id = org.id
+			AND o_ni.reference_id = ?
+		  LEFT JOIN node_infos d_ni 
+			ON d_ni.organization_country_id = org.id
+			AND d_ni.reference_id = ?
+		WHERE 
+		  org.id = ?;
+		`,
 			// Argumentos en el mismo orden que los placeholders en la query
-			to.Organization.OrganizationCountryID, // Para consumers
-			to.BusinessIdentifiers.Consumer,
-			to.Organization.OrganizationCountryID, // Para order_types
-			to.OrderType.Type,
-			to.Organization.OrganizationCountryID, // Para origin contact
-			to.Origin.AddressInfo.Contact.FullName,
+			to.BusinessIdentifiers.Commerce,        // Nombre del commerce
+			to.BusinessIdentifiers.Consumer,        // Nombre del consumer
+			to.OrderType.Type,                      // Tipo de orden
+			to.Origin.AddressInfo.Contact.FullName, // Contacto origen
 			to.Origin.AddressInfo.Contact.Email,
 			to.Origin.AddressInfo.Contact.Phone,
-			to.Organization.OrganizationCountryID, // Para destination contact
-			to.Destination.AddressInfo.Contact.FullName,
+			to.Destination.AddressInfo.Contact.FullName, // Contacto destino
 			to.Destination.AddressInfo.Contact.Email,
 			to.Destination.AddressInfo.Contact.Phone,
-			to.Organization.OrganizationCountryID, // Para origin address
-			to.Origin.AddressInfo.RawAddress(),
-			to.Organization.OrganizationCountryID, // Para destination address
-			to.Destination.AddressInfo.RawAddress(),
-			to.Organization.OrganizationCountryID, // Para origin node
-			to.Origin.NodeInfo.ReferenceID,
-			to.Organization.OrganizationCountryID, // Para destination node
-			to.Destination.NodeInfo.ReferenceID,
-			to.Organization.OrganizationCountryID, // Para commerces en WHERE
+			to.Origin.AddressInfo.RawAddress(),      // Dirección origen
+			to.Destination.AddressInfo.RawAddress(), // Dirección destino
+			to.Origin.NodeInfo.ReferenceID,          // Nodo origen
+			to.Destination.NodeInfo.ReferenceID,     // Nodo destino
+			to.Organization.OrganizationCountryID,   // ID de la organización
 		).Scan(&result).Error
 
 		if err != nil {
@@ -106,7 +121,7 @@ func NewSaveOrder(
 		orderTable.OriginNodeInfoID = result.OriginNodeInfoID
 		orderTable.DestinationNodeInfoID = result.DestinationNodeInfoID
 		orderTable.OrderTypeID = result.OrderTypeID
-		orderTable.OrderStatusID = to.OrderStatus.ID
+		orderTable.OrderStatusID = available.ID
 
 		return domain.Order{}, conn.Transaction(func(tx *gorm.DB) error {
 			// Guardar entidades que no existen y actualizar relaciones en orderTable
