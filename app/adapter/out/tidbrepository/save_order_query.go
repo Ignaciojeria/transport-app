@@ -127,6 +127,34 @@ func NewSaveOrderQuery(conn tidb.TIDBConnection) SaveOrderQuery {
 			order.Organization.OrganizationCountryID,
 		).Scan(&flattenedOrder).Error
 
+		var lpns []string
+		for _, v := range order.Packages {
+			lpns = append(lpns, v.Lpn)
+		}
+
+		var flattenedPackages []views.FlattenedPackageView
+
+		err = conn.Raw(`
+		SELECT
+		    pkg.id AS package_id,
+		    pkg.organization_country_id AS organization_country_id,
+		    pkg.lpn AS lpn,
+		    pkg.json_dimensions->>'$.height' AS height,
+		    pkg.json_dimensions->>'$.width' AS width,
+		    pkg.json_dimensions->>'$.depth' AS depth,
+		    pkg.json_dimensions->>'$.unit' AS unit,
+		    pkg.json_weight->>'$.weight_value' AS weight_value,
+		    pkg.json_weight->>'$.weight_unit' AS weight_unit,
+		    pkg.json_insurance->>'$.unit_value' AS unit_value,
+		    pkg.json_insurance->>'$.currency' AS currency
+		FROM
+		    packages pkg
+		WHERE
+		    pkg.lpn IN (?) AND
+		    pkg.organization_country_id = ?;
+			
+	`, lpns, order.Organization.OrganizationCountryID).Scan(&flattenedPackages).Error
+
 		return domain.Order{}, err
 	}
 }

@@ -47,6 +47,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
 		Commerce:                          mapCommerceToTable(order.BusinessIdentifiers),
 		Consumer:                          mapConsumerToTable(order.BusinessIdentifiers),
+		//Packages:                          MapPackagesToTable(order.Packages),
 	}
 }
 
@@ -109,10 +110,26 @@ func MapPackagesToTable(packages []domain.Package) []table.Package {
 				UnitValue: pkg.Insurance.UnitValue,
 				Currency:  pkg.Insurance.Currency,
 			},
+			JSONItemsReferences: mapDomainItemsToTable(pkg.ItemReferences),
 		}
 	}
 	return mapped
 }
+
+func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReferences {
+	mapped := make(table.JSONItemReferences, len(items))
+	for i, item := range items {
+		mapped[i] = table.ItemReference{ // Cambiado de JSONItemReferences a JSONItemReference
+			ReferenceID: string(item.ReferenceID),
+			Quantity: table.Quantity{
+				QuantityNumber: item.Quantity.QuantityNumber,
+				QuantityUnit:   item.Quantity.QuantityUnit,
+			},
+		}
+	}
+	return mapped
+}
+
 func MapPackageToTable(pkg domain.Package) table.Package {
 	return table.Package{
 		ID:  pkg.ID,
@@ -131,6 +148,7 @@ func MapPackageToTable(pkg domain.Package) table.Package {
 			UnitValue: pkg.Insurance.UnitValue,
 			Currency:  pkg.Insurance.Currency,
 		},
+		JSONItemsReferences: mapDomainItemsToTable(pkg.ItemReferences),
 	}
 }
 

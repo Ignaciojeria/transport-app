@@ -80,20 +80,19 @@ type FlattenedOrderView struct {
 }
 
 type FlattenedPackageView struct {
-	PackageID   int64   `gorm:"column:package_id"`
-	OrderID     int64   `gorm:"column:order_id"`
-	Lpn         string  `gorm:"column:lpn"`
-	Height      float64 `gorm:"column:height"`
-	Width       float64 `gorm:"column:width"`
-	Depth       float64 `gorm:"column:depth"`
-	Unit        string  `gorm:"column:unit"`
-	WeightValue float64 `gorm:"column:weight_value"`
-	WeightUnit  string  `gorm:"column:weight_unit"`
-	Description string  `gorm:"column:description"`
-	Quantity    int     `gorm:"column:quantity"`
-	UnitValue   float64 `gorm:"column:unit_value"`
-	Currency    string  `gorm:"column:currency"`
-	PackageType string  `gorm:"column:package_type"`
+	PackageID             int64                    `gorm:"column:package_id"`
+	OrderID               int64                    `gorm:"column:order_id"`
+	Items                 table.JSONItemReferences `gorm:"column:items"`
+	OrganizationCountryID int64                    `gorm:"column:organization_country_id"`
+	Lpn                   string                   `gorm:"column:lpn"`
+	Height                float64                  `gorm:"column:height"`
+	Width                 float64                  `gorm:"column:width"`
+	Depth                 float64                  `gorm:"column:depth"`
+	Unit                  string                   `gorm:"column:unit"`
+	WeightValue           float64                  `gorm:"column:weight_value"`
+	WeightUnit            string                   `gorm:"column:weight_unit"`
+	UnitValue             float64                  `gorm:"column:unit_value"`
+	Currency              string                   `gorm:"column:currency"`
 }
 
 type FlattenedOrderReferenceView struct {
@@ -265,13 +264,6 @@ func mapPackages(packages []FlattenedPackageView) []domain.Package {
 			Weight: domain.Weight{
 				Value: p.WeightValue,
 				Unit:  p.WeightUnit,
-			},
-			ItemReferences: []domain.ItemReference{
-				{
-					Quantity: domain.Quantity{
-						QuantityNumber: p.Quantity,
-					},
-				},
 			},
 			Insurance: domain.Insurance{
 				UnitValue: p.UnitValue,

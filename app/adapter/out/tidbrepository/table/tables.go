@@ -72,14 +72,14 @@ type Order struct {
 }
 
 type Items struct {
-	ReferenceID       string         `gorm:"not null"`
-	LogisticCondition string         `gorm:"default:null"`
-	QuantityNumber    int            `gorm:"not null"`
-	QuantityUnit      string         `gorm:"not null"`
-	JSONInsurance     JSONInsurance  `gorm:"type:json"`
-	Description       string         `gorm:"type:text"`
-	JSONDimensions    JSONDimensions `gorm:"type:json"`
-	JSONWeight        JSONWeight     `gorm:"type:json"`
+	ReferenceID       string         `gorm:"not null" json:"reference_id"`
+	LogisticCondition string         `gorm:"default:null" json:"logistic_condition"`
+	QuantityNumber    int            `gorm:"not null" json:"quantity_number"`
+	QuantityUnit      string         `gorm:"not null" json:"quantity_unit"`
+	JSONInsurance     JSONInsurance  `gorm:"type:json" json:"insurance"`
+	Description       string         `gorm:"type:text" json:"description"`
+	JSONDimensions    JSONDimensions `gorm:"type:json" json:"dimensions"`
+	JSONWeight        JSONWeight     `gorm:"type:json" json:"weight"`
 }
 
 type JSONItems []Items
@@ -111,8 +111,34 @@ type Contact struct {
 }
 
 type Reference struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  string `gorm:"not null" json:"type"`
+	Value string `gorm:"not null" json:"value"`
+}
+
+type ItemReference struct {
+	ReferenceID string   `json:"reference_id"`
+	Quantity    Quantity `json:"quantity"`
+}
+
+type Quantity struct {
+	QuantityNumber int    `json:"quantity_number"`
+	QuantityUnit   string `json:"quantity_unit"`
+}
+
+type JSONItemReferences []ItemReference
+
+// Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
+func (j *JSONItemReferences) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONDocuments value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON al guardar en la base de datos
+func (j JSONItemReferences) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 type JSONReference []Reference
@@ -133,12 +159,14 @@ func (j JSONReference) Value() (driver.Value, error) {
 
 type Package struct {
 	gorm.Model
-	ID             int64          `gorm:"primaryKey"`
-	Lpn            string         `gorm:"type:varchar(191);not null;uniqueIndex"`
-	JSONDimensions JSONDimensions `gorm:"type:json"`
-	JSONWeight     JSONWeight     `gorm:"type:json"`
-	JSONInsurance  JSONInsurance  `gorm:"type:json"`
-	JSONItems      JSONItems      `gorm:"type:json"`
+	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	ID                    int64               `gorm:"primaryKey"`
+	Lpn                   string              `gorm:"type:varchar(191);not null;uniqueIndex"`
+	JSONDimensions        JSONDimensions      `gorm:"type:json"`
+	JSONWeight            JSONWeight          `gorm:"type:json"`
+	JSONInsurance         JSONInsurance       `gorm:"type:json"`
+	JSONItemsReferences   JSONItemReferences  `gorm:"type:json"`
 }
 
 type OrderPackage struct {
@@ -211,8 +239,8 @@ type Operator struct {
 }
 
 type Insurance struct {
-	UnitValue float64 `gorm:"not null"`
-	Currency  string  `gorm:"not null"`
+	UnitValue float64 `gorm:"not null" json:"unit_value"`
+	Currency  string  `gorm:"not null" json:"currency"`
 }
 
 type JSONInsurance Insurance
@@ -232,10 +260,10 @@ func (j JSONInsurance) Value() (driver.Value, error) {
 }
 
 type Dimensions struct {
-	Height float64 `gorm:"not null"`
-	Width  float64 `gorm:"not null"`
-	Depth  float64 `gorm:"not null"`
-	Unit   string  `gorm:"not null"`
+	Height float64 `gorm:"not null" json:"height"`
+	Width  float64 `gorm:"not null" json:"width"`
+	Depth  float64 `gorm:"not null" json:"depth"`
+	Unit   string  `gorm:"not null" json:"unit"`
 }
 
 type JSONDimensions Dimensions
@@ -255,8 +283,8 @@ func (j JSONDimensions) Value() (driver.Value, error) {
 }
 
 type Weight struct {
-	WeightValue float64 `gorm:"not null"`
-	WeightUnit  string  `gorm:"not null"`
+	WeightValue float64 `gorm:"not null" json:"weight_value"`
+	WeightUnit  string  `gorm:"not null" json:"weight_unit"`
 }
 
 type JSONWeight Weight

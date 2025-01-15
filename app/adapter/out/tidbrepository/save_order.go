@@ -225,7 +225,7 @@ func NewSaveOrder(
 				return err
 			}
 
-			if err := saveOrderPackages(tx, orderTable.ID, orderToCreate.Packages); err != nil {
+			if err := saveOrderPackages(tx, orderTable.ID, orderToCreate.Organization.OrganizationCountryID, orderToCreate.Packages); err != nil {
 				return fmt.Errorf("failed to save packages: %w", err)
 			}
 
@@ -235,11 +235,11 @@ func NewSaveOrder(
 }
 
 // Guardar paquetes asociados a la orden
-func saveOrderPackages(tx *gorm.DB, orderID int64, incomingPackages []domain.Package) error {
+func saveOrderPackages(tx *gorm.DB, orderID int64, organizationCountry int64, incomingPackages []domain.Package) error {
 	// Procesar los paquetes entrantes
 	for _, incomingPkg := range incomingPackages {
 		// Usar createOrUpdatePackage para manejar cada paquete
-		if err := createOrUpdatePackage(tx, orderID, incomingPkg); err != nil {
+		if err := createOrUpdatePackage(tx, orderID, organizationCountry, incomingPkg); err != nil {
 			return fmt.Errorf("failed to process package LPN %s: %w", incomingPkg.Lpn, err)
 		}
 	}
@@ -274,7 +274,7 @@ func extractLPNs(packages []domain.Package) []string {
 	return lpns
 }
 
-func createOrUpdatePackage(tx *gorm.DB, orderID int64, incomingPkg domain.Package) error {
+func createOrUpdatePackage(tx *gorm.DB, orderID int64, organizationCountry int64, incomingPkg domain.Package) error {
 	var existingPkg table.Package
 
 	// Intentar obtener el paquete existente por LPN
@@ -312,7 +312,7 @@ func createOrUpdatePackage(tx *gorm.DB, orderID int64, incomingPkg domain.Packag
 	} else if err == gorm.ErrRecordNotFound {
 		// Si el paquete no existe, crearlo
 		newPkgTable := mapper.MapPackageToTable(incomingPkg)
-
+		newPkgTable.OrganizationCountryID = organizationCountry
 		// Crear el nuevo paquete
 		if err := tx.Create(&newPkgTable).Error; err != nil {
 			return fmt.Errorf("failed to create new package LPN %s: %w", incomingPkg.Lpn, err)

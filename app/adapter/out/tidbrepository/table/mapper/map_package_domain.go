@@ -12,7 +12,7 @@ func MapPackageDomain(pkg table.Package) domain.Package {
 		Dimensions:     mapTableDimensionsToDomain(pkg.JSONDimensions),
 		Weight:         mapTableWeightToDomain(pkg.JSONWeight),
 		Insurance:      mapTableInsuranceToDomain(pkg.JSONInsurance),
-		ItemReferences: mapTableItemsToDomain(pkg.JSONItems),
+		ItemReferences: mapTableItemsToDomain(pkg.JSONItemsReferences),
 	}
 }
 
@@ -39,14 +39,14 @@ func mapTableInsuranceToDomain(ins table.JSONInsurance) domain.Insurance {
 	}
 }
 
-func mapTableItemsToDomain(items table.JSONItems) []domain.ItemReference {
+func mapTableItemsToDomain(items table.JSONItemReferences) []domain.ItemReference {
 	mapped := make([]domain.ItemReference, len(items))
 	for i, item := range items {
 		mapped[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(item.ReferenceID),
 			Quantity: domain.Quantity{
-				QuantityNumber: item.QuantityNumber,
-				QuantityUnit:   item.QuantityUnit,
+				QuantityNumber: item.Quantity.QuantityNumber,
+				QuantityUnit:   item.Quantity.QuantityUnit,
 			},
 		}
 	}

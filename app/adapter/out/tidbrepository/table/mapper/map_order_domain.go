@@ -184,20 +184,20 @@ func mapPackages(packages []table.Package) []domain.Package {
 				UnitValue: pkg.JSONInsurance.UnitValue,
 				Currency:  pkg.JSONInsurance.Currency,
 			},
-			ItemReferences: mapItemReferences(pkg.JSONItems),
+			ItemReferences: mapItemReferences(pkg.JSONItemsReferences),
 		}
 	}
 	return result
 }
 
-func mapItemReferences(items table.JSONItems) []domain.ItemReference {
+func mapItemReferences(items table.JSONItemReferences) []domain.ItemReference {
 	result := make([]domain.ItemReference, len(items))
 	for i, item := range items {
 		result[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(item.ReferenceID),
 			Quantity: domain.Quantity{
-				QuantityNumber: item.QuantityNumber,
-				QuantityUnit:   item.QuantityUnit,
+				QuantityNumber: item.Quantity.QuantityNumber,
+				QuantityUnit:   item.Quantity.QuantityUnit,
 			},
 		}
 	}

@@ -143,23 +143,23 @@ WHERE
 		// Obtener packages
 		var packages []views.FlattenedPackageView
 		packagesQuery := `
-        SELECT 
+           SELECT 
             op.order_id,
             p.lpn,
-            p.json_dimensions->>'$.Height' as height,
-            p.json_dimensions->>'$.Width' as width,
-            p.json_dimensions->>'$.Depth' as depth,
-            p.json_dimensions->>'$.Unit' as unit,
-            p.json_weight->>'$.WeightValue' as weight_value,
-            p.json_weight->>'$.WeightUnit' as weight_unit,
-            p.json_items->>'$.Description' as description,
-            p.json_items->>'$.QuantityNumber' as quantity,
-            p.json_insurance->>'$.UnitValue' as unit_value,
-            p.json_insurance->>'$.Currency' as currency,
-            'default' as package_type
+            p.json_dimensions->>'$.height' AS height,
+            p.json_dimensions->>'$.width' AS width,
+            p.json_dimensions->>'$.depth' AS depth,
+            p.json_dimensions->>'$.unit' AS unit,
+            p.json_weight->>'$.weight_value' AS weight_value,
+            p.json_weight->>'$.weight_unit' AS weight_unit,
+
+            p.json_insurance->>'$.unit_value' AS unit_value,
+            p.json_insurance->>'$.currency' AS currency,
+            'default' AS package_type
         FROM packages p
         JOIN order_packages op ON p.id = op.package_id
-        WHERE op.order_id IN (?)`
+        WHERE op.order_id IN (?);
+        `
 
 		if err := conn.Raw(packagesQuery, orderIDs).Scan(&packages).Error; err != nil {
 			return nil, fmt.Errorf("error scanning packages: %w", err)

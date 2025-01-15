@@ -1,6 +1,8 @@
 package domain
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
 
 	"github.com/joomcode/errorx"
@@ -33,6 +35,10 @@ func (o Order) Validate() error {
 	// Validar fechas prometidas
 	if err := o.ValidatePromisedDate(); err != nil {
 		return errorx.Decorate(err, "validation failed for PromisedDate")
+	}
+
+	if err := o.ValidatePackages(); err != nil {
+		return errorx.Decorate(err, "validation failed for Packages")
 	}
 
 	// Validar otras reglas de dominio (si las hay)
@@ -255,6 +261,49 @@ type Package struct {
 	Weight         Weight          `json:"weight"`
 	Insurance      Insurance       `json:"insurance"`
 	ItemReferences []ItemReference `json:"itemReferences"`
+}
+
+func (o *Order) ValidatePackages() error {
+	// Crear un mapa para verificar rápidamente si un ReferenceID pertenece a los ítems de la orden
+	itemMap := make(map[ReferenceID]bool)
+	for _, item := range o.Items {
+		itemMap[item.ReferenceID] = true
+	}
+
+	if len(o.Packages) == 1 {
+		// Si solo hay un paquete y no tiene referencias de ítems, asignar todos los ítems de la orden
+		if len(o.Packages[0].ItemReferences) == 0 {
+			for _, item := range o.Items {
+				o.Packages[0].ItemReferences = append(o.Packages[0].ItemReferences, ItemReference{
+					ReferenceID: item.ReferenceID,
+					Quantity:    item.Quantity,
+				})
+			}
+		} else {
+			// Validar que todas las referencias del paquete sean válidas
+			for _, ref := range o.Packages[0].ItemReferences {
+				if !itemMap[ref.ReferenceID] {
+					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.ReferenceID)
+				}
+			}
+		}
+	} else {
+		// Si hay más de un paquete, validar que todos los paquetes tengan referencias de ítems
+		for _, p := range o.Packages {
+			if len(p.ItemReferences) == 0 {
+				return errors.New("validation failed: packages with no item references must be explicitly defined when there are multiple packages")
+			}
+
+			// Validar que todas las referencias del paquete sean válidas
+			for _, ref := range p.ItemReferences {
+				if !itemMap[ref.ReferenceID] {
+					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.ReferenceID)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (p *Package) UpdateIfChanged(newPackage Package) (updatedPackage Package, needsUpdate bool) {
