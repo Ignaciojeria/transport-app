@@ -20,14 +20,14 @@ func init() {
 }
 
 type SaveOrder func(
-	context.Context,
-	domain.Order) (domain.Order, error)
+	ctx context.Context,
+	existingOrder, orderToCreate domain.Order) (domain.Order, error)
 
 func NewSaveOrder(
 	conn tidb.TIDBConnection,
 	loadOrderSorderStatuses LoadOrderStatuses,
 ) SaveOrder {
-	return func(ctx context.Context, to domain.Order) (domain.Order, error) {
+	return func(ctx context.Context, existingOrder, orderToCreate domain.Order) (domain.Order, error) {
 		available := loadOrderSorderStatuses().Available()
 		type QueryResult struct {
 			OrganizationCountryID int64
@@ -91,27 +91,27 @@ func NewSaveOrder(
 		  org.id = ?;
 		`,
 			// Argumentos en el mismo orden que los placeholders en la query
-			to.BusinessIdentifiers.Commerce,        // Nombre del commerce
-			to.BusinessIdentifiers.Consumer,        // Nombre del consumer
-			to.OrderType.Type,                      // Tipo de orden
-			to.Origin.AddressInfo.Contact.FullName, // Contacto origen
-			to.Origin.AddressInfo.Contact.Email,
-			to.Origin.AddressInfo.Contact.Phone,
-			to.Destination.AddressInfo.Contact.FullName, // Contacto destino
-			to.Destination.AddressInfo.Contact.Email,
-			to.Destination.AddressInfo.Contact.Phone,
-			to.Origin.AddressInfo.RawAddress(),      // Dirección origen
-			to.Destination.AddressInfo.RawAddress(), // Dirección destino
-			to.Origin.NodeInfo.ReferenceID,          // Nodo origen
-			to.Destination.NodeInfo.ReferenceID,     // Nodo destino
-			to.Organization.OrganizationCountryID,   // ID de la organización
+			orderToCreate.BusinessIdentifiers.Commerce,        // Nombre del commerce
+			orderToCreate.BusinessIdentifiers.Consumer,        // Nombre del consumer
+			orderToCreate.OrderType.Type,                      // Tipo de orden
+			orderToCreate.Origin.AddressInfo.Contact.FullName, // Contacto origen
+			orderToCreate.Origin.AddressInfo.Contact.Email,
+			orderToCreate.Origin.AddressInfo.Contact.Phone,
+			orderToCreate.Destination.AddressInfo.Contact.FullName, // Contacto destino
+			orderToCreate.Destination.AddressInfo.Contact.Email,
+			orderToCreate.Destination.AddressInfo.Contact.Phone,
+			orderToCreate.Origin.AddressInfo.RawAddress(),      // Dirección origen
+			orderToCreate.Destination.AddressInfo.RawAddress(), // Dirección destino
+			orderToCreate.Origin.NodeInfo.ReferenceID,          // Nodo origen
+			orderToCreate.Destination.NodeInfo.ReferenceID,     // Nodo destino
+			orderToCreate.Organization.OrganizationCountryID,   // ID de la organización
 		).Scan(&result).Error
 
 		if err != nil {
 			return domain.Order{}, err
 		}
-		orderTable := mapper.MapOrderToTable(to)
-		orderTable.OrganizationCountryID = to.Organization.OrganizationCountryID
+		orderTable := mapper.MapOrderToTable(orderToCreate)
+		orderTable.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 		orderTable.CommerceID = result.CommerceID
 		orderTable.ConsumerID = result.ConsumerID
 		orderTable.OriginContactID = result.OriginContactID
@@ -126,7 +126,7 @@ func NewSaveOrder(
 		return domain.Order{}, conn.Transaction(func(tx *gorm.DB) error {
 			// Guardar entidades que no existen y actualizar relaciones en orderTable
 			if result.CommerceID == 0 {
-				orderTable.Commerce.OrganizationCountryID = to.Organization.OrganizationCountryID
+				orderTable.Commerce.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 				if err := tx.Save(&orderTable.Commerce).Error; err != nil {
 					return err
 				}
@@ -134,7 +134,7 @@ func NewSaveOrder(
 			}
 
 			if result.ConsumerID == 0 {
-				orderTable.Consumer.OrganizationCountryID = to.Organization.OrganizationCountryID
+				orderTable.Consumer.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 				if err := tx.Save(&orderTable.Consumer).Error; err != nil {
 					return err
 				}
@@ -142,7 +142,7 @@ func NewSaveOrder(
 			}
 
 			if result.OriginContactID == 0 {
-				orderTable.OriginContact.OrganizationCountryID = to.Organization.OrganizationCountryID
+				orderTable.OriginContact.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 				if err := tx.Save(&orderTable.OriginContact).Error; err != nil {
 					return err
 				}
@@ -150,10 +150,10 @@ func NewSaveOrder(
 			}
 
 			if result.DestinationContactID == 0 {
-				if to.IsOriginAndDestinationContactEqual() {
+				if orderToCreate.IsOriginAndDestinationContactEqual() {
 					orderTable.DestinationContactID = orderTable.OriginContactID
 				} else {
-					orderTable.DestinationContact.OrganizationCountryID = to.Organization.OrganizationCountryID
+					orderTable.DestinationContact.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 					if err := tx.Save(&orderTable.DestinationContact).Error; err != nil {
 						return err
 					}
@@ -162,7 +162,7 @@ func NewSaveOrder(
 			}
 
 			if result.OriginAddressID == 0 {
-				orderTable.OriginAddressInfo.OrganizationCountryID = to.Organization.OrganizationCountryID
+				orderTable.OriginAddressInfo.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 				if err := tx.Save(&orderTable.OriginAddressInfo).Error; err != nil {
 					return err
 				}
@@ -170,10 +170,10 @@ func NewSaveOrder(
 			}
 
 			if result.DestinationAddressID == 0 {
-				if to.IsOriginAndDestinationAddressEqual() {
+				if orderToCreate.IsOriginAndDestinationAddressEqual() {
 					orderTable.DestinationAddressInfoID = orderTable.OriginAddressInfoID
 				} else {
-					orderTable.DestinationAddressInfo.OrganizationCountryID = to.Organization.OrganizationCountryID
+					orderTable.DestinationAddressInfo.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 					if err := tx.Save(&orderTable.DestinationAddressInfo).Error; err != nil {
 						return err
 					}
@@ -182,7 +182,7 @@ func NewSaveOrder(
 			}
 
 			if result.OriginNodeInfoID == 0 {
-				orderTable.OriginNodeInfo.OrganizationCountryID = to.Organization.OrganizationCountryID
+				orderTable.OriginNodeInfo.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 				orderTable.OriginNodeInfo.AddressID = orderTable.OriginAddressInfoID
 				if err := tx.Save(&orderTable.OriginNodeInfo).Error; err != nil {
 					return err
@@ -191,10 +191,10 @@ func NewSaveOrder(
 			}
 
 			if result.DestinationNodeInfoID == 0 {
-				if to.IsOriginAndDestinationNodeEqual() {
+				if orderToCreate.IsOriginAndDestinationNodeEqual() {
 					orderTable.DestinationNodeInfoID = orderTable.OriginNodeInfoID
 				} else {
-					orderTable.DestinationNodeInfo.OrganizationCountryID = to.Organization.OrganizationCountryID
+					orderTable.DestinationNodeInfo.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 					orderTable.DestinationNodeInfo.AddressID = orderTable.DestinationAddressInfoID
 					if err := tx.Save(&orderTable.DestinationNodeInfo).Error; err != nil {
 						return err
@@ -204,7 +204,7 @@ func NewSaveOrder(
 			}
 
 			if result.OrderTypeID == 0 {
-				orderTable.OrderType.OrganizationCountryID = to.Organization.OrganizationCountryID
+				orderTable.OrderType.OrganizationCountryID = orderToCreate.Organization.OrganizationCountryID
 				if err := tx.Create(&orderTable.OrderType).Error; err != nil {
 					return err
 				}
@@ -225,7 +225,7 @@ func NewSaveOrder(
 				return err
 			}
 
-			if err := saveOrderPackages(tx, orderTable.ID, to.Packages); err != nil {
+			if err := saveOrderPackages(tx, orderTable.ID, orderToCreate.Packages); err != nil {
 				return fmt.Errorf("failed to save packages: %w", err)
 			}
 

@@ -6,63 +6,81 @@ import (
 )
 
 type FlattenedOrderView struct {
-	OrderID                     int64               `gorm:"column:order_id"`
-	ReferenceID                 string              `gorm:"column:reference_id"`
-	OrganizationCountry         string              `gorm:"column:organization_country"`
-	CommerceName                string              `gorm:"column:commerce_name"`
-	ConsumerName                string              `gorm:"column:consumer_name"`
-	OrderStatus                 string              `gorm:"column:order_status"`
-	OrderType                   string              `gorm:"column:order_type"`
-	OrderTypeDescription        string              `gorm:"column:order_type_description"`
-	DeliveryInstructions        string              `gorm:"column:delivery_instructions"`
-	OriginContactName           string              `gorm:"column:origin_contact_name"`
-	OriginContactPhone          string              `gorm:"column:origin_contact_phone"`
-	OriginContactDocuments      table.JSONReference `gorm:"column:origin_contact_documents"`
-	DestinationContactName      string              `gorm:"column:destination_contact_name"`
-	DestinationContactPhone     string              `gorm:"column:destination_contact_phone"`
-	DestinationContactDocuments table.JSONReference `gorm:"column:destination_contact_documents"`
-	OriginAddressLine1          string              `gorm:"column:origin_address_line1"`
-	OriginAddressLine2          string              `gorm:"column:origin_address_line2"`
-	OriginAddressLine3          string              `gorm:"column:origin_address_line3"`
-	OriginState                 string              `gorm:"column:origin_state"`
-	OriginProvince              string              `gorm:"column:origin_province"`
-	OriginCounty                string              `gorm:"column:origin_county"`
-	OriginDistrict              string              `gorm:"column:origin_district"`
-	OriginZipCode               string              `gorm:"column:origin_zipcode"`
-	OriginLatitude              float32             `gorm:"column:origin_latitude"`
-	OriginLongitude             float32             `gorm:"column:origin_longitude"`
-	OriginTimeZone              string              `gorm:"column:origin_timezone"`
-	OriginNodeReferenceID       string              `gorm:"column:origin_node_reference_id"`
-	OriginNodeName              string              `gorm:"column:origin_node_name"`
-	OriginNodeType              string              `gorm:"column:origin_node_type"`
-	OriginNodeOperatorName      string              `gorm:"column:origin_node_operator_name"`
-	DestinationAddressLine1     string              `gorm:"column:destination_address_line1"`
-	DestinationAddressLine2     string              `gorm:"column:destination_address_line2"`
-	DestinationAddressLine3     string              `gorm:"column:destination_address_line3"`
-	DestinationState            string              `gorm:"column:destination_state"`
-	DestinationProvince         string              `gorm:"column:destination_province"`
-	DestinationCounty           string              `gorm:"column:destination_county"`
-	DestinationDistrict         string              `gorm:"column:destination_district"`
-	DestinationZipCode          string              `gorm:"column:destination_zipcode"`
-	DestinationLatitude         float32             `gorm:"column:destination_latitude"`
-	DestinationLongitude        float32             `gorm:"column:destination_longitude"`
-	DestinationTimeZone         string              `gorm:"column:destination_timezone"`
-	DestinationNodeReferenceID  string              `gorm:"column:destination_node_reference_id"`
-	DestinationNodeName         string              `gorm:"column:destination_node_name"`
-	DestinationNodeType         string              `gorm:"column:destination_node_type"`
-	DestinationNodeOperatorName string              `gorm:"column:destination_node_operator_name"`
-	Items                       table.JSONItems     `gorm:"column:items"`
-	CollectAvailabilityDate     string              `gorm:"column:collect_availability_date"`
-	CollectStartTime            string              `gorm:"column:collect_start_time"`
-	CollectEndTime              string              `gorm:"column:collect_end_time"`
-	PromisedStartDate           string              `gorm:"column:promised_start_date"`
-	PromisedEndDate             string              `gorm:"column:promised_end_date"`
-	PromisedStartTime           string              `gorm:"column:promised_start_time"`
-	PromisedEndTime             string              `gorm:"column:promised_end_time"`
-	TransportRequirements       table.JSONReference `gorm:"column:transport_requirements"`
+	OrderID                      int64               `gorm:"column:order_id"`
+	ReferenceID                  string              `gorm:"column:reference_id"`
+	OrganizationCountryID        int64               `gorm:"column:organization_country_id"`
+	OrganizationCountry          string              `gorm:"column:organization_country"`
+	CommerceID                   int64               `gorm:"column:commerce_id"`
+	CommerceName                 string              `gorm:"column:commerce_name"`
+	ConsumerID                   int64               `gorm:"column:consumer_id"`
+	ConsumerName                 string              `gorm:"column:consumer_name"`
+	OrderStatusID                int64               `gorm:"column:order_status_id"`
+	OrderStatus                  string              `gorm:"column:order_status"`
+	OrderTypeID                  int64               `gorm:"column:order_type_id"`
+	OrderType                    string              `gorm:"column:order_type"`
+	OrderTypeDescription         string              `gorm:"column:order_type_description"`
+	DeliveryInstructions         string              `gorm:"column:delivery_instructions"`
+	OriginContactID              int64               `gorm:"column:origin_contact_id"`
+	OriginContactName            string              `gorm:"column:origin_contact_name"`
+	OriginContactPhone           string              `gorm:"column:origin_contact_phone"`
+	OriginContactDocuments       table.JSONReference `gorm:"column:origin_contact_documents"`
+	DestinationContactID         int64               `gorm:"column:destination_contact_id"`
+	DestinationContactName       string              `gorm:"column:destination_contact_name"`
+	DestinationContactPhone      string              `gorm:"column:destination_contact_phone"`
+	DestinationContactDocuments  table.JSONReference `gorm:"column:destination_contact_documents"`
+	OriginAddressInfoID          int64               `gorm:"column:origin_address_info_id"`
+	OriginAddressLine1           string              `gorm:"column:origin_address_line1"`
+	OriginAddressLine2           string              `gorm:"column:origin_address_line2"`
+	OriginAddressLine3           string              `gorm:"column:origin_address_line3"`
+	OriginContactEmail           string              `gorm:"column:origin_contact_email"`
+	OriginContactNationalID      string              `gorm:"column:origin_contact_national_id"`
+	OriginState                  string              `gorm:"column:origin_state"`
+	OriginProvince               string              `gorm:"column:origin_province"`
+	OriginCounty                 string              `gorm:"column:origin_county"`
+	OriginDistrict               string              `gorm:"column:origin_district"`
+	OriginZipCode                string              `gorm:"column:origin_zipcode"`
+	OriginLatitude               float32             `gorm:"column:origin_latitude"`
+	OriginLongitude              float32             `gorm:"column:origin_longitude"`
+	OriginTimeZone               string              `gorm:"column:origin_timezone"`
+	OriginNodeInfoID             int64               `gorm:"column:origin_node_info_id"`
+	OriginNodeReferenceID        string              `gorm:"column:origin_node_reference_id"`
+	OriginNodeName               string              `gorm:"column:origin_node_name"`
+	OriginNodeType               string              `gorm:"column:origin_node_type"`
+	OriginNodeOperatorID         int64               `gorm:"column:origin_node_operator_id"`
+	OriginNodeOperatorName       string              `gorm:"column:origin_node_operator_name"`
+	DestinationAddressInfoID     int64               `gorm:"column:destination_address_info_id"`
+	DestinationAddressLine1      string              `gorm:"column:destination_address_line1"`
+	DestinationAddressLine2      string              `gorm:"column:destination_address_line2"`
+	DestinationAddressLine3      string              `gorm:"column:destination_address_line3"`
+	DestinationContactEmail      string              `gorm:"column:destination_contact_email"`
+	DestinationContactNationalID string              `gorm:"column:destination_contact_national_id"`
+	DestinationState             string              `gorm:"column:destination_state"`
+	DestinationProvince          string              `gorm:"column:destination_province"`
+	DestinationCounty            string              `gorm:"column:destination_county"`
+	DestinationDistrict          string              `gorm:"column:destination_district"`
+	DestinationZipCode           string              `gorm:"column:destination_zipcode"`
+	DestinationLatitude          float32             `gorm:"column:destination_latitude"`
+	DestinationLongitude         float32             `gorm:"column:destination_longitude"`
+	DestinationTimeZone          string              `gorm:"column:destination_timezone"`
+	DestinationNodeInfoID        int64               `gorm:"column:destination_node_info_id"`
+	DestinationNodeReferenceID   string              `gorm:"column:destination_node_reference_id"`
+	DestinationNodeName          string              `gorm:"column:destination_node_name"`
+	DestinationNodeType          string              `gorm:"column:destination_node_type"`
+	DestinationNodeOperatorID    int64               `gorm:"column:destination_node_operator_id"`
+	DestinationNodeOperatorName  string              `gorm:"column:destination_node_operator_name"`
+	Items                        table.JSONItems     `gorm:"column:items"`
+	CollectAvailabilityDate      string              `gorm:"column:collect_availability_date"`
+	CollectStartTime             string              `gorm:"column:collect_start_time"`
+	CollectEndTime               string              `gorm:"column:collect_end_time"`
+	PromisedStartDate            string              `gorm:"column:promised_start_date"`
+	PromisedEndDate              string              `gorm:"column:promised_end_date"`
+	PromisedStartTime            string              `gorm:"column:promised_start_time"`
+	PromisedEndTime              string              `gorm:"column:promised_end_time"`
+	TransportRequirements        table.JSONReference `gorm:"column:transport_requirements"`
 }
 
 type FlattenedPackageView struct {
+	PackageID   int64   `gorm:"column:package_id"`
 	OrderID     int64   `gorm:"column:order_id"`
 	Lpn         string  `gorm:"column:lpn"`
 	Height      float64 `gorm:"column:height"`
@@ -79,12 +97,14 @@ type FlattenedPackageView struct {
 }
 
 type FlattenedOrderReferenceView struct {
-	OrderID int64  `gorm:"column:order_id"`
-	Type    string `gorm:"column:type"`
-	Value   string `gorm:"column:value"`
+	ReferenceID int64  `gorm:"column:reference_id"`
+	OrderID     int64  `gorm:"column:order_id"`
+	Type        string `gorm:"column:type"`
+	Value       string `gorm:"column:value"`
 }
 
 type FlattenedVisitView struct {
+	VisitID        int64  `gorm:"column:visit_id"`
 	OrderID        int64  `gorm:"column:order_id"`
 	Date           string `gorm:"column:date"`
 	TimeRangeStart string `gorm:"column:time_range_start"`

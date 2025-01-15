@@ -193,10 +193,11 @@ func mapOperatorToTable(operator domain.Operator) table.Operator {
 		ID:   0,
 		Type: operator.Type,
 		Contact: table.Contact{
-			ID:       0,
-			FullName: operator.Contact.FullName,
-			Email:    operator.Contact.Email,
-			Phone:    operator.Contact.Phone,
+			ID:         0,
+			FullName:   operator.Contact.FullName,
+			Email:      operator.Contact.Email,
+			Phone:      operator.Contact.Phone,
+			NationalID: operator.Contact.NationalID,
 		},
 	}
 }
@@ -213,6 +214,7 @@ func mapAddressInfoToTable(address domain.AddressInfo) table.AddressInfo {
 		Latitude:     address.Latitude,
 		Longitude:    address.Longitude,
 		ZipCode:      address.ZipCode,
+		Province:     address.Province,
 		TimeZone:     address.TimeZone,
 	}
 }
