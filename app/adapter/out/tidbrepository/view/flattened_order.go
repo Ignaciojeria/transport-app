@@ -82,7 +82,7 @@ type FlattenedOrderView struct {
 type FlattenedPackageView struct {
 	PackageID             int64                    `gorm:"column:package_id"`
 	OrderID               int64                    `gorm:"column:order_id"`
-	Items                 table.JSONItemReferences `gorm:"column:items"`
+	Items                 table.JSONItemReferences `gorm:"column:items_references"`
 	OrganizationCountryID int64                    `gorm:"column:organization_country_id"`
 	Lpn                   string                   `gorm:"column:lpn"`
 	Height                float64                  `gorm:"column:height"`
@@ -114,6 +114,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	references := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		references[i] = domain.Reference{
+			ID:    ref.ReferenceID, // ID añadido
 			Type:  ref.Type,
 			Value: ref.Value,
 		}
@@ -134,26 +135,35 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		BusinessIdentifiers: domain.BusinessIdentifiers{
-			Commerce: o.CommerceName,
-			Consumer: o.ConsumerName,
+			CommerceID: o.CommerceID, // ID añadido
+			Commerce:   o.CommerceName,
+			ConsumerID: o.ConsumerID, // ID añadido
+			Consumer:   o.ConsumerName,
 		},
 		OrderStatus: domain.OrderStatus{
+			ID:     o.OrderStatusID, // ID añadido
 			Status: o.OrderStatus,
 		},
 		OrderType: domain.OrderType{
+			ID:          o.OrderTypeID, // ID añadido
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},
 		Origin: domain.Origin{
+			ID: o.OriginContactID, // ID añadido
 			NodeInfo: domain.NodeInfo{
+				ID:          o.OriginNodeInfoID, // ID añadido
 				ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
 				Name:        &o.OriginNodeName,
 				Type:        o.OriginNodeType,
 			},
 			AddressInfo: domain.AddressInfo{
+				ID: o.OriginAddressInfoID, // ID añadido
 				Contact: domain.Contact{
+					ID:        o.OriginContactID, // ID añadido
 					FullName:  o.OriginContactName,
 					Phone:     o.OriginContactPhone,
+					Email:     o.OriginContactEmail,
 					Documents: mapDocuments(o.OriginContactDocuments),
 				},
 				AddressLine1: o.OriginAddressLine1,
@@ -170,16 +180,21 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			},
 		},
 		Destination: domain.Destination{
+			ID:                   o.DestinationContactID, // ID añadido
 			DeliveryInstructions: o.DeliveryInstructions,
 			NodeInfo: domain.NodeInfo{
+				ID:          o.DestinationNodeInfoID, // ID añadido
 				ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
 				Name:        &o.DestinationNodeName,
 				Type:        o.DestinationNodeType,
 			},
 			AddressInfo: domain.AddressInfo{
+				ID: o.DestinationAddressInfoID, // ID añadido
 				Contact: domain.Contact{
+					ID:        o.DestinationContactID, // ID añadido
 					FullName:  o.DestinationContactName,
 					Phone:     o.DestinationContactPhone,
+					Email:     o.DestinationContactEmail,
 					Documents: mapDocuments(o.DestinationContactDocuments),
 				},
 				AddressLine1: o.DestinationAddressLine1,
@@ -220,40 +235,11 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	}
 }
 
-func mapJSONItems(items table.JSONItems) []domain.Item {
-	result := make([]domain.Item, len(items))
-	for i, item := range items {
-		result[i] = domain.Item{
-			ReferenceID:       domain.ReferenceID(item.ReferenceID),
-			LogisticCondition: item.LogisticCondition,
-			Quantity: domain.Quantity{
-				QuantityNumber: item.QuantityNumber,
-				QuantityUnit:   item.QuantityUnit,
-			},
-			Insurance: domain.Insurance{
-				UnitValue: item.JSONInsurance.UnitValue,
-				Currency:  item.JSONInsurance.Currency,
-			},
-			Description: item.Description,
-			Dimensions: domain.Dimensions{
-				Height: item.JSONDimensions.Height,
-				Width:  item.JSONDimensions.Width,
-				Depth:  item.JSONDimensions.Depth,
-				Unit:   item.JSONDimensions.Unit,
-			},
-			Weight: domain.Weight{
-				Value: item.JSONWeight.WeightValue,
-				Unit:  item.JSONWeight.WeightUnit,
-			},
-		}
-	}
-	return result
-}
-
 func mapPackages(packages []FlattenedPackageView) []domain.Package {
 	result := make([]domain.Package, len(packages))
 	for i, p := range packages {
 		result[i] = domain.Package{
+			ID:  p.PackageID,
 			Lpn: p.Lpn,
 			Dimensions: domain.Dimensions{
 				Height: p.Height,
@@ -268,6 +254,21 @@ func mapPackages(packages []FlattenedPackageView) []domain.Package {
 			Insurance: domain.Insurance{
 				UnitValue: p.UnitValue,
 				Currency:  p.Currency,
+			},
+			ItemReferences: mapItemReferences(p.Items),
+		}
+	}
+	return result
+}
+
+func mapItemReferences(items table.JSONItemReferences) []domain.ItemReference {
+	result := make([]domain.ItemReference, len(items))
+	for i, item := range items {
+		result[i] = domain.ItemReference{
+			ReferenceID: domain.ReferenceID(item.ReferenceID),
+			Quantity: domain.Quantity{
+				QuantityNumber: item.Quantity.QuantityNumber,
+				QuantityUnit:   item.Quantity.QuantityUnit,
 			},
 		}
 	}
@@ -294,6 +295,36 @@ func mapDocuments(docs table.JSONReference) []domain.Document {
 		result[i] = domain.Document{
 			Value: doc.Value,
 			Type:  doc.Type,
+		}
+	}
+	return result
+}
+
+func mapJSONItems(items table.JSONItems) []domain.Item {
+	result := make([]domain.Item, len(items))
+	for i, item := range items {
+		result[i] = domain.Item{
+			ReferenceID:       domain.ReferenceID(item.ReferenceID),
+			LogisticCondition: item.LogisticCondition,
+			Quantity: domain.Quantity{
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
+			},
+			Insurance: domain.Insurance{
+				UnitValue: item.JSONInsurance.UnitValue,
+				Currency:  item.JSONInsurance.Currency,
+			},
+			Description: item.Description,
+			Dimensions: domain.Dimensions{
+				Height: item.JSONDimensions.Height,
+				Width:  item.JSONDimensions.Width,
+				Depth:  item.JSONDimensions.Depth,
+				Unit:   item.JSONDimensions.Unit,
+			},
+			Weight: domain.Weight{
+				Value: item.JSONWeight.WeightValue,
+				Unit:  item.JSONWeight.WeightUnit,
+			},
 		}
 	}
 	return result

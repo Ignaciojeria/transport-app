@@ -42,6 +42,7 @@ SELECT
     orig_contact.phone AS origin_contact_phone,
     orig_contact.email AS origin_contact_email,
     orig_contact.documents AS origin_contact_documents,
+    orig_contact.national_id AS origin_contact_national_id,
     
     orig_addr.id AS origin_address_info_id,
     orig_addr.address_line1 AS origin_address_line1,
@@ -127,26 +128,30 @@ WHERE
 		var flattenedPackages []views.FlattenedPackageView
 
 		err = conn.Raw(`
-		SELECT
-		    pkg.id AS package_id,
-		    pkg.organization_country_id AS organization_country_id,
-		    pkg.lpn AS lpn,
-		    pkg.json_dimensions->>'$.height' AS height,
-		    pkg.json_dimensions->>'$.width' AS width,
-		    pkg.json_dimensions->>'$.depth' AS depth,
-		    pkg.json_dimensions->>'$.unit' AS unit,
-		    pkg.json_weight->>'$.weight_value' AS weight_value,
-		    pkg.json_weight->>'$.weight_unit' AS weight_unit,
-		    pkg.json_insurance->>'$.unit_value' AS unit_value,
-		    pkg.json_insurance->>'$.currency' AS currency
-		FROM
-		    packages pkg
-		WHERE
-		    pkg.lpn IN (?) AND
-		    pkg.organization_country_id = ?;
-			
-	`, lpns, order.Organization.OrganizationCountryID).Scan(&flattenedPackages).Error
+        SELECT
+            pkg.id AS package_id,
+            pkg.organization_country_id AS organization_country_id,
+            pkg.lpn AS lpn,
+            pkg.json_dimensions->>'$.height' AS height,
+            pkg.json_dimensions->>'$.width' AS width,
+            pkg.json_dimensions->>'$.depth' AS depth,
+            pkg.json_dimensions->>'$.unit' AS unit,
+            pkg.json_weight->>'$.weight_value' AS weight_value,
+            pkg.json_weight->>'$.weight_unit' AS weight_unit,
+            pkg.json_insurance->>'$.unit_value' AS unit_value,
+            pkg.json_insurance->>'$.currency' AS currency,
+            pkg.json_items_references AS items_references -- Incluye json_items_references
+        FROM
+            packages pkg
+        WHERE
+            pkg.lpn IN (?) AND
+            pkg.organization_country_id = ?;
+    `, lpns, order.Organization.OrganizationCountryID).Scan(&flattenedPackages).Error
 
-		return domain.Order{}, err
+		orderDomain := flattenedOrder.ToOrder(
+			flattenedPackages,
+			[]views.FlattenedOrderReferenceView{},
+			[]views.FlattenedVisitView{})
+		return orderDomain, err
 	}
 }

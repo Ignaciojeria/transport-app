@@ -24,6 +24,97 @@ type Order struct {
 	PromisedDate            PromisedDate            `json:"promisedDate"`
 	Visits                  []Visit                 `json:"visits"`
 	TransportRequirements   []Reference             `json:"transportRequirements"`
+	NeedsUpdate             bool                    `json:"-"`
+}
+
+func (o *Order) HydrateOrder(newOrder Order) {
+	// Reiniciar el flag global de actualización
+	needsUpdate := false
+
+	// Comparar y actualizar campos simples de Order
+	if newOrder.ReferenceID != "" && o.ReferenceID != newOrder.ReferenceID {
+		o.ReferenceID = newOrder.ReferenceID
+		needsUpdate = true
+	}
+
+	if newOrder.OrderType.Type != "" && o.OrderType != newOrder.OrderType {
+		o.OrderType = newOrder.OrderType
+		needsUpdate = true
+	}
+
+	// Sobrescribir completamente las referencias
+	if len(newOrder.References) > 0 {
+		o.References = newOrder.References
+		needsUpdate = true
+	}
+
+	// Sobrescribir completamente las visitas
+	if len(newOrder.Visits) > 0 {
+		o.Visits = newOrder.Visits
+		needsUpdate = true
+	}
+
+	// Sobrescribir completamente los ítems
+	if len(newOrder.Items) > 0 {
+		o.Items = newOrder.Items
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar los paquetes
+	for i := range o.Packages {
+		if i < len(newOrder.Packages) {
+			o.Packages[i].UpdateIfChanged(newOrder.Packages[i])
+			if o.Packages[i].NeedsUpdate {
+				needsUpdate = true
+			}
+		}
+	}
+
+	// Agregar paquetes nuevos
+	if len(newOrder.Packages) > len(o.Packages) {
+		for _, newPkg := range newOrder.Packages[len(o.Packages):] {
+			newPkg.NeedsUpdate = true // Los nuevos paquetes siempre requieren persistencia
+			o.Packages = append(o.Packages, newPkg)
+			needsUpdate = true
+		}
+	}
+
+	// Comparar y actualizar origen
+	if o.Origin.UpdateIfChanged(newOrder.Origin) {
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar destino
+	if o.Destination.UpdateIfChanged(newOrder.Destination) {
+		needsUpdate = true
+	}
+
+	// Sobrescribir las promesas de entrega
+	if newOrder.PromisedDate.DateRange.StartDate != "" {
+		o.PromisedDate = newOrder.PromisedDate
+		needsUpdate = true
+	}
+
+	// Sobrescribir la fecha de disponibilidad para recolección
+	if newOrder.CollectAvailabilityDate.Date != "" {
+		o.CollectAvailabilityDate = newOrder.CollectAvailabilityDate
+		needsUpdate = true
+	}
+
+	// Sobrescribir los identificadores de negocio
+	if newOrder.BusinessIdentifiers.Commerce != "" {
+		o.BusinessIdentifiers = newOrder.BusinessIdentifiers
+		needsUpdate = true
+	}
+
+	// Sobrescribir los requerimientos de transporte
+	if len(newOrder.TransportRequirements) > 0 {
+		o.TransportRequirements = newOrder.TransportRequirements
+		needsUpdate = true
+	}
+
+	// Actualizar el flag global
+	o.NeedsUpdate = needsUpdate
 }
 
 func (o Order) Validate() error {
@@ -144,11 +235,13 @@ func (o Order) IsOriginAndDestinationNodeEqual() bool {
 type ReferenceID string
 
 type Reference struct {
+	ID    int64
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
 type NodeInfo struct {
+	ID          int64
 	ReferenceID ReferenceID `json:"referenceId"`
 	Name        *string     `json:"name"`
 	Type        string      `json:"type"`
@@ -156,9 +249,47 @@ type NodeInfo struct {
 	References  []Reference `json:"references"`
 }
 
+func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) bool {
+	needsUpdate := false
+
+	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
+		n.ReferenceID = newNode.ReferenceID
+		needsUpdate = true
+	}
+
+	if newNode.Name != nil && (n.Name == nil || *n.Name != *newNode.Name) {
+		n.Name = newNode.Name
+		needsUpdate = true
+	}
+
+	if newNode.Type != "" && n.Type != newNode.Type {
+		n.Type = newNode.Type
+		needsUpdate = true
+	}
+
+	return needsUpdate
+}
+
 type Origin struct {
+	ID          int64
 	NodeInfo    NodeInfo    `json:"nodeInfo"`
 	AddressInfo AddressInfo `json:"addressInfo"`
+}
+
+func (o *Origin) UpdateIfChanged(newOrigin Origin) bool {
+	needsUpdate := false
+
+	// Comparar y actualizar NodeInfo
+	if o.NodeInfo.UpdateIfChanged(newOrigin.NodeInfo) {
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar AddressInfo
+	if o.AddressInfo.UpdateIfChanged(newOrigin.AddressInfo) {
+		needsUpdate = true
+	}
+
+	return needsUpdate
 }
 
 type Document struct {
@@ -167,14 +298,68 @@ type Document struct {
 }
 
 type Contact struct {
-	FullName   string     `json:"fullName"`
-	Email      string     `json:"email"`
-	Phone      string     `json:"phone"`
-	NationalID string     `json:"nationalID"`
-	Documents  []Document `json:"documents"`
+	ID          int64
+	FullName    string     `json:"fullName"`
+	Email       string     `json:"email"`
+	Phone       string     `json:"phone"`
+	NationalID  string     `json:"nationalID"`
+	Documents   []Document `json:"documents"`
+	NeedsUpdate bool       `json:"-"`
+}
+
+func (c *Contact) UpdateIfChanged(newContact Contact) bool {
+	needsUpdate := false
+
+	// Comparar y actualizar FullName
+	if newContact.FullName != "" && c.FullName != newContact.FullName {
+		c.FullName = newContact.FullName
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Email
+	if newContact.Email != "" && c.Email != newContact.Email {
+		c.Email = newContact.Email
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Phone
+	if newContact.Phone != "" && c.Phone != newContact.Phone {
+		c.Phone = newContact.Phone
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar NationalID
+	if newContact.NationalID != "" && c.NationalID != newContact.NationalID {
+		c.NationalID = newContact.NationalID
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Documents
+	if len(newContact.Documents) > 0 {
+		if len(c.Documents) != len(newContact.Documents) || !compareDocuments(c.Documents, newContact.Documents) {
+			c.Documents = newContact.Documents
+			needsUpdate = true
+		}
+	}
+
+	return needsUpdate
+}
+
+// Función auxiliar para comparar arreglos de documentos
+func compareDocuments(oldDocs, newDocs []Document) bool {
+	if len(oldDocs) != len(newDocs) {
+		return false
+	}
+	for i := range oldDocs {
+		if oldDocs[i] != newDocs[i] {
+			return false
+		}
+	}
+	return true
 }
 
 type AddressInfo struct {
+	ID           int64
 	Contact      Contact `json:"contact"`
 	State        string  `json:"state"`
 	County       string  `json:"county"`
@@ -187,6 +372,87 @@ type AddressInfo struct {
 	Longitude    float32 `json:"longitude"`
 	ZipCode      string  `json:"zipCode"`
 	TimeZone     string  `json:"timeZone"`
+	NeedsUpdate  bool    `json:"-"`
+}
+
+func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) bool {
+	needsUpdate := false
+
+	// Comparar y actualizar AddressLine1
+	if newAddress.AddressLine1 != "" && a.AddressLine1 != newAddress.AddressLine1 {
+		a.AddressLine1 = newAddress.AddressLine1
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar AddressLine2
+	if newAddress.AddressLine2 != "" && a.AddressLine2 != newAddress.AddressLine2 {
+		a.AddressLine2 = newAddress.AddressLine2
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar AddressLine3
+	if newAddress.AddressLine3 != "" && a.AddressLine3 != newAddress.AddressLine3 {
+		a.AddressLine3 = newAddress.AddressLine3
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Latitude
+	if newAddress.Latitude != 0 && a.Latitude != newAddress.Latitude {
+		a.Latitude = newAddress.Latitude
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Longitude
+	if newAddress.Longitude != 0 && a.Longitude != newAddress.Longitude {
+		a.Longitude = newAddress.Longitude
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar State
+	if newAddress.State != "" && a.State != newAddress.State {
+		a.State = newAddress.State
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar County
+	if newAddress.County != "" && a.County != newAddress.County {
+		a.County = newAddress.County
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Province
+	if newAddress.Province != "" && a.Province != newAddress.Province {
+		a.Province = newAddress.Province
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar District
+	if newAddress.District != "" && a.District != newAddress.District {
+		a.District = newAddress.District
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar ZipCode
+	if newAddress.ZipCode != "" && a.ZipCode != newAddress.ZipCode {
+		a.ZipCode = newAddress.ZipCode
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar TimeZone
+	if newAddress.TimeZone != "" && a.TimeZone != newAddress.TimeZone {
+		a.TimeZone = newAddress.TimeZone
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar Contact
+	if a.Contact.UpdateIfChanged(newAddress.Contact) {
+		needsUpdate = true
+	}
+
+	// Actualizar el flag global
+	a.NeedsUpdate = needsUpdate
+
+	return needsUpdate
 }
 
 func (addr AddressInfo) RawAddress() string {
@@ -207,14 +473,38 @@ func concatenateWithCommas(values ...string) string {
 }
 
 type Operator struct {
+	ID      int64
 	Contact Contact `json:"contact"`
 	Type    string  `json:"type"`
 }
 
 type Destination struct {
+	ID                   int64
 	DeliveryInstructions string      `json:"deliveryInstructions"`
 	NodeInfo             NodeInfo    `json:"nodeInfo"`
 	AddressInfo          AddressInfo `json:"addressInfo"`
+}
+
+func (d *Destination) UpdateIfChanged(newDestination Destination) bool {
+	needsUpdate := false
+
+	// Comparar y actualizar DeliveryInstructions
+	if newDestination.DeliveryInstructions != "" && d.DeliveryInstructions != newDestination.DeliveryInstructions {
+		d.DeliveryInstructions = newDestination.DeliveryInstructions
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar NodeInfo
+	if d.NodeInfo.UpdateIfChanged(newDestination.NodeInfo) {
+		needsUpdate = true
+	}
+
+	// Comparar y actualizar AddressInfo
+	if d.AddressInfo.UpdateIfChanged(newDestination.AddressInfo) {
+		needsUpdate = true
+	}
+
+	return needsUpdate
 }
 
 type Quantity struct {
@@ -252,15 +542,6 @@ type Item struct {
 type ItemReference struct {
 	ReferenceID ReferenceID `json:"referenceId"`
 	Quantity    Quantity    `json:"quantity"`
-}
-
-type Package struct {
-	ID             int64
-	Lpn            string          `json:"lpn"`
-	Dimensions     Dimensions      `json:"dimensions"`
-	Weight         Weight          `json:"weight"`
-	Insurance      Insurance       `json:"insurance"`
-	ItemReferences []ItemReference `json:"itemReferences"`
 }
 
 func (o *Order) ValidatePackages() error {
@@ -304,6 +585,16 @@ func (o *Order) ValidatePackages() error {
 	}
 
 	return nil
+}
+
+type Package struct {
+	ID             int64
+	Lpn            string          `json:"lpn"`
+	Dimensions     Dimensions      `json:"dimensions"`
+	Weight         Weight          `json:"weight"`
+	Insurance      Insurance       `json:"insurance"`
+	ItemReferences []ItemReference `json:"itemReferences"`
+	NeedsUpdate    bool            `json:"-"`
 }
 
 func (p *Package) UpdateIfChanged(newPackage Package) (updatedPackage Package, needsUpdate bool) {
@@ -360,6 +651,7 @@ func compareItemReferences(oldRefs, newRefs []ItemReference) bool {
 }
 
 type OrderType struct {
+	ID          int64
 	Type        string `json:"type"`
 	Description string `json:"description"`
 }
@@ -397,6 +689,8 @@ type Visit struct {
 }
 
 type BusinessIdentifiers struct {
-	Commerce string `json:"commerce"`
-	Consumer string `json:"consumer"`
+	CommerceID int64
+	Commerce   string `json:"commerce"`
+	ConsumerID int64
+	Consumer   string `json:"consumer"`
 }
