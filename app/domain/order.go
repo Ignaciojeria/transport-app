@@ -24,86 +24,98 @@ type Order struct {
 	PromisedDate            PromisedDate            `json:"promisedDate"`
 	Visits                  []Visit                 `json:"visits"`
 	TransportRequirements   []Reference             `json:"transportRequirements"`
-	NeedsUpdate             bool                    `json:"-"`
+}
+
+func (o Order) AreContactsEqual() bool {
+	originContact := o.Origin.AddressInfo.Contact
+	destinationContact := o.Destination.AddressInfo.Contact
+
+	// Comparar campos importantes
+	return originContact.FullName == destinationContact.FullName &&
+		originContact.Email == destinationContact.Email &&
+		originContact.Phone == destinationContact.Phone &&
+		originContact.NationalID == destinationContact.NationalID
 }
 
 func (o *Order) HydrateOrder(newOrder Order) {
-	needsUpdate := false
-
 	// Actualizar ReferenceID
-	if newOrder.ReferenceID != "" && o.ReferenceID != newOrder.ReferenceID {
+	if newOrder.ReferenceID != "" {
 		o.ReferenceID = newOrder.ReferenceID
-		needsUpdate = true
 	}
 
 	// Actualizar OrderType
-	if newOrder.OrderType.Type != "" && o.OrderType.Type != newOrder.OrderType.Type {
+	if newOrder.OrderType.Type != "" {
 		o.OrderType.Type = newOrder.OrderType.Type
-		needsUpdate = true
 	}
-	if newOrder.OrderType.Description != "" && o.OrderType.Description != newOrder.OrderType.Description {
+	if newOrder.OrderType.Description != "" {
 		o.OrderType.Description = newOrder.OrderType.Description
-		needsUpdate = true
 	}
 
 	// Actualizar BusinessIdentifiers
-	if newOrder.BusinessIdentifiers.Commerce != "" && o.BusinessIdentifiers.Commerce != newOrder.BusinessIdentifiers.Commerce {
+	if newOrder.BusinessIdentifiers.Commerce != "" {
 		o.BusinessIdentifiers.Commerce = newOrder.BusinessIdentifiers.Commerce
-		needsUpdate = true
 	}
-	if newOrder.BusinessIdentifiers.Consumer != "" && o.BusinessIdentifiers.Consumer != newOrder.BusinessIdentifiers.Consumer {
+	if newOrder.BusinessIdentifiers.Consumer != "" {
 		o.BusinessIdentifiers.Consumer = newOrder.BusinessIdentifiers.Consumer
-		needsUpdate = true
 	}
 
-	// Actualizar otros campos (ejemplo: Origin y Destination)
-	if o.Origin.UpdateIfChanged(newOrder.Origin) {
-		needsUpdate = true
+	// Actualizar References
+	if len(newOrder.References) > 0 {
+		o.References = newOrder.References
 	}
-	if o.Destination.UpdateIfChanged(newOrder.Destination) {
-		needsUpdate = true
+
+	// Actualizar Items
+	if len(newOrder.Items) > 0 {
+		o.Items = newOrder.Items
 	}
+
+	// Actualizar Packages
+	if len(newOrder.Packages) > 0 {
+		// Si hay paquetes nuevos, actualizamos cada uno
+		for i := range newOrder.Packages {
+			if i < len(o.Packages) {
+				// Actualizar paquete existente
+				o.Packages[i].UpdateIfChanged(newOrder.Packages[i])
+			} else {
+				// Añadir nuevo paquete
+				o.Packages = append(o.Packages, newOrder.Packages[i])
+			}
+		}
+	}
+
+	// Actualizar Origin y Destination
+	o.Origin.UpdateIfChanged(newOrder.Origin)
+	o.Destination.UpdateIfChanged(newOrder.Destination)
 
 	// Actualizar PromisedDate
 	if newOrder.PromisedDate.DateRange.StartDate != "" {
 		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
-		needsUpdate = true
 	}
 	if newOrder.PromisedDate.DateRange.EndDate != "" {
 		o.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
-		needsUpdate = true
 	}
-	if newOrder.PromisedDate.TimeRange.StartTime != "" && o.PromisedDate.TimeRange.StartTime != newOrder.PromisedDate.TimeRange.StartTime {
+	if newOrder.PromisedDate.TimeRange.StartTime != "" {
 		o.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
-		needsUpdate = true
 	}
-	if newOrder.PromisedDate.TimeRange.EndTime != "" && o.PromisedDate.TimeRange.EndTime != newOrder.PromisedDate.TimeRange.EndTime {
+	if newOrder.PromisedDate.TimeRange.EndTime != "" {
 		o.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
-		needsUpdate = true
 	}
 
 	// Actualizar CollectAvailabilityDate
 	if newOrder.CollectAvailabilityDate.Date != "" {
 		o.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
-		needsUpdate = true
 	}
-	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" && o.CollectAvailabilityDate.TimeRange.StartTime != newOrder.CollectAvailabilityDate.TimeRange.StartTime {
+	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" {
 		o.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
-		needsUpdate = true
 	}
-	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" && o.CollectAvailabilityDate.TimeRange.EndTime != newOrder.CollectAvailabilityDate.TimeRange.EndTime {
+	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" {
 		o.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
-		needsUpdate = true
 	}
 
 	// Actualizar TransportRequirements
 	if len(newOrder.TransportRequirements) > 0 {
 		o.TransportRequirements = newOrder.TransportRequirements
-		needsUpdate = true
 	}
-
-	// Finalizar con el flag de NeedsUpdate
-	o.NeedsUpdate = needsUpdate
 }
 
 func (o Order) Validate() error {
@@ -238,25 +250,18 @@ type NodeInfo struct {
 	References  []Reference `json:"references"`
 }
 
-func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) bool {
-	needsUpdate := false
-
-	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
+func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
+	if newNode.ReferenceID != "" {
 		n.ReferenceID = newNode.ReferenceID
-		needsUpdate = true
 	}
 
-	if newNode.Name != nil && (n.Name == nil || *n.Name != *newNode.Name) {
+	if newNode.Name != nil {
 		n.Name = newNode.Name
-		needsUpdate = true
 	}
 
-	if newNode.Type != "" && n.Type != newNode.Type {
+	if newNode.Type != "" {
 		n.Type = newNode.Type
-		needsUpdate = true
 	}
-
-	return needsUpdate
 }
 
 type Origin struct {
@@ -265,20 +270,9 @@ type Origin struct {
 	AddressInfo AddressInfo `json:"addressInfo"`
 }
 
-func (o *Origin) UpdateIfChanged(newOrigin Origin) bool {
-	needsUpdate := false
-
-	// Comparar y actualizar NodeInfo
-	if o.NodeInfo.UpdateIfChanged(newOrigin.NodeInfo) {
-		needsUpdate = true
-	}
-
-	// Comparar y actualizar AddressInfo
-	if o.AddressInfo.UpdateIfChanged(newOrigin.AddressInfo) {
-		needsUpdate = true
-	}
-
-	return needsUpdate
+func (o *Origin) UpdateIfChanged(newOrigin Origin) {
+	o.NodeInfo.UpdateIfChanged(newOrigin.NodeInfo)
+	o.AddressInfo.UpdateIfChanged(newOrigin.AddressInfo)
 }
 
 type Document struct {
@@ -287,51 +281,39 @@ type Document struct {
 }
 
 type Contact struct {
-	ID          int64
-	FullName    string     `json:"fullName"`
-	Email       string     `json:"email"`
-	Phone       string     `json:"phone"`
-	NationalID  string     `json:"nationalID"`
-	Documents   []Document `json:"documents"`
-	NeedsUpdate bool       `json:"-"`
+	ID         int64
+	FullName   string     `json:"fullName"`
+	Email      string     `json:"email"`
+	Phone      string     `json:"phone"`
+	NationalID string     `json:"nationalID"`
+	Documents  []Document `json:"documents"`
 }
 
-func (c *Contact) UpdateIfChanged(newContact Contact) bool {
-	needsUpdate := false
-
-	// Comparar y actualizar FullName
-	if newContact.FullName != "" && c.FullName != newContact.FullName {
+func (c *Contact) UpdateIfChanged(newContact Contact) {
+	// Actualizar FullName
+	if newContact.FullName != "" {
 		c.FullName = newContact.FullName
-		needsUpdate = true
 	}
 
-	// Comparar y actualizar Email
-	if newContact.Email != "" && c.Email != newContact.Email {
+	// Actualizar Email
+	if newContact.Email != "" {
 		c.Email = newContact.Email
-		needsUpdate = true
 	}
 
-	// Comparar y actualizar Phone
-	if newContact.Phone != "" && c.Phone != newContact.Phone {
+	// Actualizar Phone
+	if newContact.Phone != "" {
 		c.Phone = newContact.Phone
-		needsUpdate = true
 	}
 
-	// Comparar y actualizar NationalID
-	if newContact.NationalID != "" && c.NationalID != newContact.NationalID {
+	// Actualizar NationalID
+	if newContact.NationalID != "" {
 		c.NationalID = newContact.NationalID
-		needsUpdate = true
 	}
 
-	// Comparar y actualizar Documents
+	// Actualizar Documents
 	if len(newContact.Documents) > 0 {
-		if len(c.Documents) != len(newContact.Documents) || !compareDocuments(c.Documents, newContact.Documents) {
-			c.Documents = newContact.Documents
-			needsUpdate = true
-		}
+		c.Documents = newContact.Documents
 	}
-
-	return needsUpdate
 }
 
 // Función auxiliar para comparar arreglos de documentos
@@ -361,89 +343,45 @@ type AddressInfo struct {
 	Longitude    float32 `json:"longitude"`
 	ZipCode      string  `json:"zipCode"`
 	TimeZone     string  `json:"timeZone"`
-	NeedsUpdate  bool    `json:"-"`
 }
 
-func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) bool {
-	needsUpdate := false
-
-	// Comparar y actualizar AddressLine1
-	if newAddress.AddressLine1 != "" && a.AddressLine1 != newAddress.AddressLine1 {
+func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) {
+	if newAddress.AddressLine1 != "" {
 		a.AddressLine1 = newAddress.AddressLine1
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar AddressLine2
-	if newAddress.AddressLine2 != "" && a.AddressLine2 != newAddress.AddressLine2 {
+	if newAddress.AddressLine2 != "" {
 		a.AddressLine2 = newAddress.AddressLine2
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar AddressLine3
-	if newAddress.AddressLine3 != "" && a.AddressLine3 != newAddress.AddressLine3 {
+	if newAddress.AddressLine3 != "" {
 		a.AddressLine3 = newAddress.AddressLine3
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar Latitude
-	if newAddress.Latitude != 0 && a.Latitude != newAddress.Latitude {
+	if newAddress.Latitude != 0 {
 		a.Latitude = newAddress.Latitude
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar Longitude
-	if newAddress.Longitude != 0 && a.Longitude != newAddress.Longitude {
+	if newAddress.Longitude != 0 {
 		a.Longitude = newAddress.Longitude
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar State
-	if newAddress.State != "" && a.State != newAddress.State {
+	if newAddress.State != "" {
 		a.State = newAddress.State
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar County
-	if newAddress.County != "" && a.County != newAddress.County {
+	if newAddress.County != "" {
 		a.County = newAddress.County
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar Province
-	if newAddress.Province != "" && a.Province != newAddress.Province {
+	if newAddress.Province != "" {
 		a.Province = newAddress.Province
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar District
-	if newAddress.District != "" && a.District != newAddress.District {
+	if newAddress.District != "" {
 		a.District = newAddress.District
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar ZipCode
-	if newAddress.ZipCode != "" && a.ZipCode != newAddress.ZipCode {
+	if newAddress.ZipCode != "" {
 		a.ZipCode = newAddress.ZipCode
-		needsUpdate = true
 	}
-
-	// Comparar y actualizar TimeZone
-	if newAddress.TimeZone != "" && a.TimeZone != newAddress.TimeZone {
+	if newAddress.TimeZone != "" {
 		a.TimeZone = newAddress.TimeZone
-		needsUpdate = true
 	}
 
-	// Comparar y actualizar Contact
-	if a.Contact.UpdateIfChanged(newAddress.Contact) {
-		needsUpdate = true
-	}
-
-	// Actualizar el flag global
-	a.NeedsUpdate = needsUpdate
-
-	return needsUpdate
+	a.Contact.UpdateIfChanged(newAddress.Contact)
 }
-
 func (addr AddressInfo) RawAddress() string {
 	return concatenateWithCommas(addr.AddressLine1, addr.AddressLine2, addr.AddressLine3)
 }
@@ -474,26 +412,18 @@ type Destination struct {
 	AddressInfo          AddressInfo `json:"addressInfo"`
 }
 
-func (d *Destination) UpdateIfChanged(newDestination Destination) bool {
-	needsUpdate := false
-
+func (d *Destination) UpdateIfChanged(newDestination Destination) {
 	// Comparar y actualizar DeliveryInstructions
 	if newDestination.DeliveryInstructions != "" && d.DeliveryInstructions != newDestination.DeliveryInstructions {
 		d.DeliveryInstructions = newDestination.DeliveryInstructions
-		needsUpdate = true
 	}
 
 	// Comparar y actualizar NodeInfo
-	if d.NodeInfo.UpdateIfChanged(newDestination.NodeInfo) {
-		needsUpdate = true
-	}
+	d.NodeInfo.UpdateIfChanged(newDestination.NodeInfo)
 
 	// Comparar y actualizar AddressInfo
-	if d.AddressInfo.UpdateIfChanged(newDestination.AddressInfo) {
-		needsUpdate = true
-	}
+	d.AddressInfo.UpdateIfChanged(newDestination.AddressInfo)
 
-	return needsUpdate
 }
 
 type Quantity struct {
@@ -583,47 +513,33 @@ type Package struct {
 	Weight         Weight          `json:"weight"`
 	Insurance      Insurance       `json:"insurance"`
 	ItemReferences []ItemReference `json:"itemReferences"`
-	NeedsUpdate    bool            `json:"-"`
 }
 
-func (p *Package) UpdateIfChanged(newPackage Package) (updatedPackage Package, needsUpdate bool) {
-	// Crear una copia del paquete actual
-	updatedPackage = *p
-	needsUpdate = false
+func (p *Package) UpdateIfChanged(newPackage Package) {
+	// Actualizar Lpn
+	if newPackage.Lpn != "" {
+		p.Lpn = newPackage.Lpn
+	}
 
-	// Comparar y actualizar dimensiones
+	// Actualizar dimensiones si no están vacías
 	if newPackage.Dimensions != (Dimensions{}) {
-		if p.Dimensions != newPackage.Dimensions {
-			updatedPackage.Dimensions = newPackage.Dimensions
-			needsUpdate = true
-		}
+		p.Dimensions = newPackage.Dimensions
 	}
 
-	// Comparar y actualizar peso
+	// Actualizar peso si no está vacío
 	if newPackage.Weight != (Weight{}) {
-		if p.Weight != newPackage.Weight {
-			updatedPackage.Weight = newPackage.Weight
-			needsUpdate = true
-		}
+		p.Weight = newPackage.Weight
 	}
 
-	// Comparar y actualizar seguro
+	// Actualizar seguro si no está vacío
 	if newPackage.Insurance != (Insurance{}) {
-		if p.Insurance != newPackage.Insurance {
-			updatedPackage.Insurance = newPackage.Insurance
-			needsUpdate = true
-		}
+		p.Insurance = newPackage.Insurance
 	}
 
-	// Comparar y actualizar referencias de ítems
+	// Actualizar referencias de ítems
 	if len(newPackage.ItemReferences) > 0 {
-		if len(p.ItemReferences) != len(newPackage.ItemReferences) || !compareItemReferences(p.ItemReferences, newPackage.ItemReferences) {
-			updatedPackage.ItemReferences = newPackage.ItemReferences
-			needsUpdate = true
-		}
+		p.ItemReferences = newPackage.ItemReferences
 	}
-
-	return updatedPackage, needsUpdate
 }
 
 // Función auxiliar para comparar arreglos de referencias de ítems

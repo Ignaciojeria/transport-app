@@ -173,7 +173,8 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 			withPackages(order.Packages).
 			withReferences(order.References).
 			withTransportRequirements(order.TransportRequirements).
-			withOrderType(order.OrderType)
+			withOrderType(order.OrderType).
+			withItems(order.Items)
 		responses = append(responses, response)
 	}
 	return responses
@@ -238,6 +239,102 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.Origin) *SearchOrdersR
 				Value: doc.Value,
 			}
 		}
+	}
+
+	return res
+}
+
+func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersResponse {
+	if res.Items == nil {
+		res.Items = make([]struct {
+			Description string `json:"description"`
+			Dimensions  struct {
+				Depth  float64 `json:"depth"`
+				Height float64 `json:"height"`
+				Unit   string  `json:"unit"`
+				Width  float64 `json:"width"`
+			} `json:"dimensions"`
+			Insurance struct {
+				Currency  string `json:"currency"`
+				UnitValue int    `json:"unitValue"`
+			} `json:"insurance"`
+			LogisticCondition string `json:"logisticCondition"`
+			Quantity          struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			} `json:"quantity"`
+			ReferenceID string `json:"referenceId"`
+			Weight      struct {
+				Unit  string `json:"unit"`
+				Value int    `json:"value"`
+			} `json:"weight"`
+		}, 0)
+	}
+
+	res.Items = res.Items[:0]
+
+	for _, item := range items {
+		itemData := struct {
+			Description string `json:"description"`
+			Dimensions  struct {
+				Depth  float64 `json:"depth"`
+				Height float64 `json:"height"`
+				Unit   string  `json:"unit"`
+				Width  float64 `json:"width"`
+			} `json:"dimensions"`
+			Insurance struct {
+				Currency  string `json:"currency"`
+				UnitValue int    `json:"unitValue"`
+			} `json:"insurance"`
+			LogisticCondition string `json:"logisticCondition"`
+			Quantity          struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			} `json:"quantity"`
+			ReferenceID string `json:"referenceId"`
+			Weight      struct {
+				Unit  string `json:"unit"`
+				Value int    `json:"value"`
+			} `json:"weight"`
+		}{
+			Description: item.Description,
+			Dimensions: struct {
+				Depth  float64 `json:"depth"`
+				Height float64 `json:"height"`
+				Unit   string  `json:"unit"`
+				Width  float64 `json:"width"`
+			}{
+				Depth:  item.Dimensions.Depth,
+				Height: item.Dimensions.Height,
+				Unit:   item.Dimensions.Unit,
+				Width:  item.Dimensions.Width,
+			},
+			Insurance: struct {
+				Currency  string `json:"currency"`
+				UnitValue int    `json:"unitValue"`
+			}{
+				Currency:  item.Insurance.Currency,
+				UnitValue: int(item.Insurance.UnitValue),
+			},
+			LogisticCondition: item.LogisticCondition,
+			Quantity: struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			}{
+				QuantityNumber: item.Quantity.QuantityNumber,
+				QuantityUnit:   item.Quantity.QuantityUnit,
+			},
+			ReferenceID: string(item.ReferenceID),
+			Weight: struct {
+				Unit  string `json:"unit"`
+				Value int    `json:"value"`
+			}{
+				Unit:  item.Weight.Unit,
+				Value: int(item.Weight.Value),
+			},
+		}
+
+		res.Items = append(res.Items, itemData)
 	}
 
 	return res
