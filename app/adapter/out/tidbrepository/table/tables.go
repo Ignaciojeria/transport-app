@@ -12,40 +12,40 @@ type Order struct {
 	gorm.Model
 	ID int64 `gorm:"primaryKey"`
 
-	ReferenceID string `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization_country"`
+	ReferenceID string `gorm:"type:varchar(191);default:null;uniqueIndex:idx_reference_organization_country"`
 
-	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization_country"`
+	OrganizationCountryID int64               `gorm:"default:null;uniqueIndex:idx_reference_organization_country"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 
-	CommerceID int64    `gorm:"not null"`
+	CommerceID int64    `gorm:"default:null"`
 	Commerce   Commerce `gorm:"foreignKey:CommerceID"`
 
-	ConsumerID int64    `gorm:"not null"`
+	ConsumerID int64    `gorm:"default:null"`
 	Consumer   Consumer `gorm:"foreignKey:ConsumerID"`
 
-	OrderStatusID int64       `gorm:"not null"`
+	OrderStatusID int64       `gorm:"default:null"`
 	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
 
-	OrderTypeID int64     `gorm:"not null"`
+	OrderTypeID int64     `gorm:"default:null"`
 	OrderType   OrderType `gorm:"foreignKey:OrderTypeID"`
 
 	OrderReferences      []OrderReferences `gorm:"foreignKey:OrderID"`
 	DeliveryInstructions string            `gorm:"type:text"`
 
 	// Contacto asociado a la orden
-	OriginContactID int64   `gorm:"not null"`                   // Clave foránea al Contact
+	OriginContactID int64   `gorm:"default:null"`               // Clave foránea al Contact
 	OriginContact   Contact `gorm:"foreignKey:OriginContactID"` // Relación con Contact
 
 	// Contacto asociado a la orden
-	DestinationContactID int64   `gorm:"not null"`                        // Clave foránea al Contact
+	DestinationContactID int64   `gorm:"default:null"`                    // Clave foránea al Contact
 	DestinationContact   Contact `gorm:"foreignKey:DestinationContactID"` // Relación con Contact
 
 	// Dirección de oriden de la orden de compra
-	OriginAddressInfoID int64       `gorm:"not null"`                       // Clave foránea al AddressInfo
+	OriginAddressInfoID int64       `gorm:"default:null"`                   // Clave foránea al AddressInfo
 	OriginAddressInfo   AddressInfo `gorm:"foreignKey:OriginAddressInfoID"` // Relación con AddressInfo
 
 	// Dirección de destino de la orden de compra
-	DestinationAddressInfoID int64       `gorm:"not null"`                            // Clave foránea al AddressInfo
+	DestinationAddressInfoID int64       `gorm:"default:null"`                        // Clave foránea al AddressInfo
 	DestinationAddressInfo   AddressInfo `gorm:"foreignKey:DestinationAddressInfoID"` // Relación con AddressInfo
 
 	// Nodo de Origen de la orden (en caso de que tenga)
@@ -194,7 +194,7 @@ type NodeInfo struct {
 	Type                  string              `gorm:"not null"`
 	OperatorID            int64               `gorm:"default:null"`
 	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator
-	AddressID             int64               `gorm:"not null"`              // Clave foránea a AddressInfo
+	AddressID             int64               `gorm:"default:null"`          // Clave foránea a AddressInfo
 	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"`  // Relación con AddressInfo
 	NodeReferences        []NodeReference     `gorm:"foreignKey:NodeInfoID"` // Relación con NodeReferences
 }
