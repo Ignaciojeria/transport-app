@@ -152,7 +152,7 @@ WHERE
             p.json_dimensions->>'$.unit' AS unit,
             p.json_weight->>'$.weight_value' AS weight_value,
             p.json_weight->>'$.weight_unit' AS weight_unit,
-
+            p.json_items_references as items_references,
             p.json_insurance->>'$.unit_value' AS unit_value,
             p.json_insurance->>'$.currency' AS currency,
             'default' AS package_type
