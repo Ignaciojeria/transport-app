@@ -28,92 +28,81 @@ type Order struct {
 }
 
 func (o *Order) HydrateOrder(newOrder Order) {
-	// Reiniciar el flag global de actualización
 	needsUpdate := false
 
-	// Comparar y actualizar campos simples de Order
+	// Actualizar ReferenceID
 	if newOrder.ReferenceID != "" && o.ReferenceID != newOrder.ReferenceID {
 		o.ReferenceID = newOrder.ReferenceID
 		needsUpdate = true
 	}
 
-	if newOrder.OrderType.Type != "" && o.OrderType != newOrder.OrderType {
-		o.OrderType = newOrder.OrderType
+	// Actualizar OrderType
+	if newOrder.OrderType.Type != "" && o.OrderType.Type != newOrder.OrderType.Type {
+		o.OrderType.Type = newOrder.OrderType.Type
+		needsUpdate = true
+	}
+	if newOrder.OrderType.Description != "" && o.OrderType.Description != newOrder.OrderType.Description {
+		o.OrderType.Description = newOrder.OrderType.Description
 		needsUpdate = true
 	}
 
-	// Sobrescribir completamente las referencias
-	if len(newOrder.References) > 0 {
-		o.References = newOrder.References
+	// Actualizar BusinessIdentifiers
+	if newOrder.BusinessIdentifiers.Commerce != "" && o.BusinessIdentifiers.Commerce != newOrder.BusinessIdentifiers.Commerce {
+		o.BusinessIdentifiers.Commerce = newOrder.BusinessIdentifiers.Commerce
+		needsUpdate = true
+	}
+	if newOrder.BusinessIdentifiers.Consumer != "" && o.BusinessIdentifiers.Consumer != newOrder.BusinessIdentifiers.Consumer {
+		o.BusinessIdentifiers.Consumer = newOrder.BusinessIdentifiers.Consumer
 		needsUpdate = true
 	}
 
-	// Sobrescribir completamente las visitas
-	if len(newOrder.Visits) > 0 {
-		o.Visits = newOrder.Visits
-		needsUpdate = true
-	}
-
-	// Sobrescribir completamente los ítems
-	if len(newOrder.Items) > 0 {
-		o.Items = newOrder.Items
-		needsUpdate = true
-	}
-
-	// Comparar y actualizar los paquetes
-	for i := range o.Packages {
-		if i < len(newOrder.Packages) {
-			o.Packages[i].UpdateIfChanged(newOrder.Packages[i])
-			if o.Packages[i].NeedsUpdate {
-				needsUpdate = true
-			}
-		}
-	}
-
-	// Agregar paquetes nuevos
-	if len(newOrder.Packages) > len(o.Packages) {
-		for _, newPkg := range newOrder.Packages[len(o.Packages):] {
-			newPkg.NeedsUpdate = true // Los nuevos paquetes siempre requieren persistencia
-			o.Packages = append(o.Packages, newPkg)
-			needsUpdate = true
-		}
-	}
-
-	// Comparar y actualizar origen
+	// Actualizar otros campos (ejemplo: Origin y Destination)
 	if o.Origin.UpdateIfChanged(newOrder.Origin) {
 		needsUpdate = true
 	}
-
-	// Comparar y actualizar destino
 	if o.Destination.UpdateIfChanged(newOrder.Destination) {
 		needsUpdate = true
 	}
 
-	// Sobrescribir las promesas de entrega
+	// Actualizar PromisedDate
 	if newOrder.PromisedDate.DateRange.StartDate != "" {
-		o.PromisedDate = newOrder.PromisedDate
+		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
+		needsUpdate = true
+	}
+	if newOrder.PromisedDate.DateRange.EndDate != "" {
+		o.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
+		needsUpdate = true
+	}
+	if newOrder.PromisedDate.TimeRange.StartTime != "" && o.PromisedDate.TimeRange.StartTime != newOrder.PromisedDate.TimeRange.StartTime {
+		o.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
+		needsUpdate = true
+	}
+	if newOrder.PromisedDate.TimeRange.EndTime != "" && o.PromisedDate.TimeRange.EndTime != newOrder.PromisedDate.TimeRange.EndTime {
+		o.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
 		needsUpdate = true
 	}
 
-	// Sobrescribir la fecha de disponibilidad para recolección
+	// Actualizar CollectAvailabilityDate
 	if newOrder.CollectAvailabilityDate.Date != "" {
-		o.CollectAvailabilityDate = newOrder.CollectAvailabilityDate
+		o.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
+		needsUpdate = true
+	}
+	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" && o.CollectAvailabilityDate.TimeRange.StartTime != newOrder.CollectAvailabilityDate.TimeRange.StartTime {
+		o.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
+		needsUpdate = true
+	}
+	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" && o.CollectAvailabilityDate.TimeRange.EndTime != newOrder.CollectAvailabilityDate.TimeRange.EndTime {
+		o.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
 		needsUpdate = true
 	}
 
-	// Sobrescribir los identificadores de negocio
-	if newOrder.BusinessIdentifiers.Commerce != "" {
-		o.BusinessIdentifiers = newOrder.BusinessIdentifiers
-		needsUpdate = true
-	}
-
-	// Sobrescribir los requerimientos de transporte
+	// Actualizar TransportRequirements
 	if len(newOrder.TransportRequirements) > 0 {
 		o.TransportRequirements = newOrder.TransportRequirements
 		needsUpdate = true
 	}
 
-	// Actualizar el flag global
+	// Finalizar con el flag de NeedsUpdate
 	o.NeedsUpdate = needsUpdate
 }
 

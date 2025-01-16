@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 
@@ -15,19 +14,22 @@ func init() {
 	ioc.Registry(
 		NewCreateOrder,
 		tidbrepository.NewSaveOrderQuery,
-		tidbrepository.NewSaveOrder)
+		tidbrepository.NewSaveOrder,
+		tidbrepository.NewLoadOrderStatuses)
 }
 
 func NewCreateOrder(
 	saveOrderQuery tidbrepository.SaveOrderQuery,
 	saveOrder tidbrepository.SaveOrder,
+	loadOrderStatuses tidbrepository.LoadOrderStatuses,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) (domain.Order, error) {
-		existingOrderDetails, err := saveOrderQuery(ctx, inOrder)
+		order, err := saveOrderQuery(ctx, inOrder)
 		if err != nil {
 			return domain.Order{}, err
 		}
-		fmt.Println(existingOrderDetails)
-		return saveOrder(ctx, existingOrderDetails, inOrder)
+		order.OrderStatus = loadOrderStatuses().Available()
+		order.HydrateOrder(inOrder)
+		return saveOrder(ctx, order)
 	}
 }

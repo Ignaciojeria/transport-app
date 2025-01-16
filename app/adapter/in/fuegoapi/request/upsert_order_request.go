@@ -234,10 +234,11 @@ func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 }) domain.AddressInfo {
 	return domain.AddressInfo{
 		Contact: domain.Contact{
-			FullName:  addressInfo.Contact.FullName,
-			Email:     addressInfo.Contact.Email,
-			Phone:     addressInfo.Contact.Phone,
-			Documents: req.mapDocuments(addressInfo.Contact.Documents),
+			FullName:   addressInfo.Contact.FullName,
+			Email:      addressInfo.Contact.Email,
+			Phone:      addressInfo.Contact.Phone,
+			NationalID: addressInfo.Contact.NationalID,
+			Documents:  req.mapDocuments(addressInfo.Contact.Documents),
 		},
 		State:        addressInfo.State,
 		County:       addressInfo.County,

@@ -3,6 +3,8 @@ package views
 import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+
+	"github.com/biter777/countries"
 )
 
 type FlattenedOrderView struct {
@@ -114,7 +116,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	references := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		references[i] = domain.Reference{
-			ID:    ref.ReferenceID, // ID añadido
+			ID:    ref.ReferenceID,
 			Type:  ref.Type,
 			Value: ref.Value,
 		}
@@ -134,37 +136,42 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	return domain.Order{
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
+		Organization: domain.Organization{
+			OrganizationCountryID: o.OrganizationCountryID,
+			Country:               countries.ByName(o.OrganizationCountry),
+		},
 		BusinessIdentifiers: domain.BusinessIdentifiers{
-			CommerceID: o.CommerceID, // ID añadido
+			CommerceID: o.CommerceID,
 			Commerce:   o.CommerceName,
-			ConsumerID: o.ConsumerID, // ID añadido
+			ConsumerID: o.ConsumerID,
 			Consumer:   o.ConsumerName,
 		},
 		OrderStatus: domain.OrderStatus{
-			ID:     o.OrderStatusID, // ID añadido
+			ID:     o.OrderStatusID,
 			Status: o.OrderStatus,
 		},
 		OrderType: domain.OrderType{
-			ID:          o.OrderTypeID, // ID añadido
+			ID:          o.OrderTypeID,
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},
 		Origin: domain.Origin{
-			ID: o.OriginContactID, // ID añadido
+			ID: o.OriginContactID,
 			NodeInfo: domain.NodeInfo{
-				ID:          o.OriginNodeInfoID, // ID añadido
+				ID:          o.OriginNodeInfoID,
 				ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
 				Name:        &o.OriginNodeName,
 				Type:        o.OriginNodeType,
 			},
 			AddressInfo: domain.AddressInfo{
-				ID: o.OriginAddressInfoID, // ID añadido
+				ID: o.OriginAddressInfoID,
 				Contact: domain.Contact{
-					ID:        o.OriginContactID, // ID añadido
-					FullName:  o.OriginContactName,
-					Phone:     o.OriginContactPhone,
-					Email:     o.OriginContactEmail,
-					Documents: mapDocuments(o.OriginContactDocuments),
+					ID:         o.OriginContactID,
+					FullName:   o.OriginContactName,
+					Phone:      o.OriginContactPhone,
+					Email:      o.OriginContactEmail,
+					NationalID: o.OriginContactNationalID,
+					Documents:  mapDocuments(o.OriginContactDocuments),
 				},
 				AddressLine1: o.OriginAddressLine1,
 				AddressLine2: o.OriginAddressLine2,
@@ -180,22 +187,23 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			},
 		},
 		Destination: domain.Destination{
-			ID:                   o.DestinationContactID, // ID añadido
+			ID:                   o.DestinationContactID,
 			DeliveryInstructions: o.DeliveryInstructions,
 			NodeInfo: domain.NodeInfo{
-				ID:          o.DestinationNodeInfoID, // ID añadido
+				ID:          o.DestinationNodeInfoID,
 				ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
 				Name:        &o.DestinationNodeName,
 				Type:        o.DestinationNodeType,
 			},
 			AddressInfo: domain.AddressInfo{
-				ID: o.DestinationAddressInfoID, // ID añadido
+				ID: o.DestinationAddressInfoID,
 				Contact: domain.Contact{
-					ID:        o.DestinationContactID, // ID añadido
-					FullName:  o.DestinationContactName,
-					Phone:     o.DestinationContactPhone,
-					Email:     o.DestinationContactEmail,
-					Documents: mapDocuments(o.DestinationContactDocuments),
+					ID:         o.DestinationContactID,
+					FullName:   o.DestinationContactName,
+					Phone:      o.DestinationContactPhone,
+					Email:      o.DestinationContactEmail,
+					NationalID: o.DestinationContactNationalID,
+					Documents:  mapDocuments(o.DestinationContactDocuments),
 				},
 				AddressLine1: o.DestinationAddressLine1,
 				AddressLine2: o.DestinationAddressLine2,

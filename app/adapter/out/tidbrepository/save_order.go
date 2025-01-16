@@ -20,14 +20,13 @@ func init() {
 }
 
 type SaveOrder func(
-	ctx context.Context,
-	existingOrder, orderToCreate domain.Order) (domain.Order, error)
+	ctx context.Context, orderToCreate domain.Order) (domain.Order, error)
 
 func NewSaveOrder(
 	conn tidb.TIDBConnection,
 	loadOrderSorderStatuses LoadOrderStatuses,
 ) SaveOrder {
-	return func(ctx context.Context, existingOrder, orderToCreate domain.Order) (domain.Order, error) {
+	return func(ctx context.Context, orderToCreate domain.Order) (domain.Order, error) {
 		available := loadOrderSorderStatuses().Available()
 		type QueryResult struct {
 			OrganizationCountryID int64
