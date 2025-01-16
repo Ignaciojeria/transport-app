@@ -217,6 +217,29 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.Origin) *SearchOrdersR
 	res.Origin.AddressInfo.Latitude = origin.AddressInfo.Latitude
 	res.Origin.AddressInfo.Longitude = origin.AddressInfo.Longitude
 	res.Origin.NodeInfo.ReferenceID = string(origin.NodeInfo.ReferenceID)
+
+	// Mapeo del contacto
+	res.Origin.AddressInfo.Contact.Email = origin.AddressInfo.Contact.Email
+	res.Origin.AddressInfo.Contact.Phone = origin.AddressInfo.Contact.Phone
+	res.Origin.AddressInfo.Contact.NationalID = origin.AddressInfo.Contact.NationalID
+	res.Origin.AddressInfo.Contact.FullName = origin.AddressInfo.Contact.FullName
+	if origin.AddressInfo.Contact.Documents != nil {
+		res.Origin.AddressInfo.Contact.Documents = make([]struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}, len(origin.AddressInfo.Contact.Documents))
+
+		for i, doc := range origin.AddressInfo.Contact.Documents {
+			res.Origin.AddressInfo.Contact.Documents[i] = struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			}{
+				Type:  doc.Type,
+				Value: doc.Value,
+			}
+		}
+	}
+
 	return res
 }
 
@@ -234,6 +257,29 @@ func (res *SearchOrdersResponse) withDestination(destination domain.Destination)
 	res.Destination.AddressInfo.Longitude = destination.AddressInfo.Longitude
 	res.Destination.DeliveryInstructions = destination.DeliveryInstructions
 	res.Destination.NodeInfo.ReferenceID = string(destination.NodeInfo.ReferenceID)
+
+	// Mapeo del contacto
+	res.Destination.AddressInfo.Contact.Email = destination.AddressInfo.Contact.Email
+	res.Destination.AddressInfo.Contact.Phone = destination.AddressInfo.Contact.Phone
+	res.Destination.AddressInfo.Contact.NationalID = destination.AddressInfo.Contact.NationalID
+	res.Destination.AddressInfo.Contact.FullName = destination.AddressInfo.Contact.FullName
+	if destination.AddressInfo.Contact.Documents != nil {
+		res.Destination.AddressInfo.Contact.Documents = make([]struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}, len(destination.AddressInfo.Contact.Documents))
+
+		for i, doc := range destination.AddressInfo.Contact.Documents {
+			res.Destination.AddressInfo.Contact.Documents[i] = struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			}{
+				Type:  doc.Type,
+				Value: doc.Value,
+			}
+		}
+	}
+
 	return res
 }
 
