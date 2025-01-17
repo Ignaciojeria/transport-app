@@ -196,8 +196,8 @@ func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 
 func mapNodeInfoToTable(node domain.NodeInfo, orgCountry int64) table.NodeInfo {
 	return table.NodeInfo{
-		OrganizationCountryID: orgCountry,
 		ID:                    node.ID,
+		OrganizationCountryID: orgCountry,
 		ReferenceID:           string(node.ReferenceID),
 		Name:                  node.Name,
 		Type:                  node.Type,

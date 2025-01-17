@@ -2,6 +2,7 @@ package tidbrepository
 
 import (
 	"context"
+	"fmt"
 	views "transport-app/app/adapter/out/tidbrepository/view"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
@@ -119,6 +120,15 @@ WHERE
 			order.Destination.NodeInfo.ReferenceID,
 			order.Organization.OrganizationCountryID,
 		).Scan(&flattenedOrder).Error
+
+		fmt.Printf("Params: %v, %v, %v, %v, %v, %v\n",
+			order.BusinessIdentifiers.Commerce,
+			order.BusinessIdentifiers.Consumer,
+			order.OrderType.Type,
+			order.Origin.NodeInfo.ReferenceID,
+			order.Destination.NodeInfo.ReferenceID,
+			order.Organization.OrganizationCountryID,
+		)
 
 		var lpns []string
 		for _, v := range order.Packages {

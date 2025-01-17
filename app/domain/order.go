@@ -26,6 +26,10 @@ type Order struct {
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
+func (o Order) IsOriginAndDestinationNodeReferenceIDEqual() bool {
+	return o.Origin.NodeInfo.ReferenceID == o.Destination.NodeInfo.ReferenceID
+}
+
 func (o Order) AreContactsEqual() bool {
 	originContact := o.Origin.AddressInfo.Contact
 	destinationContact := o.Destination.AddressInfo.Contact
