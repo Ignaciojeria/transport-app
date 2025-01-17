@@ -38,5 +38,6 @@ func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOr
 		option.Summary("searchOrdersByUniqueReferences"),
 		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
+		option.Tags(tagOrders),
 	)
 }

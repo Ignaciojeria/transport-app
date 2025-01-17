@@ -108,5 +108,6 @@ func createOrder(
 		option.Header("country", "api country", param.Required()),
 		option.Header("consumer", "api consumer key"),
 		option.Header("commerce", "api commerce key"),
+		option.Tags(tagOrders),
 	)
 }

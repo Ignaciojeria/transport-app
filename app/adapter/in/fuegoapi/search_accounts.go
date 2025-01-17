@@ -17,5 +17,7 @@ func searchAccounts(s httpserver.Server) {
 	fuego.Post(s.Manager, "/account/search",
 		func(c fuego.ContextWithBody[request.SearchAccountsRequest]) ([]response.SearchAccountsResponse, error) {
 			return nil, nil
-		}, option.Summary("searchAccounts"))
+		},
+		option.Summary("searchAccounts"),
+		option.Tags(tagAccounts))
 }

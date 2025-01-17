@@ -46,5 +46,6 @@ func createAccount(
 		}, option.Summary("createAccount"),
 		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
+		option.Tags(tagAccounts),
 	)
 }

@@ -47,5 +47,7 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 			}, nil
 		},
 		option.Summary("createOrganizationKey"),
-		option.Header("country", "api country", param.Required()))
+		option.Header("country", "api country", param.Required()),
+		option.Tags(tagOrganizations),
+	)
 }
