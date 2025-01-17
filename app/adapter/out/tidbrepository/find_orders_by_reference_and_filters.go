@@ -23,7 +23,6 @@ type FindOrdersByReferenceAndFilters func(
 func NewFindOrdersByReferenceAndFilters(conn tidb.TIDBConnection) FindOrdersByReferenceAndFilters {
 	return func(ctx context.Context, osf domain.OrderSearchFilters) ([]domain.Order, error) {
 		var orders []views.FlattenedOrderView
-
 		// Query principal para obtener las órdenes
 		query := `
 SELECT 
@@ -126,6 +125,12 @@ WHERE
 			osf.Organization.Country.Alpha2(),
 		}
 
+		if len(osf.Commerces) > 0 {
+			query += " AND com.name IN (?)"
+			params = append(params, osf.Commerces)
+		}
+
+		// Ejecutar la consulta
 		if err := conn.Raw(query, params...).Scan(&orders).Error; err != nil {
 			return nil, fmt.Errorf("error scanning orders: %w", err)
 		}
