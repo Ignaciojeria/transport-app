@@ -15,13 +15,13 @@ import (
 
 func init() {
 	ioc.Registry(
-		searchOrdersByUniqueReferences,
+		searchOrdersByLpns,
 		httpserver.New,
 		usecase.NewSearchOrders)
 }
-func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOrders) {
-	fuego.Post(s.Manager, "/order/unique-references-search",
-		func(c fuego.ContextWithBody[request.SearchOrdersByUniqueReferencesRequest]) ([]response.SearchOrdersResponse, error) {
+func searchOrdersByLpns(s httpserver.Server, search usecase.SearchOrders) {
+	fuego.Post(s.Manager, "/order/lpns-search",
+		func(c fuego.ContextWithBody[request.SearchOrdersByLpnsRequest]) ([]response.SearchOrdersResponse, error) {
 			req, err := c.Body()
 			if err != nil {
 				return nil, err
@@ -35,7 +35,7 @@ func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOr
 			}
 			return response.MapSearchOrdersResponse(orders), nil
 		},
-		option.Summary("searchOrdersByUniqueReferences"),
+		option.Summary("searchOrdersByLpns"),
 		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
 		option.Tags(tagOrders),

@@ -13,10 +13,10 @@ type SearchOrders func(ctx context.Context, input domain.OrderSearchFilters) ([]
 func init() {
 	ioc.Registry(
 		NewSearchOrders,
-		tidbrepository.NewFindOrdersByReferenceAndFilters)
+		tidbrepository.NewFindOrdersByFilters)
 }
 
-func NewSearchOrders(search tidbrepository.FindOrdersByReferenceAndFilters) SearchOrders {
+func NewSearchOrders(search tidbrepository.FindOrdersByFilters) SearchOrders {
 	return func(ctx context.Context, input domain.OrderSearchFilters) ([]domain.Order, error) {
 		return search(ctx, input)
 	}

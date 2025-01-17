@@ -86,6 +86,10 @@
         {
             "kind": "gcp-subscription",
             "name": "order-submitted"
+        },
+        {
+            "kind": "post-controller",
+            "name": "search-orders-by-lpns"
         }
     ]
 }

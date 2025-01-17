@@ -3,7 +3,7 @@ package domain
 type OrderSearchFilters struct {
 	Pagination   Pagination
 	Organization Organization
-	ReferenceIDs []ReferenceID
-	Packages     []Package
+	ReferenceIDs []string
+	Lpns         []string
 	Commerces    []string `json:"commerce"`
 }
