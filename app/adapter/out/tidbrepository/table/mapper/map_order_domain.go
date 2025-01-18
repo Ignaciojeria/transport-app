@@ -123,7 +123,7 @@ func mapAddressInfo(t table.AddressInfo, c table.Contact) domain.AddressInfo {
 	}
 }
 
-func mapNodeReferences(refs []table.NodeReference) []domain.Reference {
+func mapNodeReferences(refs table.JSONReference) []domain.Reference {
 	result := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		result[i] = domain.Reference{

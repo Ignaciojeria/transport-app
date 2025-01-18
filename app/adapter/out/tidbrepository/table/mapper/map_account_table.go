@@ -46,18 +46,6 @@ func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) tabl
 	}
 }
 
-func MapReferencesTable(refs []domain.Reference) []table.NodeReference {
-	var tableRefs []table.NodeReference
-	for _, ref := range refs {
-		tableRefs = append(tableRefs, table.NodeReference{
-			ID:    0, // ID inicializado en 0
-			Type:  ref.Type,
-			Value: ref.Value,
-		})
-	}
-	return tableRefs
-}
-
 func mapDocuments(docs []domain.Document) table.JSONReference {
 	// Crear un slice para mapear los documentos
 	mapped := make(table.JSONReference, len(docs))

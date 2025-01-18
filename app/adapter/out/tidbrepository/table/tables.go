@@ -196,7 +196,7 @@ type NodeInfo struct {
 	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator
 	AddressID             int64               `gorm:"default:null"`          // Clave foránea a AddressInfo
 	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"`  // Relación con AddressInfo
-	NodeReferences        []NodeReference     `gorm:"foreignKey:NodeInfoID"` // Relación con NodeReferences
+	NodeReferences        JSONReference       `gorm:"type:json"`             // Relación con NodeReferences
 }
 
 type AddressInfo struct {
@@ -216,16 +216,6 @@ type AddressInfo struct {
 	Longitude             float32             `gorm:"default:null"`
 	ZipCode               string              `gorm:"default:null"`
 	TimeZone              string              `gorm:"default:null"`
-}
-
-type NodeReference struct {
-	gorm.Model
-	ID                    int64               `gorm:"primaryKey"`
-	OrganizationCountryID int64               `gorm:"not null;index"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	Type                  string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_value_org_node"`
-	Value                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_value_org_node"`
-	NodeInfoID            int64               `gorm:"not null;uniqueIndex:idx_type_value_org_node"`
 }
 
 type Operator struct {

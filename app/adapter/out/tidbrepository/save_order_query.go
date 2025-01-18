@@ -3,7 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"fmt"
-	views "transport-app/app/adapter/out/tidbrepository/view"
+	views "transport-app/app/adapter/out/tidbrepository/views"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
 

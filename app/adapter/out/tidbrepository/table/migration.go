@@ -30,7 +30,6 @@ func NewRunMigrations(
 			&Order{},
 			&AddressInfo{},
 			&OrderReferences{},
-			&NodeReference{},
 			&NodeInfo{},
 			&Operator{},
 			&Package{},

@@ -19,21 +19,55 @@ type UpsertNodeRequest struct {
 		ZipCode      string  `json:"zipCode"`
 	} `json:"nodeAddress"`
 	OperatorContact struct {
-		Email      string `json:"email"`
-		Phone      string `json:"phone"`
-		NationalID string `json:"nationalID"`
-		Documents  []struct {
+		OperatorType string `json:"operatorType"`
+		Email        string `json:"email"`
+		Phone        string `json:"phone"`
+		NationalID   string `json:"nationalID"`
+		Documents    []struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"documents"`
 		FullName string `json:"fullName"`
 	} `json:"operatorContact"`
+	References []struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"references"`
 }
 
 func (req UpsertNodeRequest) Map() domain.Origin {
 	nodeInfo := domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(req.ReferenceID),
 		Name:        &req.Name,
+		References: func() []domain.Reference {
+			refs := make([]domain.Reference, len(req.References))
+			for i, ref := range req.References {
+				refs[i] = domain.Reference{
+					Type:  ref.Type,
+					Value: ref.Value,
+				}
+			}
+			return refs
+		}(),
+		Operator: domain.Operator{
+			Type: req.OperatorContact.OperatorType,
+			Contact: domain.Contact{
+				Email:      req.OperatorContact.Email,
+				Phone:      req.OperatorContact.Phone,
+				NationalID: req.OperatorContact.NationalID,
+				FullName:   req.OperatorContact.FullName,
+				Documents: func() []domain.Document {
+					docs := make([]domain.Document, len(req.OperatorContact.Documents))
+					for i, doc := range req.OperatorContact.Documents {
+						docs[i] = domain.Document{
+							Type:  doc.Type,
+							Value: doc.Value,
+						}
+					}
+					return docs
+				}(),
+			},
+		},
 	}
 	nodeAddress := domain.AddressInfo{
 		AddressLine1: req.NodeAddress.AddressLine1,
@@ -47,22 +81,6 @@ func (req UpsertNodeRequest) Map() domain.Origin {
 		State:        req.NodeAddress.State,
 		TimeZone:     req.NodeAddress.TimeZone,
 		ZipCode:      req.NodeAddress.ZipCode,
-		Contact: domain.Contact{
-			Email:      req.OperatorContact.Email,
-			Phone:      req.OperatorContact.Phone,
-			NationalID: req.OperatorContact.NationalID,
-			FullName:   req.OperatorContact.FullName,
-			Documents: func() []domain.Document {
-				docs := make([]domain.Document, len(req.OperatorContact.Documents))
-				for i, doc := range req.OperatorContact.Documents {
-					docs[i] = domain.Document{
-						Type:  doc.Type,
-						Value: doc.Value,
-					}
-				}
-				return docs
-			}(),
-		},
 	}
 	return domain.Origin{
 		NodeInfo:    nodeInfo,
