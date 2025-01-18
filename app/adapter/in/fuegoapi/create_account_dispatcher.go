@@ -23,8 +23,8 @@ func init() {
 func createAccount(
 	s httpserver.Server,
 	createAccount usecase.CreateAccount) {
-	fuego.Post(s.Manager, "/account",
-		func(c fuego.ContextWithBody[request.CreateAccountRequest]) (response.CreateAccountResponse, error) {
+	fuego.Post(s.Manager, "/account/dispatcher",
+		func(c fuego.ContextWithBody[request.CreateDispatcherRequest]) (response.CreateAccountResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
 				return response.CreateAccountResponse{}, err
@@ -43,7 +43,7 @@ func createAccount(
 			return response.CreateAccountResponse{
 				Message: "account created",
 			}, nil
-		}, option.Summary("createAccount"),
+		}, option.Summary("createAccountDispatcher"),
 		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
 		option.Tags(tagAccounts),

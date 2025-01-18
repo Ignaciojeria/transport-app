@@ -11,7 +11,6 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
-	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/biter777/countries"
@@ -24,14 +23,12 @@ func init() {
 	ioc.Registry(
 		createOrder,
 		httpserver.New,
-		usecase.NewCreateOrder,
 		tidbrepository.NewEnsureOrganizationForCountry,
 		tidbrepository.NewSaveOrderOutbox,
 		observability.NewObservability)
 }
 func createOrder(
 	s httpserver.Server,
-	createTo usecase.CreateOrder,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	saveOutboxTrx tidbrepository.SaveOrderOutbox,
 	obs observability.Observability) {
@@ -69,7 +66,6 @@ func createOrder(
 					Status: http.StatusInternalServerError,
 				}
 			}
-
 			// Convierte el OrganizationCountryID a string
 			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
 
@@ -84,11 +80,9 @@ func createOrder(
 					"commerce":              c.Header("commerce"),
 					"referenceID":           requestBody.ReferenceID,
 				},
-				Payload: eventPayload,
-				Status:  "pending",
-				Organization: domain.Organization{
-					ID: org.ID,
-				},
+				Payload:      eventPayload,
+				Status:       "pending",
+				Organization: org,
 			}); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",

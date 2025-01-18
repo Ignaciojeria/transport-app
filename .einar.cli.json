@@ -90,6 +90,58 @@
         {
             "kind": "post-controller",
             "name": "search-orders-by-lpns"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-node"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-account-driver"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-account-planner"
+        },
+        {
+            "kind": "post-controller",
+            "name": "upsert-node"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-driver-by-email"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-planner-by-email"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-dispatcher-by-email"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-account-seller"
+        },
+        {
+            "kind": "post-controller",
+            "name": "upsert-vehicle"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-carriers"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-vehicles-by-carrier"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-node"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "node-submitted"
         }
     ]
 }

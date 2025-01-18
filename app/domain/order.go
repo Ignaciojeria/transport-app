@@ -269,9 +269,10 @@ func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
 }
 
 type Origin struct {
-	ID          int64
-	NodeInfo    NodeInfo    `json:"nodeInfo"`
-	AddressInfo AddressInfo `json:"addressInfo"`
+	ID                    int64
+	OrganizationCountryID int64
+	NodeInfo              NodeInfo    `json:"nodeInfo"`
+	AddressInfo           AddressInfo `json:"addressInfo"`
 }
 
 func (o *Origin) UpdateIfChanged(newOrigin Origin) {
