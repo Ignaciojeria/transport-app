@@ -255,16 +255,33 @@ type NodeInfo struct {
 }
 
 func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
-	if newNode.ReferenceID != "" {
+	// Actualizar ReferenceID
+	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
 		n.ReferenceID = newNode.ReferenceID
 	}
 
-	if newNode.Name != nil {
+	// Actualizar Name
+	if newNode.Name != nil && (n.Name == nil || *n.Name != *newNode.Name) {
 		n.Name = newNode.Name
 	}
 
-	if newNode.Type != "" {
+	// Actualizar Type
+	if newNode.Type != "" && n.Type != newNode.Type {
 		n.Type = newNode.Type
+	}
+
+	// Actualizar Operator
+	if newNode.Operator.ID != 0 && n.Operator.ID != newNode.Operator.ID {
+		n.Operator.ID = newNode.Operator.ID
+		n.Operator.Type = newNode.Operator.Type // Asegurarse de copiar el tipo del operador
+	}
+
+	// Actualizar Contacto del Operador
+	n.Operator.Contact.UpdateIfChanged(newNode.Operator.Contact)
+
+	// Actualizar Referencias
+	if len(newNode.References) > 0 {
+		n.References = newNode.References
 	}
 }
 
@@ -276,6 +293,7 @@ type Origin struct {
 }
 
 func (o *Origin) UpdateIfChanged(newOrigin Origin) {
+	o.OrganizationCountryID = newOrigin.OrganizationCountryID
 	o.NodeInfo.UpdateIfChanged(newOrigin.NodeInfo)
 	o.AddressInfo.UpdateIfChanged(newOrigin.AddressInfo)
 }

@@ -19,6 +19,5 @@ func createAccountPlanner(s httpserver.Server) {
 		},
 		option.Summary("createAccountPlanner"),
 		option.Tags(tagAccounts),
-		option.Tags(tagAccounts),
 	)
 }

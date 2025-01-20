@@ -24,10 +24,10 @@ func MapOrderToTable(order domain.Order) table.Order {
 		OriginNodeInfo:   mapNodeInfoToTable(order.Origin.NodeInfo, orgCountryID),
 
 		OriginAddressInfoID: order.Origin.AddressInfo.ID, // Completar según la lógica de negocio
-		OriginAddressInfo:   mapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
+		OriginAddressInfo:   MapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
 
 		DestinationAddressInfoID: order.Destination.AddressInfo.ID, // Completar según la lógica de negocio
-		DestinationAddressInfo:   mapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
+		DestinationAddressInfo:   MapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
 		OriginContactID:          order.Origin.AddressInfo.Contact.ID,
 		OriginContact:            MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
 		DestinationContactID:     order.Destination.AddressInfo.Contact.ID,
@@ -221,7 +221,7 @@ func mapOperatorToTable(operator domain.Operator, orgCountry int64) table.Operat
 	}
 }*/
 
-func mapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.AddressInfo {
+func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.AddressInfo {
 	return table.AddressInfo{
 		OrganizationCountryID: orgCountry,
 		ID:                    address.ID,

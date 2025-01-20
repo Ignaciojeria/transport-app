@@ -7,7 +7,7 @@ import (
 
 func MapAccountTable(e domain.Account, originNodeInfoID int64, contactId int64, organizationCountryID int64) table.Account {
 	return table.Account{
-		ID:                    0,
+		ID:                    e.ID,
 		ContactID:             contactId,
 		IsActive:              true,
 		OriginNodeInfoID:      originNodeInfoID,
@@ -17,7 +17,7 @@ func MapAccountTable(e domain.Account, originNodeInfoID int64, contactId int64, 
 
 func MapNodeInfoTable(e domain.NodeInfo, organizationCountryID int64, addressID int64) table.NodeInfo {
 	return table.NodeInfo{
-		ID:                    0,
+		ID:                    e.ID,
 		ReferenceID:           string(e.ReferenceID),
 		Name:                  e.Name,
 		Type:                  e.Type,
@@ -30,7 +30,7 @@ func MapNodeInfoTable(e domain.NodeInfo, organizationCountryID int64, addressID 
 
 func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
 	return table.AddressInfo{
-		ID:                    0, // ID inicializado en 0
+		ID:                    e.ID, // ID inicializado en 0
 		State:                 e.State,
 		County:                e.County,
 		District:              e.District,
@@ -43,6 +43,7 @@ func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) tabl
 		ZipCode:               e.ZipCode,
 		TimeZone:              e.TimeZone,
 		OrganizationCountryID: organizationCountryID,
+		Province:              e.Province,
 	}
 }
 
