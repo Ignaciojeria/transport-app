@@ -140,13 +140,14 @@ type UpsertOrderRequest struct {
 		Type  string `json:"type"`
 		Value string `json:"value"`
 	} `json:"transportRequirements"`
-	Visits []struct {
-		Date      string `json:"date"`
-		TimeRange struct {
-			EndTime   string `json:"endTime"`
-			StartTime string `json:"startTime"`
-		} `json:"timeRange"`
-	} `json:"visits"`
+	/*
+		Visits []struct {
+			Date      string `json:"date"`
+			TimeRange struct {
+				EndTime   string `json:"endTime"`
+				StartTime string `json:"startTime"`
+			} `json:"timeRange"`
+		} `json:"visits"`*/
 }
 
 func (req UpsertOrderRequest) Map() domain.Order {
@@ -160,8 +161,8 @@ func (req UpsertOrderRequest) Map() domain.Order {
 		Packages:                req.mapPackages(),
 		CollectAvailabilityDate: req.mapCollectAvailabilityDate(),
 		PromisedDate:            req.mapPromisedDate(),
-		Visits:                  req.mapVisit(),
-		TransportRequirements:   req.mapReferences(req.TransportRequirements),
+		//Visits:                  req.mapVisit(),
+		TransportRequirements: req.mapReferences(req.TransportRequirements),
 	}
 }
 
@@ -367,6 +368,7 @@ func (req UpsertOrderRequest) mapPromisedDate() domain.PromisedDate {
 	}
 }
 
+/*
 func (req UpsertOrderRequest) mapVisit() []domain.Visit {
 	var visits []domain.Visit
 	for _, visit := range req.Visits {
@@ -379,4 +381,4 @@ func (req UpsertOrderRequest) mapVisit() []domain.Visit {
 		})
 	}
 	return visits
-}
+}*/

@@ -27,6 +27,7 @@ func NewRunMigrations(
 		tables := []interface{}{
 			&OrdersOutbox{},
 			&NodesOutbox{},
+			&VehiclesOutbox{},
 			&Order{},
 			&AddressInfo{},
 			&OrderReferences{},

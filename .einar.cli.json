@@ -142,6 +142,14 @@
         {
             "kind": "gcp-subscription",
             "name": "node-submitted"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-vehicle"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "vehicle-submitted"
         }
     ]
 }
