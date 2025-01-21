@@ -3,6 +3,7 @@ package table
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -380,16 +381,25 @@ type Account struct {
 
 type JSONB json.RawMessage
 
-// Implementación para que JSONB funcione como tipo compatible con GORM
+// Scan implementa la interfaz `sql.Scanner` para deserializar valores JSON
 func (j *JSONB) Scan(value interface{}) error {
-	bytes, ok := value.([]byte)
-	if !ok {
+	if value == nil {
+		*j = JSONB([]byte("null"))
 		return nil
 	}
-	return json.Unmarshal(bytes, j)
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed for JSONB")
+	}
+	*j = JSONB(bytes)
+	return nil
 }
 
+// Value implementa la interfaz `driver.Valuer` para serializar valores JSON
 func (j JSONB) Value() (driver.Value, error) {
+	if len(j) == 0 {
+		return nil, nil
+	}
 	return json.RawMessage(j).MarshalJSON()
 }
 
@@ -399,7 +409,7 @@ type Carrier struct {
 	ID                    int64               `gorm:"primaryKey"`
 	OrganizationCountryID int64               `gorm:"not null;index"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	ReferenceID           string              `gorm:"unique;not null"`
+	ReferenceID           string              `gorm:"unique;default:null"`
 	Name                  string              `gorm:"not null"`
 	NationalID            string              `gorm:"unique;not null"`
 	Document              JSONB               `gorm:"type:json" json:"document"` // Tipo JSON para manejar estructuras anidadas
@@ -412,7 +422,7 @@ type Vehicle struct {
 	ID                    int64               `gorm:"primaryKey"`
 	OrganizationCountryID int64               `gorm:"not null;index"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	ReferenceID           string              `gorm:"unique;not null"`
+	ReferenceID           string              `gorm:"unique;default:null"`
 	Plate                 string              `gorm:"not null"`
 	IsActive              bool
 	CertificateDate       string

@@ -45,6 +45,8 @@ func NewRunMigrations(
 			&OrganizationCountry{},
 			&Account{},
 			&Contact{},
+			&Carrier{},
+			&Vehicle{},
 		}
 
 		// Opcional: Eliminar tablas si existen

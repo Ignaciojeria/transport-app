@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"fmt"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 
@@ -26,10 +25,12 @@ func NewUpsertVehicle(
 		if err != nil {
 			return err
 		}
+		v.UpdateIfChanged(vehicle)
+		v.Organization = vehicle.Organization
+		v.BusinessIdentifiers = vehicle.BusinessIdentifiers
 		if err := upsert(ctx, v); err != nil {
 			return err
 		}
-		fmt.Println("works")
 		return nil
 	}
 }

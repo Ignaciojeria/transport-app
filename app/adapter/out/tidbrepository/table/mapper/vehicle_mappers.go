@@ -11,7 +11,6 @@ func DomainToTableVehicle(d domain.Vehicle) table.Vehicle {
 	insurance, _ := json.Marshal(d.Insurance)
 	technicalReview, _ := json.Marshal(d.TechnicalReview)
 	dimensions, _ := json.Marshal(d.Dimensions)
-	document, _ := json.Marshal(d.Carrier.Document)
 
 	return table.Vehicle{
 		ID:              d.ID,
@@ -30,7 +29,6 @@ func DomainToTableVehicle(d domain.Vehicle) table.Vehicle {
 			ReferenceID: d.Carrier.ReferenceID,
 			Name:        d.Carrier.Name,
 			NationalID:  d.Carrier.NationalID,
-			Document:    table.JSONB(document),
 		},
 	}
 }
@@ -71,7 +69,6 @@ func TableToDomainVehicle(t table.Vehicle, carrier table.Carrier) domain.Vehicle
 	_ = json.Unmarshal(t.TechnicalReview, &technicalReview)
 	_ = json.Unmarshal(t.Dimensions, &dimensions)
 	_ = json.Unmarshal(carrier.Document, &document)
-
 	return domain.Vehicle{
 		ID:              t.ID,
 		ReferenceID:     t.ReferenceID,
@@ -89,23 +86,12 @@ func TableToDomainVehicle(t table.Vehicle, carrier table.Carrier) domain.Vehicle
 			ReferenceID  string              `json:"referenceID"`
 			Name         string              `json:"name"`
 			NationalID   string              `json:"nationalID"`
-			Document     struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"document"`
 		}{
 			ID:           carrier.ID,
 			Organization: domain.Organization{}, // Ajustar según tu lógica para inicializar Organization
-			ReferenceID:  carrier.ReferenceID,
+			ReferenceID:  t.Carrier.ReferenceID,
 			Name:         carrier.Name,
 			NationalID:   carrier.NationalID,
-			Document: struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			}{
-				Type:  document.Type,
-				Value: document.Value,
-			},
 		},
 		Organization: domain.Organization{}, // Ajustar para inicializar correctamente
 	}

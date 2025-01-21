@@ -103,23 +103,12 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			ReferenceID  string              `json:"referenceID"`
 			Name         string              `json:"name"`
 			NationalID   string              `json:"nationalID"`
-			Document     struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"document"`
 		}{
 			ID:           0,                     // Si el ID no está presente en la solicitud
 			Organization: domain.Organization{}, // Ajustar según tu lógica de negocio
 			ReferenceID:  v.Carrier.ReferenceID,
 			Name:         v.Carrier.Name,
 			NationalID:   v.Carrier.NationalID,
-			Document: struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			}{
-				Type:  v.Carrier.Document.Type,
-				Value: v.Carrier.Document.Value,
-			},
 		},
 		Organization: domain.Organization{}, // Ajustar según corresponda
 	}

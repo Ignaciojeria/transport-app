@@ -3,7 +3,9 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/usecase"
@@ -31,7 +33,17 @@ func newVehicleSubmitted(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		if err := upsert(ctx, input.Map()); err != nil {
+		domainOBJ := input.Map()
+		// Completar datos adicionales desde los atributos del mensaje
+		domainOBJ.BusinessIdentifiers.Commerce = m.Attributes["commerce"]
+		domainOBJ.BusinessIdentifiers.Consumer = m.Attributes["consumer"]
+
+		orgCountryID, err := strconv.ParseInt(m.Attributes["organizationCountryID"], 10, 64)
+		if err != nil {
+			return http.StatusBadRequest, fmt.Errorf("invalid organizationCountryID: %w", err)
+		}
+		domainOBJ.Organization.OrganizationCountryID = orgCountryID
+		if err := upsert(ctx, domainOBJ); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}
