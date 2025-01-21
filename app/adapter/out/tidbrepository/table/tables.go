@@ -377,3 +377,50 @@ type Account struct {
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_organization_contact"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 }
+
+type JSONB json.RawMessage
+
+// Implementación para que JSONB funcione como tipo compatible con GORM
+func (j *JSONB) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return nil
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+func (j JSONB) Value() (driver.Value, error) {
+	return json.RawMessage(j).MarshalJSON()
+}
+
+// Modelo de Empresa de Transporte
+type Carrier struct {
+	gorm.Model
+	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	ReferenceID           string              `gorm:"unique;not null"`
+	Name                  string              `gorm:"not null"`
+	NationalID            string              `gorm:"unique;not null"`
+	Document              JSONB               `gorm:"type:json" json:"document"` // Tipo JSON para manejar estructuras anidadas
+	Vehicles              []Vehicle           `gorm:"foreignKey:CarrierID"`
+}
+
+// Modelo de Vehículo
+type Vehicle struct {
+	gorm.Model
+	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	ReferenceID           string              `gorm:"unique;not null"`
+	Plate                 string              `gorm:"not null"`
+	IsActive              bool
+	CertificateDate       string
+	Category              string
+	Weight                JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Weight
+	Insurance             JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Insurance
+	TechnicalReview       JSONB   `gorm:"type:json"`      // Tipo JSON para serializar TechnicalReview
+	Dimensions            JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Dimensions
+	CarrierID             int64   `gorm:"not null;index"` // Relación con Carrier
+	Carrier               Carrier `gorm:"foreignKey:CarrierID"`
+}

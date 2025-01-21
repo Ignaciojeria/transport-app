@@ -1,11 +1,13 @@
 package domain
 
 type Vehicle struct {
-	ReferenceID     string `json:"referenceID"`
-	Plate           string `json:"plate"`
-	IsActive        bool   `json:"isActive"`
-	CertificateDate string `json:"certificateDate"`
-	Category        string `json:"category"`
+	ID              int64
+	Organization    Organization `json:"organization"`
+	ReferenceID     string       `json:"referenceID"`
+	Plate           string       `json:"plate"`
+	IsActive        bool         `json:"isActive"`
+	CertificateDate string       `json:"certificateDate"`
+	Category        string       `json:"category"`
 	Weight          struct {
 		Value         int    `json:"value"`
 		UnitOfMeasure string `json:"unitOfMeasure"`
@@ -31,10 +33,12 @@ type Vehicle struct {
 		UnitOfMeasure string  `json:"unitOfMeasure"`
 	} `json:"dimensions"`
 	Carrier struct {
-		ReferenceID string `json:"referenceID"`
-		Name        string `json:"name"`
-		NationalID  string `json:"nationalID"`
-		Document    struct {
+		ID           int64
+		Organization Organization `json:"organization"`
+		ReferenceID  string       `json:"referenceID"`
+		Name         string       `json:"name"`
+		NationalID   string       `json:"nationalID"`
+		Document     struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"document"`

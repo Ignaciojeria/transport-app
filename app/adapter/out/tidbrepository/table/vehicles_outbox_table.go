@@ -10,9 +10,9 @@ import (
 type VehiclesOutbox struct {
 	gorm.Model
 	ID                    int64  `gorm:"primaryKey"`
-	ReferenceID           string `gorm:"not null;index:idx_orders_outbox_unique,unique"`
-	EventType             string `gorm:"not null;index:idx_orders_outbox_unique,unique"`
-	OrganizationCountryID int64  `gorm:"not null;index:idx_orders_outbox_unique,unique"`
+	ReferenceID           string `gorm:"not null;"`
+	EventType             string `gorm:"not null;"`
+	OrganizationCountryID int64  `gorm:"not null;"`
 	Attributes            []byte `gorm:"type:json"`
 	Payload               []byte `gorm:"type:json"`
 	Status                string `gorm:"default:'pending'"` // Valores posibles: pending, failed, processed
