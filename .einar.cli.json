@@ -150,6 +150,14 @@
         {
             "kind": "gcp-subscription",
             "name": "vehicle-submitted"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-nodes"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-nodes"
         }
     ]
 }
