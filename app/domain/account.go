@@ -3,7 +3,7 @@ package domain
 type Account struct {
 	ID           int64
 	Organization Organization `json:"organization"`
-	Origin       Origin
+	Origin       NodeInfo
 	Contact      Contact
 	Profiles     []Profile
 }

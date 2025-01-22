@@ -59,6 +59,5 @@ func mapDocuments(docs []domain.Document) table.JSONReference {
 		}
 	}
 
-	// Retornar los documentos mapeados como table.JSONDocuments
 	return mapped
 }

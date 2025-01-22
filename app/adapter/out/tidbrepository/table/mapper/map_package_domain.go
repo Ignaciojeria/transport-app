@@ -1,5 +1,6 @@
 package mapper
 
+/*
 import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
@@ -52,3 +53,4 @@ func mapTableItemsToDomain(items table.JSONItemReferences) []domain.ItemReferenc
 	}
 	return mapped
 }
+*/

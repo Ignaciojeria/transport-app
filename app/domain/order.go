@@ -12,12 +12,13 @@ type Order struct {
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"referenceID"`
 	Organization            Organization            `json:"organization"`
-	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
+	Commerce                Commerce                `json:"commerce"`
+	Consumer                Consumer                `json:"consumer"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
 	References              []Reference             `json:"references"`
-	Origin                  Origin                  `json:"origin"`
-	Destination             Destination             `json:"destination"`
+	Origin                  NodeInfo                `json:"origin"`
+	Destination             NodeInfo                `json:"destination"`
 	Items                   []Item                  `json:"items"`
 	Packages                []Package               `json:"packages"`
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
@@ -27,7 +28,7 @@ type Order struct {
 }
 
 func (o Order) IsOriginAndDestinationNodeReferenceIDEqual() bool {
-	return o.Origin.NodeInfo.ReferenceID == o.Destination.NodeInfo.ReferenceID
+	return o.Origin.ReferenceID == o.Destination.ReferenceID
 }
 
 func (o Order) AreContactsEqual() bool {
@@ -56,11 +57,11 @@ func (o *Order) HydrateOrder(newOrder Order) {
 	}
 
 	// Actualizar BusinessIdentifiers
-	if newOrder.BusinessIdentifiers.Commerce != "" {
-		o.BusinessIdentifiers.Commerce = newOrder.BusinessIdentifiers.Commerce
+	if newOrder.Commerce.Value != "" {
+		o.Commerce = newOrder.Commerce
 	}
-	if newOrder.BusinessIdentifiers.Consumer != "" {
-		o.BusinessIdentifiers.Consumer = newOrder.BusinessIdentifiers.Consumer
+	if newOrder.Consumer.Value != "" {
+		o.Consumer = newOrder.Consumer
 	}
 
 	// Actualizar References
@@ -234,7 +235,7 @@ func (o Order) IsOriginAndDestinationAddressEqual() bool {
 }
 
 func (o Order) IsOriginAndDestinationNodeEqual() bool {
-	return o.Origin.NodeInfo.ReferenceID == o.Destination.NodeInfo.ReferenceID
+	return o.Origin.ReferenceID == o.Destination.ReferenceID
 }
 
 type ReferenceID string
@@ -246,12 +247,15 @@ type Reference struct {
 }
 
 type NodeInfo struct {
-	ID          int64
-	ReferenceID ReferenceID `json:"referenceId"`
-	Name        *string     `json:"name"`
-	Type        string      `json:"type"`
-	Operator    Operator    `json:"operator"`
-	References  []Reference `json:"references"`
+	ID                   int64
+	ReferenceID          ReferenceID  `json:"referenceId"`
+	Organization         Organization `json:"organization"`
+	Name                 *string      `json:"name"`
+	Type                 string       `json:"type"`
+	Operator             Operator     `json:"operator"`
+	References           []Reference  `json:"references"`
+	DeliveryInstructions string       `json:"deliveryInstructions"`
+	AddressInfo          AddressInfo  `json:"addressInfo"`
 }
 
 func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
@@ -270,32 +274,17 @@ func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
 		n.Type = newNode.Type
 	}
 
-	// Actualizar Operator
-	if newNode.Operator.ID != 0 && n.Operator.ID != newNode.Operator.ID {
-		n.Operator.ID = newNode.Operator.ID
-		n.Operator.Type = newNode.Operator.Type // Asegurarse de copiar el tipo del operador
-	}
+	n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
 
-	// Actualizar Contacto del Operador
-	n.Operator.Contact.UpdateIfChanged(newNode.Operator.Contact)
-
-	// Actualizar Referencias
+	// Actualizar NodeReferences
 	if len(newNode.References) > 0 {
 		n.References = newNode.References
 	}
-}
 
-type Origin struct {
-	ID                    int64
-	OrganizationCountryID int64
-	NodeInfo              NodeInfo    `json:"nodeInfo"`
-	AddressInfo           AddressInfo `json:"addressInfo"`
-}
-
-func (o *Origin) UpdateIfChanged(newOrigin Origin) {
-	o.OrganizationCountryID = newOrigin.OrganizationCountryID
-	o.NodeInfo.UpdateIfChanged(newOrigin.NodeInfo)
-	o.AddressInfo.UpdateIfChanged(newOrigin.AddressInfo)
+	// Actualizar DeliveryInstructions
+	if newNode.DeliveryInstructions != "" && n.DeliveryInstructions != newNode.DeliveryInstructions {
+		n.DeliveryInstructions = newNode.DeliveryInstructions
+	}
 }
 
 type Document struct {
@@ -304,12 +293,13 @@ type Document struct {
 }
 
 type Contact struct {
-	ID         int64
-	FullName   string     `json:"fullName"`
-	Email      string     `json:"email"`
-	Phone      string     `json:"phone"`
-	NationalID string     `json:"nationalID"`
-	Documents  []Document `json:"documents"`
+	ID           int64
+	Organization Organization `json:"organization"`
+	FullName     string       `json:"fullName"`
+	Email        string       `json:"email"`
+	Phone        string       `json:"phone"`
+	NationalID   string       `json:"nationalID"`
+	Documents    []Document   `json:"documents"`
 }
 
 func (c *Contact) UpdateIfChanged(newContact Contact) {
@@ -354,6 +344,7 @@ func compareDocuments(oldDocs, newDocs []Document) bool {
 
 type AddressInfo struct {
 	ID           int64
+	Organization Organization
 	Contact      Contact `json:"contact"`
 	State        string  `json:"state"`
 	County       string  `json:"county"`
@@ -423,30 +414,10 @@ func concatenateWithCommas(values ...string) string {
 }
 
 type Operator struct {
-	ID      int64
-	Contact Contact `json:"contact"`
-	Type    string  `json:"type"`
-}
-
-type Destination struct {
-	ID                   int64
-	DeliveryInstructions string      `json:"deliveryInstructions"`
-	NodeInfo             NodeInfo    `json:"nodeInfo"`
-	AddressInfo          AddressInfo `json:"addressInfo"`
-}
-
-func (d *Destination) UpdateIfChanged(newDestination Destination) {
-	// Comparar y actualizar DeliveryInstructions
-	if newDestination.DeliveryInstructions != "" && d.DeliveryInstructions != newDestination.DeliveryInstructions {
-		d.DeliveryInstructions = newDestination.DeliveryInstructions
-	}
-
-	// Comparar y actualizar NodeInfo
-	d.NodeInfo.UpdateIfChanged(newDestination.NodeInfo)
-
-	// Comparar y actualizar AddressInfo
-	d.AddressInfo.UpdateIfChanged(newDestination.AddressInfo)
-
+	ID           int64
+	Organization Organization
+	Contact      Contact `json:"contact"`
+	Type         string  `json:"type"`
 }
 
 type Quantity struct {
@@ -531,7 +502,8 @@ func (o *Order) ValidatePackages() error {
 
 type Package struct {
 	ID             int64
-	Lpn            string          `json:"lpn"`
+	Lpn            string `json:"lpn"`
+	Organization   Organization
 	Dimensions     Dimensions      `json:"dimensions"`
 	Weight         Weight          `json:"weight"`
 	Insurance      Insurance       `json:"insurance"`
@@ -616,9 +588,12 @@ type Visit struct {
 	TimeRange TimeRange `json:"timeRange"`
 }
 
-type BusinessIdentifiers struct {
-	CommerceID int64
-	Commerce   string `json:"commerce"`
-	ConsumerID int64
-	Consumer   string `json:"consumer"`
+type Consumer struct {
+	ID    int64
+	Value string `json:"consumer"`
+}
+
+type Commerce struct {
+	ID    int64
+	Value string `json:"commerce"`
 }

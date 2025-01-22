@@ -11,8 +11,8 @@ func MapOrderToTable(order domain.Order) table.Order {
 		ID:                    order.ID,
 		ReferenceID:           string(order.ReferenceID),
 		OrganizationCountryID: order.Organization.OrganizationCountryID, // Completar según la lógica de negocio
-		CommerceID:            order.BusinessIdentifiers.CommerceID,     // Completar según la lógica de negocio
-		ConsumerID:            order.BusinessIdentifiers.ConsumerID,     // Completar según la lógica de negocio
+		CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
+		ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
 		OrderStatusID:         order.OrderStatus.ID,                     // Completar según la lógica de negocio
 		OrderTypeID:           order.OrderType.ID,                       // Completar según la lógica de negocio
 		OrderType:             mapOrderTypeToTable(order.OrderType, orgCountryID),
@@ -20,8 +20,8 @@ func MapOrderToTable(order domain.Order) table.Order {
 		DeliveryInstructions:  order.Destination.DeliveryInstructions,
 
 		// Origen
-		OriginNodeInfoID: order.Origin.NodeInfo.ID, // Completar según la lógica de negocio
-		OriginNodeInfo:   mapNodeInfoToTable(order.Origin.NodeInfo, orgCountryID),
+		OriginNodeInfoID: order.Origin.ID, // Completar según la lógica de negocio
+		OriginNodeInfo:   mapNodeInfoToTable(order.Origin, orgCountryID),
 
 		OriginAddressInfoID: order.Origin.AddressInfo.ID, // Completar según la lógica de negocio
 		OriginAddressInfo:   MapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
@@ -33,8 +33,8 @@ func MapOrderToTable(order domain.Order) table.Order {
 		DestinationContactID:     order.Destination.AddressInfo.Contact.ID,
 		DestinationContact:       MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
 		// Destino
-		DestinationNodeInfoID: order.Destination.NodeInfo.ID, // Completar según la lógica de negocio
-		DestinationNodeInfo:   mapNodeInfoToTable(order.Destination.NodeInfo, orgCountryID),
+		DestinationNodeInfoID: order.Destination.ID, // Completar según la lógica de negocio
+		DestinationNodeInfo:   mapNodeInfoToTable(order.Destination, orgCountryID),
 
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
@@ -46,8 +46,8 @@ func MapOrderToTable(order domain.Order) table.Order {
 		JSONItems:                         mapItemsToTable(order.Items),
 		//Visits:                            mapVisitsToTable(order.Visits),
 		TransportRequirements: mapTransportRequirementsToTable(order.TransportRequirements),
-		Commerce:              mapCommerceToTable(order.BusinessIdentifiers, orgCountryID),
-		Consumer:              mapConsumerToTable(order.BusinessIdentifiers, orgCountryID),
+		Commerce:              mapCommerceToTable(order.Commerce, orgCountryID),
+		Consumer:              mapConsumerToTable(order.Consumer, orgCountryID),
 		Packages:              MapPackagesToTable(order.Packages, orgCountryID),
 	}
 }
@@ -124,11 +124,9 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 	mapped := make(table.JSONItemReferences, len(items))
 	for i, item := range items {
 		mapped[i] = table.ItemReference{ // Cambiado de JSONItemReferences a JSONItemReference
-			ReferenceID: string(item.ReferenceID),
-			Quantity: table.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
-			},
+			ReferenceID:    string(item.ReferenceID),
+			QuantityNumber: item.Quantity.QuantityNumber,
+			QuantityUnit:   item.Quantity.QuantityUnit,
 		}
 	}
 	return mapped
@@ -169,19 +167,19 @@ func mapTransportRequirementsToTable(requirements []domain.Reference) table.JSON
 	return jsonReference
 }
 
-func mapCommerceToTable(bi domain.BusinessIdentifiers, orgCountry int64) table.Commerce {
+func mapCommerceToTable(c domain.Commerce, orgCountry int64) table.Commerce {
 	return table.Commerce{
 		OrganizationCountryID: orgCountry,
-		ID:                    bi.CommerceID,
-		Name:                  bi.Commerce,
+		ID:                    c.ID,
+		Name:                  c.Value,
 	}
 }
 
-func mapConsumerToTable(bi domain.BusinessIdentifiers, orgCountry int64) table.Consumer {
+func mapConsumerToTable(c domain.Consumer, orgCountry int64) table.Consumer {
 	return table.Consumer{
 		OrganizationCountryID: orgCountry,
-		ID:                    bi.ConsumerID,
-		Name:                  bi.Consumer,
+		ID:                    c.ID,
+		Name:                  c.Value,
 	}
 }
 
@@ -204,22 +202,6 @@ func mapNodeInfoToTable(node domain.NodeInfo, orgCountry int64) table.NodeInfo {
 		//Operator:              mapOperatorToTable(node.Operator, orgCountry),
 	}
 }
-
-/*
-func mapOperatorToTable(operator domain.Operator, orgCountry int64) table.Operator {
-	return table.Operator{
-		OrganizationCountryID: orgCountry,
-		ID:                    operator.ID,
-		Type:                  operator.Type,
-		Contact: table.Contact{
-			ID:         0,
-			FullName:   operator.Contact.FullName,
-			Email:      operator.Contact.Email,
-			Phone:      operator.Contact.Phone,
-			NationalID: operator.Contact.NationalID,
-		},
-	}
-}*/
 
 func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.AddressInfo {
 	return table.AddressInfo{

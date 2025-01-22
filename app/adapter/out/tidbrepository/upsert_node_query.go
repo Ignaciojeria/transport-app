@@ -13,7 +13,7 @@ import (
 
 type UpsertNodeQuery func(
 	ctx context.Context,
-	origin domain.Origin) (domain.Origin, error)
+	origin domain.NodeInfo) (domain.NodeInfo, error)
 
 func init() {
 	ioc.Registry(
@@ -22,7 +22,7 @@ func init() {
 }
 
 func NewUpsertNodeQuery(conn tidb.TIDBConnection) UpsertNodeQuery {
-	return func(ctx context.Context, origin domain.Origin) (domain.Origin, error) {
+	return func(ctx context.Context, origin domain.NodeInfo) (domain.NodeInfo, error) {
 		var flattenedNode views.FlattenedNodeView
 
 		// Realiza la consulta combinando las tablas originales
@@ -57,18 +57,18 @@ func NewUpsertNodeQuery(conn tidb.TIDBConnection) UpsertNodeQuery {
 			Joins("LEFT JOIN operators AS o ON n.operator_id = o.id").
 			Joins("LEFT JOIN contacts AS c ON o.contact_id = c.id").
 			Joins("LEFT JOIN address_infos AS a ON n.address_id = a.id").
-			Where("n.reference_id = ?", origin.NodeInfo.ReferenceID).
+			Where("n.reference_id = ?", origin.ReferenceID).
 			Scan(&flattenedNode)
 
 		// Manejo de errores
 		if result.Error != nil {
 			if result.Error == gorm.ErrRecordNotFound {
-				return domain.Origin{}, fmt.Errorf("node with ReferenceID '%s' not found", origin.NodeInfo.ReferenceID)
+				return domain.NodeInfo{}, fmt.Errorf("node with ReferenceID '%s' not found", origin.ReferenceID)
 			}
-			return domain.Origin{}, fmt.Errorf("failed to query node: %w", result.Error)
+			return domain.NodeInfo{}, fmt.Errorf("failed to query node: %w", result.Error)
 		}
 
 		// Mapea el resultado al dominio y retorna
-		return flattenedNode.ToOrigin(), nil
+		return flattenedNode.ToNodeInfo(), nil
 	}
 }

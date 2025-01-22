@@ -140,14 +140,6 @@ type UpsertOrderRequest struct {
 		Type  string `json:"type"`
 		Value string `json:"value"`
 	} `json:"transportRequirements"`
-	/*
-		Visits []struct {
-			Date      string `json:"date"`
-			TimeRange struct {
-				EndTime   string `json:"endTime"`
-				StartTime string `json:"startTime"`
-			} `json:"timeRange"`
-		} `json:"visits"`*/
 }
 
 func (req UpsertOrderRequest) Map() domain.Order {
@@ -187,19 +179,16 @@ func (req UpsertOrderRequest) mapReferences(refs []struct {
 	return mapped
 }
 
-func (req UpsertOrderRequest) mapOrigin() domain.Origin {
-	return domain.Origin{
-		NodeInfo:    req.mapNodeInfo(req.Origin.NodeInfo),
-		AddressInfo: req.mapAddressInfo(req.Origin.AddressInfo),
-	}
+func (req UpsertOrderRequest) mapOrigin() domain.NodeInfo {
+	nodeInfo := req.mapNodeInfo(req.Origin.NodeInfo)
+	nodeInfo.AddressInfo = req.mapAddressInfo(req.Origin.AddressInfo)
+	return nodeInfo
 }
 
-func (req UpsertOrderRequest) mapDestination() domain.Destination {
-	return domain.Destination{
-		DeliveryInstructions: req.Destination.DeliveryInstructions,
-		NodeInfo:             req.mapNodeInfo(req.Destination.NodeInfo),
-		AddressInfo:          req.mapAddressInfo(req.Destination.AddressInfo),
-	}
+func (req UpsertOrderRequest) mapDestination() domain.NodeInfo {
+	nodeInfo := req.mapNodeInfo(req.Destination.NodeInfo)
+	nodeInfo.AddressInfo = req.mapAddressInfo(req.Destination.AddressInfo)
+	return nodeInfo
 }
 
 func (req UpsertOrderRequest) mapNodeInfo(nodeInfo struct {

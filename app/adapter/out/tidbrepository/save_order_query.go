@@ -109,24 +109,24 @@ FROM
 WHERE 
     org.id = ?;
 		`,
-			order.BusinessIdentifiers.Commerce,
-			order.BusinessIdentifiers.Consumer,
+			order.Commerce.Value,
+			order.Consumer.Value,
 			order.OrderType.Type,
 			order.Origin.AddressInfo.Contact.FullName,
 			order.Origin.AddressInfo.RawAddress(),
-			order.Origin.NodeInfo.ReferenceID,
+			order.Origin.ReferenceID,
 			order.Destination.AddressInfo.Contact.FullName,
 			order.Destination.AddressInfo.RawAddress(),
-			order.Destination.NodeInfo.ReferenceID,
+			order.Destination.ReferenceID,
 			order.Organization.OrganizationCountryID,
 		).Scan(&flattenedOrder).Error
 
 		fmt.Printf("Params: %v, %v, %v, %v, %v, %v\n",
-			order.BusinessIdentifiers.Commerce,
-			order.BusinessIdentifiers.Consumer,
+			order.Commerce.Value,
+			order.Consumer.Value,
 			order.OrderType.Type,
-			order.Origin.NodeInfo.ReferenceID,
-			order.Destination.NodeInfo.ReferenceID,
+			order.Origin.ReferenceID,
+			order.Destination.ReferenceID,
 			order.Organization.OrganizationCountryID,
 		)
 

@@ -36,7 +36,6 @@ func NewRunMigrations(
 			&Package{},
 			&OrderPackage{},
 			&OrderStatus{},
-			&Visit{},
 			&Commerce{},
 			&Consumer{},
 			&Organization{},

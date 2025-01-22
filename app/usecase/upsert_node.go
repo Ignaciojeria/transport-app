@@ -8,7 +8,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertNode func(context.Context, domain.Origin) error
+type UpsertNode func(context.Context, domain.NodeInfo) error
 
 func init() {
 	ioc.Registry(
@@ -22,7 +22,7 @@ func NewUpsertNode(
 	query tidbrepository.UpsertNodeQuery,
 	upsert tidbrepository.UpsertNode,
 ) UpsertNode {
-	return func(ctx context.Context, origin domain.Origin) error {
+	return func(ctx context.Context, origin domain.NodeInfo) error {
 		o, err := query(ctx, origin)
 		if err != nil {
 			return err

@@ -35,7 +35,7 @@ type UpsertNodeRequest struct {
 	} `json:"references"`
 }
 
-func (req UpsertNodeRequest) Map() domain.Origin {
+func (req UpsertNodeRequest) Map() domain.NodeInfo {
 	nodeInfo := domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(req.ReferenceID),
 		Name:        &req.Name,
@@ -82,8 +82,6 @@ func (req UpsertNodeRequest) Map() domain.Origin {
 		TimeZone:     req.NodeAddress.TimeZone,
 		ZipCode:      req.NodeAddress.ZipCode,
 	}
-	return domain.Origin{
-		NodeInfo:    nodeInfo,
-		AddressInfo: nodeAddress,
-	}
+	nodeInfo.AddressInfo = nodeAddress
+	return nodeInfo
 }

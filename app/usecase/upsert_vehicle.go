@@ -27,7 +27,7 @@ func NewUpsertVehicle(
 		}
 		v.UpdateIfChanged(vehicle)
 		v.Organization = vehicle.Organization
-		v.BusinessIdentifiers = vehicle.BusinessIdentifiers
+		//v.BusinessIdentifiers = vehicle.BusinessIdentifiers
 		if err := upsert(ctx, v); err != nil {
 			return err
 		}

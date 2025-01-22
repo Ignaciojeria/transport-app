@@ -9,9 +9,11 @@ type SearchNodesRequest struct {
 	} `json:"pagination"`
 }
 
-func (s SearchNodesRequest) Map() domain.Pagination {
-	return domain.Pagination{
-		Page: s.Pagination.Page,
-		Size: s.Pagination.PageSize,
+func (s SearchNodesRequest) Map() domain.NodeSearchFilters {
+	return domain.NodeSearchFilters{
+		Pagination: domain.Pagination{
+			Page: s.Pagination.Page,
+			Size: s.Pagination.PageSize,
+		},
 	}
 }

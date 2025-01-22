@@ -1,12 +1,6 @@
 package mapper
 
-import (
-	"transport-app/app/adapter/out/tidbrepository/table"
-	"transport-app/app/domain"
-
-	"github.com/biter777/countries"
-)
-
+/*
 func MapOrderDomain(t table.Order) domain.Order {
 	return domain.Order{
 		ID:          t.ID,
@@ -232,3 +226,4 @@ func mapTransportRequirements(req table.JSONReference) []domain.Reference {
 
 	return references
 }
+*/

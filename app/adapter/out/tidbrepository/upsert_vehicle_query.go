@@ -24,6 +24,7 @@ func NewUpsertVehicleQuery(conn tidb.TIDBConnection) UpsertVehicleQuery {
 		// Buscar vehículo por placa
 		if err := conn.WithContext(ctx).
 			Where("plate = ?", v.Plate).
+			Where("organization_country_id = ?", v.Organization.OrganizationCountryID).
 			First(&vehicle).Error; err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return domain.Vehicle{}, err
@@ -33,6 +34,7 @@ func NewUpsertVehicleQuery(conn tidb.TIDBConnection) UpsertVehicleQuery {
 		// Buscar carrier por nationalID
 		if err := conn.WithContext(ctx).
 			Where("national_id = ?", v.Carrier.NationalID).
+			Where("organization_country_id = ?", v.Organization.OrganizationCountryID).
 			First(&vehicle.Carrier).Error; err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return domain.Vehicle{}, err

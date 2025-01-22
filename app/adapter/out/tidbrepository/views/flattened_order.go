@@ -140,11 +140,13 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			OrganizationCountryID: o.OrganizationCountryID,
 			Country:               countries.ByName(o.OrganizationCountry),
 		},
-		BusinessIdentifiers: domain.BusinessIdentifiers{
-			CommerceID: o.CommerceID,
-			Commerce:   o.CommerceName,
-			ConsumerID: o.ConsumerID,
-			Consumer:   o.ConsumerName,
+		Commerce: domain.Commerce{
+			ID:    o.CommerceID,
+			Value: o.CommerceName,
+		},
+		Consumer: domain.Consumer{
+			ID:    o.ConsumerID,
+			Value: o.ConsumerName,
 		},
 		OrderStatus: domain.OrderStatus{
 			ID:     o.OrderStatusID,
@@ -155,14 +157,12 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},
-		Origin: domain.Origin{
-			ID: o.OriginContactID,
-			NodeInfo: domain.NodeInfo{
-				ID:          o.OriginNodeInfoID,
-				ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
-				Name:        &o.OriginNodeName,
-				Type:        o.OriginNodeType,
-			},
+		Origin: domain.NodeInfo{
+			ID:          o.OriginNodeInfoID,
+			ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
+			Name:        &o.OriginNodeName,
+			Type:        o.OriginNodeType,
+
 			AddressInfo: domain.AddressInfo{
 				ID: o.OriginAddressInfoID,
 				Contact: domain.Contact{
@@ -186,15 +186,12 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				TimeZone:     o.OriginTimeZone,
 			},
 		},
-		Destination: domain.Destination{
-			ID:                   o.DestinationContactID,
+		Destination: domain.NodeInfo{
+			ID:                   o.DestinationNodeInfoID,
 			DeliveryInstructions: o.DeliveryInstructions,
-			NodeInfo: domain.NodeInfo{
-				ID:          o.DestinationNodeInfoID,
-				ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
-				Name:        &o.DestinationNodeName,
-				Type:        o.DestinationNodeType,
-			},
+			ReferenceID:          domain.ReferenceID(o.DestinationNodeReferenceID),
+			Name:                 &o.DestinationNodeName,
+			Type:                 o.DestinationNodeType,
 			AddressInfo: domain.AddressInfo{
 				ID: o.DestinationAddressInfoID,
 				Contact: domain.Contact{
@@ -275,8 +272,8 @@ func mapItemReferences(items table.JSONItemReferences) []domain.ItemReference {
 		result[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(item.ReferenceID),
 			Quantity: domain.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
 			},
 		}
 	}

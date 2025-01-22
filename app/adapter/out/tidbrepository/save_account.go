@@ -52,7 +52,7 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 			`,
 				o.Contact.Email,
 				o.Origin.AddressInfo.RawAddress(),
-				o.Origin.NodeInfo.ReferenceID,
+				o.Origin.ReferenceID,
 			).
 			Where("organization_countries.country = ? AND api_keys.key = ?",
 				o.Organization.Country.Alpha2(),
@@ -85,7 +85,7 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 			}
 
 			// Crear o actualizar NodeInfo
-			nodeInfoTable := mapper.MapNodeInfoTable(o.Origin.NodeInfo, query.OrganizationCountryID, query.AddressInfoID)
+			nodeInfoTable := mapper.MapNodeInfoTable(o.Origin, query.OrganizationCountryID, query.AddressInfoID)
 			if query.NodeInfoID == 0 {
 				if err := tx.Create(&nodeInfoTable).Error; err != nil {
 					return err
@@ -110,11 +110,8 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 		// Devolver los datos actualizados
 		return domain.Account{
 			Organization: o.Organization,
-			Origin: domain.Origin{
-				NodeInfo:    o.Origin.NodeInfo,
-				AddressInfo: o.Origin.AddressInfo,
-			},
-			Contact: o.Contact,
+			Origin:       o.Origin,
+			Contact:      o.Contact,
 		}, nil
 	}
 }
