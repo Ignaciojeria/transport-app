@@ -349,7 +349,6 @@ func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *S
 	res.Destination.AddressInfo.TimeZone = destination.AddressInfo.TimeZone
 	res.Destination.AddressInfo.Latitude = destination.AddressInfo.Latitude
 	res.Destination.AddressInfo.Longitude = destination.AddressInfo.Longitude
-	res.Destination.DeliveryInstructions = destination.DeliveryInstructions
 	res.Destination.NodeInfo.ReferenceID = string(destination.ReferenceID)
 
 	// Mapeo del contacto

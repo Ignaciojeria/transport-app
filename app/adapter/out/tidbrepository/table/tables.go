@@ -265,13 +265,39 @@ type NodeInfo struct {
 	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`                 // Parte del índice único con OrganizationCountryID
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
-	Name                  *string             `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
+	Name                  string              `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
 	Type                  string              `gorm:"default:null"`
-	OperatorID            int64               `gorm:"default:null"`
+	OperatorID            *int64              `gorm:"default:null"`
 	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator
-	AddressID             int64               `gorm:"default:null"`          // Clave foránea a AddressInfo
+	AddressID             *int64              `gorm:"default:null"`          // Clave foránea a AddressInfo
 	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"`  // Relación con AddressInfo
 	NodeReferences        JSONReference       `gorm:"type:json"`             // Relación con NodeReferences
+}
+
+func (n NodeInfo) Map() domain.NodeInfo {
+	var operatorID, addressID int64
+	if n.OperatorID != nil {
+		operatorID = *n.OperatorID
+	}
+	if n.AddressID != nil {
+		addressID = *n.AddressID
+	}
+	return domain.NodeInfo{
+		ID:          n.ID,
+		ReferenceID: domain.ReferenceID(n.ReferenceID),
+		Organization: domain.Organization{
+			OrganizationCountryID: n.OrganizationCountryID,
+		},
+		Name:       n.Name,
+		Type:       n.Type,
+		References: n.NodeReferences.Map(),
+		Operator: domain.Operator{
+			ID: operatorID,
+		},
+		AddressInfo: domain.AddressInfo{
+			ID: addressID,
+		},
+	}
 }
 
 type AddressInfo struct {

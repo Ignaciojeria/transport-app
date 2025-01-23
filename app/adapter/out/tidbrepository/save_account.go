@@ -85,7 +85,7 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 			}
 
 			// Crear o actualizar NodeInfo
-			nodeInfoTable := mapper.MapNodeInfoTable(o.Origin, query.OrganizationCountryID, query.AddressInfoID)
+			nodeInfoTable := mapper.MapNodeInfoTable(o.Origin)
 			if query.NodeInfoID == 0 {
 				if err := tx.Create(&nodeInfoTable).Error; err != nil {
 					return err

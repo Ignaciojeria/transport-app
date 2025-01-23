@@ -16,6 +16,7 @@ func init() {
 		tidbrepository.NewLoadOrderStatuses,
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
+		tidbrepository.NewUpsertNodeInfo,
 	)
 }
 
@@ -23,6 +24,7 @@ func NewCreateOrder(
 	loadOrderStatuses tidbrepository.LoadOrderStatuses,
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
+	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) (domain.Order, error) {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
@@ -51,6 +53,13 @@ func NewCreateOrder(
 			return domain.Order{}, err
 		}
 
+		inOrder.Origin.Organization = inOrder.Organization
+		originNodeInfo, err := upsertNodeInfo(ctx, inOrder.Origin)
+		if err != nil {
+			return domain.Order{}, err
+		}
+
+		inOrder.Origin = originNodeInfo
 		inOrder.Origin.AddressInfo = originAddressInfo
 		inOrder.Origin.AddressInfo.Contact = originContact
 		inOrder.Destination.AddressInfo = destinationAddressInfo

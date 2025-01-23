@@ -38,7 +38,7 @@ type UpsertNodeRequest struct {
 func (req UpsertNodeRequest) Map() domain.NodeInfo {
 	nodeInfo := domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(req.ReferenceID),
-		Name:        &req.Name,
+		Name:        req.Name,
 		References: func() []domain.Reference {
 			refs := make([]domain.Reference, len(req.References))
 			for i, ref := range req.References {

@@ -15,22 +15,28 @@ func MapAccountTable(e domain.Account, originNodeInfoID int64, contactId int64, 
 	}
 }
 
-func MapNodeInfoTable(e domain.NodeInfo, organizationCountryID int64, addressID int64) table.NodeInfo {
+func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
+	var operatorID, addressInfoID *int64
+	if e.Operator.ID == 0 {
+		operatorID = nil
+	}
+	if e.AddressInfo.ID == 0 {
+		addressInfoID = nil
+	}
 	return table.NodeInfo{
 		ID:                    e.ID,
 		ReferenceID:           string(e.ReferenceID),
 		Name:                  e.Name,
 		Type:                  e.Type,
-		OperatorID:            0,
-		OrganizationCountryID: organizationCountryID,
-		AddressID:             addressID,
-		//NodeReferences: MapReferencesTable(e.References),
+		OperatorID:            operatorID,
+		OrganizationCountryID: e.Organization.OrganizationCountryID,
+		AddressID:             addressInfoID,
 	}
 }
 
 func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
 	return table.AddressInfo{
-		ID:                    e.ID, // ID inicializado en 0
+		ID:                    e.ID,
 		State:                 e.State,
 		County:                e.County,
 		District:              e.District,

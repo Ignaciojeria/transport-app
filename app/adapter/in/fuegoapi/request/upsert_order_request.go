@@ -40,6 +40,7 @@ type UpsertOrderRequest struct {
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
 			ReferenceID string `json:"referenceId"`
+			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
 	Items []struct {
@@ -95,6 +96,7 @@ type UpsertOrderRequest struct {
 		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceId"`
+			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
 	Packages []struct {
@@ -193,9 +195,11 @@ func (req UpsertOrderRequest) mapDestination() domain.NodeInfo {
 
 func (req UpsertOrderRequest) mapNodeInfo(nodeInfo struct {
 	ReferenceID string `json:"referenceId"`
+	Name        string `json:"name"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
+		Name:        nodeInfo.Name,
 	}
 }
 

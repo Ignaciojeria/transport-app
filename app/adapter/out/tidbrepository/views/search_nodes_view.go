@@ -12,7 +12,7 @@ func (sn SearchNodesView) Map() []domain.NodeInfo {
 	for _, s := range sn {
 		name := s.NodeName // Handle potential nil case if NodeName is a pointer in domain.NodeInfo
 		nodes = append(nodes, domain.NodeInfo{
-			Name:        &name,
+			Name:        name,
 			ReferenceID: domain.ReferenceID(s.ReferenceID),
 		})
 	}

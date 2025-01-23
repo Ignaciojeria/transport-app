@@ -160,7 +160,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		Origin: domain.NodeInfo{
 			ID:          o.OriginNodeInfoID,
 			ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
-			Name:        &o.OriginNodeName,
+			Name:        o.OriginNodeName,
 			Type:        o.OriginNodeType,
 
 			AddressInfo: domain.AddressInfo{
@@ -187,11 +187,10 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			},
 		},
 		Destination: domain.NodeInfo{
-			ID:                   o.DestinationNodeInfoID,
-			DeliveryInstructions: o.DeliveryInstructions,
-			ReferenceID:          domain.ReferenceID(o.DestinationNodeReferenceID),
-			Name:                 &o.DestinationNodeName,
-			Type:                 o.DestinationNodeType,
+			ID:          o.DestinationNodeInfoID,
+			ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
+			Name:        o.DestinationNodeName,
+			Type:        o.DestinationNodeType,
 			AddressInfo: domain.AddressInfo{
 				ID: o.DestinationAddressInfoID,
 				Contact: domain.Contact{

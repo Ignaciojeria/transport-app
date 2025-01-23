@@ -24,6 +24,7 @@ type Order struct {
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
 	PromisedDate            PromisedDate            `json:"promisedDate"`
 	Visits                  []Visit                 `json:"visits"`
+	DeliveryInstructions    string                  `json:"deliveryInstructions"`
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
@@ -251,45 +252,44 @@ type Reference struct {
 }
 
 type NodeInfo struct {
-	ID                   int64
-	ReferenceID          ReferenceID  `json:"referenceId"`
-	Organization         Organization `json:"organization"`
-	Name                 *string      `json:"name"`
-	Type                 string       `json:"type"`
-	Operator             Operator     `json:"operator"`
-	References           []Reference  `json:"references"`
-	DeliveryInstructions string       `json:"deliveryInstructions"`
-	AddressInfo          AddressInfo  `json:"addressInfo"`
+	ID           int64
+	ReferenceID  ReferenceID  `json:"referenceId"`
+	Organization Organization `json:"organization"`
+	Name         string       `json:"name"`
+	Type         string       `json:"type"`
+	Operator     Operator     `json:"operator"`
+	References   []Reference  `json:"references"`
+	AddressInfo  AddressInfo  `json:"addressInfo"`
 }
 
-func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
+func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	// Actualizar ReferenceID
 	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
 		n.ReferenceID = newNode.ReferenceID
 	}
-
 	// Actualizar Name
-	if newNode.Name != nil && (n.Name == nil || *n.Name != *newNode.Name) {
+	if newNode.Name != "" {
 		n.Name = newNode.Name
 	}
-
 	// Actualizar Type
 	if newNode.Type != "" && n.Type != newNode.Type {
 		n.Type = newNode.Type
 	}
-
-	n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
-	n.AddressInfo.Contact.UpdateIfChanged(newNode.AddressInfo.Contact)
-
 	// Actualizar NodeReferences
 	if len(newNode.References) > 0 {
 		n.References = newNode.References
 	}
-
-	// Actualizar DeliveryInstructions
-	if newNode.DeliveryInstructions != "" && n.DeliveryInstructions != newNode.DeliveryInstructions {
-		n.DeliveryInstructions = newNode.DeliveryInstructions
+	if newNode.AddressInfo.ID != 0 {
+		n.AddressInfo.ID = newNode.AddressInfo.ID
 	}
+	if newNode.Operator.ID != 0 {
+		n.Operator.ID = newNode.Operator.ID
+	}
+	if newNode.Operator.Contact.ID != 0 {
+		n.Operator.Contact.ID = newNode.Operator.Contact.ID
+	}
+	n.Organization = newNode.Organization
+	return n
 }
 
 type Document struct {

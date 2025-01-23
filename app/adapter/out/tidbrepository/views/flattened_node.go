@@ -35,7 +35,7 @@ func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 	return domain.NodeInfo{
 		ID:          n.NodeID,
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
-		Name:        &n.NodeName,
+		Name:        n.NodeName,
 		Type:        n.NodeType,
 		References:  mapReferences(n.NodeReferences),
 		Operator: domain.Operator{

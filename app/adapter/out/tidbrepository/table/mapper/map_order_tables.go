@@ -17,14 +17,14 @@ func MapOrderToTable(order domain.Order) table.Order {
 		OrderTypeID:           order.OrderType.ID,                       // Completar según la lógica de negocio
 		OrderType:             mapOrderTypeToTable(order.OrderType, orgCountryID),
 		OrderReferences:       mapReferencesToTable(order.References),
-		DeliveryInstructions:  order.Destination.DeliveryInstructions,
+		//DeliveryInstructions:  order.Destination.DeliveryInstructions,
 
 		// Origen
 		OriginNodeInfoID: order.Origin.ID, // Completar según la lógica de negocio
-		OriginNodeInfo:   mapNodeInfoToTable(order.Origin, orgCountryID),
+		//OriginNodeInfo:   MapNodeInfoTable(order.Origin),
 
 		OriginAddressInfoID: order.Origin.AddressInfo.ID, // Completar según la lógica de negocio
-		OriginAddressInfo:   MapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
+		//OriginAddressInfo:   MapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
 
 		DestinationAddressInfoID: order.Destination.AddressInfo.ID, // Completar según la lógica de negocio
 		DestinationAddressInfo:   MapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
@@ -34,7 +34,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		DestinationContact:       MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
 		// Destino
 		DestinationNodeInfoID: order.Destination.ID, // Completar según la lógica de negocio
-		DestinationNodeInfo:   mapNodeInfoToTable(order.Destination, orgCountryID),
+		//DestinationNodeInfo:   MapNodeInfoTable(order.Destination),
 
 		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
@@ -189,17 +189,6 @@ func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 		ID:                    t.ID,
 		Type:                  t.Type,
 		Description:           t.Description,
-	}
-}
-
-func mapNodeInfoToTable(node domain.NodeInfo, orgCountry int64) table.NodeInfo {
-	return table.NodeInfo{
-		ID:                    node.ID,
-		OrganizationCountryID: orgCountry,
-		ReferenceID:           string(node.ReferenceID),
-		Name:                  node.Name,
-		Type:                  node.Type,
-		//Operator:              mapOperatorToTable(node.Operator, orgCountry),
 	}
 }
 
