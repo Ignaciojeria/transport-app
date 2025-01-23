@@ -519,7 +519,16 @@ type Package struct {
 	ItemReferences []ItemReference `json:"itemReferences"`
 }
 
-func (p *Package) UpdateIfChanged(newPackage Package) {
+func SearchPackageByLpn(pcks []Package, lpn string) Package {
+	for _, pck := range pcks {
+		if pck.Lpn == lpn {
+			return pck
+		}
+	}
+	return Package{}
+}
+
+func (p Package) UpdateIfChanged(newPackage Package) Package {
 	// Actualizar Lpn
 	if newPackage.Lpn != "" {
 		p.Lpn = newPackage.Lpn
@@ -544,6 +553,7 @@ func (p *Package) UpdateIfChanged(newPackage Package) {
 	if len(newPackage.ItemReferences) > 0 {
 		p.ItemReferences = newPackage.ItemReferences
 	}
+	return p
 }
 
 // Función auxiliar para comparar arreglos de referencias de ítems
