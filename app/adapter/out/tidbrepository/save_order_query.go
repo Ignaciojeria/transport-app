@@ -98,11 +98,21 @@ FROM
     LEFT JOIN commerces comm ON comm.name = ? AND comm.organization_country_id = org.id
     LEFT JOIN consumers cons ON cons.name = ? AND cons.organization_country_id = org.id
     LEFT JOIN order_types oty ON oty.organization_country_id = org.id AND oty.type = ?
-    LEFT JOIN contacts orig_contact ON orig_contact.full_name = ? AND orig_contact.organization_country_id = org.id
+    LEFT JOIN contacts orig_contact ON 
+        orig_contact.full_name = ? AND 
+        orig_contact.phone = ? AND 
+        orig_contact.email = ? AND 
+        orig_contact.national_id = ? AND 
+        orig_contact.organization_country_id = org.id
     LEFT JOIN address_infos orig_addr ON orig_addr.raw_address = ? AND orig_addr.organization_country_id = org.id
     LEFT JOIN node_infos orig_node ON orig_node.reference_id = ? AND orig_node.organization_country_id = org.id
     LEFT JOIN operators orig_operator ON orig_operator.id = orig_node.operator_id
-    LEFT JOIN contacts dest_contact ON dest_contact.full_name = ? AND dest_contact.organization_country_id = org.id
+    LEFT JOIN contacts dest_contact ON 
+        dest_contact.full_name = ? AND 
+        dest_contact.phone = ? AND 
+        dest_contact.email = ? AND 
+        dest_contact.national_id = ? AND 
+        dest_contact.organization_country_id = org.id
     LEFT JOIN address_infos dest_addr ON dest_addr.raw_address = ? AND dest_addr.organization_country_id = org.id
     LEFT JOIN node_infos dest_node ON dest_node.reference_id = ? AND dest_node.organization_country_id = org.id
     LEFT JOIN operators dest_operator ON dest_operator.id = dest_node.operator_id
@@ -113,9 +123,15 @@ WHERE
 			order.Consumer.Value,
 			order.OrderType.Type,
 			order.Origin.AddressInfo.Contact.FullName,
+			order.Origin.AddressInfo.Contact.Phone,
+			order.Origin.AddressInfo.Contact.Email,
+			order.Origin.AddressInfo.Contact.NationalID,
 			order.Origin.AddressInfo.RawAddress(),
 			order.Origin.ReferenceID,
 			order.Destination.AddressInfo.Contact.FullName,
+			order.Destination.AddressInfo.Contact.Phone,
+			order.Destination.AddressInfo.Contact.Email,
+			order.Destination.AddressInfo.Contact.NationalID,
 			order.Destination.AddressInfo.RawAddress(),
 			order.Destination.ReferenceID,
 			order.Organization.OrganizationCountryID,

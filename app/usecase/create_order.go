@@ -13,23 +13,48 @@ type CreateOrder func(ctx context.Context, input domain.Order) (domain.Order, er
 func init() {
 	ioc.Registry(
 		NewCreateOrder,
-		tidbrepository.NewSaveOrderQuery,
-		tidbrepository.NewSaveOrder,
-		tidbrepository.NewLoadOrderStatuses)
+		tidbrepository.NewLoadOrderStatuses,
+		tidbrepository.NewUpsertContact,
+		tidbrepository.NewUpsertAddressInfo,
+	)
 }
 
 func NewCreateOrder(
-	saveOrderQuery tidbrepository.SaveOrderQuery,
-	saveOrder tidbrepository.SaveOrder,
 	loadOrderStatuses tidbrepository.LoadOrderStatuses,
+	upsertContact tidbrepository.UpsertContact,
+	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) (domain.Order, error) {
-		order, err := saveOrderQuery(ctx, inOrder)
+		inOrder.OrderStatus = loadOrderStatuses().Available()
+
+		inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
+		originContact, err := upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		if err != nil {
 			return domain.Order{}, err
 		}
-		order.OrderStatus = loadOrderStatuses().Available()
-		order.HydrateOrder(inOrder)
-		return saveOrder(ctx, order)
+
+		inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
+		destinationContact, err := upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
+		if err != nil {
+			return domain.Order{}, err
+		}
+
+		inOrder.Origin.AddressInfo.Organization = inOrder.Organization
+		originAddressInfo, err := upsertAddressInfo(ctx, inOrder.Origin.AddressInfo)
+		if err != nil {
+			return domain.Order{}, err
+		}
+
+		inOrder.Destination.AddressInfo.Organization = inOrder.Organization
+		destinationAddressInfo, err := upsertAddressInfo(ctx, inOrder.Destination.AddressInfo)
+		if err != nil {
+			return domain.Order{}, err
+		}
+
+		inOrder.Origin.AddressInfo = originAddressInfo
+		inOrder.Origin.AddressInfo.Contact = originContact
+		inOrder.Destination.AddressInfo = destinationAddressInfo
+		inOrder.Destination.AddressInfo.Contact = destinationContact
+		return inOrder, nil
 	}
 }

@@ -27,6 +27,10 @@ type Order struct {
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
+func (o *Order) WithOriginAddressInfo(ai AddressInfo) {
+	o.Origin.AddressInfo = ai
+}
+
 func (o Order) IsOriginAndDestinationNodeReferenceIDEqual() bool {
 	return o.Origin.ReferenceID == o.Destination.ReferenceID
 }
@@ -58,10 +62,10 @@ func (o *Order) HydrateOrder(newOrder Order) {
 
 	// Actualizar BusinessIdentifiers
 	if newOrder.Commerce.Value != "" {
-		o.Commerce = newOrder.Commerce
+		o.Commerce.Value = newOrder.Commerce.Value
 	}
 	if newOrder.Consumer.Value != "" {
-		o.Consumer = newOrder.Consumer
+		o.Consumer.Value = newOrder.Consumer.Value
 	}
 
 	// Actualizar References
@@ -275,6 +279,7 @@ func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
 	}
 
 	n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
+	n.AddressInfo.Contact.UpdateIfChanged(newNode.AddressInfo.Contact)
 
 	// Actualizar NodeReferences
 	if len(newNode.References) > 0 {
@@ -302,31 +307,35 @@ type Contact struct {
 	Documents    []Document   `json:"documents"`
 }
 
-func (c *Contact) UpdateIfChanged(newContact Contact) {
+func (c Contact) UpdateIfChanged(newContact Contact) Contact {
+	updatedContact := c // Copiamos la instancia actual
+
 	// Actualizar FullName
 	if newContact.FullName != "" {
-		c.FullName = newContact.FullName
+		updatedContact.FullName = newContact.FullName
 	}
 
 	// Actualizar Email
 	if newContact.Email != "" {
-		c.Email = newContact.Email
+		updatedContact.Email = newContact.Email
 	}
 
 	// Actualizar Phone
 	if newContact.Phone != "" {
-		c.Phone = newContact.Phone
+		updatedContact.Phone = newContact.Phone
 	}
 
 	// Actualizar NationalID
 	if newContact.NationalID != "" {
-		c.NationalID = newContact.NationalID
+		updatedContact.NationalID = newContact.NationalID
 	}
 
 	// Actualizar Documents
 	if len(newContact.Documents) > 0 {
-		c.Documents = newContact.Documents
+		updatedContact.Documents = newContact.Documents
 	}
+
+	return updatedContact
 }
 
 // Función auxiliar para comparar arreglos de documentos
@@ -359,7 +368,7 @@ type AddressInfo struct {
 	TimeZone     string  `json:"timeZone"`
 }
 
-func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) {
+func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
 	if newAddress.AddressLine1 != "" {
 		a.AddressLine1 = newAddress.AddressLine1
 	}
@@ -393,9 +402,9 @@ func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) {
 	if newAddress.TimeZone != "" {
 		a.TimeZone = newAddress.TimeZone
 	}
-
-	a.Contact.UpdateIfChanged(newAddress.Contact)
+	return a
 }
+
 func (addr AddressInfo) RawAddress() string {
 	return concatenateWithCommas(addr.AddressLine1, addr.AddressLine2, addr.AddressLine3)
 }
