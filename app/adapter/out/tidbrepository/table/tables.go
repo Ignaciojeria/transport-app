@@ -628,6 +628,19 @@ func (m NodeHeaders) Map() domain.Headers {
 }
 
 type NodeType struct {
-	ID   int64  `gorm:"primaryKey"`
-	Name string `gorm:"uniqueIndex,length:200"`
+	gorm.Model
+	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_name_organization"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	Name                  string              `gorm:"type:varchar(191);uniqueIndex:idx_name_organization"`
+}
+
+func (n NodeType) Map() domain.NodeType {
+	return domain.NodeType{
+		ID: n.ID,
+		Organization: domain.Organization{
+			OrganizationCountryID: n.OrganizationCountryID,
+		},
+		Value: n.Name,
+	}
 }

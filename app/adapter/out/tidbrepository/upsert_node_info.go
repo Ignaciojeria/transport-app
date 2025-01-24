@@ -31,7 +31,12 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 		dbNodeToUpsert.CreatedAt = nodeInfo.CreatedAt
 		upsertQuery := conn.DB
 
-		if err := upsertQuery.Save(&dbNodeToUpsert).Error; err != nil {
+		if err := upsertQuery.
+			Omit("OrganizationCountry").
+			Omit("NodeType").
+			Omit("Contact").
+			Omit("AddressInfo").
+			Save(&dbNodeToUpsert).Error; err != nil {
 			return domain.NodeInfo{}, err
 		}
 		return dbNodeToUpsert.Map(), nil

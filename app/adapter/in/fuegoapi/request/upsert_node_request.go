@@ -39,6 +39,22 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 	nodeInfo := domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(req.ReferenceID),
 		Name:        req.Name,
+		NodeType: domain.NodeType{
+			Value: req.Type,
+		},
+		AddressInfo: domain.AddressInfo{
+			AddressLine1: req.NodeAddress.AddressLine1,
+			AddressLine2: req.NodeAddress.AddressLine2,
+			AddressLine3: req.NodeAddress.AddressLine3,
+			County:       req.NodeAddress.County,
+			District:     req.NodeAddress.District,
+			Latitude:     req.NodeAddress.Latitude,
+			Longitude:    req.NodeAddress.Longitude,
+			Province:     req.NodeAddress.Province,
+			State:        req.NodeAddress.State,
+			TimeZone:     req.NodeAddress.TimeZone,
+			ZipCode:      req.NodeAddress.ZipCode,
+		},
 		References: func() []domain.Reference {
 			refs := make([]domain.Reference, len(req.References))
 			for i, ref := range req.References {
@@ -66,19 +82,5 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			}(),
 		},
 	}
-	nodeAddress := domain.AddressInfo{
-		AddressLine1: req.NodeAddress.AddressLine1,
-		AddressLine2: req.NodeAddress.AddressLine2,
-		AddressLine3: req.NodeAddress.AddressLine3,
-		County:       req.NodeAddress.County,
-		District:     req.NodeAddress.District,
-		Latitude:     req.NodeAddress.Latitude,
-		Longitude:    req.NodeAddress.Longitude,
-		Province:     req.NodeAddress.Province,
-		State:        req.NodeAddress.State,
-		TimeZone:     req.NodeAddress.TimeZone,
-		ZipCode:      req.NodeAddress.ZipCode,
-	}
-	nodeInfo.AddressInfo = nodeAddress
 	return nodeInfo
 }

@@ -179,11 +179,6 @@ type NodeInfo struct {
 	AddressInfo  AddressInfo  `json:"addressInfo"`
 }
 
-type NodeType struct {
-	ID    int64
-	Value string `json:"type"`
-}
-
 func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	// Actualizar ReferenceID
 	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
@@ -217,6 +212,23 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 
 	n.Organization = newNode.Organization
 	return n
+}
+
+type NodeType struct {
+	ID           int64
+	Organization Organization
+	Value        string `json:"type"`
+}
+
+func (nt NodeType) UpdateIfChanged(newNodeType NodeType) NodeType {
+	if newNodeType.Value != "" {
+		nt.Value = newNodeType.Value
+	}
+	if newNodeType.ID != 0 {
+		nt.ID = newNodeType.ID
+	}
+	nt.Organization = newNodeType.Organization
+	return nt
 }
 
 type Document struct {

@@ -13,6 +13,7 @@ type UpsertNode func(context.Context, domain.NodeInfo) error
 func init() {
 	ioc.Registry(
 		NewUpsertNode,
+		tidbrepository.NewUpsertNodeType,
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
 		tidbrepository.NewUpsertNodeInfo,
@@ -20,29 +21,31 @@ func init() {
 }
 
 func NewUpsertNode(
+	upsertNodeType tidbrepository.UpsertNodeType,
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 ) UpsertNode {
 	return func(ctx context.Context, nodeInfo domain.NodeInfo) error {
-
-		//nodeInfo.Operator.Contact.Organization = nodeInfo.Organization
-		/*contact, err := upsertContact(ctx, nodeInfo.Operator.Contact)
+		nodeInfo.NodeType.Organization = nodeInfo.Organization
+		nodeType, err := upsertNodeType(ctx, nodeInfo.NodeType)
 		if err != nil {
 			return err
-		}*/
-
-		/*
-			o, err := query(ctx, origin)
-			if err != nil {
-				return err
-			}
-			o.UpdateIfChanged(origin)
-			if err := upsert(ctx, o); err != nil {
-				return err
-			}
-		*/
-		//nodeInfo.Operator.Contact = contact
-		return nil
+		}
+		nodeInfo.Contact.Organization = nodeInfo.Organization
+		contact, err := upsertContact(ctx, nodeInfo.Contact)
+		if err != nil {
+			return err
+		}
+		nodeInfo.AddressInfo.Organization = nodeInfo.Organization
+		addressInfo, err := upsertAddressInfo(ctx, nodeInfo.AddressInfo)
+		if err != nil {
+			return err
+		}
+		nodeInfo.NodeType = nodeType
+		nodeInfo.Contact = contact
+		nodeInfo.AddressInfo = addressInfo
+		_, err = upsertNodeInfo(ctx, nodeInfo)
+		return err
 	}
 }

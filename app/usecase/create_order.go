@@ -20,8 +20,6 @@ func init() {
 		tidbrepository.NewUpsertNodeInfo,
 		tidbrepository.NewUpsertPackages,
 		tidbrepository.NewUpsertOrderType,
-		//tidbrepository.NewUpsertCommerce,
-		//tidbrepository.NewUpsertConsumer,
 		tidbrepository.NewUpsertOrder,
 	)
 }
@@ -34,8 +32,6 @@ func NewCreateOrder(
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 	upsertPackages tidbrepository.UpsertPackages,
 	upsertOrderType tidbrepository.UpsertOrderType,
-	//upsertCommerce tidbrepository.UpsertCommerce,
-	//upsertConsumer tidbrepository.UpsertConsumer,
 	upsertOrder tidbrepository.UpsertOrder,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) (domain.Order, error) {
@@ -92,22 +88,6 @@ func NewCreateOrder(
 		if err != nil {
 			return domain.Order{}, err
 		}
-		/*
-			inOrder.Commerce.Organization = inOrder.Organization
-			commerce, err := upsertCommerce(ctx, inOrder.Commerce)
-			if err != nil {
-				return domain.Order{}, err
-			}
-
-			inOrder.Consumer.Organization = inOrder.Organization
-			consumer, err := upsertConsumer(ctx, inOrder.Consumer)
-			if err != nil {
-				return domain.Order{}, err
-			}
-
-			inOrder.Commerce = commerce
-			inOrder.Consumer = consumer
-		*/
 		inOrder.Headers = orderHeaders
 		inOrder.OrderType = orderType
 		inOrder.Origin = originNodeInfo
@@ -117,7 +97,6 @@ func NewCreateOrder(
 		inOrder.Destination.AddressInfo = destinationAddressInfo
 		inOrder.Destination.AddressInfo.Contact = destinationContact
 		inOrder.Packages = pcks
-
 		return upsertOrder(ctx, inOrder)
 	}
 }
