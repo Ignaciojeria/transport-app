@@ -25,7 +25,7 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
 		var orders []views.FlattenedOrderView
 		// Query principal para obtener las órdenes
 		query := `
-SELECT 
+    SELECT DISTINCT
     o.id as order_id,
     o.reference_id,
     org_country.country as organization_country,
@@ -39,13 +39,13 @@ SELECT
     oc.full_name as origin_contact_name,
     oc.phone as origin_contact_phone,
     oc.email as origin_contact_email,
-    oc.national_id as origin_contact_national_id, -- Suponiendo que este campo existe
+    oc.national_id as origin_contact_national_id,
     oc.documents as origin_contact_documents,
     -- Datos del contacto de destino
     dc.full_name as destination_contact_name,
     dc.phone as destination_contact_phone,
     dc.email as destination_contact_email,
-    dc.national_id as destination_contact_national_id, -- Suponiendo que este campo existe
+    dc.national_id as destination_contact_national_id,
     dc.documents as destination_contact_documents,
     -- Datos de dirección de origen
     oa.address_line1 as origin_address_line1,
@@ -97,7 +97,16 @@ LEFT JOIN address_infos oa ON o.origin_address_info_id = oa.id
 LEFT JOIN node_infos on_info ON o.origin_node_info_id = on_info.id
 LEFT JOIN contacts dc ON o.destination_contact_id = dc.id
 LEFT JOIN address_infos da ON o.destination_address_info_id = da.id
-LEFT JOIN node_infos dn_info ON o.destination_node_info_id = dn_info.id
+LEFT JOIN node_infos dn_info ON o.destination_node_info_id = dn_info.id`
+
+		// Agregar JOIN con packages si hay LPNs
+		if len(osf.Lpns) > 0 {
+			query += `
+LEFT JOIN order_packages op ON o.id = op.order_id
+LEFT JOIN packages p ON op.package_id = p.id`
+		}
+
+		query += `
 WHERE 
     org_country.country = ? 
     AND EXISTS (
@@ -118,7 +127,7 @@ WHERE
 
 		// Condición dinámica para LPNs o ReferenceIDs
 		if len(osf.Lpns) > 0 {
-			query += " AND o.reference_id IN (?)"
+			query += " AND p.lpn IN (?)"
 			params = append(params, osf.Lpns)
 		} else if len(osf.ReferenceIDs) > 0 {
 			query += " AND o.reference_id IN (?)"
@@ -127,7 +136,7 @@ WHERE
 
 		// Condición adicional para comercios
 		if len(osf.Commerces) > 0 {
-			query += " AND com.name IN (?)"
+			query += " AND headers.commerce IN (?)"
 			params = append(params, osf.Commerces)
 		}
 
@@ -135,7 +144,6 @@ WHERE
 		if err := conn.Raw(query, params...).Scan(&orders).Error; err != nil {
 			return nil, fmt.Errorf("error scanning orders: %w", err)
 		}
-
 		if len(orders) == 0 {
 			return []domain.Order{}, nil
 		}

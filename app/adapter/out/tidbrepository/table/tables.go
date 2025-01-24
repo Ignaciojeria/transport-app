@@ -263,7 +263,7 @@ type NodeInfo struct {
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
 	Name                  string              `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
-	NodeTypeID            int64               `gorm:"default:null"`
+	NodeTypeID            *int64              `gorm:"default:null"`
 	NodeType              NodeType            `gorm:"foreignKey:NodeTypeID"`
 	ContactID             *int64              `gorm:"default:null"`
 	Contact               Contact             `gorm:"foreignKey:ContactID"` // Relación con Operator
