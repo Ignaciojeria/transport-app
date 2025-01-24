@@ -156,8 +156,7 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 		response := SearchOrdersResponse{}
 		response.
 			withReferenceID(order.ReferenceID).
-			withCommerce(order.Commerce).
-			withConsumer(order.Consumer).
+			withHeaders(order.Headers).
 			withOrderStatus(order.OrderStatus).
 			withCollectAvailabilityDate(order.CollectAvailabilityDate).
 			withOrigin(order.Origin).
@@ -173,13 +172,9 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 	return responses
 }
 
-func (res *SearchOrdersResponse) withConsumer(consumer domain.Consumer) *SearchOrdersResponse {
-	res.BusinessIdentifiers.Consumer = consumer.Value
-	return res
-}
-
-func (res *SearchOrdersResponse) withCommerce(commerce domain.Commerce) *SearchOrdersResponse {
-	res.BusinessIdentifiers.Commerce = commerce.Value
+func (res *SearchOrdersResponse) withHeaders(headers domain.Headers) *SearchOrdersResponse {
+	res.BusinessIdentifiers.Consumer = headers.Consumer
+	res.BusinessIdentifiers.Commerce = headers.Commerce
 	return res
 }
 

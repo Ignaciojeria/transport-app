@@ -9,11 +9,9 @@ import (
 )
 
 type Order struct {
+	Headers
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"referenceID"`
-	Organization            Organization            `json:"organization"`
-	Commerce                Commerce                `json:"commerce"`
-	Consumer                Consumer                `json:"consumer"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
 	References              []Reference             `json:"references"`
@@ -45,87 +43,6 @@ func (o Order) AreContactsEqual() bool {
 		originContact.Email == destinationContact.Email &&
 		originContact.Phone == destinationContact.Phone &&
 		originContact.NationalID == destinationContact.NationalID
-}
-
-func (o *Order) HydrateOrder(newOrder Order) {
-	// Actualizar ReferenceID
-	if newOrder.ReferenceID != "" {
-		o.ReferenceID = newOrder.ReferenceID
-	}
-
-	// Actualizar OrderType
-	if newOrder.OrderType.Type != "" {
-		o.OrderType.Type = newOrder.OrderType.Type
-	}
-	if newOrder.OrderType.Description != "" {
-		o.OrderType.Description = newOrder.OrderType.Description
-	}
-
-	// Actualizar BusinessIdentifiers
-	if newOrder.Commerce.Value != "" {
-		o.Commerce.Value = newOrder.Commerce.Value
-	}
-	if newOrder.Consumer.Value != "" {
-		o.Consumer.Value = newOrder.Consumer.Value
-	}
-
-	// Actualizar References
-	if len(newOrder.References) > 0 {
-		o.References = newOrder.References
-	}
-
-	// Actualizar Items
-	if len(newOrder.Items) > 0 {
-		o.Items = newOrder.Items
-	}
-
-	// Actualizar Packages
-	if len(newOrder.Packages) > 0 {
-		// Si hay paquetes nuevos, actualizamos cada uno
-		for i := range newOrder.Packages {
-			if i < len(o.Packages) {
-				// Actualizar paquete existente
-				o.Packages[i].UpdateIfChanged(newOrder.Packages[i])
-			} else {
-				// Añadir nuevo paquete
-				o.Packages = append(o.Packages, newOrder.Packages[i])
-			}
-		}
-	}
-
-	// Actualizar Origin y Destination
-	o.Origin.UpdateIfChanged(newOrder.Origin)
-	o.Destination.UpdateIfChanged(newOrder.Destination)
-
-	// Actualizar PromisedDate
-	if newOrder.PromisedDate.DateRange.StartDate != "" {
-		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
-	}
-	if newOrder.PromisedDate.DateRange.EndDate != "" {
-		o.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
-	}
-	if newOrder.PromisedDate.TimeRange.StartTime != "" {
-		o.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
-	}
-	if newOrder.PromisedDate.TimeRange.EndTime != "" {
-		o.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
-	}
-
-	// Actualizar CollectAvailabilityDate
-	if newOrder.CollectAvailabilityDate.Date != "" {
-		o.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
-	}
-	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" {
-		o.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
-	}
-	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" {
-		o.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
-	}
-
-	// Actualizar TransportRequirements
-	if len(newOrder.TransportRequirements) > 0 {
-		o.TransportRequirements = newOrder.TransportRequirements
-	}
 }
 
 func (o Order) Validate() error {
@@ -619,36 +536,4 @@ type DateRange struct {
 type Visit struct {
 	Date      string    `json:"date"`
 	TimeRange TimeRange `json:"timeRange"`
-}
-
-type Consumer struct {
-	Organization Organization
-	ID           int64
-	Value        string `json:"consumer"`
-}
-
-func (c Consumer) UpdateIfChanged(newConsumer Consumer) Consumer {
-	if newConsumer.Value != "" {
-		c.Value = newConsumer.Value
-	}
-	if newConsumer.Organization.OrganizationCountryID != 0 {
-		c.Organization = newConsumer.Organization
-	}
-	return c
-}
-
-type Commerce struct {
-	Organization Organization
-	ID           int64
-	Value        string `json:"commerce"`
-}
-
-func (c Commerce) UpdateIfChanged(newCommerce Commerce) Commerce {
-	if newCommerce.Value != "" {
-		c.Value = newCommerce.Value
-	}
-	if newCommerce.Organization.OrganizationCountryID != 0 {
-		c.Organization = newCommerce.Organization
-	}
-	return c
 }

@@ -1,5 +1,6 @@
 package tidbrepository
 
+/*
 import (
 	"context"
 	"errors"
@@ -37,3 +38,4 @@ func NewUpsertCommerce(conn tidb.TIDBConnection) UpsertCommerce {
 		return commerce.Map(), nil
 	}
 }
+*/

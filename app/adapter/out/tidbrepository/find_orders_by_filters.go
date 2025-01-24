@@ -29,8 +29,8 @@ SELECT
     o.id as order_id,
     o.reference_id,
     org_country.country as organization_country,
-    com.name as commerce_name,
-    con.name as consumer_name,
+    headers.commerce as commerce_name,
+    headers.consumer as consumer_name,
     os.status as order_status,
     ot.type as order_type,
     ot.description as order_type_description,
@@ -92,8 +92,7 @@ SELECT
     o.promised_time_range_end as promised_end_time,
     o.transport_requirements
 FROM orders o
-LEFT JOIN commerces com ON o.commerce_id = com.id
-LEFT JOIN consumers con ON o.consumer_id = con.id
+LEFT JOIN order_headers headers ON o.order_headers_id = headers.id
 LEFT JOIN order_statuses os ON o.order_status_id = os.id
 LEFT JOIN order_types ot ON o.order_type_id = ot.id
 LEFT JOIN organization_countries org_country ON o.organization_country_id = org_country.id

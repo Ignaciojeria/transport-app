@@ -20,11 +20,8 @@ type Order struct {
 	OrganizationCountryID int64               `gorm:"default:null;uniqueIndex:idx_reference_organization_country"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 
-	CommerceID int64    `gorm:"default:null"`
-	Commerce   Commerce `gorm:"foreignKey:CommerceID"`
-
-	ConsumerID int64    `gorm:"default:null"`
-	Consumer   Consumer `gorm:"foreignKey:ConsumerID"`
+	OrderHeadersID int64        `gorm:"default:null"`
+	OrderHeaders   OrderHeaders `gorm:"foreignKey:OrderHeadersID"`
 
 	OrderStatusID int64       `gorm:"default:null"`
 	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
@@ -470,42 +467,6 @@ type OrderStatus struct {
 	Status string `gorm:"not null"`
 }
 
-type Consumer struct {
-	gorm.Model
-	ID                    int64               `gorm:"primaryKey"`
-	Name                  string              `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
-	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Actualizado para el índice único compuesto
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-}
-
-func (c Consumer) Map() domain.Consumer {
-	return domain.Consumer{
-		ID:    c.ID,
-		Value: c.Name,
-		Organization: domain.Organization{
-			OrganizationCountryID: c.OrganizationCountryID,
-		},
-	}
-}
-
-type Commerce struct {
-	gorm.Model
-	ID                    int64               `gorm:"primaryKey"`
-	Name                  string              `gorm:"type:varchar(255);not null;uniqueIndex:idx_name_organization"` // Índice único compuesto
-	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_name_organization"`                   // Actualizado para el índice único compuesto
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-}
-
-func (c Commerce) Map() domain.Commerce {
-	return domain.Commerce{
-		ID:    c.ID,
-		Value: c.Name,
-		Organization: domain.Organization{
-			OrganizationCountryID: c.OrganizationCountryID,
-		},
-	}
-}
-
 // Organization tables
 
 type ApiKey struct {
@@ -623,4 +584,60 @@ type Vehicle struct {
 	Dimensions            JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Dimensions
 	CarrierID             int64   `gorm:"not null;index"` // Relación con Carrier
 	Carrier               Carrier `gorm:"foreignKey:CarrierID"`
+}
+
+type OrderHeaders struct {
+	gorm.Model
+	ID                    int64               `gorm:"primaryKey"`
+	Commerce              string              `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	Consumer              string              `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	OrganizationCountryID int64               `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+}
+
+func (m OrderHeaders) Map() domain.Headers {
+	return domain.Headers{
+		ID: m.ID,
+		Organization: domain.Organization{
+			OrganizationCountryID: m.OrganizationCountryID,
+		},
+		Consumer: m.Consumer,
+		Commerce: m.Commerce,
+	}
+}
+
+type VehicleHeaders struct {
+	ID                    int64               `gorm:"primaryKey"`
+	Commerce              string              `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	Consumer              string              `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	OrganizationCountryID int64               `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+}
+
+func (m VehicleHeaders) Map() domain.Headers {
+	return domain.Headers{
+		Organization: domain.Organization{
+			OrganizationCountryID: m.OrganizationCountryID,
+		},
+		Consumer: m.Consumer,
+		Commerce: m.Commerce,
+	}
+}
+
+type NodeHeaders struct {
+	ID                    int64               `gorm:"primaryKey"`
+	Commerce              string              `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	Consumer              string              `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	OrganizationCountryID int64               `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+}
+
+func (m NodeHeaders) Map() domain.Headers {
+	return domain.Headers{
+		Organization: domain.Organization{
+			OrganizationCountryID: m.OrganizationCountryID,
+		},
+		Consumer: m.Consumer,
+		Commerce: m.Commerce,
+	}
 }

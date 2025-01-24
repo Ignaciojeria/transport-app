@@ -110,6 +110,5 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			Name:         v.Carrier.Name,
 			NationalID:   v.Carrier.NationalID,
 		},
-		Organization: domain.Organization{}, // Ajustar según corresponda
 	}
 }

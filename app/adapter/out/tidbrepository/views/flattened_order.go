@@ -12,9 +12,8 @@ type FlattenedOrderView struct {
 	ReferenceID                  string              `gorm:"column:reference_id"`
 	OrganizationCountryID        int64               `gorm:"column:organization_country_id"`
 	OrganizationCountry          string              `gorm:"column:organization_country"`
-	CommerceID                   int64               `gorm:"column:commerce_id"`
+	HeaderID                     int64               `gorm:"column:header_id"`
 	CommerceName                 string              `gorm:"column:commerce_name"`
-	ConsumerID                   int64               `gorm:"column:consumer_id"`
 	ConsumerName                 string              `gorm:"column:consumer_name"`
 	OrderStatusID                int64               `gorm:"column:order_status_id"`
 	OrderStatus                  string              `gorm:"column:order_status"`
@@ -136,17 +135,14 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	return domain.Order{
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
-		Organization: domain.Organization{
-			OrganizationCountryID: o.OrganizationCountryID,
-			Country:               countries.ByName(o.OrganizationCountry),
-		},
-		Commerce: domain.Commerce{
-			ID:    o.CommerceID,
-			Value: o.CommerceName,
-		},
-		Consumer: domain.Consumer{
-			ID:    o.ConsumerID,
-			Value: o.ConsumerName,
+		Headers: domain.Headers{
+			ID: o.HeaderID,
+			Organization: domain.Organization{
+				OrganizationCountryID: o.OrganizationCountryID,
+				Country:               countries.ByName(o.OrganizationCountry),
+			},
+			Consumer: o.ConsumerName,
+			Commerce: o.CommerceName,
 		},
 		OrderStatus: domain.OrderStatus{
 			ID:     o.OrderStatusID,

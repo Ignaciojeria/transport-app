@@ -43,13 +43,13 @@ func createOrder(
 			mappedTO := requestBody.Map()
 			mappedTO.Organization.Key = c.Header("organization-key")
 			mappedTO.Organization.Country = countries.ByName(c.Header("country"))
-			mappedTO.Consumer.Value = c.Header("consumer")
-			mappedTO.Commerce.Value = c.Header("commerce")
+			mappedTO.Headers.Consumer = c.Header("consumer")
+			mappedTO.Headers.Commerce = c.Header("commerce")
 			if c.Header("consumer") == "" {
-				mappedTO.Consumer.Value = "UNSPECIFIED"
+				mappedTO.Headers.Consumer = "UNSPECIFIED"
 			}
 			if c.Header("commerce") == "" {
-				mappedTO.Commerce.Value = "UNSPECIFIED"
+				mappedTO.Headers.Commerce = "UNSPECIFIED"
 			}
 			if err := mappedTO.Validate(); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{

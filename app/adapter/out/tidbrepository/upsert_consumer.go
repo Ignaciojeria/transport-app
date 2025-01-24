@@ -1,5 +1,6 @@
 package tidbrepository
 
+/*
 import (
 	"context"
 	"errors"
@@ -37,3 +38,4 @@ func NewUpsertConsumer(conn tidb.TIDBConnection) UpsertConsumer {
 		return consumer.Map(), nil
 	}
 }
+*/

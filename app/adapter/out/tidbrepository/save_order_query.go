@@ -27,11 +27,9 @@ SELECT
     org.id AS organization_country_id,
     org.country AS organization_country,
     
-    comm.id AS commerce_id,
-    comm.name AS commerce_name,
-    
-    cons.id AS consumer_id,
-    cons.name AS consumer_name,
+    headers.id AS header_id,
+    headers.commerce AS commerce_name,
+    headers.consumer AS consumer_name,
     
     oty.id AS order_type_id,
     oty.type AS order_type,
@@ -95,7 +93,7 @@ SELECT
     dest_operator.contact_id AS destination_node_operator_contact_id
 FROM 
     organization_countries org
-    LEFT JOIN commerces comm ON comm.name = ? AND comm.organization_country_id = org.id
+    LEFT JOIN order_headers headers ON headers.commerce = ? AND headers.consumer = ? AND comm.organization_country_id = org.id
     LEFT JOIN consumers cons ON cons.name = ? AND cons.organization_country_id = org.id
     LEFT JOIN order_types oty ON oty.organization_country_id = org.id AND oty.type = ?
     LEFT JOIN contacts orig_contact ON 
@@ -119,8 +117,8 @@ FROM
 WHERE 
     org.id = ?;
 		`,
-			order.Commerce.Value,
-			order.Consumer.Value,
+			order.Commerce,
+			order.Consumer,
 			order.OrderType.Type,
 			order.Origin.AddressInfo.Contact.FullName,
 			order.Origin.AddressInfo.Contact.Phone,
@@ -138,8 +136,8 @@ WHERE
 		).Scan(&flattenedOrder).Error
 
 		fmt.Printf("Params: %v, %v, %v, %v, %v, %v\n",
-			order.Commerce.Value,
-			order.Consumer.Value,
+			order.Commerce,
+			order.Consumer,
 			order.OrderType.Type,
 			order.Origin.ReferenceID,
 			order.Destination.ReferenceID,

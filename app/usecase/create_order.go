@@ -13,31 +13,39 @@ type CreateOrder func(ctx context.Context, input domain.Order) (domain.Order, er
 func init() {
 	ioc.Registry(
 		NewCreateOrder,
+		tidbrepository.NewUpsertOrderHeaders,
 		tidbrepository.NewLoadOrderStatuses,
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
 		tidbrepository.NewUpsertNodeInfo,
 		tidbrepository.NewUpsertPackages,
 		tidbrepository.NewUpsertOrderType,
-		tidbrepository.NewUpsertCommerce,
-		tidbrepository.NewUpsertConsumer,
+		//tidbrepository.NewUpsertCommerce,
+		//tidbrepository.NewUpsertConsumer,
 		tidbrepository.NewUpsertOrder,
 	)
 }
 
 func NewCreateOrder(
+	upsertOrderHeaders tidbrepository.UpsertOrderHeaders,
 	loadOrderStatuses tidbrepository.LoadOrderStatuses,
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 	upsertPackages tidbrepository.UpsertPackages,
 	upsertOrderType tidbrepository.UpsertOrderType,
-	upsertCommerce tidbrepository.UpsertCommerce,
-	upsertConsumer tidbrepository.UpsertConsumer,
+	//upsertCommerce tidbrepository.UpsertCommerce,
+	//upsertConsumer tidbrepository.UpsertConsumer,
 	upsertOrder tidbrepository.UpsertOrder,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) (domain.Order, error) {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
+
+		inOrder.Headers.Organization = inOrder.Organization
+		orderHeaders, err := upsertOrderHeaders(ctx, inOrder.Headers)
+		if err != nil {
+			return domain.Order{}, err
+		}
 
 		inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
 		originContact, err := upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
@@ -84,21 +92,23 @@ func NewCreateOrder(
 		if err != nil {
 			return domain.Order{}, err
 		}
+		/*
+			inOrder.Commerce.Organization = inOrder.Organization
+			commerce, err := upsertCommerce(ctx, inOrder.Commerce)
+			if err != nil {
+				return domain.Order{}, err
+			}
 
-		inOrder.Commerce.Organization = inOrder.Organization
-		commerce, err := upsertCommerce(ctx, inOrder.Commerce)
-		if err != nil {
-			return domain.Order{}, err
-		}
+			inOrder.Consumer.Organization = inOrder.Organization
+			consumer, err := upsertConsumer(ctx, inOrder.Consumer)
+			if err != nil {
+				return domain.Order{}, err
+			}
 
-		inOrder.Consumer.Organization = inOrder.Organization
-		consumer, err := upsertConsumer(ctx, inOrder.Consumer)
-		if err != nil {
-			return domain.Order{}, err
-		}
-
-		inOrder.Commerce = commerce
-		inOrder.Consumer = consumer
+			inOrder.Commerce = commerce
+			inOrder.Consumer = consumer
+		*/
+		inOrder.Headers = orderHeaders
 		inOrder.OrderType = orderType
 		inOrder.Origin = originNodeInfo
 		inOrder.Destination = destinationNodeInfo

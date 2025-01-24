@@ -21,8 +21,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		if err := conn.Transaction(func(tx *gorm.DB) error {
 			return tx.
 				Omit("OrganizationCountry").
-				Omit("Commerce").
-				Omit("Consumer").
+				Omit("OrderHeaders").
 				Omit("OrderStatus").
 				Omit("OrderType").
 				Omit("OriginContact").

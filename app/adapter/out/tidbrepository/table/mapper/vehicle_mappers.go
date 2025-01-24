@@ -93,6 +93,5 @@ func TableToDomainVehicle(t table.Vehicle, carrier table.Carrier) domain.Vehicle
 			Name:         carrier.Name,
 			NationalID:   carrier.NationalID,
 		},
-		Organization: domain.Organization{}, // Ajustar para inicializar correctamente
 	}
 }

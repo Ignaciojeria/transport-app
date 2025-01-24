@@ -11,12 +11,13 @@ func MapOrderToTable(order domain.Order) table.Order {
 		ID:                    order.ID,
 		ReferenceID:           string(order.ReferenceID),
 		OrganizationCountryID: order.Organization.OrganizationCountryID, // Completar según la lógica de negocio
-		CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
-		ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
-		OrderStatusID:         order.OrderStatus.ID,                     // Completar según la lógica de negocio
-		OrderTypeID:           order.OrderType.ID,                       // Completar según la lógica de negocio
-		OrderType:             mapOrderTypeToTable(order.OrderType, orgCountryID),
-		OrderReferences:       mapReferencesToTable(order.References),
+		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
+		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
+		OrderHeadersID:  order.Headers.ID,
+		OrderStatusID:   order.OrderStatus.ID, // Completar según la lógica de negocio
+		OrderTypeID:     order.OrderType.ID,   // Completar según la lógica de negocio
+		OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
+		OrderReferences: mapReferencesToTable(order.References),
 		//DeliveryInstructions:  order.Destination.DeliveryInstructions,
 
 		// Origen
@@ -46,8 +47,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		JSONItems:                         mapItemsToTable(order.Items),
 		//Visits:                            mapVisitsToTable(order.Visits),
 		TransportRequirements: mapTransportRequirementsToTable(order.TransportRequirements),
-		Commerce:              mapCommerceToTable(order.Commerce, orgCountryID),
-		Consumer:              mapConsumerToTable(order.Consumer, orgCountryID),
+		OrderHeaders:          mapHeadersToTable(order.Headers, orgCountryID),
 		Packages:              MapPackagesToTable(order.Packages, orgCountryID),
 	}
 }
@@ -167,19 +167,14 @@ func mapTransportRequirementsToTable(requirements []domain.Reference) table.JSON
 	return jsonReference
 }
 
-func mapCommerceToTable(c domain.Commerce, orgCountry int64) table.Commerce {
-	return table.Commerce{
-		OrganizationCountryID: orgCountry,
-		ID:                    c.ID,
-		Name:                  c.Value,
-	}
-}
-
-func mapConsumerToTable(c domain.Consumer, orgCountry int64) table.Consumer {
-	return table.Consumer{
-		OrganizationCountryID: orgCountry,
-		ID:                    c.ID,
-		Name:                  c.Value,
+func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders {
+	return table.OrderHeaders{
+		ID:       c.ID,
+		Commerce: c.Commerce,
+		Consumer: c.Consumer,
+		OrganizationCountry: table.OrganizationCountry{
+			ID: orgCountryID,
+		},
 	}
 }
 
