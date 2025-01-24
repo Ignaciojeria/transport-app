@@ -570,9 +570,23 @@ func compareItemReferences(oldRefs, newRefs []ItemReference) bool {
 }
 
 type OrderType struct {
-	ID          int64
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	ID           int64
+	Organization Organization
+	Type         string `json:"type"`
+	Description  string `json:"description"`
+}
+
+func (ot OrderType) UpdateIfChanged(newOrderType OrderType) OrderType {
+	if newOrderType.Type != "" {
+		ot.Type = newOrderType.Type
+	}
+	if newOrderType.Description != "" {
+		ot.Description = newOrderType.Description
+	}
+	if newOrderType.Organization.OrganizationCountryID != 0 {
+		ot.Organization = newOrderType.Organization
+	}
+	return ot
 }
 
 type OrderStatus struct {
@@ -608,11 +622,33 @@ type Visit struct {
 }
 
 type Consumer struct {
-	ID    int64
-	Value string `json:"consumer"`
+	Organization Organization
+	ID           int64
+	Value        string `json:"consumer"`
+}
+
+func (c Consumer) UpdateIfChanged(newConsumer Consumer) Consumer {
+	if newConsumer.Value != "" {
+		c.Value = newConsumer.Value
+	}
+	if newConsumer.Organization.OrganizationCountryID != 0 {
+		c.Organization = newConsumer.Organization
+	}
+	return c
 }
 
 type Commerce struct {
-	ID    int64
-	Value string `json:"commerce"`
+	Organization Organization
+	ID           int64
+	Value        string `json:"commerce"`
+}
+
+func (c Commerce) UpdateIfChanged(newCommerce Commerce) Commerce {
+	if newCommerce.Value != "" {
+		c.Value = newCommerce.Value
+	}
+	if newCommerce.Organization.OrganizationCountryID != 0 {
+		c.Organization = newCommerce.Organization
+	}
+	return c
 }
