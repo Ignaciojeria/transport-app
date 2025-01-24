@@ -31,6 +31,7 @@ func NewRunMigrations(
 			&OrderHeaders{},
 			&VehicleHeaders{},
 			&NodeHeaders{},
+			&NodeType{},
 			&Order{},
 			&AddressInfo{},
 			&OrderReferences{},

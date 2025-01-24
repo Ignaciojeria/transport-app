@@ -5,6 +5,7 @@ import "transport-app/app/domain"
 type UpsertNodeRequest struct {
 	ReferenceID string `json:"referenceId" validate:"required"`
 	Name        string `json:"name" validate:"required"`
+	Type        string `json:"type" validate:"required"`
 	NodeAddress struct {
 		AddressLine1 string  `json:"addressLine1"`
 		AddressLine2 string  `json:"addressLine2"`
@@ -19,11 +20,10 @@ type UpsertNodeRequest struct {
 		ZipCode      string  `json:"zipCode"`
 	} `json:"nodeAddress"`
 	OperatorContact struct {
-		OperatorType string `json:"operatorType"`
-		Email        string `json:"email"`
-		Phone        string `json:"phone"`
-		NationalID   string `json:"nationalID"`
-		Documents    []struct {
+		Email      string `json:"email"`
+		Phone      string `json:"phone"`
+		NationalID string `json:"nationalID"`
+		Documents  []struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"documents"`

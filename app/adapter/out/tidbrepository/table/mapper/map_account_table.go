@@ -27,7 +27,7 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 		ID:                    e.ID,
 		ReferenceID:           string(e.ReferenceID),
 		Name:                  e.Name,
-		Type:                  e.Type,
+		NodeTypeID:            e.NodeType.ID,
 		ContactID:             contactID,
 		OrganizationCountryID: e.Organization.OrganizationCountryID,
 		AddressID:             addressInfoID,

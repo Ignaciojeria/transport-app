@@ -263,7 +263,8 @@ type NodeInfo struct {
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
 	Name                  string              `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
-	Type                  string              `gorm:"default:null"`
+	NodeTypeID            int64               `gorm:"default:null"`
+	NodeType              NodeType            `gorm:"foreignKey:NodeTypeID"`
 	ContactID             *int64              `gorm:"default:null"`
 	Contact               Contact             `gorm:"foreignKey:ContactID"` // Relación con Operator
 	AddressID             *int64              `gorm:"default:null"`         // Clave foránea a AddressInfo
@@ -285,8 +286,11 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		Organization: domain.Organization{
 			OrganizationCountryID: n.OrganizationCountryID,
 		},
-		Name:       n.Name,
-		Type:       n.Type,
+		Name: n.Name,
+		NodeType: domain.NodeType{
+			ID:    n.NodeType.ID,
+			Value: n.NodeType.Name,
+		},
 		References: n.NodeReferences.Map(),
 		Contact: domain.Contact{
 			ID: contactID,
@@ -621,4 +625,9 @@ func (m NodeHeaders) Map() domain.Headers {
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
+}
+
+type NodeType struct {
+	ID   int64  `gorm:"primaryKey"`
+	Name string `gorm:"uniqueIndex,length:200"`
 }

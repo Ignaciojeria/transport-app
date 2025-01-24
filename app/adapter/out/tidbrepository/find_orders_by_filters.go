@@ -62,7 +62,6 @@ SELECT
     -- Datos del nodo de origen
     on_info.reference_id as origin_node_reference_id,
     on_info.name as origin_node_name,
-    on_info.type as origin_node_type,
     -- Datos de dirección de destino
     da.address_line1 as destination_address_line1,
     da.address_line2 as destination_address_line2,
@@ -78,7 +77,6 @@ SELECT
     -- Datos del nodo de destino
     dn_info.reference_id as destination_node_reference_id,
     dn_info.name as destination_node_name,
-    dn_info.type as destination_node_type,
     -- Otros datos
     o.json_items as items,
     o.collect_availability_date,

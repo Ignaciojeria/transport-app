@@ -173,10 +173,15 @@ type NodeInfo struct {
 	ReferenceID  ReferenceID  `json:"referenceId"`
 	Organization Organization `json:"organization"`
 	Name         string       `json:"name"`
-	Type         string       `json:"type"`
+	NodeType     NodeType     `json:"type"`
 	Contact      Contact      `json:"contact"`
 	References   []Reference  `json:"references"`
 	AddressInfo  AddressInfo  `json:"addressInfo"`
+}
+
+type NodeType struct {
+	ID    int64
+	Value string `json:"type"`
 }
 
 func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
@@ -189,8 +194,8 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 		n.Name = newNode.Name
 	}
 	// Actualizar Type
-	if newNode.Type != "" && n.Type != newNode.Type {
-		n.Type = newNode.Type
+	if newNode.NodeType.Value != "" && n.NodeType.Value != newNode.NodeType.Value {
+		n.NodeType.Value = newNode.NodeType.Value
 	}
 	// Actualizar NodeReferences
 	if len(newNode.References) > 0 {
@@ -205,6 +210,11 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	if newNode.Contact.ID != 0 {
 		n.Contact.ID = newNode.Contact.ID
 	}
+
+	if newNode.NodeType.ID != 0 {
+		n.NodeType.ID = newNode.NodeType.ID
+	}
+
 	n.Organization = newNode.Organization
 	return n
 }
