@@ -174,7 +174,7 @@ type NodeInfo struct {
 	Organization Organization `json:"organization"`
 	Name         string       `json:"name"`
 	Type         string       `json:"type"`
-	Operator     Operator     `json:"operator"`
+	Contact      Contact      `json:"contact"`
 	References   []Reference  `json:"references"`
 	AddressInfo  AddressInfo  `json:"addressInfo"`
 }
@@ -199,11 +199,11 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	if newNode.AddressInfo.ID != 0 {
 		n.AddressInfo.ID = newNode.AddressInfo.ID
 	}
-	if newNode.Operator.ID != 0 {
-		n.Operator.ID = newNode.Operator.ID
+	if newNode.Contact.ID != 0 {
+		n.Contact.ID = newNode.Contact.ID
 	}
-	if newNode.Operator.Contact.ID != 0 {
-		n.Operator.Contact.ID = newNode.Operator.Contact.ID
+	if newNode.Contact.ID != 0 {
+		n.Contact.ID = newNode.Contact.ID
 	}
 	n.Organization = newNode.Organization
 	return n

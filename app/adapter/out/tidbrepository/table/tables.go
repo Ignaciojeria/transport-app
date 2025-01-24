@@ -264,17 +264,17 @@ type NodeInfo struct {
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
 	Name                  string              `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
 	Type                  string              `gorm:"default:null"`
-	OperatorID            *int64              `gorm:"default:null"`
-	Operator              Operator            `gorm:"foreignKey:OperatorID"` // Relación con Operator
-	AddressID             *int64              `gorm:"default:null"`          // Clave foránea a AddressInfo
-	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"`  // Relación con AddressInfo
-	NodeReferences        JSONReference       `gorm:"type:json"`             // Relación con NodeReferences
+	ContactID             *int64              `gorm:"default:null"`
+	Contact               Contact             `gorm:"foreignKey:ContactID"` // Relación con Operator
+	AddressID             *int64              `gorm:"default:null"`         // Clave foránea a AddressInfo
+	AddressInfo           AddressInfo         `gorm:"foreignKey:AddressID"` // Relación con AddressInfo
+	NodeReferences        JSONReference       `gorm:"type:json"`            // Relación con NodeReferences
 }
 
 func (n NodeInfo) Map() domain.NodeInfo {
-	var operatorID, addressID int64
-	if n.OperatorID != nil {
-		operatorID = *n.OperatorID
+	var contactID, addressID int64
+	if n.ContactID != nil {
+		contactID = *n.ContactID
 	}
 	if n.AddressID != nil {
 		addressID = *n.AddressID
@@ -288,8 +288,8 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		Name:       n.Name,
 		Type:       n.Type,
 		References: n.NodeReferences.Map(),
-		Operator: domain.Operator{
-			ID: operatorID,
+		Contact: domain.Contact{
+			ID: contactID,
 		},
 		AddressInfo: domain.AddressInfo{
 			ID: addressID,
@@ -331,25 +331,6 @@ func (a AddressInfo) Map() domain.AddressInfo {
 		Longitude:    a.Longitude,
 		ZipCode:      a.ZipCode,
 		TimeZone:     a.TimeZone,
-	}
-}
-
-type Operator struct {
-	gorm.Model
-	ID                    int64               `gorm:"primaryKey"`
-	ContactID             int64               `gorm:"not null;uniqueIndex:idx_contact_organization"` // Parte del índice único
-	Contact               Contact             `gorm:"foreignKey:ContactID"`                          // Relación con la tabla Contact
-	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_contact_organization"` // Parte del índice único
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	Type                  string              `gorm:"type:varchar(191);not null"`
-}
-
-func (o Operator) Map() domain.Operator {
-	return domain.Operator{
-		ID:           o.ID,
-		Organization: o.OrganizationCountry.Map(),
-		Contact:      o.Contact.Map(),
-		Type:         o.Type,
 	}
 }
 

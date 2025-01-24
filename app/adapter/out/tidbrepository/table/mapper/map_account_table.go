@@ -16,9 +16,9 @@ func MapAccountTable(e domain.Account, originNodeInfoID int64, contactId int64, 
 }
 
 func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
-	var operatorID, addressInfoID *int64
-	if e.Operator.ID == 0 {
-		operatorID = nil
+	var contactID, addressInfoID *int64
+	if e.Contact.ID == 0 {
+		contactID = nil
 	}
 	if e.AddressInfo.ID == 0 {
 		addressInfoID = nil
@@ -28,7 +28,7 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 		ReferenceID:           string(e.ReferenceID),
 		Name:                  e.Name,
 		Type:                  e.Type,
-		OperatorID:            operatorID,
+		ContactID:             contactID,
 		OrganizationCountryID: e.Organization.OrganizationCountryID,
 		AddressID:             addressInfoID,
 	}

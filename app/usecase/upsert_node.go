@@ -14,7 +14,6 @@ func init() {
 	ioc.Registry(
 		NewUpsertNode,
 		tidbrepository.NewUpsertContact,
-		tidbrepository.NewUpsertOperator,
 		tidbrepository.NewUpsertAddressInfo,
 		tidbrepository.NewUpsertNodeInfo,
 	)
@@ -22,11 +21,17 @@ func init() {
 
 func NewUpsertNode(
 	upsertContact tidbrepository.UpsertContact,
-	upsertOperator tidbrepository.UpsertOperator,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 ) UpsertNode {
-	return func(ctx context.Context, origin domain.NodeInfo) error {
+	return func(ctx context.Context, nodeInfo domain.NodeInfo) error {
+
+		//nodeInfo.Operator.Contact.Organization = nodeInfo.Organization
+		/*contact, err := upsertContact(ctx, nodeInfo.Operator.Contact)
+		if err != nil {
+			return err
+		}*/
+
 		/*
 			o, err := query(ctx, origin)
 			if err != nil {
@@ -37,6 +42,7 @@ func NewUpsertNode(
 				return err
 			}
 		*/
+		//nodeInfo.Operator.Contact = contact
 		return nil
 	}
 }

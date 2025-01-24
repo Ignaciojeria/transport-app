@@ -38,16 +38,13 @@ func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 		Name:        n.NodeName,
 		Type:        n.NodeType,
 		References:  mapReferences(n.NodeReferences),
-		Operator: domain.Operator{
-			ID: n.OperatorID,
-			Contact: domain.Contact{
-				ID:         n.OperatorID,
-				FullName:   n.OperatorName,
-				Email:      n.OperatorEmail,
-				Phone:      n.OperatorPhone,
-				NationalID: n.OperatorNationalID,
-				Documents:  mapDocuments(n.OperatorDocuments),
-			},
+		Contact: domain.Contact{
+			ID:         n.OperatorID,
+			FullName:   n.OperatorName,
+			Email:      n.OperatorEmail,
+			Phone:      n.OperatorPhone,
+			NationalID: n.OperatorNationalID,
+			Documents:  mapDocuments(n.OperatorDocuments),
 		},
 		AddressInfo: domain.AddressInfo{
 			ID:           n.AddressID,

@@ -63,7 +63,6 @@ SELECT
     on_info.reference_id as origin_node_reference_id,
     on_info.name as origin_node_name,
     on_info.type as origin_node_type,
-    on_op.full_name as origin_node_operator_name,
     -- Datos de dirección de destino
     da.address_line1 as destination_address_line1,
     da.address_line2 as destination_address_line2,
@@ -80,7 +79,6 @@ SELECT
     dn_info.reference_id as destination_node_reference_id,
     dn_info.name as destination_node_name,
     dn_info.type as destination_node_type,
-    dn_op.full_name as destination_node_operator_name,
     -- Otros datos
     o.json_items as items,
     o.collect_availability_date,
@@ -99,11 +97,9 @@ LEFT JOIN organization_countries org_country ON o.organization_country_id = org_
 LEFT JOIN contacts oc ON o.origin_contact_id = oc.id
 LEFT JOIN address_infos oa ON o.origin_address_info_id = oa.id
 LEFT JOIN node_infos on_info ON o.origin_node_info_id = on_info.id
-LEFT JOIN contacts on_op ON on_info.operator_id = on_op.id
 LEFT JOIN contacts dc ON o.destination_contact_id = dc.id
 LEFT JOIN address_infos da ON o.destination_address_info_id = da.id
 LEFT JOIN node_infos dn_info ON o.destination_node_info_id = dn_info.id
-LEFT JOIN contacts dn_op ON dn_info.operator_id = dn_op.id
 WHERE 
     org_country.country = ? 
     AND EXISTS (

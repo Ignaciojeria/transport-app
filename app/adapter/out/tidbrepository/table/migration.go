@@ -35,7 +35,6 @@ func NewRunMigrations(
 			&AddressInfo{},
 			&OrderReferences{},
 			&NodeInfo{},
-			&Operator{},
 			&Package{},
 			&OrderPackage{},
 			&OrderStatus{},
