@@ -27,6 +27,9 @@ func NewUpsertCommerce(conn tidb.TIDBConnection) UpsertCommerce {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Commerce{}, err
 		}
+		if commerce.Name != "" {
+			return commerce.Map(), nil
+		}
 		commerce = mapper.MapCommerceToTable(commerce.Map().UpdateIfChanged(c))
 		if err := conn.Save(&commerce).Error; err != nil {
 			return domain.Commerce{}, err

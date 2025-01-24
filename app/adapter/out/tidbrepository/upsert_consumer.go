@@ -27,6 +27,9 @@ func NewUpsertConsumer(conn tidb.TIDBConnection) UpsertConsumer {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Consumer{}, err
 		}
+		if consumer.Name != "" {
+			return consumer.Map(), nil
+		}
 		consumer = mapper.MapConsumerToTable(consumer.Map().UpdateIfChanged(c))
 		if err := conn.Save(&consumer).Error; err != nil {
 			return domain.Consumer{}, err
