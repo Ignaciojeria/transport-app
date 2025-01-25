@@ -602,9 +602,22 @@ func (v Vehicle) Map() domain.Vehicle {
 }
 
 type VehicleCategory struct {
-	ID                  int64  `gorm:"primaryKey"`
-	Type                string `gorm:"unique;not null"`
-	MaxPackagesQuantity int
+	gorm.Model
+	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_org_country_type"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	Type                  string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_org_country_type"`
+	MaxPackagesQuantity   int
+}
+
+func (vc VehicleCategory) Map() domain.VehicleCategory {
+	return domain.VehicleCategory{
+		ID:                  vc.ID,
+		MaxPackagesQuantity: vc.MaxPackagesQuantity,
+		Type:                vc.Type,
+
+		Organization: domain.Organization{OrganizationCountryID: vc.OrganizationCountryID},
+	}
 }
 
 type OrderHeaders struct {

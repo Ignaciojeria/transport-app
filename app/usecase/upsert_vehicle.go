@@ -14,12 +14,14 @@ func init() {
 	ioc.Registry(
 		NewUpsertVehicle,
 		tidbrepository.NewUpsertVehicleHeaders,
+		tidbrepository.NewUpsertVehicleCategory,
 		tidbrepository.NewUpsertCarrier,
 		tidbrepository.NewUpsertVehicle)
 }
 
 func NewUpsertVehicle(
 	upsertVehicleHeaders tidbrepository.UpsertVehicleHeaders,
+	upsertVehicleCategory tidbrepository.UpsertVehicleCategory,
 	upsertCarrier tidbrepository.UpsertCarrier,
 	upsertVehicle tidbrepository.UpsertVehicle,
 ) UpsertVehicle {
@@ -29,12 +31,20 @@ func NewUpsertVehicle(
 		if err != nil {
 			return err
 		}
+
+		vehicle.VehicleCategory.Organization = vehicle.Organization
+		category, err := upsertVehicleCategory(ctx, vehicle.VehicleCategory)
+		if err != nil {
+			return err
+		}
+
 		vehicle.Carrier.Organization = vehicle.Organization
 		carrier, err := upsertCarrier(ctx, vehicle.Carrier)
 		if err != nil {
 			return err
 		}
 		vehicle.Headers = vehicleHeaders
+		vehicle.VehicleCategory = category
 		vehicle.Carrier = carrier
 		_, err = upsertVehicle(ctx, vehicle)
 		return err

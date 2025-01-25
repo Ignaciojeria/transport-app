@@ -108,9 +108,26 @@ func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 }
 
 type VehicleCategory struct {
+	Organization        Organization
 	ID                  int64
 	Type                string
 	MaxPackagesQuantity int
+}
+
+func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {
+	if in.Type != "" {
+		vc.Type = in.Type
+	}
+	if in.MaxPackagesQuantity != 0 {
+		vc.MaxPackagesQuantity = in.MaxPackagesQuantity
+	}
+	if in.Organization.OrganizationCountryID != 0 {
+		vc.Organization = in.Organization
+	}
+	if in.ID != 0 {
+		vc.ID = in.ID
+	}
+	return vc
 }
 
 type Carrier struct {
