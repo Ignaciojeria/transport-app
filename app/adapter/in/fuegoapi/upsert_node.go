@@ -14,6 +14,7 @@ import (
 	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
@@ -72,5 +73,7 @@ func upsertNode(
 			}, nil
 		},
 		option.Summary("upsertNode"),
+		option.Header("consumer", "api consumer key", param.Required()),
+		option.Header("commerce", "api commerce key", param.Required()),
 		option.Tags(tagNetwork))
 }

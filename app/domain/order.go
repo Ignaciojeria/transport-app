@@ -205,11 +205,9 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	if newNode.Contact.ID != 0 {
 		n.Contact.ID = newNode.Contact.ID
 	}
-
 	if newNode.NodeType.ID != 0 {
 		n.NodeType.ID = newNode.NodeType.ID
 	}
-
 	n.Organization = newNode.Organization
 	return n
 }

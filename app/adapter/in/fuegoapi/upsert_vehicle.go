@@ -14,6 +14,7 @@ import (
 	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
@@ -72,7 +73,10 @@ func upsertVehicle(
 			return response.UpsertVehicleResponse{
 				Message: "upsert vehicle submitted",
 			}, nil
-		}, option.Summary("upsertVehicle"),
+		},
+		option.Summary("upsertVehicle"),
+		option.Header("consumer", "api consumer key", param.Required()),
+		option.Header("commerce", "api commerce key", param.Required()),
 		option.Tags(tagFleets),
 	)
 }

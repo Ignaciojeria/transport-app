@@ -30,6 +30,7 @@ func NewRunMigrations(
 			&VehiclesOutbox{},
 			&OrderHeaders{},
 			&VehicleHeaders{},
+			&VehicleCategory{},
 			&NodeHeaders{},
 			&NodeType{},
 			&Order{},

@@ -100,8 +100,8 @@ func createOrder(
 		}, option.Summary("createOrder"),
 		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
-		option.Header("consumer", "api consumer key"),
-		option.Header("commerce", "api commerce key"),
+		option.Header("consumer", "api consumer key", param.Required()),
+		option.Header("commerce", "api commerce key", param.Required()),
 		option.Tags(tagOrders),
 	)
 }

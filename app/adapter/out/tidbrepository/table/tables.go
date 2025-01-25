@@ -543,32 +543,68 @@ func (j JSONB) Value() (driver.Value, error) {
 type Carrier struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
-	OrganizationCountryID int64               `gorm:"not null;index"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	ReferenceID           string              `gorm:"unique;default:null"`
+	ReferenceID           string              `gorm:"type:varchar(50);uniqueIndex:idx_carrier_ref_org"`
+	OrganizationCountryID int64               `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
 	Name                  string              `gorm:"not null"`
-	NationalID            string              `gorm:"unique;not null"`
-	Document              JSONB               `gorm:"type:json" json:"document"` // Tipo JSON para manejar estructuras anidadas
-	Vehicles              []Vehicle           `gorm:"foreignKey:CarrierID"`
+	NationalID            string              `gorm:"type:varchar(20);default:null;uniqueIndex:idx_carrier_national_org"`
+}
+
+func (c Carrier) Map() domain.Carrier {
+	return domain.Carrier{
+		ID:          c.ID,
+		ReferenceID: c.ReferenceID,
+		Name:        c.Name,
+		NationalID:  c.NationalID,
+		Organization: domain.Organization{
+			OrganizationCountryID: c.OrganizationCountryID,
+		},
+	}
 }
 
 // Modelo de Vehículo
 type Vehicle struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
-	OrganizationCountryID int64               `gorm:"not null;index"`
+	OrganizationCountryID int64               `gorm:"not null;index;uniqueIndex:idx_vehicle_ref_org;uniqueIndex:idx_vehicle_plate_org"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	ReferenceID           string              `gorm:"unique;default:null"`
-	Plate                 string              `gorm:"not null"`
+	ReferenceID           string              `gorm:"type:varchar(50);uniqueIndex:idx_vehicle_ref_org"`
+	Plate                 string              `gorm:"type:varchar(20);uniqueIndex:idx_vehicle_plate_org"`
 	IsActive              bool
 	CertificateDate       string
-	Category              string
-	Weight                JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Weight
-	Insurance             JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Insurance
-	TechnicalReview       JSONB   `gorm:"type:json"`      // Tipo JSON para serializar TechnicalReview
-	Dimensions            JSONB   `gorm:"type:json"`      // Tipo JSON para serializar Dimensions
-	CarrierID             int64   `gorm:"not null;index"` // Relación con Carrier
-	Carrier               Carrier `gorm:"foreignKey:CarrierID"`
+	VehicleCategoryID     *int64          `gorm:"default null;index"`
+	VehicleCategory       VehicleCategory `gorm:"foreignKey:VehicleCategoryID"`
+	VehicleHeadersID      int64           `gorm:"not null"`
+	VehicleHeaders        VehicleHeaders  `gorm:"foreignKey:VehicleHeadersID"`
+	Weight                JSONB           `gorm:"type:json"`          // Tipo JSON para serializar Weight
+	Insurance             JSONB           `gorm:"type:json"`          // Tipo JSON para serializar Insurance
+	TechnicalReview       JSONB           `gorm:"type:json"`          // Tipo JSON para serializar TechnicalReview
+	Dimensions            JSONB           `gorm:"type:json"`          // Tipo JSON para serializar Dimensions
+	CarrierID             *int64          `gorm:"default null;index"` // Relación con Carrier
+	Carrier               Carrier         `gorm:"foreignKey:CarrierID"`
+}
+
+func (v Vehicle) Map() domain.Vehicle {
+	return domain.Vehicle{
+		ID:              v.ID,
+		ReferenceID:     v.ReferenceID,
+		Plate:           v.Plate,
+		IsActive:        v.IsActive,
+		CertificateDate: v.CertificateDate,
+		VehicleCategory: domain.VehicleCategory{
+			ID:                  v.VehicleCategory.ID,
+			Type:                v.VehicleCategory.Type,
+			MaxPackagesQuantity: v.VehicleCategory.MaxPackagesQuantity,
+		},
+		Headers: v.VehicleHeaders.Map(),
+		Carrier: v.Carrier.Map(),
+	}
+}
+
+type VehicleCategory struct {
+	ID                  int64  `gorm:"primaryKey"`
+	Type                string `gorm:"unique;not null"`
+	MaxPackagesQuantity int
 }
 
 type OrderHeaders struct {
@@ -601,6 +637,7 @@ type VehicleHeaders struct {
 
 func (m VehicleHeaders) Map() domain.Headers {
 	return domain.Headers{
+		ID: m.ID,
 		Organization: domain.Organization{
 			OrganizationCountryID: m.OrganizationCountryID,
 		},
@@ -619,6 +656,7 @@ type NodeHeaders struct {
 
 func (m NodeHeaders) Map() domain.Headers {
 	return domain.Headers{
+		ID: m.ID,
 		Organization: domain.Organization{
 			OrganizationCountryID: m.OrganizationCountryID,
 		},

@@ -3,8 +3,8 @@ package request
 import "transport-app/app/domain"
 
 type UpsertVehicleRequest struct {
-	ReferenceID     string `json:"referenceID"`
-	Plate           string `json:"plate"`
+	ReferenceID     string `json:"referenceID" validate:"required"`
+	Plate           string `json:"plate" validate:"required"`
 	IsActive        bool   `json:"isActive"`
 	CertificateDate string `json:"certificateDate"`
 	Category        string `json:"category"`
@@ -33,13 +33,9 @@ type UpsertVehicleRequest struct {
 		UnitOfMeasure string  `json:"unitOfMeasure"`
 	} `json:"dimensions"`
 	Carrier struct {
-		ReferenceID string `json:"referenceID"`
+		ReferenceID string `json:"referenceID" validate:"required_with=Name NationalID"`
 		Name        string `json:"name"`
 		NationalID  string `json:"nationalID"`
-		Document    struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
-		} `json:"document"`
 	} `json:"carrier"`
 }
 
@@ -49,7 +45,9 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 		Plate:           v.Plate,
 		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
-		Category:        v.Category,
+		VehicleCategory: domain.VehicleCategory{
+			Type: v.Category,
+		},
 		Weight: struct {
 			Value         int    `json:"value"`
 			UnitOfMeasure string `json:"unitOfMeasure"`
