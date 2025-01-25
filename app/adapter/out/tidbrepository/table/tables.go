@@ -543,9 +543,9 @@ func (j JSONB) Value() (driver.Value, error) {
 type Carrier struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey"`
+	OrganizationCountryID int64               `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 	ReferenceID           string              `gorm:"type:varchar(50);uniqueIndex:idx_carrier_ref_org"`
-	OrganizationCountryID int64               `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
 	Name                  string              `gorm:"not null"`
 	NationalID            string              `gorm:"type:varchar(20);default:null;uniqueIndex:idx_carrier_national_org"`
 }

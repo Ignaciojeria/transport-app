@@ -158,6 +158,10 @@
         {
             "kind": "usecase",
             "name": "search-nodes"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-carriers"
         }
     ]
 }
