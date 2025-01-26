@@ -162,6 +162,10 @@
         {
             "kind": "usecase",
             "name": "search-carriers"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-vehicles-by-carrier"
         }
     ]
 }

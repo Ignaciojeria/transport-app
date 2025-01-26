@@ -4,7 +4,7 @@ import "transport-app/app/domain"
 
 type SearchNodesResponse struct {
 	Name        string `json:"name"`
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 }
 
 func MapSearchNodesResponse(nodes []domain.NodeInfo) []SearchNodesResponse {
