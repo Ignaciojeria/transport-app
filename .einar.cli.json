@@ -166,6 +166,14 @@
         {
             "kind": "usecase",
             "name": "search-vehicles-by-carrier"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-plan"
+        },
+        {
+            "kind": "post-controller",
+            "name": "capacity-k-means"
         }
     ]
 }
