@@ -103,5 +103,6 @@ func createOrder(
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
 		option.Tags(tagOrders),
+		option.Tags(tagEndToEndOperator),
 	)
 }

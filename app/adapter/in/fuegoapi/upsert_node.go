@@ -75,5 +75,6 @@ func upsertNode(
 		option.Summary("upsertNode"),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
-		option.Tags(tagNetwork))
+		option.Tags(tagNetwork),
+		option.Tags(tagEndToEndOperator))
 }
