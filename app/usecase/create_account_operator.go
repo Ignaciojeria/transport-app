@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 
@@ -16,7 +17,7 @@ func init() {
 
 func NewCreateAccountOperator(upsertContact tidbrepository.UpsertContact) CreateAccountOperator {
 	return func(ctx context.Context, input domain.Operator) (domain.Operator, error) {
-
+		fmt.Println("create operator works")
 		return input, nil
 	}
 }
