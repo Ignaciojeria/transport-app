@@ -190,6 +190,14 @@
         {
             "kind": "get-controller",
             "name": "search-first-operator-daily-plan"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account-operator"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "operator-submitted"
         }
     ]
 }

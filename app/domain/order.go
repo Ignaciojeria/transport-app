@@ -359,13 +359,6 @@ func concatenateWithCommas(values ...string) string {
 	return result
 }
 
-type Operator struct {
-	ID           int64
-	Organization Organization
-	Contact      Contact `json:"contact"`
-	Type         string  `json:"type"`
-}
-
 type Quantity struct {
 	QuantityNumber int    `json:"quantityNumber"`
 	QuantityUnit   string `json:"quantityUnit"`

@@ -28,6 +28,7 @@ func NewRunMigrations(
 			&OrdersOutbox{},
 			&NodesOutbox{},
 			&VehiclesOutbox{},
+			&OperatorOutbox{},
 			&OrderHeaders{},
 			&VehicleHeaders{},
 			&VehicleCategory{},

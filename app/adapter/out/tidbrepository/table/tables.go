@@ -503,12 +503,17 @@ type Account struct {
 	gorm.Model
 	ID int64 `gorm:"primaryKey"`
 
-	ContactID int64   `gorm:"not null;uniqueIndex:idx_organization_contact"`
+	Type string `gorm:"not null"`
+
+	ContactID *int64  `gorm:"not null;uniqueIndex:idx_organization_contact"`
 	Contact   Contact `gorm:"foreignKey:ContactID"`
+
+	AddressInfoID *int64      `gorm:"default:null"`
+	AddressInfo   AddressInfo `gorm:"foreignKey:AddressInfoID"`
 
 	IsActive bool `gorm:"not null;index"`
 
-	OriginNodeInfoID int64    `gorm:"default:null"`
+	OriginNodeInfoID *int64   `gorm:"default:null"`
 	OriginNodeInfo   NodeInfo `gorm:"foreignKey:OriginNodeInfoID"`
 
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_organization_contact"`

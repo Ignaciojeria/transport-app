@@ -5,13 +5,22 @@ import (
 	"transport-app/app/domain"
 )
 
-func MapAccountTable(e domain.Account, originNodeInfoID int64, contactId int64, organizationCountryID int64) table.Account {
+func MapAccountTable(e domain.Account) table.Account {
+	var contactIDPtr *int64
+	if e.Contact.ID != 0 {
+		contactIDPtr = &e.Contact.ID
+	}
+
+	var originNodeInfoIDPtr *int64
+	if e.Origin.ID != 0 {
+		originNodeInfoIDPtr = &e.Origin.ID
+	}
 	return table.Account{
 		ID:                    e.ID,
-		ContactID:             contactId,
+		ContactID:             contactIDPtr,
 		IsActive:              true,
-		OriginNodeInfoID:      originNodeInfoID,
-		OrganizationCountryID: organizationCountryID,
+		OriginNodeInfoID:      originNodeInfoIDPtr,
+		OrganizationCountryID: e.Organization.OrganizationCountryID,
 	}
 }
 
