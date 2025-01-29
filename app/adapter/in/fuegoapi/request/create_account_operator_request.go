@@ -15,6 +15,7 @@ type CreateAccountOperatorRequest struct {
 
 func (r CreateAccountOperatorRequest) Map() domain.Operator {
 	return domain.Operator{
+		ReferenceID: r.ReferenceID,
 		OriginNode: domain.NodeInfo{
 			ReferenceID: domain.ReferenceID(r.OriginNodeReferenceID),
 		},

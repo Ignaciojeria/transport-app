@@ -503,7 +503,8 @@ type Account struct {
 	gorm.Model
 	ID int64 `gorm:"primaryKey"`
 
-	Type string `gorm:"not null"`
+	Type        string `gorm:"not null"`
+	ReferenceID string `gorm:"type:varchar(50);uniqueIndex:idx_account_ref_org"`
 
 	ContactID *int64  `gorm:"not null;uniqueIndex:idx_organization_contact"`
 	Contact   Contact `gorm:"foreignKey:ContactID"`
@@ -516,8 +517,32 @@ type Account struct {
 	OriginNodeInfoID *int64   `gorm:"default:null"`
 	OriginNodeInfo   NodeInfo `gorm:"foreignKey:OriginNodeInfoID"`
 
-	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_organization_contact"`
+	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_organization_contact;uniqueIndex:idx_account_ref_org"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+}
+
+func (a Account) MapOperator() domain.Operator {
+	// Inicializamos un Operator base
+	operator := domain.Operator{
+		ID:          a.ID,
+		ReferenceID: a.ReferenceID, // Usando el Type como ReferenceID
+		Type:        a.Type,
+		Organization: domain.Organization{
+			OrganizationCountryID: a.OrganizationCountryID,
+		},
+	}
+
+	// Mapeamos el Contact si existe
+	if a.ContactID != nil {
+		operator.Contact = a.Contact.Map()
+	}
+
+	// Mapeamos el OriginNode si existe
+	if a.OriginNodeInfoID != nil {
+		operator.OriginNode = a.OriginNodeInfo.Map()
+	}
+
+	return operator
 }
 
 type JSONB json.RawMessage

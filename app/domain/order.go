@@ -181,6 +181,9 @@ type NodeInfo struct {
 
 func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	// Actualizar ReferenceID
+	if newNode.ID != 0 {
+		n.ID = newNode.ID
+	}
 	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
 		n.ReferenceID = newNode.ReferenceID
 	}
@@ -246,6 +249,11 @@ type Contact struct {
 
 func (c Contact) UpdateIfChanged(newContact Contact) Contact {
 	updatedContact := c // Copiamos la instancia actual
+
+	// Actualizar FullName
+	if newContact.ID != 0 {
+		updatedContact.ID = newContact.ID
+	}
 
 	// Actualizar FullName
 	if newContact.FullName != "" {
