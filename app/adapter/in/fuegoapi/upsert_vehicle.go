@@ -22,12 +22,12 @@ func init() {
 		upsertVehicle,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveVehicleOutbox)
+		tidbrepository.NewSaveEventOutBox)
 }
 func upsertVehicle(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	outbox tidbrepository.SaveVehicleOutbox) {
+	outbox tidbrepository.SaveEventOutBox) {
 	fuego.Post(s.Manager, "/vehicle",
 		func(c fuego.ContextWithBody[request.UpsertVehicleRequest]) (response.UpsertVehicleResponse, error) {
 

@@ -21,12 +21,12 @@ func init() {
 		createAccountOperator,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveOperatorOutbox)
+		tidbrepository.NewSaveEventOutBox)
 }
 func createAccountOperator(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	outbox tidbrepository.SaveOperatorOutbox) {
+	outbox tidbrepository.SaveEventOutBox) {
 	fuego.Post(s.Manager, "/operator",
 		func(c fuego.ContextWithBody[request.CreateAccountOperatorRequest]) (response.CreateAccountResponse, error) {
 			requestBody, err := c.Body()

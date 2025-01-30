@@ -14,26 +14,24 @@ import (
 	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
-	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
 	ioc.Registry(
-		upsertNode, httpserver.New,
+		upsertDailyPlan,
+		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveEventOutBox,
-	)
+		tidbrepository.NewSaveEventOutBox)
 }
-func upsertNode(
+func upsertDailyPlan(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox tidbrepository.SaveEventOutBox) {
-	fuego.Post(s.Manager, "/node",
-		func(c fuego.ContextWithBody[request.UpsertNodeRequest]) (response.UpsertNodeResponse, error) {
-
+	fuego.Post(s.Manager, "/operator/{referenceID}/daily-plan",
+		func(c fuego.ContextWithBody[request.CreateDailyPlanRequest]) (response.CreateDailyPlanResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return response.UpsertNodeResponse{}, err
+				return response.CreateDailyPlanResponse{}, err
 			}
 
 			organization := domain.Organization{
@@ -43,8 +41,8 @@ func upsertNode(
 
 			org, err := ensureOrg(c.Context(), organization)
 			if err != nil {
-				return response.UpsertNodeResponse{}, fuego.HTTPError{
-					Title:  "error creating order",
+				return response.CreateDailyPlanResponse{}, fuego.HTTPError{
+					Title:  "error creating daily plan",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
@@ -54,8 +52,8 @@ func upsertNode(
 			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
 			if _, err := outbox(c.Context(), domain.Outbox{
 				Attributes: map[string]string{
-					"entityType":            "node",
-					"eventType":             "nodeSubmitted",
+					"entityType":            "plan",
+					"eventType":             "dailyPlanSubmitted",
 					"country":               countries.ByName(c.Header("country")).Alpha2(),
 					"organizationCountryID": orgIDString,
 					"consumer":              c.Header("consumer"),
@@ -66,15 +64,13 @@ func upsertNode(
 				Organization: org,
 				Payload:      requestBodyBytes,
 			}); err != nil {
-				return response.UpsertNodeResponse{}, err
+				return response.CreateDailyPlanResponse{}, err
 			}
-			return response.UpsertNodeResponse{
-				Message: "upsert node submitted",
-			}, nil
+			return response.CreateDailyPlanResponse{
+				Message: "daily plan submitted",
+			}, err
 		},
-		option.Summary("upsertNode"),
-		option.Header("consumer", "api consumer key", param.Required()),
-		option.Header("commerce", "api commerce key", param.Required()),
-		option.Tags(tagNetwork),
-		option.Tags(tagEndToEndOperator))
+		option.Summary("createDailyPlan"),
+		option.Tags(tagEndToEndOperator),
+	)
 }

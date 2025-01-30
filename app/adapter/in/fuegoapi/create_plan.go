@@ -10,7 +10,9 @@ import (
 )
 
 func init() {
-	ioc.Registry(createPlan, httpserver.New)
+	ioc.Registry(
+		createPlan,
+		httpserver.New)
 }
 func createPlan(s httpserver.Server) {
 	fuego.Post(s.Manager, "/plan",

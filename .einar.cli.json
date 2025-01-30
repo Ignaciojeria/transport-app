@@ -198,6 +198,10 @@
         {
             "kind": "gcp-subscription",
             "name": "operator-submitted"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "daily-plan-submitted"
         }
     ]
 }

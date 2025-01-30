@@ -24,13 +24,13 @@ func init() {
 		createOrder,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveOrderOutbox,
+		tidbrepository.NewSaveEventOutBox,
 		observability.NewObservability)
 }
 func createOrder(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	saveOutboxTrx tidbrepository.SaveOrderOutbox,
+	saveOutboxTrx tidbrepository.SaveEventOutBox,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/order",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
