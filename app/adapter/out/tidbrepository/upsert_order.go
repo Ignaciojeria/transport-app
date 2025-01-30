@@ -30,6 +30,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				Omit("DestinationAddressInfo").
 				Omit("OriginNodeInfo").
 				Omit("DestinationNodeInfo").
+				Omit("Route").
 				Save(&tbl).Error
 		}); err != nil {
 			return domain.Order{}, err

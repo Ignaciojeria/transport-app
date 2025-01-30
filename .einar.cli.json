@@ -202,6 +202,10 @@
         {
             "kind": "gcp-subscription",
             "name": "daily-plan-submitted"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-daily-plan"
         }
     ]
 }

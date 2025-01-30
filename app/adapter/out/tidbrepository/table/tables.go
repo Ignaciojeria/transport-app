@@ -29,6 +29,9 @@ type Order struct {
 	OrderTypeID int64     `gorm:"default:null"`
 	OrderType   OrderType `gorm:"foreignKey:OrderTypeID"`
 
+	RouteID *int64 `gorm:"default:null"`
+	Route   Route  `gorm:"foreignKey:RouteID"`
+
 	OrderReferences      []OrderReferences `gorm:"foreignKey:OrderID"`
 	DeliveryInstructions string            `gorm:"type:text"`
 
