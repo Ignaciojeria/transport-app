@@ -3,7 +3,7 @@ package request
 import "transport-app/app/domain"
 
 type UpsertNodeRequest struct {
-	ReferenceID string `json:"referenceId" validate:"required"`
+	ReferenceID string `json:"referenceID" validate:"required"`
 	Name        string `json:"name" validate:"required"`
 	Type        string `json:"type" validate:"required"`
 	NodeAddress struct {
