@@ -21,9 +21,11 @@ type Plan struct {
 
 func (p Plan) Map() domain.Plan {
 	return domain.Plan{
-		ID:          p.ID,
-		ReferenceID: p.ReferenceID,
-		Date:        p.Date,
+		ID:             p.ID,
+		ReferenceID:    p.ReferenceID,
+		Date:           p.Date,
+		PlanningStatus: p.PlanningStatus.Map(),
+		PlanType:       p.PlanType.Map(),
 	}
 }
 
@@ -51,6 +53,14 @@ type PlanningStatus struct {
 	Name                  string              `gorm:"type:varchar(100);not null;unique"`
 }
 
+func (ps PlanningStatus) Map() domain.PlanningStatus {
+	return domain.PlanningStatus{
+		Organization: ps.OrganizationCountry.Map(),
+		ID:           ps.ID,
+		Value:        ps.Name,
+	}
+}
+
 type Route struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey;autoIncrement"`
@@ -64,4 +74,15 @@ type Route struct {
 	Vehicle               Vehicle             `gorm:"foreignKey:VehicleID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	CarrierID             int64               `gorm:"not null"`
 	Carrier               Carrier             `gorm:"foreignKey:CarrierID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+}
+
+func (r Route) Map(orders []domain.Order) domain.Route {
+	return domain.Route{
+		Organization: r.OrganizationCountry.Map(),
+		ID:           r.ID,
+		Vehicle:      r.Vehicle.Map(),
+		Operator:     r.Account.MapOperator(),
+		Plan:         r.Plan.Map(),
+		Orders:       orders,
+	}
 }

@@ -70,11 +70,13 @@ func (ps PlanningStatus) UpdateIfChanged(newPlanningStatus PlanningStatus) Plann
 	if newPlanningStatus.Value != "" {
 		ps.Value = newPlanningStatus.Value
 	}
+	ps.Organization = newPlanningStatus.Organization
 	return ps
 }
 
 type Route struct {
 	Organization
+	Plan     Plan
 	ID       int64
 	Vehicle  Vehicle
 	Operator Operator
@@ -87,5 +89,6 @@ func (r Route) UpdateIfChanged(newRoute Route) Route {
 	}
 	r.Operator = r.Operator.UpdateIfChanged(newRoute.Operator)
 	r.Orders = newRoute.Orders
+	r.Organization = newRoute.Organization
 	return r
 }
