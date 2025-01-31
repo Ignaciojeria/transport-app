@@ -1,0 +1,547 @@
+{
+	"info": {
+		"_postman_id": "9db59a6a-18dc-4dc3-b0f3-0a315a62d218",
+		"name": "transport-app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1410350"
+	},
+	"item": [
+		{
+			"name": "CREATE ORGANIZATION KEY",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"ignaciovl3.j@gmail.com\",\r\n    \"name\": \"einarcli-org\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/organization-key",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"organization-key"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPSERT ORDER",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "471d1acd-f816-4383-bbbc-fccfc6fd4722-820374f9-9fe6-4e46-9840-2d5523575b67",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					},
+					{
+						"key": "commerce",
+						"value": "COMMERCE_EXAMPLE2AAA",
+						"type": "text"
+					},
+					{
+						"key": "consumer",
+						"value": "CONSUMER_EXAMPLE",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"referenceID\": \"reference_1\",\r\n    \"collectAvailabilityDate\": {\r\n        \"date\": \"2022-03-10\",\r\n        \"timeRange\": {\r\n            \"endTime\": \"03:41\",\r\n            \"startTime\": \"03:41\"\r\n        }\r\n    },\r\n    \"destination\": {\r\n        \"addressInfo\": {\r\n            \"addressLine1\": \"string24\",\r\n            \"addressLine2\": \"string24\",\r\n            \"addressLine3\": \"string24\",\r\n            \"contact\": {\r\n                \"documents\": [\r\n                    {\r\n                        \"type\": \"string24\",\r\n                        \"value\": \"string24\"\r\n                    }\r\n                ],\r\n                \"email\": \"string24161\",\r\n                \"fullName\": \"string24name\",\r\n                \"nationalID\": \"string24\",\r\n                \"phone\": \"string242\"\r\n            },\r\n            \"county\": \"string24\",\r\n            \"district\": \"string24\",\r\n            \"latitude\": 100,\r\n            \"longitude\": 100,\r\n            \"province\": \"string24\",\r\n            \"state\": \"string24\",\r\n            \"timeZone\": \"string24\",\r\n            \"zipCode\": \"string24\"\r\n        },\r\n        \"deliveryInstructions\": \"entregar en mi house\",\r\n        \"nodeInfo\": {\r\n            \"referenceId\": \"string244XD\",\r\n            \"name\":\"Ignacio Node 2214\"\r\n        }\r\n    },\r\n    \"items\": [\r\n        {\r\n            \"referenceId\": \"string24\",\r\n            \"description\": \"string24\",\r\n            \"dimensions\": {\r\n                \"depth\": 1,\r\n                \"height\": 1,\r\n                \"unit\": \"string24\",\r\n                \"width\": 1\r\n            },\r\n            \"insurance\": {\r\n                \"currency\": \"CLP\",\r\n                \"unitValue\": 100\r\n            },\r\n            \"logisticCondition\": \"string24\",\r\n            \"quantity\": {\r\n                \"quantityNumber\": 1,\r\n                \"quantityUnit\": \"C/U\"\r\n            },\r\n            \"weight\": {\r\n                \"unit\": \"string24\",\r\n                \"value\": 100\r\n            }\r\n        }\r\n    ],\r\n    \"orderType\": {\r\n        \"description\": \"JOJOJO\",\r\n        \"type\": \"string24\"\r\n    },\r\n    \"origin\": {\r\n        \"addressInfo\": {\r\n            \"addressLine1\": \"string24\",\r\n            \"addressLine2\": \"string24\",\r\n            \"addressLine3\": \"string24\",\r\n            \"contact\": {\r\n                \"documents\": [\r\n                    {\r\n                        \"type\": \"string24\",\r\n                        \"value\": \"string24\"\r\n                    }\r\n                ],\r\n                \"email\": \"string24\",\r\n                \"fullName\": \"string24\",\r\n                \"nationalID\": \"string24\",\r\n                \"phone\": \"string24\"\r\n            },\r\n            \"county\": \"string24\",\r\n            \"district\": \"string24\",\r\n            \"latitude\": 10,\r\n            \"longitude\": 10,\r\n            \"province\": \"string24\",\r\n            \"state\": \"string24\",\r\n            \"timeZone\": \"string24\",\r\n            \"zipCode\": \"string24\"\r\n        },\r\n        \"nodeInfo\": {\r\n            \"referenceId\": \"string24\",\r\n            \"name\":\"NAXONODE\"\r\n        }\r\n    },\r\n    \"packages\": [\r\n        {\r\n            \"dimensions\": {\r\n                \"depth\": 10,\r\n                \"height\": 10,\r\n                \"unit\": \"string24\",\r\n                \"width\": 10\r\n            },\r\n            \"insurance\": {\r\n                \"currency\": \"string242\",\r\n                \"unitValue\": 10\r\n            },\r\n            \"itemReferences\": [\r\n                {\r\n                    \"quantity\": {\r\n                        \"quantityNumber\": 10,\r\n                        \"quantityUnit\": \"string24\"\r\n                    },\r\n                    \"referenceId\": \"string24\"\r\n                }\r\n            ],\r\n            \"lpn\": \"string24\",\r\n            \"weight\": {\r\n                \"unit\": \"string24\",\r\n                \"value\": 10\r\n            }\r\n        }\r\n    ],\r\n    \"promisedDate\": {\r\n        \"dateRange\": {\r\n            \"endDate\": \"2025-03-10\",\r\n            \"startDate\": \"2025-03-10\"\r\n        },\r\n        \"serviceCategory\": \"string24\",\r\n        \"timeRange\": {\r\n            \"endTime\": \"03:30\",\r\n            \"startTime\": \"03:30\"\r\n        }\r\n    },\r\n    \"references\": [\r\n        {\r\n            \"type\": \"string24\",\r\n            \"value\": \"string24\"\r\n        }\r\n    ],\r\n    \"transportRequirements\": [\r\n        {\r\n            \"type\": \"string24\",\r\n            \"value\": \"string24\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/order",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH ORDERS BY REFERENCES",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "c09d98cb-e7ac-4b70-9e72-1b0b2c2aa18a-f76bdd2f-d8ce-4a06-a078-a5064287f673",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"referenceIds\": [\r\n        \"reference_1\"\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/order/unique-references-search",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"order",
+						"unique-references-search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH ORDERS BY LPNS",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "d3090a52-0a02-42db-98b3-c0edee4bfdcf-9ea1fa8a-fd96-48de-b403-a024ad2c1c18",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"packageLpns\": [\r\n        \"string24\"\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/order/lpns-search",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"order",
+						"lpns-search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH ORDERS BY DAILY PLAN",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "8606b6cf-5ac3-42a0-b327-68b9b9ab29c8-bf8e99ee-c4f3-45f6-a2f4-026241e92fef",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"operatorReferenceID\":\"1234\",\r\n    \"plannedDate\":\"2025-01-03\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/order/daily-plan-search",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"order",
+						"daily-plan-search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPSERT NODE",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "8606b6cf-5ac3-42a0-b327-68b9b9ab29c8-bf8e99ee-c4f3-45f6-a2f4-026241e92fef",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					},
+					{
+						"key": "commerce",
+						"value": "CORP",
+						"type": "text"
+					},
+					{
+						"key": "consumer",
+						"value": "CORP",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"referenceID\": \"referenceIdExample14\",\r\n    \"name\": \"CENTRO DE OPERACION A\",\r\n    \"type\":\"CENTRO_DE_OPERACION\",\r\n    \"nodeAddress\": {\r\n        \"addressLine1\": \"Inglaterra 59, La florida, Chile\",\r\n        \"addressLine2\": \"\",\r\n        \"addressLine3\": \"\",\r\n        \"county\": \"La Florida\",\r\n        \"district\": \"Santiago\",\r\n        \"latitude\": -33.5233,\r\n        \"longitude\": -70.5743,\r\n        \"province\": \"Santiago\",\r\n        \"state\": \"Región Metropolitana\",\r\n        \"timeZone\": \"America/Santiago\",\r\n        \"zipCode\": \"8320000\"\r\n    },\r\n    \"operatorContact\": {\r\n        \"documents\": [\r\n            {\r\n                \"type\": \"anyExtraDocumentType\",\r\n                \"value\": \"anyValue\"\r\n            }\r\n        ],\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/node",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"node"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH NODES",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "9dd1e3b1-9933-471a-9167-c59fb8dd0f2c-a845d29e-e2b3-4844-aadf-92a142d4e991",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					},
+					{
+						"key": "consumer",
+						"value": "CORP",
+						"type": "text"
+					},
+					{
+						"key": "commerce",
+						"value": "CORP",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/node?page=0&size=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"node"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPSERT VEHICLE",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					},
+					{
+						"key": "organization-key",
+						"value": "9542b3c6-b70e-446b-aaee-12d5a590522c-6819eeaf-17af-45e3-a533-d5b1e23412a8",
+						"type": "text"
+					},
+					{
+						"key": "commerce",
+						"value": "CORP",
+						"type": "text"
+					},
+					{
+						"key": "consumer",
+						"value": "CORP",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"referenceID\": \"string\",\r\n    \"carrier\": {\r\n        \"referenceID\":\"my-reference-id-2\",\r\n        \"name\": \"string\",\r\n        \"nationalID\": \"string5\"\r\n    },\r\n    \"category\": \"string\",\r\n    \"certificateDate\": \"string\",\r\n    \"dimensions\": {\r\n        \"height\": 0,\r\n        \"length\": 0,\r\n        \"unitOfMeasure\": \"string\",\r\n        \"width\": 0\r\n    },\r\n    \"insurance\": {\r\n        \"maxInsuranceCoverage\": {\r\n            \"amount\": 0,\r\n            \"currency\": \"string\"\r\n        },\r\n        \"policyExpirationDate\": \"string\",\r\n        \"policyRenewalDate\": \"string\",\r\n        \"policyStartDate\": \"string\"\r\n    },\r\n    \"isActive\": true,\r\n    \"plate\": \"string\",\r\n    \"technicalReview\": {\r\n        \"lastReviewDate\": \"string\",\r\n        \"nextReviewDate\": \"string\",\r\n        \"reviewedBy\": \"string\"\r\n    },\r\n    \"weight\": {\r\n        \"unitOfMeasure\": \"string\",\r\n        \"value\": 0\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/vehicle",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"vehicle"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH CARRIERS",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "9542b3c6-b70e-446b-aaee-12d5a590522c-6819eeaf-17af-45e3-a533-d5b1e23412a8",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/carrier?page=0&size=2",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"carrier"
+					],
+					"query": [
+						{
+							"key": "page",
+							"value": "0"
+						},
+						{
+							"key": "size",
+							"value": "2"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH VEHICLES BY CARRIER",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "e947a011-e217-47c4-9ff3-2e9a682ec7a0-795db356-1ec9-490e-b9d7-95126dd5ce6d",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:8080/carrier/{{referenceID}}/vehicle",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"carrier",
+						"{{referenceID}}",
+						"vehicle"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPSERT OPERATOR",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "593a827b-b616-4678-9881-50e02b6b58e0-2a966bc2-a6ea-4b79-9d19-27362e0870fb",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"referenceID\": \"referenceID\",\r\n    \"originNodeReferenceID\": \"REFERENCIA DE CENTRO DE OPERACION\",\r\n    \"contact\": {\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/operator",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"operator"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UPSERT OPERATOR DAILY PLAN",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "8606b6cf-5ac3-42a0-b327-68b9b9ab29c8-bf8e99ee-c4f3-45f6-a2f4-026241e92fef",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"operatorReferenceID\": \"1234\",\r\n    \"orderReferenceIDs\": [\r\n        {\r\n            \"referenceID\": \"reference_1\"\r\n        },\r\n        {\r\n            \"referenceID\": \"reference_3\"\r\n        }\r\n    ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8080/daily-plan",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"daily-plan"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "referenceID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "planID",
+			"value": "",
+			"type": "default"
+		}
+	]
+}

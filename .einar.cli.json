@@ -206,6 +206,14 @@
         {
             "kind": "usecase",
             "name": "upsert-daily-plan"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-first-operator-daily-plan"
+        },
+        {
+            "kind": "post-controller",
+            "name": "search-orders-by-daily-plan"
         }
     ]
 }

@@ -104,15 +104,7 @@ type FlattenedOrderReferenceView struct {
 	Value       string `gorm:"column:value"`
 }
 
-type FlattenedVisitView struct {
-	VisitID        int64  `gorm:"column:visit_id"`
-	OrderID        int64  `gorm:"column:order_id"`
-	Date           string `gorm:"column:date"`
-	TimeRangeStart string `gorm:"column:time_range_start"`
-	TimeRangeEnd   string `gorm:"column:time_range_end"`
-}
-
-func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []FlattenedOrderReferenceView, visits []FlattenedVisitView) domain.Order {
+func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []FlattenedOrderReferenceView) domain.Order {
 	references := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		references[i] = domain.Reference{

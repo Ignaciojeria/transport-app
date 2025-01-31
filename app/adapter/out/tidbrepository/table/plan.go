@@ -15,9 +15,9 @@ type Plan struct {
 	ReferenceID           string              `gorm:"type:varchar(255);not null"`
 	PlannedDate           time.Time           `gorm:"type:date;not null"`
 	PlanTypeID            int64               `gorm:"not null"`
-	PlanType              PlanType            `gorm:"foreignKey:PlanTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	PlanType              PlanType            `gorm:"foreignKey:PlanTypeID"`
 	PlanningStatusID      int64               `gorm:"not null"`
-	PlanningStatus        PlanningStatus      `gorm:"foreignKey:PlanningStatusID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	PlanningStatus        PlanningStatus      `gorm:"foreignKey:PlanningStatusID"`
 }
 
 func (p Plan) Map() domain.Plan {
@@ -32,10 +32,10 @@ func (p Plan) Map() domain.Plan {
 
 type PlanType struct {
 	gorm.Model
-	ID                    int64               `gorm:"primaryKey;autoIncrement"`
-	OrganizationCountryID int64               `gorm:"not null"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	Name                  string              `gorm:"type:varchar(100);not null;unique"`
+	ID                    int64               `gorm:"type:bigint;primaryKey;autoIncrement"`
+	OrganizationCountryID int64               `gorm:"type:bigint;not null;index;uniqueIndex:idx_plan_type_org_name"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID;references:ID"`
+	Name                  string              `gorm:"type:varchar(100);not null;uniqueIndex:idx_plan_type_org_name"`
 }
 
 func (pt PlanType) Map() domain.PlanType {
@@ -48,10 +48,10 @@ func (pt PlanType) Map() domain.PlanType {
 
 type PlanningStatus struct {
 	gorm.Model
-	ID                    int64               `gorm:"primaryKey;autoIncrement"`
-	OrganizationCountryID int64               `gorm:"not null"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	Name                  string              `gorm:"type:varchar(100);not null;unique"`
+	ID                    int64               `gorm:"type:bigint;primaryKey;autoIncrement"`
+	OrganizationCountryID int64               `gorm:"type:bigint;not null;index;uniqueIndex:idx_planning_status_org_name"`
+	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID;references:ID"`
+	Name                  string              `gorm:"type:varchar(100);not null;uniqueIndex:idx_planning_status_org_name"`
 }
 
 func (ps PlanningStatus) Map() domain.PlanningStatus {

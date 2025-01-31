@@ -50,7 +50,8 @@ func NewUpsertDailyPlan(
 		if err != nil {
 			return domain.Plan{}, err
 		}
-		orders, err := findOrders(ctx, plan.GetOrderSearchFilters())
+		filters := plan.GetOrderSearchFilters()
+		orders, err := findOrders(ctx, filters)
 		if err != nil {
 			return domain.Plan{}, err
 		}
