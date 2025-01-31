@@ -28,3 +28,5 @@ gcloud iam service-accounts create cloud-logs --display-name="Cloud Logs Service
 gcloud pubsub topics add-iam-policy-binding transport-app-events --member=serviceAccount:cloud-logs@einar-404623.iam.gserviceaccount.com --role=roles/pubsub.publisher --project=einar-404623
 
 gcloud pubsub topics add-iam-policy-binding transport-app-events --member=serviceAccount:cloud-logs@einar-404623.iam.gserviceaccount.com --role=roles/pubsub.publisher  --project=einar-404623
+
+KO_DOCKER_REPO=gcr.io/[TU_PROYECTO_ID]
