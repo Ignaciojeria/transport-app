@@ -104,3 +104,9 @@ jobs:
             TIDB_PORT=TIDB_PORT:latest,\
             TIDB_TLS_CONFIG=TIDB_TLS_CONFIG:latest,\
             TIDB_USERNAME=TIDB_USERNAME:latest"
+
+          # Agregar permisos de invocación pública
+          gcloud run services add-iam-policy-binding "$SERVICE_NAME" \
+            --region=us-central1 \
+            --member="allUsers" \
+            --role="roles/run.invoker"
