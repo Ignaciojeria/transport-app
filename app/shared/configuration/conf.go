@@ -12,9 +12,9 @@ type Conf struct {
 	VERSION           string `env:"version,required"`
 	PORT              string `env:"PORT" envDefault:"8080"`
 	ENVIRONMENT       string `env:"ENVIRONMENT" envDefault:"development"`
-	PROJECT_NAME      string `env:"PROJECT_NAME,required"`
-	GOOGLE_PROJECT_ID string `env:"GOOGLE_PROJECT_ID"`
-	OUTBOX_TOPIC_NAME string `env:"OUTBOX_TOPIC_NAME,required"`
+	PROJECT_NAME      string `env:"PROJECT_NAME" envDefault:"transport-app"`
+	GOOGLE_PROJECT_ID string `env:"GOOGLE_PROJECT_ID" envDefault:"einar-404623"`
+	OUTBOX_TOPIC_NAME string `env:"OUTBOX_TOPIC_NAME" envDefault:"transport-app-events"`
 }
 
 func NewConf() (Conf, error) {
