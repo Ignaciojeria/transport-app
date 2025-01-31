@@ -1,1 +1,2 @@
 defaultBaseImage: gcr.io/distroless/static:nonroot
+imageName: $KO_IMAGE_NAME
