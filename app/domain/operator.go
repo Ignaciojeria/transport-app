@@ -10,24 +10,28 @@ type Operator struct {
 }
 
 func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
-	updatedOperator := o // Copiamos la instancia actual
+	// Copiamos la instancia actual
+
+	if newOperator.ID != 0 {
+		o.ID = newOperator.ID
+	}
 
 	// Actualizar campos primitivos solo si tienen valores no vacíos
 	if newOperator.ReferenceID != "" {
-		updatedOperator.ReferenceID = newOperator.ReferenceID
+		o.ReferenceID = newOperator.ReferenceID
 	}
 	if newOperator.Type != "" {
-		updatedOperator.Type = newOperator.Type
+		o.Type = newOperator.Type
 	}
 
 	// Actualizar Organization si tiene valores nuevos
 	if newOperator.Organization.OrganizationCountryID != 0 {
-		updatedOperator.Organization = newOperator.Organization
+		o.Organization = newOperator.Organization
 	}
 
-	updatedOperator.OriginNode = updatedOperator.OriginNode.UpdateIfChanged(newOperator.OriginNode)
+	o.OriginNode = o.OriginNode.UpdateIfChanged(newOperator.OriginNode)
 
-	updatedOperator.Contact = updatedOperator.Contact.UpdateIfChanged(newOperator.Contact)
+	o.Contact = o.Contact.UpdateIfChanged(newOperator.Contact)
 
-	return updatedOperator
+	return o
 }

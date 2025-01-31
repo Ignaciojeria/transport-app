@@ -64,25 +64,26 @@ func (ps PlanningStatus) Map() domain.PlanningStatus {
 type Route struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey;autoIncrement"`
-	OrganizationCountryID int64               `gorm:"not null"`
+	ReferenceID           string              `gorm:"type:varchar(255);not null"`
+	OrganizationCountryID int64               `gorm:"default:null"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	PlanID                int                 `gorm:"not null"`
-	Plan                  Plan                `gorm:"foreignKey:PlanID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	AccountID             int64               `gorm:"not null"`
-	Account               Account             `gorm:"foreignKey:AccountID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	VehicleID             int64               `gorm:"not null"`
-	Vehicle               Vehicle             `gorm:"foreignKey:VehicleID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
-	CarrierID             int64               `gorm:"not null"`
-	Carrier               Carrier             `gorm:"foreignKey:CarrierID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
+	PlanID                int64               `gorm:"default:null"`
+	Plan                  Plan                `gorm:"foreignKey:PlanID"`
+	AccountID             *int64              `gorm:"default:null"`
+	Account               Account             `gorm:"foreignKey:AccountID"`
+	VehicleID             *int64              `gorm:"default:null"`
+	Vehicle               Vehicle             `gorm:"foreignKey:VehicleID"`
+	CarrierID             *int64              `gorm:"default:null"`
+	Carrier               Carrier             `gorm:"foreignKey:CarrierID"`
 }
 
-func (r Route) Map(orders []domain.Order) domain.Route {
+func (r Route) Map() domain.Route {
 	return domain.Route{
 		Organization: r.OrganizationCountry.Map(),
+		ReferenceID:  r.ReferenceID,
 		ID:           r.ID,
 		Vehicle:      r.Vehicle.Map(),
 		Operator:     r.Account.MapOperator(),
-		Plan:         r.Plan.Map(),
-		Orders:       orders,
+		PlanID:       r.Plan.ID,
 	}
 }

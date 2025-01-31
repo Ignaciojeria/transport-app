@@ -16,7 +16,8 @@ func init() {
 		tidbrepository.NewUpsertPlanType,
 		tidbrepository.NewUpsertPlanningStatus,
 		tidbrepository.NewFindOrdersByFilters,
-		tidbrepository.NewUpsertOperator)
+		tidbrepository.NewUpsertOperator,
+		tidbrepository.NewUpsertDailyPlan)
 }
 
 func NewUpsertDailyPlan(
@@ -24,6 +25,7 @@ func NewUpsertDailyPlan(
 	upsertPlanningStatus tidbrepository.UpsertPlanningStatus,
 	findOrders tidbrepository.FindOrdersByFilters,
 	upsertOperator tidbrepository.UpsertOperator,
+	upsertDailyPlan tidbrepository.UpsertDailyPlan,
 ) UpsertDailyPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 		plan.PlanType.Organization = plan.Organization
@@ -46,9 +48,11 @@ func NewUpsertDailyPlan(
 			return domain.Plan{}, err
 		}
 		plan.Routes[0].Orders = orders
+		plan.Routes[0].Organization = plan.Organization
 		plan.Routes[0].Operator = operator
+		plan.Routes[0].ReferenceID = plan.ReferenceID
 		plan.PlanType = planType
 		plan.PlanningStatus = planningStatus
-		return domain.Plan{}, nil
+		return domain.Plan{}, upsertDailyPlan(ctx, plan)
 	}
 }

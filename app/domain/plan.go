@@ -47,7 +47,7 @@ func (p Plan) UpdateIfChanged(newPlan Plan) Plan {
 	if len(newPlan.Routes) > 0 {
 		p.Routes = newPlan.Routes
 	}
-
+	p.Organization = newPlan.Organization
 	return p
 }
 
@@ -87,16 +87,23 @@ func (ps PlanningStatus) UpdateIfChanged(newPlanningStatus PlanningStatus) Plann
 
 type Route struct {
 	Organization
-	Plan     Plan
-	ID       int64
-	Vehicle  Vehicle
-	Operator Operator
-	Orders   []Order
+	ReferenceID string
+	PlanID      int64
+	ID          int64
+	Vehicle     Vehicle
+	Operator    Operator
+	Orders      []Order
 }
 
 func (r Route) UpdateIfChanged(newRoute Route) Route {
 	if newRoute.ID != 0 {
 		r.ID = newRoute.ID
+	}
+	if newRoute.PlanID != 0 {
+		r.PlanID = newRoute.PlanID
+	}
+	if newRoute.ReferenceID != "" {
+		r.ReferenceID = newRoute.ReferenceID
 	}
 	r.Operator = r.Operator.UpdateIfChanged(newRoute.Operator)
 	r.Orders = newRoute.Orders
