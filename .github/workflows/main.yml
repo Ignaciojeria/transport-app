@@ -34,18 +34,10 @@ jobs:
         uses: actions/checkout@v3
 
       -
-        name: Read version from .version file
-        id: version
-        run: |
-          VERSION=$(cat .version)
-          echo "Version from .version file: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-
-      -
         name: Set KO_IMAGE_NAME
         run: |
           REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-          IMAGE_NAME="${REPO_NAME}-${VERSION}"
+          IMAGE_NAME="${REPO_NAME}"
           echo "Image name: $IMAGE_NAME"
           echo "KO_IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
@@ -83,13 +75,11 @@ jobs:
         run: |
           echo "KO_DOCKER_REPO: $KO_DOCKER_REPO"
           echo "KO_DEFAULTBASEIMAGE: $KO_DEFAULTBASEIMAGE"
-          echo "VERSION: $VERSION"
           echo "KO_IMAGE_NAME: $KO_IMAGE_NAME"
 
       -
         name: Build and push image with ko
         run: |
-          export KO_DOCKER_TAGS=$VERSION
           IMAGE_REF=$(ko build .)
           echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
 
@@ -100,7 +90,7 @@ jobs:
           SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
           
           gcloud run deploy "$SERVICE_NAME" \
-            --image=$KO_DOCKER_REPO/$KO_IMAGE_NAME \
+            --image="$IMAGE_REF" \
             --region=us-central1 \
             --platform=managed \
             --allow-unauthenticated
