@@ -91,7 +91,7 @@ jobs:
           gcloud run deploy "$SERVICE_NAME" \
             --image="$IMAGE_REF" \
             --region=us-central1 \
-            --service-account="dagger@einar-404623.iam.gserviceaccount.com" \
+            --service-account="transport-app-sa@einar-404623.iam.gserviceaccount.com" \
             --platform=managed \
             --allow-unauthenticated \
             --set-secrets="OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest,\
