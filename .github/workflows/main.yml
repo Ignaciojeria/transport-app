@@ -86,11 +86,20 @@ jobs:
       -
         name: Deploy to Cloud Run
         run: |
-          # Usar el nombre del repositorio como nombre fijo del servicio
           SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
           
           gcloud run deploy "$SERVICE_NAME" \
             --image="$IMAGE_REF" \
             --region=us-central1 \
             --platform=managed \
-            --allow-unauthenticated
+            --allow-unauthenticated \
+            --set-secrets="OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest,\
+            OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
+            OPENOBSERVE_HTTP_ENDPOINT=OPENOBSERVE_HTTP_ENDPOINT:latest,\
+            OPENOBSERVE_STREAM_NAME=OPENOBSERVE_STREAM_NAME:latest,\
+            TIDB_DATABASE=TIDB_DATABASE:latest,\
+            TIDB_HOSTNAME=TIDB_HOSTNAME:latest,\
+            TIDB_PASSWORD=TIDB_PASSWORD:latest,\
+            TIDB_PORT=TIDB_PORT:latest,\
+            TIDB_TLS_CONFIG=TIDB_TLS_CONFIG:latest,\
+            TIDB_USERNAME=TIDB_USERNAME:latest"
