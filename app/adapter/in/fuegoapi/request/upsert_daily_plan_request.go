@@ -2,8 +2,7 @@ package request
 
 import "transport-app/app/domain"
 
-type CreateDailyPlanRequest struct {
-	ReferenceID         string `json:"referenceID"`
+type UpsertDailyPlanRequest struct {
 	OperatorReferenceID string `json:"operatorReferenceID"`
 	PlanDate            string `json:"planDate"`
 	OrderReferenceIDs   []struct {
@@ -11,7 +10,7 @@ type CreateDailyPlanRequest struct {
 	} `json:"orderReferenceIDs"`
 }
 
-func (r CreateDailyPlanRequest) Map() domain.Plan {
+func (r UpsertDailyPlanRequest) Map() domain.Plan {
 	var oders []domain.Order
 	for _, v := range r.OrderReferenceIDs {
 		oders = append(oders, domain.Order{
@@ -19,7 +18,7 @@ func (r CreateDailyPlanRequest) Map() domain.Plan {
 		})
 	}
 	return domain.Plan{
-		ReferenceID: r.ReferenceID,
+		ReferenceID: r.ReferenceID(),
 		Date:        r.PlanDate,
 		PlanningStatus: domain.PlanningStatus{
 			Value: "planned",
@@ -36,4 +35,8 @@ func (r CreateDailyPlanRequest) Map() domain.Plan {
 			},
 		},
 	}
+}
+
+func (r UpsertDailyPlanRequest) ReferenceID() string {
+	return r.PlanDate + "_" + r.OperatorReferenceID
 }

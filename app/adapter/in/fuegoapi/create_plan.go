@@ -16,7 +16,7 @@ func init() {
 }
 func createPlan(s httpserver.Server) {
 	fuego.Post(s.Manager, "/plan",
-		func(c fuego.ContextWithBody[request.CreatePlanRequest]) (any, error) {
+		func(c fuego.ContextWithBody[request.UpsertDailyPlanRequest]) (any, error) {
 
 			return "unimplemented", nil
 		},

@@ -28,7 +28,7 @@ func newDailyPlanSubmitted(
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
-		var input request.CreateDailyPlanRequest
+		var input request.UpsertDailyPlanRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

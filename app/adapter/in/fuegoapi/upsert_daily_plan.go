@@ -27,8 +27,8 @@ func upsertDailyPlan(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox tidbrepository.SaveEventOutBox) {
-	fuego.Post(s.Manager, "/operator/{referenceID}/daily-plan",
-		func(c fuego.ContextWithBody[request.CreateDailyPlanRequest]) (response.CreateDailyPlanResponse, error) {
+	fuego.Post(s.Manager, "/daily-plan",
+		func(c fuego.ContextWithBody[request.UpsertDailyPlanRequest]) (response.CreateDailyPlanResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
 				return response.CreateDailyPlanResponse{}, err
@@ -58,7 +58,7 @@ func upsertDailyPlan(
 					"organizationCountryID": orgIDString,
 					"consumer":              c.Header("consumer"),
 					"commerce":              c.Header("commerce"),
-					"referenceID":           requestBody.ReferenceID,
+					"referenceID":           requestBody.ReferenceID(),
 				},
 				Status:       "pending",
 				Organization: org,

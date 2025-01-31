@@ -14,12 +14,16 @@ func init() {
 	ioc.Registry(
 		NewUpsertDailyPlan,
 		tidbrepository.NewUpsertPlanType,
-		tidbrepository.NewUpsertPlanningStatus)
+		tidbrepository.NewUpsertPlanningStatus,
+		tidbrepository.NewFindOrdersByFilters,
+		tidbrepository.NewUpsertOperator)
 }
 
 func NewUpsertDailyPlan(
 	upsertPlanType tidbrepository.UpsertPlanType,
 	upsertPlanningStatus tidbrepository.UpsertPlanningStatus,
+	findOrders tidbrepository.FindOrdersByFilters,
+	upsertOperator tidbrepository.UpsertOperator,
 ) UpsertDailyPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 		plan.PlanType.Organization = plan.Organization
@@ -32,6 +36,17 @@ func NewUpsertDailyPlan(
 		if err != nil {
 			return domain.Plan{}, err
 		}
+		plan.Routes[0].Operator.Organization = plan.Organization
+		operator, err := upsertOperator(ctx, plan.Routes[0].Operator)
+		if err != nil {
+			return domain.Plan{}, err
+		}
+		orders, err := findOrders(ctx, plan.GetOrderSearchFilters())
+		if err != nil {
+			return domain.Plan{}, err
+		}
+		plan.Routes[0].Orders = orders
+		plan.Routes[0].Operator = operator
 		plan.PlanType = planType
 		plan.PlanningStatus = planningStatus
 		return domain.Plan{}, nil

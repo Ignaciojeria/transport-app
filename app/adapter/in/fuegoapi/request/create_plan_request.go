@@ -1,7 +1,6 @@
 package request
 
-type CreatePlanRequest struct {
-	ReferenceID         string   `json:"referenceID"`
+type UpsertPlanRequest struct {
 	StartDate           string   `json:"startDate"`
 	EndDate             string   `json:"endDate"`
 	VehiclePlates       []string `json:"vehiclePlates"`
