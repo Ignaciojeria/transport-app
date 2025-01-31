@@ -17,7 +17,8 @@ func init() {
 		tidbrepository.NewUpsertPlanningStatus,
 		tidbrepository.NewFindOrdersByFilters,
 		tidbrepository.NewUpsertOperator,
-		tidbrepository.NewUpsertDailyPlan)
+		tidbrepository.NewUpsertDailyPlan,
+		tidbrepository.NewLoadOrganizationCountry)
 }
 
 func NewUpsertDailyPlan(
@@ -26,8 +27,14 @@ func NewUpsertDailyPlan(
 	findOrders tidbrepository.FindOrdersByFilters,
 	upsertOperator tidbrepository.UpsertOperator,
 	upsertDailyPlan tidbrepository.UpsertDailyPlan,
+	loadOrganizationCountry tidbrepository.LoadOrganizationCountry,
 ) UpsertDailyPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
+		org, err := loadOrganizationCountry(ctx, plan.Organization)
+		if err != nil {
+			return domain.Plan{}, err
+		}
+		plan.Organization = org
 		plan.PlanType.Organization = plan.Organization
 		planType, err := upsertPlanType(ctx, plan.PlanType)
 		if err != nil {

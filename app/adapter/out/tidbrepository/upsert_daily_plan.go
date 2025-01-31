@@ -45,6 +45,12 @@ func NewUpsertDailyPlan(conn tidb.TIDBConnection) UpsertDailyPlan {
 		DBRouteToUpdate := mapper.MapRoute(routeToUpdate)
 		DBRouteToUpdate.CreatedAt = route.CreatedAt
 
+		orderList := []int64{}
+
+		for _, order := range p.Routes[0].Orders {
+			orderList = append(orderList, order.ID)
+		}
+
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := tx.
 				Omit("OrganizationCountry").
@@ -62,6 +68,21 @@ func NewUpsertDailyPlan(conn tidb.TIDBConnection) UpsertDailyPlan {
 				Save(&DBRouteToUpdate).Error; err != nil {
 				return err
 			}
+
+			if err := tx.Table("orders").
+				Where("route_id = ?", DBRouteToUpdate.ID).
+				Update("route_id", nil).Error; err != nil {
+				return err
+			}
+
+			if len(orderList) > 0 {
+				if err := tx.Table("orders").
+					Where("id IN ?", orderList).
+					Update("route_id", DBRouteToUpdate.ID).Error; err != nil {
+					return err
+				}
+			}
+
 			return nil
 		})
 		if err != nil {
