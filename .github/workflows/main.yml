@@ -93,7 +93,10 @@ jobs:
       -
         name: Deploy to Cloud Run
         run: |
-          gcloud run deploy $KO_IMAGE_NAME \
+          # Usar el nombre del repositorio como nombre fijo del servicio
+          SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          
+          gcloud run deploy "$SERVICE_NAME" \
             --image=$KO_DOCKER_REPO/$KO_IMAGE_NAME \
             --region=us-central1 \
             --platform=managed \
