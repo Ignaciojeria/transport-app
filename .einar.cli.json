@@ -158,6 +158,62 @@
         {
             "kind": "usecase",
             "name": "search-nodes"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-carriers"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-vehicles-by-carrier"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-plan"
+        },
+        {
+            "kind": "post-controller",
+            "name": "capacity-k-means"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-account-operator"
+        },
+        {
+            "kind": "post-controller",
+            "name": "create-daily-plan"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-operator-daily-plan"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-first-operator-daily-plan"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account-operator"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "operator-submitted"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "daily-plan-submitted"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-daily-plan"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-first-operator-daily-plan"
+        },
+        {
+            "kind": "post-controller",
+            "name": "search-orders-by-daily-plan"
         }
     ]
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"transport-app/app/adapter/out/tidbrepository/table"
-	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
 
@@ -44,9 +43,6 @@ func NewFindOrganizationByEmail(conn tidb.TIDBConnection) FindOrganizationByEmai
 			return domain.Organization{}, err
 		}
 
-		// Mapear la organización desde la tabla al dominio
-		org := mapper.MapOrganizationFromTable(tableOrg)
-
-		return org, nil
+		return tableOrg.Map(), nil
 	}
 }

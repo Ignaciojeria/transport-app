@@ -46,7 +46,7 @@ func newNodeSubmitted(
 			m.Ack()
 			return http.StatusAccepted, fmt.Errorf("invalid organizationCountryID: %v", err)
 		}
-		node.OrganizationCountryID = organizationCountryID
+		node.Organization.OrganizationCountryID = organizationCountryID
 
 		if err := upsert(ctx, node); err != nil {
 			m.Ack()

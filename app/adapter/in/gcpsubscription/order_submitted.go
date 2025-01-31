@@ -38,8 +38,8 @@ func newOrderSubmitted(
 		domainOBJ := input.Map()
 
 		// Completar datos adicionales desde los atributos del mensaje
-		domainOBJ.BusinessIdentifiers.Commerce = m.Attributes["commerce"]
-		domainOBJ.BusinessIdentifiers.Consumer = m.Attributes["consumer"]
+		domainOBJ.Commerce = m.Attributes["commerce"]
+		domainOBJ.Consumer = m.Attributes["consumer"]
 
 		orgCountryID, err := strconv.ParseInt(m.Attributes["organizationCountryID"], 10, 64)
 		if err != nil {

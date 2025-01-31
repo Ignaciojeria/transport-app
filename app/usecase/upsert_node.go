@@ -8,29 +8,44 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertNode func(context.Context, domain.Origin) error
+type UpsertNode func(context.Context, domain.NodeInfo) error
 
 func init() {
 	ioc.Registry(
 		NewUpsertNode,
-		tidbrepository.NewUpsertNodeQuery,
-		tidbrepository.NewUpsertNode,
+		tidbrepository.NewUpsertNodeType,
+		tidbrepository.NewUpsertContact,
+		tidbrepository.NewUpsertAddressInfo,
+		tidbrepository.NewUpsertNodeInfo,
 	)
 }
 
 func NewUpsertNode(
-	query tidbrepository.UpsertNodeQuery,
-	upsert tidbrepository.UpsertNode,
+	upsertNodeType tidbrepository.UpsertNodeType,
+	upsertContact tidbrepository.UpsertContact,
+	upsertAddressInfo tidbrepository.UpsertAddressInfo,
+	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 ) UpsertNode {
-	return func(ctx context.Context, origin domain.Origin) error {
-		o, err := query(ctx, origin)
+	return func(ctx context.Context, nodeInfo domain.NodeInfo) error {
+		nodeInfo.NodeType.Organization = nodeInfo.Organization
+		nodeType, err := upsertNodeType(ctx, nodeInfo.NodeType)
 		if err != nil {
 			return err
 		}
-		o.UpdateIfChanged(origin)
-		if err := upsert(ctx, o); err != nil {
+		nodeInfo.Contact.Organization = nodeInfo.Organization
+		contact, err := upsertContact(ctx, nodeInfo.Contact)
+		if err != nil {
 			return err
 		}
-		return nil
+		nodeInfo.AddressInfo.Organization = nodeInfo.Organization
+		addressInfo, err := upsertAddressInfo(ctx, nodeInfo.AddressInfo)
+		if err != nil {
+			return err
+		}
+		nodeInfo.NodeType = nodeType
+		nodeInfo.Contact = contact
+		nodeInfo.AddressInfo = addressInfo
+		_, err = upsertNodeInfo(ctx, nodeInfo)
+		return err
 	}
 }

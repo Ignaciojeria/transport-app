@@ -8,14 +8,14 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type SearchNodes func(ctx context.Context, input domain.Pagination) ([]domain.NodeInfo, error)
+type SearchNodes func(ctx context.Context, input domain.NodeSearchFilters) ([]domain.NodeInfo, error)
 
 func init() {
 	ioc.Registry(NewSearchNodes, tidbrepository.NewSearchNodesQuery)
 }
 
-func NewSearchNodes(search tidbrepository.SearchNodesQuey) SearchNodes {
-	return func(ctx context.Context, input domain.Pagination) ([]domain.NodeInfo, error) {
+func NewSearchNodes(search tidbrepository.SearchNodesQuery) SearchNodes {
+	return func(ctx context.Context, input domain.NodeSearchFilters) ([]domain.NodeInfo, error) {
 		return search(ctx, input)
 	}
 }

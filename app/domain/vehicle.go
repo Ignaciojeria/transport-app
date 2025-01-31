@@ -1,15 +1,14 @@
 package domain
 
 type Vehicle struct {
-	ID                  int64
-	Organization        Organization        `json:"organization"`
-	BusinessIdentifiers BusinessIdentifiers `json:"businessIdentifiers"`
-	ReferenceID         string              `json:"referenceID"`
-	Plate               string              `json:"plate"`
-	IsActive            bool                `json:"isActive"`
-	CertificateDate     string              `json:"certificateDate"`
-	Category            string              `json:"category"`
-	Weight              struct {
+	Headers
+	ID              int64
+	ReferenceID     string          `json:"referenceID"`
+	Plate           string          `json:"plate"`
+	IsActive        bool            `json:"isActive"`
+	CertificateDate string          `json:"certificateDate"`
+	VehicleCategory VehicleCategory `json:"category"`
+	Weight          struct {
 		Value         int    `json:"value"`
 		UnitOfMeasure string `json:"unitOfMeasure"`
 	} `json:"weight"`
@@ -33,16 +32,11 @@ type Vehicle struct {
 		Height        int     `json:"height"`
 		UnitOfMeasure string  `json:"unitOfMeasure"`
 	} `json:"dimensions"`
-	Carrier struct {
-		ID           int64
-		Organization Organization `json:"organization"`
-		ReferenceID  string       `json:"referenceID"`
-		Name         string       `json:"name"`
-		NationalID   string       `json:"nationalID"`
-	} `json:"carrier"`
+	Carrier Carrier `json:"carrier"`
 }
 
-func (v *Vehicle) UpdateIfChanged(in Vehicle) {
+func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
+	v.Organization = in.Organization
 	if in.ReferenceID != "" {
 		v.ReferenceID = in.ReferenceID
 	}
@@ -52,15 +46,14 @@ func (v *Vehicle) UpdateIfChanged(in Vehicle) {
 	if in.CertificateDate != "" {
 		v.CertificateDate = in.CertificateDate
 	}
-	if in.Category != "" {
-		v.Category = in.Category
-	}
+
 	if in.Weight.Value != 0 {
 		v.Weight.Value = in.Weight.Value
 	}
 	if in.Weight.UnitOfMeasure != "" {
 		v.Weight.UnitOfMeasure = in.Weight.UnitOfMeasure
 	}
+
 	if in.Insurance.PolicyStartDate != "" {
 		v.Insurance.PolicyStartDate = in.Insurance.PolicyStartDate
 	}
@@ -76,6 +69,7 @@ func (v *Vehicle) UpdateIfChanged(in Vehicle) {
 	if in.Insurance.MaxInsuranceCoverage.Currency != "" {
 		v.Insurance.MaxInsuranceCoverage.Currency = in.Insurance.MaxInsuranceCoverage.Currency
 	}
+
 	if in.TechnicalReview.LastReviewDate != "" {
 		v.TechnicalReview.LastReviewDate = in.TechnicalReview.LastReviewDate
 	}
@@ -85,6 +79,7 @@ func (v *Vehicle) UpdateIfChanged(in Vehicle) {
 	if in.TechnicalReview.ReviewedBy != "" {
 		v.TechnicalReview.ReviewedBy = in.TechnicalReview.ReviewedBy
 	}
+
 	if in.Dimensions.Width != 0 {
 		v.Dimensions.Width = in.Dimensions.Width
 	}
@@ -100,13 +95,62 @@ func (v *Vehicle) UpdateIfChanged(in Vehicle) {
 	if in.Carrier.ID != 0 {
 		v.Carrier.ID = in.Carrier.ID
 	}
-	if in.Carrier.ReferenceID != "" {
-		v.Carrier.ReferenceID = in.Carrier.ReferenceID
+	if in.VehicleCategory.ID != 0 {
+		v.VehicleCategory.ID = in.VehicleCategory.ID
 	}
-	if in.Carrier.Name != "" {
-		v.Carrier.Name = in.Carrier.Name
+	if in.Headers.ID != 0 {
+		v.Headers.ID = in.Headers.ID
 	}
-	if in.Carrier.NationalID != "" {
-		v.Carrier.NationalID = in.Carrier.NationalID
+	if in.VehicleCategory.Type != "" {
+		v.VehicleCategory = in.VehicleCategory
 	}
+	return v
+}
+
+type VehicleCategory struct {
+	Organization        Organization
+	ID                  int64
+	Type                string
+	MaxPackagesQuantity int
+}
+
+func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {
+	if in.Type != "" {
+		vc.Type = in.Type
+	}
+	if in.MaxPackagesQuantity != 0 {
+		vc.MaxPackagesQuantity = in.MaxPackagesQuantity
+	}
+	if in.Organization.OrganizationCountryID != 0 {
+		vc.Organization = in.Organization
+	}
+	if in.ID != 0 {
+		vc.ID = in.ID
+	}
+	return vc
+}
+
+type Carrier struct {
+	ID           int64
+	Organization Organization `json:"organization"`
+	ReferenceID  string       `json:"referenceID"`
+	Name         string       `json:"name"`
+	NationalID   string       `json:"nationalID"`
+}
+
+func (c Carrier) UpdateIfChanged(newCarrier Carrier) Carrier {
+	updatedCarrier := c
+	if newCarrier.ReferenceID != "" {
+		updatedCarrier.ReferenceID = newCarrier.ReferenceID
+	}
+	if newCarrier.Name != "" {
+		updatedCarrier.Name = newCarrier.Name
+	}
+	if newCarrier.NationalID != "" {
+		updatedCarrier.NationalID = newCarrier.NationalID
+	}
+	if newCarrier.Organization.OrganizationCountryID != 0 {
+		updatedCarrier.Organization = newCarrier.Organization
+	}
+	return updatedCarrier
 }

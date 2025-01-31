@@ -156,7 +156,7 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 		response := SearchOrdersResponse{}
 		response.
 			withReferenceID(order.ReferenceID).
-			withBusinessIdentifiers(order.BusinessIdentifiers).
+			withHeaders(order.Headers).
 			withOrderStatus(order.OrderStatus).
 			withCollectAvailabilityDate(order.CollectAvailabilityDate).
 			withOrigin(order.Origin).
@@ -172,9 +172,9 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 	return responses
 }
 
-func (res *SearchOrdersResponse) withBusinessIdentifiers(businessIdentifiers domain.BusinessIdentifiers) *SearchOrdersResponse {
-	res.BusinessIdentifiers.Commerce = businessIdentifiers.Commerce
-	res.BusinessIdentifiers.Consumer = businessIdentifiers.Consumer
+func (res *SearchOrdersResponse) withHeaders(headers domain.Headers) *SearchOrdersResponse {
+	res.BusinessIdentifiers.Consumer = headers.Consumer
+	res.BusinessIdentifiers.Commerce = headers.Commerce
 	return res
 }
 
@@ -186,18 +186,11 @@ func (res *SearchOrdersResponse) withReferenceID(referenceID domain.ReferenceID)
 func (res *SearchOrdersResponse) withOrderStatus(orderStatus domain.OrderStatus) *SearchOrdersResponse {
 	res.OrderStatus.ID = orderStatus.ID
 	res.OrderStatus.Status = orderStatus.Status
-	res.OrderStatus.CreatedAt = orderStatus.CreatedAt
+	res.OrderStatus.CreatedAt = orderStatus.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
 	return res
 }
 
-func (res *SearchOrdersResponse) withCollectAvailabilityDate(collectAvailabilityDate domain.CollectAvailabilityDate) *SearchOrdersResponse {
-	res.CollectAvailabilityDate.Date = collectAvailabilityDate.Date
-	res.CollectAvailabilityDate.TimeRange.EndTime = collectAvailabilityDate.TimeRange.EndTime
-	res.CollectAvailabilityDate.TimeRange.StartTime = collectAvailabilityDate.TimeRange.StartTime
-	return res
-}
-
-func (res *SearchOrdersResponse) withOrigin(origin domain.Origin) *SearchOrdersResponse {
+func (res *SearchOrdersResponse) withOrigin(origin domain.NodeInfo) *SearchOrdersResponse {
 	res.Origin.AddressInfo.AddressLine1 = origin.AddressInfo.AddressLine1
 	res.Origin.AddressInfo.AddressLine2 = origin.AddressInfo.AddressLine2
 	res.Origin.AddressInfo.AddressLine3 = origin.AddressInfo.AddressLine3
@@ -209,7 +202,7 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.Origin) *SearchOrdersR
 	res.Origin.AddressInfo.TimeZone = origin.AddressInfo.TimeZone
 	res.Origin.AddressInfo.Latitude = origin.AddressInfo.Latitude
 	res.Origin.AddressInfo.Longitude = origin.AddressInfo.Longitude
-	res.Origin.NodeInfo.ReferenceID = string(origin.NodeInfo.ReferenceID)
+	res.Origin.NodeInfo.ReferenceID = string(origin.ReferenceID)
 
 	// Mapeo del contacto
 	res.Origin.AddressInfo.Contact.Email = origin.AddressInfo.Contact.Email
@@ -332,7 +325,7 @@ func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersRes
 	return res
 }
 
-func (res *SearchOrdersResponse) withDestination(destination domain.Destination) *SearchOrdersResponse {
+func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *SearchOrdersResponse {
 	res.Destination.AddressInfo.AddressLine1 = destination.AddressInfo.AddressLine1
 	res.Destination.AddressInfo.AddressLine2 = destination.AddressInfo.AddressLine2
 	res.Destination.AddressInfo.AddressLine3 = destination.AddressInfo.AddressLine3
@@ -344,8 +337,7 @@ func (res *SearchOrdersResponse) withDestination(destination domain.Destination)
 	res.Destination.AddressInfo.TimeZone = destination.AddressInfo.TimeZone
 	res.Destination.AddressInfo.Latitude = destination.AddressInfo.Latitude
 	res.Destination.AddressInfo.Longitude = destination.AddressInfo.Longitude
-	res.Destination.DeliveryInstructions = destination.DeliveryInstructions
-	res.Destination.NodeInfo.ReferenceID = string(destination.NodeInfo.ReferenceID)
+	res.Destination.NodeInfo.ReferenceID = string(destination.ReferenceID)
 
 	// Mapeo del contacto
 	res.Destination.AddressInfo.Contact.Email = destination.AddressInfo.Contact.Email
@@ -372,9 +364,18 @@ func (res *SearchOrdersResponse) withDestination(destination domain.Destination)
 	return res
 }
 
+func (res *SearchOrdersResponse) withCollectAvailabilityDate(collectAvailabilityDate domain.CollectAvailabilityDate) *SearchOrdersResponse {
+	// Convertir time.Time a string en formato yyyy-mm-dd
+	res.CollectAvailabilityDate.Date = collectAvailabilityDate.Date.Format("2006-01-02")
+	res.CollectAvailabilityDate.TimeRange.EndTime = collectAvailabilityDate.TimeRange.EndTime
+	res.CollectAvailabilityDate.TimeRange.StartTime = collectAvailabilityDate.TimeRange.StartTime
+	return res
+}
+
 func (res *SearchOrdersResponse) withPromisedDate(promisedDate domain.PromisedDate) *SearchOrdersResponse {
-	res.PromisedDate.DateRange.StartDate = promisedDate.DateRange.StartDate
-	res.PromisedDate.DateRange.EndDate = promisedDate.DateRange.EndDate
+	// Convertir time.Time a string en formato yyyy-mm-dd
+	res.PromisedDate.DateRange.StartDate = promisedDate.DateRange.StartDate.Format("2006-01-02")
+	res.PromisedDate.DateRange.EndDate = promisedDate.DateRange.EndDate.Format("2006-01-02")
 	res.PromisedDate.ServiceCategory = promisedDate.ServiceCategory
 	res.PromisedDate.TimeRange.StartTime = promisedDate.TimeRange.StartTime
 	res.PromisedDate.TimeRange.EndTime = promisedDate.TimeRange.EndTime

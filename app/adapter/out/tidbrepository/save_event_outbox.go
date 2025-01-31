@@ -13,22 +13,22 @@ import (
 
 func init() {
 	ioc.Registry(
-		NewSaveOrderOutbox,
+		NewSaveEventOutBox,
 		tidb.NewTIDBConnection,
 		gcppublisher.NewApplicationEvents)
 }
 
-type SaveOrderOutbox func(
+type SaveEventOutBox func(
 	context.Context,
 	domain.Outbox) (domain.Outbox, error)
 
-func NewSaveOrderOutbox(
+func NewSaveEventOutBox(
 	conn tidb.TIDBConnection,
 	publishOutBoxEvent gcppublisher.ApplicationEvents,
-) SaveOrderOutbox {
+) SaveEventOutBox {
 	return func(ctx context.Context, event domain.Outbox) (domain.Outbox, error) {
 		// Mapear al modelo de la base de datos
-		e := table.MapOrderOutbox(event)
+		e := table.MapEventOutbox(event)
 		e.Status = "pending"
 		// Guardar el evento en la base de datos
 		if err := conn.Save(&e).Error; err != nil {

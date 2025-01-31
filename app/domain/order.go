@@ -4,30 +4,34 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/joomcode/errorx"
 )
 
 type Order struct {
+	Headers
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"referenceID"`
-	Organization            Organization            `json:"organization"`
-	BusinessIdentifiers     BusinessIdentifiers     `json:"businessIdentifiers"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
 	References              []Reference             `json:"references"`
-	Origin                  Origin                  `json:"origin"`
-	Destination             Destination             `json:"destination"`
+	Origin                  NodeInfo                `json:"origin"`
+	Destination             NodeInfo                `json:"destination"`
 	Items                   []Item                  `json:"items"`
 	Packages                []Package               `json:"packages"`
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
 	PromisedDate            PromisedDate            `json:"promisedDate"`
-	Visits                  []Visit                 `json:"visits"`
+	DeliveryInstructions    string                  `json:"deliveryInstructions"`
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
+func (o *Order) WithOriginAddressInfo(ai AddressInfo) {
+	o.Origin.AddressInfo = ai
+}
+
 func (o Order) IsOriginAndDestinationNodeReferenceIDEqual() bool {
-	return o.Origin.NodeInfo.ReferenceID == o.Destination.NodeInfo.ReferenceID
+	return o.Origin.ReferenceID == o.Destination.ReferenceID
 }
 
 func (o Order) AreContactsEqual() bool {
@@ -39,87 +43,6 @@ func (o Order) AreContactsEqual() bool {
 		originContact.Email == destinationContact.Email &&
 		originContact.Phone == destinationContact.Phone &&
 		originContact.NationalID == destinationContact.NationalID
-}
-
-func (o *Order) HydrateOrder(newOrder Order) {
-	// Actualizar ReferenceID
-	if newOrder.ReferenceID != "" {
-		o.ReferenceID = newOrder.ReferenceID
-	}
-
-	// Actualizar OrderType
-	if newOrder.OrderType.Type != "" {
-		o.OrderType.Type = newOrder.OrderType.Type
-	}
-	if newOrder.OrderType.Description != "" {
-		o.OrderType.Description = newOrder.OrderType.Description
-	}
-
-	// Actualizar BusinessIdentifiers
-	if newOrder.BusinessIdentifiers.Commerce != "" {
-		o.BusinessIdentifiers.Commerce = newOrder.BusinessIdentifiers.Commerce
-	}
-	if newOrder.BusinessIdentifiers.Consumer != "" {
-		o.BusinessIdentifiers.Consumer = newOrder.BusinessIdentifiers.Consumer
-	}
-
-	// Actualizar References
-	if len(newOrder.References) > 0 {
-		o.References = newOrder.References
-	}
-
-	// Actualizar Items
-	if len(newOrder.Items) > 0 {
-		o.Items = newOrder.Items
-	}
-
-	// Actualizar Packages
-	if len(newOrder.Packages) > 0 {
-		// Si hay paquetes nuevos, actualizamos cada uno
-		for i := range newOrder.Packages {
-			if i < len(o.Packages) {
-				// Actualizar paquete existente
-				o.Packages[i].UpdateIfChanged(newOrder.Packages[i])
-			} else {
-				// Añadir nuevo paquete
-				o.Packages = append(o.Packages, newOrder.Packages[i])
-			}
-		}
-	}
-
-	// Actualizar Origin y Destination
-	o.Origin.UpdateIfChanged(newOrder.Origin)
-	o.Destination.UpdateIfChanged(newOrder.Destination)
-
-	// Actualizar PromisedDate
-	if newOrder.PromisedDate.DateRange.StartDate != "" {
-		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
-	}
-	if newOrder.PromisedDate.DateRange.EndDate != "" {
-		o.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
-	}
-	if newOrder.PromisedDate.TimeRange.StartTime != "" {
-		o.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
-	}
-	if newOrder.PromisedDate.TimeRange.EndTime != "" {
-		o.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
-	}
-
-	// Actualizar CollectAvailabilityDate
-	if newOrder.CollectAvailabilityDate.Date != "" {
-		o.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
-	}
-	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" {
-		o.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
-	}
-	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" {
-		o.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
-	}
-
-	// Actualizar TransportRequirements
-	if len(newOrder.TransportRequirements) > 0 {
-		o.TransportRequirements = newOrder.TransportRequirements
-	}
 }
 
 func (o Order) Validate() error {
@@ -144,38 +67,30 @@ func (o Order) Validate() error {
 }
 
 func (o Order) ValidatePromisedDate() error {
-	// Validar formato de fecha yyyy-mm-dd
-	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
 
-	// Validar el rango de fechas
-	if o.PromisedDate.DateRange.StartDate != "" && !dateRegex.MatchString(o.PromisedDate.DateRange.StartDate) {
-		return errorx.Decorate(
-			ErrInvalidDateFormat.New("invalid startDate"),
-			"startDate: %s, expected format yyyy-mm-dd",
-			o.PromisedDate.DateRange.StartDate,
-		)
-	}
-	if o.PromisedDate.DateRange.EndDate != "" && !dateRegex.MatchString(o.PromisedDate.DateRange.EndDate) {
-		return errorx.Decorate(
-			ErrInvalidDateFormat.New("invalid endDate"),
-			"endDate: %s, expected format yyyy-mm-dd",
-			o.PromisedDate.DateRange.EndDate,
-		)
+	// Validar que EndDate no sea anterior a StartDate cuando ambas están definidas
+	if (o.PromisedDate.DateRange.StartDate != time.Time{}) && (o.PromisedDate.DateRange.EndDate != time.Time{}) {
+		if o.PromisedDate.DateRange.EndDate.Before(o.PromisedDate.DateRange.StartDate) {
+			return errorx.Decorate(
+				ErrInvalidDateFormat.New("invalid endDate"),
+				"promised delivery endDate cannot be before startDate",
+			)
+		}
 	}
 
-	// Validar los rangos horarios
+	// Validar formato de horas
 	if o.PromisedDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.StartTime) {
 		return errorx.Decorate(
 			ErrInvalidTimeFormat.New("invalid startTime"),
-			"startTime: %s, expected format hh:mm",
+			"promised delivery startTime: %s, expected format hh:mm",
 			o.PromisedDate.TimeRange.StartTime,
 		)
 	}
 	if o.PromisedDate.TimeRange.EndTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.EndTime) {
 		return errorx.Decorate(
 			ErrInvalidTimeFormat.New("invalid endTime"),
-			"endTime: %s, expected format hh:mm",
+			"promised delivery endTime: %s, expected format hh:mm",
 			o.PromisedDate.TimeRange.EndTime,
 		)
 	}
@@ -184,20 +99,15 @@ func (o Order) ValidatePromisedDate() error {
 }
 
 func (o Order) ValidateCollectAvailabilityDate() error {
-	// Validar formato de fecha yyyy-mm-dd
-	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
-	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
-
-	// Validar la fecha
-	if o.CollectAvailabilityDate.Date != "" && !dateRegex.MatchString(o.CollectAvailabilityDate.Date) {
-		return errorx.Decorate(
-			ErrInvalidDateFormat.New("invalid date"),
-			"collect date: %s, expected format yyyy-mm-dd",
-			o.CollectAvailabilityDate.Date,
-		)
+	// Si la fecha está definida (no es zero value), solo validamos que sea una fecha válida
+	// Ya no validamos si está en el pasado
+	if (o.CollectAvailabilityDate.Date != time.Time{}) {
+		// Aquí podrías agregar otras validaciones específicas si las necesitas
+		// pero no la comparación con time.Now()
 	}
 
 	// Validar el rango horario
+	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
 	if o.CollectAvailabilityDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.CollectAvailabilityDate.TimeRange.StartTime) {
 		return errorx.Decorate(
 			ErrInvalidTimeFormat.New("invalid startTime"),
@@ -234,7 +144,7 @@ func (o Order) IsOriginAndDestinationAddressEqual() bool {
 }
 
 func (o Order) IsOriginAndDestinationNodeEqual() bool {
-	return o.Origin.NodeInfo.ReferenceID == o.Destination.NodeInfo.ReferenceID
+	return o.Origin.ReferenceID == o.Destination.ReferenceID
 }
 
 type ReferenceID string
@@ -246,56 +156,67 @@ type Reference struct {
 }
 
 type NodeInfo struct {
-	ID          int64
-	ReferenceID ReferenceID `json:"referenceId"`
-	Name        *string     `json:"name"`
-	Type        string      `json:"type"`
-	Operator    Operator    `json:"operator"`
-	References  []Reference `json:"references"`
+	ID           int64
+	ReferenceID  ReferenceID  `json:"referenceId"`
+	Organization Organization `json:"organization"`
+	Name         string       `json:"name"`
+	NodeType     NodeType     `json:"type"`
+	Contact      Contact      `json:"contact"`
+	References   []Reference  `json:"references"`
+	AddressInfo  AddressInfo  `json:"addressInfo"`
 }
 
-func (n *NodeInfo) UpdateIfChanged(newNode NodeInfo) {
+func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 	// Actualizar ReferenceID
+	if newNode.ID != 0 {
+		n.ID = newNode.ID
+	}
 	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
 		n.ReferenceID = newNode.ReferenceID
 	}
-
 	// Actualizar Name
-	if newNode.Name != nil && (n.Name == nil || *n.Name != *newNode.Name) {
+	if newNode.Name != "" {
 		n.Name = newNode.Name
 	}
-
 	// Actualizar Type
-	if newNode.Type != "" && n.Type != newNode.Type {
-		n.Type = newNode.Type
+	if newNode.NodeType.Value != "" && n.NodeType.Value != newNode.NodeType.Value {
+		n.NodeType.Value = newNode.NodeType.Value
 	}
-
-	// Actualizar Operator
-	if newNode.Operator.ID != 0 && n.Operator.ID != newNode.Operator.ID {
-		n.Operator.ID = newNode.Operator.ID
-		n.Operator.Type = newNode.Operator.Type // Asegurarse de copiar el tipo del operador
-	}
-
-	// Actualizar Contacto del Operador
-	n.Operator.Contact.UpdateIfChanged(newNode.Operator.Contact)
-
-	// Actualizar Referencias
+	// Actualizar NodeReferences
 	if len(newNode.References) > 0 {
 		n.References = newNode.References
 	}
+	if newNode.AddressInfo.ID != 0 {
+		n.AddressInfo.ID = newNode.AddressInfo.ID
+	}
+	if newNode.Contact.ID != 0 {
+		n.Contact.ID = newNode.Contact.ID
+	}
+	if newNode.Contact.ID != 0 {
+		n.Contact.ID = newNode.Contact.ID
+	}
+	if newNode.NodeType.ID != 0 {
+		n.NodeType.ID = newNode.NodeType.ID
+	}
+	n.Organization = newNode.Organization
+	return n
 }
 
-type Origin struct {
-	ID                    int64
-	OrganizationCountryID int64
-	NodeInfo              NodeInfo    `json:"nodeInfo"`
-	AddressInfo           AddressInfo `json:"addressInfo"`
+type NodeType struct {
+	ID           int64
+	Organization Organization
+	Value        string `json:"type"`
 }
 
-func (o *Origin) UpdateIfChanged(newOrigin Origin) {
-	o.OrganizationCountryID = newOrigin.OrganizationCountryID
-	o.NodeInfo.UpdateIfChanged(newOrigin.NodeInfo)
-	o.AddressInfo.UpdateIfChanged(newOrigin.AddressInfo)
+func (nt NodeType) UpdateIfChanged(newNodeType NodeType) NodeType {
+	if newNodeType.Value != "" {
+		nt.Value = newNodeType.Value
+	}
+	if newNodeType.ID != 0 {
+		nt.ID = newNodeType.ID
+	}
+	nt.Organization = newNodeType.Organization
+	return nt
 }
 
 type Document struct {
@@ -304,39 +225,49 @@ type Document struct {
 }
 
 type Contact struct {
-	ID         int64
-	FullName   string     `json:"fullName"`
-	Email      string     `json:"email"`
-	Phone      string     `json:"phone"`
-	NationalID string     `json:"nationalID"`
-	Documents  []Document `json:"documents"`
+	ID           int64
+	Organization Organization `json:"organization"`
+	FullName     string       `json:"fullName"`
+	Email        string       `json:"email"`
+	Phone        string       `json:"phone"`
+	NationalID   string       `json:"nationalID"`
+	Documents    []Document   `json:"documents"`
 }
 
-func (c *Contact) UpdateIfChanged(newContact Contact) {
+func (c Contact) UpdateIfChanged(newContact Contact) Contact {
+	updatedContact := c // Copiamos la instancia actual
+
+	// Actualizar FullName
+	if newContact.ID != 0 {
+		updatedContact.ID = newContact.ID
+	}
+
 	// Actualizar FullName
 	if newContact.FullName != "" {
-		c.FullName = newContact.FullName
+		updatedContact.FullName = newContact.FullName
 	}
 
 	// Actualizar Email
 	if newContact.Email != "" {
-		c.Email = newContact.Email
+		updatedContact.Email = newContact.Email
 	}
 
 	// Actualizar Phone
 	if newContact.Phone != "" {
-		c.Phone = newContact.Phone
+		updatedContact.Phone = newContact.Phone
 	}
 
 	// Actualizar NationalID
 	if newContact.NationalID != "" {
-		c.NationalID = newContact.NationalID
+		updatedContact.NationalID = newContact.NationalID
 	}
 
 	// Actualizar Documents
 	if len(newContact.Documents) > 0 {
-		c.Documents = newContact.Documents
+		updatedContact.Documents = newContact.Documents
 	}
+
+	return updatedContact
 }
 
 // Función auxiliar para comparar arreglos de documentos
@@ -354,6 +285,7 @@ func compareDocuments(oldDocs, newDocs []Document) bool {
 
 type AddressInfo struct {
 	ID           int64
+	Organization Organization
 	Contact      Contact `json:"contact"`
 	State        string  `json:"state"`
 	County       string  `json:"county"`
@@ -368,7 +300,7 @@ type AddressInfo struct {
 	TimeZone     string  `json:"timeZone"`
 }
 
-func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) {
+func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
 	if newAddress.AddressLine1 != "" {
 		a.AddressLine1 = newAddress.AddressLine1
 	}
@@ -402,9 +334,9 @@ func (a *AddressInfo) UpdateIfChanged(newAddress AddressInfo) {
 	if newAddress.TimeZone != "" {
 		a.TimeZone = newAddress.TimeZone
 	}
-
-	a.Contact.UpdateIfChanged(newAddress.Contact)
+	return a
 }
+
 func (addr AddressInfo) RawAddress() string {
 	return concatenateWithCommas(addr.AddressLine1, addr.AddressLine2, addr.AddressLine3)
 }
@@ -420,33 +352,6 @@ func concatenateWithCommas(values ...string) string {
 		}
 	}
 	return result
-}
-
-type Operator struct {
-	ID      int64
-	Contact Contact `json:"contact"`
-	Type    string  `json:"type"`
-}
-
-type Destination struct {
-	ID                   int64
-	DeliveryInstructions string      `json:"deliveryInstructions"`
-	NodeInfo             NodeInfo    `json:"nodeInfo"`
-	AddressInfo          AddressInfo `json:"addressInfo"`
-}
-
-func (d *Destination) UpdateIfChanged(newDestination Destination) {
-	// Comparar y actualizar DeliveryInstructions
-	if newDestination.DeliveryInstructions != "" && d.DeliveryInstructions != newDestination.DeliveryInstructions {
-		d.DeliveryInstructions = newDestination.DeliveryInstructions
-	}
-
-	// Comparar y actualizar NodeInfo
-	d.NodeInfo.UpdateIfChanged(newDestination.NodeInfo)
-
-	// Comparar y actualizar AddressInfo
-	d.AddressInfo.UpdateIfChanged(newDestination.AddressInfo)
-
 }
 
 type Quantity struct {
@@ -531,14 +436,24 @@ func (o *Order) ValidatePackages() error {
 
 type Package struct {
 	ID             int64
-	Lpn            string          `json:"lpn"`
+	Lpn            string `json:"lpn"`
+	Organization   Organization
 	Dimensions     Dimensions      `json:"dimensions"`
 	Weight         Weight          `json:"weight"`
 	Insurance      Insurance       `json:"insurance"`
 	ItemReferences []ItemReference `json:"itemReferences"`
 }
 
-func (p *Package) UpdateIfChanged(newPackage Package) {
+func SearchPackageByLpn(pcks []Package, lpn string) Package {
+	for _, pck := range pcks {
+		if pck.Lpn == lpn {
+			return pck
+		}
+	}
+	return Package{}
+}
+
+func (p Package) UpdateIfChanged(newPackage Package) Package {
 	// Actualizar Lpn
 	if newPackage.Lpn != "" {
 		p.Lpn = newPackage.Lpn
@@ -563,6 +478,7 @@ func (p *Package) UpdateIfChanged(newPackage Package) {
 	if len(newPackage.ItemReferences) > 0 {
 		p.ItemReferences = newPackage.ItemReferences
 	}
+	return p
 }
 
 // Función auxiliar para comparar arreglos de referencias de ítems
@@ -579,15 +495,29 @@ func compareItemReferences(oldRefs, newRefs []ItemReference) bool {
 }
 
 type OrderType struct {
-	ID          int64
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	ID           int64
+	Organization Organization
+	Type         string `json:"type"`
+	Description  string `json:"description"`
+}
+
+func (ot OrderType) UpdateIfChanged(newOrderType OrderType) OrderType {
+	if newOrderType.Type != "" {
+		ot.Type = newOrderType.Type
+	}
+	if newOrderType.Description != "" {
+		ot.Description = newOrderType.Description
+	}
+	if newOrderType.Organization.OrganizationCountryID != 0 {
+		ot.Organization = newOrderType.Organization
+	}
+	return ot
 }
 
 type OrderStatus struct {
 	ID        int64
-	Status    string `json:"status"`
-	CreatedAt string `json:"createdAt"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type PromisedDate struct {
@@ -597,7 +527,7 @@ type PromisedDate struct {
 }
 
 type CollectAvailabilityDate struct {
-	Date      string    `json:"date"`
+	Date      time.Time `json:"date"`
 	TimeRange TimeRange `json:"timeRange"`
 }
 
@@ -607,18 +537,6 @@ type TimeRange struct {
 }
 
 type DateRange struct {
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
-}
-
-type Visit struct {
-	Date      string    `json:"date"`
-	TimeRange TimeRange `json:"timeRange"`
-}
-
-type BusinessIdentifiers struct {
-	CommerceID int64
-	Commerce   string `json:"commerce"`
-	ConsumerID int64
-	Consumer   string `json:"consumer"`
+	StartDate time.Time `json:"startDate"`
+	EndDate   time.Time `json:"endDate"`
 }

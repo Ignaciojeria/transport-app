@@ -31,26 +31,22 @@ type FlattenedNodeView struct {
 	TimeZone           string              `gorm:"column:time_zone"`
 }
 
-func (n FlattenedNodeView) ToOrigin() domain.Origin {
-	return domain.Origin{
-		ID: n.NodeID,
-		NodeInfo: domain.NodeInfo{
-			ID:          n.NodeID,
-			ReferenceID: domain.ReferenceID(n.ReferenceID),
-			Name:        &n.NodeName,
-			Type:        n.NodeType,
-			References:  mapReferences(n.NodeReferences),
-			Operator: domain.Operator{
-				ID: n.OperatorID,
-				Contact: domain.Contact{
-					ID:         n.OperatorID,
-					FullName:   n.OperatorName,
-					Email:      n.OperatorEmail,
-					Phone:      n.OperatorPhone,
-					NationalID: n.OperatorNationalID,
-					Documents:  mapDocuments(n.OperatorDocuments),
-				},
-			},
+func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
+	return domain.NodeInfo{
+		ID:          n.NodeID,
+		ReferenceID: domain.ReferenceID(n.ReferenceID),
+		Name:        n.NodeName,
+		NodeType: domain.NodeType{
+			Value: n.NodeType,
+		},
+		References: mapReferences(n.NodeReferences),
+		Contact: domain.Contact{
+			ID:         n.OperatorID,
+			FullName:   n.OperatorName,
+			Email:      n.OperatorEmail,
+			Phone:      n.OperatorPhone,
+			NationalID: n.OperatorNationalID,
+			Documents:  mapDocuments(n.OperatorDocuments),
 		},
 		AddressInfo: domain.AddressInfo{
 			ID:           n.AddressID,

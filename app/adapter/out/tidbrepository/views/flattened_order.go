@@ -1,6 +1,7 @@
 package views
 
 import (
+	"time"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 
@@ -12,9 +13,8 @@ type FlattenedOrderView struct {
 	ReferenceID                  string              `gorm:"column:reference_id"`
 	OrganizationCountryID        int64               `gorm:"column:organization_country_id"`
 	OrganizationCountry          string              `gorm:"column:organization_country"`
-	CommerceID                   int64               `gorm:"column:commerce_id"`
+	HeaderID                     int64               `gorm:"column:header_id"`
 	CommerceName                 string              `gorm:"column:commerce_name"`
-	ConsumerID                   int64               `gorm:"column:consumer_id"`
 	ConsumerName                 string              `gorm:"column:consumer_name"`
 	OrderStatusID                int64               `gorm:"column:order_status_id"`
 	OrderStatus                  string              `gorm:"column:order_status"`
@@ -71,11 +71,11 @@ type FlattenedOrderView struct {
 	DestinationNodeOperatorID    int64               `gorm:"column:destination_node_operator_id"`
 	DestinationNodeOperatorName  string              `gorm:"column:destination_node_operator_name"`
 	Items                        table.JSONItems     `gorm:"column:items"`
-	CollectAvailabilityDate      string              `gorm:"column:collect_availability_date"`
+	CollectAvailabilityDate      time.Time           `gorm:"column:collect_availability_date"`
 	CollectStartTime             string              `gorm:"column:collect_start_time"`
 	CollectEndTime               string              `gorm:"column:collect_end_time"`
-	PromisedStartDate            string              `gorm:"column:promised_start_date"`
-	PromisedEndDate              string              `gorm:"column:promised_end_date"`
+	PromisedStartDate            time.Time           `gorm:"column:promised_start_date"`
+	PromisedEndDate              time.Time           `gorm:"column:promised_end_date"`
 	PromisedStartTime            string              `gorm:"column:promised_start_time"`
 	PromisedEndTime              string              `gorm:"column:promised_end_time"`
 	TransportRequirements        table.JSONReference `gorm:"column:transport_requirements"`
@@ -104,15 +104,7 @@ type FlattenedOrderReferenceView struct {
 	Value       string `gorm:"column:value"`
 }
 
-type FlattenedVisitView struct {
-	VisitID        int64  `gorm:"column:visit_id"`
-	OrderID        int64  `gorm:"column:order_id"`
-	Date           string `gorm:"column:date"`
-	TimeRangeStart string `gorm:"column:time_range_start"`
-	TimeRangeEnd   string `gorm:"column:time_range_end"`
-}
-
-func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []FlattenedOrderReferenceView, visits []FlattenedVisitView) domain.Order {
+func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []FlattenedOrderReferenceView) domain.Order {
 	references := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		references[i] = domain.Reference{
@@ -136,15 +128,14 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	return domain.Order{
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
-		Organization: domain.Organization{
-			OrganizationCountryID: o.OrganizationCountryID,
-			Country:               countries.ByName(o.OrganizationCountry),
-		},
-		BusinessIdentifiers: domain.BusinessIdentifiers{
-			CommerceID: o.CommerceID,
-			Commerce:   o.CommerceName,
-			ConsumerID: o.ConsumerID,
-			Consumer:   o.ConsumerName,
+		Headers: domain.Headers{
+			ID: o.HeaderID,
+			Organization: domain.Organization{
+				OrganizationCountryID: o.OrganizationCountryID,
+				Country:               countries.ByName(o.OrganizationCountry),
+			},
+			Consumer: o.ConsumerName,
+			Commerce: o.CommerceName,
 		},
 		OrderStatus: domain.OrderStatus{
 			ID:     o.OrderStatusID,
@@ -155,13 +146,12 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},
-		Origin: domain.Origin{
-			ID: o.OriginContactID,
-			NodeInfo: domain.NodeInfo{
-				ID:          o.OriginNodeInfoID,
-				ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
-				Name:        &o.OriginNodeName,
-				Type:        o.OriginNodeType,
+		Origin: domain.NodeInfo{
+			ID:          o.OriginNodeInfoID,
+			ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
+			Name:        o.OriginNodeName,
+			NodeType: domain.NodeType{
+				Value: o.OriginNodeType,
 			},
 			AddressInfo: domain.AddressInfo{
 				ID: o.OriginAddressInfoID,
@@ -186,14 +176,12 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				TimeZone:     o.OriginTimeZone,
 			},
 		},
-		Destination: domain.Destination{
-			ID:                   o.DestinationContactID,
-			DeliveryInstructions: o.DeliveryInstructions,
-			NodeInfo: domain.NodeInfo{
-				ID:          o.DestinationNodeInfoID,
-				ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
-				Name:        &o.DestinationNodeName,
-				Type:        o.DestinationNodeType,
+		Destination: domain.NodeInfo{
+			ID:          o.DestinationNodeInfoID,
+			ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
+			Name:        o.DestinationNodeName,
+			NodeType: domain.NodeType{
+				Value: o.DestinationNodeType,
 			},
 			AddressInfo: domain.AddressInfo{
 				ID: o.DestinationAddressInfoID,
@@ -239,7 +227,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				EndTime:   o.PromisedEndTime,
 			},
 		},
-		Visits: mapVisits(visits),
 	}
 }
 
@@ -275,22 +262,8 @@ func mapItemReferences(items table.JSONItemReferences) []domain.ItemReference {
 		result[i] = domain.ItemReference{
 			ReferenceID: domain.ReferenceID(item.ReferenceID),
 			Quantity: domain.Quantity{
-				QuantityNumber: item.Quantity.QuantityNumber,
-				QuantityUnit:   item.Quantity.QuantityUnit,
-			},
-		}
-	}
-	return result
-}
-
-func mapVisits(visits []FlattenedVisitView) []domain.Visit {
-	result := make([]domain.Visit, len(visits))
-	for i, v := range visits {
-		result[i] = domain.Visit{
-			Date: v.Date,
-			TimeRange: domain.TimeRange{
-				StartTime: v.TimeRangeStart,
-				EndTime:   v.TimeRangeEnd,
+				QuantityNumber: item.QuantityNumber,
+				QuantityUnit:   item.QuantityUnit,
 			},
 		}
 	}

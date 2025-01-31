@@ -24,13 +24,13 @@ func init() {
 		createOrder,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveOrderOutbox,
+		tidbrepository.NewSaveEventOutBox,
 		observability.NewObservability)
 }
 func createOrder(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	saveOutboxTrx tidbrepository.SaveOrderOutbox,
+	saveOutboxTrx tidbrepository.SaveEventOutBox,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/order",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
@@ -43,13 +43,13 @@ func createOrder(
 			mappedTO := requestBody.Map()
 			mappedTO.Organization.Key = c.Header("organization-key")
 			mappedTO.Organization.Country = countries.ByName(c.Header("country"))
-			mappedTO.BusinessIdentifiers.Consumer = c.Header("consumer")
-			mappedTO.BusinessIdentifiers.Commerce = c.Header("commerce")
+			mappedTO.Headers.Consumer = c.Header("consumer")
+			mappedTO.Headers.Commerce = c.Header("commerce")
 			if c.Header("consumer") == "" {
-				mappedTO.BusinessIdentifiers.Consumer = "UNSPECIFIED"
+				mappedTO.Headers.Consumer = "UNSPECIFIED"
 			}
 			if c.Header("commerce") == "" {
-				mappedTO.BusinessIdentifiers.Commerce = "UNSPECIFIED"
+				mappedTO.Headers.Commerce = "UNSPECIFIED"
 			}
 			if err := mappedTO.Validate(); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{
@@ -100,8 +100,9 @@ func createOrder(
 		}, option.Summary("createOrder"),
 		option.Header("organization-key", "api organization key", param.Required()),
 		option.Header("country", "api country", param.Required()),
-		option.Header("consumer", "api consumer key"),
-		option.Header("commerce", "api commerce key"),
+		option.Header("consumer", "api consumer key", param.Required()),
+		option.Header("commerce", "api commerce key", param.Required()),
 		option.Tags(tagOrders),
+		option.Tags(tagEndToEndOperator),
 	)
 }
