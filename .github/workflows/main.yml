@@ -88,7 +88,10 @@ jobs:
 
       -
         name: Build and push image with ko
-        run: ko build .
+        run: |
+          export KO_DOCKER_TAGS=$VERSION
+          IMAGE_REF=$(ko build .)
+          echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
 
       -
         name: Deploy to Cloud Run
