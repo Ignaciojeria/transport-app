@@ -1,10 +1,12 @@
 package domain
 
+import "time"
+
 type Plan struct {
 	Headers
 	ID             int64
 	ReferenceID    string
-	Date           string
+	PlannedDate    time.Time
 	Routes         []Route
 	PlanningStatus PlanningStatus
 	PlanType       PlanType
@@ -29,21 +31,20 @@ func (p Plan) UpdateIfChanged(newPlan Plan) Plan {
 	if newPlan.ReferenceID != "" {
 		p.ReferenceID = newPlan.ReferenceID
 	}
-	if newPlan.Date != "" {
-		p.Date = newPlan.Date
+	// Comparar con zero value de time.Time
+	if !newPlan.PlannedDate.IsZero() {
+		p.PlannedDate = newPlan.PlannedDate
 	}
 
-	// Actualizar PlanningStatus
+	// El resto permanece igual
 	if newPlan.PlanningStatus.ID != 0 || newPlan.PlanningStatus.Value != "" {
 		p.PlanningStatus = newPlan.PlanningStatus
 	}
 
-	// Actualizar PlanType
 	if newPlan.PlanType.ID != 0 || newPlan.PlanType.Value != "" {
 		p.PlanType = newPlan.PlanType
 	}
 
-	// Actualizar Routes si hay nuevas rutas
 	if len(newPlan.Routes) > 0 {
 		p.Routes = newPlan.Routes
 	}

@@ -1,6 +1,7 @@
 package table
 
 import (
+	"time"
 	"transport-app/app/domain"
 
 	"gorm.io/gorm"
@@ -12,7 +13,7 @@ type Plan struct {
 	OrganizationCountryID int64               `gorm:"not null"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 	ReferenceID           string              `gorm:"type:varchar(255);not null"`
-	Date                  string              `gorm:"type:varchar(50);not null"`
+	PlannedDate           time.Time           `gorm:"type:date;not null"`
 	PlanTypeID            int64               `gorm:"not null"`
 	PlanType              PlanType            `gorm:"foreignKey:PlanTypeID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT"`
 	PlanningStatusID      int64               `gorm:"not null"`
@@ -23,7 +24,7 @@ func (p Plan) Map() domain.Plan {
 	return domain.Plan{
 		ID:             p.ID,
 		ReferenceID:    p.ReferenceID,
-		Date:           p.Date,
+		PlannedDate:    p.PlannedDate,
 		PlanningStatus: p.PlanningStatus.Map(),
 		PlanType:       p.PlanType.Map(),
 	}

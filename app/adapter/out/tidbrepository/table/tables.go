@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 	"transport-app/app/domain"
 
 	"github.com/biter777/countries"
@@ -63,11 +64,11 @@ type Order struct {
 
 	JSONItems JSONItems `gorm:"type:json"`
 
-	CollectAvailabilityDate           string        `gorm:"default:null"`
+	CollectAvailabilityDate           time.Time     `gorm:"type:date;default:null"`
 	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
 	CollectAvailabilityTimeRangeEnd   string        `gorm:"default:null"`
-	PromisedDateRangeStart            string        `gorm:"default:null"`
-	PromisedDateRangeEnd              string        `gorm:"default:null"`
+	PromisedDateRangeStart            time.Time     `gorm:"type:date;default:null"`
+	PromisedDateRangeEnd              time.Time     `gorm:"type:date;default:null"`
 	PromisedTimeRangeStart            string        `gorm:"default:null"`
 	PromisedTimeRangeEnd              string        `gorm:"default:null"`
 	TransportRequirements             JSONReference `gorm:"type:json"`

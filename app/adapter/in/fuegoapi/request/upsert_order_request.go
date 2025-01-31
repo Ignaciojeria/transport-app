@@ -1,6 +1,7 @@
 package request
 
 import (
+	"time"
 	"transport-app/app/domain"
 )
 
@@ -336,10 +337,18 @@ func (req UpsertOrderRequest) mapItemReferences(itemReferences []struct {
 	}
 	return mapped
 }
-
 func (req UpsertOrderRequest) mapCollectAvailabilityDate() domain.CollectAvailabilityDate {
+	date, err := time.Parse("2006-01-02", req.CollectAvailabilityDate.Date)
+	if err != nil {
+		// Dependiendo de tu manejo de errores, podrías:
+		// 1. Retornar un zero value time.Time
+		// 2. Usar un valor por defecto
+		// 3. Propagar el error (requeriría cambiar la firma del método)
+		date = time.Time{} // zero value como ejemplo
+	}
+
 	return domain.CollectAvailabilityDate{
-		Date: req.CollectAvailabilityDate.Date,
+		Date: date,
 		TimeRange: domain.TimeRange{
 			StartTime: req.CollectAvailabilityDate.TimeRange.StartTime,
 			EndTime:   req.CollectAvailabilityDate.TimeRange.EndTime,
@@ -348,10 +357,20 @@ func (req UpsertOrderRequest) mapCollectAvailabilityDate() domain.CollectAvailab
 }
 
 func (req UpsertOrderRequest) mapPromisedDate() domain.PromisedDate {
+	startDate, err := time.Parse("2006-01-02", req.PromisedDate.DateRange.StartDate)
+	if err != nil {
+		startDate = time.Time{}
+	}
+
+	endDate, err := time.Parse("2006-01-02", req.PromisedDate.DateRange.EndDate)
+	if err != nil {
+		endDate = time.Time{}
+	}
+
 	return domain.PromisedDate{
 		DateRange: domain.DateRange{
-			StartDate: req.PromisedDate.DateRange.StartDate,
-			EndDate:   req.PromisedDate.DateRange.EndDate,
+			StartDate: startDate,
+			EndDate:   endDate,
 		},
 		TimeRange: domain.TimeRange{
 			StartTime: req.PromisedDate.TimeRange.StartTime,
@@ -360,18 +379,3 @@ func (req UpsertOrderRequest) mapPromisedDate() domain.PromisedDate {
 		ServiceCategory: req.PromisedDate.ServiceCategory,
 	}
 }
-
-/*
-func (req UpsertOrderRequest) mapVisit() []domain.Visit {
-	var visits []domain.Visit
-	for _, visit := range req.Visits {
-		visits = append(visits, domain.Visit{
-			Date: visit.Date,
-			TimeRange: domain.TimeRange{
-				StartTime: visit.TimeRange.StartTime,
-				EndTime:   visit.TimeRange.EndTime,
-			},
-		})
-	}
-	return visits
-}*/

@@ -186,14 +186,7 @@ func (res *SearchOrdersResponse) withReferenceID(referenceID domain.ReferenceID)
 func (res *SearchOrdersResponse) withOrderStatus(orderStatus domain.OrderStatus) *SearchOrdersResponse {
 	res.OrderStatus.ID = orderStatus.ID
 	res.OrderStatus.Status = orderStatus.Status
-	res.OrderStatus.CreatedAt = orderStatus.CreatedAt
-	return res
-}
-
-func (res *SearchOrdersResponse) withCollectAvailabilityDate(collectAvailabilityDate domain.CollectAvailabilityDate) *SearchOrdersResponse {
-	res.CollectAvailabilityDate.Date = collectAvailabilityDate.Date
-	res.CollectAvailabilityDate.TimeRange.EndTime = collectAvailabilityDate.TimeRange.EndTime
-	res.CollectAvailabilityDate.TimeRange.StartTime = collectAvailabilityDate.TimeRange.StartTime
+	res.OrderStatus.CreatedAt = orderStatus.CreatedAt.Format("2006-01-02T15:04:05Z07:00")
 	return res
 }
 
@@ -371,9 +364,18 @@ func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *S
 	return res
 }
 
+func (res *SearchOrdersResponse) withCollectAvailabilityDate(collectAvailabilityDate domain.CollectAvailabilityDate) *SearchOrdersResponse {
+	// Convertir time.Time a string en formato yyyy-mm-dd
+	res.CollectAvailabilityDate.Date = collectAvailabilityDate.Date.Format("2006-01-02")
+	res.CollectAvailabilityDate.TimeRange.EndTime = collectAvailabilityDate.TimeRange.EndTime
+	res.CollectAvailabilityDate.TimeRange.StartTime = collectAvailabilityDate.TimeRange.StartTime
+	return res
+}
+
 func (res *SearchOrdersResponse) withPromisedDate(promisedDate domain.PromisedDate) *SearchOrdersResponse {
-	res.PromisedDate.DateRange.StartDate = promisedDate.DateRange.StartDate
-	res.PromisedDate.DateRange.EndDate = promisedDate.DateRange.EndDate
+	// Convertir time.Time a string en formato yyyy-mm-dd
+	res.PromisedDate.DateRange.StartDate = promisedDate.DateRange.StartDate.Format("2006-01-02")
+	res.PromisedDate.DateRange.EndDate = promisedDate.DateRange.EndDate.Format("2006-01-02")
 	res.PromisedDate.ServiceCategory = promisedDate.ServiceCategory
 	res.PromisedDate.TimeRange.StartTime = promisedDate.TimeRange.StartTime
 	res.PromisedDate.TimeRange.EndTime = promisedDate.TimeRange.EndTime

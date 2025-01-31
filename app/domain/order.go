@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/joomcode/errorx"
 )
@@ -21,7 +22,6 @@ type Order struct {
 	Packages                []Package               `json:"packages"`
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
 	PromisedDate            PromisedDate            `json:"promisedDate"`
-	Visits                  []Visit                 `json:"visits"`
 	DeliveryInstructions    string                  `json:"deliveryInstructions"`
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
@@ -67,38 +67,30 @@ func (o Order) Validate() error {
 }
 
 func (o Order) ValidatePromisedDate() error {
-	// Validar formato de fecha yyyy-mm-dd
-	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
 	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
 
-	// Validar el rango de fechas
-	if o.PromisedDate.DateRange.StartDate != "" && !dateRegex.MatchString(o.PromisedDate.DateRange.StartDate) {
-		return errorx.Decorate(
-			ErrInvalidDateFormat.New("invalid startDate"),
-			"startDate: %s, expected format yyyy-mm-dd",
-			o.PromisedDate.DateRange.StartDate,
-		)
-	}
-	if o.PromisedDate.DateRange.EndDate != "" && !dateRegex.MatchString(o.PromisedDate.DateRange.EndDate) {
-		return errorx.Decorate(
-			ErrInvalidDateFormat.New("invalid endDate"),
-			"endDate: %s, expected format yyyy-mm-dd",
-			o.PromisedDate.DateRange.EndDate,
-		)
+	// Validar que EndDate no sea anterior a StartDate cuando ambas están definidas
+	if (o.PromisedDate.DateRange.StartDate != time.Time{}) && (o.PromisedDate.DateRange.EndDate != time.Time{}) {
+		if o.PromisedDate.DateRange.EndDate.Before(o.PromisedDate.DateRange.StartDate) {
+			return errorx.Decorate(
+				ErrInvalidDateFormat.New("invalid endDate"),
+				"promised delivery endDate cannot be before startDate",
+			)
+		}
 	}
 
-	// Validar los rangos horarios
+	// Validar formato de horas
 	if o.PromisedDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.StartTime) {
 		return errorx.Decorate(
 			ErrInvalidTimeFormat.New("invalid startTime"),
-			"startTime: %s, expected format hh:mm",
+			"promised delivery startTime: %s, expected format hh:mm",
 			o.PromisedDate.TimeRange.StartTime,
 		)
 	}
 	if o.PromisedDate.TimeRange.EndTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.EndTime) {
 		return errorx.Decorate(
 			ErrInvalidTimeFormat.New("invalid endTime"),
-			"endTime: %s, expected format hh:mm",
+			"promised delivery endTime: %s, expected format hh:mm",
 			o.PromisedDate.TimeRange.EndTime,
 		)
 	}
@@ -107,20 +99,15 @@ func (o Order) ValidatePromisedDate() error {
 }
 
 func (o Order) ValidateCollectAvailabilityDate() error {
-	// Validar formato de fecha yyyy-mm-dd
-	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
-	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
-
-	// Validar la fecha
-	if o.CollectAvailabilityDate.Date != "" && !dateRegex.MatchString(o.CollectAvailabilityDate.Date) {
-		return errorx.Decorate(
-			ErrInvalidDateFormat.New("invalid date"),
-			"collect date: %s, expected format yyyy-mm-dd",
-			o.CollectAvailabilityDate.Date,
-		)
+	// Si la fecha está definida (no es zero value), solo validamos que sea una fecha válida
+	// Ya no validamos si está en el pasado
+	if (o.CollectAvailabilityDate.Date != time.Time{}) {
+		// Aquí podrías agregar otras validaciones específicas si las necesitas
+		// pero no la comparación con time.Now()
 	}
 
 	// Validar el rango horario
+	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
 	if o.CollectAvailabilityDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.CollectAvailabilityDate.TimeRange.StartTime) {
 		return errorx.Decorate(
 			ErrInvalidTimeFormat.New("invalid startTime"),
@@ -529,8 +516,8 @@ func (ot OrderType) UpdateIfChanged(newOrderType OrderType) OrderType {
 
 type OrderStatus struct {
 	ID        int64
-	Status    string `json:"status"`
-	CreatedAt string `json:"createdAt"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type PromisedDate struct {
@@ -540,7 +527,7 @@ type PromisedDate struct {
 }
 
 type CollectAvailabilityDate struct {
-	Date      string    `json:"date"`
+	Date      time.Time `json:"date"`
 	TimeRange TimeRange `json:"timeRange"`
 }
 
@@ -550,11 +537,6 @@ type TimeRange struct {
 }
 
 type DateRange struct {
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
-}
-
-type Visit struct {
-	Date      string    `json:"date"`
-	TimeRange TimeRange `json:"timeRange"`
+	StartDate time.Time `json:"startDate"`
+	EndDate   time.Time `json:"endDate"`
 }

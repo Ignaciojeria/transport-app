@@ -1,25 +1,39 @@
 package request
 
-import "transport-app/app/domain"
+import (
+	"time"
+	"transport-app/app/domain"
+)
 
 type UpsertDailyPlanRequest struct {
 	OperatorReferenceID string `json:"operatorReferenceID"`
-	PlanDate            string `json:"planDate"`
+	PlannedDate         string `json:"plannedDate"`
 	OrderReferenceIDs   []struct {
 		ReferenceID string `json:"referenceID"`
 	} `json:"orderReferenceIDs"`
 }
 
 func (r UpsertDailyPlanRequest) Map() domain.Plan {
+	// Convertir string a time.Time
+	planDate, err := time.Parse("2006-01-02", r.PlannedDate)
+	if err != nil {
+		// Dependiendo de tu manejo de errores podrías:
+		// 1. Retornar un error adicional en la firma del método
+		// 2. Usar un valor por defecto
+		// 3. Usar time.Time{} (zero value)
+		planDate = time.Time{} // usando zero value como ejemplo
+	}
+
 	var oders []domain.Order
 	for _, v := range r.OrderReferenceIDs {
 		oders = append(oders, domain.Order{
 			ReferenceID: domain.ReferenceID(v.ReferenceID),
 		})
 	}
+
 	return domain.Plan{
 		ReferenceID: r.ReferenceID(),
-		Date:        r.PlanDate,
+		PlannedDate: planDate, // Usar el time.Time en lugar del string
 		PlanningStatus: domain.PlanningStatus{
 			Value: "planned",
 		},
@@ -38,5 +52,5 @@ func (r UpsertDailyPlanRequest) Map() domain.Plan {
 }
 
 func (r UpsertDailyPlanRequest) ReferenceID() string {
-	return r.PlanDate + "_" + r.OperatorReferenceID
+	return r.PlannedDate + "_" + r.OperatorReferenceID
 }

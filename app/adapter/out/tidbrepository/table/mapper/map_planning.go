@@ -10,7 +10,7 @@ func MapPlan(plan domain.Plan) table.Plan {
 		ID:                    plan.ID,
 		ReferenceID:           plan.ReferenceID,
 		OrganizationCountryID: plan.Organization.OrganizationCountryID,
-		Date:                  plan.Date,
+		PlannedDate:           plan.PlannedDate,
 		PlanTypeID:            plan.PlanType.ID,
 		PlanningStatusID:      plan.PlanningStatus.ID,
 	}

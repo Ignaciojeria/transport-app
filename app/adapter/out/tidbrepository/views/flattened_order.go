@@ -1,6 +1,7 @@
 package views
 
 import (
+	"time"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 
@@ -70,11 +71,11 @@ type FlattenedOrderView struct {
 	DestinationNodeOperatorID    int64               `gorm:"column:destination_node_operator_id"`
 	DestinationNodeOperatorName  string              `gorm:"column:destination_node_operator_name"`
 	Items                        table.JSONItems     `gorm:"column:items"`
-	CollectAvailabilityDate      string              `gorm:"column:collect_availability_date"`
+	CollectAvailabilityDate      time.Time           `gorm:"column:collect_availability_date"`
 	CollectStartTime             string              `gorm:"column:collect_start_time"`
 	CollectEndTime               string              `gorm:"column:collect_end_time"`
-	PromisedStartDate            string              `gorm:"column:promised_start_date"`
-	PromisedEndDate              string              `gorm:"column:promised_end_date"`
+	PromisedStartDate            time.Time           `gorm:"column:promised_start_date"`
+	PromisedEndDate              time.Time           `gorm:"column:promised_end_date"`
 	PromisedStartTime            string              `gorm:"column:promised_start_time"`
 	PromisedEndTime              string              `gorm:"column:promised_end_time"`
 	TransportRequirements        table.JSONReference `gorm:"column:transport_requirements"`
@@ -234,7 +235,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				EndTime:   o.PromisedEndTime,
 			},
 		},
-		Visits: mapVisits(visits),
 	}
 }
 
@@ -272,20 +272,6 @@ func mapItemReferences(items table.JSONItemReferences) []domain.ItemReference {
 			Quantity: domain.Quantity{
 				QuantityNumber: item.QuantityNumber,
 				QuantityUnit:   item.QuantityUnit,
-			},
-		}
-	}
-	return result
-}
-
-func mapVisits(visits []FlattenedVisitView) []domain.Visit {
-	result := make([]domain.Visit, len(visits))
-	for i, v := range visits {
-		result[i] = domain.Visit{
-			Date: v.Date,
-			TimeRange: domain.TimeRange{
-				StartTime: v.TimeRangeStart,
-				EndTime:   v.TimeRangeEnd,
 			},
 		}
 	}
