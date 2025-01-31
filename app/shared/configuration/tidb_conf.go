@@ -14,7 +14,7 @@ type TiDBConfiguration struct {
 	TIDB_DATABASE       string `env:"TIDB_DATABASE,required"`
 	TIDB_USERNAME       string `env:"TIDB_USERNAME,required"`
 	TIDB_PASSWORD       string `env:"TIDB_PASSWORD,required"`
-	TIDB_RUN_MIGRATIONS string `env:"TIDB_RUN_MIGRATIONS,required"`
+	TIDB_RUN_MIGRATIONS string `env:"TIDB_RUN_MIGRATIONS"`
 }
 
 func NewTiDBConfiguration() (TiDBConfiguration, error) {
