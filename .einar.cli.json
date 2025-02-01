@@ -214,6 +214,10 @@
         {
             "kind": "post-controller",
             "name": "search-orders-by-daily-plan"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-operator"
         }
     ]
 }
