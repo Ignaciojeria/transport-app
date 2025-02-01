@@ -218,6 +218,10 @@
         {
             "kind": "get-controller",
             "name": "search-operator"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-account-operator"
         }
     ]
 }
