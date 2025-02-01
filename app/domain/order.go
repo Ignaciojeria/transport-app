@@ -199,6 +199,8 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
 		n.NodeType.ID = newNode.NodeType.ID
 	}
 	n.Organization = newNode.Organization
+	//n.AddressInfo = n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
+	//n.NodeType = n.NodeType.UpdateIfChanged(newNode.NodeType)
 	return n
 }
 

@@ -277,23 +277,25 @@ type NodeInfo struct {
 }
 
 func (n NodeInfo) Map() domain.NodeInfo {
-	var contactID, addressID int64
+	var contactID, addressID, nodeTypeID int64
 	if n.ContactID != nil {
 		contactID = *n.ContactID
 	}
 	if n.AddressID != nil {
 		addressID = *n.AddressID
 	}
-	return domain.NodeInfo{
+	if n.NodeTypeID != nil {
+		nodeTypeID = *n.AddressID
+	}
+	nodeInfo := domain.NodeInfo{
 		ID:          n.ID,
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
+		Name:        n.Name,
 		Organization: domain.Organization{
 			OrganizationCountryID: n.OrganizationCountryID,
 		},
-		Name: n.Name,
 		NodeType: domain.NodeType{
-			ID:    n.NodeType.ID,
-			Value: n.NodeType.Name,
+			ID: nodeTypeID,
 		},
 		References: n.NodeReferences.Map(),
 		Contact: domain.Contact{
@@ -303,6 +305,7 @@ func (n NodeInfo) Map() domain.NodeInfo {
 			ID: addressID,
 		},
 	}
+	return nodeInfo
 }
 
 type AddressInfo struct {
@@ -544,6 +547,16 @@ func (a Account) MapOperator() domain.Operator {
 	// Mapeamos el OriginNode si existe
 	if a.OriginNodeInfoID != nil {
 		operator.OriginNode = a.OriginNodeInfo.Map()
+	}
+
+	// Mapeamos el OriginNode si existe
+	if a.OriginNodeInfo.AddressID != nil {
+		operator.OriginNode.AddressInfo = a.OriginNodeInfo.AddressInfo.Map()
+	}
+
+	// Mapeamos el OriginNode si existe
+	if a.OriginNodeInfo.NodeTypeID != nil {
+		operator.OriginNode.NodeType = a.OriginNodeInfo.NodeType.Map()
 	}
 
 	return operator
