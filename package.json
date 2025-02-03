@@ -1,7 +1,0 @@
-{
-    "name": "zuplo-deploy",
-    "private": true,
-    "devDependencies": {
-      "@zuplo/cli": "latest"
-    }
-}
