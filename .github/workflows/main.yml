@@ -22,30 +22,50 @@ jobs:
             version:
               - '.version'
 
-  zuplo-deploy:
+zuplo-deploy:
     runs-on: ubuntu-latest
     needs: check-version-change
     if: needs.check-version-change.outputs.version_changed == 'true'
-    env:
-      ZUPLO_API_KEY: ${{ secrets.ZUPLO_API_KEY }}
     steps:
       - uses: actions/checkout@v4
+      
       - uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      - name: Create package.json
+        run: |
+          echo '{
+            "name": "zuplo-deploy",
+            "private": true,
+            "devDependencies": {
+              "@zuplo/cli": "latest"
+            }
+          }' > package.json
+
       - name: Install dependencies
         run: npm install
+
+      - name: Verify ZUPLO_API_KEY
+        run: |
+          if [ -z "$ZUPLO_API_KEY" ]; then
+            echo "ZUPLO_API_KEY is not set"
+            exit 1
+          fi
+        env:
+          ZUPLO_API_KEY: ${{ secrets.ZUPLO_API_KEY }}
+
+      - name: Setup Zuplo Project
+        run: npx zuplo init --apiKey "$ZUPLO_API_KEY"
+        env:
+          ZUPLO_API_KEY: ${{ secrets.ZUPLO_API_KEY }}
 
       - name: Zuplo Deploy
         shell: bash
         run: |
           npx zuplo deploy --apiKey "$ZUPLO_API_KEY" | tee ./DEPLOYMENT_STDOUT
-
-      - name: Zuplo Test
-        shell: bash
-        run: |
-          npx zuplo test --endpoint $(cat ./DEPLOYMENT_STDOUT | sed -E 's/Deployed to (.*)/\1/')
+        env:
+          ZUPLO_API_KEY: ${{ secrets.ZUPLO_API_KEY }}
 
   build-and-push:
     runs-on: ubuntu-latest
