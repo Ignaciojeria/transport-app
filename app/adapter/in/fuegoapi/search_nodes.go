@@ -21,7 +21,7 @@ func init() {
 		usecase.NewSearchNodes)
 }
 func searchNodes(s httpserver.Server, search usecase.SearchNodes) {
-	fuego.Get(s.Manager, "/node",
+	fuego.Get(s.Manager, "/nodes",
 		func(c fuego.ContextNoBody) ([]response.SearchNodesResponse, error) {
 			searchFilters := domain.NodeSearchFilters{
 				Organization: domain.Organization{

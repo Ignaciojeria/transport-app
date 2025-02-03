@@ -20,7 +20,7 @@ func init() {
 		usecase.NewSearchOrders)
 }
 func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOrders) {
-	fuego.Post(s.Manager, "/order/unique-references-search",
+	fuego.Post(s.Manager, "/orders/unique-references-search",
 		func(c fuego.ContextWithBody[request.SearchOrdersByUniqueReferencesRequest]) ([]response.SearchOrdersResponse, error) {
 			req, err := c.Body()
 			if err != nil {

@@ -32,7 +32,7 @@ func createOrder(
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	saveOutboxTrx tidbrepository.SaveEventOutBox,
 	obs observability.Observability) {
-	fuego.Post(s.Manager, "/order",
+	fuego.Post(s.Manager, "/orders",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "createOrder")
 			defer span.End()

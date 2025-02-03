@@ -12,7 +12,7 @@ func init() {
 	ioc.Registry(capacityKMeans, httpserver.New)
 }
 func capacityKMeans(s httpserver.Server) {
-	fuego.Post(s.Manager, "/algorithm/capacity-k-means",
+	fuego.Post(s.Manager, "/algorithms/capacity-k-means",
 		func(c fuego.ContextNoBody) (any, error) {
 
 			return "unimplemented", nil

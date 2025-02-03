@@ -21,7 +21,7 @@ func init() {
 func searchOrdersByDailyPlan(
 	s httpserver.Server,
 	search usecase.SearchOrders) {
-	fuego.Post(s.Manager, "/order/daily-plan-search",
+	fuego.Post(s.Manager, "/orders/daily-plan-search",
 		func(c fuego.ContextWithBody[request.SearchOrdersByDailyPlanRequest]) ([]response.SearchOrdersResponse, error) {
 			req, err := c.Body()
 			if err != nil {

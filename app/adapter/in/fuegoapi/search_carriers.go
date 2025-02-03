@@ -21,7 +21,7 @@ func init() {
 		usecase.NewSearchCarriers)
 }
 func searchCarriers(s httpserver.Server, search usecase.SearchCarriers) {
-	fuego.Get(s.Manager, "/carrier",
+	fuego.Get(s.Manager, "/carriers",
 		func(c fuego.ContextNoBody) ([]response.SearchCarriersResponse, error) {
 			searchFilters := domain.CarrierSearchFilters{
 				Organization: domain.Organization{

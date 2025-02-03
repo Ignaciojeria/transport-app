@@ -27,7 +27,7 @@ func upsertDailyPlan(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox tidbrepository.SaveEventOutBox) {
-	fuego.Post(s.Manager, "/daily-plan",
+	fuego.Post(s.Manager, "/daily-plans",
 		func(c fuego.ContextWithBody[request.UpsertDailyPlanRequest]) (response.CreateDailyPlanResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {

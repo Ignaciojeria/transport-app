@@ -28,7 +28,7 @@ func upsertNode(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox tidbrepository.SaveEventOutBox) {
-	fuego.Post(s.Manager, "/node",
+	fuego.Post(s.Manager, "/nodes",
 		func(c fuego.ContextWithBody[request.UpsertNodeRequest]) (response.UpsertNodeResponse, error) {
 
 			requestBody, err := c.Body()

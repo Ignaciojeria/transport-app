@@ -20,7 +20,7 @@ func init() {
 		usecase.NewSearchOrders)
 }
 func searchOrdersByLpns(s httpserver.Server, search usecase.SearchOrders) {
-	fuego.Post(s.Manager, "/order/lpns-search",
+	fuego.Post(s.Manager, "/orders/lpns-search",
 		func(c fuego.ContextWithBody[request.SearchOrdersByLpnsRequest]) ([]response.SearchOrdersResponse, error) {
 			req, err := c.Body()
 			if err != nil {

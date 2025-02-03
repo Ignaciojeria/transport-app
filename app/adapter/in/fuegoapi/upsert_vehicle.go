@@ -28,7 +28,7 @@ func upsertVehicle(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox tidbrepository.SaveEventOutBox) {
-	fuego.Post(s.Manager, "/vehicle",
+	fuego.Post(s.Manager, "/vehicles",
 		func(c fuego.ContextWithBody[request.UpsertVehicleRequest]) (response.UpsertVehicleResponse, error) {
 
 			requestBody, err := c.Body()

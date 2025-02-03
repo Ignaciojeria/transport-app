@@ -22,7 +22,7 @@ func init() {
 		usecase.NewCreateOrganizationKey)
 }
 func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizationKey) {
-	fuego.Post(s.Manager, "/organization-key",
+	fuego.Post(s.Manager, "/organizations",
 		func(c fuego.ContextWithBody[request.CreateOrganizationKeyRequest]) (response.CreateOrganizationKeyResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {

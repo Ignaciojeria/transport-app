@@ -22,7 +22,7 @@ func init() {
 func searchAccountOperator(
 	s httpserver.Server,
 	search usecase.SearchAccountOperator) {
-	fuego.Get(s.Manager, "/operator",
+	fuego.Get(s.Manager, "/operators",
 		func(c fuego.ContextNoBody) (response.SearchAccountResponse, error) {
 			operator := domain.Operator{
 				Organization: domain.Organization{

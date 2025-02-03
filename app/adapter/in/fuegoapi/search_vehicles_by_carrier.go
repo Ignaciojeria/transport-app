@@ -22,7 +22,7 @@ func init() {
 func searchVehiclesByCarrier(
 	s httpserver.Server,
 	search usecase.SearchVehiclesByCarrier) {
-	fuego.Get(s.Manager, "/carrier/{referenceID}/vehicle",
+	fuego.Get(s.Manager, "/carriers/{referenceID}/vehicles",
 		func(c fuego.ContextNoBody) ([]response.SearchVehiclesByCarrierResponse, error) {
 			searchFilters := domain.VehicleSearchFilters{
 				CarrierReferenceID: c.PathParam("referenceID"),
