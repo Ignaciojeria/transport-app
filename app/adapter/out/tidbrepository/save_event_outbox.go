@@ -1,5 +1,6 @@
 package tidbrepository
 
+/*
 import (
 	"context"
 	"fmt"
@@ -35,9 +36,6 @@ func NewSaveEventOutBox(
 			return domain.Outbox{}, fmt.Errorf("failed to save outbox event: %w", err)
 		}
 
-		// Actualizar el ID en la entidad de dominio
-		event.ID = e.ID
-
 		// Manejar publicación del evento en una goroutine
 		go func() {
 			if pubErr := publishOutBoxEvent(context.Background(), event); pubErr != nil {
@@ -49,3 +47,4 @@ func NewSaveEventOutBox(
 		return event, nil
 	}
 }
+*/

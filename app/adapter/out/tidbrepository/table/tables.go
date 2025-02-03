@@ -356,7 +356,7 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		addressID = *n.AddressID
 	}
 	if n.NodeTypeID != nil {
-		nodeTypeID = *n.AddressID
+		nodeTypeID = *n.NodeTypeID
 	}
 	nodeInfo := domain.NodeInfo{
 		ID:          n.ID,

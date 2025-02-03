@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
+	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -24,13 +25,13 @@ func init() {
 		createOrder,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveEventOutBox,
+		gcppublisher.NewApplicationEvents,
 		observability.NewObservability)
 }
 func createOrder(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	saveOutboxTrx tidbrepository.SaveEventOutBox,
+	saveOutboxTrx gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/orders",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
@@ -70,7 +71,7 @@ func createOrder(
 			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
 
 			eventPayload, _ := json.Marshal(requestBody)
-			if _, err := saveOutboxTrx(spanCtx, domain.Outbox{
+			if err := saveOutboxTrx(spanCtx, domain.Outbox{
 				Attributes: map[string]string{
 					"entityType":            "order",
 					"eventType":             "orderSubmitted",

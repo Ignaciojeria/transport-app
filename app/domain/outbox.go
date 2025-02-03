@@ -1,7 +1,6 @@
 package domain
 
 type Outbox struct {
-	ID           int64
 	CreatedAt    string
 	UpdatedAt    string
 	Organization Organization

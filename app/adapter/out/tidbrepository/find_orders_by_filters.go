@@ -102,6 +102,8 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
         LEFT JOIN address_infos da ON o.destination_address_info_id = da.id
         LEFT JOIN node_infos dn_info ON o.destination_node_info_id = dn_info.id
         LEFT JOIN routes r ON o.route_id = r.id
+        LEFT JOIN order_packages op ON o.id = op.order_id
+        LEFT JOIN packages p ON op.package_id = p.id
         WHERE 
             ak.key = ? 
             AND org_country.country = ?`

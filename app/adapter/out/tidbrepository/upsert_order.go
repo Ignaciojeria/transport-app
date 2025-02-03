@@ -15,7 +15,9 @@ import (
 type UpsertOrder func(context.Context, domain.Order) (domain.Order, error)
 
 func init() {
-	ioc.Registry(NewUpsertOrder, tidb.NewTIDBConnection)
+	ioc.Registry(
+		NewUpsertOrder,
+		tidb.NewTIDBConnection)
 }
 func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 	return func(ctx context.Context, o domain.Order) (domain.Order, error) {

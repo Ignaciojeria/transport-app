@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
+	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -21,12 +22,12 @@ func init() {
 		createAccountOperator,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveEventOutBox)
+		gcppublisher.NewApplicationEvents)
 }
 func createAccountOperator(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	outbox tidbrepository.SaveEventOutBox) {
+	outbox gcppublisher.ApplicationEvents) {
 	fuego.Post(s.Manager, "/operators",
 		func(c fuego.ContextWithBody[request.CreateAccountOperatorRequest]) (response.CreateAccountResponse, error) {
 			requestBody, err := c.Body()
@@ -50,7 +51,7 @@ func createAccountOperator(
 
 			requestBodyBytes, _ := json.Marshal(requestBody)
 			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
-			if _, err := outbox(c.Context(), domain.Outbox{
+			if err := outbox(c.Context(), domain.Outbox{
 				Attributes: map[string]string{
 					"entityType":            "operator",
 					"eventType":             "operatorSubmitted",

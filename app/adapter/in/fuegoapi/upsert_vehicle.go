@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
+	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -22,12 +23,12 @@ func init() {
 		upsertVehicle,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
-		tidbrepository.NewSaveEventOutBox)
+		gcppublisher.NewApplicationEvents)
 }
 func upsertVehicle(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	outbox tidbrepository.SaveEventOutBox) {
+	outbox gcppublisher.ApplicationEvents) {
 	fuego.Post(s.Manager, "/vehicles",
 		func(c fuego.ContextWithBody[request.UpsertVehicleRequest]) (response.UpsertVehicleResponse, error) {
 
@@ -53,7 +54,7 @@ func upsertVehicle(
 			requestBodyBytes, _ := json.Marshal(requestBody)
 			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
 
-			if _, err := outbox(c.Context(), domain.Outbox{
+			if err := outbox(c.Context(), domain.Outbox{
 				Attributes: map[string]string{
 					"entityType":            "vehicle",
 					"eventType":             "vehicleSubmitted",
