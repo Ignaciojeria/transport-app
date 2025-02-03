@@ -157,6 +157,7 @@ func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
 		response.
 			withReferenceID(order.ReferenceID).
 			withHeaders(order.Headers).
+			withDeliveryInstructions(order.DeliveryInstructions).
 			withOrderStatus(order.OrderStatus).
 			withCollectAvailabilityDate(order.CollectAvailabilityDate).
 			withOrigin(order.Origin).
@@ -180,6 +181,11 @@ func (res *SearchOrdersResponse) withHeaders(headers domain.Headers) *SearchOrde
 
 func (res *SearchOrdersResponse) withReferenceID(referenceID domain.ReferenceID) *SearchOrdersResponse {
 	res.ReferenceID = string(referenceID)
+	return res
+}
+
+func (res *SearchOrdersResponse) withDeliveryInstructions(instructions string) *SearchOrdersResponse {
+	res.Destination.DeliveryInstructions = string(instructions)
 	return res
 }
 

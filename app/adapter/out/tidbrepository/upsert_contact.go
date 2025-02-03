@@ -32,7 +32,8 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 		contactWithChanges := contact.Map().UpdateIfChanged(c)
 		dbContactToUpsert := mapper.MapContactToTable(contactWithChanges, c.Organization.OrganizationCountryID)
 		dbContactToUpsert.CreatedAt = contact.CreatedAt
-		if err := conn.Save(&dbContactToUpsert).Error; err != nil {
+		if err := conn.Omit("OrganizationCountry").
+			Save(&dbContactToUpsert).Error; err != nil {
 			return domain.Contact{}, err
 		}
 		return dbContactToUpsert.Map(), nil

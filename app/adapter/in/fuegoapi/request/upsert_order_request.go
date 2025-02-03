@@ -156,6 +156,7 @@ func (req UpsertOrderRequest) Map() domain.Order {
 		Packages:                req.mapPackages(),
 		CollectAvailabilityDate: req.mapCollectAvailabilityDate(),
 		PromisedDate:            req.mapPromisedDate(),
+		DeliveryInstructions:    req.Destination.DeliveryInstructions,
 		//Visits:                  req.mapVisit(),
 		TransportRequirements: req.mapReferences(req.TransportRequirements),
 	}

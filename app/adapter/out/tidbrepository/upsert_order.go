@@ -2,6 +2,8 @@ package tidbrepository
 
 import (
 	"context"
+	"errors"
+	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
@@ -17,9 +19,30 @@ func init() {
 }
 func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 	return func(ctx context.Context, o domain.Order) (domain.Order, error) {
-		tbl := mapper.MapOrderToTable(o)
+		var order table.Order
+		err := conn.DB.WithContext(ctx).
+			Table("orders").
+			Where("reference_id = ? AND organization_country_id = ?",
+				o.ReferenceID, o.Organization.OrganizationCountryID).
+			First(&order).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Order{}, err
+		}
+		orderWithChanges := order.Map().UpdateIfChanged(o)
+		DBOrderToUpdate := mapper.MapOrderToTable(orderWithChanges)
+		DBOrderToUpdate.CreatedAt = order.CreatedAt
 		if err := conn.Transaction(func(tx *gorm.DB) error {
-			return tx.
+			if err := tx.Delete(
+				&table.OrderReferences{},
+				"order_id = ?", DBOrderToUpdate.ID).Error; err != nil {
+				return err
+			}
+			if err := tx.Delete(&table.OrderPackage{},
+				"order_id = ?",
+				DBOrderToUpdate.ID).Error; err != nil {
+				return err
+			}
+			if err := tx.
 				Omit("OrganizationCountry").
 				Omit("OrderHeaders").
 				Omit("OrderStatus").
@@ -31,7 +54,10 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				Omit("OriginNodeInfo").
 				Omit("DestinationNodeInfo").
 				Omit("Route").
-				Save(&tbl).Error
+				Save(&DBOrderToUpdate).Error; err != nil {
+				return err
+			}
+			return nil
 		}); err != nil {
 			return domain.Order{}, err
 		}

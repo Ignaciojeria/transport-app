@@ -26,23 +26,82 @@ type Order struct {
 	TransportRequirements   []Reference             `json:"transportRequirements"`
 }
 
-func (o *Order) WithOriginAddressInfo(ai AddressInfo) {
-	o.Origin.AddressInfo = ai
-}
+func (o Order) UpdateIfChanged(newOrder Order) Order {
+	// Actualizar usando los métodos UpdateIfChanged existentes
+	o.Headers = o.Headers.UpdateIfChanged(newOrder.Headers)
+	o.Origin.AddressInfo.Contact =
+		o.Origin.Contact.UpdateIfChanged(newOrder.Origin.AddressInfo.Contact)
+	o.Destination.AddressInfo.Contact =
+		o.Origin.Contact.UpdateIfChanged(newOrder.Destination.AddressInfo.Contact)
+	o.OrderStatus = o.OrderStatus.UpdateIfChanged(newOrder.OrderStatus)
+	o.OrderType = o.OrderType.UpdateIfChanged(newOrder.OrderType)
+	o.Origin = o.Origin.UpdateIfChanged(newOrder.Origin)
+	o.Destination = o.Destination.UpdateIfChanged(newOrder.Destination)
 
-func (o Order) IsOriginAndDestinationNodeReferenceIDEqual() bool {
-	return o.Origin.ReferenceID == o.Destination.ReferenceID
-}
+	// Actualizar referencias - reemplazar directamente si hay nuevas
+	if len(newOrder.References) > 0 {
+		o.References = newOrder.References
+	}
 
-func (o Order) AreContactsEqual() bool {
-	originContact := o.Origin.AddressInfo.Contact
-	destinationContact := o.Destination.AddressInfo.Contact
+	// Actualizar packages - reemplazar directamente si hay nuevos
+	if len(newOrder.Packages) > 0 {
+		o.Packages = newOrder.Packages
+	}
 
-	// Comparar campos importantes
-	return originContact.FullName == destinationContact.FullName &&
-		originContact.Email == destinationContact.Email &&
-		originContact.Phone == destinationContact.Phone &&
-		originContact.NationalID == destinationContact.NationalID
+	// Update basic order information
+	if newOrder.ReferenceID != "" {
+		o.ReferenceID = newOrder.ReferenceID
+	}
+
+	// Update delivery instructions
+	if newOrder.DeliveryInstructions != "" {
+		o.DeliveryInstructions = newOrder.DeliveryInstructions
+	}
+
+	// Update CollectAvailabilityDate individual fields
+	if !newOrder.CollectAvailabilityDate.Date.IsZero() {
+		o.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
+	}
+	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" {
+		o.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
+	}
+	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" {
+		o.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
+	}
+
+	// Update PromisedDate individual fields
+	if !newOrder.PromisedDate.DateRange.StartDate.IsZero() {
+		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
+	}
+	if !newOrder.PromisedDate.DateRange.EndDate.IsZero() {
+		o.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
+	}
+	if newOrder.PromisedDate.TimeRange.StartTime != "" {
+		o.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
+	}
+	if newOrder.PromisedDate.TimeRange.EndTime != "" {
+		o.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
+	}
+	if newOrder.PromisedDate.ServiceCategory != "" {
+		o.PromisedDate.ServiceCategory = newOrder.PromisedDate.ServiceCategory
+	}
+
+	// Update TransportRequirements if not empty
+	if len(newOrder.TransportRequirements) > 0 {
+		o.TransportRequirements = newOrder.TransportRequirements
+	}
+
+	// Update Items if not empty
+	if len(newOrder.Items) > 0 {
+		o.Items = newOrder.Items
+	}
+
+	// Update Organization if changed
+	if newOrder.Organization.OrganizationCountryID != 0 {
+		o.Organization = newOrder.Organization
+	}
+
+	return o
 }
 
 func (o Order) Validate() error {
@@ -211,6 +270,9 @@ type NodeType struct {
 }
 
 func (nt NodeType) UpdateIfChanged(newNodeType NodeType) NodeType {
+	if newNodeType.ID != 0 {
+		nt.ID = newNodeType.ID
+	}
 	if newNodeType.Value != "" {
 		nt.Value = newNodeType.Value
 	}
@@ -303,6 +365,9 @@ type AddressInfo struct {
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
+	if newAddress.ID != 0 {
+		a.ID = newAddress.ID
+	}
 	if newAddress.AddressLine1 != "" {
 		a.AddressLine1 = newAddress.AddressLine1
 	}
@@ -504,6 +569,9 @@ type OrderType struct {
 }
 
 func (ot OrderType) UpdateIfChanged(newOrderType OrderType) OrderType {
+	if newOrderType.ID != 0 {
+		ot.ID = newOrderType.ID
+	}
 	if newOrderType.Type != "" {
 		ot.Type = newOrderType.Type
 	}
@@ -520,6 +588,25 @@ type OrderStatus struct {
 	ID        int64
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+func (os OrderStatus) UpdateIfChanged(newOrderStatus OrderStatus) OrderStatus {
+	// Actualizar ID si es diferente de 0
+	if newOrderStatus.ID != 0 {
+		os.ID = newOrderStatus.ID
+	}
+
+	// Actualizar Status si no está vacío
+	if newOrderStatus.Status != "" {
+		os.Status = newOrderStatus.Status
+	}
+
+	// Actualizar CreatedAt si no es zero value
+	if !newOrderStatus.CreatedAt.IsZero() {
+		os.CreatedAt = newOrderStatus.CreatedAt
+	}
+
+	return os
 }
 
 type PromisedDate struct {

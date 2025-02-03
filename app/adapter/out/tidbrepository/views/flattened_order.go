@@ -137,6 +137,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Consumer: o.ConsumerName,
 			Commerce: o.CommerceName,
 		},
+		DeliveryInstructions: o.DeliveryInstructions,
 		OrderStatus: domain.OrderStatus{
 			ID:     o.OrderStatusID,
 			Status: o.OrderStatus,

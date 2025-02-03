@@ -7,18 +7,18 @@ import (
 
 func MapOrderToTable(order domain.Order) table.Order {
 	orgCountryID := order.Organization.OrganizationCountryID
-	return table.Order{
+	tbl := table.Order{
 		ID:                    order.ID,
 		ReferenceID:           string(order.ReferenceID),
 		OrganizationCountryID: order.Organization.OrganizationCountryID, // Completar según la lógica de negocio
 		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
 		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
-		OrderHeadersID:  order.Headers.ID,
-		OrderStatusID:   order.OrderStatus.ID, // Completar según la lógica de negocio
-		OrderTypeID:     order.OrderType.ID,   // Completar según la lógica de negocio
-		OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
-		OrderReferences: mapReferencesToTable(order.References),
-		//DeliveryInstructions:  order.Destination.DeliveryInstructions,
+		OrderHeadersID: order.Headers.ID,
+		OrderStatusID:  order.OrderStatus.ID, // Completar según la lógica de negocio
+		OrderTypeID:    order.OrderType.ID,   // Completar según la lógica de negocio
+		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
+		OrderReferences:      mapReferencesToTable(order.References),
+		DeliveryInstructions: order.DeliveryInstructions,
 
 		// Origen
 		OriginNodeInfoID: order.Origin.ID, // Completar según la lógica de negocio
@@ -28,11 +28,11 @@ func MapOrderToTable(order domain.Order) table.Order {
 		//OriginAddressInfo:   MapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
 
 		DestinationAddressInfoID: order.Destination.AddressInfo.ID, // Completar según la lógica de negocio
-		DestinationAddressInfo:   MapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
-		OriginContactID:          order.Origin.AddressInfo.Contact.ID,
-		OriginContact:            MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
-		DestinationContactID:     order.Destination.AddressInfo.Contact.ID,
-		DestinationContact:       MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
+		//DestinationAddressInfo:   MapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
+		OriginContactID: order.Origin.AddressInfo.Contact.ID,
+		//OriginContact:            MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
+		DestinationContactID: order.Destination.AddressInfo.Contact.ID,
+		//DestinationContact:       MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
 		// Destino
 		DestinationNodeInfoID: order.Destination.ID, // Completar según la lógica de negocio
 		//DestinationNodeInfo:   MapNodeInfoTable(order.Destination),
@@ -50,6 +50,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		OrderHeaders:          mapHeadersToTable(order.Headers, orgCountryID),
 		Packages:              MapPackagesToTable(order.Packages, orgCountryID),
 	}
+	return tbl
 }
 
 func mapReferencesToTable(references []domain.Reference) []table.OrderReferences {

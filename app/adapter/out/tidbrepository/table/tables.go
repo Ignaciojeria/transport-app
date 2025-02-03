@@ -74,6 +74,77 @@ type Order struct {
 	TransportRequirements             JSONReference `gorm:"type:json"`
 }
 
+func (o Order) Map() domain.Order {
+	// Mapear la orden base
+	order := domain.Order{
+		ID:          o.ID,
+		ReferenceID: domain.ReferenceID(o.ReferenceID),
+		Headers: domain.Headers{
+			Organization: domain.Organization{
+				OrganizationCountryID: o.OrganizationCountryID,
+			},
+		},
+		DeliveryInstructions: o.DeliveryInstructions,
+	}
+
+	// Mapear las fechas de disponibilidad de recolección
+	order.CollectAvailabilityDate = domain.CollectAvailabilityDate{
+		Date: o.CollectAvailabilityDate,
+		TimeRange: domain.TimeRange{
+			StartTime: o.CollectAvailabilityTimeRangeStart,
+			EndTime:   o.CollectAvailabilityTimeRangeEnd,
+		},
+	}
+
+	// Mapear las fechas prometidas
+	order.PromisedDate = domain.PromisedDate{
+		DateRange: domain.DateRange{
+			StartDate: o.PromisedDateRangeStart,
+			EndDate:   o.PromisedDateRangeEnd,
+		},
+		TimeRange: domain.TimeRange{
+			StartTime: o.PromisedTimeRangeStart,
+			EndTime:   o.PromisedTimeRangeEnd,
+		},
+	}
+
+	// Mapear requisitos de transporte
+	order.TransportRequirements = o.TransportRequirements.Map()
+
+	// Mapear items
+	items := make([]domain.Item, len(o.JSONItems))
+	for i, item := range o.JSONItems {
+		items[i] = item.Map()
+	}
+	order.Items = items
+
+	// Mapear Contact IDs
+	if o.OriginContactID != 0 {
+		order.Origin.Contact.ID = o.OriginContactID
+	}
+	if o.DestinationContactID != 0 {
+		order.Destination.Contact.ID = o.DestinationContactID
+	}
+
+	// Mapear AddressInfo IDs
+	if o.OriginAddressInfoID != 0 {
+		order.Origin.AddressInfo.ID = o.OriginAddressInfoID
+	}
+	if o.DestinationAddressInfoID != 0 {
+		order.Destination.AddressInfo.ID = o.DestinationAddressInfoID
+	}
+
+	// Mapear NodeInfo IDs
+	if o.OriginNodeInfoID != 0 {
+		order.Origin.ID = o.OriginNodeInfoID
+	}
+	if o.DestinationNodeInfoID != 0 {
+		order.Destination.ID = o.DestinationNodeInfoID
+	}
+
+	return order
+}
+
 type Items struct {
 	ReferenceID       string         `gorm:"not null" json:"reference_id"`
 	LogisticCondition string         `gorm:"default:null" json:"logistic_condition"`

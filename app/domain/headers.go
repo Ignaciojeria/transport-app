@@ -7,15 +7,18 @@ type Headers struct {
 	Commerce     string `json:"commerce"`
 }
 
-func (c Headers) UpdateIfChanged(newConsumer Headers) Headers {
-	if newConsumer.Consumer != "" {
-		c.Consumer = newConsumer.Consumer
+func (c Headers) UpdateIfChanged(newHeaders Headers) Headers {
+	if newHeaders.ID != 0 {
+		c.ID = newHeaders.ID
 	}
-	if newConsumer.Commerce != "" {
-		c.Consumer = newConsumer.Commerce
+	if newHeaders.Consumer != "" {
+		c.Consumer = newHeaders.Consumer
 	}
-	if newConsumer.Organization.OrganizationCountryID != 0 {
-		c.Organization = newConsumer.Organization
+	if newHeaders.Commerce != "" {
+		c.Consumer = newHeaders.Commerce
+	}
+	if newHeaders.Organization.OrganizationCountryID != 0 {
+		c.Organization = newHeaders.Organization
 	}
 	return c
 }
