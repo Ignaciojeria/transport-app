@@ -222,6 +222,10 @@
         {
             "kind": "usecase",
             "name": "search-account-operator"
+        },
+        {
+            "kind": "post-controller",
+            "name": "orders-checkout"
         }
     ]
 }
