@@ -1,4 +1,4 @@
-name: 'CI with ko (Version Change)'
+name: 'CI with ko and Zuplo'
 
 on:
   push:
@@ -11,12 +11,10 @@ jobs:
     outputs:
       version_changed: ${{ steps.filter.outputs.version }}
     steps:
-      -
-        name: Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      -
-        name: Check if .version file changed
+      - name: Check if .version file changed
         id: filter
         uses: dorny/paths-filter@v2
         with:
@@ -29,62 +27,52 @@ jobs:
     needs: check-version-change
     if: needs.check-version-change.outputs.version_changed == 'true'
     steps:
-      -
-        name: Checkout code
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      -
-        name: Set KO_IMAGE_NAME
+      - name: Set KO_IMAGE_NAME
         run: |
           REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
           IMAGE_NAME="${REPO_NAME}"
           echo "Image name: $IMAGE_NAME"
           echo "KO_IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
-      -
-        name: Authenticate to Google Cloud
+      - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
 
-      -
-        name: Configure Docker for Artifact Registry
+      - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      -
-        name: Set up Go
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '>=1.21'
 
-      -
-        name: Install ko
+      - name: Install ko
         run: go install github.com/google/ko@latest
 
-      -
-        name: Set environment variables
+      - name: Set environment variables
         env:
-          KO_DOCKER_REPO: ${{ vars.KO_DOCKER_REPO }}  # Usa la repository variable
-          KO_DEFAULTBASEIMAGE: ${{ vars.KO_DEFAULTBASEIMAGE }}  # Usa la repository variable
+          KO_DOCKER_REPO: ${{ vars.KO_DOCKER_REPO }}
+          KO_DEFAULTBASEIMAGE: ${{ vars.KO_DEFAULTBASEIMAGE }}
         run: |
           echo "KO_DOCKER_REPO=$KO_DOCKER_REPO" >> $GITHUB_ENV
           echo "KO_DEFAULTBASEIMAGE=$KO_DEFAULTBASEIMAGE" >> $GITHUB_ENV
 
-      -
-        name: Print environment variables
+      - name: Print environment variables
         run: |
           echo "KO_DOCKER_REPO: $KO_DOCKER_REPO"
           echo "KO_DEFAULTBASEIMAGE: $KO_DEFAULTBASEIMAGE"
           echo "KO_IMAGE_NAME: $KO_IMAGE_NAME"
 
-      -
-        name: Build and push image with ko
+      - name: Build and push image with ko
         run: |
           IMAGE_REF=$(ko build .)
           echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
 
-      -
-        name: Deploy to Cloud Run
+      - name: Deploy to Cloud Run
         run: |
           SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
           
@@ -104,11 +92,12 @@ jobs:
             TIDB_PORT=TIDB_PORT:latest,\
             TIDB_TLS_CONFIG=TIDB_TLS_CONFIG:latest,\
             TIDB_USERNAME=TIDB_USERNAME:latest"
-run-zup-test:
+
+  run-zup-test:
     runs-on: ubuntu-latest
+    needs: build-and-push
     env:
       ZUPLO_API_KEY: ${{ secrets.ZUPLO_API_KEY }}
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -117,11 +106,6 @@ run-zup-test:
 
       - run: npm install
 
-      # shell: bash is required so that pipefail is set.
-      # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#exit-codes-and-error-action-preference
-      # This way if the deploy fails, we fail before piping to tee.
-      # Note that you aren't required to use tee. We are using it in this example
-      # so that the output is available to the terminal and written to the file.
       - name: Zuplo Deploy
         shell: bash
         run: |
@@ -130,15 +114,14 @@ run-zup-test:
       - name: Zuplo Test
         shell: bash
         run: |
-          npx zuplo test --endpoint $(cat ./DEPLOYMENT_STDOUT |  sed -E 's/Deployed to (.*)/\1/')
+          npx zuplo test --endpoint $(cat ./DEPLOYMENT_STDOUT | sed -E 's/Deployed to (.*)/\1/')
 
       - name: Zuplo Delete
         if: ${{ github.event_name == 'pull_request' }}
         shell: bash
         run: |
-          npx zuplo delete --url $(cat ./DEPLOYMENT_STDOUT |  sed -E 's/Deployed to (.*)/\1/') --apiKey "$ZUPLO_API_KEY" --wait
+          npx zuplo delete --url $(cat ./DEPLOYMENT_STDOUT | sed -E 's/Deployed to (.*)/\1/') --apiKey "$ZUPLO_API_KEY" --wait
 
-      # This isn't necessary but it showcases how you can list your Zuplo deployments
       - name: Zuplo List
         shell: bash
         run: |
