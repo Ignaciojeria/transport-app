@@ -113,13 +113,6 @@ jobs:
          echo "Working directory: $(pwd)"
          echo "Listing directory contents:"
          ls -la
-         
-     - name: Verify API Key Format
-       run: |
-         if [[ ! $ZUPLO_API_KEY =~ ^zup_ ]]; then
-           echo "API key format appears incorrect - should start with 'zup_'"
-           exit 1
-         fi
 
      - name: Setup NPM and Zuplo CLI
        run: |
