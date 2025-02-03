@@ -1,169 +1,106 @@
-name: 'CI with ko and Zuplo'
+name: 'CI with ko (Version Change)'
 
 on:
- push:
-   branches:
-     - main
+  push:
+    branches:
+      - main
 
 jobs:
- check-version-change:
-   runs-on: ubuntu-latest
-   outputs:
-     version_changed: ${{ steps.filter.outputs.version }}
-   steps:
-     - name: Checkout code
-       uses: actions/checkout@v3
+  check-version-change:
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.filter.outputs.version }}
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
 
-     - name: Check if .version file changed
-       id: filter
-       uses: dorny/paths-filter@v2
-       with:
-         filters: |
-           version:
-             - '.version'
+      -
+        name: Check if .version file changed
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            version:
+              - '.version'
 
- build-and-push:
-   runs-on: ubuntu-latest
-   needs: check-version-change
-   if: needs.check-version-change.outputs.version_changed == 'true'
-   steps:
-     - name: Checkout code
-       uses: actions/checkout@v3
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: check-version-change
+    if: needs.check-version-change.outputs.version_changed == 'true'
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v3
 
-     - name: Set KO_IMAGE_NAME
-       run: |
-         REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
-         IMAGE_NAME="${REPO_NAME}"
-         echo "Image name: $IMAGE_NAME"
-         echo "KO_IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+      -
+        name: Set KO_IMAGE_NAME
+        run: |
+          REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          IMAGE_NAME="${REPO_NAME}"
+          echo "Image name: $IMAGE_NAME"
+          echo "KO_IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
-     - name: Authenticate to Google Cloud
-       uses: google-github-actions/auth@v1
-       with:
-         credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+      -
+        name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
 
-     - name: Configure Docker for Artifact Registry
-       run: gcloud auth configure-docker us-central1-docker.pkg.dev
+      -
+        name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
-     - name: Set up Go
-       uses: actions/setup-go@v4
-       with:
-         go-version: '>=1.21'
+      -
+        name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.21'
 
-     - name: Install ko
-       run: go install github.com/google/ko@latest
+      -
+        name: Install ko
+        run: go install github.com/google/ko@latest
 
-     - name: Set environment variables
-       env:
-         KO_DOCKER_REPO: ${{ vars.KO_DOCKER_REPO }}
-         KO_DEFAULTBASEIMAGE: ${{ vars.KO_DEFAULTBASEIMAGE }}
-       run: |
-         echo "KO_DOCKER_REPO=$KO_DOCKER_REPO" >> $GITHUB_ENV
-         echo "KO_DEFAULTBASEIMAGE=$KO_DEFAULTBASEIMAGE" >> $GITHUB_ENV
+      -
+        name: Set environment variables
+        env:
+          KO_DOCKER_REPO: ${{ vars.KO_DOCKER_REPO }}  # Usa la repository variable
+          KO_DEFAULTBASEIMAGE: ${{ vars.KO_DEFAULTBASEIMAGE }}  # Usa la repository variable
+        run: |
+          echo "KO_DOCKER_REPO=$KO_DOCKER_REPO" >> $GITHUB_ENV
+          echo "KO_DEFAULTBASEIMAGE=$KO_DEFAULTBASEIMAGE" >> $GITHUB_ENV
 
-     - name: Print environment variables
-       run: |
-         echo "KO_DOCKER_REPO: $KO_DOCKER_REPO"
-         echo "KO_DEFAULTBASEIMAGE: $KO_DEFAULTBASEIMAGE"
-         echo "KO_IMAGE_NAME: $KO_IMAGE_NAME"
+      -
+        name: Print environment variables
+        run: |
+          echo "KO_DOCKER_REPO: $KO_DOCKER_REPO"
+          echo "KO_DEFAULTBASEIMAGE: $KO_DEFAULTBASEIMAGE"
+          echo "KO_IMAGE_NAME: $KO_IMAGE_NAME"
 
-     - name: Build and push image with ko
-       run: |
-         IMAGE_REF=$(ko build .)
-         echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
+      -
+        name: Build and push image with ko
+        run: |
+          IMAGE_REF=$(ko build .)
+          echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
 
-     - name: Deploy to Cloud Run
-       run: |
-         SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
-         
-         gcloud run deploy "$SERVICE_NAME" \
-           --image="$IMAGE_REF" \
-           --region=us-central1 \
-           --service-account="transport-app-sa@einar-404623.iam.gserviceaccount.com" \
-           --platform=managed \
-           --allow-unauthenticated \
-           --set-secrets="OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest,\
-           OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
-           OPENOBSERVE_HTTP_ENDPOINT=OPENOBSERVE_HTTP_ENDPOINT:latest,\
-           OPENOBSERVE_STREAM_NAME=OPENOBSERVE_STREAM_NAME:latest,\
-           TIDB_DATABASE=TIDB_DATABASE:latest,\
-           TIDB_HOSTNAME=TIDB_HOSTNAME:latest,\
-           TIDB_PASSWORD=TIDB_PASSWORD:latest,\
-           TIDB_PORT=TIDB_PORT:latest,\
-           TIDB_TLS_CONFIG=TIDB_TLS_CONFIG:latest,\
-           TIDB_USERNAME=TIDB_USERNAME:latest"
-
- run-zup-test:
-   runs-on: ubuntu-latest
-   needs: build-and-push
-   env:
-     ZUPLO_API_KEY: ${{ secrets.ZUPLO_API_KEY }}
-   steps:
-     - uses: actions/checkout@v4
-     
-     - uses: actions/setup-node@v4
-       with:
-         node-version: 20
-
-     - name: Debug Environment
-       run: |
-         echo "Node version: $(node -v)"
-         echo "NPM version: $(npm -v)"
-         echo "API Key length: ${#ZUPLO_API_KEY}"
-         echo "Working directory: $(pwd)"
-         echo "Listing directory contents:"
-         ls -la
-
-     - name: Setup NPM and Zuplo CLI
-       run: |
-         npm install @zuplo/cli --save-dev
-         echo "Installed @zuplo/cli version:"
-         npx zuplo --version
-
-     - name: Zuplo Deploy
-       shell: bash
-       run: |
-         echo "Starting Zuplo deployment..."
-         npx zuplo deploy --apiKey "$ZUPLO_API_KEY" --debug | tee ./DEPLOYMENT_STDOUT
-         if [ ! -f ./DEPLOYMENT_STDOUT ]; then
-           echo "Deployment output file not created"
-           exit 1
-         fi
-
-     - name: Verify Deployment Output
-       run: |
-         if [ -f ./DEPLOYMENT_STDOUT ]; then
-           echo "Deployment output exists:"
-           cat ./DEPLOYMENT_STDOUT
-         else
-           echo "No deployment output found"
-           exit 1
-         fi
-
-     - name: Zuplo Test
-       if: success()
-       shell: bash
-       run: |
-         if [ -f ./DEPLOYMENT_STDOUT ]; then
-           ENDPOINT=$(cat ./DEPLOYMENT_STDOUT | sed -E 's/Deployed to (.*)/\1/')
-           echo "Testing endpoint: $ENDPOINT"
-           npx zuplo test --endpoint "$ENDPOINT"
-         else
-           echo "No deployment output found"
-           exit 1
-         fi
-
-     - name: Zuplo Delete
-       if: ${{ github.event_name == 'pull_request' }}
-       shell: bash
-       run: |
-         if [ -f ./DEPLOYMENT_STDOUT ]; then
-           URL=$(cat ./DEPLOYMENT_STDOUT | sed -E 's/Deployed to (.*)/\1/')
-           npx zuplo delete --url "$URL" --apiKey "$ZUPLO_API_KEY" --wait
-         fi
-
-     - name: Zuplo List
-       shell: bash
-       run: |
-         echo "Listing Zuplo deployments..."
-         npx zuplo list --apiKey "$ZUPLO_API_KEY"
+      -
+        name: Deploy to Cloud Run
+        run: |
+          SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          
+          gcloud run deploy "$SERVICE_NAME" \
+            --image="$IMAGE_REF" \
+            --region=us-central1 \
+            --service-account="transport-app-sa@einar-404623.iam.gserviceaccount.com" \
+            --platform=managed \
+            --allow-unauthenticated \
+            --set-secrets="OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest,\
+            OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
+            OPENOBSERVE_HTTP_ENDPOINT=OPENOBSERVE_HTTP_ENDPOINT:latest,\
+            OPENOBSERVE_STREAM_NAME=OPENOBSERVE_STREAM_NAME:latest,\
+            TIDB_DATABASE=TIDB_DATABASE:latest,\
+            TIDB_HOSTNAME=TIDB_HOSTNAME:latest,\
+            TIDB_PASSWORD=TIDB_PASSWORD:latest,\
+            TIDB_PORT=TIDB_PORT:latest,\
+            TIDB_TLS_CONFIG=TIDB_TLS_CONFIG:latest,\
+            TIDB_USERNAME=TIDB_USERNAME:latest"
