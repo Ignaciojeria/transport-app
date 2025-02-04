@@ -7,6 +7,79 @@
 	},
 	"item": [
 		{
+			"name": "https://dev.zuplo.com/v1/accounts/:accountName/key-buckets/:bucketName/consumers/:consumerName/keys",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "{\r\n  \"description\": \"My secret api key\",\r\n  \"expiresOn\": \"2023-04-20T05:54:34.408Z\",\r\n  \"key\": \"zpka_66b21c8591354c0997db232cc2f79c9e_69253f24\"\r\n}",
+							"value": "",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://dev.zuplo.com/v1/accounts/:accountName/key-buckets/:bucketName/consumers/:consumerName/keys",
+					"protocol": "https",
+					"host": [
+						"dev",
+						"zuplo",
+						"com"
+					],
+					"path": [
+						"v1",
+						"accounts",
+						":accountName",
+						"key-buckets",
+						":bucketName",
+						"consumers",
+						":consumerName",
+						"keys"
+					],
+					"variable": [
+						{
+							"key": "accountName"
+						},
+						{
+							"key": "bucketName"
+						},
+						{
+							"key": "consumerName"
+						}
+					]
+				},
+				"description": "Generated from cURL: curl --request POST \\\r\n  --url https://dev.zuplo.com/v1/accounts/:accountName/key-buckets/:bucketName/consumers/:consumerName/keys \\\r\n  --data '\r\n{\r\n  \"description\": \"My secret api key\",\r\n  \"expiresOn\": \"2023-04-20T05:54:34.408Z\",\r\n  \"key\": \"zpka_66b21c8591354c0997db232cc2f79c9e_69253f24\"\r\n}\r\n'"
+			},
+			"response": []
+		},
+		{
+			"name": "HEALTH",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://einar-main-f0820bc.d2.zuplo.dev/health",
+					"protocol": "https",
+					"host": [
+						"einar-main-f0820bc",
+						"d2",
+						"zuplo",
+						"dev"
+					],
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "CREATE ORGANIZATION KEY",
 			"request": {
 				"method": "POST",
@@ -19,7 +92,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"email\": \"ignaciovl3.j@gmail.com\",\r\n    \"name\": \"einarcli-org\"\r\n}",
+					"raw": "{\r\n    \"email\": \"32342545a659114@gmail.com\",\r\n    \"name\": \"einarcli-org\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -27,14 +100,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/organization-key",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/organizations",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"organization-key"
+						"organizations"
 					]
 				}
 			},
@@ -47,7 +118,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "471d1acd-f816-4383-bbbc-fccfc6fd4722-820374f9-9fe6-4e46-9840-2d5523575b67",
+						"value": "09e7eced-dd4d-44ad-ab2a-b023cd957ce3-1073dc9c-8dc9-4101-a8f9-4047b181d73e",
 						"type": "text"
 					},
 					{
@@ -76,14 +147,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/order",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/orders",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"order"
+						"orders"
 					]
 				}
 			},
@@ -96,7 +165,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "c09d98cb-e7ac-4b70-9e72-1b0b2c2aa18a-f76bdd2f-d8ce-4a06-a078-a5064287f673",
+						"value": "09e7eced-dd4d-44ad-ab2a-b023cd957ce3-1073dc9c-8dc9-4101-a8f9-4047b181d73e",
 						"type": "text"
 					},
 					{
@@ -115,14 +184,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/order/unique-references-search",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/orders/unique-references-search",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"order",
+						"orders",
 						"unique-references-search"
 					]
 				}
@@ -136,7 +203,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "d3090a52-0a02-42db-98b3-c0edee4bfdcf-9ea1fa8a-fd96-48de-b403-a024ad2c1c18",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -155,58 +222,13 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/order/lpns-search",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/orders/lpns-search",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"order",
+						"orders",
 						"lpns-search"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "SEARCH ORDERS BY DAILY PLAN",
-			"request": {
-				"auth": {
-					"type": "noauth"
-				},
-				"method": "POST",
-				"header": [
-					{
-						"key": "organization-key",
-						"value": "8606b6cf-5ac3-42a0-b327-68b9b9ab29c8-bf8e99ee-c4f3-45f6-a2f4-026241e92fef",
-						"type": "text"
-					},
-					{
-						"key": "country",
-						"value": "CL",
-						"type": "text"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"operatorReferenceID\":\"1234\",\r\n    \"plannedDate\":\"2025-01-03\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://localhost:8080/order/daily-plan-search",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "8080",
-					"path": [
-						"order",
-						"daily-plan-search"
 					]
 				}
 			},
@@ -222,7 +244,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "8606b6cf-5ac3-42a0-b327-68b9b9ab29c8-bf8e99ee-c4f3-45f6-a2f4-026241e92fef",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -243,7 +265,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"referenceID\": \"referenceIdExample14\",\r\n    \"name\": \"CENTRO DE OPERACION A\",\r\n    \"type\":\"CENTRO_DE_OPERACION\",\r\n    \"nodeAddress\": {\r\n        \"addressLine1\": \"Inglaterra 59, La florida, Chile\",\r\n        \"addressLine2\": \"\",\r\n        \"addressLine3\": \"\",\r\n        \"county\": \"La Florida\",\r\n        \"district\": \"Santiago\",\r\n        \"latitude\": -33.5233,\r\n        \"longitude\": -70.5743,\r\n        \"province\": \"Santiago\",\r\n        \"state\": \"Región Metropolitana\",\r\n        \"timeZone\": \"America/Santiago\",\r\n        \"zipCode\": \"8320000\"\r\n    },\r\n    \"operatorContact\": {\r\n        \"documents\": [\r\n            {\r\n                \"type\": \"anyExtraDocumentType\",\r\n                \"value\": \"anyValue\"\r\n            }\r\n        ],\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
+					"raw": "{\r\n    \"referenceID\": \"referenceIdExample24\",\r\n    \"name\": \"CENTRO DE OPERACION F4\",\r\n    \"type\":\"CENTRO_DE_OPERACION\",\r\n    \"nodeAddress\": {\r\n        \"addressLine1\": \"Inglaterra 59, La florida, Chile\",\r\n        \"addressLine2\": \"\",\r\n        \"addressLine3\": \"\",\r\n        \"county\": \"La Florida\",\r\n        \"district\": \"Santiago\",\r\n        \"latitude\": -33.5233,\r\n        \"longitude\": -70.5743,\r\n        \"province\": \"Santiago\",\r\n        \"state\": \"Región Metropolitana\",\r\n        \"timeZone\": \"America/Santiago\",\r\n        \"zipCode\": \"8320000\"\r\n    },\r\n    \"operatorContact\": {\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -251,14 +273,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/node",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/nodes",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"node"
+						"nodes"
 					]
 				}
 			},
@@ -274,7 +294,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "9dd1e3b1-9933-471a-9167-c59fb8dd0f2c-a845d29e-e2b3-4844-aadf-92a142d4e991",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -294,14 +314,12 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/node?page=0&size=2",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/nodes?page=0&size=2",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"node"
+						"nodes"
 					],
 					"query": [
 						{
@@ -332,7 +350,7 @@
 					},
 					{
 						"key": "organization-key",
-						"value": "9542b3c6-b70e-446b-aaee-12d5a590522c-6819eeaf-17af-45e3-a533-d5b1e23412a8",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -356,14 +374,12 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/vehicle",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/vehicles",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"vehicle"
+						"vehicles"
 					]
 				}
 			},
@@ -379,7 +395,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "9542b3c6-b70e-446b-aaee-12d5a590522c-6819eeaf-17af-45e3-a533-d5b1e23412a8",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -389,14 +405,12 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/carrier?page=0&size=2",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/carriers?page=0&size=2",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"carrier"
+						"carriers"
 					],
 					"query": [
 						{
@@ -422,7 +436,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "e947a011-e217-47c4-9ff3-2e9a682ec7a0-795db356-1ec9-490e-b9d7-95126dd5ce6d",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -432,16 +446,14 @@
 					}
 				],
 				"url": {
-					"raw": "http://localhost:8080/carrier/{{referenceID}}/vehicle",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/carriers/{{referenceID}}/vehicles",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"carrier",
+						"carriers",
 						"{{referenceID}}",
-						"vehicle"
+						"vehicles"
 					]
 				}
 			},
@@ -457,7 +469,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "593a827b-b616-4678-9881-50e02b6b58e0-2a966bc2-a6ea-4b79-9d19-27362e0870fb",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -468,7 +480,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"referenceID\": \"referenceID\",\r\n    \"originNodeReferenceID\": \"REFERENCIA DE CENTRO DE OPERACION\",\r\n    \"contact\": {\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
+					"raw": "{\r\n    \"referenceID\": \"reference_8\",\r\n    \"originNodeReferenceID\": \"referenceIdExample24\",\r\n    \"contact\": {\r\n        \"email\": \"ignaciovl8.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -476,18 +488,96 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/operator",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/operators",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"operator"
+						"operators"
 					]
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "SEARCH OPERATOR",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{TRANSPORT_APP_HOST}}/operators?email=ignaciovl8.j@gmail.com",
+					"host": [
+						"{{TRANSPORT_APP_HOST}}"
+					],
+					"path": [
+						"operators"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "ignaciovl8.j@gmail.com"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "SEARCH OPERATOR",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/operator?email=ignaciovl.j@gmail.com",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"operator"
+							],
+							"query": [
+								{
+									"key": "email",
+									"value": "ignaciovl.j@gmail.com"
+								}
+							]
+						}
+					},
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Content-Type",
+							"value": "application/json",
+							"name": "Content-Type",
+							"description": "",
+							"type": "text"
+						}
+					],
+					"cookie": [],
+					"body": "{\r\n    \"referenceID\": \"req-67890\",\r\n    \"contact\": {\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    },\r\n    \"originNode\": {\r\n        \"referenceID\": \"node-12345\",\r\n        \"name\": \"CENTRO DE OPERACION A\",\r\n        \"type\": \"CENTRO_DE_OPERACION\",\r\n        \"addressInfo\": {\r\n            \"rawAddress\": \"Inglaterra 59, La florida, Chile\",\r\n            \"latitude\": -33.5233,\r\n            \"longitude\": -70.5743\r\n        }\r\n    }\r\n}"
+				}
+			]
 		},
 		{
 			"name": "UPSERT OPERATOR DAILY PLAN",
@@ -499,7 +589,7 @@
 				"header": [
 					{
 						"key": "organization-key",
-						"value": "8606b6cf-5ac3-42a0-b327-68b9b9ab29c8-bf8e99ee-c4f3-45f6-a2f4-026241e92fef",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
 						"type": "text"
 					},
 					{
@@ -510,7 +600,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"operatorReferenceID\": \"1234\",\r\n    \"orderReferenceIDs\": [\r\n        {\r\n            \"referenceID\": \"reference_1\"\r\n        },\r\n        {\r\n            \"referenceID\": \"reference_3\"\r\n        }\r\n    ]\r\n}",
+					"raw": "{\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"operatorReferenceID\": \"1234\",\r\n    \"orderReferenceIDs\": [\r\n        {\r\n            \"referenceID\": \"reference_1\"\r\n        }\r\n    ]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -518,18 +608,152 @@
 					}
 				},
 				"url": {
-					"raw": "http://localhost:8080/daily-plan",
-					"protocol": "http",
+					"raw": "{{TRANSPORT_APP_HOST}}/daily-plans",
 					"host": [
-						"localhost"
+						"{{TRANSPORT_APP_HOST}}"
 					],
-					"port": "8080",
 					"path": [
-						"daily-plan"
+						"daily-plans"
 					]
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "SEARCH ORDERS BY DAILY PLAN",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "organization-key",
+						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"operatorReferenceID\":\"1234\",\r\n    \"plannedDate\":\"2025-01-03\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{TRANSPORT_APP_HOST}}/orders/daily-plan-search",
+					"host": [
+						"{{TRANSPORT_APP_HOST}}"
+					],
+					"path": [
+						"orders",
+						"daily-plan-search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ORDERS CHECKOUT",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    {\r\n        \"orderReferenceID\": \"order_ref_value\",\r\n        \"routeReferenceID\": \"route_ref_value\",\r\n        \"status\": \"finished\",\r\n        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n        \"vehicle\": {\r\n            \"referenceID\": \"string\",\r\n            \"plate\": \"string\",\r\n            \"carrier\": {\r\n                \"referenceID\": \"my-reference-id-2\",\r\n                \"nationalID\": \"string5\"\r\n            }\r\n        },\r\n        \"recipient\": {\r\n            \"fullName\": \"\",\r\n            \"nationalID\": \"\"\r\n        },\r\n        \"evidencePhotos\": [\r\n            {\r\n                \"url\": \"https://example.com/photo1.jpg\",\r\n                \"type\": \"DELIVERY_PROOF\",\r\n                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n            }\r\n        ],\r\n        \"delivery\": {\r\n            \"failure\": {\r\n                \"referenceID\": \"1234\",\r\n                \"reason\": \"NO_RESIDENTS\",\r\n                \"detail\": \"No se encontraron moradores\"\r\n            },\r\n            \"location\": {\r\n                \"latitude\": -12.123456,\r\n                \"longitude\": -77.123456\r\n            }\r\n        }\r\n    }\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{TRANSPORT_APP_HOST}}/orders/checkout",
+					"host": [
+						"{{TRANSPORT_APP_HOST}}"
+					],
+					"path": [
+						"orders",
+						"checkout"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "ORDERS DELIVERED",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"orderReferenceID\": \"order_ref_value\",\r\n        \"routeReferenceID\": \"route_ref_value\",\r\n        \"status\": \"finished\",\r\n        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n        \"vehicle\": {\r\n            \"referenceID\": \"string\",\r\n            \"plate\": \"string\",\r\n            \"carrier\": {\r\n                \"referenceID\": \"my-reference-id-2\",\r\n                \"nationalID\": \"string5\"\r\n            }\r\n        },\r\n        \"recipient\": {\r\n            \"fullName\": \"\",\r\n            \"nationalID\": \"\"\r\n        },\r\n        \"evidencePhotos\": [\r\n            {\r\n                \"url\": \"https://example.com/photo1.jpg\",\r\n                \"type\": \"DELIVERY_PROOF\",\r\n                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n            }\r\n        ],\r\n        \"delivery\": {\r\n            \"failure\": null, // Solo cuando success es false\r\n            \"location\": {\r\n                \"latitude\": -12.123456,\r\n                \"longitude\": -77.123456\r\n            }\r\n        }\r\n    }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/orders/checkout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"checkout"
+							]
+						}
+					},
+					"_postman_previewlanguage": null,
+					"header": null,
+					"cookie": [],
+					"body": null
+				},
+				{
+					"name": "ORDERS NOT DELIVERED",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    {\r\n        \"orderReferenceID\": \"order_ref_value\",\r\n        \"routeReferenceID\": \"route_ref_value\",\r\n        \"status\": \"pending\",\r\n        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n        \"vehicle\": {\r\n            \"referenceID\": \"string\",\r\n            \"plate\": \"string\",\r\n            \"carrier\": {\r\n                \"referenceID\": \"my-reference-id-2\",\r\n                \"nationalID\": \"string5\"\r\n            }\r\n        },\r\n        \"recipient\": {\r\n            \"fullName\": \"\",\r\n            \"nationalID\": \"\"\r\n        },\r\n        \"evidencePhotos\": [\r\n            {\r\n                \"url\": \"https://example.com/photo1.jpg\",\r\n                \"type\": \"DELIVERY_PROOF\",\r\n                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n            }\r\n        ],\r\n        \"delivery\": {\r\n            \"failure\": {\r\n                \"reasonReferenceID\": \"1234\",\r\n                \"reason\": \"NO_RESIDENTS\",\r\n                \"detail\": \"No se encontraron moradores\"\r\n            },\r\n            \"location\": {\r\n                \"latitude\": -12.123456,\r\n                \"longitude\": -77.123456\r\n            }\r\n        }\r\n    }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/orders/checkout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"checkout"
+							]
+						}
+					},
+					"_postman_previewlanguage": null,
+					"header": null,
+					"cookie": [],
+					"body": null
+				}
+			]
 		}
 	],
 	"variable": [
@@ -540,6 +764,16 @@
 		},
 		{
 			"key": "planID",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "ZUPLO_HOST",
+			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "TRANSPORT_APP_HOST",
 			"value": "",
 			"type": "default"
 		}
