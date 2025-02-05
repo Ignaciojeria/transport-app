@@ -43,7 +43,8 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 			}
 			return response.CreateOrganizationKeyResponse{
 				OrganizationKey: org.Key,
-				Message:         "Organization key created successfully. Please save it securely as it will be required for API authentication.",
+				Country:         c.Header("country"),
+				Message:         "Organization created successfully",
 			}, nil
 		},
 		option.Summary("createOrganizationKey"),

@@ -24,6 +24,7 @@ import (
 	_ "transport-app/app/adapter/in/gcpsubscription"
 	_ "transport-app/app/shared/infrastructure/observability"
 	_ "transport-app/app/shared/infrastructure/observability/strategy"
+	_ "transport-app/app/shared/infrastructure/httpresty"
 )
 
 //go:embed .version

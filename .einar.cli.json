@@ -36,6 +36,14 @@
             "name": "observability",
             "unique": "",
             "libraries": null
+        },
+        {
+            "name": "resty",
+            "unique": "",
+            "libraries": [
+                "github.com/go-resty/resty/v2",
+                "github.com/dubonzi/otelresty"
+            ]
         }
     ],
     "components": [
