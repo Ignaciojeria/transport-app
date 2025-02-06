@@ -44,6 +44,7 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 			return response.CreateOrganizationKeyResponse{
 				OrganizationKey: org.Key,
 				Country:         c.Header("country"),
+				Email:           requestBody.Email,
 				Message:         "Organization created successfully",
 			}, nil
 		},
