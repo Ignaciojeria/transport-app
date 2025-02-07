@@ -7,55 +7,6 @@
 	},
 	"item": [
 		{
-			"name": "https://dev.zuplo.com/v1/accounts/:accountName/key-buckets/:bucketName/consumers/:consumerName/keys",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "urlencoded",
-					"urlencoded": [
-						{
-							"key": "{\r\n  \"description\": \"My secret api key\",\r\n  \"expiresOn\": \"2023-04-20T05:54:34.408Z\",\r\n  \"key\": \"zpka_66b21c8591354c0997db232cc2f79c9e_69253f24\"\r\n}",
-							"value": "",
-							"type": "text"
-						}
-					]
-				},
-				"url": {
-					"raw": "https://dev.zuplo.com/v1/accounts/:accountName/key-buckets/:bucketName/consumers/:consumerName/keys",
-					"protocol": "https",
-					"host": [
-						"dev",
-						"zuplo",
-						"com"
-					],
-					"path": [
-						"v1",
-						"accounts",
-						":accountName",
-						"key-buckets",
-						":bucketName",
-						"consumers",
-						":consumerName",
-						"keys"
-					],
-					"variable": [
-						{
-							"key": "accountName"
-						},
-						{
-							"key": "bucketName"
-						},
-						{
-							"key": "consumerName"
-						}
-					]
-				},
-				"description": "Generated from cURL: curl --request POST \\\r\n  --url https://dev.zuplo.com/v1/accounts/:accountName/key-buckets/:bucketName/consumers/:consumerName/keys \\\r\n  --data '\r\n{\r\n  \"description\": \"My secret api key\",\r\n  \"expiresOn\": \"2023-04-20T05:54:34.408Z\",\r\n  \"key\": \"zpka_66b21c8591354c0997db232cc2f79c9e_69253f24\"\r\n}\r\n'"
-			},
-			"response": []
-		},
-		{
 			"name": "HEALTH",
 			"request": {
 				"auth": {
@@ -80,10 +31,18 @@
 			"response": []
 		},
 		{
-			"name": "CREATE ORGANIZATION KEY",
+			"name": "CREATE ORGANIZATION",
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [
+					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
 					{
 						"key": "country",
 						"value": "CL",
@@ -92,7 +51,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"email\": \"32342545a659114@gmail.com\",\r\n    \"name\": \"einarcli-org\"\r\n}",
+					"raw": "{\r\n    \"name\": \"mi org\",\r\n    \"email\": \"ignaciovl.j@gmail.com\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -117,8 +76,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "09e7eced-dd4d-44ad-ab2a-b023cd957ce3-1073dc9c-8dc9-4101-a8f9-4047b181d73e",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -164,8 +128,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "09e7eced-dd4d-44ad-ab2a-b023cd957ce3-1073dc9c-8dc9-4101-a8f9-4047b181d73e",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -202,8 +171,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -243,8 +217,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -293,8 +272,13 @@
 				"method": "GET",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -344,13 +328,18 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "country",
 						"value": "CL",
 						"type": "text"
 					},
 					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -394,8 +383,13 @@
 				"method": "GET",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -435,8 +429,13 @@
 				"method": "GET",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -468,8 +467,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -508,8 +512,13 @@
 				"method": "GET",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -588,8 +597,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -628,8 +642,13 @@
 				"method": "POST",
 				"header": [
 					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
 						"key": "organization-key",
-						"value": "932c125a-3f90-43be-86e6-72814ec1d28d-cf79a866-0294-4d6c-b672-147500d2fd30",
+						"value": "{{ORGANIZATION_KEY}}",
 						"type": "text"
 					},
 					{
@@ -661,6 +680,28 @@
 			"response": []
 		},
 		{
+			"name": "CREATE CHECKOUT REJECTION",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "SEARCH CHECKOUT REJECTIONS",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
 			"name": "ORDERS CHECKOUT",
 			"request": {
 				"auth": {
@@ -688,72 +729,7 @@
 					]
 				}
 			},
-			"response": [
-				{
-					"name": "ORDERS DELIVERED",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"orderReferenceID\": \"order_ref_value\",\r\n        \"routeReferenceID\": \"route_ref_value\",\r\n        \"status\": \"finished\",\r\n        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n        \"vehicle\": {\r\n            \"referenceID\": \"string\",\r\n            \"plate\": \"string\",\r\n            \"carrier\": {\r\n                \"referenceID\": \"my-reference-id-2\",\r\n                \"nationalID\": \"string5\"\r\n            }\r\n        },\r\n        \"recipient\": {\r\n            \"fullName\": \"\",\r\n            \"nationalID\": \"\"\r\n        },\r\n        \"evidencePhotos\": [\r\n            {\r\n                \"url\": \"https://example.com/photo1.jpg\",\r\n                \"type\": \"DELIVERY_PROOF\",\r\n                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n            }\r\n        ],\r\n        \"delivery\": {\r\n            \"failure\": null, // Solo cuando success es false\r\n            \"location\": {\r\n                \"latitude\": -12.123456,\r\n                \"longitude\": -77.123456\r\n            }\r\n        }\r\n    }\r\n]",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://localhost:8080/orders/checkout",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"orders",
-								"checkout"
-							]
-						}
-					},
-					"_postman_previewlanguage": null,
-					"header": null,
-					"cookie": [],
-					"body": null
-				},
-				{
-					"name": "ORDERS NOT DELIVERED",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "[\r\n    {\r\n        \"orderReferenceID\": \"order_ref_value\",\r\n        \"routeReferenceID\": \"route_ref_value\",\r\n        \"status\": \"pending\",\r\n        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n        \"vehicle\": {\r\n            \"referenceID\": \"string\",\r\n            \"plate\": \"string\",\r\n            \"carrier\": {\r\n                \"referenceID\": \"my-reference-id-2\",\r\n                \"nationalID\": \"string5\"\r\n            }\r\n        },\r\n        \"recipient\": {\r\n            \"fullName\": \"\",\r\n            \"nationalID\": \"\"\r\n        },\r\n        \"evidencePhotos\": [\r\n            {\r\n                \"url\": \"https://example.com/photo1.jpg\",\r\n                \"type\": \"DELIVERY_PROOF\",\r\n                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n            }\r\n        ],\r\n        \"delivery\": {\r\n            \"failure\": {\r\n                \"reasonReferenceID\": \"1234\",\r\n                \"reason\": \"NO_RESIDENTS\",\r\n                \"detail\": \"No se encontraron moradores\"\r\n            },\r\n            \"location\": {\r\n                \"latitude\": -12.123456,\r\n                \"longitude\": -77.123456\r\n            }\r\n        }\r\n    }\r\n]",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "http://localhost:8080/orders/checkout",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"orders",
-								"checkout"
-							]
-						}
-					},
-					"_postman_previewlanguage": null,
-					"header": null,
-					"cookie": [],
-					"body": null
-				}
-			]
+			"response": []
 		}
 	],
 	"variable": [
@@ -775,6 +751,26 @@
 		{
 			"key": "TRANSPORT_APP_HOST",
 			"value": "",
+			"type": "default"
+		},
+		{
+			"key": "ZUPLO_API_KEY",
+			"value": "Bearer zpka_e418578185d84230b0e808761c6ba380_29db53d5",
+			"type": "default"
+		},
+		{
+			"key": "API_KEY",
+			"value": "Bearer zpka_e418578185d84230b0e808761c6ba380_29db53d5",
+			"type": "default"
+		},
+		{
+			"key": "ACCESS_TOKEN",
+			"value": "zpka_436d2dc5fe614d24bbbfc61013e28484_38827f47",
+			"type": "default"
+		},
+		{
+			"key": "ORGANIZATION_KEY",
+			"value": "a25d627d-cc07-4efe-a071-dc76aff4b77b-0ec942d5-c66b-4843-8712-62fd30fee9de",
 			"type": "default"
 		}
 	]
