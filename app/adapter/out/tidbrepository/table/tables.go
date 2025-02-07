@@ -74,6 +74,68 @@ type Order struct {
 	TransportRequirements             JSONReference `gorm:"type:json"`
 }
 
+type CheckoutRejection struct {
+	gorm.Model
+	ID          int64  `gorm:"primaryKey"`
+	ReferenceID string `gorm:"type:varchar(191);not null"`
+	Reason      string `gorm:"type:varchar(191);not null"`
+	Detail      string `gorm:"type:text"`
+}
+
+type CheckoutHistory struct {
+	gorm.Model
+	ID int64 `gorm:"primaryKey"`
+
+	OrderID int64 `gorm:"not null;index"`
+	Order   Order `gorm:"foreignKey:OrderID"`
+
+	VehicleID int64   `gorm:"not null;index"`
+	Vehicle   Vehicle `gorm:"foreignKey:VehicleID"`
+
+	CarrierID int64   `gorm:"not null;index"`
+	Carrier   Carrier `gorm:"foreignKey:CarrierID"`
+
+	RouteID int64 `gorm:"not null;index"`
+	Route   Route `gorm:"foreignKey:RouteID"`
+
+	OrderStatusID int64       `gorm:"not null;index"`
+	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
+
+	CheckoutRejectionID int64             `gorm:"not null;index"`
+	CheckoutRejection   CheckoutRejection `gorm:"foreignKey:CheckoutRejectionID"`
+
+	Latitude  float32
+	Longitude float32
+
+	RecipientFullName   string
+	RecipientNationalID string
+
+	EvidencePhotos JSONEvidencePhotos `gorm:"type:json"`
+}
+
+type EvidencePhoto struct {
+	URL     string
+	Type    string
+	TakenAt time.Time
+}
+
+// Definimos el tipo para manejar el array de EvidencePhoto como JSON
+type JSONEvidencePhotos []EvidencePhoto
+
+// Implementamos los métodos necesarios para el manejo de JSON
+func (j *JSONEvidencePhotos) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONEvidencePhotos value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON
+func (j JSONEvidencePhotos) Value() (driver.Value, error) {
+	return json.Marshal(j)
+}
+
 func (o Order) Map() domain.Order {
 	// Mapear la orden base
 	order := domain.Order{

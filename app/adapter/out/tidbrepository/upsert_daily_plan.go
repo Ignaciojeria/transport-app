@@ -17,10 +17,11 @@ type UpsertDailyPlan func(context.Context, domain.Plan) error
 func init() {
 	ioc.Registry(
 		NewUpsertDailyPlan,
-		tidb.NewTIDBConnection)
+		tidb.NewTIDBConnection,
+		NewLoadOrderStatuses)
 }
 
-func NewUpsertDailyPlan(conn tidb.TIDBConnection) UpsertDailyPlan {
+func NewUpsertDailyPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatuses) UpsertDailyPlan {
 	return func(ctx context.Context, p domain.Plan) error {
 		plan := table.Plan{}
 		err := conn.DB.WithContext(ctx).Table("plans").
@@ -76,13 +77,16 @@ func NewUpsertDailyPlan(conn tidb.TIDBConnection) UpsertDailyPlan {
 			}
 
 			if len(orderList) > 0 {
+				plannedStatusID := loadOrdorderStatuses().Planned().ID
 				if err := tx.Table("orders").
 					Where("id IN ?", orderList).
-					Update("route_id", DBRouteToUpdate.ID).Error; err != nil {
+					Updates(map[string]interface{}{
+						"route_id":        DBRouteToUpdate.ID,
+						"order_status_id": plannedStatusID,
+					}).Error; err != nil {
 					return err
 				}
 			}
-
 			return nil
 		})
 		if err != nil {

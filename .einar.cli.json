@@ -234,6 +234,10 @@
         {
             "kind": "post-controller",
             "name": "orders-checkout"
+        },
+        {
+            "kind": "usecase",
+            "name": "orders-checkout"
         }
     ]
 }

@@ -50,6 +50,8 @@ func NewRunMigrations(
 			&Contact{},
 			&Carrier{},
 			&Vehicle{},
+			&CheckoutRejection{},
+			&CheckoutHistory{},
 		}
 
 		// Opcional: Eliminar tablas si existen

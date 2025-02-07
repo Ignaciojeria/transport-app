@@ -637,7 +637,7 @@ type OrderCheckout struct {
 	DeliveredAt       time.Time
 	Vehicle           Vehicle
 	Recipient         Recipient
-	EvicencePhotos    []EvicencePhotos
+	EvidencePhotos    []EvidencePhotos
 	Latitude          float32
 	Longitude         float32
 	NotDeliveryReason NotDeliveryReason
@@ -648,7 +648,7 @@ type Recipient struct {
 	NationalID string
 }
 
-type EvicencePhotos struct {
+type EvidencePhotos struct {
 	ID      int64
 	URL     string
 	Type    string

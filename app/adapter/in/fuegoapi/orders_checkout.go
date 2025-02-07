@@ -2,6 +2,7 @@ package fuegoapi
 
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/shared/infrastructure/httpserver"
 
@@ -20,9 +21,9 @@ func ordersCheckout(
 	s httpserver.Server,
 	outbox gcppublisher.ApplicationEvents) {
 	fuego.Post(s.Manager, "/orders/checkout",
-		func(c fuego.ContextWithBody[[]request.OrdersCheckoutRequest]) (any, error) {
+		func(c fuego.ContextWithBody[[]request.OrdersCheckoutRequest]) (response.OrdersCheckoutResponse, error) {
 
-			return "unimplemented", nil
+			return response.OrdersCheckoutResponse{}, nil
 		},
 		option.Summary("ordersCheckout"),
 		option.Tags(tagOrders),

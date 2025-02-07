@@ -6,80 +6,94 @@ import (
 )
 
 type OrdersCheckoutRequest struct {
-	OrderReferenceID string    `json:"orderReferenceID"`
-	RouteReferenceID string    `json:"routeReferenceID"`
-	Status           string    `json:"status"`
-	DeliveredAt      time.Time `json:"deliveredAt"`
-	Vehicle          struct {
-		ReferenceID string `json:"referenceID"`
-		Plate       string `json:"plate"`
-		Carrier     struct {
+	Plan struct {
+		Routes []struct {
 			ReferenceID string `json:"referenceID"`
-			NationalID  string `json:"nationalID"`
-		} `json:"carrier"`
-	} `json:"vehicle"`
-	Recipient struct {
-		FullName   string `json:"fullName"`
-		NationalID string `json:"nationalID"`
-	} `json:"recipient"`
-	EvidencePhotos []struct {
-		URL     string    `json:"url"`
-		Type    string    `json:"type"`
-		TakenAt time.Time `json:"takenAt"`
-	} `json:"evidencePhotos"`
-	Delivery struct {
-		Failure struct {
-			ReasonReferenceID string `json:"reasonReferenceID"`
-			Reason            string `json:"reason"`
-			Detail            string `json:"detail"`
-		} `json:"failure"`
-		Location struct {
-			Latitude  float64 `json:"latitude"`
-			Longitude float64 `json:"longitude"`
-		} `json:"location"`
-	} `json:"delivery"`
+			Vehicle     struct {
+				ReferenceID string `json:"referenceID"`
+				Plate       string `json:"plate"`
+			} `json:"vehicle"`
+			Carrier struct {
+				ReferenceID string `json:"referenceID"`
+				NationalID  string `json:"nationalID"`
+			} `json:"carrier"`
+			Orders []struct {
+				ReferenceID string    `json:"referenceID"`
+				Status      string    `json:"status"`
+				DeliveredAt time.Time `json:"deliveredAt"`
+				Recipient   struct {
+					FullName   string `json:"fullName"`
+					NationalID string `json:"nationalID"`
+				} `json:"recipient"`
+				EvidencePhotos []struct {
+					URL     string    `json:"url"`
+					Type    string    `json:"type"`
+					TakenAt time.Time `json:"takenAt"`
+				} `json:"evidencePhotos"`
+				Delivery struct {
+					Failure struct {
+						ReferenceID string `json:"referenceID"`
+						Reason      string `json:"reason"`
+						Detail      string `json:"detail"`
+					} `json:"failure"`
+					Location struct {
+						Latitude  float64 `json:"latitude"`
+						Longitude float64 `json:"longitude"`
+					} `json:"location"`
+				} `json:"delivery"`
+			} `json:"orders"`
+		} `json:"routes"`
+	} `json:"plan"`
 }
 
-func Map(r OrdersCheckoutRequest) domain.OrderCheckout {
-	evidencePhotos := make([]domain.EvicencePhotos, len(r.EvidencePhotos))
-	for i, photo := range r.EvidencePhotos {
-		evidencePhotos[i] = domain.EvicencePhotos{
-			URL:     photo.URL,
-			Type:    photo.Type,
-			TakenAt: photo.TakenAt,
+func MapOrdersCheckout(request OrdersCheckoutRequest) []domain.OrderCheckout {
+	var checkouts []domain.OrderCheckout
+
+	for _, route := range request.Plan.Routes {
+		for _, order := range route.Orders {
+			evidencePhotos := make([]domain.EvidencePhotos, len(order.EvidencePhotos))
+			for i, photo := range order.EvidencePhotos {
+				evidencePhotos[i] = domain.EvidencePhotos{
+					URL:     photo.URL,
+					Type:    photo.Type,
+					TakenAt: photo.TakenAt,
+				}
+			}
+
+			checkouts = append(checkouts, domain.OrderCheckout{
+				Order: domain.Order{
+					ReferenceID: domain.ReferenceID(order.ReferenceID),
+				},
+				Route: domain.Route{
+					ReferenceID: route.ReferenceID,
+				},
+				OrderStatus: domain.OrderStatus{
+					Status:    order.Status,
+					CreatedAt: time.Now(),
+				},
+				DeliveredAt: order.DeliveredAt,
+				Vehicle: domain.Vehicle{
+					ReferenceID: route.Vehicle.ReferenceID,
+					Plate:       route.Vehicle.Plate,
+					Carrier: domain.Carrier{
+						ReferenceID: route.Carrier.ReferenceID,
+						NationalID:  route.Carrier.NationalID,
+					},
+				},
+				Recipient: domain.Recipient{
+					FullName:   order.Recipient.FullName,
+					NationalID: order.Recipient.NationalID,
+				},
+				EvidencePhotos: evidencePhotos,
+				Latitude:       float32(order.Delivery.Location.Latitude),
+				Longitude:      float32(order.Delivery.Location.Longitude),
+				NotDeliveryReason: domain.NotDeliveryReason{
+					ReferenceID: order.Delivery.Failure.ReferenceID,
+					Detail:      order.Delivery.Failure.Detail,
+				},
+			})
 		}
 	}
 
-	return domain.OrderCheckout{
-		Order: domain.Order{
-			ReferenceID: domain.ReferenceID(r.OrderReferenceID),
-		},
-		Route: domain.Route{
-			ReferenceID: r.RouteReferenceID,
-		},
-		OrderStatus: domain.OrderStatus{
-			Status:    r.Status,
-			CreatedAt: time.Now(),
-		},
-		DeliveredAt: r.DeliveredAt,
-		Vehicle: domain.Vehicle{
-			ReferenceID: r.Vehicle.ReferenceID,
-			Plate:       r.Vehicle.Plate,
-			Carrier: domain.Carrier{
-				ReferenceID: r.Vehicle.Carrier.ReferenceID,
-				NationalID:  r.Vehicle.Carrier.NationalID,
-			},
-		},
-		Recipient: domain.Recipient{
-			FullName:   r.Recipient.FullName,
-			NationalID: r.Recipient.NationalID,
-		},
-		EvicencePhotos: evidencePhotos,
-		Latitude:       float32(r.Delivery.Location.Latitude),
-		Longitude:      float32(r.Delivery.Location.Longitude),
-		NotDeliveryReason: domain.NotDeliveryReason{
-			ReferenceID: r.Delivery.Failure.ReasonReferenceID,
-			Detail:      r.Delivery.Failure.Detail,
-		},
-	}
+	return checkouts
 }
