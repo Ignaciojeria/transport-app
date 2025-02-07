@@ -238,6 +238,10 @@
         {
             "kind": "usecase",
             "name": "orders-checkout"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "checkout-submitted"
         }
     ]
 }

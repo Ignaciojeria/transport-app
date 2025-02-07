@@ -5,7 +5,7 @@ import (
 	"transport-app/app/domain"
 )
 
-type OrdersCheckoutRequest struct {
+type CheckoutRequest struct {
 	Plan struct {
 		Routes []struct {
 			ReferenceID string `json:"referenceID"`
@@ -18,10 +18,14 @@ type OrdersCheckoutRequest struct {
 				NationalID  string `json:"nationalID"`
 			} `json:"carrier"`
 			Orders []struct {
-				ReferenceID string    `json:"referenceID"`
-				Status      string    `json:"status"`
-				DeliveredAt time.Time `json:"deliveredAt"`
-				Recipient   struct {
+				ReferenceID         string    `json:"referenceID"`
+				Status              string    `json:"status"`
+				DeliveredAt         time.Time `json:"deliveredAt"`
+				BusinessIdentifiers struct {
+					Commerce string `json:"commerce"`
+					Consumer string `json:"consumer"`
+				} `json:"businessIdentifiers"`
+				Recipient struct {
 					FullName   string `json:"fullName"`
 					NationalID string `json:"nationalID"`
 				} `json:"recipient"`
@@ -46,8 +50,8 @@ type OrdersCheckoutRequest struct {
 	} `json:"plan"`
 }
 
-func MapOrdersCheckout(request OrdersCheckoutRequest) []domain.OrderCheckout {
-	var checkouts []domain.OrderCheckout
+func MapCheckout(request CheckoutRequest) []domain.Checkout {
+	var checkouts []domain.Checkout
 
 	for _, route := range request.Plan.Routes {
 		for _, order := range route.Orders {
@@ -60,8 +64,12 @@ func MapOrdersCheckout(request OrdersCheckoutRequest) []domain.OrderCheckout {
 				}
 			}
 
-			checkouts = append(checkouts, domain.OrderCheckout{
+			checkouts = append(checkouts, domain.Checkout{
 				Order: domain.Order{
+					Headers: domain.Headers{
+						Consumer: order.BusinessIdentifiers.Consumer,
+						Commerce: order.BusinessIdentifiers.Commerce,
+					},
 					ReferenceID: domain.ReferenceID(order.ReferenceID),
 				},
 				Route: domain.Route{

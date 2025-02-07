@@ -702,16 +702,32 @@
 			"response": []
 		},
 		{
-			"name": "ORDERS CHECKOUT",
+			"name": "CHECKOUT SUBMISSION",
 			"request": {
 				"auth": {
 					"type": "noauth"
 				},
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "X-Access-Token",
+						"value": "{{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "organization-key",
+						"value": "{{ORGANIZATION_KEY}}",
+						"type": "text"
+					},
+					{
+						"key": "country",
+						"value": "CL",
+						"type": "text"
+					}
+				],
 				"body": {
 					"mode": "raw",
-					"raw": "[\r\n    {\r\n        \"orderReferenceID\": \"order_ref_value\",\r\n        \"routeReferenceID\": \"route_ref_value\",\r\n        \"status\": \"finished\",\r\n        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n        \"vehicle\": {\r\n            \"referenceID\": \"string\",\r\n            \"plate\": \"string\",\r\n            \"carrier\": {\r\n                \"referenceID\": \"my-reference-id-2\",\r\n                \"nationalID\": \"string5\"\r\n            }\r\n        },\r\n        \"recipient\": {\r\n            \"fullName\": \"\",\r\n            \"nationalID\": \"\"\r\n        },\r\n        \"evidencePhotos\": [\r\n            {\r\n                \"url\": \"https://example.com/photo1.jpg\",\r\n                \"type\": \"DELIVERY_PROOF\",\r\n                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n            }\r\n        ],\r\n        \"delivery\": {\r\n            \"failure\": {\r\n                \"referenceID\": \"1234\",\r\n                \"reason\": \"NO_RESIDENTS\",\r\n                \"detail\": \"No se encontraron moradores\"\r\n            },\r\n            \"location\": {\r\n                \"latitude\": -12.123456,\r\n                \"longitude\": -77.123456\r\n            }\r\n        }\r\n    }\r\n]",
+					"raw": "{\r\n    \"plan\": {\r\n        \"routes\": [\r\n            {\r\n                \"referenceID\": \"reference_1234\",\r\n                \"vehicle\": {\r\n                    \"referenceID\": \"string\",\r\n                    \"plate\": \"string\"\r\n                },\r\n                \"carrier\": {\r\n                    \"referenceID\": \"my-reference-id-2\",\r\n                    \"nationalID\": \"string5\"\r\n                },\r\n                \"orders\": [\r\n                    {\r\n                        \"referenceID\": \"order_ref_value\",\r\n                        \"status\": \"finished\",\r\n                        \"businessIdentifiers\": {\r\n                            \"commerce\": \"COMMERCE_EXAMPLE2AAA\",\r\n                            \"consumer\": \"CONSUMER_EXAMPLE\"\r\n                        },\r\n                        \"deliveredAt\": \"2024-02-02T15:30:00Z\",\r\n                        \"recipient\": {\r\n                            \"fullName\": \"\",\r\n                            \"nationalID\": \"\"\r\n                        },\r\n                        \"evidencePhotos\": [\r\n                            {\r\n                                \"url\": \"https://example.com/photo1.jpg\",\r\n                                \"type\": \"DELIVERY_PROOF\",\r\n                                \"takenAt\": \"2024-02-02T15:30:00Z\"\r\n                            }\r\n                        ],\r\n                        \"delivery\": {\r\n                            \"failure\": {\r\n                                \"referenceID\": \"1234\",\r\n                                \"reason\": \"NO_RESIDENTS\",\r\n                                \"detail\": \"No se encontraron moradores\"\r\n                            },\r\n                            \"location\": {\r\n                                \"latitude\": -12.123456,\r\n                                \"longitude\": -77.123456\r\n                            }\r\n                        }\r\n                    }\r\n                ]\r\n            }\r\n        ]\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -719,13 +735,12 @@
 					}
 				},
 				"url": {
-					"raw": "{{TRANSPORT_APP_HOST}}/orders/checkout",
+					"raw": "{{TRANSPORT_APP_HOST}}/checkouts",
 					"host": [
 						"{{TRANSPORT_APP_HOST}}"
 					],
 					"path": [
-						"orders",
-						"checkout"
+						"checkouts"
 					]
 				}
 			},
