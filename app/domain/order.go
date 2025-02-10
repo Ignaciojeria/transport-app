@@ -22,8 +22,9 @@ type Order struct {
 	Packages                []Package               `json:"packages"`
 	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
 	PromisedDate            PromisedDate            `json:"promisedDate"`
-	DeliveryInstructions    string                  `json:"deliveryInstructions"`
-	TransportRequirements   []Reference             `json:"transportRequirements"`
+	UnassignedReason        string
+	DeliveryInstructions    string      `json:"deliveryInstructions"`
+	TransportRequirements   []Reference `json:"transportRequirements"`
 }
 
 func (o Order) UpdateIfChanged(newOrder Order) Order {

@@ -4,31 +4,34 @@ import (
 	"context"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
+	"transport-app/app/usecase/optimization"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertDailyPlan func(context.Context, domain.Plan) (domain.Plan, error)
+type UpsertPlan func(context.Context, domain.Plan) (domain.Plan, error)
 
 func init() {
 	ioc.Registry(
-		NewUpsertDailyPlan,
+		NewUpsertPlan,
 		tidbrepository.NewUpsertPlanType,
 		tidbrepository.NewUpsertPlanningStatus,
 		tidbrepository.NewFindOrdersByFilters,
 		tidbrepository.NewUpsertOperator,
-		tidbrepository.NewUpsertDailyPlan,
-		tidbrepository.NewLoadOrganizationCountry)
+		tidbrepository.NewUpsertPlan,
+		tidbrepository.NewLoadOrganizationCountry,
+		optimization.NewOptimize)
 }
 
-func NewUpsertDailyPlan(
+func NewUpsertPlan(
 	upsertPlanType tidbrepository.UpsertPlanType,
 	upsertPlanningStatus tidbrepository.UpsertPlanningStatus,
 	findOrders tidbrepository.FindOrdersByFilters,
 	upsertOperator tidbrepository.UpsertOperator,
-	upsertDailyPlan tidbrepository.UpsertDailyPlan,
+	upsertPlan tidbrepository.UpsertPlan,
 	loadOrganizationCountry tidbrepository.LoadOrganizationCountry,
-) UpsertDailyPlan {
+	optimize optimization.Optimize,
+) UpsertPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 		org, err := loadOrganizationCountry(ctx, plan.Organization)
 		if err != nil {
@@ -45,22 +48,18 @@ func NewUpsertDailyPlan(
 		if err != nil {
 			return domain.Plan{}, err
 		}
-		plan.Routes[0].Operator.Organization = plan.Organization
-		operator, err := upsertOperator(ctx, plan.Routes[0].Operator)
-		if err != nil {
-			return domain.Plan{}, err
+		for index := range plan.Routes {
+			plan.Routes[index].Organization = plan.Organization
+			plan.Routes[index].Operator.Organization = plan.Organization
+			operator, err := upsertOperator(ctx, plan.Routes[index].Operator)
+			if err != nil {
+				return domain.Plan{}, err
+			}
+			plan.Routes[index].Operator = operator
+			plan.Routes[index].Organization = plan.Organization
 		}
-		filters := plan.GetOrderSearchFilters()
-		orders, err := findOrders(ctx, filters)
-		if err != nil {
-			return domain.Plan{}, err
-		}
-		plan.Routes[0].Orders = orders
-		plan.Routes[0].Organization = plan.Organization
-		plan.Routes[0].Operator = operator
-		plan.Routes[0].ReferenceID = plan.ReferenceID
 		plan.PlanType = planType
 		plan.PlanningStatus = planningStatus
-		return domain.Plan{}, upsertDailyPlan(ctx, plan)
+		return domain.Plan{}, upsertPlan(ctx, plan)
 	}
 }

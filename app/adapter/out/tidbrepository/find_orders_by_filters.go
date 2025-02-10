@@ -126,9 +126,10 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
 		}
 
 		// Condición dinámica para OperatorReferenceID
-		if osf.OrderSearchOperatorDailyPlanFilters.OperatorReferenceID != "" {
+
+		if osf.RouteReferenceID != "" {
 			query += " AND r.reference_id = ?"
-			params = append(params, osf.OrderSearchOperatorDailyPlanFilters.GetRouteReferenceID())
+			params = append(params, osf.RouteReferenceID)
 		}
 
 		// Condición adicional para comercios

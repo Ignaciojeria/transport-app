@@ -19,20 +19,20 @@ import (
 
 func init() {
 	ioc.Registry(
-		upsertDailyPlan,
+		upsertPlan,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
 		gcppublisher.NewApplicationEvents)
 }
-func upsertDailyPlan(
+func upsertPlan(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox gcppublisher.ApplicationEvents) {
-	fuego.Post(s.Manager, "/daily-plans",
-		func(c fuego.ContextWithBody[request.UpsertDailyPlanRequest]) (response.CreateDailyPlanResponse, error) {
+	fuego.Post(s.Manager, "/plans",
+		func(c fuego.ContextWithBody[request.UpsertPlanRequest]) (response.UpsertPlanResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return response.CreateDailyPlanResponse{}, err
+				return response.UpsertPlanResponse{}, err
 			}
 
 			organization := domain.Organization{
@@ -42,7 +42,7 @@ func upsertDailyPlan(
 
 			org, err := ensureOrg(c.Context(), organization)
 			if err != nil {
-				return response.CreateDailyPlanResponse{}, fuego.HTTPError{
+				return response.UpsertPlanResponse{}, fuego.HTTPError{
 					Title:  "error creating daily plan",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
@@ -59,19 +59,19 @@ func upsertDailyPlan(
 					"organizationCountryID": orgIDString,
 					"consumer":              c.Header("consumer"),
 					"commerce":              c.Header("commerce"),
-					"referenceID":           requestBody.ReferenceID(),
+					"referenceID":           requestBody.ReferenceID,
 				},
 				Status:       "pending",
 				Organization: org,
 				Payload:      requestBodyBytes,
 			}); err != nil {
-				return response.CreateDailyPlanResponse{}, err
+				return response.UpsertPlanResponse{}, err
 			}
-			return response.CreateDailyPlanResponse{
+			return response.UpsertPlanResponse{
 				Message: "daily plan submitted",
 			}, err
 		},
-		option.Summary("createDailyPlan"),
-		option.Tags(tagEndToEndOperator),
+		option.Summary("upsertPlan"),
+		option.Tags(tagEndToEndOperator, tagPlanning),
 	)
 }

@@ -16,19 +16,19 @@ import (
 
 func init() {
 	ioc.Registry(
-		newDailyPlanSubmitted,
+		newPlanSubmitted,
 		subscriptionwrapper.NewSubscriptionManager,
-		usecase.NewUpsertDailyPlan)
+		usecase.NewUpsertPlan)
 }
-func newDailyPlanSubmitted(
+func newPlanSubmitted(
 	sm subscriptionwrapper.SubscriptionManager,
-	upsertDailyPlan usecase.UpsertDailyPlan,
+	upsertPlan usecase.UpsertPlan,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := "transport-app-events-daily-plan-submitted"
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
-		var input request.UpsertDailyPlanRequest
+		var input request.UpsertPlanRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
@@ -48,7 +48,7 @@ func newDailyPlanSubmitted(
 		inputMapped := input.Map()
 		inputMapped.Organization.OrganizationCountryID = organizationCountryID
 
-		_, err = upsertDailyPlan(ctx, inputMapped)
+		_, err = upsertPlan(ctx, inputMapped)
 		if err != nil {
 			m.Ack()
 			return http.StatusOK, err

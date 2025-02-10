@@ -4,12 +4,15 @@ import "time"
 
 type Plan struct {
 	Headers
-	ID             int64
-	ReferenceID    string
-	PlannedDate    time.Time
-	Routes         []Route
-	PlanningStatus PlanningStatus
-	PlanType       PlanType
+	ID               int64
+	Origin           NodeInfo
+	Destination      NodeInfo
+	ReferenceID      string
+	PlannedDate      time.Time
+	UnassignedOrders []Order
+	Routes           []Route
+	PlanningStatus   PlanningStatus
+	PlanType         PlanType
 }
 
 func (p Plan) GetOrderSearchFilters() OrderSearchFilters {
@@ -18,6 +21,7 @@ func (p Plan) GetOrderSearchFilters() OrderSearchFilters {
 	for _, route := range p.Routes {
 		for _, order := range route.Orders {
 			osf.ReferenceIDs = append(osf.ReferenceIDs, string(order.ReferenceID))
+			osf.RouteReferenceID = route.ReferenceID
 		}
 	}
 	return osf
