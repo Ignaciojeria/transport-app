@@ -254,6 +254,10 @@
         {
             "kind": "resty-client",
             "name": "location-iq-optimization"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-route-by-reference"
         }
     ]
 }
