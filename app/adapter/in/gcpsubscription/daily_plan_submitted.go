@@ -28,6 +28,7 @@ func newPlanSubmitted(
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
+		m.Ack()
 		var input request.UpsertPlanRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()

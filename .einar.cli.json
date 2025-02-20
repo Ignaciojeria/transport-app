@@ -242,6 +242,18 @@
         {
             "kind": "gcp-subscription",
             "name": "checkout-submitted"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-plan-by-reference"
+        },
+        {
+            "kind": "post-controller",
+            "name": "plan-optimization"
+        },
+        {
+            "kind": "resty-client",
+            "name": "location-iq-optimization"
         }
     ]
 }

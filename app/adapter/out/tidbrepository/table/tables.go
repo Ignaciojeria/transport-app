@@ -9,6 +9,7 @@ import (
 	"transport-app/app/domain"
 
 	"github.com/biter777/countries"
+	"github.com/paulmach/orb"
 	"gorm.io/gorm"
 )
 
@@ -63,6 +64,12 @@ type Order struct {
 	DestinationNodeInfoID int64    `gorm:"default:null"`
 	DestinationNodeInfo   NodeInfo `gorm:"foreignKey:DestinationNodeInfoID"`
 
+	SequenceNumber *int `gorm:"default:null"`
+
+	JSONPlanLocation          JSONPlanLocation `gorm:"type:json;default:null"`
+	JSONPlanCorrectedLocation JSONPlanLocation `gorm:"type:json;default:null"`
+	PlanCorrectedDistance     float64          `gorm:"default:null"`
+
 	Packages []Package `gorm:"many2many:order_packages"`
 
 	JSONItems JSONItems `gorm:"type:json"`
@@ -107,8 +114,8 @@ type CheckoutHistory struct {
 	CheckoutRejectionID int64             `gorm:"not null;index"`
 	CheckoutRejection   CheckoutRejection `gorm:"foreignKey:CheckoutRejectionID"`
 
-	Latitude  float32
-	Longitude float32
+	Latitude  float64
+	Longitude float64
 
 	RecipientFullName   string
 	RecipientNationalID string
@@ -457,8 +464,8 @@ type AddressInfo struct {
 	AddressLine1          string              `gorm:"not null"`
 	AddressLine2          string              `gorm:"default:null"`
 	AddressLine3          string              `gorm:"default:null"`
-	Latitude              float32             `gorm:"default:null"`
-	Longitude             float32             `gorm:"default:null"`
+	Latitude              float64             `gorm:"default:null"`
+	Longitude             float64             `gorm:"default:null"`
 	ZipCode               string              `gorm:"default:null"`
 	TimeZone              string              `gorm:"default:null"`
 }
@@ -474,8 +481,7 @@ func (a AddressInfo) Map() domain.AddressInfo {
 		AddressLine1: a.AddressLine1,
 		AddressLine2: a.AddressLine2,
 		AddressLine3: a.AddressLine3,
-		Latitude:     a.Latitude,
-		Longitude:    a.Longitude,
+		Location:     orb.Point{a.Longitude, a.Latitude},
 		ZipCode:      a.ZipCode,
 		TimeZone:     a.TimeZone,
 	}

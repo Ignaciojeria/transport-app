@@ -6,6 +6,7 @@ import (
 	"transport-app/app/domain"
 
 	"github.com/biter777/countries"
+	"github.com/paulmach/orb"
 )
 
 type FlattenedOrderView struct {
@@ -41,8 +42,8 @@ type FlattenedOrderView struct {
 	OriginCounty                 string              `gorm:"column:origin_county"`
 	OriginDistrict               string              `gorm:"column:origin_district"`
 	OriginZipCode                string              `gorm:"column:origin_zipcode"`
-	OriginLatitude               float32             `gorm:"column:origin_latitude"`
-	OriginLongitude              float32             `gorm:"column:origin_longitude"`
+	OriginLatitude               float64             `gorm:"column:origin_latitude"`
+	OriginLongitude              float64             `gorm:"column:origin_longitude"`
 	OriginTimeZone               string              `gorm:"column:origin_timezone"`
 	OriginNodeInfoID             int64               `gorm:"column:origin_node_info_id"`
 	OriginNodeReferenceID        string              `gorm:"column:origin_node_reference_id"`
@@ -61,8 +62,8 @@ type FlattenedOrderView struct {
 	DestinationCounty            string              `gorm:"column:destination_county"`
 	DestinationDistrict          string              `gorm:"column:destination_district"`
 	DestinationZipCode           string              `gorm:"column:destination_zipcode"`
-	DestinationLatitude          float32             `gorm:"column:destination_latitude"`
-	DestinationLongitude         float32             `gorm:"column:destination_longitude"`
+	DestinationLatitude          float64             `gorm:"column:destination_latitude"`
+	DestinationLongitude         float64             `gorm:"column:destination_longitude"`
 	DestinationTimeZone          string              `gorm:"column:destination_timezone"`
 	DestinationNodeInfoID        int64               `gorm:"column:destination_node_info_id"`
 	DestinationNodeReferenceID   string              `gorm:"column:destination_node_reference_id"`
@@ -172,8 +173,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				ZipCode:      o.OriginZipCode,
 				County:       o.OriginCounty,
 				District:     o.OriginDistrict,
-				Latitude:     o.OriginLatitude,
-				Longitude:    o.OriginLongitude,
+				Location:     orb.Point{o.OriginLongitude, o.OriginLatitude},
 				TimeZone:     o.OriginTimeZone,
 			},
 		},
@@ -202,8 +202,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				ZipCode:      o.DestinationZipCode,
 				County:       o.DestinationCounty,
 				District:     o.DestinationDistrict,
-				Latitude:     o.DestinationLatitude,
-				Longitude:    o.DestinationLongitude,
+				Location:     orb.Point{o.DestinationLongitude, o.DestinationLatitude},
 				TimeZone:     o.DestinationTimeZone,
 			},
 		},

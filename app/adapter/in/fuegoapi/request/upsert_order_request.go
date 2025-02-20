@@ -3,6 +3,8 @@ package request
 import (
 	"time"
 	"transport-app/app/domain"
+
+	"github.com/paulmach/orb"
 )
 
 type UpsertOrderRequest struct {
@@ -31,8 +33,8 @@ type UpsertOrderRequest struct {
 			} `json:"contact"`
 			County    string  `json:"county"`
 			District  string  `json:"district"`
-			Latitude  float32 `json:"latitude"`
-			Longitude float32 `json:"longitude"`
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
 			Province  string  `json:"province"`
 			State     string  `json:"state"`
 			TimeZone  string  `json:"timeZone"`
@@ -63,8 +65,8 @@ type UpsertOrderRequest struct {
 		} `json:"quantity"`
 		ReferenceID string `json:"referenceId"`
 		Weight      struct {
-			Unit  string `json:"unit"`
-			Value int    `json:"value"`
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
 		} `json:"weight"`
 	} `json:"items"`
 	OrderType struct {
@@ -88,8 +90,8 @@ type UpsertOrderRequest struct {
 			} `json:"contact"`
 			County    string  `json:"county"`
 			District  string  `json:"district"`
-			Latitude  float32 `json:"latitude"`
-			Longitude float32 `json:"longitude"`
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
 			Province  string  `json:"province"`
 			State     string  `json:"state"`
 			TimeZone  string  `json:"timeZone"`
@@ -120,8 +122,8 @@ type UpsertOrderRequest struct {
 		} `json:"itemReferences"`
 		Lpn    string `json:"lpn"`
 		Weight struct {
-			Unit  string `json:"unit"`
-			Value int    `json:"value"`
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
 		} `json:"weight"`
 	} `json:"packages"`
 	PromisedDate struct {
@@ -221,8 +223,8 @@ func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 	} `json:"contact"`
 	County    string  `json:"county"`
 	District  string  `json:"district"`
-	Latitude  float32 `json:"latitude"`
-	Longitude float32 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
 	Province  string  `json:"province"`
 	State     string  `json:"state"`
 	TimeZone  string  `json:"timeZone"`
@@ -243,10 +245,12 @@ func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 		AddressLine1: addressInfo.AddressLine1,
 		AddressLine2: addressInfo.AddressLine2,
 		AddressLine3: addressInfo.AddressLine3,
-		Latitude:     addressInfo.Latitude,
-		Longitude:    addressInfo.Longitude,
-		ZipCode:      addressInfo.ZipCode,
-		TimeZone:     addressInfo.TimeZone,
+		Location: orb.Point{
+			addressInfo.Longitude, // orb.Point espera [lon, lat]
+			addressInfo.Latitude,
+		},
+		ZipCode:  addressInfo.ZipCode,
+		TimeZone: addressInfo.TimeZone,
 	}
 }
 
@@ -280,14 +284,14 @@ func (req UpsertOrderRequest) mapItems() []domain.Item {
 			},
 			Description: item.Description,
 			Dimensions: domain.Dimensions{
-				Height: float64(item.Dimensions.Height),
-				Width:  float64(item.Dimensions.Width),
-				Depth:  float64(item.Dimensions.Depth),
+				Height: item.Dimensions.Height,
+				Width:  item.Dimensions.Width,
+				Depth:  item.Dimensions.Depth,
 				Unit:   item.Dimensions.Unit,
 			},
 			Weight: domain.Weight{
 				Unit:  item.Weight.Unit,
-				Value: float64(item.Weight.Value),
+				Value: item.Weight.Value,
 			},
 		}
 	}
@@ -300,14 +304,14 @@ func (req UpsertOrderRequest) mapPackages() []domain.Package {
 		mapped[i] = domain.Package{
 			Lpn: pkg.Lpn,
 			Dimensions: domain.Dimensions{
-				Height: float64(pkg.Dimensions.Height),
-				Width:  float64(pkg.Dimensions.Width),
-				Depth:  float64(pkg.Dimensions.Depth),
+				Height: pkg.Dimensions.Height,
+				Width:  pkg.Dimensions.Width,
+				Depth:  pkg.Dimensions.Depth,
 				Unit:   pkg.Dimensions.Unit,
 			},
 			Weight: domain.Weight{
 				Unit:  pkg.Weight.Unit,
-				Value: float64(pkg.Weight.Value),
+				Value: pkg.Weight.Value,
 			},
 			Insurance: domain.Insurance{
 				Currency:  pkg.Insurance.Currency,

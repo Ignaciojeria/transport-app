@@ -37,8 +37,8 @@ type SearchOrdersResponse struct {
 			} `json:"contact"`
 			County    string  `json:"county"`
 			District  string  `json:"district"`
-			Latitude  float32 `json:"latitude"`
-			Longitude float32 `json:"longitude"`
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
 			Province  string  `json:"province"`
 			State     string  `json:"state"`
 			TimeZone  string  `json:"timeZone"`
@@ -93,8 +93,8 @@ type SearchOrdersResponse struct {
 			} `json:"contact"`
 			County    string  `json:"county"`
 			District  string  `json:"district"`
-			Latitude  float32 `json:"latitude"`
-			Longitude float32 `json:"longitude"`
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
 			Province  string  `json:"province"`
 			State     string  `json:"state"`
 			TimeZone  string  `json:"timeZone"`
@@ -206,8 +206,8 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.NodeInfo) *SearchOrder
 	res.Origin.AddressInfo.State = origin.AddressInfo.State
 	res.Origin.AddressInfo.ZipCode = origin.AddressInfo.ZipCode
 	res.Origin.AddressInfo.TimeZone = origin.AddressInfo.TimeZone
-	res.Origin.AddressInfo.Latitude = origin.AddressInfo.Latitude
-	res.Origin.AddressInfo.Longitude = origin.AddressInfo.Longitude
+	res.Origin.AddressInfo.Latitude = origin.AddressInfo.Location[1]
+	res.Origin.AddressInfo.Longitude = origin.AddressInfo.Location[0]
 	res.Origin.NodeInfo.ReferenceID = string(origin.ReferenceID)
 
 	// Mapeo del contacto
@@ -341,8 +341,8 @@ func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *S
 	res.Destination.AddressInfo.State = destination.AddressInfo.State
 	res.Destination.AddressInfo.ZipCode = destination.AddressInfo.ZipCode
 	res.Destination.AddressInfo.TimeZone = destination.AddressInfo.TimeZone
-	res.Destination.AddressInfo.Latitude = destination.AddressInfo.Latitude
-	res.Destination.AddressInfo.Longitude = destination.AddressInfo.Longitude
+	res.Destination.AddressInfo.Latitude = destination.AddressInfo.Location[1]  // Latitud
+	res.Destination.AddressInfo.Longitude = destination.AddressInfo.Location[0] // Longitud
 	res.Destination.NodeInfo.ReferenceID = string(destination.ReferenceID)
 
 	// Mapeo del contacto

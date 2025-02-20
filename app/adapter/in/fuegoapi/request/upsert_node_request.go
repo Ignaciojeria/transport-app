@@ -1,6 +1,10 @@
 package request
 
-import "transport-app/app/domain"
+import (
+	"transport-app/app/domain"
+
+	"github.com/paulmach/orb"
+)
 
 type UpsertNodeRequest struct {
 	ReferenceID string `json:"referenceID" validate:"required"`
@@ -12,8 +16,8 @@ type UpsertNodeRequest struct {
 		AddressLine3 string  `json:"addressLine3"`
 		County       string  `json:"county"`
 		District     string  `json:"district"`
-		Latitude     float32 `json:"latitude"`
-		Longitude    float32 `json:"longitude"`
+		Latitude     float64 `json:"latitude"`
+		Longitude    float64 `json:"longitude"`
 		Province     string  `json:"province"`
 		State        string  `json:"state"`
 		TimeZone     string  `json:"timeZone"`
@@ -48,12 +52,14 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			AddressLine3: req.NodeAddress.AddressLine3,
 			County:       req.NodeAddress.County,
 			District:     req.NodeAddress.District,
-			Latitude:     req.NodeAddress.Latitude,
-			Longitude:    req.NodeAddress.Longitude,
-			Province:     req.NodeAddress.Province,
-			State:        req.NodeAddress.State,
-			TimeZone:     req.NodeAddress.TimeZone,
-			ZipCode:      req.NodeAddress.ZipCode,
+			Location: orb.Point{
+				req.NodeAddress.Longitude, // orb.Point espera [lon, lat]
+				req.NodeAddress.Latitude,
+			},
+			Province: req.NodeAddress.Province,
+			State:    req.NodeAddress.State,
+			TimeZone: req.NodeAddress.TimeZone,
+			ZipCode:  req.NodeAddress.ZipCode,
 		},
 		References: func() []domain.Reference {
 			refs := make([]domain.Reference, len(req.References))

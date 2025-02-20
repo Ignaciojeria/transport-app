@@ -7,12 +7,14 @@ import (
 	"time"
 
 	"github.com/joomcode/errorx"
+	"github.com/paulmach/orb"
 )
 
 type Order struct {
 	Headers
 	ID                      int64
 	ReferenceID             ReferenceID             `json:"referenceID"`
+	SequenceNumber          *int                    `json:"sequenceNumber"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
 	OrderType               OrderType               `json:"orderType"`
 	References              []Reference             `json:"references"`
@@ -349,20 +351,22 @@ func compareDocuments(oldDocs, newDocs []Document) bool {
 }
 
 type AddressInfo struct {
-	ID           int64
-	Organization Organization
-	Contact      Contact `json:"contact"`
-	State        string  `json:"state"`
-	County       string  `json:"county"`
-	Province     string  `json:"province"`
-	District     string  `json:"district"`
-	AddressLine1 string  `json:"addressLine1"`
-	AddressLine2 string  `json:"addressLine2"`
-	AddressLine3 string  `json:"addressLine3"`
-	Latitude     float32 `json:"latitude"`
-	Longitude    float32 `json:"longitude"`
-	ZipCode      string  `json:"zipCode"`
-	TimeZone     string  `json:"timeZone"`
+	ID                    int64
+	Organization          Organization
+	Contact               Contact   `json:"contact"`
+	State                 string    `json:"state"`
+	County                string    `json:"county"`
+	Province              string    `json:"province"`
+	District              string    `json:"district"`
+	AddressLine1          string    `json:"addressLine1"`
+	AddressLine2          string    `json:"addressLine2"`
+	AddressLine3          string    `json:"addressLine3"`
+	Location              orb.Point // Punto original
+	PlanLocation          orb.Point // Punto enviado en el plan
+	PlanCorrectedLocation orb.Point // Punto corregido del plan (snapped)
+	PlanCorrectedDistance float64   // Distancia aplicada al punto corregido del plan
+	ZipCode               string    `json:"zipCode"`
+	TimeZone              string    `json:"timeZone"`
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
@@ -378,11 +382,11 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
 	if newAddress.AddressLine3 != "" {
 		a.AddressLine3 = newAddress.AddressLine3
 	}
-	if newAddress.Latitude != 0 {
-		a.Latitude = newAddress.Latitude
+	if newAddress.Location[1] != 0 { // Si la latitud no es 0
+		a.Location[1] = newAddress.Location[1]
 	}
-	if newAddress.Longitude != 0 {
-		a.Longitude = newAddress.Longitude
+	if newAddress.Location[0] != 0 { // Si la longitud no es 0
+		a.Location[0] = newAddress.Location[0]
 	}
 	if newAddress.State != "" {
 		a.State = newAddress.State

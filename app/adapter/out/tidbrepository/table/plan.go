@@ -1,6 +1,9 @@
 package table
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 	"transport-app/app/domain"
 
@@ -10,6 +13,8 @@ import (
 type Plan struct {
 	gorm.Model
 	ID                    int64               `gorm:"primaryKey;autoIncrement"`
+	StartNodeReferenceID  string              `gorm:"default:null"`
+	JSONStartLocation     JSONPlanLocation    `gorm:"type:json;default:null"`
 	OrganizationCountryID int64               `gorm:"not null"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 	ReferenceID           string              `gorm:"type:varchar(255);not null"`
@@ -18,6 +23,27 @@ type Plan struct {
 	PlanType              PlanType            `gorm:"foreignKey:PlanTypeID"`
 	PlanningStatusID      int64               `gorm:"not null"`
 	PlanningStatus        PlanningStatus      `gorm:"foreignKey:PlanningStatusID"`
+}
+
+type PlanLocation struct {
+	Longitude float64
+	Latitude  float64
+}
+
+type JSONPlanLocation PlanLocation
+
+// Implementamos los métodos necesarios para el manejo de JSON
+func (j *JSONPlanLocation) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONPlanLocation value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Value implementa la interfaz driver.Valuer para convertir la estructura en JSON
+func (j JSONPlanLocation) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 func (p Plan) Map() domain.Plan {
@@ -68,6 +94,8 @@ type Route struct {
 	ReferenceID           string              `gorm:"type:varchar(255);not null"`
 	OrganizationCountryID int64               `gorm:"default:null"`
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
+	EndNodeReferenceID    string              `gorm:"default:null"`
+	JSONEndLocation       JSONPlanLocation    `gorm:"type:json;default:null"`
 	PlanID                int64               `gorm:"default:null"`
 	Plan                  Plan                `gorm:"foreignKey:PlanID"`
 	AccountID             *int64              `gorm:"default:null"`

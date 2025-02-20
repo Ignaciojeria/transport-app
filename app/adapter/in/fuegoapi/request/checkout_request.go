@@ -93,8 +93,8 @@ func MapCheckout(request CheckoutRequest) []domain.Checkout {
 					NationalID: order.Recipient.NationalID,
 				},
 				EvidencePhotos: evidencePhotos,
-				Latitude:       float32(order.Delivery.Location.Latitude),
-				Longitude:      float32(order.Delivery.Location.Longitude),
+				Latitude:       order.Delivery.Location.Latitude,
+				Longitude:      order.Delivery.Location.Longitude,
 				NotDeliveryReason: domain.NotDeliveryReason{
 					ReferenceID: order.Delivery.Failure.ReferenceID,
 					Detail:      order.Delivery.Failure.Detail,

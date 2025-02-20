@@ -3,6 +3,8 @@ package request
 import (
 	"time"
 	"transport-app/app/domain"
+
+	"github.com/paulmach/orb"
 )
 
 type UpsertPlanRequest struct {
@@ -18,16 +20,19 @@ type UpsertPlanRequest struct {
 		End   string `json:"end"`
 	} `json:"workingHours"`
 	UnassignedOrders []struct {
-		ReferenceID string `json:"referenceID"`
-		Reason      string `json:"reason"`
-		Location    struct {
-			Latitude  float32 `json:"latitude"`
-			Longitude float32 `json:"longitude"`
-		} `json:"location"`
+		ReferenceID string  `json:"referenceID"`
+		Reason      string  `json:"reason"`
+		Latitude    float64 `json:"latitude"`
+		Longitude   float64 `json:"longitude"`
 	} `json:"unassignedOrders"`
 	Routes []struct {
 		ReferenceID string `json:"referenceID"`
-		Operator    struct {
+		EndLocation struct {
+			NodeReferenceID string  `json:"nodeReferenceID"`
+			Latitude        float64 `json:"latitude"`
+			Longitude       float64 `json:"longitude"`
+		} `json:"endLocation"`
+		Operator struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"operator"`
 		Vehicle *struct {
@@ -39,13 +44,11 @@ type UpsertPlanRequest struct {
 			Email       string `json:"email"`
 		} `json:"driver,omitempty"`
 		Visits []struct {
-			Sequence    int    `json:"sequence"`
-			ReferenceID string `json:"referenceID"`
-			Location    struct {
-				Latitude  float64 `json:"latitude"`
-				Longitude float64 `json:"longitude"`
-			} `json:"location"`
-			Orders []struct {
+			Sequence    int     `json:"sequence"`
+			ReferenceID string  `json:"referenceID"`
+			Latitude    float64 `json:"latitude"`
+			Longitude   float64 `json:"longitude"`
+			Orders      []struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"orders"`
 		} `json:"visits"`
@@ -58,18 +61,28 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 		planDate = time.Time{}
 	}
 
-	// Mapear Origin como NodeInfo
-	origin := domain.NodeInfo{
+	// Mapear startLocation como NodeInfo
+	startLocation := domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(r.StartLocation.NodeReferenceID),
 		AddressInfo: domain.AddressInfo{
-			Latitude:  float32(r.StartLocation.Latitude),
-			Longitude: float32(r.StartLocation.Longitude),
+			PlanLocation: orb.Point{
+				r.StartLocation.Longitude,
+				r.StartLocation.Latitude,
+			},
 		},
 	}
 
-	// Por ahora Destination será igual a Origin ya que no viene en el request
-	// Podrías modificar el request para incluir un destinationLocation si es necesario
-	destination := origin
+	// Mapear endLocation como NodeInfo
+	/*
+		endLocation := domain.NodeInfo{
+			ReferenceID: domain.ReferenceID(r.EndLocation.NodeReferenceID),
+			AddressInfo: domain.AddressInfo{
+				PlanLocation: orb.Point{
+					r.EndLocation.Longitude, // orb.Point espera [lon, lat]
+					r.EndLocation.Latitude,
+				},
+			},
+		}*/
 
 	// Mapear órdenes no asignadas
 	var unassignedOrders []domain.Order
@@ -78,8 +91,10 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			ReferenceID: domain.ReferenceID(unassignedOrder.ReferenceID),
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
-					Latitude:  float32(unassignedOrder.Location.Latitude),
-					Longitude: float32(unassignedOrder.Location.Longitude),
+					PlanLocation: orb.Point{
+						unassignedOrder.Longitude, // orb.Point espera [lon, lat]
+						unassignedOrder.Latitude,
+					},
 				},
 			},
 			UnassignedReason: unassignedOrder.Reason,
@@ -97,8 +112,10 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			destination := domain.NodeInfo{
 				ReferenceID: domain.ReferenceID(visitData.ReferenceID),
 				AddressInfo: domain.AddressInfo{
-					Latitude:  float32(visitData.Location.Latitude),
-					Longitude: float32(visitData.Location.Longitude),
+					PlanLocation: orb.Point{
+						visitData.Longitude, // orb.Point espera [lon, lat]
+						visitData.Latitude,
+					},
 				},
 			}
 
@@ -106,14 +123,23 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			for _, orderData := range visitData.Orders {
 				orders = append(orders, domain.Order{
 					ReferenceID: domain.ReferenceID(orderData.ReferenceID),
-					Origin:      origin,      // La orden hereda el origin del plan
-					Destination: destination, // El destination viene de la visita
+					Origin:      startLocation, // La orden hereda el startLocation del plan
+					Destination: destination,   // El destination viene de la visita
 				})
 			}
 		}
 
 		route := domain.Route{
 			ReferenceID: routeData.ReferenceID,
+			Destination: domain.NodeInfo{
+				ReferenceID: domain.ReferenceID(routeData.EndLocation.NodeReferenceID),
+				AddressInfo: domain.AddressInfo{
+					PlanLocation: orb.Point{
+						routeData.EndLocation.Longitude,
+						routeData.EndLocation.Latitude,
+					},
+				},
+			},
 			Operator: domain.Operator{
 				ReferenceID: routeData.Operator.ReferenceID,
 			},
@@ -134,8 +160,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 	return domain.Plan{
 		ReferenceID:      r.ReferenceID,
 		PlannedDate:      planDate,
-		Origin:           origin,
-		Destination:      destination,
+		Origin:           startLocation,
 		UnassignedOrders: unassignedOrders,
 		Routes:           routes,
 		PlanType: domain.PlanType{

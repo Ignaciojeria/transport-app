@@ -15,16 +15,18 @@ import (
 
 	_ "transport-app/app/usecase"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	_ "transport-app/app/adapter/in/gcpsubscription"
+	_ "transport-app/app/adapter/out/gcppublisher"
+	_ "transport-app/app/adapter/out/restyclient/locationiq"
 	_ "transport-app/app/onload"
 	_ "transport-app/app/shared/infrastructure/gcppubsub"
 	_ "transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
-	_ "transport-app/mocks"
-	_ "transport-app/app/adapter/out/gcppublisher"
-	_ "transport-app/app/adapter/in/gcpsubscription"
+	_ "transport-app/app/shared/infrastructure/httpresty"
 	_ "transport-app/app/shared/infrastructure/observability"
 	_ "transport-app/app/shared/infrastructure/observability/strategy"
-	_ "transport-app/app/shared/infrastructure/httpresty"
+	_ "transport-app/mocks"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 //go:embed .version

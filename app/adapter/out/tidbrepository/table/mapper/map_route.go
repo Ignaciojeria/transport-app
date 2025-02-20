@@ -24,7 +24,12 @@ func MapRoute(route domain.Route) table.Route {
 	}
 
 	return table.Route{
-		ID:                    route.ID,
+		ID:                 route.ID,
+		EndNodeReferenceID: string(route.Destination.ReferenceID),
+		JSONEndLocation: table.JSONPlanLocation{
+			Longitude: route.Destination.AddressInfo.PlanLocation.Lon(),
+			Latitude:  route.Destination.AddressInfo.PlanLocation.Lat(),
+		},
 		ReferenceID:           route.ReferenceID,
 		PlanID:                route.PlanID,
 		AccountID:             accountID,

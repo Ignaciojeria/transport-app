@@ -16,8 +16,8 @@ type SearchAccountResponse struct {
 		Type        string `json:"type"`
 		AddressInfo struct {
 			RawAddress string  `json:"rawAddress"`
-			Latitude   float32 `json:"latitude"`
-			Longitude  float32 `json:"longitude"`
+			Latitude   float64 `json:"latitude"`
+			Longitude  float64 `json:"longitude"`
 		} `json:"addressInfo"`
 	} `json:"originNode"`
 }
@@ -42,8 +42,8 @@ func MapSearchAccountOperatorResponse(operator domain.Operator) SearchAccountRes
 			Type        string "json:\"type\""
 			AddressInfo struct {
 				RawAddress string  "json:\"rawAddress\""
-				Latitude   float32 "json:\"latitude\""
-				Longitude  float32 "json:\"longitude\""
+				Latitude   float64 "json:\"latitude\""
+				Longitude  float64 "json:\"longitude\""
 			} "json:\"addressInfo\""
 		}{
 			ReferenceID: string(operator.OriginNode.ReferenceID),
@@ -51,12 +51,12 @@ func MapSearchAccountOperatorResponse(operator domain.Operator) SearchAccountRes
 			Type:        operator.Type,
 			AddressInfo: struct {
 				RawAddress string  "json:\"rawAddress\""
-				Latitude   float32 "json:\"latitude\""
-				Longitude  float32 "json:\"longitude\""
+				Latitude   float64 "json:\"latitude\""
+				Longitude  float64 "json:\"longitude\""
 			}{
 				RawAddress: operator.OriginNode.AddressInfo.RawAddress(),
-				Latitude:   operator.OriginNode.AddressInfo.Latitude,
-				Longitude:  operator.OriginNode.AddressInfo.Longitude,
+				Longitude:  operator.OriginNode.AddressInfo.Location[0],
+				Latitude:   operator.OriginNode.AddressInfo.Location[1],
 			},
 		},
 	}

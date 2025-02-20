@@ -23,6 +23,7 @@ func init() {
 
 func NewUpsertPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatuses) UpsertPlan {
 	return func(ctx context.Context, p domain.Plan) error {
+		plannedStatusID := loadOrdorderStatuses().Planned().ID
 		plan := table.Plan{}
 		err := conn.DB.WithContext(ctx).Table("plans").
 			Where("reference_id = ? AND organization_country_id = ?",
@@ -42,23 +43,26 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatu
 			return err
 		}
 
+		// Mapeamos las rutas existentes por su referencia
 		routeMap := make(map[string]table.Route)
 		for _, r := range routes {
 			routeMap[r.ReferenceID] = r
 		}
 
 		var DBRoutesToUpdate []table.Route
+
+		// Aquí agrupamos las órdenes según la ruta, utilizando la estructura routeOrders
 		type routeOrders struct {
-			RouteID  string
-			OrderIDs []string
+			RouteReferenceID string
+			Orders           []domain.Order
 		}
 		var routeOrdersMap []routeOrders
-		var unassignedOrderRefs []string
+		var unassignedOrders []domain.Order
 
+		// Procesamos cada ruta del plan
 		for _, inputRoute := range p.Routes {
-			existingRoute, exists := routeMap[inputRoute.ReferenceID]
-
 			var routeToUpdate domain.Route
+			existingRoute, exists := routeMap[inputRoute.ReferenceID]
 			if exists {
 				routeToUpdate = existingRoute.Map().UpdateIfChanged(inputRoute)
 			} else {
@@ -70,25 +74,26 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatu
 			if exists {
 				DBRouteToUpdate.CreatedAt = existingRoute.CreatedAt
 			}
-
 			DBRoutesToUpdate = append(DBRoutesToUpdate, DBRouteToUpdate)
 
-			var orderRefs []string
+			// Agrupamos las órdenes de esta ruta
+			var ordersForRoute []domain.Order
 			for _, order := range inputRoute.Orders {
-				orderRefs = append(orderRefs, string(order.ReferenceID))
+				ordersForRoute = append(ordersForRoute, order)
 			}
-
 			routeOrdersMap = append(routeOrdersMap, routeOrders{
-				RouteID:  inputRoute.ReferenceID,
-				OrderIDs: orderRefs,
+				RouteReferenceID: inputRoute.ReferenceID,
+				Orders:           ordersForRoute,
 			})
 		}
 
+		// Recopilamos las órdenes sin asignar a ninguna ruta
 		for _, order := range p.UnassignedOrders {
-			unassignedOrderRefs = append(unassignedOrderRefs, string(order.ReferenceID))
+			unassignedOrders = append(unassignedOrders, order)
 		}
 
 		err = conn.Transaction(func(tx *gorm.DB) error {
+			// Inserta o actualiza el plan
 			if err := tx.
 				Omit("OrganizationCountry").
 				Omit("PlanType").
@@ -97,6 +102,7 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatu
 				return err
 			}
 
+			// Actualiza las rutas asociadas al plan
 			for _, DBRouteToUpdate := range DBRoutesToUpdate {
 				if err := tx.
 					Omit("OrganizationCountry").
@@ -109,6 +115,7 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatu
 				}
 			}
 
+			// Reiniciamos la asignación previa en las órdenes
 			if err := tx.Table("orders").
 				Where("plan_id = ?", DBPlanToUpdate.ID).
 				Updates(map[string]interface{}{
@@ -118,35 +125,63 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrdorderStatuses LoadOrderStatu
 				return err
 			}
 
-			plannedStatusID := loadOrdorderStatuses().Planned().ID
-
+			// Actualiza individualmente cada orden asignada a una ruta
 			for _, ro := range routeOrdersMap {
-				if len(ro.OrderIDs) > 0 {
+				if len(ro.Orders) > 0 {
 					var route table.Route
-					if err := tx.Where("reference_id = ?", ro.RouteID).First(&route).Error; err != nil {
+					if err := tx.Where("reference_id = ? AND organization_country_id = ?",
+						ro.RouteReferenceID, p.Organization.OrganizationCountryID).
+						First(&route).Error; err != nil {
 						return err
 					}
-
-					if err := tx.Table("orders").
-						Where("reference_id IN ? AND organization_country_id = ?",
-							ro.OrderIDs, p.Organization.OrganizationCountryID).
-						Updates(map[string]interface{}{
-							"route_id":        route.ID,
-							"plan_id":         DBPlanToUpdate.ID,
-							"order_status_id": plannedStatusID,
-						}).Error; err != nil {
-						return err
+					// Iteramos sobre cada orden individualmente
+					for _, order := range ro.Orders {
+						planLocation := order.Destination.AddressInfo.PlanLocation
+						JSONPlanLocation := table.JSONPlanLocation{
+							//NodeReferenceID: string(order.Destination.ReferenceID),
+							Longitude: planLocation.Lat(),
+							Latitude:  planLocation.Lon(),
+						}
+						planCorrectedLocation := order.Destination.AddressInfo.PlanCorrectedLocation
+						JSONCorrectedPlanLocation := table.JSONPlanLocation{
+							//NodeReferenceID: string(order.Destination.ReferenceID),
+							Longitude: planCorrectedLocation.Lat(),
+							Latitude:  planCorrectedLocation.Lon(),
+						}
+						correctedDistance := order.Destination.AddressInfo.PlanCorrectedDistance
+						if err := tx.Table("orders").
+							Where("reference_id = ? AND organization_country_id = ?",
+								order.ReferenceID, p.Organization.OrganizationCountryID).
+							Updates(map[string]interface{}{
+								"route_id":                     route.ID,
+								"plan_id":                      DBPlanToUpdate.ID,
+								"order_status_id":              plannedStatusID,
+								"json_plan_location":           JSONPlanLocation,
+								"json_plan_corrected_location": JSONCorrectedPlanLocation,
+								"plan_corrected_distance":      correctedDistance,
+								"sequence_number":              order.SequenceNumber,
+							}).Error; err != nil {
+							return err
+						}
 					}
 				}
 			}
 
-			if len(unassignedOrderRefs) > 0 {
+			// Actualiza individualmente las órdenes sin asignación de ruta
+			for _, order := range unassignedOrders {
+				planLocation := order.Destination.AddressInfo.PlanLocation
+				JSONPlanLocation := table.JSONPlanLocation{
+					//NodeReferenceID: string(order.Destination.ReferenceID),
+					Longitude: planLocation.Lat(),
+					Latitude:  planLocation.Lon(),
+				}
 				if err := tx.Table("orders").
-					Where("reference_id IN ? AND organization_country_id = ?",
-						unassignedOrderRefs, p.Organization.OrganizationCountryID).
+					Where("reference_id = ? AND organization_country_id = ?",
+						order.ReferenceID, p.Organization.OrganizationCountryID).
 					Updates(map[string]interface{}{
-						"plan_id":         DBPlanToUpdate.ID,
-						"order_status_id": plannedStatusID,
+						"plan_id":            DBPlanToUpdate.ID,
+						"order_status_id":    plannedStatusID,
+						"json_plan_location": JSONPlanLocation,
 					}).Error; err != nil {
 					return err
 				}

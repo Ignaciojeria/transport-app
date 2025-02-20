@@ -60,6 +60,11 @@ func NewUpsertPlan(
 		}
 		plan.PlanType = planType
 		plan.PlanningStatus = planningStatus
-		return domain.Plan{}, upsertPlan(ctx, plan)
+		optimizedPlan, err := optimize(ctx, plan)
+		if err != nil {
+			return domain.Plan{}, err
+		}
+		return domain.Plan{}, upsertPlan(ctx, optimizedPlan)
+		//return domain.Plan{}, upsertPlan(ctx, plan)
 	}
 }

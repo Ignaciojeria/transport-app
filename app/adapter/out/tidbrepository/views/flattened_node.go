@@ -3,6 +3,8 @@ package views
 import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+
+	"github.com/paulmach/orb"
 )
 
 type FlattenedNodeView struct {
@@ -23,8 +25,8 @@ type FlattenedNodeView struct {
 	AddressLine3       string              `gorm:"column:address_line3"`
 	County             string              `gorm:"column:county"`
 	District           string              `gorm:"column:district"`
-	Latitude           float32             `gorm:"column:latitude"`
-	Longitude          float32             `gorm:"column:longitude"`
+	Latitude           float64             `gorm:"column:latitude"`
+	Longitude          float64             `gorm:"column:longitude"`
 	Province           string              `gorm:"column:province"`
 	State              string              `gorm:"column:state"`
 	ZipCode            string              `gorm:"column:zip_code"`
@@ -55,8 +57,7 @@ func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 			AddressLine3: n.AddressLine3,
 			County:       n.County,
 			District:     n.District,
-			Latitude:     n.Latitude,
-			Longitude:    n.Longitude,
+			Location:     orb.Point{n.Longitude, n.Latitude},
 			Province:     n.Province,
 			State:        n.State,
 			ZipCode:      n.ZipCode,

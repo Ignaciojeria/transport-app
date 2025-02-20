@@ -1,12 +1,15 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/paulmach/orb"
+)
 
 type Plan struct {
 	Headers
 	ID               int64
 	Origin           NodeInfo
-	Destination      NodeInfo
 	ReferenceID      string
 	PlannedDate      time.Time
 	UnassignedOrders []Order
@@ -48,6 +51,8 @@ func (p Plan) UpdateIfChanged(newPlan Plan) Plan {
 	if newPlan.PlanType.ID != 0 || newPlan.PlanType.Value != "" {
 		p.PlanType = newPlan.PlanType
 	}
+
+	p.Origin = newPlan.Origin
 
 	if len(newPlan.Routes) > 0 {
 		p.Routes = newPlan.Routes
@@ -92,6 +97,7 @@ func (ps PlanningStatus) UpdateIfChanged(newPlanningStatus PlanningStatus) Plann
 
 type Route struct {
 	Organization
+	Destination NodeInfo
 	ReferenceID string
 	PlanID      int64
 	ID          int64
@@ -114,4 +120,15 @@ func (r Route) UpdateIfChanged(newRoute Route) Route {
 	r.Orders = newRoute.Orders
 	r.Organization = newRoute.Organization
 	return r
+}
+
+type Visit struct {
+	ID               int64
+	Orders           []Order
+	Sequence         int
+	Location         orb.Point // La ubicación única de la visita
+	PlannedArrival   time.Time
+	EstimatedArrival time.Time
+	ActualArrival    time.Time
+	Duration         time.Duration
 }
