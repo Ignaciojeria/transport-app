@@ -70,8 +70,8 @@ func checkout(
 				Message: "checkout submission succedded",
 			}, nil
 		},
-		option.Summary("ordersCheckout"),
-		option.Tags(tagOrders),
+		option.Summary("checkout"),
+		option.Tags(tagCheckouts),
 		option.Tags(tagEndToEndOperator),
 	)
 }
