@@ -47,8 +47,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 			Longitude       float64 `json:"longitude"`
 		}{
 			NodeReferenceID: string(p.Origin.ReferenceID),
-			Latitude:        p.Origin.AddressInfo.PlanCorrectedLocation[1],
-			Longitude:       p.Origin.AddressInfo.PlanCorrectedLocation[0],
+			Latitude:        p.Origin.AddressInfo.CorrectedLocation[1],
+			Longitude:       p.Origin.AddressInfo.CorrectedLocation[0],
 		},
 	}
 
@@ -59,8 +59,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 			Latitude    float64 `json:"latitude"`
 			ReferenceID string  `json:"referenceID"`
 		}{
-			Longitude:   order.Destination.AddressInfo.PlanCorrectedLocation[0],
-			Latitude:    order.Destination.AddressInfo.PlanCorrectedLocation[1],
+			Longitude:   order.Destination.AddressInfo.CorrectedLocation[0],
+			Latitude:    order.Destination.AddressInfo.CorrectedLocation[1],
 			ReferenceID: string(order.ReferenceID),
 		}
 		response.UnassignedOrders = append(response.UnassignedOrders, unassignedOrder)
@@ -98,8 +98,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				Longitude       float64 `json:"longitude"`
 			}{
 				NodeReferenceID: string(route.Destination.ReferenceID),
-				Latitude:        route.Destination.AddressInfo.PlanCorrectedLocation[1],
-				Longitude:       route.Destination.AddressInfo.PlanCorrectedLocation[0],
+				Latitude:        route.Destination.AddressInfo.CorrectedLocation[1],
+				Longitude:       route.Destination.AddressInfo.CorrectedLocation[0],
 			},
 		}
 
@@ -127,8 +127,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				}{
 					ReferenceID: string(firstOrder.ReferenceID),
 					Sequence:    seq,
-					Latitude:    firstOrder.Destination.AddressInfo.PlanCorrectedLocation[1],
-					Longitude:   firstOrder.Destination.AddressInfo.PlanCorrectedLocation[0],
+					Latitude:    firstOrder.Destination.AddressInfo.CorrectedLocation[1],
+					Longitude:   firstOrder.Destination.AddressInfo.CorrectedLocation[0],
 					Orders:      MapSearchOrdersResponse(ordersInSequence),
 				}
 

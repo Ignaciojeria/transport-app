@@ -351,22 +351,21 @@ func compareDocuments(oldDocs, newDocs []Document) bool {
 }
 
 type AddressInfo struct {
-	ID                    int64
-	Organization          Organization
-	Contact               Contact   `json:"contact"`
-	State                 string    `json:"state"`
-	County                string    `json:"county"`
-	Province              string    `json:"province"`
-	District              string    `json:"district"`
-	AddressLine1          string    `json:"addressLine1"`
-	AddressLine2          string    `json:"addressLine2"`
-	AddressLine3          string    `json:"addressLine3"`
-	Location              orb.Point // Punto original
-	PlanLocation          orb.Point // Punto enviado en el plan
-	PlanCorrectedLocation orb.Point // Punto corregido del plan (snapped)
-	PlanCorrectedDistance float64   // Distancia aplicada al punto corregido del plan
-	ZipCode               string    `json:"zipCode"`
-	TimeZone              string    `json:"timeZone"`
+	ID                int64
+	Organization      Organization
+	Contact           Contact   `json:"contact"`
+	State             string    `json:"state"`
+	County            string    `json:"county"`
+	Province          string    `json:"province"`
+	District          string    `json:"district"`
+	AddressLine1      string    `json:"addressLine1"`
+	AddressLine2      string    `json:"addressLine2"`
+	AddressLine3      string    `json:"addressLine3"`
+	Location          orb.Point // Punto original
+	CorrectedLocation orb.Point // Punto corregido del plan (snapped)
+	CorrectedDistance float64   // Distancia aplicada al punto corregido del plan
+	ZipCode           string    `json:"zipCode"`
+	TimeZone          string    `json:"timeZone"`
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {

@@ -66,9 +66,7 @@ type Order struct {
 
 	SequenceNumber *int `gorm:"default:null"`
 
-	JSONPlanLocation          JSONPlanLocation `gorm:"type:json;default:null"`
-	JSONPlanCorrectedLocation JSONPlanLocation `gorm:"type:json;default:null"`
-	PlanCorrectedDistance     float64          `gorm:"default:null"`
+	JSONPlannedData JSONPlannedData `gorm:"type:json"`
 
 	Packages []Package `gorm:"many2many:order_packages"`
 
@@ -82,6 +80,28 @@ type Order struct {
 	PromisedTimeRangeStart            string        `gorm:"default:null"`
 	PromisedTimeRangeEnd              string        `gorm:"default:null"`
 	TransportRequirements             JSONReference `gorm:"type:json"`
+}
+
+type PlannedData struct {
+	JSONPlanLocation          PlanLocation
+	JSONPlanCorrectedLocation PlanLocation
+	PlanCorrectedDistance     float64
+}
+
+type JSONPlannedData PlannedData
+
+// Implementación de sql.Scanner para deserializar JSON desde la BD
+func (j *JSONPlannedData) Scan(value interface{}) error {
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("failed to unmarshal JSONPlannedData value: %v", value)
+	}
+	return json.Unmarshal(bytes, j)
+}
+
+// Implementación de driver.Valuer para serializar a JSON en la BD
+func (j JSONPlannedData) Value() (driver.Value, error) {
+	return json.Marshal(j)
 }
 
 type CheckoutRejection struct {

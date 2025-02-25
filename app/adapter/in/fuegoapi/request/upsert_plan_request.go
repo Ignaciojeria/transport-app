@@ -65,24 +65,12 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 	startLocation := domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(r.StartLocation.NodeReferenceID),
 		AddressInfo: domain.AddressInfo{
-			PlanLocation: orb.Point{
+			Location: orb.Point{
 				r.StartLocation.Longitude,
 				r.StartLocation.Latitude,
 			},
 		},
 	}
-
-	// Mapear endLocation como NodeInfo
-	/*
-		endLocation := domain.NodeInfo{
-			ReferenceID: domain.ReferenceID(r.EndLocation.NodeReferenceID),
-			AddressInfo: domain.AddressInfo{
-				PlanLocation: orb.Point{
-					r.EndLocation.Longitude, // orb.Point espera [lon, lat]
-					r.EndLocation.Latitude,
-				},
-			},
-		}*/
 
 	// Mapear órdenes no asignadas
 	var unassignedOrders []domain.Order
@@ -91,7 +79,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			ReferenceID: domain.ReferenceID(unassignedOrder.ReferenceID),
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
-					PlanLocation: orb.Point{
+					Location: orb.Point{
 						unassignedOrder.Longitude, // orb.Point espera [lon, lat]
 						unassignedOrder.Latitude,
 					},
@@ -112,7 +100,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			destination := domain.NodeInfo{
 				ReferenceID: domain.ReferenceID(visitData.ReferenceID),
 				AddressInfo: domain.AddressInfo{
-					PlanLocation: orb.Point{
+					Location: orb.Point{
 						visitData.Longitude, // orb.Point espera [lon, lat]
 						visitData.Latitude,
 					},
@@ -134,7 +122,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			Destination: domain.NodeInfo{
 				ReferenceID: domain.ReferenceID(routeData.EndLocation.NodeReferenceID),
 				AddressInfo: domain.AddressInfo{
-					PlanLocation: orb.Point{
+					Location: orb.Point{
 						routeData.EndLocation.Longitude,
 						routeData.EndLocation.Latitude,
 					},

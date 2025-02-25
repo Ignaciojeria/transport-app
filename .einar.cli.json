@@ -258,6 +258,10 @@
         {
             "kind": "get-controller",
             "name": "search-route-by-reference"
+        },
+        {
+            "kind": "usecase",
+            "name": "search-plan"
         }
     ]
 }
