@@ -80,6 +80,17 @@ type FlattenedOrderView struct {
 	PromisedStartTime            string              `gorm:"column:promised_start_time"`
 	PromisedEndTime              string              `gorm:"column:promised_end_time"`
 	TransportRequirements        table.JSONReference `gorm:"column:transport_requirements"`
+	//Campos nuevos
+	PlanID                  int64                  `gorm:"column:plan_id"`
+	PlanReferenceID         string                 `gorm:"column:plan_reference_id"`
+	PlannedDate             time.Time              `gorm:"column:planned_date"`
+	PlanStartLocation       table.JSONPlanLocation `gorm:"column:plan_start_location"`
+	RouteID                 int64                  `gorm:"column:route_id"`
+	RouteReferenceID        string                 `gorm:"column:route_reference_id"`
+	RouteEndLocation        table.JSONPlanLocation `gorm:"column:route_end_location"`
+	RouteEndNodeReferenceID string                 `gorm:"column:route_end_node_reference_id"`
+	RouteAccountID          int64                  `gorm:"column:route_account_id"`
+	RouteAccountReferenceID string                 `gorm:"column:route_account_reference_id"`
 }
 
 type FlattenedPackageView struct {
@@ -148,62 +159,29 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},
-		Origin: domain.NodeInfo{
-			ID:          o.OriginNodeInfoID,
-			ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
-			Name:        o.OriginNodeName,
-			NodeType: domain.NodeType{
-				Value: o.OriginNodeType,
-			},
-			AddressInfo: domain.AddressInfo{
-				ID: o.OriginAddressInfoID,
-				Contact: domain.Contact{
-					ID:         o.OriginContactID,
-					FullName:   o.OriginContactName,
-					Phone:      o.OriginContactPhone,
-					Email:      o.OriginContactEmail,
-					NationalID: o.OriginContactNationalID,
-					Documents:  mapDocuments(o.OriginContactDocuments),
+		Plan: domain.Plan{
+			ID:          o.PlanID,
+			PlannedDate: o.PlannedDate,
+			ReferenceID: o.PlanReferenceID,
+			Origin: domain.NodeInfo{
+				AddressInfo: domain.AddressInfo{
+					Location: orb.Point{o.PlanStartLocation.Longitude, o.PlanStartLocation.Latitude},
 				},
-				AddressLine1: o.OriginAddressLine1,
-				AddressLine2: o.OriginAddressLine2,
-				AddressLine3: o.OriginAddressLine3,
-				State:        o.OriginState,
-				Province:     o.OriginProvince,
-				ZipCode:      o.OriginZipCode,
-				County:       o.OriginCounty,
-				District:     o.OriginDistrict,
-				Location:     orb.Point{o.OriginLongitude, o.OriginLatitude},
-				TimeZone:     o.OriginTimeZone,
 			},
-		},
-		Destination: domain.NodeInfo{
-			ID:          o.DestinationNodeInfoID,
-			ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
-			Name:        o.DestinationNodeName,
-			NodeType: domain.NodeType{
-				Value: o.DestinationNodeType,
-			},
-			AddressInfo: domain.AddressInfo{
-				ID: o.DestinationAddressInfoID,
-				Contact: domain.Contact{
-					ID:         o.DestinationContactID,
-					FullName:   o.DestinationContactName,
-					Phone:      o.DestinationContactPhone,
-					Email:      o.DestinationContactEmail,
-					NationalID: o.DestinationContactNationalID,
-					Documents:  mapDocuments(o.DestinationContactDocuments),
+			Routes: []domain.Route{
+				{
+					ID:          o.RouteID,
+					ReferenceID: o.RouteReferenceID,
+					Destination: domain.NodeInfo{
+						ReferenceID: domain.ReferenceID(o.RouteEndNodeReferenceID),
+						AddressInfo: domain.AddressInfo{
+							Location: orb.Point{o.RouteEndLocation.Longitude, o.RouteEndLocation.Latitude},
+						},
+					},
+					Organization: domain.Organization{
+						ID: o.RouteAccountID,
+					},
 				},
-				AddressLine1: o.DestinationAddressLine1,
-				AddressLine2: o.DestinationAddressLine2,
-				AddressLine3: o.DestinationAddressLine3,
-				State:        o.DestinationState,
-				Province:     o.DestinationProvince,
-				ZipCode:      o.DestinationZipCode,
-				County:       o.DestinationCounty,
-				District:     o.DestinationDistrict,
-				Location:     orb.Point{o.DestinationLongitude, o.DestinationLatitude},
-				TimeZone:     o.DestinationTimeZone,
 			},
 		},
 		Packages:              mapPackages(packages),

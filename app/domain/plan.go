@@ -18,18 +18,6 @@ type Plan struct {
 	PlanType         PlanType
 }
 
-func (p Plan) GetOrderSearchFilters() OrderSearchFilters {
-	osf := OrderSearchFilters{}
-	osf.Organization = p.Organization
-	for _, route := range p.Routes {
-		for _, order := range route.Orders {
-			osf.ReferenceIDs = append(osf.ReferenceIDs, string(order.ReferenceID))
-			osf.RouteReferenceID = route.ReferenceID
-		}
-	}
-	return osf
-}
-
 func (p Plan) UpdateIfChanged(newPlan Plan) Plan {
 	// Actualizar campos básicos si no están vacíos
 	if newPlan.ID != 0 {

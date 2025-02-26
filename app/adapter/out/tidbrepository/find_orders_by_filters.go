@@ -87,7 +87,19 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
             o.promised_date_range_end as promised_end_date,
             o.promised_time_range_start as promised_start_time,
             o.promised_time_range_end as promised_end_time,
-            o.transport_requirements
+            o.transport_requirements,
+            -- Campos nuevos relacionados con el Plan
+            o.plan_id,
+            pln.planned_date,
+            pln.reference_id AS plan_reference_id,
+            pln.json_start_location as plan_start_location,
+            -- Campos nuevos relacionados con la Ruta
+            r.id AS route_id,
+            r.reference_id AS route_reference_id,
+            r.json_end_location AS route_end_location,
+            r.end_node_reference_id AS route_end_node_reference_id,
+            r.account_id AS route_account_id,
+            a.reference_id AS route_account_reference_id
         FROM orders o
         LEFT JOIN order_headers headers ON o.order_headers_id = headers.id
         LEFT JOIN order_statuses os ON o.order_status_id = os.id
@@ -101,7 +113,9 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
         LEFT JOIN contacts dc ON o.destination_contact_id = dc.id
         LEFT JOIN address_infos da ON o.destination_address_info_id = da.id
         LEFT JOIN node_infos dn_info ON o.destination_node_info_id = dn_info.id
+        LEFT JOIN plans pln ON o.plan_id = pln.id
         LEFT JOIN routes r ON o.route_id = r.id
+        LEFT JOIN accounts a ON r.account_id = a.id
         LEFT JOIN order_packages op ON o.id = op.order_id
         LEFT JOIN packages p ON op.package_id = p.id
         WHERE 
@@ -127,9 +141,9 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
 
 		// Condición dinámica para OperatorReferenceID
 
-		if osf.RouteReferenceID != "" {
+		if osf.PlanReferenceID != "" {
 			query += " AND r.reference_id = ?"
-			params = append(params, osf.RouteReferenceID)
+			params = append(params, osf.PlanReferenceID)
 		}
 
 		// Condición adicional para comercios

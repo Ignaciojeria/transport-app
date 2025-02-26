@@ -13,6 +13,7 @@ import (
 type Order struct {
 	Headers
 	ID                      int64
+	Plan                    Plan
 	ReferenceID             ReferenceID             `json:"referenceID"`
 	SequenceNumber          *int                    `json:"sequenceNumber"`
 	OrderStatus             OrderStatus             `json:"orderStatus"`
