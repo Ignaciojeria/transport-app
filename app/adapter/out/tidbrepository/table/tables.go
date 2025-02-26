@@ -304,7 +304,7 @@ type Contact struct {
 	FullName              string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	Email                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	Phone                 string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
-	NationalID            string              `gorm:"type:varchar(191);default:null;uniqueIndex:idx_contact_unique"`
+	NationalID            string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
 	Documents             JSONReference       `gorm:"type:json"`
 }
 

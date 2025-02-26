@@ -118,6 +118,7 @@ type FlattenedOrderReferenceView struct {
 }
 
 func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []FlattenedOrderReferenceView) domain.Order {
+	// Mapear referencias
 	references := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		references[i] = domain.Reference{
@@ -127,6 +128,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		}
 	}
 
+	// Mapear requisitos de transporte
 	var transportReqs []domain.Reference
 	if o.TransportRequirements != nil {
 		transportReqs = make([]domain.Reference, len(o.TransportRequirements))
@@ -137,6 +139,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			}
 		}
 	}
+
 	return domain.Order{
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
@@ -160,6 +163,72 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},
+
+		// ✅ Mapeo COMPLETO del contacto y dirección de ORIGEN
+		Origin: domain.NodeInfo{
+			ReferenceID: domain.ReferenceID(o.OriginNodeReferenceID),
+			Name:        o.OriginNodeName,
+			NodeType: domain.NodeType{
+				Value: o.OriginNodeType,
+			},
+			Contact: domain.Contact{
+				ID:         o.OriginContactID,
+				FullName:   o.OriginContactName,
+				Phone:      o.OriginContactPhone,
+				Email:      o.OriginContactEmail,
+				NationalID: o.OriginContactNationalID,
+				Documents:  mapDocuments(o.OriginContactDocuments),
+			},
+			AddressInfo: domain.AddressInfo{
+				AddressLine1: o.OriginAddressLine1,
+				AddressLine2: o.OriginAddressLine2,
+				AddressLine3: o.OriginAddressLine3,
+				State:        o.OriginState,
+				Province:     o.OriginProvince,
+				County:       o.OriginCounty,
+				District:     o.OriginDistrict,
+				ZipCode:      o.OriginZipCode,
+				Location: orb.Point{
+					o.OriginLongitude,
+					o.OriginLatitude,
+				},
+				TimeZone: o.OriginTimeZone,
+			},
+		},
+
+		// ✅ Mapeo COMPLETO del contacto y dirección de DESTINO
+		Destination: domain.NodeInfo{
+			ReferenceID: domain.ReferenceID(o.DestinationNodeReferenceID),
+			Name:        o.DestinationNodeName,
+			NodeType: domain.NodeType{
+				Value: o.DestinationNodeType,
+			},
+			Contact: domain.Contact{
+				ID:         o.DestinationContactID,
+				FullName:   o.DestinationContactName,
+				Phone:      o.DestinationContactPhone,
+				Email:      o.DestinationContactEmail,
+				NationalID: o.DestinationContactNationalID,
+				Documents:  mapDocuments(o.DestinationContactDocuments),
+			},
+			AddressInfo: domain.AddressInfo{
+				AddressLine1: o.DestinationAddressLine1,
+				AddressLine2: o.DestinationAddressLine2,
+				AddressLine3: o.DestinationAddressLine3,
+				State:        o.DestinationState,
+				Province:     o.DestinationProvince,
+				County:       o.DestinationCounty,
+				District:     o.DestinationDistrict,
+				ZipCode:      o.DestinationZipCode,
+				Location: orb.Point{
+					o.DestinationLongitude,
+					o.DestinationLatitude,
+				},
+				TimeZone: o.DestinationTimeZone,
+			},
+		},
+
+		// ✅ Mapeo de Plan y Ruta
 		Plan: domain.Plan{
 			ID:          o.PlanID,
 			PlannedDate: o.PlannedDate,
@@ -185,10 +254,14 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				},
 			},
 		},
+
+		// ✅ Mapeo de paquetes, referencias e ítems
 		Packages:              mapPackages(packages),
 		Items:                 mapJSONItems(o.Items),
 		References:            references,
 		TransportRequirements: transportReqs,
+
+		// ✅ Mapeo de disponibilidad de recolección
 		CollectAvailabilityDate: domain.CollectAvailabilityDate{
 			Date: o.CollectAvailabilityDate,
 			TimeRange: domain.TimeRange{
@@ -196,6 +269,8 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				EndTime:   o.CollectEndTime,
 			},
 		},
+
+		// ✅ Mapeo de fecha prometida
 		PromisedDate: domain.PromisedDate{
 			DateRange: domain.DateRange{
 				StartDate: o.PromisedStartDate,

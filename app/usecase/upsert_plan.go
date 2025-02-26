@@ -16,21 +16,21 @@ func init() {
 		NewUpsertPlan,
 		tidbrepository.NewUpsertPlanType,
 		tidbrepository.NewUpsertPlanningStatus,
-		tidbrepository.NewFindOrdersByFilters,
 		tidbrepository.NewUpsertOperator,
 		tidbrepository.NewUpsertPlan,
 		tidbrepository.NewLoadOrganizationCountry,
-		optimization.NewOptimize)
+		optimization.NewOptimize,
+		NewCreateOrder)
 }
 
 func NewUpsertPlan(
 	upsertPlanType tidbrepository.UpsertPlanType,
 	upsertPlanningStatus tidbrepository.UpsertPlanningStatus,
-	findOrders tidbrepository.FindOrdersByFilters,
 	upsertOperator tidbrepository.UpsertOperator,
 	upsertPlan tidbrepository.UpsertPlan,
 	loadOrganizationCountry tidbrepository.LoadOrganizationCountry,
 	optimize optimization.Optimize,
+	upsertOrder CreateOrder,
 ) UpsertPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 		org, err := loadOrganizationCountry(ctx, plan.Organization)
@@ -40,6 +40,25 @@ func NewUpsertPlan(
 		plan.Organization = org
 		plan.PlanType.Organization = plan.Organization
 		planType, err := upsertPlanType(ctx, plan.PlanType)
+
+		for _, order := range plan.UnassignedOrders {
+			order.Organization = plan.Organization
+			_, err := upsertOrder(ctx, order)
+			if err != nil {
+				return domain.Plan{}, err
+			}
+		}
+
+		for _, route := range plan.Routes {
+			for _, order := range route.Orders {
+				order.Organization = plan.Organization
+				_, err := upsertOrder(ctx, order)
+				if err != nil {
+					return domain.Plan{}, err
+				}
+			}
+		}
+
 		if err != nil {
 			return domain.Plan{}, err
 		}

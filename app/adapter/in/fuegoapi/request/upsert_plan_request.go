@@ -20,10 +20,14 @@ type UpsertPlanRequest struct {
 		End   string `json:"end"`
 	} `json:"workingHours"`
 	UnassignedOrders []struct {
-		ReferenceID string  `json:"referenceID"`
-		Reason      string  `json:"reason"`
-		Latitude    float64 `json:"latitude"`
-		Longitude   float64 `json:"longitude"`
+		ReferenceID   string  `json:"referenceID"`
+		Reason        string  `json:"reason"`
+		Address       string  `json:"address"`
+		Notes         string  `json:"notes"`
+		ReceiverName  string  `json:"receiverName"`
+		ReceiverPhone string  `json:"receiverPhone"`
+		Latitude      float64 `json:"latitude"`
+		Longitude     float64 `json:"longitude"`
 	} `json:"unassignedOrders"`
 	Routes []struct {
 		ReferenceID string `json:"referenceID"`
@@ -44,12 +48,18 @@ type UpsertPlanRequest struct {
 			Email       string `json:"email"`
 		} `json:"driver,omitempty"`
 		Visits []struct {
-			Sequence    int     `json:"sequence"`
-			ReferenceID string  `json:"referenceID"`
-			Latitude    float64 `json:"latitude"`
-			Longitude   float64 `json:"longitude"`
-			Orders      []struct {
-				ReferenceID string `json:"referenceID"`
+			Sequence  int     `json:"sequence"`
+			Latitude  float64 `json:"latitude"`
+			Longitude float64 `json:"longitude"`
+			Orders    []struct {
+				ReferenceID   string  `json:"referenceID"`
+				Reason        string  `json:"reason"`
+				Address       string  `json:"address"`
+				Notes         string  `json:"notes"`
+				ReceiverName  string  `json:"receiverName"`
+				ReceiverPhone string  `json:"receiverPhone"`
+				Latitude      float64 `json:"latitude"`
+				Longitude     float64 `json:"longitude"`
 			} `json:"orders"`
 		} `json:"visits"`
 	} `json:"routes"`
@@ -76,12 +86,22 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 	var unassignedOrders []domain.Order
 	for _, unassignedOrder := range r.UnassignedOrders {
 		unassignedOrders = append(unassignedOrders, domain.Order{
-			ReferenceID: domain.ReferenceID(unassignedOrder.ReferenceID),
+			Headers: domain.Headers{
+				Consumer: "EMPTY",
+				Commerce: "EMPTY",
+			},
+			ReferenceID:          domain.ReferenceID(unassignedOrder.ReferenceID),
+			DeliveryInstructions: unassignedOrder.Notes,
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
 					Location: orb.Point{
-						unassignedOrder.Longitude, // orb.Point espera [lon, lat]
+						unassignedOrder.Longitude,
 						unassignedOrder.Latitude,
+					},
+					AddressLine1: unassignedOrder.Address,
+					Contact: domain.Contact{
+						FullName: unassignedOrder.ReceiverName,
+						Phone:    unassignedOrder.ReceiverPhone,
 					},
 				},
 			},
@@ -96,23 +116,30 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 
 		// Convertir visitas a órdenes
 		for _, visitData := range routeData.Visits {
-			// Crear NodeInfo para el destino de la orden
-			destination := domain.NodeInfo{
-				ReferenceID: domain.ReferenceID(visitData.ReferenceID),
-				AddressInfo: domain.AddressInfo{
-					Location: orb.Point{
-						visitData.Longitude, // orb.Point espera [lon, lat]
-						visitData.Latitude,
-					},
-				},
-			}
-
 			// Mapear las órdenes de la visita
 			for _, orderData := range visitData.Orders {
+				destination := domain.NodeInfo{
+					AddressInfo: domain.AddressInfo{
+						Location: orb.Point{
+							orderData.Longitude, // orb.Point espera [lon, lat]
+							orderData.Latitude,
+						},
+						AddressLine1: orderData.Address,
+						Contact: domain.Contact{
+							FullName: orderData.ReceiverName,
+							Phone:    orderData.ReceiverPhone,
+						},
+					},
+				}
 				orders = append(orders, domain.Order{
-					ReferenceID: domain.ReferenceID(orderData.ReferenceID),
-					Origin:      startLocation, // La orden hereda el startLocation del plan
-					Destination: destination,   // El destination viene de la visita
+					Headers: domain.Headers{
+						Consumer: "EMPTY",
+						Commerce: "EMPTY",
+					},
+					DeliveryInstructions: orderData.Notes,
+					ReferenceID:          domain.ReferenceID(orderData.ReferenceID),
+					Origin:               startLocation, // La orden hereda el startLocation del plan
+					Destination:          destination,   // El destination viene de la visita
 				})
 			}
 		}

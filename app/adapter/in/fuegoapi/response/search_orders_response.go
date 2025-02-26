@@ -206,22 +206,24 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.NodeInfo) *SearchOrder
 	res.Origin.AddressInfo.State = origin.AddressInfo.State
 	res.Origin.AddressInfo.ZipCode = origin.AddressInfo.ZipCode
 	res.Origin.AddressInfo.TimeZone = origin.AddressInfo.TimeZone
-	res.Origin.AddressInfo.Latitude = origin.AddressInfo.Location[1]
-	res.Origin.AddressInfo.Longitude = origin.AddressInfo.Location[0]
+	res.Origin.AddressInfo.Latitude = origin.AddressInfo.Location[1]  // Latitud
+	res.Origin.AddressInfo.Longitude = origin.AddressInfo.Location[0] // Longitud
 	res.Origin.NodeInfo.ReferenceID = string(origin.ReferenceID)
 
-	// Mapeo del contacto
-	res.Origin.AddressInfo.Contact.Email = origin.AddressInfo.Contact.Email
-	res.Origin.AddressInfo.Contact.Phone = origin.AddressInfo.Contact.Phone
-	res.Origin.AddressInfo.Contact.NationalID = origin.AddressInfo.Contact.NationalID
-	res.Origin.AddressInfo.Contact.FullName = origin.AddressInfo.Contact.FullName
-	if origin.AddressInfo.Contact.Documents != nil {
+	// ✅ Asegurar que se asigna el contacto de origen
+	res.Origin.AddressInfo.Contact.FullName = origin.Contact.FullName
+	res.Origin.AddressInfo.Contact.Email = origin.Contact.Email
+	res.Origin.AddressInfo.Contact.Phone = origin.Contact.Phone
+	res.Origin.AddressInfo.Contact.NationalID = origin.Contact.NationalID
+
+	// ✅ Manejar documentos correctamente
+	if len(origin.Contact.Documents) > 0 {
 		res.Origin.AddressInfo.Contact.Documents = make([]struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
-		}, len(origin.AddressInfo.Contact.Documents))
+		}, len(origin.Contact.Documents))
 
-		for i, doc := range origin.AddressInfo.Contact.Documents {
+		for i, doc := range origin.Contact.Documents {
 			res.Origin.AddressInfo.Contact.Documents[i] = struct {
 				Type  string `json:"type"`
 				Value string `json:"value"`
@@ -230,6 +232,8 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.NodeInfo) *SearchOrder
 				Value: doc.Value,
 			}
 		}
+	} else {
+		res.Origin.AddressInfo.Contact.Documents = nil
 	}
 
 	return res
@@ -345,18 +349,20 @@ func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *S
 	res.Destination.AddressInfo.Longitude = destination.AddressInfo.Location[0] // Longitud
 	res.Destination.NodeInfo.ReferenceID = string(destination.ReferenceID)
 
-	// Mapeo del contacto
-	res.Destination.AddressInfo.Contact.Email = destination.AddressInfo.Contact.Email
-	res.Destination.AddressInfo.Contact.Phone = destination.AddressInfo.Contact.Phone
-	res.Destination.AddressInfo.Contact.NationalID = destination.AddressInfo.Contact.NationalID
-	res.Destination.AddressInfo.Contact.FullName = destination.AddressInfo.Contact.FullName
-	if destination.AddressInfo.Contact.Documents != nil {
+	// ✅ Asegurar que se asigna el contacto de destino
+	res.Destination.AddressInfo.Contact.FullName = destination.Contact.FullName
+	res.Destination.AddressInfo.Contact.Email = destination.Contact.Email
+	res.Destination.AddressInfo.Contact.Phone = destination.Contact.Phone
+	res.Destination.AddressInfo.Contact.NationalID = destination.Contact.NationalID
+
+	// ✅ Manejar documentos correctamente
+	if len(destination.Contact.Documents) > 0 {
 		res.Destination.AddressInfo.Contact.Documents = make([]struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
-		}, len(destination.AddressInfo.Contact.Documents))
+		}, len(destination.Contact.Documents))
 
-		for i, doc := range destination.AddressInfo.Contact.Documents {
+		for i, doc := range destination.Contact.Documents {
 			res.Destination.AddressInfo.Contact.Documents[i] = struct {
 				Type  string `json:"type"`
 				Value string `json:"value"`
@@ -365,6 +371,8 @@ func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *S
 				Value: doc.Value,
 			}
 		}
+	} else {
+		res.Destination.AddressInfo.Contact.Documents = nil // Para evitar JSON `null` en lugar de `[]`
 	}
 
 	return res

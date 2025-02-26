@@ -303,39 +303,39 @@ type Contact struct {
 }
 
 func (c Contact) UpdateIfChanged(newContact Contact) Contact {
-	updatedContact := c // Copiamos la instancia actual
+	// Copiamos la instancia actual
 
 	// Actualizar FullName
 	if newContact.ID != 0 {
-		updatedContact.ID = newContact.ID
+		c.ID = newContact.ID
 	}
 
 	// Actualizar FullName
 	if newContact.FullName != "" {
-		updatedContact.FullName = newContact.FullName
+		c.FullName = newContact.FullName
 	}
 
 	// Actualizar Email
 	if newContact.Email != "" {
-		updatedContact.Email = newContact.Email
+		c.Email = newContact.Email
 	}
 
 	// Actualizar Phone
 	if newContact.Phone != "" {
-		updatedContact.Phone = newContact.Phone
+		c.Phone = newContact.Phone
 	}
 
 	// Actualizar NationalID
 	if newContact.NationalID != "" {
-		updatedContact.NationalID = newContact.NationalID
+		c.NationalID = newContact.NationalID
 	}
 
 	// Actualizar Documents
 	if len(newContact.Documents) > 0 {
-		updatedContact.Documents = newContact.Documents
+		c.Documents = newContact.Documents
 	}
 
-	return updatedContact
+	return c
 }
 
 // Función auxiliar para comparar arreglos de documentos
