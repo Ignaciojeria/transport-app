@@ -1,6 +1,7 @@
 package mapper
 
 import (
+	"time"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 )
@@ -50,11 +51,11 @@ func MapOrderToTable(order domain.Order) table.Order {
 		DestinationNodeInfoID: order.Destination.ID, // Completar según la lógica de negocio
 		//DestinationNodeInfo:   MapNodeInfoTable(order.Destination),
 
-		CollectAvailabilityDate:           order.CollectAvailabilityDate.Date,
+		CollectAvailabilityDate:           safePtrTime(order.CollectAvailabilityDate.Date),
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
 		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
-		PromisedDateRangeStart:            order.PromisedDate.DateRange.StartDate,
-		PromisedDateRangeEnd:              order.PromisedDate.DateRange.EndDate,
+		PromisedDateRangeStart:            safePtrTime(order.PromisedDate.DateRange.StartDate),
+		PromisedDateRangeEnd:              safePtrTime(order.PromisedDate.DateRange.EndDate),
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		JSONItems:                         mapItemsToTable(order.Items),
@@ -64,6 +65,13 @@ func MapOrderToTable(order domain.Order) table.Order {
 		Packages:              MapPackagesToTable(order.Packages, orgCountryID),
 	}
 	return tbl
+}
+
+func safePtrTime(t time.Time) *time.Time {
+	if t.IsZero() {
+		return nil // Retorna nil si la fecha es vacía en el dominio
+	}
+	return &t
 }
 
 func mapReferencesToTable(references []domain.Reference) []table.OrderReferences {

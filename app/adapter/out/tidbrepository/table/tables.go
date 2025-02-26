@@ -72,11 +72,11 @@ type Order struct {
 
 	JSONItems JSONItems `gorm:"type:json"`
 
-	CollectAvailabilityDate           time.Time     `gorm:"type:date;default:null"`
+	CollectAvailabilityDate           *time.Time    `gorm:"type:date;default:null"`
 	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
 	CollectAvailabilityTimeRangeEnd   string        `gorm:"default:null"`
-	PromisedDateRangeStart            time.Time     `gorm:"type:date;default:null"`
-	PromisedDateRangeEnd              time.Time     `gorm:"type:date;default:null"`
+	PromisedDateRangeStart            *time.Time    `gorm:"type:date;default:null"`
+	PromisedDateRangeEnd              *time.Time    `gorm:"type:date;default:null"`
 	PromisedTimeRangeStart            string        `gorm:"default:null"`
 	PromisedTimeRangeEnd              string        `gorm:"default:null"`
 	TransportRequirements             JSONReference `gorm:"type:json"`
@@ -146,7 +146,7 @@ type CheckoutHistory struct {
 type EvidencePhoto struct {
 	URL     string
 	Type    string
-	TakenAt time.Time
+	TakenAt *time.Time
 }
 
 // Definimos el tipo para manejar el array de EvidencePhoto como JSON
@@ -198,7 +198,7 @@ func (o Order) Map() domain.Order {
 
 	// Mapear las fechas de disponibilidad de recolección
 	order.CollectAvailabilityDate = domain.CollectAvailabilityDate{
-		Date: o.CollectAvailabilityDate,
+		Date: safeTime(o.CollectAvailabilityDate),
 		TimeRange: domain.TimeRange{
 			StartTime: o.CollectAvailabilityTimeRangeStart,
 			EndTime:   o.CollectAvailabilityTimeRangeEnd,
@@ -208,8 +208,8 @@ func (o Order) Map() domain.Order {
 	// Mapear las fechas prometidas
 	order.PromisedDate = domain.PromisedDate{
 		DateRange: domain.DateRange{
-			StartDate: o.PromisedDateRangeStart,
-			EndDate:   o.PromisedDateRangeEnd,
+			StartDate: safeTime(o.PromisedDateRangeStart),
+			EndDate:   safeTime(o.PromisedDateRangeEnd),
 		},
 		TimeRange: domain.TimeRange{
 			StartTime: o.PromisedTimeRangeStart,
@@ -252,6 +252,14 @@ func (o Order) Map() domain.Order {
 	}
 
 	return order
+}
+
+// 🔥 Función auxiliar para manejar punteros de time.Time de manera segura
+func safeTime(t *time.Time) time.Time {
+	if t == nil {
+		return time.Time{} // Retorna un time.Time vacío en lugar de nil
+	}
+	return *t
 }
 
 type Items struct {
