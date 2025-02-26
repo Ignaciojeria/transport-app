@@ -29,6 +29,7 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
         SELECT DISTINCT
             o.id as order_id,
             o.reference_id,
+            o.sequence_number as order_sequence_number,
             org_country.country as organization_country,
             headers.commerce as commerce_name,
             headers.consumer as consumer_name,
@@ -142,7 +143,7 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
 		// Condición dinámica para OperatorReferenceID
 
 		if osf.PlanReferenceID != "" {
-			query += " AND r.reference_id = ?"
+			query += " AND pln.reference_id = ?"
 			params = append(params, osf.PlanReferenceID)
 		}
 

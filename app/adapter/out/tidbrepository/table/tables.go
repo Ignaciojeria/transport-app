@@ -168,12 +168,29 @@ func (j JSONEvidencePhotos) Value() (driver.Value, error) {
 
 func (o Order) Map() domain.Order {
 	// Mapear la orden base
+	var planID int64
+	if o.PlanID != nil {
+		planID = *o.PlanID
+	}
+	var routeID int64
+	if o.RouteID != nil {
+		routeID = *o.RouteID
+	}
+
 	order := domain.Order{
 		ID:          o.ID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		Headers: domain.Headers{
 			Organization: domain.Organization{
 				OrganizationCountryID: o.OrganizationCountryID,
+			},
+		},
+		Plan: domain.Plan{
+			ID: planID,
+			Routes: []domain.Route{
+				{
+					ID: routeID,
+				},
 			},
 		},
 		DeliveryInstructions: o.DeliveryInstructions,

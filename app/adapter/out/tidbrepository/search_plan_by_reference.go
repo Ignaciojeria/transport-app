@@ -10,6 +10,7 @@ type SearchPlanByReference func(context.Context, string) (domain.Plan, error)
 
 func NewSearchPlanByReference(conn tidb.TIDBConnection) SearchPlanByReference {
 	return func(ctx context.Context, s string) (domain.Plan, error) {
+
 		return domain.Plan{}, nil
 	}
 }

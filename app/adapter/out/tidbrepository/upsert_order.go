@@ -56,6 +56,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				Omit("OriginNodeInfo").
 				Omit("DestinationNodeInfo").
 				Omit("Route").
+				Omit("Plan").
 				Save(&DBOrderToUpdate).Error; err != nil {
 				return err
 			}

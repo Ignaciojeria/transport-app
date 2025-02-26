@@ -28,11 +28,10 @@ type SearchPlanByReferenceResponse struct {
 			Longitude       float64 `json:"longitude"`
 		} `json:"endLocation"`
 		Visits []struct {
-			ReferenceID string                 `json:"referenceID"`
-			Sequence    int                    `json:"sequence"`
-			Latitude    float64                `json:"latitude"`
-			Longitude   float64                `json:"longitude"`
-			Orders      []SearchOrdersResponse `json:"orders"`
+			Sequence  int                    `json:"sequence"`
+			Latitude  float64                `json:"latitude"`
+			Longitude float64                `json:"longitude"`
+			Orders    []SearchOrdersResponse `json:"orders"`
 		} `json:"visits"`
 	} `json:"routes"`
 }
@@ -52,7 +51,7 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 		},
 	}
 
-	// Map unassigned orders
+	// Mapear órdenes no asignadas
 	for _, order := range p.UnassignedOrders {
 		unassignedOrder := struct {
 			Longitude   float64 `json:"longitude"`
@@ -66,7 +65,7 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 		response.UnassignedOrders = append(response.UnassignedOrders, unassignedOrder)
 	}
 
-	// Map routes
+	// Mapear rutas
 	for _, route := range p.Routes {
 		mappedRoute := struct {
 			ReferenceID string `json:"referenceID"`
@@ -79,11 +78,10 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				Longitude       float64 `json:"longitude"`
 			} `json:"endLocation"`
 			Visits []struct {
-				ReferenceID string                 `json:"referenceID"`
-				Sequence    int                    `json:"sequence"`
-				Latitude    float64                `json:"latitude"`
-				Longitude   float64                `json:"longitude"`
-				Orders      []SearchOrdersResponse `json:"orders"`
+				Sequence  int                    `json:"sequence"`
+				Latitude  float64                `json:"latitude"`
+				Longitude float64                `json:"longitude"`
+				Orders    []SearchOrdersResponse `json:"orders"`
 			} `json:"visits"`
 		}{
 			ReferenceID: string(route.ReferenceID),
@@ -105,35 +103,55 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 
 		// Agrupar órdenes por sequenceNumber
 		ordersBySequence := make(map[int][]domain.Order)
+		unorderedOrders := []domain.Order{} // Lista para órdenes sin secuencia
+
 		for _, order := range route.Orders {
 			if order.SequenceNumber != nil {
 				seq := *order.SequenceNumber
 				ordersBySequence[seq] = append(ordersBySequence[seq], order)
+			} else {
+				unorderedOrders = append(unorderedOrders, order) // Guardar órdenes sin secuencia
 			}
 		}
 
-		// Crear una visita para cada secuencia
+		// Crear una visita para cada secuencia asignada
 		for seq, ordersInSequence := range ordersBySequence {
 			if len(ordersInSequence) > 0 {
-				// Usar la ubicación de la primera orden del grupo
-				firstOrder := ordersInSequence[0]
+				firstOrder := ordersInSequence[0] // Usamos la primera orden para la ubicación
 
 				visit := struct {
-					ReferenceID string                 `json:"referenceID"`
-					Sequence    int                    `json:"sequence"`
-					Latitude    float64                `json:"latitude"`
-					Longitude   float64                `json:"longitude"`
-					Orders      []SearchOrdersResponse `json:"orders"`
+					Sequence  int                    `json:"sequence"`
+					Latitude  float64                `json:"latitude"`
+					Longitude float64                `json:"longitude"`
+					Orders    []SearchOrdersResponse `json:"orders"`
 				}{
-					ReferenceID: string(firstOrder.ReferenceID),
-					Sequence:    seq,
-					Latitude:    firstOrder.Destination.AddressInfo.CorrectedLocation[1],
-					Longitude:   firstOrder.Destination.AddressInfo.CorrectedLocation[0],
-					Orders:      MapSearchOrdersResponse(ordersInSequence),
+					Sequence:  seq,
+					Latitude:  firstOrder.Destination.AddressInfo.CorrectedLocation[1],
+					Longitude: firstOrder.Destination.AddressInfo.CorrectedLocation[0],
+					Orders:    MapSearchOrdersResponse(ordersInSequence),
 				}
 
 				mappedRoute.Visits = append(mappedRoute.Visits, visit)
 			}
+		}
+
+		// Agregar una visita especial para órdenes sin secuencia
+		if len(unorderedOrders) > 0 {
+			firstOrder := unorderedOrders[0] // Usamos la primera orden para la ubicación
+
+			visit := struct {
+				Sequence  int                    `json:"sequence"`
+				Latitude  float64                `json:"latitude"`
+				Longitude float64                `json:"longitude"`
+				Orders    []SearchOrdersResponse `json:"orders"`
+			}{
+				Sequence:  -1, // Indica que no tienen secuencia asignada
+				Latitude:  firstOrder.Destination.AddressInfo.CorrectedLocation[1],
+				Longitude: firstOrder.Destination.AddressInfo.CorrectedLocation[0],
+				Orders:    MapSearchOrdersResponse(unorderedOrders),
+			}
+
+			mappedRoute.Visits = append(mappedRoute.Visits, visit)
 		}
 
 		response.Routes = append(response.Routes, mappedRoute)

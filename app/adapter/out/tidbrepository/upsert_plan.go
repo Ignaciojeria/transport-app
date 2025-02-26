@@ -192,6 +192,7 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 					"plan_id":                 plan.ID,
 					"order_status_id":         plannedStatusID,
 					"json_planned_data":       plannedData,
+					"sequence_number":         order.SequenceNumber,
 					"organization_country_id": p.Organization.OrganizationCountryID,
 				}
 

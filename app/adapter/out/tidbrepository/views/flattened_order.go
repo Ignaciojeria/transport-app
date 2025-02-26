@@ -21,6 +21,7 @@ type FlattenedOrderView struct {
 	OrderStatus                  string              `gorm:"column:order_status"`
 	OrderTypeID                  int64               `gorm:"column:order_type_id"`
 	OrderType                    string              `gorm:"column:order_type"`
+	OrderSequenceNumber          *int                `gorm:"column:order_sequence_number"`
 	OrderTypeDescription         string              `gorm:"column:order_type_description"`
 	DeliveryInstructions         string              `gorm:"column:delivery_instructions"`
 	OriginContactID              int64               `gorm:"column:origin_contact_id"`
@@ -136,7 +137,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			}
 		}
 	}
-
 	return domain.Order{
 		ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
@@ -149,6 +149,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Consumer: o.ConsumerName,
 			Commerce: o.CommerceName,
 		},
+		SequenceNumber:       o.OrderSequenceNumber,
 		DeliveryInstructions: o.DeliveryInstructions,
 		OrderStatus: domain.OrderStatus{
 			ID:     o.OrderStatusID,
