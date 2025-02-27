@@ -9,5 +9,6 @@ const (
 	tagFleets           = "fleets"
 	tagPlanning         = "planning"
 	tagAlgorithm        = "algorithm"
+	tagLocations        = "location"
 	tagEndToEndOperator = "End-to-End Operator"
 )

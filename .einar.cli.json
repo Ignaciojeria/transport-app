@@ -262,6 +262,18 @@
         {
             "kind": "usecase",
             "name": "search-plan"
+        },
+        {
+            "kind": "get-controller",
+            "name": "autocomplete-directions"
+        },
+        {
+            "kind": "post-controller",
+            "name": "optimize-plan"
+        },
+        {
+            "kind": "usecase",
+            "name": "optimize-plan"
         }
     ]
 }
