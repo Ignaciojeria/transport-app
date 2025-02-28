@@ -2,7 +2,6 @@ package fuegoapi
 
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
-	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
 
@@ -16,13 +15,13 @@ func init() {
 }
 func optimizePlan(s httpserver.Server, optimize usecase.OptimizePlan) {
 	fuego.Post(s.Manager, "/plans/optimize",
-		func(c fuego.ContextWithBody[request.OptimizePlanRequest]) (response.SearchPlanByReferenceResponse, error) {
+		func(c fuego.ContextWithBody[request.OptimizePlanRequest]) (request.SearchPlanByReferenceResponse, error) {
 			req, err := c.Body()
 			if err != nil {
-				return response.SearchPlanByReferenceResponse{}, err
+				return request.SearchPlanByReferenceResponse{}, err
 			}
 			plan, err := optimize(c.Context(), req.Map())
-			return response.MapSearchPlanByReferenceResponse(plan), err
+			return request.MapSearchPlanByReferenceResponse(plan), err
 		},
 		option.Tags(tagPlanning),
 		option.Summary("optimizePlan"))

@@ -148,7 +148,7 @@ type UpsertOrderRequest struct {
 }
 
 func (req UpsertOrderRequest) Map() domain.Order {
-	return domain.Order{
+	order := domain.Order{
 		ReferenceID:             domain.ReferenceID(req.ReferenceID),
 		OrderType:               req.mapOrderType(),
 		References:              req.mapReferences(req.References),
@@ -162,6 +162,13 @@ func (req UpsertOrderRequest) Map() domain.Order {
 		//Visits:                  req.mapVisit(),
 		TransportRequirements: req.mapReferences(req.TransportRequirements),
 	}
+	if order.Commerce == "" {
+		order.Commerce = "empty"
+	}
+	if order.Consumer == "" {
+		order.Consumer = "empty"
+	}
+	return order
 }
 
 func (req UpsertOrderRequest) mapOrderType() domain.OrderType {

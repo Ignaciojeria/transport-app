@@ -1,9 +1,11 @@
-package response
+package request
 
-import "transport-app/app/domain"
+import (
+	"transport-app/app/domain"
+)
 
 type SearchOrdersResponse struct {
-	ReferenceID         string `json:"referenceID"`
+	UpsertOrderRequest  // Hereda todos los campos del request
 	BusinessIdentifiers struct {
 		Commerce string `json:"commerce"`
 		Consumer string `json:"consumer"`
@@ -13,141 +15,6 @@ type SearchOrdersResponse struct {
 		Status    string `json:"status"`
 		CreatedAt string `json:"createdAt"`
 	} `json:"orderStatus"`
-	CollectAvailabilityDate struct {
-		Date      string `json:"date"`
-		TimeRange struct {
-			EndTime   string `json:"endTime"`
-			StartTime string `json:"startTime"`
-		} `json:"timeRange"`
-	} `json:"collectAvailabilityDate"`
-	Destination struct {
-		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
-			AddressLine3 string `json:"addressLine3"`
-			Contact      struct {
-				Email      string `json:"email"`
-				Phone      string `json:"phone"`
-				NationalID string `json:"nationalID"`
-				Documents  []struct {
-					Type  string `json:"type"`
-					Value string `json:"value"`
-				} `json:"documents"`
-				FullName string `json:"fullName"`
-			} `json:"contact"`
-			County    string  `json:"county"`
-			District  string  `json:"district"`
-			Latitude  float64 `json:"latitude"`
-			Longitude float64 `json:"longitude"`
-			Province  string  `json:"province"`
-			State     string  `json:"state"`
-			TimeZone  string  `json:"timeZone"`
-			ZipCode   string  `json:"zipCode"`
-		} `json:"addressInfo"`
-		DeliveryInstructions string `json:"deliveryInstructions"`
-		NodeInfo             struct {
-			ReferenceID string `json:"referenceId"`
-		} `json:"nodeInfo"`
-	} `json:"destination"`
-	Items []struct {
-		Description string `json:"description"`
-		Dimensions  struct {
-			Depth  float64 `json:"depth"`
-			Height float64 `json:"height"`
-			Unit   string  `json:"unit"`
-			Width  float64 `json:"width"`
-		} `json:"dimensions"`
-		Insurance struct {
-			Currency  string `json:"currency"`
-			UnitValue int    `json:"unitValue"`
-		} `json:"insurance"`
-		LogisticCondition string `json:"logisticCondition"`
-		Quantity          struct {
-			QuantityNumber int    `json:"quantityNumber"`
-			QuantityUnit   string `json:"quantityUnit"`
-		} `json:"quantity"`
-		ReferenceID string `json:"referenceId"`
-		Weight      struct {
-			Unit  string `json:"unit"`
-			Value int    `json:"value"`
-		} `json:"weight"`
-	} `json:"items"`
-	OrderType struct {
-		Description string `json:"description"`
-		Type        string `json:"type"`
-	} `json:"orderType"`
-	Origin struct {
-		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
-			AddressLine3 string `json:"addressLine3"`
-			Contact      struct {
-				Email      string `json:"email"`
-				Phone      string `json:"phone"`
-				NationalID string `json:"nationalID"`
-				Documents  []struct {
-					Type  string `json:"type"`
-					Value string `json:"value"`
-				} `json:"documents"`
-				FullName string `json:"fullName"`
-			} `json:"contact"`
-			County    string  `json:"county"`
-			District  string  `json:"district"`
-			Latitude  float64 `json:"latitude"`
-			Longitude float64 `json:"longitude"`
-			Province  string  `json:"province"`
-			State     string  `json:"state"`
-			TimeZone  string  `json:"timeZone"`
-			ZipCode   string  `json:"zipCode"`
-		} `json:"addressInfo"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceId"`
-		} `json:"nodeInfo"`
-	} `json:"origin"`
-	Packages []struct {
-		Dimensions struct {
-			Depth  float64 `json:"depth"`
-			Height float64 `json:"height"`
-			Unit   string  `json:"unit"`
-			Width  float64 `json:"width"`
-		} `json:"dimensions"`
-		Insurance struct {
-			Currency  string  `json:"currency"`
-			UnitValue float64 `json:"unitValue"`
-		} `json:"insurance"`
-		ItemReferences []struct {
-			Quantity struct {
-				QuantityNumber int    `json:"quantityNumber"`
-				QuantityUnit   string `json:"quantityUnit"`
-			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
-		} `json:"itemReferences"`
-		Lpn         string `json:"lpn"`
-		PackageType string `json:"packageType"`
-		Weight      struct {
-			Unit  string `json:"unit"`
-			Value int    `json:"value"`
-		} `json:"weight"`
-	} `json:"packages"`
-	PromisedDate struct {
-		DateRange struct {
-			EndDate   string `json:"endDate"`
-			StartDate string `json:"startDate"`
-		} `json:"dateRange"`
-		ServiceCategory string `json:"serviceCategory"`
-		TimeRange       struct {
-			EndTime   string `json:"endTime"`
-			StartTime string `json:"startTime"`
-		} `json:"timeRange"`
-	} `json:"promisedDate"`
-	References []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"references"`
-	TransportRequirements []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"transportRequirements"`
 }
 
 func MapSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
@@ -240,8 +107,33 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.NodeInfo) *SearchOrder
 }
 
 func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersResponse {
-	if res.Items == nil {
-		res.Items = make([]struct {
+	res.UpsertOrderRequest.Items = make([]struct {
+		Description string `json:"description"`
+		Dimensions  struct {
+			Depth  float64 `json:"depth"`
+			Height float64 `json:"height"`
+			Unit   string  `json:"unit"`
+			Width  float64 `json:"width"`
+		} `json:"dimensions"`
+		Insurance struct {
+			Currency  string  `json:"currency"`
+			UnitValue float64 `json:"unitValue"`
+		} `json:"insurance"`
+		LogisticCondition string `json:"logisticCondition"`
+		Quantity          struct {
+			QuantityNumber int    `json:"quantityNumber"`
+			QuantityUnit   string `json:"quantityUnit"`
+		} `json:"quantity"`
+		ReferenceID string `json:"referenceId"`
+		Weight      struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		} `json:"weight"`
+	}, len(items))
+
+	// Mapeo de cada item
+	for i, item := range items {
+		res.UpsertOrderRequest.Items[i] = struct {
 			Description string `json:"description"`
 			Dimensions  struct {
 				Depth  float64 `json:"depth"`
@@ -250,8 +142,8 @@ func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersRes
 				Width  float64 `json:"width"`
 			} `json:"dimensions"`
 			Insurance struct {
-				Currency  string `json:"currency"`
-				UnitValue int    `json:"unitValue"`
+				Currency  string  `json:"currency"`
+				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
 			LogisticCondition string `json:"logisticCondition"`
 			Quantity          struct {
@@ -260,36 +152,8 @@ func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersRes
 			} `json:"quantity"`
 			ReferenceID string `json:"referenceId"`
 			Weight      struct {
-				Unit  string `json:"unit"`
-				Value int    `json:"value"`
-			} `json:"weight"`
-		}, 0)
-	}
-
-	res.Items = res.Items[:0]
-
-	for _, item := range items {
-		itemData := struct {
-			Description string `json:"description"`
-			Dimensions  struct {
-				Depth  float64 `json:"depth"`
-				Height float64 `json:"height"`
-				Unit   string  `json:"unit"`
-				Width  float64 `json:"width"`
-			} `json:"dimensions"`
-			Insurance struct {
-				Currency  string `json:"currency"`
-				UnitValue int    `json:"unitValue"`
-			} `json:"insurance"`
-			LogisticCondition string `json:"logisticCondition"`
-			Quantity          struct {
-				QuantityNumber int    `json:"quantityNumber"`
-				QuantityUnit   string `json:"quantityUnit"`
-			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
-			Weight      struct {
-				Unit  string `json:"unit"`
-				Value int    `json:"value"`
+				Unit  string  `json:"unit"`
+				Value float64 `json:"value"`
 			} `json:"weight"`
 		}{
 			Description: item.Description,
@@ -305,11 +169,11 @@ func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersRes
 				Width:  item.Dimensions.Width,
 			},
 			Insurance: struct {
-				Currency  string `json:"currency"`
-				UnitValue int    `json:"unitValue"`
+				Currency  string  `json:"currency"`
+				UnitValue float64 `json:"unitValue"`
 			}{
 				Currency:  item.Insurance.Currency,
-				UnitValue: int(item.Insurance.UnitValue),
+				UnitValue: item.Insurance.UnitValue,
 			},
 			LogisticCondition: item.LogisticCondition,
 			Quantity: struct {
@@ -321,15 +185,13 @@ func (res *SearchOrdersResponse) withItems(items []domain.Item) *SearchOrdersRes
 			},
 			ReferenceID: string(item.ReferenceID),
 			Weight: struct {
-				Unit  string `json:"unit"`
-				Value int    `json:"value"`
+				Unit  string  `json:"unit"`
+				Value float64 `json:"value"`
 			}{
 				Unit:  item.Weight.Unit,
-				Value: int(item.Weight.Value),
+				Value: item.Weight.Value,
 			},
 		}
-
-		res.Items = append(res.Items, itemData)
 	}
 
 	return res
@@ -396,96 +258,128 @@ func (res *SearchOrdersResponse) withPromisedDate(promisedDate domain.PromisedDa
 	return res
 }
 
-func (res *SearchOrdersResponse) withPackages(packages []domain.Package) *SearchOrdersResponse {
-	if res.Packages == nil {
-		res.Packages = make([]struct {
-			Dimensions struct {
-				Depth  float64 `json:"depth"`
-				Height float64 `json:"height"`
-				Unit   string  `json:"unit"`
-				Width  float64 `json:"width"`
-			} `json:"dimensions"`
-			Insurance struct {
-				Currency  string  `json:"currency"`
-				UnitValue float64 `json:"unitValue"`
-			} `json:"insurance"`
-			ItemReferences []struct {
-				Quantity struct {
-					QuantityNumber int    `json:"quantityNumber"`
-					QuantityUnit   string `json:"quantityUnit"`
-				} `json:"quantity"`
-				ReferenceID string `json:"referenceId"`
-			} `json:"itemReferences"`
-			Lpn         string `json:"lpn"`
-			PackageType string `json:"packageType"`
-			Weight      struct {
-				Unit  string `json:"unit"`
-				Value int    `json:"value"`
-			} `json:"weight"`
-		}, 0)
+// Extrae la lógica de mapeo de referencias de ítems en una función separada
+func mapItemReferences(itemReferences []domain.ItemReference) []struct {
+	Quantity struct {
+		QuantityNumber int    `json:"quantityNumber"`
+		QuantityUnit   string `json:"quantityUnit"`
+	} `json:"quantity"`
+	ReferenceID string `json:"referenceId"`
+} {
+	mapped := make([]struct {
+		Quantity struct {
+			QuantityNumber int    `json:"quantityNumber"`
+			QuantityUnit   string `json:"quantityUnit"`
+		} `json:"quantity"`
+		ReferenceID string `json:"referenceId"`
+	}, len(itemReferences))
+
+	for i, itemRef := range itemReferences {
+		mapped[i] = struct {
+			Quantity struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			} `json:"quantity"`
+			ReferenceID string `json:"referenceId"`
+		}{
+			Quantity: struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			}{
+				QuantityNumber: itemRef.Quantity.QuantityNumber,
+				QuantityUnit:   itemRef.Quantity.QuantityUnit,
+			},
+			ReferenceID: string(itemRef.ReferenceID),
+		}
 	}
 
-	res.Packages = res.Packages[:0]
+	return mapped
+}
 
-	for _, pkg := range packages {
-		pkgData := struct {
-			Dimensions struct {
-				Depth  float64 `json:"depth"`
-				Height float64 `json:"height"`
-				Unit   string  `json:"unit"`
-				Width  float64 `json:"width"`
-			} `json:"dimensions"`
-			Insurance struct {
-				Currency  string  `json:"currency"`
-				UnitValue float64 `json:"unitValue"`
-			} `json:"insurance"`
-			ItemReferences []struct {
-				Quantity struct {
-					QuantityNumber int    `json:"quantityNumber"`
-					QuantityUnit   string `json:"quantityUnit"`
-				} `json:"quantity"`
-				ReferenceID string `json:"referenceId"`
-			} `json:"itemReferences"`
-			Lpn         string `json:"lpn"`
-			PackageType string `json:"packageType"`
-			Weight      struct {
-				Unit  string `json:"unit"`
-				Value int    `json:"value"`
-			} `json:"weight"`
-		}{}
+func (res *SearchOrdersResponse) withPackages(packages []domain.Package) *SearchOrdersResponse {
+	// Reinicializa la lista de paquetes
+	res.Packages = make([]struct {
+		Dimensions struct {
+			Depth  float64 `json:"depth"`
+			Height float64 `json:"height"`
+			Unit   string  `json:"unit"`
+			Width  float64 `json:"width"`
+		} `json:"dimensions"`
+		Insurance struct {
+			Currency  string  `json:"currency"`
+			UnitValue float64 `json:"unitValue"`
+		} `json:"insurance"`
+		ItemReferences []struct {
+			Quantity struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			} `json:"quantity"`
+			ReferenceID string `json:"referenceId"`
+		} `json:"itemReferences"`
+		Lpn    string `json:"lpn"`
+		Weight struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		} `json:"weight"`
+	}, len(packages))
 
-		// Mapeo de dimensiones
-		pkgData.Dimensions.Depth = pkg.Dimensions.Depth
-		pkgData.Dimensions.Height = pkg.Dimensions.Height
-		pkgData.Dimensions.Unit = pkg.Dimensions.Unit
-		pkgData.Dimensions.Width = pkg.Dimensions.Width
-
-		// Mapeo de seguro
-		pkgData.Insurance.Currency = pkg.Insurance.Currency
-		pkgData.Insurance.UnitValue = pkg.Insurance.UnitValue
-
-		// Mapeo de referencias de ítems
-		for _, itemRef := range pkg.ItemReferences {
-			itemRefData := struct {
-				Quantity struct {
-					QuantityNumber int    `json:"quantityNumber"`
-					QuantityUnit   string `json:"quantityUnit"`
-				} `json:"quantity"`
-				ReferenceID string `json:"referenceId"`
-			}{}
-			itemRefData.Quantity.QuantityNumber = itemRef.Quantity.QuantityNumber
-			itemRefData.Quantity.QuantityUnit = itemRef.Quantity.QuantityUnit
-			itemRefData.ReferenceID = string(itemRef.ReferenceID)
-			pkgData.ItemReferences = append(pkgData.ItemReferences, itemRefData)
+	// Mapeo de cada paquete
+	for i, pkg := range packages {
+		res.Packages[i].Dimensions = struct {
+			Depth  float64 `json:"depth"`
+			Height float64 `json:"height"`
+			Unit   string  `json:"unit"`
+			Width  float64 `json:"width"`
+		}{
+			Depth:  pkg.Dimensions.Depth,
+			Height: pkg.Dimensions.Height,
+			Unit:   pkg.Dimensions.Unit,
+			Width:  pkg.Dimensions.Width,
 		}
 
-		// Mapeo del LPN, tipo de paquete y peso
-		pkgData.Lpn = pkg.Lpn
-		pkgData.PackageType = "default" // Actualiza esto según el dominio si es necesario
-		pkgData.Weight.Unit = pkg.Weight.Unit
-		pkgData.Weight.Value = int(pkg.Weight.Value)
+		res.Packages[i].Insurance = struct {
+			Currency  string  `json:"currency"`
+			UnitValue float64 `json:"unitValue"`
+		}{
+			Currency:  pkg.Insurance.Currency,
+			UnitValue: pkg.Insurance.UnitValue,
+		}
 
-		res.Packages = append(res.Packages, pkgData)
+		res.Packages[i].ItemReferences = make([]struct {
+			Quantity struct {
+				QuantityNumber int    `json:"quantityNumber"`
+				QuantityUnit   string `json:"quantityUnit"`
+			} `json:"quantity"`
+			ReferenceID string `json:"referenceId"`
+		}, len(pkg.ItemReferences))
+
+		for j, itemRef := range pkg.ItemReferences {
+			res.Packages[i].ItemReferences[j] = struct {
+				Quantity struct {
+					QuantityNumber int    `json:"quantityNumber"`
+					QuantityUnit   string `json:"quantityUnit"`
+				} `json:"quantity"`
+				ReferenceID string `json:"referenceId"`
+			}{
+				Quantity: struct {
+					QuantityNumber int    `json:"quantityNumber"`
+					QuantityUnit   string `json:"quantityUnit"`
+				}{
+					QuantityNumber: itemRef.Quantity.QuantityNumber,
+					QuantityUnit:   itemRef.Quantity.QuantityUnit,
+				},
+				ReferenceID: string(itemRef.ReferenceID),
+			}
+		}
+
+		res.Packages[i].Lpn = pkg.Lpn
+		res.Packages[i].Weight = struct {
+			Unit  string  `json:"unit"`
+			Value float64 `json:"value"`
+		}{
+			Unit:  pkg.Weight.Unit,
+			Value: pkg.Weight.Value,
+		}
 	}
 
 	return res

@@ -20,6 +20,7 @@ func newOneRouteOptimization(optimize locationiq.LocationIqOptimization) oneRout
 		for _, unnasignedOrder := range p.UnassignedOrders {
 			p.Routes[0].Orders = append(p.Routes[0].Orders, unnasignedOrder)
 		}
+		p.UnassignedOrders = []domain.Order{}
 		return optimize(ctx, p)
 	}
 }

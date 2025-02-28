@@ -19,17 +19,8 @@ type OptimizePlanRequest struct {
 		Start string `json:"start"`
 		End   string `json:"end"`
 	} `json:"workingHours"`
-	UnassignedOrders []struct {
-		ReferenceID   string  `json:"referenceID"`
-		Reason        string  `json:"reason"`
-		Address       string  `json:"address"`
-		Notes         string  `json:"notes"`
-		ReceiverName  string  `json:"receiverName"`
-		ReceiverPhone string  `json:"receiverPhone"`
-		Latitude      float64 `json:"latitude"`
-		Longitude     float64 `json:"longitude"`
-	} `json:"unassignedOrders"`
-	Routes []struct {
+	UnassignedOrders []SearchOrdersResponse `json:"unassignedOrders"`
+	Routes           []struct {
 		ReferenceID string `json:"referenceID"`
 		EndLocation struct {
 			NodeReferenceID string  `json:"nodeReferenceID"`
@@ -68,24 +59,7 @@ func (r OptimizePlanRequest) Map() domain.Plan {
 
 	var unassignedOrders []domain.Order
 	for _, unassignedOrder := range r.UnassignedOrders {
-		unassignedOrders = append(unassignedOrders, domain.Order{
-			ReferenceID:          domain.ReferenceID(unassignedOrder.ReferenceID),
-			DeliveryInstructions: unassignedOrder.Notes,
-			Destination: domain.NodeInfo{
-				AddressInfo: domain.AddressInfo{
-					Location: orb.Point{
-						unassignedOrder.Longitude,
-						unassignedOrder.Latitude,
-					},
-					AddressLine1: unassignedOrder.Address,
-					Contact: domain.Contact{
-						FullName: unassignedOrder.ReceiverName,
-						Phone:    unassignedOrder.ReceiverPhone,
-					},
-				},
-			},
-			UnassignedReason: unassignedOrder.Reason,
-		})
+		unassignedOrders = append(unassignedOrders, unassignedOrder.Map())
 	}
 
 	var routes []domain.Route

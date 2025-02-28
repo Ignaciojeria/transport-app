@@ -1,4 +1,4 @@
-package response
+package request
 
 import (
 	"transport-app/app/domain"
@@ -12,12 +12,8 @@ type SearchPlanByReferenceResponse struct {
 		Latitude        float64 `json:"latitude"`
 		Longitude       float64 `json:"longitude"`
 	} `json:"startLocation"`
-	UnassignedOrders []struct {
-		Longitude   float64 `json:"longitude"`
-		Latitude    float64 `json:"latitude"`
-		ReferenceID string  `json:"referenceID"`
-	} `json:"unassignedOrders"`
-	Routes []struct {
+	UnassignedOrders []SearchOrdersResponse `json:"unassignedOrders"`
+	Routes           []struct {
 		ReferenceID string `json:"referenceID"`
 		Operator    struct {
 			ReferenceID string `json:"referenceID"`
@@ -46,25 +42,11 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 			Longitude       float64 `json:"longitude"`
 		}{
 			NodeReferenceID: string(p.Origin.ReferenceID),
-			Latitude:        p.Origin.AddressInfo.CorrectedLocation[1],
-			Longitude:       p.Origin.AddressInfo.CorrectedLocation[0],
+			Latitude:        p.Origin.AddressInfo.Location[1],
+			Longitude:       p.Origin.AddressInfo.Location[0],
 		},
 	}
-
-	// Mapear órdenes no asignadas
-	for _, order := range p.UnassignedOrders {
-		unassignedOrder := struct {
-			Longitude   float64 `json:"longitude"`
-			Latitude    float64 `json:"latitude"`
-			ReferenceID string  `json:"referenceID"`
-		}{
-			Longitude:   order.Destination.AddressInfo.CorrectedLocation[0],
-			Latitude:    order.Destination.AddressInfo.CorrectedLocation[1],
-			ReferenceID: string(order.ReferenceID),
-		}
-		response.UnassignedOrders = append(response.UnassignedOrders, unassignedOrder)
-	}
-
+	response.UnassignedOrders = MapSearchOrdersResponse(p.UnassignedOrders)
 	// Mapear rutas
 	for _, route := range p.Routes {
 		mappedRoute := struct {
@@ -96,8 +78,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				Longitude       float64 `json:"longitude"`
 			}{
 				NodeReferenceID: string(route.Destination.ReferenceID),
-				Latitude:        route.Destination.AddressInfo.CorrectedLocation[1],
-				Longitude:       route.Destination.AddressInfo.CorrectedLocation[0],
+				Latitude:        route.Destination.AddressInfo.Location[1],
+				Longitude:       route.Destination.AddressInfo.Location[0],
 			},
 		}
 

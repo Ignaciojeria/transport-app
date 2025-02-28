@@ -38,10 +38,14 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 	if e.NodeType.ID == 0 {
 		nodeTypeID = nil
 	}
+	var nodeName *string = &e.Name
+	if e.Name == "" {
+		nodeName = nil
+	}
 	return table.NodeInfo{
 		ID:                    e.ID,
 		ReferenceID:           string(e.ReferenceID),
-		Name:                  e.Name,
+		Name:                  nodeName,
 		NodeTypeID:            nodeTypeID,
 		ContactID:             contactID,
 		OrganizationCountryID: e.Organization.OrganizationCountryID,

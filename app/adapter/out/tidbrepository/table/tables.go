@@ -454,7 +454,7 @@ type NodeInfo struct {
 	ReferenceID           string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`                 // Parte del índice único con OrganizationCountryID
 	OrganizationCountryID int64               `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`                                                  // Relación con OrganizationCountry
-	Name                  string              `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
+	Name                  *string             `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
 	NodeTypeID            *int64              `gorm:"default:null"`
 	NodeType              NodeType            `gorm:"foreignKey:NodeTypeID"`
 	ContactID             *int64              `gorm:"default:null"`
@@ -475,10 +475,14 @@ func (n NodeInfo) Map() domain.NodeInfo {
 	if n.NodeTypeID != nil {
 		nodeTypeID = *n.NodeTypeID
 	}
+	var nodeName string
+	if n.Name != nil {
+		nodeName = *n.Name
+	}
 	nodeInfo := domain.NodeInfo{
 		ID:          n.ID,
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
-		Name:        n.Name,
+		Name:        nodeName,
 		Organization: domain.Organization{
 			OrganizationCountryID: n.OrganizationCountryID,
 		},
@@ -494,6 +498,13 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		},
 	}
 	return nodeInfo
+}
+
+func nilIfEmpty(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 type AddressInfo struct {
