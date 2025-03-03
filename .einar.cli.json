@@ -286,6 +286,10 @@
         {
             "kind": "post-controller",
             "name": "directions-normalization"
+        },
+        {
+            "kind": "get-controller",
+            "name": "geocoding"
         }
     ]
 }
