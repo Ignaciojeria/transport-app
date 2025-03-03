@@ -18,10 +18,11 @@ type UpsertOrderRequest struct {
 	} `json:"collectAvailabilityDate"`
 	Destination struct {
 		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
-			AddressLine3 string `json:"addressLine3"`
-			Contact      struct {
+			ProviderAddress string `json:"providerAddress"`
+			AddressLine1    string `json:"addressLine1"`
+			AddressLine2    string `json:"addressLine2"`
+			AddressLine3    string `json:"addressLine3"`
+			Contact         struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`
@@ -31,7 +32,7 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			County    string  `json:"county"`
+			Locality  string  `json:"locality"`
 			District  string  `json:"district"`
 			Latitude  float64 `json:"latitude"`
 			Longitude float64 `json:"longitude"`
@@ -75,10 +76,11 @@ type UpsertOrderRequest struct {
 	} `json:"orderType"`
 	Origin struct {
 		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
-			AddressLine3 string `json:"addressLine3"`
-			Contact      struct {
+			ProviderAddress string `json:"providerAddress"`
+			AddressLine1    string `json:"addressLine1"`
+			AddressLine2    string `json:"addressLine2"`
+			AddressLine3    string `json:"addressLine3"`
+			Contact         struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`
@@ -88,7 +90,7 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			County    string  `json:"county"`
+			Locality  string  `json:"locality"`
 			District  string  `json:"district"`
 			Latitude  float64 `json:"latitude"`
 			Longitude float64 `json:"longitude"`
@@ -215,10 +217,11 @@ func (req UpsertOrderRequest) mapNodeInfo(nodeInfo struct {
 }
 
 func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
-	AddressLine1 string `json:"addressLine1"`
-	AddressLine2 string `json:"addressLine2"`
-	AddressLine3 string `json:"addressLine3"`
-	Contact      struct {
+	ProviderAddress string `json:"providerAddress"`
+	AddressLine1    string `json:"addressLine1"`
+	AddressLine2    string `json:"addressLine2"`
+	AddressLine3    string `json:"addressLine3"`
+	Contact         struct {
 		Email      string `json:"email"`
 		Phone      string `json:"phone"`
 		NationalID string `json:"nationalID"`
@@ -228,7 +231,7 @@ func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 		} `json:"documents"`
 		FullName string `json:"fullName"`
 	} `json:"contact"`
-	County    string  `json:"county"`
+	Locality  string  `json:"locality"`
 	District  string  `json:"district"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
@@ -246,7 +249,7 @@ func (req UpsertOrderRequest) mapAddressInfo(addressInfo struct {
 			Documents:  req.mapDocuments(addressInfo.Contact.Documents),
 		},
 		State:        addressInfo.State,
-		County:       addressInfo.County,
+		Locality:     addressInfo.Locality,
 		Province:     addressInfo.Province,
 		District:     addressInfo.District,
 		AddressLine1: addressInfo.AddressLine1,

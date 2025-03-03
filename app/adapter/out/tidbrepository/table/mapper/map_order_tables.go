@@ -214,7 +214,7 @@ func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.A
 		OrganizationCountryID: orgCountry,
 		ID:                    address.ID,
 		State:                 address.State,
-		County:                address.County,
+		Locality:              address.Locality,
 		District:              address.District,
 		AddressLine1:          address.AddressLine1,
 		AddressLine2:          address.AddressLine2,

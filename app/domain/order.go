@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
+	"transport-app/app/shared/utils"
 
 	"github.com/joomcode/errorx"
 	"github.com/paulmach/orb"
@@ -356,9 +358,10 @@ type AddressInfo struct {
 	Organization      Organization
 	Contact           Contact   `json:"contact"`
 	State             string    `json:"state"`
-	County            string    `json:"county"`
+	Locality          string    `json:"locality"`
 	Province          string    `json:"province"`
 	District          string    `json:"district"`
+	ProviderAddress   string    `json:"providerAddress"`
 	AddressLine1      string    `json:"addressLine1"`
 	AddressLine2      string    `json:"addressLine2"`
 	AddressLine3      string    `json:"addressLine3"`
@@ -367,6 +370,16 @@ type AddressInfo struct {
 	CorrectedDistance float64   // Distancia aplicada al punto corregido del plan
 	ZipCode           string    `json:"zipCode"`
 	TimeZone          string    `json:"timeZone"`
+}
+
+// Normalize limpia y formatea los valores de State, Province y District.
+func (a *AddressInfo) Normalize() {
+	a.State = utils.NormalizeText(a.State)
+	a.ProviderAddress = strings.ToLower(a.ProviderAddress)
+	a.AddressLine1 = strings.ToLower(a.AddressLine1)
+	a.AddressLine2 = strings.ToLower(a.AddressLine2)
+	a.Province = utils.NormalizeText(a.Province)
+	a.District = utils.NormalizeText(a.District)
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
@@ -391,8 +404,8 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
 	if newAddress.State != "" {
 		a.State = newAddress.State
 	}
-	if newAddress.County != "" {
-		a.County = newAddress.County
+	if newAddress.Locality != "" {
+		a.Locality = newAddress.Locality
 	}
 	if newAddress.Province != "" {
 		a.Province = newAddress.Province

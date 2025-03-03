@@ -1,32 +1,76 @@
-# AddressInfo Structure
+## 📌 Convención de Campos para Direcciones en Chile
 
-This document provides an overview of the `AddressInfo` structure and its fields, explaining their purpose and usage.
+| Campo en JSON       | Descripción | Ejemplo |
+|---------------------|------------|---------|
+| `addressInfo.addressLine1` | Calle y número | `inglaterra 59` |
+| `addressInfo.addressLine2` | Información adicional (opcional) | `dpto 2214` |
+| `addressInfo.district` | Comuna | `la-florida` |
+| `addressInfo.province` | Provincia | `santiago` |
+| `addressInfo.state` | Región | `metropolitana-de-santiago` |
+| `addressInfo.latitude` | Latitud | `-33.5204181` |
+| `addressInfo.longitude` | Longitud | `-70.6006178` |
 
-## Field Context
+---
 
-| Field          | Purpose                                                                                         |
-|-----------------|------------------------------------------------------------------------------------------------|
-| `Contact`      | Information about the contact associated with the address.                                      |
-| `State`        | Represents the state, generally used in the U.S. and similar countries.                         |
-| `Province`     | Represents the province, as in Canada or countries with specific subdivisions.                  |
-| `County`       | A smaller administrative level than the state or province (e.g., counties).                     |
-| `District`     | For urban subdivisions like neighborhoods or sectors.                                           |
-| `AddressLine1` | Main address line (street and number).                                                          |
-| `AddressLine2` | Additional information, such as an apartment or unit.                                           |
-| `AddressLine3` | Optional additional details, such as references.                                                |
-| `Latitude`     | Geographic coordinate for geolocation.                                                          |
-| `Longitude`    | Geographic coordinate for geolocation.                                                          |
-| `ZipCode`      | Postal code.                                                                                    |
-| `TimeZone`     | Time zone associated with the location. 
+## 🌐 Ejemplos de Direcciones en Chile
 
+### 🏢 Ejemplo en Santiago (con departamento)
+```json
+{
+  "addressInfo": {
+    "addressLine1": "av providencia 1234",
+    "addressLine2": "depto 1202",
+    "district": "providencia",
+    "province": "santiago",
+    "state": "metropolitana-de-santiago",
+    "latitude": "-33.4263",
+    "longitude": "-70.6200"
+  }
+}
+```
 
-Enviar logs a openobserve (el paso de permisos a topico) :
+### 🏙️ Ejemplo en Santiago (sin departamento)
+```json
+{
+  "addressInfo": {
+    "addressLine1": "avenida las condes 7890",
+    "addressLine2": "",
+    "district": "las-condes",
+    "province": "santiago",
+    "state": "metropolitana-de-santiago",
+    "latitude": "-33.4085",
+    "longitude": "-70.5666"
+  }
+}
+```
 
-gcloud iam service-accounts create cloud-logs --display-name="Cloud Logs Service Account" --project=einar-404623
+### 🏠 Ejemplo en el Sur (zona urbana)
+```json
+{
+  "addressInfo": {
+    "addressLine1": "avenida diego portales 1010",
+    "addressLine2": "edificio costanera piso 5",
+    "district": "puerto-montt",
+    "province": "llanquihue",
+    "state": "los-lagos",
+    "latitude": "-41.4717",
+    "longitude": "-72.9361"
+  }
+}
+```
 
+### 🌿 Ejemplo en el Sur (zona rural)
+```json
+{
+  "addressInfo": {
+    "addressLine1": "ruta 5 sur km 789",
+    "addressLine2": "sector rucapequen",
+    "district": "san-carlos",
+    "province": "punilla",
+    "state": "nuble",
+    "latitude": "-36.4241",
+    "longitude": "-71.9598"
+  }
+}
+```
 
-gcloud pubsub topics add-iam-policy-binding transport-app-events --member=serviceAccount:cloud-logs@einar-404623.iam.gserviceaccount.com --role=roles/pubsub.publisher --project=einar-404623
-
-gcloud pubsub topics add-iam-policy-binding transport-app-events --member=serviceAccount:cloud-logs@einar-404623.iam.gserviceaccount.com --role=roles/pubsub.publisher  --project=einar-404623
-
-KO_DOCKER_REPO=gcr.io/[TU_PROYECTO_ID]

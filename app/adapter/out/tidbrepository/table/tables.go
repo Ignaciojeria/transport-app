@@ -515,7 +515,7 @@ type AddressInfo struct {
 	RawAddress            string              `gorm:"type:varchar(191);not null;uniqueIndex:idx_raw_address_organization"` // Parte del índice único
 	State                 string              `gorm:"default:null"`
 	Province              string              `gorm:"default:null"`
-	County                string              `gorm:"default:null"`
+	Locality              string              `gorm:"default:null"`
 	District              string              `gorm:"default:null"`
 	AddressLine1          string              `gorm:"not null"`
 	AddressLine2          string              `gorm:"default:null"`
@@ -532,7 +532,7 @@ func (a AddressInfo) Map() domain.AddressInfo {
 		Organization: a.OrganizationCountry.Map(),
 		State:        a.State,
 		Province:     a.Province,
-		County:       a.County,
+		Locality:     a.Locality,
 		District:     a.District,
 		AddressLine1: a.AddressLine1,
 		AddressLine2: a.AddressLine2,

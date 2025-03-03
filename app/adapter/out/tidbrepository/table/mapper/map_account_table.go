@@ -57,7 +57,7 @@ func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) tabl
 	return table.AddressInfo{
 		ID:                    e.ID,
 		State:                 e.State,
-		County:                e.County,
+		Locality:              e.Locality,
 		District:              e.District,
 		AddressLine1:          e.AddressLine1,
 		AddressLine2:          e.AddressLine2,

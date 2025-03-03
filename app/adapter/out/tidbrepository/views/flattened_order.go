@@ -40,7 +40,7 @@ type FlattenedOrderView struct {
 	OriginContactNationalID      string              `gorm:"column:origin_contact_national_id"`
 	OriginState                  string              `gorm:"column:origin_state"`
 	OriginProvince               string              `gorm:"column:origin_province"`
-	OriginCounty                 string              `gorm:"column:origin_county"`
+	OriginLocality               string              `gorm:"column:origin_locality"`
 	OriginDistrict               string              `gorm:"column:origin_district"`
 	OriginZipCode                string              `gorm:"column:origin_zipcode"`
 	OriginLatitude               float64             `gorm:"column:origin_latitude"`
@@ -60,7 +60,7 @@ type FlattenedOrderView struct {
 	DestinationContactNationalID string              `gorm:"column:destination_contact_national_id"`
 	DestinationState             string              `gorm:"column:destination_state"`
 	DestinationProvince          string              `gorm:"column:destination_province"`
-	DestinationCounty            string              `gorm:"column:destination_county"`
+	DestinationLocality          string              `gorm:"column:destination_locality"`
 	DestinationDistrict          string              `gorm:"column:destination_district"`
 	DestinationZipCode           string              `gorm:"column:destination_zipcode"`
 	DestinationLatitude          float64             `gorm:"column:destination_latitude"`
@@ -185,7 +185,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				AddressLine3: o.OriginAddressLine3,
 				State:        o.OriginState,
 				Province:     o.OriginProvince,
-				County:       o.OriginCounty,
+				Locality:     o.OriginLocality,
 				District:     o.OriginDistrict,
 				ZipCode:      o.OriginZipCode,
 				Location: orb.Point{
@@ -217,7 +217,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				AddressLine3: o.DestinationAddressLine3,
 				State:        o.DestinationState,
 				Province:     o.DestinationProvince,
-				County:       o.DestinationCounty,
+				Locality:     o.DestinationLocality,
 				District:     o.DestinationDistrict,
 				ZipCode:      o.DestinationZipCode,
 				Location: orb.Point{

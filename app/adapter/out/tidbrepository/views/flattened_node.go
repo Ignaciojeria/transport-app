@@ -23,7 +23,7 @@ type FlattenedNodeView struct {
 	AddressLine1       string              `gorm:"column:address_line1"`
 	AddressLine2       string              `gorm:"column:address_line2"`
 	AddressLine3       string              `gorm:"column:address_line3"`
-	County             string              `gorm:"column:county"`
+	Locality           string              `gorm:"column:locality"`
 	District           string              `gorm:"column:district"`
 	Latitude           float64             `gorm:"column:latitude"`
 	Longitude          float64             `gorm:"column:longitude"`
@@ -55,7 +55,7 @@ func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 			AddressLine1: n.AddressLine1,
 			AddressLine2: n.AddressLine2,
 			AddressLine3: n.AddressLine3,
-			County:       n.County,
+			Locality:     n.Locality,
 			District:     n.District,
 			Location:     orb.Point{n.Longitude, n.Latitude},
 			Province:     n.Province,

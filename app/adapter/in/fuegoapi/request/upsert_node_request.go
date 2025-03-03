@@ -14,7 +14,7 @@ type UpsertNodeRequest struct {
 		AddressLine1 string  `json:"addressLine1"`
 		AddressLine2 string  `json:"addressLine2"`
 		AddressLine3 string  `json:"addressLine3"`
-		County       string  `json:"county"`
+		Locality     string  `json:"locality"`
 		District     string  `json:"district"`
 		Latitude     float64 `json:"latitude"`
 		Longitude    float64 `json:"longitude"`
@@ -50,7 +50,7 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			AddressLine1: req.NodeAddress.AddressLine1,
 			AddressLine2: req.NodeAddress.AddressLine2,
 			AddressLine3: req.NodeAddress.AddressLine3,
-			County:       req.NodeAddress.County,
+			Locality:     req.NodeAddress.Locality,
 			District:     req.NodeAddress.District,
 			Location: orb.Point{
 				req.NodeAddress.Longitude, // orb.Point espera [lon, lat]

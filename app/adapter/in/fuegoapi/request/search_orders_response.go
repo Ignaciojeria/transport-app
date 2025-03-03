@@ -67,7 +67,7 @@ func (res *SearchOrdersResponse) withOrigin(origin domain.NodeInfo) *SearchOrder
 	res.Origin.AddressInfo.AddressLine1 = origin.AddressInfo.AddressLine1
 	res.Origin.AddressInfo.AddressLine2 = origin.AddressInfo.AddressLine2
 	res.Origin.AddressInfo.AddressLine3 = origin.AddressInfo.AddressLine3
-	res.Origin.AddressInfo.County = origin.AddressInfo.County
+	res.Origin.AddressInfo.Locality = origin.AddressInfo.Locality
 	res.Origin.AddressInfo.District = origin.AddressInfo.District
 	res.Origin.AddressInfo.Province = origin.AddressInfo.Province
 	res.Origin.AddressInfo.State = origin.AddressInfo.State
@@ -201,7 +201,7 @@ func (res *SearchOrdersResponse) withDestination(destination domain.NodeInfo) *S
 	res.Destination.AddressInfo.AddressLine1 = destination.AddressInfo.AddressLine1
 	res.Destination.AddressInfo.AddressLine2 = destination.AddressInfo.AddressLine2
 	res.Destination.AddressInfo.AddressLine3 = destination.AddressInfo.AddressLine3
-	res.Destination.AddressInfo.County = destination.AddressInfo.County
+	res.Destination.AddressInfo.Locality = destination.AddressInfo.Locality
 	res.Destination.AddressInfo.District = destination.AddressInfo.District
 	res.Destination.AddressInfo.Province = destination.AddressInfo.Province
 	res.Destination.AddressInfo.State = destination.AddressInfo.State
