@@ -51,7 +51,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"name\": \"mi org\",\r\n    \"email\": \"einar1.j@gmail.com\"\r\n}",
+					"raw": "{\r\n    \"name\": \"mi org\",\r\n    \"email\": \"org@gmail.com\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -103,7 +103,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"referenceID\": \"reference_3\",\r\n    \"collectAvailabilityDate\": {\r\n        \"date\": \"2022-03-10\",\r\n        \"timeRange\": {\r\n            \"endTime\": \"03:41\",\r\n            \"startTime\": \"03:41\"\r\n        }\r\n    },\r\n    \"destination\": {\r\n        \"addressInfo\": {\r\n            \"addressLine1\": \"string24\",\r\n            \"addressLine2\": \"string24\",\r\n            \"addressLine3\": \"string24\",\r\n            \"contact\": {\r\n                \"documents\": [\r\n                    {\r\n                        \"type\": \"string24\",\r\n                        \"value\": \"string24\"\r\n                    }\r\n                ],\r\n                \"email\": \"string24161\",\r\n                \"fullName\": \"string24name\",\r\n                \"nationalID\": \"string24\",\r\n                \"phone\": \"string242\"\r\n            },\r\n            \"county\": \"string24\",\r\n            \"district\": \"string24\",\r\n            \"latitude\": 100,\r\n            \"longitude\": 100,\r\n            \"province\": \"string24\",\r\n            \"state\": \"string24\",\r\n            \"timeZone\": \"string24\",\r\n            \"zipCode\": \"string24\"\r\n        },\r\n        \"deliveryInstructions\": \"entregar en mi house\",\r\n        \"nodeInfo\": {\r\n            \"referenceId\": \"string244XD\",\r\n            \"name\":\"Ignacio Node 2214\"\r\n        }\r\n    },\r\n    \"items\": [\r\n        {\r\n            \"referenceId\": \"string24\",\r\n            \"description\": \"string24\",\r\n            \"dimensions\": {\r\n                \"depth\": 1,\r\n                \"height\": 1,\r\n                \"unit\": \"string24\",\r\n                \"width\": 1\r\n            },\r\n            \"insurance\": {\r\n                \"currency\": \"CLP\",\r\n                \"unitValue\": 100\r\n            },\r\n            \"logisticCondition\": \"string24\",\r\n            \"quantity\": {\r\n                \"quantityNumber\": 1,\r\n                \"quantityUnit\": \"C/U\"\r\n            },\r\n            \"weight\": {\r\n                \"unit\": \"string24\",\r\n                \"value\": 100\r\n            }\r\n        }\r\n    ],\r\n    \"orderType\": {\r\n        \"description\": \"JOJOJO\",\r\n        \"type\": \"string24\"\r\n    },\r\n    \"origin\": {\r\n        \"addressInfo\": {\r\n            \"addressLine1\": \"string24\",\r\n            \"addressLine2\": \"string24\",\r\n            \"addressLine3\": \"string24\",\r\n            \"contact\": {\r\n                \"documents\": [\r\n                    {\r\n                        \"type\": \"string24\",\r\n                        \"value\": \"string24\"\r\n                    }\r\n                ],\r\n                \"email\": \"string24\",\r\n                \"fullName\": \"string24\",\r\n                \"nationalID\": \"string24\",\r\n                \"phone\": \"string24\"\r\n            },\r\n            \"county\": \"string24\",\r\n            \"district\": \"string24\",\r\n            \"latitude\": 10,\r\n            \"longitude\": 10,\r\n            \"province\": \"string24\",\r\n            \"state\": \"string24\",\r\n            \"timeZone\": \"string24\",\r\n            \"zipCode\": \"string24\"\r\n        },\r\n        \"nodeInfo\": {\r\n            \"referenceId\": \"string24\",\r\n            \"name\":\"NAXONODE\"\r\n        }\r\n    },\r\n    \"packages\": [\r\n        {\r\n            \"dimensions\": {\r\n                \"depth\": 10,\r\n                \"height\": 10,\r\n                \"unit\": \"string24\",\r\n                \"width\": 10\r\n            },\r\n            \"insurance\": {\r\n                \"currency\": \"string242\",\r\n                \"unitValue\": 10\r\n            },\r\n            \"itemReferences\": [\r\n                {\r\n                    \"quantity\": {\r\n                        \"quantityNumber\": 10,\r\n                        \"quantityUnit\": \"string24\"\r\n                    },\r\n                    \"referenceId\": \"string24\"\r\n                }\r\n            ],\r\n            \"lpn\": \"string24\",\r\n            \"weight\": {\r\n                \"unit\": \"string24\",\r\n                \"value\": 10\r\n            }\r\n        }\r\n    ],\r\n    \"promisedDate\": {\r\n        \"dateRange\": {\r\n            \"endDate\": \"2025-03-10\",\r\n            \"startDate\": \"2025-03-10\"\r\n        },\r\n        \"serviceCategory\": \"string24\",\r\n        \"timeRange\": {\r\n            \"endTime\": \"03:30\",\r\n            \"startTime\": \"03:30\"\r\n        }\r\n    },\r\n    \"references\": [\r\n        {\r\n            \"type\": \"string24\",\r\n            \"value\": \"string24\"\r\n        }\r\n    ],\r\n    \"transportRequirements\": [\r\n        {\r\n            \"type\": \"string24\",\r\n            \"value\": \"string24\"\r\n        }\r\n    ]\r\n}",
+					"raw": "{\r\n    \"referenceID\": \"reference_1\",\r\n    \"collectAvailabilityDate\": {\r\n        \"date\": \"2022-03-10\",\r\n        \"timeRange\": {\r\n            \"endTime\": \"03:41\",\r\n            \"startTime\": \"03:41\"\r\n        }\r\n    },\r\n    \"destination\": {\r\n        \"addressInfo\": {\r\n            \"addressLine1\": \"string24\",\r\n            \"addressLine2\": \"string24\",\r\n            \"addressLine3\": \"string24\",\r\n            \"contact\": {\r\n                \"documents\": [\r\n                    {\r\n                        \"type\": \"string24\",\r\n                        \"value\": \"string24\"\r\n                    }\r\n                ],\r\n                \"email\": \"string24161\",\r\n                \"fullName\": \"string24name\",\r\n                \"nationalID\": \"string24\",\r\n                \"phone\": \"string242\"\r\n            },\r\n            \"locality\": \"string24\",\r\n            \"district\": \"string24\",\r\n            \"latitude\": 100,\r\n            \"longitude\": 100,\r\n            \"province\": \"string24\",\r\n            \"state\": \"string24\",\r\n            \"timeZone\": \"string24\",\r\n            \"zipCode\": \"string24\"\r\n        },\r\n        \"deliveryInstructions\": \"entregar en mi house\",\r\n        \"nodeInfo\": {\r\n            \"referenceId\": \"string244XD\",\r\n            \"name\":\"Ignacio Node 2214\"\r\n        }\r\n    },\r\n    \"items\": [\r\n        {\r\n            \"referenceId\": \"string24\",\r\n            \"description\": \"string24\",\r\n            \"dimensions\": {\r\n                \"depth\": 1,\r\n                \"height\": 1,\r\n                \"unit\": \"string24\",\r\n                \"width\": 1\r\n            },\r\n            \"insurance\": {\r\n                \"currency\": \"CLP\",\r\n                \"unitValue\": 100\r\n            },\r\n            \"logisticCondition\": \"string24\",\r\n            \"quantity\": {\r\n                \"quantityNumber\": 1,\r\n                \"quantityUnit\": \"C/U\"\r\n            },\r\n            \"weight\": {\r\n                \"unit\": \"string24\",\r\n                \"value\": 100\r\n            }\r\n        }\r\n    ],\r\n    \"orderType\": {\r\n        \"description\": \"JOJOJO\",\r\n        \"type\": \"string24\"\r\n    },\r\n    \"origin\": {\r\n        \"addressInfo\": {\r\n            \"addressLine1\": \"string24\",\r\n            \"addressLine2\": \"string24\",\r\n            \"addressLine3\": \"string24\",\r\n            \"contact\": {\r\n                \"documents\": [\r\n                    {\r\n                        \"type\": \"string24\",\r\n                        \"value\": \"string24\"\r\n                    }\r\n                ],\r\n                \"email\": \"string24\",\r\n                \"fullName\": \"string24\",\r\n                \"nationalID\": \"string24\",\r\n                \"phone\": \"string24\"\r\n            },\r\n            \"locality\": \"string24\",\r\n            \"district\": \"string24\",\r\n            \"latitude\": 10,\r\n            \"longitude\": 10,\r\n            \"province\": \"string24\",\r\n            \"state\": \"string24\",\r\n            \"timeZone\": \"string24\",\r\n            \"zipCode\": \"string24\"\r\n        },\r\n        \"nodeInfo\": {\r\n            \"referenceId\": \"string24\",\r\n            \"name\":\"NAXONODE\"\r\n        }\r\n    },\r\n    \"packages\": [\r\n        {\r\n            \"dimensions\": {\r\n                \"depth\": 10,\r\n                \"height\": 10,\r\n                \"unit\": \"string24\",\r\n                \"width\": 10\r\n            },\r\n            \"insurance\": {\r\n                \"currency\": \"string242\",\r\n                \"unitValue\": 10\r\n            },\r\n            \"itemReferences\": [\r\n                {\r\n                    \"quantity\": {\r\n                        \"quantityNumber\": 10,\r\n                        \"quantityUnit\": \"string24\"\r\n                    },\r\n                    \"referenceId\": \"string24\"\r\n                }\r\n            ],\r\n            \"lpn\": \"string24\",\r\n            \"weight\": {\r\n                \"unit\": \"string24\",\r\n                \"value\": 10\r\n            }\r\n        }\r\n    ],\r\n    \"promisedDate\": {\r\n        \"dateRange\": {\r\n            \"endDate\": \"2025-03-10\",\r\n            \"startDate\": \"2025-03-10\"\r\n        },\r\n        \"serviceCategory\": \"string24\",\r\n        \"timeRange\": {\r\n            \"endTime\": \"03:30\",\r\n            \"startTime\": \"03:30\"\r\n        }\r\n    },\r\n    \"references\": [\r\n        {\r\n            \"type\": \"string24\",\r\n            \"value\": \"string24\"\r\n        }\r\n    ],\r\n    \"transportRequirements\": [\r\n        {\r\n            \"type\": \"string24\",\r\n            \"value\": \"string24\"\r\n        }\r\n    ]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -290,7 +290,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"referenceID\": \"referenceIdExample24\",\r\n    \"name\": \"CENTRO DE OPERACION F4\",\r\n    \"type\":\"CENTRO_DE_OPERACION\",\r\n    \"nodeAddress\": {\r\n        \"addressLine1\": \"Inglaterra 59, La florida, Chile\",\r\n        \"addressLine2\": \"\",\r\n        \"addressLine3\": \"\",\r\n        \"county\": \"La Florida\",\r\n        \"district\": \"Santiago\",\r\n        \"latitude\": -33.5233,\r\n        \"longitude\": -70.5743,\r\n        \"province\": \"Santiago\",\r\n        \"state\": \"Región Metropolitana\",\r\n        \"timeZone\": \"America/Santiago\",\r\n        \"zipCode\": \"8320000\"\r\n    },\r\n    \"operatorContact\": {\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
+					"raw": "{\r\n    \"referenceID\": \"referenceIdExample24\",\r\n    \"name\": \"CENTRO DE OPERACION F4\",\r\n    \"type\":\"CENTRO_DE_OPERACION\",\r\n    \"nodeAddress\": {\r\n        \"addressLine1\": \"Inglaterra 59, La florida, Chile\",\r\n        \"addressLine2\": \"\",\r\n        \"addressLine3\": \"\",\r\n        \"locality\": \"La Florida\",\r\n        \"district\": \"Santiago\",\r\n        \"latitude\": -33.5233,\r\n        \"longitude\": -70.5743,\r\n        \"province\": \"Santiago\",\r\n        \"state\": \"Región Metropolitana\",\r\n        \"timeZone\": \"America/Santiago\",\r\n        \"zipCode\": \"8320000\"\r\n    },\r\n    \"operatorContact\": {\r\n        \"email\": \"ignaciovl.j@gmail.com\",\r\n        \"fullName\": \"Ignacio Jeria\",\r\n        \"nationalID\": \"187238123-4\",\r\n        \"phone\": \"+56967283134\"\r\n    }\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -643,7 +643,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"referenceID\": \"operator-reference-plannedDate\",\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"unassignedOrders\": [\r\n        {\r\n            \"referenceID\": \"reference_1\",\r\n            \"latitude\": -12.123456,\r\n            \"longitude\": -77.123456\r\n        }\r\n    ],\r\n    \"routes\": [\r\n        {\r\n            \"referenceID\": \"operator-reference-plannedDate\",\r\n            \"operator\": {\r\n                \"referenceID\": \"operatorReference\"\r\n            }\r\n        }\r\n    ]\r\n}",
+					"raw": "{\r\n    \"referenceID\": \"operator-reference-plannedDate\",\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"startLocation\": {\r\n        \"latitude\": -0.127627,\r\n        \"longitude\": 51.503355\r\n    },\r\n    \"unassignedOrders\": [\r\n        {\r\n            \"longitude\": -0.076134,\r\n            \"latitude\": 51.508037,\r\n            \"address\": \"Inglaterra 59, La florida, Santiago, Chile\",\r\n            \"notes\": \"Departamento nº 2214\",\r\n            \"receiverName\": \"Ignacio Jeria\",\r\n            \"receiverPhone\": \"+56957857558\",\r\n            \"referenceID\": \"reference_3\"\r\n        },\r\n        {\r\n            \"longitude\": -0.087199,\r\n            \"latitude\": 51.509562,\r\n            \"address\": \"Inglaterra 59, La florida, Santiago Chile\",\r\n            \"notes\": \"Departamento nº 2214\",\r\n            \"receiverName\": \"Ignacio Jeria\",\r\n            \"receiverPhone\": \"+56957857558\",\r\n            \"referenceID\": \"reference_2\"\r\n        },\r\n        {\r\n            \"longitude\": -0.127627,\r\n            \"latitude\": 51.503355,\r\n            \"address\": \"Inglaterra 59, La florida, Santiago Chile\",\r\n            \"receiverName\": \"Ignacio Jeria\",\r\n            \"notes\": \"Departamento nº 2214\",\r\n            \"receiverPhone\": \"+56957857558\",\r\n            \"referenceID\": \"reference_1\"\r\n        }\r\n    ],\r\n    \"routes\": [\r\n        {\r\n            \"referenceID\": \"operator-reference-plannedDate\",\r\n            \"operator\": {\r\n                \"referenceID\": \"operatorReference\"\r\n            },\r\n            \"endLocation\": {\r\n                \"nodeReferenceID\": \"12345\",\r\n                \"latitude\": -0.127627,\r\n                \"longitude\": 51.503355\r\n            }\r\n        }\r\n    ]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -734,7 +734,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"referenceID\": \"operator-reference-plannedDate\",\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"startLocation\": {\r\n        \"latitude\": -0.127627,\r\n        \"longitude\": 51.503355\r\n    },\r\n    \"unassignedOrders\": [\r\n        {\r\n            \"longitude\": -0.076134,\r\n            \"latitude\": 51.508037,\r\n            \"address\": \"Inglaterra 59, La florida, Santiago Chile\",\r\n            \"notes\": \"Departamento nº 2214\",\r\n            \"receiverName\": \"Ignacio Jeria\",\r\n            \"receiverPhone\": \"+56957857558\",\r\n            \"referenceID\": \"reference_3\"\r\n        },\r\n        {\r\n            \"longitude\": -0.087199,\r\n            \"latitude\": 51.509562,\r\n            \"address\": \"Inglaterra 59, La florida, Santiago Chile\",\r\n            \"notes\": \"Departamento nº 2214\",\r\n            \"receiverName\": \"Ignacio Jeria\",\r\n            \"receiverPhone\": \"+56957857558\",\r\n            \"referenceID\": \"reference_2\"\r\n        },\r\n        {\r\n            \"longitude\": -0.127627,\r\n            \"latitude\": 51.503355,\r\n            \"address\": \"Inglaterra 59, La florida, Santiago Chile\",\r\n            \"receiverName\": \"Ignacio Jeria\",\r\n            \"notes\": \"Departamento nº 2214\",\r\n            \"receiverPhone\": \"+56957857558\",\r\n            \"referenceID\": \"reference_1\"\r\n        }\r\n    ],\r\n    \"routes\": [\r\n        {\r\n            \"referenceID\": \"operator-reference-plannedDate\",\r\n            \"operator\": {\r\n                \"referenceID\": \"operatorReference\"\r\n            },\r\n            \"endLocation\": {\r\n                \"nodeReferenceID\": \"12345\",\r\n                \"latitude\": -0.127627,\r\n                \"longitude\": 51.503355\r\n            }\r\n        }\r\n    ]\r\n}",
+					"raw": "{\r\n    \"referenceID\": \"operator-reference-plannedDate\",\r\n    \"plannedDate\": \"2025-01-03\",\r\n    \"startLocation\": {\r\n        \"nodeReferenceID\": \"\",\r\n        \"latitude\": -0.127627,\r\n        \"longitude\": 51.503355\r\n    },\r\n    \"unassignedOrders\": null,\r\n    \"routes\": [\r\n        {\r\n            \"referenceID\": \"operator-reference-plannedDate\",\r\n            \"operator\": {\r\n                \"referenceID\": \"operatorReference\"\r\n            },\r\n            \"endLocation\": {\r\n                \"nodeReferenceID\": \"12345\",\r\n                \"latitude\": -0.127627,\r\n                \"longitude\": 51.503355\r\n            },\r\n            \"visits\": [\r\n                {\r\n                    \"sequence\": 1,\r\n                    \"latitude\": 51.507884,\r\n                    \"longitude\": -0.074146,\r\n                    \"orders\": [\r\n                        {\r\n                            \"referenceID\": \"reference_3\",\r\n                            \"collectAvailabilityDate\": {\r\n                                \"date\": \"0001-01-01\",\r\n                                \"timeRange\": {\r\n                                    \"endTime\": \"\",\r\n                                    \"startTime\": \"\"\r\n                                }\r\n                            },\r\n                            \"destination\": {\r\n                                \"addressInfo\": {\r\n                                    \"addressLine1\": \"Inglaterra 59\",\r\n                                    \"addressLine2\": \"La Florida\",\r\n                                    \"addressLine3\": \"Santiago, Chile\",\r\n                                    \"contact\": {\r\n                                        \"email\": \"\",\r\n                                        \"phone\": \"\",\r\n                                        \"nationalID\": \"\",\r\n                                        \"documents\": null,\r\n                                        \"fullName\": \"\"\r\n                                    },\r\n                                    \"county\": \"La Florida\",\r\n                                    \"district\": \"Santiago\",\r\n                                    \"latitude\": 51.508037,\r\n                                    \"longitude\": -0.076134,\r\n                                    \"province\": \"Santiago\",\r\n                                    \"state\": \"RM\",\r\n                                    \"timeZone\": \"America/Santiago\",\r\n                                    \"zipCode\": \"8320000\"\r\n                                },\r\n                                \"deliveryInstructions\": \"Departamento nº 2214\",\r\n                                \"nodeInfo\": {\r\n                                    \"referenceId\": \"destination-node-3\",\r\n                                    \"name\": \"\"\r\n                                }\r\n                            },\r\n                            \"items\": [],\r\n                            \"orderType\": {\r\n                                \"description\": \"\",\r\n                                \"type\": \"\"\r\n                            },\r\n                            \"origin\": {\r\n                                \"addressInfo\": {\r\n                                    \"addressLine1\": \"\",\r\n                                    \"addressLine2\": \"\",\r\n                                    \"addressLine3\": \"\",\r\n                                    \"contact\": {\r\n                                        \"email\": \"\",\r\n                                        \"phone\": \"\",\r\n                                        \"nationalID\": \"\",\r\n                                        \"documents\": null,\r\n                                        \"fullName\": \"\"\r\n                                    },\r\n                                    \"county\": \"\",\r\n                                    \"district\": \"\",\r\n                                    \"latitude\": 0,\r\n                                    \"longitude\": 0,\r\n                                    \"province\": \"\",\r\n                                    \"state\": \"\",\r\n                                    \"timeZone\": \"\",\r\n                                    \"zipCode\": \"\"\r\n                                },\r\n                                \"nodeInfo\": {\r\n                                    \"referenceId\": \"\",\r\n                                    \"name\": \"\"\r\n                                }\r\n                            },\r\n                            \"packages\": [],\r\n                            \"promisedDate\": {\r\n                                \"dateRange\": {\r\n                                    \"endDate\": \"0001-01-01\",\r\n                                    \"startDate\": \"0001-01-01\"\r\n                                },\r\n                                \"serviceCategory\": \"\",\r\n                                \"timeRange\": {\r\n                                    \"endTime\": \"\",\r\n                                    \"startTime\": \"\"\r\n                                }\r\n                            },\r\n                            \"references\": [],\r\n                            \"transportRequirements\": [],\r\n                            \"businessIdentifiers\": {\r\n                                \"commerce\": \"\",\r\n                                \"consumer\": \"\"\r\n                            },\r\n                            \"orderStatus\": {\r\n                                \"ID\": 0,\r\n                                \"status\": \"\",\r\n                                \"createdAt\": \"0001-01-01T00:00:00Z\"\r\n                            }\r\n                        }\r\n                    ]\r\n                },\r\n                {\r\n                    \"sequence\": 2,\r\n                    \"latitude\": 51.509562,\r\n                    \"longitude\": -0.0872,\r\n                    \"orders\": [\r\n                        {\r\n                            \"referenceID\": \"reference_2\",\r\n                            \"collectAvailabilityDate\": {\r\n                                \"date\": \"0001-01-01\",\r\n                                \"timeRange\": {\r\n                                    \"endTime\": \"\",\r\n                                    \"startTime\": \"\"\r\n                                }\r\n                            },\r\n                            \"destination\": {\r\n                                \"addressInfo\": {\r\n                                    \"addressLine1\": \"Inglaterra 59\",\r\n                                    \"addressLine2\": \"La Florida\",\r\n                                    \"addressLine3\": \"Santiago, Chile\",\r\n                                    \"contact\": {\r\n                                        \"email\": \"\",\r\n                                        \"phone\": \"\",\r\n                                        \"nationalID\": \"\",\r\n                                        \"documents\": null,\r\n                                        \"fullName\": \"\"\r\n                                    },\r\n                                    \"county\": \"La Florida\",\r\n                                    \"district\": \"Santiago\",\r\n                                    \"latitude\": 51.509562,\r\n                                    \"longitude\": -0.087199,\r\n                                    \"province\": \"Santiago\",\r\n                                    \"state\": \"RM\",\r\n                                    \"timeZone\": \"America/Santiago\",\r\n                                    \"zipCode\": \"8320000\"\r\n                                },\r\n                                \"deliveryInstructions\": \"Departamento nº 2214\",\r\n                                \"nodeInfo\": {\r\n                                    \"referenceId\": \"destination-node-2\",\r\n                                    \"name\": \"\"\r\n                                }\r\n                            },\r\n                            \"items\": [],\r\n                            \"orderType\": {\r\n                                \"description\": \"\",\r\n                                \"type\": \"\"\r\n                            },\r\n                            \"origin\": {\r\n                                \"addressInfo\": {\r\n                                    \"addressLine1\": \"\",\r\n                                    \"addressLine2\": \"\",\r\n                                    \"addressLine3\": \"\",\r\n                                    \"contact\": {\r\n                                        \"email\": \"\",\r\n                                        \"phone\": \"\",\r\n                                        \"nationalID\": \"\",\r\n                                        \"documents\": null,\r\n                                        \"fullName\": \"\"\r\n                                    },\r\n                                    \"county\": \"\",\r\n                                    \"district\": \"\",\r\n                                    \"latitude\": 0,\r\n                                    \"longitude\": 0,\r\n                                    \"province\": \"\",\r\n                                    \"state\": \"\",\r\n                                    \"timeZone\": \"\",\r\n                                    \"zipCode\": \"\"\r\n                                },\r\n                                \"nodeInfo\": {\r\n                                    \"referenceId\": \"\",\r\n                                    \"name\": \"\"\r\n                                }\r\n                            },\r\n                            \"packages\": [],\r\n                            \"promisedDate\": {\r\n                                \"dateRange\": {\r\n                                    \"endDate\": \"0001-01-01\",\r\n                                    \"startDate\": \"0001-01-01\"\r\n                                },\r\n                                \"serviceCategory\": \"\",\r\n                                \"timeRange\": {\r\n                                    \"endTime\": \"\",\r\n                                    \"startTime\": \"\"\r\n                                }\r\n                            },\r\n                            \"references\": [],\r\n                            \"transportRequirements\": [],\r\n                            \"businessIdentifiers\": {\r\n                                \"commerce\": \"\",\r\n                                \"consumer\": \"\"\r\n                            },\r\n                            \"orderStatus\": {\r\n                                \"ID\": 0,\r\n                                \"status\": \"\",\r\n                                \"createdAt\": \"0001-01-01T00:00:00Z\"\r\n                            }\r\n                        }\r\n                    ]\r\n                },\r\n                {\r\n                    \"sequence\": 3,\r\n                    \"latitude\": 51.503174,\r\n                    \"longitude\": -0.126406,\r\n                    \"orders\": [\r\n                        {\r\n                            \"referenceID\": \"reference_1\",\r\n                            \"collectAvailabilityDate\": {\r\n                                \"date\": \"0001-01-01\",\r\n                                \"timeRange\": {\r\n                                    \"endTime\": \"\",\r\n                                    \"startTime\": \"\"\r\n                                }\r\n                            },\r\n                            \"destination\": {\r\n                                \"addressInfo\": {\r\n                                    \"addressLine1\": \"Inglaterra 59\",\r\n                                    \"addressLine2\": \"La Florida\",\r\n                                    \"addressLine3\": \"Santiago, Chile\",\r\n                                    \"contact\": {\r\n                                        \"email\": \"\",\r\n                                        \"phone\": \"\",\r\n                                        \"nationalID\": \"\",\r\n                                        \"documents\": null,\r\n                                        \"fullName\": \"\"\r\n                                    },\r\n                                    \"county\": \"La Florida\",\r\n                                    \"district\": \"Santiago\",\r\n                                    \"latitude\": 51.503355,\r\n                                    \"longitude\": -0.127627,\r\n                                    \"province\": \"Santiago\",\r\n                                    \"state\": \"RM\",\r\n                                    \"timeZone\": \"America/Santiago\",\r\n                                    \"zipCode\": \"8320000\"\r\n                                },\r\n                                \"deliveryInstructions\": \"Departamento nº 2214\",\r\n                                \"nodeInfo\": {\r\n                                    \"referenceId\": \"destination-node-1\",\r\n                                    \"name\": \"\"\r\n                                }\r\n                            },\r\n                            \"items\": [],\r\n                            \"orderType\": {\r\n                                \"description\": \"\",\r\n                                \"type\": \"\"\r\n                            },\r\n                            \"origin\": {\r\n                                \"addressInfo\": {\r\n                                    \"addressLine1\": \"\",\r\n                                    \"addressLine2\": \"\",\r\n                                    \"addressLine3\": \"\",\r\n                                    \"contact\": {\r\n                                        \"email\": \"\",\r\n                                        \"phone\": \"\",\r\n                                        \"nationalID\": \"\",\r\n                                        \"documents\": null,\r\n                                        \"fullName\": \"\"\r\n                                    },\r\n                                    \"county\": \"\",\r\n                                    \"district\": \"\",\r\n                                    \"latitude\": 0,\r\n                                    \"longitude\": 0,\r\n                                    \"province\": \"\",\r\n                                    \"state\": \"\",\r\n                                    \"timeZone\": \"\",\r\n                                    \"zipCode\": \"\"\r\n                                },\r\n                                \"nodeInfo\": {\r\n                                    \"referenceId\": \"\",\r\n                                    \"name\": \"\"\r\n                                }\r\n                            },\r\n                            \"packages\": [],\r\n                            \"promisedDate\": {\r\n                                \"dateRange\": {\r\n                                    \"endDate\": \"0001-01-01\",\r\n                                    \"startDate\": \"0001-01-01\"\r\n                                },\r\n                                \"serviceCategory\": \"\",\r\n                                \"timeRange\": {\r\n                                    \"endTime\": \"\",\r\n                                    \"startTime\": \"\"\r\n                                }\r\n                            },\r\n                            \"references\": [],\r\n                            \"transportRequirements\": [],\r\n                            \"businessIdentifiers\": {\r\n                                \"commerce\": \"\",\r\n                                \"consumer\": \"\"\r\n                            },\r\n                            \"orderStatus\": {\r\n                                \"ID\": 0,\r\n                                \"status\": \"\",\r\n                                \"createdAt\": \"0001-01-01T00:00:00Z\"\r\n                            }\r\n                        }\r\n                    ]\r\n                }\r\n            ]\r\n        }\r\n    ]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -986,6 +986,152 @@
 						"checkouts"
 					]
 				}
+			},
+			"response": []
+		},
+		{
+			"name": "DIRECTIONS AUTOCOMPLETE",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://einar-main-f0820bc.d2.zuplo.dev/autocomplete?q=inglaterra%2059,%20la%20florida,%20santiago,%20chile&limit=5&dedupe=1&key=pk.6fb271168ebb42320bc9248737e83834",
+					"protocol": "https",
+					"host": [
+						"einar-main-f0820bc",
+						"d2",
+						"zuplo",
+						"dev"
+					],
+					"path": [
+						"autocomplete"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "inglaterra%2059,%20la%20florida,%20santiago,%20chile"
+						},
+						{
+							"key": "limit",
+							"value": "5"
+						},
+						{
+							"key": "dedupe",
+							"value": "1"
+						},
+						{
+							"key": "key",
+							"value": "pk.6fb271168ebb42320bc9248737e83834"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DIRECTIONS NORMALIZATION",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"providerInput\": {\r\n        \"displayName\": \"Inglaterra, Bellavista de La Florida, La Florida, Provincia de Santiago, Santiago Metropolitan Region, 8260183, Chile\"\r\n    },\r\n    \"userInput\": {\r\n        \"addressLine1\": \"INGLATERRA 59\",\r\n        \"addressLine2\": \"piso 1\"\r\n    }\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{TRANSPORT_APP_HOST}}/normalization",
+					"host": [
+						"{{TRANSPORT_APP_HOST}}"
+					],
+					"path": [
+						"normalization"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GEOCODING",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://einar-main-f0820bc.d2.zuplo.dev/geocode?q=Inglaterra%2C%20Bellavista%20de%20La%20Florida%2C%20La%20Florida%2C%20Provincia%20de%20Santiago%2C%20Santiago%20Metropolitan%20Region%2C%208260183%2C%20Chile&format=json&",
+					"protocol": "https",
+					"host": [
+						"einar-main-f0820bc",
+						"d2",
+						"zuplo",
+						"dev"
+					],
+					"path": [
+						"geocode"
+					],
+					"query": [
+						{
+							"key": "q",
+							"value": "Inglaterra%2C%20Bellavista%20de%20La%20Florida%2C%20La%20Florida%2C%20Provincia%20de%20Santiago%2C%20Santiago%20Metropolitan%20Region%2C%208260183%2C%20Chile"
+						},
+						{
+							"key": "format",
+							"value": "json"
+						},
+						{
+							"key": "",
+							"value": null
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://api.deepseek.com/chat/completions",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer sk-66c256548b2b4bc39f1e771eb4a398bc"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"model\": \"deepseek-chat\",\r\n  \"messages\": [\r\n    {\r\n      \"role\": \"system\",\r\n      \"content\": \"You are an assistant that normalizes addresses in Chile following a structured format. Always return a JSON with the following fields: AddressLine1, AddressLine2, Comune, Region, and Country. Use 'AddressLine2' only for apartment, house number, block, or specific location details. If no additional details exist, return an empty string for AddressLine2. Never duplicate the Comune in AddressLine2.\"\r\n    },\r\n    {\r\n      \"role\": \"user\",\r\n      \"content\": \"Normalize the following address and return a JSON:\\n\\nUser Input: inglaterra 59, la florida chile\\nLocationIQ Output: Inglaterra, Bellavista de La Florida, La Florida, Provincia de Santiago, Santiago Metropolitan Region, 8260183, Chile\\nCoordinates: -33.5150979, -70.6083496\"\r\n    }\r\n  ],\r\n  \"stream\": false\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://api.deepseek.com/chat/completions",
+					"protocol": "https",
+					"host": [
+						"api",
+						"deepseek",
+						"com"
+					],
+					"path": [
+						"chat",
+						"completions"
+					]
+				},
+				"description": "Generated from cURL: curl https://api.deepseek.com/chat/completions \\\r\n  -H \"Content-Type: application/json\" \\\r\n  -H \"Authorization: Bearer <DeepSeek API Key>\" \\\r\n  -d '{\r\n        \"model\": \"deepseek-chat\",\r\n        \"messages\": [\r\n          {\"role\": \"system\", \"content\": \"You are a helpful assistant.\"},\r\n          {\"role\": \"user\", \"content\": \"Hello!\"}\r\n        ],\r\n        \"stream\": false\r\n      }'"
 			},
 			"response": []
 		}
