@@ -10,5 +10,6 @@ const (
 	tagPlanning         = "planning"
 	tagAlgorithm        = "algorithm"
 	tagLocations        = "location"
+	tagAuthentication   = "authentication"
 	tagEndToEndOperator = "End-to-End Operator"
 )

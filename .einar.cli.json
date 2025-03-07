@@ -290,6 +290,14 @@
         {
             "kind": "get-controller",
             "name": "geocoding"
+        },
+        {
+            "kind": "usecase",
+            "name": "signup"
+        },
+        {
+            "kind": "post-controller",
+            "name": "sign-up"
         }
     ]
 }
