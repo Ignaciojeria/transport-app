@@ -298,6 +298,10 @@
         {
             "kind": "post-controller",
             "name": "sign-up"
+        },
+        {
+            "kind": "usecase",
+            "name": "register"
         }
     ]
 }
