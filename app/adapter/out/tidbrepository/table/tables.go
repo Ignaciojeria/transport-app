@@ -726,6 +726,18 @@ type Account struct {
 	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
 }
 
+type AccountOrganization struct {
+	AccountID      int64  `gorm:"primaryKey"`
+	OrganizationID int64  `gorm:"primaryKey"`
+	Role           string `gorm:"type:varchar(50);default:null"` // Opcional: para definir el rol de la cuenta en la organización
+
+	Account      Account      `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
+	Organization Organization `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
 func (a Account) MapOperator() domain.Operator {
 	// Inicializamos un Operator base
 	operator := domain.Operator{

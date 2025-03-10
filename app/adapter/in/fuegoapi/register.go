@@ -2,6 +2,7 @@ package fuegoapi
 
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
@@ -16,22 +17,24 @@ func init() {
 }
 func register(s httpserver.Server, register usecase.Register) {
 	fuego.Post(s.Manager, "/register",
-		func(c fuego.ContextWithBody[request.RegisterRequest]) (any, error) {
+		func(c fuego.ContextWithBody[request.RegisterRequest]) (response.RegisterResponse, error) {
 			req, err := c.Body()
 			if err != nil {
-				return "", err
+				return response.RegisterResponse{}, err
 			}
 			err = register(c.Context(), domain.UserCredentials{
 				Email:    req.Email,
 				Password: req.Password,
 			})
 			if err != nil {
-				return "", fuego.InternalServerError{
+				return response.RegisterResponse{}, fuego.InternalServerError{
 					Err:    err,
 					Detail: err.Error(),
 				}
 			}
-			return "user registered", nil
+			return response.RegisterResponse{
+				Message: "user registered",
+			}, nil
 		},
 		option.Tags(tagAuthentication),
 		option.Summary("register"))
