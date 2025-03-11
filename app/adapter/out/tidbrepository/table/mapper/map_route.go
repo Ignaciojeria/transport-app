@@ -30,11 +30,11 @@ func MapRoute(route domain.Route) table.Route {
 			Longitude: route.Destination.AddressInfo.Location.Lon(),
 			Latitude:  route.Destination.AddressInfo.Location.Lat(),
 		},
-		ReferenceID:           route.ReferenceID,
-		PlanID:                route.PlanID,
-		AccountID:             accountID,
-		VehicleID:             vehicleID,
-		CarrierID:             carrierID,
-		OrganizationCountryID: route.OrganizationCountryID,
+		ReferenceID:    route.ReferenceID,
+		PlanID:         route.PlanID,
+		AccountID:      accountID,
+		VehicleID:      vehicleID,
+		CarrierID:      carrierID,
+		OrganizationID: route.Organization.ID,
 	}
 }

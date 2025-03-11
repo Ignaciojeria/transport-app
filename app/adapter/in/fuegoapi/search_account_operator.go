@@ -7,7 +7,6 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -25,14 +24,11 @@ func searchAccountOperator(
 	fuego.Get(s.Manager, "/operators",
 		func(c fuego.ContextNoBody) (response.SearchAccountResponse, error) {
 			operator := domain.Operator{
-				Organization: domain.Organization{
-					Key:     c.Header("organization-key"),
-					Country: countries.ByName(c.Header("country")),
-				},
 				Contact: domain.Contact{
 					Email: c.QueryParam("email"),
 				},
 			}
+			operator.Organization.SetKey(c.Header("organization"))
 			operator, err := search(c.Context(), operator)
 			if err != nil {
 				return response.SearchAccountResponse{}, err
@@ -40,8 +36,7 @@ func searchAccountOperator(
 			return response.MapSearchAccountOperatorResponse(operator), nil
 		},
 		option.Summary("searchAccountOperator"),
-		option.Header("organization-key", "api organization key", param.Required()),
-		option.Header("country", "api country", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Tags(tagAccounts, tagEndToEndOperator),
 		option.Query("email", "Filter By Operator Email"))
 }

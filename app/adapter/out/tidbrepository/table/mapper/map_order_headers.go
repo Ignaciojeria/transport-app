@@ -10,8 +10,8 @@ func MapOrderHeaders(c domain.Headers) table.OrderHeaders {
 		ID:       c.ID,
 		Commerce: c.Commerce,
 		Consumer: c.Consumer,
-		OrganizationCountry: table.OrganizationCountry{
-			ID: c.Organization.OrganizationCountryID,
+		Organization: table.Organization{
+			ID: c.Organization.ID,
 		},
 	}
 }

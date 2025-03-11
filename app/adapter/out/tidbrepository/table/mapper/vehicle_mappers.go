@@ -20,18 +20,18 @@ func DomainToTableVehicle(d domain.Vehicle) table.Vehicle {
 		carrierID = &d.Carrier.ID
 	}
 	return table.Vehicle{
-		ID:                    d.ID,
-		ReferenceID:           d.ReferenceID,
-		Plate:                 d.Plate,
-		IsActive:              d.IsActive,
-		CertificateDate:       d.CertificateDate,
-		VehicleCategoryID:     vehicleCategoryID,
-		VehicleHeadersID:      d.Headers.ID,
-		OrganizationCountryID: d.Organization.OrganizationCountryID,
-		CarrierID:             carrierID,
-		Weight:                table.JSONB(weight),
-		Insurance:             table.JSONB(insurance),
-		TechnicalReview:       table.JSONB(technicalReview),
-		Dimensions:            table.JSONB(dimensions),
+		ID:                d.ID,
+		ReferenceID:       d.ReferenceID,
+		Plate:             d.Plate,
+		IsActive:          d.IsActive,
+		CertificateDate:   d.CertificateDate,
+		VehicleCategoryID: vehicleCategoryID,
+		VehicleHeadersID:  d.Headers.ID,
+		OrganizationID:    d.Organization.ID,
+		CarrierID:         carrierID,
+		Weight:            table.JSONB(weight),
+		Insurance:         table.JSONB(insurance),
+		TechnicalReview:   table.JSONB(technicalReview),
+		Dimensions:        table.JSONB(dimensions),
 	}
 }

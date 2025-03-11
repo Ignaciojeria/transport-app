@@ -7,7 +7,6 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -26,11 +25,8 @@ func searchVehiclesByCarrier(
 		func(c fuego.ContextNoBody) ([]response.SearchVehiclesByCarrierResponse, error) {
 			searchFilters := domain.VehicleSearchFilters{
 				CarrierReferenceID: c.PathParam("referenceID"),
-				Organization: domain.Organization{
-					Key:     c.Header("organization-key"),
-					Country: countries.ByName(c.Header("country")),
-				},
 			}
+			searchFilters.Organization.SetKey(c.Header("organization"))
 			vehicles, err := search(c.Context(), searchFilters)
 			if err != nil {
 				return nil, err
@@ -38,7 +34,7 @@ func searchVehiclesByCarrier(
 			return response.MapSearchVehiclesByCarrierResponse(vehicles), nil
 		},
 		option.Summary("searchVehiclesByCarrier"),
-		option.Header("organization-key", "api organization key", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Tags(tagFleets),
 	)
 }

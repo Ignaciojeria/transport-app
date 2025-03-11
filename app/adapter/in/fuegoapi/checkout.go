@@ -2,8 +2,6 @@ package fuegoapi
 
 import (
 	"encoding/json"
-	"net/http"
-	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
@@ -12,7 +10,6 @@ import (
 	"transport-app/app/shared/infrastructure/httpserver"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -35,33 +32,20 @@ func checkout(
 				return response.CheckoutResponse{}, err
 			}
 
-			organization := domain.Organization{
-				Key:     c.Header("organization-key"),
-				Country: countries.ByName(c.Header("country")),
-			}
-
-			org, err := ensureOrg(c.Context(), organization)
-			if err != nil {
-				return response.CheckoutResponse{}, fuego.HTTPError{
-					Title:  "error creating order",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
-
+			organization := domain.Organization{}
+			organization.SetKey(c.Header("organization"))
 			requestBodyBytes, _ := json.Marshal(requestBody)
-			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
 			if err := outbox(c.Context(), domain.Outbox{
 				Attributes: map[string]string{
-					"entityType":            "checkout",
-					"eventType":             "checkoutSubmitted",
-					"country":               countries.ByName(c.Header("country")).Alpha2(),
-					"organizationCountryID": orgIDString,
-					"consumer":              c.Header("consumer"),
-					"commerce":              c.Header("commerce"),
+					"entityType":   "checkout",
+					"eventType":    "checkoutSubmitted",
+					"country":      organization.Country.Alpha2(),
+					"organization": organization.GetOrgKey(),
+					"consumer":     c.Header("consumer"),
+					"commerce":     c.Header("commerce"),
 				},
 				Status:       "pending",
-				Organization: org,
+				Organization: organization,
 				Payload:      requestBodyBytes,
 			}); err != nil {
 				return response.CheckoutResponse{}, err

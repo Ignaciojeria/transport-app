@@ -22,9 +22,9 @@ func NewUpsertVehicleCategory(conn tidb.TIDBConnection) UpsertVehicleCategory {
 		var vehicleCategoryTbl table.VehicleCategory
 		err := conn.DB.WithContext(ctx).
 			Table("vehicle_categories").
-			Where("`type` = ? AND organization_country_id = ?",
+			Where("`type` = ? AND organization_id = ?",
 				vc.Type,
-				vc.Organization.OrganizationCountryID).
+				vc.Organization.ID).
 			First(&vehicleCategoryTbl).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

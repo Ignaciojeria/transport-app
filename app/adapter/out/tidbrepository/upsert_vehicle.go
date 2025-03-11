@@ -21,8 +21,8 @@ func NewUpsertVehicle(conn tidb.TIDBConnection) UpsertVehicle {
 	return func(ctx context.Context, v domain.Vehicle) (domain.Vehicle, error) {
 		vehicle := table.Vehicle{}
 		err := conn.DB.WithContext(ctx).Table("vehicles").
-			Where("reference_id = ? AND organization_country_id = ?",
-				string(v.ReferenceID), v.Organization.OrganizationCountryID).First(&vehicle).Error
+			Where("reference_id = ? AND organization_id = ?",
+				string(v.ReferenceID), v.Organization.ID).First(&vehicle).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Vehicle{}, err
 		}
@@ -30,7 +30,7 @@ func NewUpsertVehicle(conn tidb.TIDBConnection) UpsertVehicle {
 		DBVehicleToUpsert := mapper.DomainToTableVehicle(vehicleWithChanges)
 		DBVehicleToUpsert.CreatedAt = vehicle.CreatedAt
 		if err := conn.
-			Omit("OrganizationCountry").
+			Omit("Organization").
 			Omit("VehicleCategory").
 			Omit("VehicleHeaders").
 			Omit("Carrier").

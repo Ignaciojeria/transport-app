@@ -7,8 +7,8 @@ import (
 
 func MapPlanningStatus(ps domain.PlanningStatus) table.PlanningStatus {
 	return table.PlanningStatus{
-		ID:                    ps.ID,
-		OrganizationCountryID: ps.OrganizationCountryID,
-		Name:                  ps.Value,
+		ID:             ps.ID,
+		OrganizationID: ps.Organization.ID,
+		Name:           ps.Value,
 	}
 }

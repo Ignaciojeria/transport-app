@@ -3,9 +3,7 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/usecase"
@@ -37,12 +35,7 @@ func newVehicleSubmitted(
 		// Completar datos adicionales desde los atributos del mensaje
 		domainOBJ.Commerce = m.Attributes["commerce"]
 		domainOBJ.Consumer = m.Attributes["consumer"]
-
-		orgCountryID, err := strconv.ParseInt(m.Attributes["organizationCountryID"], 10, 64)
-		if err != nil {
-			return http.StatusBadRequest, fmt.Errorf("invalid organizationCountryID: %w", err)
-		}
-		domainOBJ.Organization.OrganizationCountryID = orgCountryID
+		domainOBJ.Organization.SetKey(m.Attributes["organization"])
 		if err := upsert(ctx, domainOBJ); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

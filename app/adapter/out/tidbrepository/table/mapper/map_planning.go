@@ -14,9 +14,9 @@ func MapPlan(plan domain.Plan) table.Plan {
 			Latitude:  plan.Origin.AddressInfo.Location.Lat(),
 			Longitude: plan.Origin.AddressInfo.Location.Lon(),
 		},
-		OrganizationCountryID: plan.Organization.OrganizationCountryID,
-		PlannedDate:           plan.PlannedDate,
-		PlanTypeID:            plan.PlanType.ID,
-		PlanningStatusID:      plan.PlanningStatus.ID,
+		OrganizationID:   plan.Organization.ID,
+		PlannedDate:      plan.PlannedDate,
+		PlanTypeID:       plan.PlanType.ID,
+		PlanningStatusID: plan.PlanningStatus.ID,
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -23,13 +22,8 @@ func init() {
 func searchNodes(s httpserver.Server, search usecase.SearchNodes) {
 	fuego.Get(s.Manager, "/nodes",
 		func(c fuego.ContextNoBody) ([]response.SearchNodesResponse, error) {
-			searchFilters := domain.NodeSearchFilters{
-				Organization: domain.Organization{
-					Key:     c.Header("organization-key"),
-					Country: countries.ByName(c.Header("country")),
-				},
-			}
-
+			searchFilters := domain.NodeSearchFilters{}
+			searchFilters.Organization.SetKey(c.Header("organization"))
 			page := c.QueryParam("page")
 			if page == "" {
 				page = "0"
@@ -59,8 +53,7 @@ func searchNodes(s httpserver.Server, search usecase.SearchNodes) {
 		},
 		option.Summary("searchNodes"),
 		option.Tags(tagNetwork),
-		option.Header("organization-key", "api organization key", param.Required()),
-		option.Header("country", "api country", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Query("page", "Page number", param.Default("0")),
 		option.Query("size", "Page size", param.Default("10")),
 	)

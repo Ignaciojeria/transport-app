@@ -12,17 +12,17 @@ import (
 
 type Plan struct {
 	gorm.Model
-	ID                    int64               `gorm:"primaryKey;autoIncrement"`
-	StartNodeReferenceID  string              `gorm:"default:null"`
-	JSONStartLocation     JSONPlanLocation    `gorm:"type:json;default:null"`
-	OrganizationCountryID int64               `gorm:"not null"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	ReferenceID           string              `gorm:"type:varchar(255);not null"`
-	PlannedDate           time.Time           `gorm:"type:date;not null"`
-	PlanTypeID            int64               `gorm:"not null"`
-	PlanType              PlanType            `gorm:"foreignKey:PlanTypeID"`
-	PlanningStatusID      int64               `gorm:"not null"`
-	PlanningStatus        PlanningStatus      `gorm:"foreignKey:PlanningStatusID"`
+	ID                   int64            `gorm:"primaryKey;autoIncrement"`
+	StartNodeReferenceID string           `gorm:"default:null"`
+	JSONStartLocation    JSONPlanLocation `gorm:"type:json;default:null"`
+	OrganizationID       int64            `gorm:"not null"`
+	Organization         Organization     `gorm:"foreignKey:OrganizationID"`
+	ReferenceID          string           `gorm:"type:varchar(255);not null"`
+	PlannedDate          time.Time        `gorm:"type:date;not null"`
+	PlanTypeID           int64            `gorm:"not null"`
+	PlanType             PlanType         `gorm:"foreignKey:PlanTypeID"`
+	PlanningStatusID     int64            `gorm:"not null"`
+	PlanningStatus       PlanningStatus   `gorm:"foreignKey:PlanningStatusID"`
 }
 
 type PlanLocation struct {
@@ -58,15 +58,15 @@ func (p Plan) Map() domain.Plan {
 
 type PlanType struct {
 	gorm.Model
-	ID                    int64               `gorm:"type:bigint;primaryKey;autoIncrement"`
-	OrganizationCountryID int64               `gorm:"type:bigint;not null;index;uniqueIndex:idx_plan_type_org_name"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID;references:ID"`
-	Name                  string              `gorm:"type:varchar(100);not null;uniqueIndex:idx_plan_type_org_name"`
+	ID             int64        `gorm:"type:bigint;primaryKey;autoIncrement"`
+	OrganizationID int64        `gorm:"type:bigint;not null;index;uniqueIndex:idx_plan_type_org_name"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID;references:ID"`
+	Name           string       `gorm:"type:varchar(100);not null;uniqueIndex:idx_plan_type_org_name"`
 }
 
 func (pt PlanType) Map() domain.PlanType {
 	return domain.PlanType{
-		Organization: pt.OrganizationCountry.Map(),
+		Organization: pt.Organization.Map(),
 		ID:           pt.ID,
 		Value:        pt.Name,
 	}
@@ -74,15 +74,15 @@ func (pt PlanType) Map() domain.PlanType {
 
 type PlanningStatus struct {
 	gorm.Model
-	ID                    int64               `gorm:"type:bigint;primaryKey;autoIncrement"`
-	OrganizationCountryID int64               `gorm:"type:bigint;not null;index;uniqueIndex:idx_planning_status_org_name"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID;references:ID"`
-	Name                  string              `gorm:"type:varchar(100);not null;uniqueIndex:idx_planning_status_org_name"`
+	ID             int64        `gorm:"type:bigint;primaryKey;autoIncrement"`
+	OrganizationID int64        `gorm:"type:bigint;not null;index;uniqueIndex:idx_planning_status_org_name"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID;references:ID"`
+	Name           string       `gorm:"type:varchar(100);not null;uniqueIndex:idx_planning_status_org_name"`
 }
 
 func (ps PlanningStatus) Map() domain.PlanningStatus {
 	return domain.PlanningStatus{
-		Organization: ps.OrganizationCountry.Map(),
+		Organization: ps.Organization.Map(),
 		ID:           ps.ID,
 		Value:        ps.Name,
 	}
@@ -90,25 +90,25 @@ func (ps PlanningStatus) Map() domain.PlanningStatus {
 
 type Route struct {
 	gorm.Model
-	ID                    int64               `gorm:"primaryKey;autoIncrement"`
-	ReferenceID           string              `gorm:"type:varchar(255);not null"`
-	OrganizationCountryID int64               `gorm:"default:null"`
-	OrganizationCountry   OrganizationCountry `gorm:"foreignKey:OrganizationCountryID"`
-	EndNodeReferenceID    string              `gorm:"default:null"`
-	JSONEndLocation       JSONPlanLocation    `gorm:"type:json;default:null"`
-	PlanID                int64               `gorm:"default:null"`
-	Plan                  Plan                `gorm:"foreignKey:PlanID"`
-	AccountID             *int64              `gorm:"default:null"`
-	Account               Account             `gorm:"foreignKey:AccountID"`
-	VehicleID             *int64              `gorm:"default:null"`
-	Vehicle               Vehicle             `gorm:"foreignKey:VehicleID"`
-	CarrierID             *int64              `gorm:"default:null"`
-	Carrier               Carrier             `gorm:"foreignKey:CarrierID"`
+	ID                 int64            `gorm:"primaryKey;autoIncrement"`
+	ReferenceID        string           `gorm:"type:varchar(255);not null"`
+	OrganizationID     int64            `gorm:"default:null"`
+	Organization       Organization     `gorm:"foreignKey:OrganizationID"`
+	EndNodeReferenceID string           `gorm:"default:null"`
+	JSONEndLocation    JSONPlanLocation `gorm:"type:json;default:null"`
+	PlanID             int64            `gorm:"default:null"`
+	Plan               Plan             `gorm:"foreignKey:PlanID"`
+	AccountID          *int64           `gorm:"default:null"`
+	Account            Account          `gorm:"foreignKey:AccountID"`
+	VehicleID          *int64           `gorm:"default:null"`
+	Vehicle            Vehicle          `gorm:"foreignKey:VehicleID"`
+	CarrierID          *int64           `gorm:"default:null"`
+	Carrier            Carrier          `gorm:"foreignKey:CarrierID"`
 }
 
 func (r Route) Map() domain.Route {
 	return domain.Route{
-		Organization: r.OrganizationCountry.Map(),
+		Organization: r.Organization.Map(),
 		ReferenceID:  r.ReferenceID,
 		ID:           r.ID,
 		Vehicle:      r.Vehicle.Map(),

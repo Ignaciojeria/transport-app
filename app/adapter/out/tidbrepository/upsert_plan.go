@@ -30,14 +30,14 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 			// 1️⃣ Buscar o crear el plan
 			var plan table.Plan
 			err := tx.Table("plans").
-				Where("reference_id = ? AND organization_country_id = ?",
-					p.ReferenceID, p.Organization.OrganizationCountryID).
+				Where("reference_id = ? AND organization_id = ?",
+					p.ReferenceID, p.Organization.ID).
 				First(&plan).Error
 
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				plan = mapper.MapPlan(p)
 				plan.CreatedAt = time.Now()
-				plan.OrganizationCountryID = p.Organization.OrganizationCountryID
+				plan.OrganizationID = p.Organization.ID
 				err = tx.Table("plans").Create(&plan).Error
 			} else if err == nil {
 				planToUpdate := plan.Map().UpdateIfChanged(p)
@@ -74,8 +74,8 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 			// 3️⃣ Consultar rutas existentes
 			var existingRoutes []table.Route
 			err = tx.Table("routes").
-				Where("reference_id IN ? AND organization_country_id = ?",
-					routeReferenceIDs, p.Organization.OrganizationCountryID).
+				Where("reference_id IN ? AND organization_id = ?",
+					routeReferenceIDs, p.Organization.ID).
 				Find(&existingRoutes).Error
 			if err != nil {
 				return err
@@ -93,7 +93,7 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 				if _, exists := existingRouteMap[route.ReferenceID]; !exists {
 					newRoute := mapper.MapRoute(route)
 					newRoute.PlanID = plan.ID
-					newRoute.OrganizationCountryID = p.Organization.OrganizationCountryID
+					newRoute.OrganizationID = p.Organization.ID
 					newRoutes = append(newRoutes, newRoute)
 				}
 			}
@@ -137,8 +137,8 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 			// 7️⃣ Obtener todas las órdenes existentes
 			var existingOrders []table.Order
 			err = tx.Table("orders").
-				Where("reference_id IN ? AND organization_country_id = ?",
-					referenceIDs, p.Organization.OrganizationCountryID).
+				Where("reference_id IN ? AND organization_id = ?",
+					referenceIDs, p.Organization.ID).
 				Find(&existingOrders).Error
 			if err != nil {
 				return err
@@ -159,7 +159,7 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 				newOrder := mapper.MapOrderToTable(order)
 				newOrder.PlanID = &plan.ID
 				newOrder.OrderStatusID = plannedStatusID
-				newOrder.OrganizationCountryID = p.Organization.OrganizationCountryID
+				newOrder.OrganizationID = p.Organization.ID
 
 				if routeID, exists := routeIDMap[string(order.ReferenceID)]; exists {
 					newOrder.RouteID = routeID
@@ -189,11 +189,11 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 				}
 
 				updateFields := map[string]interface{}{
-					"plan_id":                 plan.ID,
-					"order_status_id":         plannedStatusID,
-					"json_planned_data":       plannedData,
-					"sequence_number":         order.SequenceNumber,
-					"organization_country_id": p.Organization.OrganizationCountryID,
+					"plan_id":           plan.ID,
+					"order_status_id":   plannedStatusID,
+					"json_planned_data": plannedData,
+					"sequence_number":   order.SequenceNumber,
+					"organization_id":   p.Organization.ID,
 				}
 
 				if routeID, exists := routeIDMap[string(order.ReferenceID)]; exists {
@@ -203,8 +203,8 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 				}
 
 				err = tx.Table("orders").
-					Where("reference_id = ? AND organization_country_id = ?",
-						order.ReferenceID, p.Organization.OrganizationCountryID).
+					Where("reference_id = ? AND organization_id = ?",
+						order.ReferenceID, p.Organization.ID).
 					Updates(updateFields).Error
 				if err != nil {
 					return err

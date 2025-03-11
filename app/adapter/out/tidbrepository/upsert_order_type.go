@@ -24,7 +24,7 @@ func NewUpsertOrderType(conn tidb.TIDBConnection) UpsertOrderType {
 		var orderType table.OrderType
 		err := conn.DB.WithContext(ctx).
 			Table("order_types").
-			Where("type = ? AND organization_country_id = ?", ot.Type, ot.Organization.OrganizationCountryID).
+			Where("type = ? AND organization_id = ?", ot.Type, ot.Organization.ID).
 			First(&orderType).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.OrderType{}, err

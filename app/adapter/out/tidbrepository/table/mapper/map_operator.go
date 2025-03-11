@@ -15,12 +15,12 @@ func MapOperator(e domain.Operator) table.Account {
 		originNodeInfoIDPtr = &e.OriginNode.ID
 	}
 	return table.Account{
-		ID:                    e.ID,
-		ReferenceID:           e.ReferenceID,
-		ContactID:             contactIDPtr,
-		IsActive:              true,
-		OriginNodeInfoID:      originNodeInfoIDPtr,
-		OrganizationCountryID: e.Organization.OrganizationCountryID,
-		Type:                  "operator",
+		ID:               e.ID,
+		ReferenceID:      e.ReferenceID,
+		ContactID:        contactIDPtr,
+		IsActive:         true,
+		OriginNodeInfoID: originNodeInfoIDPtr,
+		OrganizationID:   e.Organization.ID,
+		Type:             "operator",
 	}
 }

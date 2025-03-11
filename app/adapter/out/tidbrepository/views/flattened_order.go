@@ -12,7 +12,7 @@ import (
 type FlattenedOrderView struct {
 	OrderID                      int64               `gorm:"column:order_id"`
 	ReferenceID                  string              `gorm:"column:reference_id"`
-	OrganizationCountryID        int64               `gorm:"column:organization_country_id"`
+	OrganizationID               int64               `gorm:"column:organization_id"`
 	OrganizationCountry          string              `gorm:"column:organization_country"`
 	HeaderID                     int64               `gorm:"column:header_id"`
 	CommerceName                 string              `gorm:"column:commerce_name"`
@@ -146,8 +146,8 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		Headers: domain.Headers{
 			ID: o.HeaderID,
 			Organization: domain.Organization{
-				OrganizationCountryID: o.OrganizationCountryID,
-				Country:               countries.ByName(o.OrganizationCountry),
+				ID:      o.OrganizationID,
+				Country: countries.ByName(o.OrganizationCountry),
 			},
 			Consumer: o.ConsumerName,
 			Commerce: o.CommerceName,

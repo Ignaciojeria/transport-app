@@ -21,8 +21,8 @@ func NewUpsertCarrier(conn tidb.TIDBConnection) UpsertCarrier {
 	return func(ctx context.Context, c domain.Carrier) (domain.Carrier, error) {
 		carrier := table.Carrier{}
 		err := conn.DB.WithContext(ctx).Table("carriers").
-			Where("reference_id = ? AND organization_country_id = ?",
-				string(c.ReferenceID), c.Organization.OrganizationCountryID).First(&carrier).Error
+			Where("reference_id = ? AND organization_id = ?",
+				string(c.ReferenceID), c.Organization.ID).First(&carrier).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Carrier{}, err
 		}

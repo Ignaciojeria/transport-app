@@ -19,15 +19,13 @@ func NewSearchNodesQuery(conn tidb.TIDBConnection) SearchNodesQuery {
 		var nodes views.SearchNodesView
 
 		query := `
-            SELECT ni.name AS node_name, ni.reference_id
-            FROM node_infos ni
-            JOIN organization_countries oc ON ni.organization_country_id = oc.id
-            JOIN organizations org ON oc.organization_id = org.id
-            JOIN api_keys ak ON org.id = ak.organization_id
-            WHERE ak.key = ? AND oc.country = ?
-            LIMIT ? OFFSET ?
-        `
-		params := []interface{}{p.Organization.Key, p.Organization.Country.Alpha2(), p.Size, p.Page}
+        SELECT ni.name AS node_name, ni.reference_id
+        FROM node_infos ni
+        JOIN organizations org ON ni.organization_id = org.id
+        WHERE org.id = ?
+        LIMIT ? OFFSET ?
+    `
+		params := []interface{}{p.Organization.ID, p.Size, p.Page}
 
 		if err := conn.DB.WithContext(ctx).Raw(query, params...).Scan(&nodes).Error; err != nil {
 			return nil, err

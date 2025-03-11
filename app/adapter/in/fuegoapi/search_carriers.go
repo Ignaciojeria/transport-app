@@ -8,7 +8,6 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -23,12 +22,8 @@ func init() {
 func searchCarriers(s httpserver.Server, search usecase.SearchCarriers) {
 	fuego.Get(s.Manager, "/carriers",
 		func(c fuego.ContextNoBody) ([]response.SearchCarriersResponse, error) {
-			searchFilters := domain.CarrierSearchFilters{
-				Organization: domain.Organization{
-					Key:     c.Header("organization-key"),
-					Country: countries.ByName(c.Header("country")),
-				},
-			}
+			searchFilters := domain.CarrierSearchFilters{}
+			searchFilters.Organization.SetKey(c.Header("organization"))
 
 			page := c.QueryParam("page")
 			if page == "" {
@@ -57,8 +52,7 @@ func searchCarriers(s httpserver.Server, search usecase.SearchCarriers) {
 			return response.MapSearchCarriersResponse(carriers), nil
 		},
 		option.Summary("searchCarriers"),
-		option.Header("organization-key", "api organization key", param.Required()),
-		option.Header("country", "api country", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Query("page", "Page number", param.Default("0")),
 		option.Query("size", "Page size", param.Default("10")),
 		option.Tags(tagFleets),

@@ -7,12 +7,12 @@ import (
 
 func MapContactToTable(e domain.Contact, organizationCountryID int64) table.Contact {
 	return table.Contact{
-		ID:                    e.ID,
-		FullName:              e.FullName,
-		Email:                 e.Email,
-		Phone:                 e.Phone,
-		Documents:             mapDocuments(e.Documents), // Serializar a JSON
-		NationalID:            e.NationalID,
-		OrganizationCountryID: organizationCountryID,
+		ID:             e.ID,
+		FullName:       e.FullName,
+		Email:          e.Email,
+		Phone:          e.Phone,
+		Documents:      mapDocuments(e.Documents), // Serializar a JSON
+		NationalID:     e.NationalID,
+		OrganizationID: organizationCountryID,
 	}
 }

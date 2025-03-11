@@ -121,7 +121,7 @@ func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {
 	if in.MaxPackagesQuantity != 0 {
 		vc.MaxPackagesQuantity = in.MaxPackagesQuantity
 	}
-	if in.Organization.OrganizationCountryID != 0 {
+	if in.Organization.ID != 0 {
 		vc.Organization = in.Organization
 	}
 	if in.ID != 0 {
@@ -149,7 +149,7 @@ func (c Carrier) UpdateIfChanged(newCarrier Carrier) Carrier {
 	if newCarrier.NationalID != "" {
 		updatedCarrier.NationalID = newCarrier.NationalID
 	}
-	if newCarrier.Organization.OrganizationCountryID != 0 {
+	if newCarrier.Organization.ID != 0 {
 		updatedCarrier.Organization = newCarrier.Organization
 	}
 	return updatedCarrier

@@ -18,6 +18,6 @@ func applicationLoader(
 	if err := runMigrations(); err != nil {
 		return err
 	}
-	LoadOrderStatuses()
+	//LoadOrderStatuses()
 	return nil
 }

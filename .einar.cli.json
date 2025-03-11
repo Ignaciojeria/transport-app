@@ -302,6 +302,14 @@
         {
             "kind": "usecase",
             "name": "register"
+        },
+        {
+            "kind": "post-controller",
+            "name": "login"
+        },
+        {
+            "kind": "usecase",
+            "name": "login"
         }
     ]
 }

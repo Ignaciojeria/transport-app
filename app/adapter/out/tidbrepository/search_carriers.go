@@ -20,10 +20,8 @@ func NewSearchCarriers(conn tidb.TIDBConnection) SearchCarriers {
 	return func(ctx context.Context, csf domain.CarrierSearchFilters) ([]domain.Carrier, error) {
 		var carriers []table.Carrier
 		if err := conn.DB.WithContext(ctx).
-			Joins("JOIN organization_countries oc ON carriers.organization_country_id = oc.id").
-			Joins("JOIN organizations org ON oc.organization_id = org.id").
-			Joins("JOIN api_keys ak ON org.id = ak.organization_id").
-			Where("ak.key = ? AND oc.country = ?", csf.Organization.Key, csf.Organization.Country.Alpha2()).
+			Joins("JOIN organizations org ON carriers.organization_id = org.id"). // Se une directamente con organizations
+			Where("org.id = ?", csf.Organization.ID).                             // Filtra solo por organization_id
 			Limit(csf.Size).
 			Offset(csf.Page).
 			Find(&carriers).Error; err != nil {

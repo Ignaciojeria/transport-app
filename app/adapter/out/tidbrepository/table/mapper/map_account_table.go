@@ -16,11 +16,11 @@ func MapAccountTable(e domain.Account) table.Account {
 		originNodeInfoIDPtr = &e.Origin.ID
 	}
 	return table.Account{
-		ID:                    e.ID,
-		ContactID:             contactIDPtr,
-		IsActive:              true,
-		OriginNodeInfoID:      originNodeInfoIDPtr,
-		OrganizationCountryID: e.Organization.OrganizationCountryID,
+		ID:               e.ID,
+		ContactID:        contactIDPtr,
+		IsActive:         true,
+		OriginNodeInfoID: originNodeInfoIDPtr,
+		OrganizationID:   e.Organization.ID,
 	}
 }
 
@@ -43,32 +43,32 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 		nodeName = nil
 	}
 	return table.NodeInfo{
-		ID:                    e.ID,
-		ReferenceID:           string(e.ReferenceID),
-		Name:                  nodeName,
-		NodeTypeID:            nodeTypeID,
-		ContactID:             contactID,
-		OrganizationCountryID: e.Organization.OrganizationCountryID,
-		AddressID:             addressInfoID,
+		ID:             e.ID,
+		ReferenceID:    string(e.ReferenceID),
+		Name:           nodeName,
+		NodeTypeID:     nodeTypeID,
+		ContactID:      contactID,
+		OrganizationID: e.Organization.ID,
+		AddressID:      addressInfoID,
 	}
 }
 
 func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
 	return table.AddressInfo{
-		ID:                    e.ID,
-		State:                 e.State,
-		Locality:              e.Locality,
-		District:              e.District,
-		AddressLine1:          e.AddressLine1,
-		AddressLine2:          e.AddressLine2,
-		AddressLine3:          e.AddressLine3,
-		RawAddress:            e.RawAddress(),
-		Latitude:              e.Location[1],
-		Longitude:             e.Location[0],
-		ZipCode:               e.ZipCode,
-		TimeZone:              e.TimeZone,
-		OrganizationCountryID: organizationCountryID,
-		Province:              e.Province,
+		ID:             e.ID,
+		State:          e.State,
+		Locality:       e.Locality,
+		District:       e.District,
+		AddressLine1:   e.AddressLine1,
+		AddressLine2:   e.AddressLine2,
+		AddressLine3:   e.AddressLine3,
+		RawAddress:     e.RawAddress(),
+		Latitude:       e.Location[1],
+		Longitude:      e.Location[0],
+		ZipCode:        e.ZipCode,
+		TimeZone:       e.TimeZone,
+		OrganizationID: organizationCountryID,
+		Province:       e.Province,
 	}
 }
 

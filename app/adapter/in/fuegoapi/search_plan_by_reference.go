@@ -7,7 +7,6 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -22,8 +21,9 @@ func searchPlanByReference(
 	fuego.Get(s.Manager, "/plans/{referenceID}",
 		func(c fuego.ContextNoBody) (request.SearchPlanByReferenceResponse, error) {
 			searchFilters := domain.OrderSearchFilters{}
-			searchFilters.Organization.Key = c.Header("organization-key")
-			searchFilters.Organization.Country = countries.ByName(c.Header("country"))
+			//searchFilters.Organization.Key = c.Header("organization-key")
+			//searchFilters.Organization.Country = countries.ByName(c.Header("country"))
+			searchFilters.Organization.SetKey(c.Header("organization"))
 			searchFilters.PlanReferenceID = c.PathParam("referenceID")
 			plan, err := searchPlan(c.Context(), searchFilters)
 			if err != nil {
@@ -32,7 +32,6 @@ func searchPlanByReference(
 			return request.MapSearchPlanByReferenceResponse(plan), nil
 		},
 		option.Summary("searchPlanByReference"),
-		option.Header("organization-key", "api organization key", param.Required()),
-		option.Header("country", "api country", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Tags(tagPlanning))
 }
