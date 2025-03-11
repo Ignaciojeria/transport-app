@@ -510,7 +510,7 @@ type AddressInfo struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
 	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_raw_address_organization"`                   // Parte del índice único
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`                                           // Relación con la tabla OrganizationCountry
+	Organization   Organization `gorm:"foreignKey:OrganizationID"`                                           // Relación con la tabla
 	RawAddress     string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_raw_address_organization"` // Parte del índice único
 	State          string       `gorm:"default:null"`
 	Province       string       `gorm:"default:null"`
@@ -673,7 +673,6 @@ type Organization struct {
 	Email   string `gorm:"type:varchar(255);not null;unique"`
 	Name    string `gorm:"type:varchar(255);not null;"`
 	Country string `gorm:"type:varchar(255);not null;"`
-	//Countries []OrganizationCountry `gorm:"foreignKey:OrganizationID"` // Relación con países
 }
 
 func (o Organization) Map() domain.Organization {
@@ -684,27 +683,6 @@ func (o Organization) Map() domain.Organization {
 		Country: countries.ByName(o.Country),
 	}
 }
-
-/*
-type OrganizationCountry struct {
-	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_organization_country"`              // Parte del índice compuesto
-	Country        string       `gorm:"type:char(5);not null;uniqueIndex:idx_organization_country"` // Código ISO de 2 caracteres
-}
-
-func (o OrganizationCountry) Map() domain.Organization {
-	return domain.Organization{
-		ID:                    o.OrganizationID,
-		OrganizationCountryID: o.ID,
-		Country:               countries.ByName(o.Country),
-		Name:                  o.Organization.Name,
-		Email:                 o.Organization.Email,
-	}
-}*/
-
-//Account Tables
 
 type Account struct {
 	gorm.Model
