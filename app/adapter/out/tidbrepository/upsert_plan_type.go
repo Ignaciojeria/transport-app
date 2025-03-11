@@ -22,7 +22,7 @@ func NewUpsertPlanType(conn tidb.TIDBConnection) UpsertPlanType {
 		var planType table.PlanType
 		err := conn.DB.WithContext(ctx).
 			Table("plan_types").
-			Where("name = ? AND organization_country_id = ?", pt.Value, pt.Organization.OrganizationCountryID).
+			Where("name = ? AND organization_id = ?", pt.Value, pt.Organization.ID).
 			First(&planType).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.PlanType{}, err
@@ -31,7 +31,7 @@ func NewUpsertPlanType(conn tidb.TIDBConnection) UpsertPlanType {
 		DBOrderTypeToUpdate := mapper.MapPlanType(planTypeWithChanges)
 		DBOrderTypeToUpdate.CreatedAt = planType.CreatedAt
 		if err := conn.
-			Omit("OrganizationCountry").
+			Omit("Organization").
 			Save(&DBOrderTypeToUpdate).Error; err != nil {
 			return domain.PlanType{}, err
 		}

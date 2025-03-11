@@ -7,8 +7,8 @@ import (
 
 func MapNodeType(nt domain.NodeType) table.NodeType {
 	return table.NodeType{
-		OrganizationCountryID: nt.Organization.OrganizationCountryID,
-		ID:                    nt.ID,
-		Name:                  nt.Value,
+		OrganizationID: nt.Organization.ID,
+		ID:             nt.ID,
+		Name:           nt.Value,
 	}
 }

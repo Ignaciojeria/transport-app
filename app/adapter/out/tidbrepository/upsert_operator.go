@@ -21,9 +21,9 @@ func NewUpsertOperator(conn tidb.TIDBConnection) UpsertOperator {
 		operatorTBL := mapper.MapOperator(o)
 		err := conn.DB.WithContext(ctx).
 			Table("accounts").
-			Where("reference_id = ? AND organization_country_id = ?",
+			Where("reference_id = ? AND organization_id = ?",
 				o.ReferenceID,
-				o.Organization.OrganizationCountryID).
+				o.Organization.ID).
 			First(&operatorTBL).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Operator{}, err
@@ -35,7 +35,7 @@ func NewUpsertOperator(conn tidb.TIDBConnection) UpsertOperator {
 			Omit("Contact").
 			Omit("AddressInfo").
 			Omit("OriginNodeInfo").
-			Omit("OrganizationCountry").
+			Omit("Organization").
 			Save(&DBOperatorToUpdate).Error
 	}
 }

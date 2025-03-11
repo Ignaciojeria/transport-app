@@ -22,7 +22,7 @@ func NewUpsertPlanningStatus(conn tidb.TIDBConnection) UpsertPlanningStatus {
 		var planningStatus table.PlanningStatus
 		err := conn.DB.WithContext(ctx).
 			Table("planning_statuses").
-			Where("name = ? AND organization_country_id = ?", ps.Value, ps.Organization.OrganizationCountryID).
+			Where("name = ? AND organization_id = ?", ps.Value, ps.Organization.ID).
 			First(&planningStatus).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.PlanningStatus{}, err
@@ -31,7 +31,7 @@ func NewUpsertPlanningStatus(conn tidb.TIDBConnection) UpsertPlanningStatus {
 		DBPlanningStatusToUpdate := mapper.MapPlanningStatus(planningStatusWithChanges)
 		DBPlanningStatusToUpdate.CreatedAt = planningStatus.CreatedAt
 		if err := conn.
-			Omit("OrganizationCountry").
+			Omit("Organization").
 			Save(&DBPlanningStatusToUpdate).Error; err != nil {
 			return domain.PlanningStatus{}, err
 		}

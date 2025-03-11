@@ -7,8 +7,9 @@ import (
 
 func MapOrganizationToTable(org domain.Organization) table.Organization {
 	return table.Organization{
-		ID:    org.ID,
-		Name:  org.Name,
-		Email: org.Email,
+		ID:      org.ID,
+		Name:    org.Name,
+		Email:   org.Email,
+		Country: org.Country.Alpha2(),
 	}
 }

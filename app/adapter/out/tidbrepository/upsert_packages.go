@@ -30,7 +30,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		}
 
 		err := conn.DB.WithContext(ctx).Table("packages").
-			Where("lpn IN ? AND organization_country_id = ?", lpns, org.OrganizationCountryID).Find(&packagesTable).Error
+			Where("lpn IN ? AND organization_id = ?", lpns, org.ID).Find(&packagesTable).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return []domain.Package{}, err
 		}
@@ -47,11 +47,11 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 			if existing, ok := existingPackages[pck.Lpn]; ok {
 				// Actualizar existente
 				DBpackagesToUpsert = append(DBpackagesToUpsert,
-					mapper.MapPackageToTable(existing.Map().UpdateIfChanged(pck), org.OrganizationCountryID))
+					mapper.MapPackageToTable(existing.Map().UpdateIfChanged(pck), org.ID))
 			} else {
 				// Insertar nuevo
 				DBpackagesToUpsert = append(DBpackagesToUpsert,
-					mapper.MapPackageToTable(pck, org.OrganizationCountryID))
+					mapper.MapPackageToTable(pck, org.ID))
 			}
 		}
 

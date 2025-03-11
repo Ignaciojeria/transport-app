@@ -10,8 +10,8 @@ func MapVehicleHeaders(c domain.Headers) table.VehicleHeaders {
 		ID:       c.ID,
 		Commerce: c.Commerce,
 		Consumer: c.Consumer,
-		OrganizationCountry: table.OrganizationCountry{
-			ID: c.Organization.OrganizationCountryID,
+		Organization: table.Organization{
+			ID: c.Organization.ID,
 		},
 	}
 }

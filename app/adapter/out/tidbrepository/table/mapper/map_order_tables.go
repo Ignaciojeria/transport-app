@@ -7,7 +7,7 @@ import (
 )
 
 func MapOrderToTable(order domain.Order) table.Order {
-	orgCountryID := order.Organization.OrganizationCountryID
+	orgCountryID := order.Organization.ID
 	var planId *int64
 	if order.Plan.ID != 0 { // Si el ID es distinto de 0, creamos un puntero
 		planId = new(int64)
@@ -20,11 +20,11 @@ func MapOrderToTable(order domain.Order) table.Order {
 		*routeID = order.Plan.Routes[0].ID
 	}
 	tbl := table.Order{
-		ID:                    order.ID,
-		PlanID:                planId,
-		RouteID:               routeID,
-		ReferenceID:           string(order.ReferenceID),
-		OrganizationCountryID: order.Organization.OrganizationCountryID, // Completar según la lógica de negocio
+		ID:             order.ID,
+		PlanID:         planId,
+		RouteID:        routeID,
+		ReferenceID:    string(order.ReferenceID),
+		OrganizationID: order.Organization.ID, // Completar según la lógica de negocio
 		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
 		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
 		OrderHeadersID: order.Headers.ID,
@@ -119,9 +119,9 @@ func MapPackagesToTable(packages []domain.Package, orgCountryID int64) []table.P
 	mapped := make([]table.Package, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = table.Package{
-			OrganizationCountryID: orgCountryID,
-			ID:                    pkg.ID,
-			Lpn:                   pkg.Lpn,
+			OrganizationID: orgCountryID,
+			ID:             pkg.ID,
+			Lpn:            pkg.Lpn,
 			JSONDimensions: table.JSONDimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,
@@ -156,9 +156,9 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 
 func MapPackageToTable(pkg domain.Package, orgCountryID int64) table.Package {
 	return table.Package{
-		OrganizationCountryID: orgCountryID,
-		ID:                    pkg.ID,
-		Lpn:                   pkg.Lpn,
+		OrganizationID: orgCountryID,
+		ID:             pkg.ID,
+		Lpn:            pkg.Lpn,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
 			Width:  pkg.Dimensions.Width,
@@ -194,7 +194,7 @@ func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders 
 		ID:       c.ID,
 		Commerce: c.Commerce,
 		Consumer: c.Consumer,
-		OrganizationCountry: table.OrganizationCountry{
+		Organization: table.Organization{
 			ID: orgCountryID,
 		},
 	}
@@ -202,28 +202,28 @@ func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders 
 
 func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 	return table.OrderType{
-		OrganizationCountryID: orgCountry,
-		ID:                    t.ID,
-		Type:                  t.Type,
-		Description:           t.Description,
+		OrganizationID: orgCountry,
+		ID:             t.ID,
+		Type:           t.Type,
+		Description:    t.Description,
 	}
 }
 
 func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.AddressInfo {
 	return table.AddressInfo{
-		OrganizationCountryID: orgCountry,
-		ID:                    address.ID,
-		State:                 address.State,
-		Locality:              address.Locality,
-		District:              address.District,
-		AddressLine1:          address.AddressLine1,
-		AddressLine2:          address.AddressLine2,
-		AddressLine3:          address.AddressLine3,
-		RawAddress:            address.RawAddress(),
-		Latitude:              address.Location[1],
-		Longitude:             address.Location[0],
-		ZipCode:               address.ZipCode,
-		Province:              address.Province,
-		TimeZone:              address.TimeZone,
+		OrganizationID: orgCountry,
+		ID:             address.ID,
+		State:          address.State,
+		Locality:       address.Locality,
+		District:       address.District,
+		AddressLine1:   address.AddressLine1,
+		AddressLine2:   address.AddressLine2,
+		AddressLine3:   address.AddressLine3,
+		RawAddress:     address.RawAddress(),
+		Latitude:       address.Location[1],
+		Longitude:      address.Location[0],
+		ZipCode:        address.ZipCode,
+		Province:       address.Province,
+		TimeZone:       address.TimeZone,
 	}
 }

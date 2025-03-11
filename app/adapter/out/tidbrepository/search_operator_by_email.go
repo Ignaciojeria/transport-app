@@ -22,11 +22,9 @@ func NewSearchOperatorByEmail(conn tidb.TIDBConnection) SearchOperatorByEmail {
 			Preload("OriginNodeInfo.AddressInfo").
 			Preload("OriginNodeInfo.NodeType").
 			Preload("Contact").
-			Joins("JOIN organization_countries oc ON accounts.organization_country_id = oc.id").
-			Joins("JOIN organizations org ON oc.organization_id = org.id").
-			Joins("JOIN api_keys ak ON org.id = ak.organization_id").
-			Joins("JOIN contacts c ON accounts.contact_id = c.id"). // Unión con la tabla Contact
-			Where("ak.key = ? AND oc.country = ?", o.Organization.Key, o.Organization.Country.Alpha2()).
+			Joins("JOIN organizations org ON accounts.organization_id = org.id").    // Se une directamente con organizations
+			Joins("JOIN contacts c ON accounts.contact_id = c.id").                  // Unión con la tabla Contact
+			Where("org.id = ?", o.Organization.ID).                                  // Filtra solo por organization_id
 			Where("c.email = ? AND accounts.type = ?", o.Contact.Email, "operator"). // Filtro por email del Contact y type del Account
 			First(&account).Error; err != nil {
 			return domain.Operator{}, err

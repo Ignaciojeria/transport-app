@@ -103,7 +103,7 @@ func (o Order) UpdateIfChanged(newOrder Order) Order {
 	}
 
 	// Update Organization if changed
-	if newOrder.Organization.OrganizationCountryID != 0 {
+	if newOrder.Organization.ID != 0 {
 		o.Organization = newOrder.Organization
 	}
 
@@ -596,7 +596,7 @@ func (ot OrderType) UpdateIfChanged(newOrderType OrderType) OrderType {
 	if newOrderType.Description != "" {
 		ot.Description = newOrderType.Description
 	}
-	if newOrderType.Organization.OrganizationCountryID != 0 {
+	if newOrderType.Organization.ID != 0 {
 		ot.Organization = newOrderType.Organization
 	}
 	return ot

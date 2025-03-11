@@ -18,6 +18,7 @@ type Conf struct {
 	OPTIMIZATION_STRATEGY    string `env:"OPTIMIZATION_STRATEGY" envDefault:"locationiq"`
 	LOCATION_IQ_ACCESS_TOKEN string `env:"LOCATION_IQ_ACCESS_TOKEN"`
 	LOCATION_IQ_DNS          string `env:"LOCATION_IQ_DNS"`
+	FIREBASE_API_KEY         string `env:"FIREBASE_API_KEY"`
 }
 
 func NewConf() (Conf, error) {

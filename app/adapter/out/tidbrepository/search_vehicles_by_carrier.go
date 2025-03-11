@@ -26,12 +26,9 @@ func NewSearchVehiclesByCarrier(conn tidb.TIDBConnection) SearchVehiclesByCarrie
 			Preload("VehicleCategory").
 			Preload("VehicleHeaders").
 			Joins("JOIN carriers c ON vehicles.carrier_id = c.id").
-			Joins("JOIN organization_countries oc ON vehicles.organization_country_id = oc.id").
-			Joins("JOIN organizations org ON oc.organization_id = org.id").
-			Joins("JOIN api_keys ak ON org.id = ak.organization_id").
-			Where("ak.key = ? AND oc.country = ? AND c.reference_id = ?",
-				vsf.Organization.Key,
-				vsf.Organization.Country.Alpha2(),
+			Joins("JOIN organizations org ON vehicles.organization_id = org.id"). // Se une directamente con organizations
+			Where("org.id = ? AND c.reference_id = ?",
+				vsf.Organization.ID, // Filtra solo por organization_id
 				vsf.CarrierReferenceID).
 			Find(&vehicles).Error; err != nil {
 			return nil, err

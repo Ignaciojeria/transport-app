@@ -1,6 +1,6 @@
 package request
 
-type CreateOrganizationKeyRequest struct {
+type CreateOrganizationRequest struct {
 	Name  string `json:"name" validate:"required" example:"org-name"`
 	Email string `json:"email" validate:"required" example:"org-email@gmail.com"`
 }

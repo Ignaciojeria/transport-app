@@ -6,7 +6,6 @@ import (
 	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -26,8 +25,9 @@ func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOr
 				return nil, err
 			}
 			searchFilters := req.Map()
-			searchFilters.Organization.Key = c.Header("organization-key")
-			searchFilters.Organization.Country = countries.ByName(c.Header("country"))
+			//searchFilters.Organization.Key = c.Header("organization-key")
+			//searchFilters.Organization.Country = countries.ByName(c.Header("country"))
+			searchFilters.Organization.SetKey(c.Header("organization"))
 			orders, err := search(c.Context(), searchFilters)
 			if err != nil {
 				return nil, err
@@ -35,8 +35,7 @@ func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOr
 			return request.MapSearchOrdersResponse(orders), nil
 		},
 		option.Summary("searchOrdersByUniqueReferences"),
-		option.Header("organization-key", "api organization key", param.Required()),
-		option.Header("country", "api country", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Tags(tagOrders),
 	)
 }

@@ -23,8 +23,8 @@ func NewUpsertVehicleHeaders(conn tidb.TIDBConnection) UpsertVehicleHeaders {
 		err := conn.DB.WithContext(ctx).
 			Table("vehicle_headers").
 			Where(
-				"commerce = ? AND consumer = ? AND organization_country_id = ?",
-				h.Commerce, h.Consumer, h.Organization.OrganizationCountryID).
+				"commerce = ? AND consumer = ? AND organization_id = ?",
+				h.Commerce, h.Consumer, h.Organization.ID).
 			First(&vehicleHeaders).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Headers{}, err

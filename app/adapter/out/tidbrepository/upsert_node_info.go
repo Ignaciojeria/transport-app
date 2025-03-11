@@ -21,8 +21,8 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 	return func(ctx context.Context, ni domain.NodeInfo) (domain.NodeInfo, error) {
 		nodeInfo := table.NodeInfo{}
 		err := conn.DB.WithContext(ctx).Table("node_infos").
-			Where("reference_id = ? AND organization_country_id = ?",
-				string(ni.ReferenceID), ni.Organization.OrganizationCountryID).First(&nodeInfo).Error
+			Where("reference_id = ? AND organization_id = ?",
+				string(ni.ReferenceID), ni.Organization.ID).First(&nodeInfo).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.NodeInfo{}, err
 		}
@@ -33,7 +33,7 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 		upsertQuery := conn.DB
 
 		if err := upsertQuery.
-			Omit("OrganizationCountry").
+			Omit("Organization").
 			Omit("NodeType").
 			Omit("Contact").
 			Omit("AddressInfo").

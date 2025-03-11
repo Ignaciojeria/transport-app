@@ -17,7 +17,7 @@ func (c Headers) UpdateIfChanged(newHeaders Headers) Headers {
 	if newHeaders.Commerce != "" {
 		c.Consumer = newHeaders.Commerce
 	}
-	if newHeaders.Organization.OrganizationCountryID != 0 {
+	if newHeaders.Organization.ID != 0 {
 		c.Organization = newHeaders.Organization
 	}
 	return c

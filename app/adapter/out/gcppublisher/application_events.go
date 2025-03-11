@@ -29,14 +29,14 @@ func NewApplicationEvents(
 		outbox.Attributes["updatedAt"] = outbox.UpdatedAt
 		message := &pubsub.Message{
 			Attributes: map[string]string{
-				"referenceId":           outbox.Attributes["referenceID"],
-				"createdAt":             outbox.CreatedAt,
-				"updatedAt":             outbox.UpdatedAt,
-				"eventType":             outbox.Attributes["eventType"],
-				"entityType":            outbox.Attributes["entityType"],
-				"organizationCountryID": outbox.Attributes["organizationCountryID"],
-				"commerce":              outbox.Attributes["commerce"],
-				"consumer":              outbox.Attributes["consumer"],
+				"referenceId":  outbox.Attributes["referenceID"],
+				"createdAt":    outbox.CreatedAt,
+				"updatedAt":    outbox.UpdatedAt,
+				"eventType":    outbox.Attributes["eventType"],
+				"entityType":   outbox.Attributes["entityType"],
+				"organization": outbox.Attributes["organization"],
+				"commerce":     outbox.Attributes["commerce"],
+				"consumer":     outbox.Attributes["consumer"],
 			},
 			Data: outbox.Payload,
 		}

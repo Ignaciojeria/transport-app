@@ -24,8 +24,8 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		var order table.Order
 		err := conn.DB.WithContext(ctx).
 			Table("orders").
-			Where("reference_id = ? AND organization_country_id = ?",
-				o.ReferenceID, o.Organization.OrganizationCountryID).
+			Where("reference_id = ? AND organization_id = ?",
+				o.ReferenceID, o.Organization.ID).
 			First(&order).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Order{}, err
@@ -45,7 +45,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				return err
 			}
 			if err := tx.
-				Omit("OrganizationCountry").
+				Omit("Organization").
 				Omit("OrderHeaders").
 				Omit("OrderStatus").
 				Omit("OrderType").

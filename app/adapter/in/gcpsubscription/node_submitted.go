@@ -3,9 +3,7 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/usecase"
@@ -35,19 +33,7 @@ func newNodeSubmitted(
 			return http.StatusAccepted, err
 		}
 		node := input.Map()
-		organizationCountryIDStr, ok := m.Attributes["organizationCountryID"]
-		if !ok {
-			m.Ack()
-			return http.StatusAccepted, fmt.Errorf("organizationCountryID not found in attributes")
-		}
-
-		organizationCountryID, err := strconv.ParseInt(organizationCountryIDStr, 10, 64)
-		if err != nil {
-			m.Ack()
-			return http.StatusAccepted, fmt.Errorf("invalid organizationCountryID: %v", err)
-		}
-		node.Organization.OrganizationCountryID = organizationCountryID
-
+		node.Organization.SetKey(m.Attributes["organization"])
 		if err := upsert(ctx, node); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

@@ -12,42 +12,40 @@ import (
 	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
-	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
 	ioc.Registry(
 		createOrganization,
 		httpserver.New,
-		usecase.NewCreateOrganizationKey)
+		usecase.NewCreateOrganization)
 }
-func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizationKey) {
+func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganization) {
 	fuego.Post(s.Manager, "/organizations",
-		func(c fuego.ContextWithBody[request.CreateOrganizationKeyRequest]) (response.CreateOrganizationKeyResponse, error) {
+		func(c fuego.ContextWithBody[request.CreateOrganizationRequest]) (response.CreateOrganizationResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return response.CreateOrganizationKeyResponse{}, err
+				return response.CreateOrganizationResponse{}, err
 			}
 			org := domain.Organization{
-				Name:    requestBody.Email,
+				Name:    requestBody.Name,
 				Email:   requestBody.Email,
 				Country: countries.ByName(c.Header("country")),
 			}
 			org, err = createOrg(c.Context(), org)
 			if err != nil {
-				return response.CreateOrganizationKeyResponse{}, fuego.HTTPError{
+				return response.CreateOrganizationResponse{}, fuego.HTTPError{
 					Title:  "error creating organization",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
-			return response.CreateOrganizationKeyResponse{
-				OrganizationKey: org.Key,
+			return response.CreateOrganizationResponse{
+				OrganizationKey: org.GetOrgKey(),
 				Message:         "Organization created successfully",
 			}, nil
 		},
 		option.Summary("createOrganizationKey"),
-		option.Header("country", "api country", param.Required()),
 		option.Tags(tagOrganizations),
 	)
 }

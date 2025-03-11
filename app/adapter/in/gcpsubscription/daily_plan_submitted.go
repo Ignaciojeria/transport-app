@@ -3,9 +3,7 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/usecase"
@@ -34,21 +32,10 @@ func newPlanSubmitted(
 			return http.StatusAccepted, err
 		}
 
-		organizationCountryIDStr, ok := m.Attributes["organizationCountryID"]
-		if !ok {
-			m.Ack()
-			return http.StatusAccepted, fmt.Errorf("organizationCountryID not found in attributes")
-		}
-
-		organizationCountryID, err := strconv.ParseInt(organizationCountryIDStr, 10, 64)
-		if err != nil {
-			m.Ack()
-			return http.StatusAccepted, fmt.Errorf("invalid organizationCountryID: %v", err)
-		}
 		inputMapped := input.Map()
-		inputMapped.Organization.OrganizationCountryID = organizationCountryID
+		inputMapped.Organization.SetKey(m.Attributes["organization"])
 
-		_, err = upsertPlan(ctx, inputMapped)
+		_, err := upsertPlan(ctx, inputMapped)
 		if err != nil {
 			m.Ack()
 			return http.StatusOK, err

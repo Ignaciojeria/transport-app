@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
@@ -14,7 +13,6 @@ import (
 	"transport-app/app/shared/infrastructure/observability"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -42,8 +40,7 @@ func createOrder(
 				return response.UpsertOrderResponse{}, err
 			}
 			mappedTO := requestBody.Map()
-			mappedTO.Organization.Key = c.Header("organization-key")
-			mappedTO.Organization.Country = countries.ByName(c.Header("country"))
+			mappedTO.Organization.SetKey(c.Header("organization"))
 			mappedTO.Headers.Consumer = c.Header("consumer")
 			mappedTO.Headers.Commerce = c.Header("commerce")
 			if c.Header("consumer") == "" {
@@ -59,31 +56,19 @@ func createOrder(
 					Status: http.StatusBadRequest,
 				}
 			}
-			org, err := ensureOrg(spanCtx, mappedTO.Organization)
-			if err != nil {
-				return response.UpsertOrderResponse{}, fuego.HTTPError{
-					Title:  "error creating order",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
-			// Convierte el OrganizationCountryID a string
-			orgIDString := strconv.FormatInt(org.OrganizationCountryID, 10)
-
 			eventPayload, _ := json.Marshal(requestBody)
 			if err := saveOutboxTrx(spanCtx, domain.Outbox{
 				Attributes: map[string]string{
-					"entityType":            "order",
-					"eventType":             "orderSubmitted",
-					"country":               countries.ByName(c.Header("country")).Alpha2(),
-					"organizationCountryID": orgIDString,
-					"consumer":              c.Header("consumer"),
-					"commerce":              c.Header("commerce"),
-					"referenceID":           requestBody.ReferenceID,
+					"entityType":   "order",
+					"eventType":    "orderSubmitted",
+					"country":      mappedTO.Organization.Country.Alpha2(),
+					"organization": mappedTO.Organization.GetOrgKey(),
+					"consumer":     c.Header("consumer"),
+					"commerce":     c.Header("commerce"),
+					"referenceID":  requestBody.ReferenceID,
 				},
-				Payload:      eventPayload,
-				Status:       "pending",
-				Organization: org,
+				Payload: eventPayload,
+				Status:  "pending",
 			}); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",
@@ -94,13 +79,13 @@ func createOrder(
 			obs.Logger.InfoContext(spanCtx,
 				"ORDER_SUBMISSION_SUCCEEDED",
 				slog.Any("payload", requestBody))
+
 			return response.UpsertOrderResponse{
 				Message: "Order submitted successfully",
 				Status:  "pending",
 			}, err
 		}, option.Summary("createOrder"),
-		option.Header("organization-key", "api organization key", param.Required()),
-		option.Header("country", "api country", param.Required()),
+		option.Header("organization", "api organization key", param.Required()),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
 		option.Tags(tagOrders),

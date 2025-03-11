@@ -6,24 +6,23 @@ import (
 	"transport-app/app/domain"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/google/uuid"
 	"github.com/joomcode/errorx"
 )
 
-type CreateOrganizationKey func(ctx context.Context, org domain.Organization) (domain.Organization, error)
+type CreateOrganization func(ctx context.Context, org domain.Organization) (domain.Organization, error)
 
 func init() {
 	ioc.Registry(
-		NewCreateOrganizationKey,
+		NewCreateOrganization,
 		tidbrepository.NewSaveOrganization,
 		tidbrepository.NewFindOrganizationByEmail,
 	)
 }
 
-func NewCreateOrganizationKey(
+func NewCreateOrganization(
 	saveOrg tidbrepository.SaveOrganization,
 	findOrganizationByEmail tidbrepository.FindOrganizationByEmail,
-) CreateOrganizationKey {
+) CreateOrganization {
 	return func(ctx context.Context, org domain.Organization) (domain.Organization, error) {
 		// Buscar si la organización ya existe
 		_, err := findOrganizationByEmail(ctx, org.Email)
@@ -36,7 +35,6 @@ func NewCreateOrganizationKey(
 		if !errorx.IsOfType(err, tidbrepository.ErrOrganizationNotFound) {
 			return domain.Organization{}, err
 		}
-		org.Key = uuid.NewString() + "-" + uuid.NewString()
 		// Crear la organización si no existe
 		return saveOrg(ctx, org)
 	}

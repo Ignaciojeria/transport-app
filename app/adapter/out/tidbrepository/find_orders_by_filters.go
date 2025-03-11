@@ -30,7 +30,6 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
             o.id as order_id,
             o.reference_id,
             o.sequence_number as order_sequence_number,
-            org_country.country as organization_country,
             headers.commerce as commerce_name,
             headers.consumer as consumer_name,
             os.status as order_status,
@@ -105,9 +104,7 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
         LEFT JOIN order_headers headers ON o.order_headers_id = headers.id
         LEFT JOIN order_statuses os ON o.order_status_id = os.id
         LEFT JOIN order_types ot ON o.order_type_id = ot.id
-        LEFT JOIN organization_countries org_country ON o.organization_country_id = org_country.id
-        LEFT JOIN organizations org ON org_country.organization_id = org.id
-        LEFT JOIN api_keys ak ON org.id = ak.organization_id
+        LEFT JOIN organizations org ON o.organization_id = org.id  -- Se mantiene el filtro por Organization ID
         LEFT JOIN contacts oc ON o.origin_contact_id = oc.id
         LEFT JOIN address_infos oa ON o.origin_address_info_id = oa.id
         LEFT JOIN node_infos on_info ON o.origin_node_info_id = on_info.id
@@ -120,12 +117,10 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
         LEFT JOIN order_packages op ON o.id = op.order_id
         LEFT JOIN packages p ON op.package_id = p.id
         WHERE 
-            ak.key = ? 
-            AND org_country.country = ?`
+            o.organization_id = ?`
 
 		params := []interface{}{
-			osf.Organization.Key,              // Filtro por API key
-			osf.Organization.Country.Alpha2(), // Filtro por país
+			osf.Organization.ID,
 		}
 
 		// Condición dinámica para LPNs

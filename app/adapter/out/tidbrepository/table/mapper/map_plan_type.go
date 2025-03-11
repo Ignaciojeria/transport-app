@@ -7,8 +7,8 @@ import (
 
 func MapPlanType(pt domain.PlanType) table.PlanType {
 	return table.PlanType{
-		ID:                    pt.ID,
-		Name:                  pt.Value,
-		OrganizationCountryID: pt.OrganizationCountryID,
+		ID:             pt.ID,
+		Name:           pt.Value,
+		OrganizationID: pt.Organization.ID,
 	}
 }

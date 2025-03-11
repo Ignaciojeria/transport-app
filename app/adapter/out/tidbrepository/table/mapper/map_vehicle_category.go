@@ -7,9 +7,9 @@ import (
 
 func MapVehicleCategory(domain domain.VehicleCategory) table.VehicleCategory {
 	return table.VehicleCategory{
-		ID:                    domain.ID,
-		OrganizationCountryID: domain.Organization.OrganizationCountryID,
-		Type:                  domain.Type,
-		MaxPackagesQuantity:   domain.MaxPackagesQuantity,
+		ID:                  domain.ID,
+		OrganizationID:      domain.Organization.ID,
+		Type:                domain.Type,
+		MaxPackagesQuantity: domain.MaxPackagesQuantity,
 	}
 }

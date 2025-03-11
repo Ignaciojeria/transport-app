@@ -25,7 +25,7 @@ func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
 	}
 
 	// Actualizar Organization si tiene valores nuevos
-	if newOperator.Organization.OrganizationCountryID != 0 {
+	if newOperator.Organization.ID != 0 {
 		o.Organization = newOperator.Organization
 	}
 

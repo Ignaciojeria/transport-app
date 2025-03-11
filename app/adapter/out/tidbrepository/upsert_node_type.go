@@ -22,9 +22,9 @@ func NewUpsertNodeType(conn tidb.TIDBConnection) UpsertNodeType {
 		var nodeType table.NodeType
 		err := conn.DB.WithContext(ctx).
 			Table("node_types").
-			Where("name = ? AND organization_country_id = ?",
+			Where("name = ? AND organization_id = ?",
 				nt.Value,
-				nt.Organization.OrganizationCountryID).
+				nt.Organization.ID).
 			First(&nodeType).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.NodeType{}, err
