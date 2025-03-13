@@ -8,6 +8,7 @@ import (
 type SearchOrdersResponse struct {
 	ReferenceID             string `json:"referenceID"`
 	DeliveryInstructions    string `json:"deliveryInstructions"`
+	SequenceNumber          int    `json:"sequenceNumber"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
 		TimeRange struct {
@@ -159,6 +160,11 @@ type SearchOrdersResponse struct {
 
 // Map convierte un SearchOrdersResponse a un objeto domain.Order
 func (res SearchOrdersResponse) Map() domain.Order {
+	var sequenceNumber *int
+	if res.SequenceNumber != 0 {
+		sequenceValue := res.SequenceNumber
+		sequenceNumber = &sequenceValue
+	}
 	order := domain.Order{
 		ReferenceID:          domain.ReferenceID(res.ReferenceID),
 		DeliveryInstructions: res.DeliveryInstructions,
@@ -168,7 +174,7 @@ func (res SearchOrdersResponse) Map() domain.Order {
 			Commerce: res.BusinessIdentifiers.Commerce,
 			Consumer: res.BusinessIdentifiers.Consumer,
 		},
-
+		SequenceNumber: sequenceNumber,
 		// Mapear utilizando los mappers genéricos existentes
 		Items:                   mapper.MapItemsToDomain(res.Items),
 		OrderType:               mapper.MapOrderTypeToDomain(res.OrderType),
