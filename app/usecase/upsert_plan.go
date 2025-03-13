@@ -18,7 +18,6 @@ func init() {
 		tidbrepository.NewUpsertPlanningStatus,
 		tidbrepository.NewUpsertOperator,
 		tidbrepository.NewUpsertPlan,
-		tidbrepository.NewLoadOrganizationCountry,
 		optimization.NewOptimize,
 		NewCreateOrder)
 }
@@ -28,16 +27,10 @@ func NewUpsertPlan(
 	upsertPlanningStatus tidbrepository.UpsertPlanningStatus,
 	upsertOperator tidbrepository.UpsertOperator,
 	upsertPlan tidbrepository.UpsertPlan,
-	loadOrganizationCountry tidbrepository.LoadOrganizationCountry,
 	optimize optimization.Optimize,
 	upsertOrder CreateOrder,
 ) UpsertPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
-		org, err := loadOrganizationCountry(ctx, plan.Organization)
-		if err != nil {
-			return domain.Plan{}, err
-		}
-		plan.Organization = org
 		plan.PlanType.Organization = plan.Organization
 		planType, err := upsertPlanType(ctx, plan.PlanType)
 
