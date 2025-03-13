@@ -30,20 +30,12 @@ func NewSearchPlan(search tidbrepository.FindOrdersByFilters) SearchPlan {
 			return domain.Plan{}, fmt.Errorf("no orders found")
 		}
 
-		// Obtener el PlanReferenceID de la primera orden
-		planReferenceID := orders[0].Plan.ReferenceID
-
 		// Agrupar órdenes por ruta
 		routesMap := make(map[string]domain.Route)
 		unassignedOrders := []domain.Order{}
 
 		for _, order := range orders {
-			if order.Plan.ReferenceID != planReferenceID {
-				return domain.Plan{}, fmt.Errorf("inconsistent PlanReferenceID in orders")
-			}
-
-			routeKey := fmt.Sprintf("%s-%s", order.Origin.ReferenceID, order.Destination.ReferenceID)
-
+			routeKey := order.Plan.Routes[0].ReferenceID
 			if route, exists := routesMap[routeKey]; exists {
 				route.Orders = append(route.Orders, order)
 				routesMap[routeKey] = route
@@ -65,7 +57,7 @@ func NewSearchPlan(search tidbrepository.FindOrdersByFilters) SearchPlan {
 
 		// Crear el plan
 		plan := domain.Plan{
-			ReferenceID:      planReferenceID,
+			ReferenceID:      osf.PlanReferenceID,
 			PlannedDate:      time.Now(),
 			UnassignedOrders: unassignedOrders,
 			Routes:           routes,

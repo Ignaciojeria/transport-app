@@ -2,6 +2,7 @@ package fuegoapi
 
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
 
@@ -19,7 +20,7 @@ func init() {
 }
 func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOrders) {
 	fuego.Post(s.Manager, "/orders/unique-references-search",
-		func(c fuego.ContextWithBody[request.SearchOrdersByUniqueReferencesRequest]) ([]request.SearchOrdersResponse, error) {
+		func(c fuego.ContextWithBody[request.SearchOrdersByUniqueReferencesRequest]) ([]response.SearchOrdersResponse, error) {
 			req, err := c.Body()
 			if err != nil {
 				return nil, err
@@ -32,7 +33,7 @@ func searchOrdersByUniqueReferences(s httpserver.Server, search usecase.SearchOr
 			if err != nil {
 				return nil, err
 			}
-			return request.MapSearchOrdersResponse(orders), nil
+			return response.MapOrdersToSearchOrdersResponse(orders), nil
 		},
 		option.Summary("searchOrdersByUniqueReferences"),
 		option.Header("organization", "api organization key", param.Required()),

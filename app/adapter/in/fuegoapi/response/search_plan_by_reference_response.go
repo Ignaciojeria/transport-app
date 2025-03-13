@@ -1,4 +1,4 @@
-package request
+package response
 
 import (
 	"transport-app/app/domain"
@@ -33,7 +33,7 @@ type SearchPlanByReferenceResponse struct {
 }
 
 func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceResponse {
-	response := SearchPlanByReferenceResponse{
+	result := SearchPlanByReferenceResponse{
 		ReferenceID: string(p.ReferenceID),
 		PlannedDate: p.PlannedDate.Format("2006-01-02"),
 		StartLocation: struct {
@@ -46,7 +46,7 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 			Longitude:       p.Origin.AddressInfo.Location[0],
 		},
 	}
-	response.UnassignedOrders = MapSearchOrdersResponse(p.UnassignedOrders)
+	result.UnassignedOrders = MapOrdersToSearchOrdersResponse(p.UnassignedOrders)
 	// Mapear rutas
 	for _, route := range p.Routes {
 		mappedRoute := struct {
@@ -110,7 +110,7 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 					Sequence:  seq,
 					Latitude:  firstOrder.Destination.AddressInfo.CorrectedLocation[1],
 					Longitude: firstOrder.Destination.AddressInfo.CorrectedLocation[0],
-					Orders:    MapSearchOrdersResponse(ordersInSequence),
+					Orders:    MapOrdersToSearchOrdersResponse(ordersInSequence),
 				}
 
 				mappedRoute.Visits = append(mappedRoute.Visits, visit)
@@ -130,14 +130,13 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				Sequence:  -1, // Indica que no tienen secuencia asignada
 				Latitude:  firstOrder.Destination.AddressInfo.CorrectedLocation[1],
 				Longitude: firstOrder.Destination.AddressInfo.CorrectedLocation[0],
-				Orders:    MapSearchOrdersResponse(unorderedOrders),
+				Orders:    MapOrdersToSearchOrdersResponse(unorderedOrders),
 			}
 
 			mappedRoute.Visits = append(mappedRoute.Visits, visit)
 		}
-
-		response.Routes = append(response.Routes, mappedRoute)
+		result.Routes = append(result.Routes, mappedRoute)
 	}
 
-	return response
+	return result
 }

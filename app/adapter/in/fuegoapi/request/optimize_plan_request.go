@@ -2,6 +2,7 @@ package request
 
 import (
 	"time"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/domain"
 
 	"github.com/paulmach/orb"
@@ -19,7 +20,7 @@ type OptimizePlanRequest struct {
 		Start string `json:"start"`
 		End   string `json:"end"`
 	} `json:"workingHours"`
-	UnassignedOrders []SearchOrdersResponse `json:"unassignedOrders"`
+	UnassignedOrders []response.SearchOrdersResponse `json:"unassignedOrders"`
 	Routes           []struct {
 		ReferenceID string `json:"referenceID"`
 		EndLocation struct {
@@ -58,6 +59,7 @@ func (r OptimizePlanRequest) Map() domain.Plan {
 	}
 
 	var unassignedOrders []domain.Order
+
 	for _, unassignedOrder := range r.UnassignedOrders {
 		unassignedOrders = append(unassignedOrders, unassignedOrder.Map())
 	}

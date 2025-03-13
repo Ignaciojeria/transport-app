@@ -33,8 +33,10 @@ func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 			return orderHeaders.Map(), nil
 		}
 		orderHeadersTbl := mapper.MapOrderHeaders(h)
-		if err := conn.Save(&orderHeadersTbl).Error; err != nil {
-			return domain.Headers{}, err
+		if orderHeaders.ID == 0 {
+			if err := conn.Save(&orderHeadersTbl).Error; err != nil {
+				return domain.Headers{}, err
+			}
 		}
 		return orderHeadersTbl.Map(), nil
 	}

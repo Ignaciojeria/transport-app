@@ -1,12 +1,13 @@
-package request
+package response
 
 import (
 	"transport-app/app/adapter/in/fuegoapi/mapper"
 	"transport-app/app/domain"
 )
 
-type UpsertOrderRequest struct {
-	ReferenceID             string `json:"referenceID" validate:"required"`
+type SearchOrdersResponse struct {
+	ReferenceID             string `json:"referenceID"`
+	DeliveryInstructions    string `json:"deliveryInstructions"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
 		TimeRange struct {
@@ -145,28 +146,83 @@ type UpsertOrderRequest struct {
 		Type  string `json:"type"`
 		Value string `json:"value"`
 	} `json:"transportRequirements"`
+	BusinessIdentifiers struct {
+		Commerce string `json:"commerce"`
+		Consumer string `json:"consumer"`
+	} `json:"businessIdentifiers"`
+	OrderStatus struct {
+		ID        int64
+		Status    string `json:"status"`
+		CreatedAt string `json:"createdAt"`
+	} `json:"orderStatus"`
 }
 
-// Map convierte el request a un objeto de dominio Order
-func (req UpsertOrderRequest) Map() domain.Order {
+// Map convierte un SearchOrdersResponse a un objeto domain.Order
+func (res SearchOrdersResponse) Map() domain.Order {
 	order := domain.Order{
-		ReferenceID:             domain.ReferenceID(req.ReferenceID),
-		OrderType:               mapper.MapOrderTypeToDomain(req.OrderType),
-		References:              mapper.MapReferencesToDomain(req.References),
-		Origin:                  mapper.MapNodeInfoToDomain(req.Origin.NodeInfo, req.Origin.AddressInfo),
-		Destination:             mapper.MapNodeInfoToDomain(req.Destination.NodeInfo, req.Destination.AddressInfo),
-		Items:                   mapper.MapItemsToDomain(req.Items),
-		Packages:                mapper.MapPackagesToDomain(req.Packages),
-		CollectAvailabilityDate: mapper.MapCollectAvailabilityDateToDomain(req.CollectAvailabilityDate),
-		PromisedDate:            mapper.MapPromisedDateToDomain(req.PromisedDate),
-		DeliveryInstructions:    req.Destination.DeliveryInstructions,
-		TransportRequirements:   mapper.MapReferencesToDomain(req.TransportRequirements),
+		ReferenceID:          domain.ReferenceID(res.ReferenceID),
+		DeliveryInstructions: res.DeliveryInstructions,
+
+		// Mapear headers desde BusinessIdentifiers
+		Headers: domain.Headers{
+			Commerce: res.BusinessIdentifiers.Commerce,
+			Consumer: res.BusinessIdentifiers.Consumer,
+		},
+
+		// Mapear utilizando los mappers genéricos existentes
+		Items:                   mapper.MapItemsToDomain(res.Items),
+		OrderType:               mapper.MapOrderTypeToDomain(res.OrderType),
+		References:              mapper.MapReferencesToDomain(res.References),
+		TransportRequirements:   mapper.MapReferencesToDomain(res.TransportRequirements),
+		Packages:                mapper.MapPackagesToDomain(res.Packages),
+		Origin:                  mapper.MapNodeInfoToDomain(res.Origin.NodeInfo, res.Origin.AddressInfo),
+		Destination:             mapper.MapNodeInfoToDomain(res.Destination.NodeInfo, res.Destination.AddressInfo),
+		CollectAvailabilityDate: mapper.MapCollectAvailabilityDateToDomain(res.CollectAvailabilityDate),
+		PromisedDate:            mapper.MapPromisedDateToDomain(res.PromisedDate),
+		OrderStatus:             mapper.MapOrderStatusToDomain(res.OrderStatus),
 	}
-	if order.Commerce == "" {
-		order.Commerce = "empty"
-	}
-	if order.Consumer == "" {
-		order.Consumer = "empty"
-	}
+
 	return order
+}
+
+// MapOrdersToSearchOrdersResponse convierte un slice de domain.Order a un slice de SearchOrdersResponse
+func MapOrdersToSearchOrdersResponse(orders []domain.Order) []SearchOrdersResponse {
+	var responses []SearchOrdersResponse
+	for _, order := range orders {
+		response := SearchOrdersResponse{}
+		response.ReferenceID = string(order.ReferenceID)
+		response.OrderStatus = mapper.MapOrderStatusFromDomain(order.OrderStatus)
+		response.DeliveryInstructions = order.DeliveryInstructions
+
+		// Identificadores de negocio
+		response.BusinessIdentifiers.Commerce = order.Headers.Commerce
+		response.BusinessIdentifiers.Consumer = order.Headers.Consumer
+
+		// OrderType
+		response.OrderType = mapper.MapOrderTypeFromDomain(order.OrderType)
+
+		// Origin y Destination
+		originNodeInfo, originAddressInfo := mapper.MapNodeInfoToResponseNodeInfo(order.Origin)
+		response.Origin.NodeInfo = originNodeInfo
+		response.Origin.AddressInfo = originAddressInfo
+
+		destNodeInfo, destAddressInfo := mapper.MapNodeInfoToResponseNodeInfo(order.Destination)
+		response.Destination.NodeInfo = destNodeInfo
+		response.Destination.AddressInfo = destAddressInfo
+		response.Destination.DeliveryInstructions = order.DeliveryInstructions
+
+		// Items, Packages
+		response.Items = mapper.MapItemsFromDomain(order.Items)
+		response.Packages = mapper.MapPackagesFromDomain(order.Packages)
+
+		// References, Requirements
+		response.References = mapper.MapReferencesFromDomain(order.References)
+		response.TransportRequirements = mapper.MapReferencesFromDomain(order.TransportRequirements)
+
+		// Fechas
+		response.CollectAvailabilityDate = mapper.MapCollectAvailabilityDateFromDomain(order.CollectAvailabilityDate)
+		response.PromisedDate = mapper.MapPromisedDateFromDomain(order.PromisedDate)
+		responses = append(responses, response)
+	}
+	return responses
 }

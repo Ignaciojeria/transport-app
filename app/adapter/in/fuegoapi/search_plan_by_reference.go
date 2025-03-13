@@ -1,7 +1,7 @@
 package fuegoapi
 
 import (
-	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/usecase"
@@ -19,7 +19,7 @@ func searchPlanByReference(
 	s httpserver.Server,
 	searchPlan usecase.SearchPlan) {
 	fuego.Get(s.Manager, "/plans/{referenceID}",
-		func(c fuego.ContextNoBody) (request.SearchPlanByReferenceResponse, error) {
+		func(c fuego.ContextNoBody) (response.SearchPlanByReferenceResponse, error) {
 			searchFilters := domain.OrderSearchFilters{}
 			//searchFilters.Organization.Key = c.Header("organization-key")
 			//searchFilters.Organization.Country = countries.ByName(c.Header("country"))
@@ -27,9 +27,9 @@ func searchPlanByReference(
 			searchFilters.PlanReferenceID = c.PathParam("referenceID")
 			plan, err := searchPlan(c.Context(), searchFilters)
 			if err != nil {
-				return request.SearchPlanByReferenceResponse{}, nil
+				return response.SearchPlanByReferenceResponse{}, nil
 			}
-			return request.MapSearchPlanByReferenceResponse(plan), nil
+			return response.MapSearchPlanByReferenceResponse(plan), nil
 		},
 		option.Summary("searchPlanByReference"),
 		option.Header("organization", "api organization key", param.Required()),

@@ -2,6 +2,7 @@ package request
 
 import (
 	"time"
+	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/domain"
 
 	"github.com/paulmach/orb"
@@ -19,7 +20,7 @@ type UpsertPlanRequest struct {
 		Start string `json:"start"`
 		End   string `json:"end"`
 	} `json:"workingHours"`
-	UnassignedOrders []SearchOrdersResponse `json:"unassignedOrders"`
+	UnassignedOrders []response.SearchOrdersResponse `json:"unassignedOrders"`
 	Routes           []struct {
 		ReferenceID string `json:"referenceID"`
 		EndLocation struct {
@@ -39,10 +40,10 @@ type UpsertPlanRequest struct {
 			Email       string `json:"email"`
 		} `json:"driver,omitempty"`
 		Visits []struct {
-			Sequence  int                    `json:"sequence"`
-			Latitude  float64                `json:"latitude"`
-			Longitude float64                `json:"longitude"`
-			Orders    []SearchOrdersResponse `json:"orders"`
+			Sequence  int                             `json:"sequence"`
+			Latitude  float64                         `json:"latitude"`
+			Longitude float64                         `json:"longitude"`
+			Orders    []response.SearchOrdersResponse `json:"orders"`
 		} `json:"visits"`
 	} `json:"routes"`
 }
@@ -66,6 +67,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 
 	// Mapear órdenes no asignadas
 	var unassignedOrders []domain.Order
+
 	for _, unassignedOrder := range r.UnassignedOrders {
 		order := unassignedOrder.Map()
 		unassignedOrders = append(unassignedOrders, order)
