@@ -7,7 +7,7 @@ import (
 )
 
 func MapNodeInfoToDomain(nodeInfo struct {
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 	Name        string `json:"name"`
 }, addressInfo struct {
 	ProviderAddress string `json:"providerAddress"`
@@ -62,7 +62,7 @@ func MapNodeInfoToDomain(nodeInfo struct {
 }
 
 func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 	Name        string `json:"name"`
 }, struct {
 	ProviderAddress string `json:"providerAddress"`
@@ -89,7 +89,7 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	ZipCode   string  `json:"zipCode"`
 }) {
 	responseNodeInfo := struct {
-		ReferenceID string `json:"referenceId"`
+		ReferenceID string `json:"referenceID"`
 		Name        string `json:"name"`
 	}{
 		ReferenceID: string(nodeInfo.ReferenceID),

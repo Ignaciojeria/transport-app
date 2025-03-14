@@ -29,7 +29,7 @@ func NewApplicationEvents(
 		outbox.Attributes["updatedAt"] = outbox.UpdatedAt
 		message := &pubsub.Message{
 			Attributes: map[string]string{
-				"referenceId":  outbox.Attributes["referenceID"],
+				"referenceID":  outbox.Attributes["referenceID"],
 				"createdAt":    outbox.CreatedAt,
 				"updatedAt":    outbox.UpdatedAt,
 				"eventType":    outbox.Attributes["eventType"],

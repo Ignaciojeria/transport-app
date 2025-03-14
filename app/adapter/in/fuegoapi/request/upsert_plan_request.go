@@ -40,7 +40,7 @@ type UpsertPlanRequest struct {
 			Email       string `json:"email"`
 		} `json:"driver,omitempty"`
 		Visits []struct {
-			Sequence  int                      `json:"sequence"`
+			Sequence  *int                     `json:"sequence"`
 			Latitude  float64                  `json:"latitude"`
 			Longitude float64                  `json:"longitude"`
 			Orders    []UpsertPlanOrderRequest `json:"orders"`
@@ -51,7 +51,6 @@ type UpsertPlanRequest struct {
 type UpsertPlanOrderRequest struct {
 	ReferenceID             string `json:"referenceID"`
 	DeliveryInstructions    string `json:"deliveryInstructions"`
-	SequenceNumber          int    `json:"sequenceNumber"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
 		TimeRange struct {
@@ -86,7 +85,7 @@ type UpsertPlanOrderRequest struct {
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
@@ -107,7 +106,7 @@ type UpsertPlanOrderRequest struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceId"`
+		ReferenceID string `json:"referenceID"`
 		Weight      struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
@@ -143,7 +142,7 @@ type UpsertPlanOrderRequest struct {
 			ZipCode   string  `json:"zipCode"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
@@ -163,7 +162,7 @@ type UpsertPlanOrderRequest struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 		} `json:"itemReferences"`
 		Lpn    string `json:"lpn"`
 		Weight struct {
@@ -203,11 +202,7 @@ type UpsertPlanOrderRequest struct {
 
 // Map convierte un SearchOrdersResponse a un objeto domain.Order
 func (res UpsertPlanOrderRequest) Map() domain.Order {
-	var sequenceNumber *int
-	if res.SequenceNumber != 0 {
-		sequenceValue := res.SequenceNumber
-		sequenceNumber = &sequenceValue
-	}
+
 	order := domain.Order{
 		ReferenceID:          domain.ReferenceID(res.ReferenceID),
 		DeliveryInstructions: res.DeliveryInstructions,
@@ -217,7 +212,6 @@ func (res UpsertPlanOrderRequest) Map() domain.Order {
 			Commerce: res.BusinessIdentifiers.Commerce,
 			Consumer: res.BusinessIdentifiers.Consumer,
 		},
-		SequenceNumber: sequenceNumber,
 		// Mapear utilizando los mappers genéricos existentes
 		Items:                   mapper.MapItemsToDomain(res.Items),
 		OrderType:               mapper.MapOrderTypeToDomain(res.OrderType),
@@ -311,6 +305,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 			// Mapear las órdenes de la visita
 			for _, orderData := range visitData.Orders {
 				order := orderData.Map()
+				order.SequenceNumber = visitData.Sequence
 				orders = append(orders, order)
 			}
 		}

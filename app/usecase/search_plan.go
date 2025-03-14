@@ -57,6 +57,7 @@ func NewSearchPlan(search tidbrepository.FindOrdersByFilters) SearchPlan {
 
 		// Crear el plan
 		plan := domain.Plan{
+			Origin:           orders[0].Plan.Origin,
 			ReferenceID:      osf.PlanReferenceID,
 			PlannedDate:      time.Now(),
 			UnassignedOrders: unassignedOrders,

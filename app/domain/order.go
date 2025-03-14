@@ -222,7 +222,7 @@ type Reference struct {
 
 type NodeInfo struct {
 	ID           int64
-	ReferenceID  ReferenceID  `json:"referenceId"`
+	ReferenceID  ReferenceID  `json:"referenceID"`
 	Organization Organization `json:"organization"`
 	Name         string       `json:"name"`
 	NodeType     NodeType     `json:"type"`
@@ -462,7 +462,7 @@ type Weight struct {
 }
 
 type Item struct {
-	ReferenceID       ReferenceID `json:"referenceId"`
+	ReferenceID       ReferenceID `json:"referenceID"`
 	LogisticCondition string      `json:"logisticCondition"`
 	Quantity          Quantity    `json:"quantity"`
 	Insurance         Insurance   `json:"insurance"`
@@ -472,7 +472,7 @@ type Item struct {
 }
 
 type ItemReference struct {
-	ReferenceID ReferenceID `json:"referenceId"`
+	ReferenceID ReferenceID `json:"referenceID"`
 	Quantity    Quantity    `json:"quantity"`
 }
 

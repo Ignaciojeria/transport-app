@@ -43,7 +43,7 @@ type SearchOrdersResponse struct {
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
@@ -64,7 +64,7 @@ type SearchOrdersResponse struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceId"`
+		ReferenceID string `json:"referenceID"`
 		Weight      struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
@@ -100,7 +100,7 @@ type SearchOrdersResponse struct {
 			ZipCode   string  `json:"zipCode"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
@@ -120,7 +120,7 @@ type SearchOrdersResponse struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 		} `json:"itemReferences"`
 		Lpn    string `json:"lpn"`
 		Weight struct {

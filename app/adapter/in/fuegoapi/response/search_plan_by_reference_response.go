@@ -36,7 +36,6 @@ type SearchPlanByReferenceResponse struct {
 type SearchPlanByReferenceOrdersResponse struct {
 	ReferenceID             string `json:"referenceID"`
 	DeliveryInstructions    string `json:"deliveryInstructions"`
-	SequenceNumber          int    `json:"sequenceNumber"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
 		TimeRange struct {
@@ -71,7 +70,7 @@ type SearchPlanByReferenceOrdersResponse struct {
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
@@ -92,7 +91,7 @@ type SearchPlanByReferenceOrdersResponse struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceId"`
+		ReferenceID string `json:"referenceID"`
 		Weight      struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
@@ -128,7 +127,7 @@ type SearchPlanByReferenceOrdersResponse struct {
 			ZipCode   string  `json:"zipCode"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
@@ -148,7 +147,7 @@ type SearchPlanByReferenceOrdersResponse struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 		} `json:"itemReferences"`
 		Lpn    string `json:"lpn"`
 		Weight struct {
@@ -304,8 +303,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 					Orders    []SearchPlanByReferenceOrdersResponse `json:"orders"`
 				}{
 					Sequence:  seq,
-					Latitude:  firstOrder.Destination.AddressInfo.CorrectedLocation[1],
-					Longitude: firstOrder.Destination.AddressInfo.CorrectedLocation[0],
+					Latitude:  firstOrder.Destination.AddressInfo.Location[1],
+					Longitude: firstOrder.Destination.AddressInfo.Location[0],
 					Orders:    MapSearchPlanByReferenceOrdersResponse(ordersInSequence),
 				}
 
@@ -324,8 +323,8 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				Orders    []SearchPlanByReferenceOrdersResponse `json:"orders"`
 			}{
 				Sequence:  -1, // Indica que no tienen secuencia asignada
-				Latitude:  firstOrder.Destination.AddressInfo.CorrectedLocation[1],
-				Longitude: firstOrder.Destination.AddressInfo.CorrectedLocation[0],
+				Latitude:  firstOrder.Destination.AddressInfo.Location[1],
+				Longitude: firstOrder.Destination.AddressInfo.Location[0],
 				Orders:    MapSearchPlanByReferenceOrdersResponse(unorderedOrders),
 			}
 

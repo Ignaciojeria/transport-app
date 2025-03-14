@@ -19,7 +19,7 @@ func MapItemsToDomain(items []struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 	Weight      struct {
 		Unit  string  `json:"unit"`
 		Value float64 `json:"value"`
@@ -71,7 +71,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 	Weight      struct {
 		Unit  string  `json:"unit"`
 		Value float64 `json:"value"`
@@ -94,7 +94,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceId"`
+		ReferenceID string `json:"referenceID"`
 		Weight      struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
@@ -119,7 +119,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 			Weight      struct {
 				Unit  string  `json:"unit"`
 				Value float64 `json:"value"`

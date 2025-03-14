@@ -7,7 +7,7 @@ func MapItemReferencesToDomain(itemRefs []struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 }) []domain.ItemReference {
 	mapped := make([]domain.ItemReference, len(itemRefs))
 	for i, ref := range itemRefs {
@@ -27,14 +27,14 @@ func MapItemReferencesFromDomain(itemRefs []domain.ItemReference) []struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
-	ReferenceID string `json:"referenceId"`
+	ReferenceID string `json:"referenceID"`
 } {
 	mapped := make([]struct {
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceId"`
+		ReferenceID string `json:"referenceID"`
 	}, len(itemRefs))
 
 	for i, ref := range itemRefs {
@@ -43,7 +43,7 @@ func MapItemReferencesFromDomain(itemRefs []domain.ItemReference) []struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceId"`
+			ReferenceID string `json:"referenceID"`
 		}{
 			Quantity: struct {
 				QuantityNumber int    `json:"quantityNumber"`
