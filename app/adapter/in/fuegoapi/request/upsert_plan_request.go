@@ -28,6 +28,9 @@ type UpsertPlanRequest struct {
 			Latitude        float64 `json:"latitude"`
 			Longitude       float64 `json:"longitude"`
 		} `json:"endLocation"`
+		Container struct {
+			Lpn string `json:"lpn"`
+		} `json:"container"`
 		Operator struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"operator"`

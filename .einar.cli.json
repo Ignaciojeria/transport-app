@@ -310,6 +310,38 @@
         {
             "kind": "usecase",
             "name": "login"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "plan-audit-log"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "checkout-audit-log"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "order-delivery-log"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "order-planned-log"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "order-in-route-log"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "order-out-for-delivery-log"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "order-delivery-confirmation-log"
+        },
+        {
+            "kind": "post-controller",
+            "name": "out-for-delivery"
         }
     ]
 }

@@ -5,7 +5,7 @@ import (
 	"transport-app/app/domain"
 )
 
-type CheckoutRequest struct {
+type ConfirmDeliveriesRequest struct {
 	Plan struct {
 		Routes []struct {
 			ReferenceID string `json:"referenceID"`
@@ -50,7 +50,7 @@ type CheckoutRequest struct {
 	} `json:"plan"`
 }
 
-func MapCheckout(request CheckoutRequest) []domain.Checkout {
+func MapCheckout(request ConfirmDeliveriesRequest) []domain.Checkout {
 	var checkouts []domain.Checkout
 
 	for _, route := range request.Plan.Routes {

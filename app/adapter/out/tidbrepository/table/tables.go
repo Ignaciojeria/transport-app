@@ -702,30 +702,32 @@ type Account struct {
 	OriginNodeInfoID *int64   `gorm:"default:null"`
 	OriginNodeInfo   NodeInfo `gorm:"foreignKey:OriginNodeInfoID"`
 
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_organization_contact;uniqueIndex:idx_account_ref_org"`
+	OrganizationID *int64       `gorm:"not null;uniqueIndex:idx_organization_contact;uniqueIndex:idx_account_ref_org"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 }
 
 type AccountOrganization struct {
-	AccountID      int64  `gorm:"primaryKey"`
-	OrganizationID int64  `gorm:"primaryKey"`
-	Role           string `gorm:"type:varchar(50);default:null"` // Opcional: para definir el rol de la cuenta en la organización
-
-	Account      Account      `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
-	Organization Organization `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE"`
-
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	AccountID      int64        `gorm:"primaryKey"`
+	OrganizationID int64        `gorm:"primaryKey"`
+	Role           string       `gorm:"type:varchar(50);default:null"` // Opcional: para definir el rol de la cuenta en la organización
+	Account        Account      `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 func (a Account) MapOperator() domain.Operator {
 	// Inicializamos un Operator base
+	var orgId int64
+	if a.OrganizationID != nil {
+		orgId = *a.OrganizationID
+	}
 	operator := domain.Operator{
 		ID:          a.ID,
 		ReferenceID: a.ReferenceID, // Usando el Type como ReferenceID
 		Type:        a.Type,
 		Organization: domain.Organization{
-			ID: a.OrganizationID,
+			ID: orgId,
 		},
 	}
 

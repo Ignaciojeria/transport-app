@@ -1,5 +1,5 @@
 package response
 
-type CheckoutResponse struct {
+type ConfirmDeliveriesResponse struct {
 	Message string `json:"message" example:"Orders checkout submitted."`
 }

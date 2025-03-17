@@ -15,12 +15,16 @@ func MapAccountTable(e domain.Account) table.Account {
 	if e.Origin.ID != 0 {
 		originNodeInfoIDPtr = &e.Origin.ID
 	}
+	var orgIDPtr *int64
+	if e.Organization.ID != 0 {
+		orgIDPtr = &e.Organization.ID
+	}
 	return table.Account{
 		ID:               e.ID,
 		ContactID:        contactIDPtr,
 		IsActive:         true,
 		OriginNodeInfoID: originNodeInfoIDPtr,
-		OrganizationID:   e.Organization.ID,
+		OrganizationID:   orgIDPtr,
 	}
 }
 

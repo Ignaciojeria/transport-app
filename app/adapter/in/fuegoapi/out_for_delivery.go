@@ -5,7 +5,6 @@ import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
-	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 
@@ -16,29 +15,27 @@ import (
 
 func init() {
 	ioc.Registry(
-		checkout,
+		outForDelivery,
 		httpserver.New,
-		tidbrepository.NewEnsureOrganizationForCountry,
 		gcppublisher.NewApplicationEvents)
 }
-func checkout(
+func outForDelivery(
 	s httpserver.Server,
-	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox gcppublisher.ApplicationEvents) {
-	fuego.Post(s.Manager, "/checkouts",
-		func(c fuego.ContextWithBody[request.CheckoutRequest]) (response.CheckoutResponse, error) {
+	fuego.Post(s.Manager, "/out-for-delivery",
+		func(c fuego.ContextWithBody[request.OutForDeliveryRequest]) (
+			response.OutForDeliveryResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return response.CheckoutResponse{}, err
+				return response.OutForDeliveryResponse{}, err
 			}
-
 			organization := domain.Organization{}
 			organization.SetKey(c.Header("organization"))
 			requestBodyBytes, _ := json.Marshal(requestBody)
 			if err := outbox(c.Context(), domain.Outbox{
 				Attributes: map[string]string{
-					"entityType":   "checkout",
-					"eventType":    "checkoutSubmitted",
+					"entityType":   "outForDelivery",
+					"eventType":    "outForDeliverySubmitted",
 					"country":      organization.Country.Alpha2(),
 					"organization": organization.GetOrgKey(),
 					"consumer":     c.Header("consumer"),
@@ -48,14 +45,13 @@ func checkout(
 				Organization: organization,
 				Payload:      requestBodyBytes,
 			}); err != nil {
-				return response.CheckoutResponse{}, err
+				return response.OutForDeliveryResponse{}, err
 			}
-			return response.CheckoutResponse{
-				Message: "checkout submission succedded",
+			return response.OutForDeliveryResponse{
+				Message: "out for delivery submission succedded",
 			}, nil
 		},
-		option.Summary("checkout"),
-		option.Tags(tagCheckouts),
-		option.Tags(tagEndToEndOperator),
+		option.Summary("outForDelivery"),
+		option.Tags(tagDelivery),
 	)
 }

@@ -2,11 +2,9 @@ package fuegoapi
 
 import (
 	"encoding/json"
-	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
-	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 
@@ -17,55 +15,45 @@ import (
 
 func init() {
 	ioc.Registry(
-		upsertPlan,
+		checkout,
 		httpserver.New,
-		tidbrepository.NewEnsureOrganizationForCountry,
 		gcppublisher.NewApplicationEvents)
 }
-func upsertPlan(
+func checkout(
 	s httpserver.Server,
-	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	outbox gcppublisher.ApplicationEvents) {
-	fuego.Post(s.Manager, "/plans",
-		func(c fuego.ContextWithBody[request.UpsertPlanRequest]) (response.UpsertPlanResponse, error) {
+	fuego.Post(s.Manager, "/confirm-deliveries",
+		func(c fuego.ContextWithBody[request.ConfirmDeliveriesRequest]) (
+			response.ConfirmDeliveriesResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
-				return response.UpsertPlanResponse{}, err
+				return response.ConfirmDeliveriesResponse{}, err
 			}
 
 			organization := domain.Organization{}
 			organization.SetKey(c.Header("organization"))
-			org, err := ensureOrg(c.Context(), organization)
-			if err != nil {
-				return response.UpsertPlanResponse{}, fuego.HTTPError{
-					Title:  "error creating daily plan",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
-
 			requestBodyBytes, _ := json.Marshal(requestBody)
 			if err := outbox(c.Context(), domain.Outbox{
 				Attributes: map[string]string{
-					"entityType":   "plan",
-					"eventType":    "upsertPlanSubmitted",
+					"entityType":   "confirmDeliveries",
+					"eventType":    "confirmDeliveriesSubmitted",
 					"country":      organization.Country.Alpha2(),
 					"organization": organization.GetOrgKey(),
 					"consumer":     c.Header("consumer"),
 					"commerce":     c.Header("commerce"),
-					"referenceID":  requestBody.ReferenceID,
 				},
 				Status:       "pending",
-				Organization: org,
+				Organization: organization,
 				Payload:      requestBodyBytes,
 			}); err != nil {
-				return response.UpsertPlanResponse{}, err
+				return response.ConfirmDeliveriesResponse{}, err
 			}
-			return response.UpsertPlanResponse{
-				Message: "daily plan submitted",
-			}, err
+			return response.ConfirmDeliveriesResponse{
+				Message: "checkout submission succedded",
+			}, nil
 		},
-		option.Summary("upsertPlan"),
-		option.Tags(tagEndToEndOperator, tagPlanning),
+		option.Summary("confirmDeliveries"),
+		option.Tags(tagDelivery),
+		option.Tags(tagEndToEndOperator),
 	)
 }

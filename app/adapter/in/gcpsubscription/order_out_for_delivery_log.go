@@ -3,9 +3,7 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 
 	"cloud.google.com/go/pubsub"
@@ -14,22 +12,21 @@ import (
 
 func init() {
 	ioc.Registry(
-		newCheckoutSubmitted,
+		newOrderOutForDeliveryLog,
 		subscriptionwrapper.NewSubscriptionManager)
 }
-func newCheckoutSubmitted(
+func newOrderOutForDeliveryLog(
 	sm subscriptionwrapper.SubscriptionManager,
 ) subscriptionwrapper.MessageProcessor {
-	subscriptionName := "transport-app-events-checkout-submitted"
+	subscriptionName := "transport-app-events-order-out-for-delivery-log"
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
-		var input request.CheckoutRequest
+		var input interface{}
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		fmt.Println("works")
 		m.Ack()
 		return http.StatusOK, nil
 	}
