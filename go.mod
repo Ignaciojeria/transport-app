@@ -4,6 +4,7 @@ go 1.23.3
 
 require (
 	cloud.google.com/go/pubsub v1.45.3
+	firebase.google.com/go/v4 v4.15.2
 	github.com/Ignaciojeria/einar-ioc/v2 v2.4.0
 	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
@@ -14,6 +15,7 @@ require (
 	github.com/google/generative-ai-go v0.19.0
 	github.com/google/uuid v1.6.0
 	github.com/hellofresh/health-go/v5 v5.5.3
+	github.com/jackc/pgx v3.6.2+incompatible
 	github.com/joho/godotenv v1.5.1
 	github.com/joomcode/errorx v1.2.0
 	github.com/paulmach/orb v0.11.1
@@ -30,6 +32,7 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.9.0
 	go.opentelemetry.io/otel/sdk/metric v1.34.0
 	go.opentelemetry.io/otel/trace v1.34.0
+	golang.org/x/text v0.21.0
 	google.golang.org/api v0.215.0
 	google.golang.org/grpc v1.71.0
 	gorm.io/driver/mysql v1.5.7
@@ -52,7 +55,6 @@ require (
 	cloud.google.com/go/storage v1.49.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
-	firebase.google.com/go/v4 v4.15.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.25.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.48.1 // indirect
@@ -147,7 +149,6 @@ require (
 	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect

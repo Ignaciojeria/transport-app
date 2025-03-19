@@ -29,6 +29,6 @@ func NewSearchOperatorByEmail(conn tidb.TIDBConnection) SearchOperatorByEmail {
 			First(&account).Error; err != nil {
 			return domain.Operator{}, err
 		}
-		return account.MapOperator(), nil
+		return account.MapOperator(o.Organization), nil
 	}
 }

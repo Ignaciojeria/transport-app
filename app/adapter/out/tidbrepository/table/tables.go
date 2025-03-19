@@ -670,7 +670,6 @@ type ApiKey struct {
 type Organization struct {
 	gorm.Model
 	ID      int64  `gorm:"primaryKey"`
-	Email   string `gorm:"type:varchar(255);not null;unique"`
 	Name    string `gorm:"type:varchar(255);not null;"`
 	Country string `gorm:"type:varchar(255);not null;"`
 }
@@ -679,31 +678,15 @@ func (o Organization) Map() domain.Organization {
 	return domain.Organization{
 		ID:      o.ID,
 		Name:    o.Name,
-		Email:   o.Email,
 		Country: countries.ByName(o.Country),
 	}
 }
 
 type Account struct {
 	gorm.Model
-	ID int64 `gorm:"primaryKey"`
-
-	Type        string `gorm:"default:null"`
-	ReferenceID string `gorm:"type:varchar(50);uniqueIndex:idx_account_ref_org"`
-
-	ContactID *int64  `gorm:"default:null;uniqueIndex:idx_organization_contact"`
-	Contact   Contact `gorm:"foreignKey:ContactID"`
-
-	AddressInfoID *int64      `gorm:"default:null"`
-	AddressInfo   AddressInfo `gorm:"foreignKey:AddressInfoID"`
-
-	IsActive bool `gorm:"default:null;index"`
-
-	OriginNodeInfoID *int64   `gorm:"default:null"`
-	OriginNodeInfo   NodeInfo `gorm:"foreignKey:OriginNodeInfoID"`
-
-	OrganizationID *int64       `gorm:"not null;uniqueIndex:idx_organization_contact;uniqueIndex:idx_account_ref_org"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	ID       int64  `gorm:"primaryKey"`
+	Email    string `gorm:"type:varchar(255);not null;unique"`
+	IsActive bool   `gorm:"default:null"`
 }
 
 type AccountOrganization struct {
@@ -716,41 +699,14 @@ type AccountOrganization struct {
 	UpdatedAt      time.Time
 }
 
-func (a Account) MapOperator() domain.Operator {
+func (a Account) MapOperator(org domain.Organization) domain.Operator {
 	// Inicializamos un Operator base
-	var orgId int64
-	if a.OrganizationID != nil {
-		orgId = *a.OrganizationID
-	}
 	operator := domain.Operator{
-		ID:          a.ID,
-		ReferenceID: a.ReferenceID, // Usando el Type como ReferenceID
-		Type:        a.Type,
+		ID: a.ID,
 		Organization: domain.Organization{
-			ID: orgId,
+			ID: org.ID,
 		},
 	}
-
-	// Mapeamos el Contact si existe
-	if a.ContactID != nil {
-		operator.Contact = a.Contact.Map()
-	}
-
-	// Mapeamos el OriginNode si existe
-	if a.OriginNodeInfoID != nil {
-		operator.OriginNode = a.OriginNodeInfo.Map()
-	}
-
-	// Mapeamos el OriginNode si existe
-	if a.OriginNodeInfo.AddressID != nil {
-		operator.OriginNode.AddressInfo = a.OriginNodeInfo.AddressInfo.Map()
-	}
-
-	// Mapeamos el OriginNode si existe
-	if a.OriginNodeInfo.NodeTypeID != nil {
-		operator.OriginNode.NodeType = a.OriginNodeInfo.NodeType.Map()
-	}
-
 	return operator
 }
 

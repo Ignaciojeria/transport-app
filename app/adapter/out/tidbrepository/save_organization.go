@@ -2,11 +2,13 @@ package tidbrepository
 
 import (
 	"context"
+	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -26,8 +28,25 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		// Mapear la entidad del dominio a la tabla
 		tableOrg := mapper.MapOrganizationToTable(o)
 
-		if err := conn.DB.Create(&tableOrg).Error; err != nil {
-			return domain.Organization{}, ErrOrganizationDatabase.New(err.Error())
+		var account table.Account
+		err := conn.Where("email = ?", o.Email).Find(&account).Error
+		if err != nil {
+			return domain.Organization{}, err
+		}
+		var accountOrg table.AccountOrganization
+		err = conn.Transaction(func(tx *gorm.DB) error {
+			if err := conn.DB.Create(&tableOrg).Error; err != nil {
+				return ErrOrganizationDatabase.New(err.Error())
+			}
+			accountOrg.AccountID = account.ID
+			accountOrg.OrganizationID = tableOrg.ID
+			if err := conn.DB.Create(&accountOrg).Error; err != nil {
+				return ErrOrganizationDatabase.New(err.Error())
+			}
+			return nil
+		})
+		if err != nil {
+			return domain.Organization{}, err
 		}
 		// Mapear de vuelta a la entidad de dominio
 		savedOrg := domain.Organization{

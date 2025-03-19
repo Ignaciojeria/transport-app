@@ -28,10 +28,10 @@ func NewUpsertOperator(conn tidb.TIDBConnection) UpsertOperator {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Operator{}, err
 		}
-		operatorToUpdate := operatorTBL.MapOperator().UpdateIfChanged(o)
+		operatorToUpdate := operatorTBL.MapOperator(o.Organization).UpdateIfChanged(o)
 		DBOperatorToUpdate := mapper.MapOperator(operatorToUpdate)
 		DBOperatorToUpdate.CreatedAt = operatorTBL.CreatedAt
-		return DBOperatorToUpdate.MapOperator(), conn.
+		return DBOperatorToUpdate.MapOperator(o.Organization), conn.
 			Omit("Contact").
 			Omit("AddressInfo").
 			Omit("OriginNodeInfo").

@@ -1,0 +1,36 @@
+package tidbrepository
+
+import (
+	"context"
+	"errors"
+	"transport-app/app/adapter/out/tidbrepository/table"
+	"transport-app/app/adapter/out/tidbrepository/table/mapper"
+	"transport-app/app/domain"
+	"transport-app/app/shared/infrastructure/tidb"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"gorm.io/gorm"
+)
+
+type UpsertAccount func(context.Context, domain.Account) error
+
+func init() {
+	ioc.Registry(NewUpsertAccount, tidb.NewTIDBConnection)
+}
+func NewUpsertAccount(conn tidb.TIDBConnection) UpsertAccount {
+	return func(ctx context.Context, a domain.Account) error {
+		var accountTbl table.Account
+		err := conn.DB.WithContext(ctx).
+			Table("accounts").
+			Where("email = ?", a.Email).
+			First(&accountTbl).Error
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if err == nil {
+			return nil
+		}
+		accountTbl = mapper.MapAccountTable(a)
+		return conn.Save(&accountTbl).Error
+	}
+}

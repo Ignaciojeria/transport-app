@@ -18,9 +18,9 @@ type RunMigrations func() error
 
 func NewRunMigrations(
 	conn tidb.TIDBConnection,
-	conf configuration.TiDBConfiguration) RunMigrations {
+	conf configuration.DBConfiguration) RunMigrations {
 	return func() error {
-		if conf.TIDB_RUN_MIGRATIONS != "true" {
+		if conf.DB_RUN_MIGRATIONS != "true" {
 			return nil
 		}
 		// Lista de tablas que tienen un campo ID como clave primaria
@@ -47,6 +47,7 @@ func NewRunMigrations(
 			//&ApiKey{},
 			//&OrganizationCountry{},
 			&Account{},
+			&AccountOrganization{},
 			&Contact{},
 			&Carrier{},
 			&Vehicle{},
@@ -55,11 +56,12 @@ func NewRunMigrations(
 		}
 
 		// Opcional: Eliminar tablas si existen
-		for _, table := range tables {
-			if err := conn.Migrator().DropTable(table); err != nil {
-				return err
-			}
-		}
+		/*
+			for _, table := range tables {
+				if err := conn.Migrator().DropTable(table); err != nil {
+					return err
+				}
+			}*/
 
 		// Crear las tablas nuevamente
 		if err := conn.AutoMigrate(tables...); err != nil {

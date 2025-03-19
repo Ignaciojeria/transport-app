@@ -112,7 +112,7 @@ func (r Route) Map() domain.Route {
 		ReferenceID:  r.ReferenceID,
 		ID:           r.ID,
 		Vehicle:      r.Vehicle.Map(),
-		Operator:     r.Account.MapOperator(),
+		Operator:     r.Account.MapOperator(r.Organization.Map()),
 		PlanID:       r.Plan.ID,
 	}
 }
