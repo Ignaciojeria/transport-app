@@ -342,6 +342,10 @@
         {
             "kind": "post-controller",
             "name": "out-for-delivery"
+        },
+        {
+            "kind": "usecase",
+            "name": "order-planned-log"
         }
     ]
 }
