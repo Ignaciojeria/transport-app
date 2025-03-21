@@ -12,13 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertOrderHeaders func(context.Context, domain.Headers) (domain.Headers, error)
+type UpsertOrderHeaders func(context.Context, domain.Headers) error
 
 func init() {
 	ioc.Registry(NewUpsertOrderHeaders, tidb.NewTIDBConnection)
 }
 func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
-	return func(ctx context.Context, h domain.Headers) (domain.Headers, error) {
+	return func(ctx context.Context, h domain.Headers) error {
 		var orderHeaders table.OrderHeaders
 		err := conn.DB.WithContext(ctx).
 			Table("order_headers").
@@ -27,17 +27,15 @@ func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 				h.Commerce, h.Consumer, h.Organization.ID).
 			First(&orderHeaders).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Headers{}, err
+			return err
 		}
-		if orderHeaders.Commerce != "" {
-			return orderHeaders.Map(), nil
+		if orderHeaders.ID != 0 {
+			return nil
 		}
 		orderHeadersTbl := mapper.MapOrderHeaders(h)
-		if orderHeaders.ID == 0 {
-			if err := conn.Save(&orderHeadersTbl).Error; err != nil {
-				return domain.Headers{}, err
-			}
+		if err := conn.Save(&orderHeadersTbl).Error; err != nil {
+			return err
 		}
-		return orderHeadersTbl.Map(), nil
+		return nil
 	}
 }

@@ -38,7 +38,7 @@ func NewCreateOrder(
 		inOrder.OrderStatus = loadOrderStatuses().Available()
 
 		inOrder.Headers.Organization = inOrder.Organization
-		_, err := upsertOrderHeaders(ctx, inOrder.Headers)
+		err := upsertOrderHeaders(ctx, inOrder.Headers)
 		if err != nil {
 			return domain.Order{}, err
 		}
