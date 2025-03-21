@@ -28,6 +28,9 @@ var connection tidb.TIDBConnection
 var organization1 domain.Organization
 var organization2 domain.Organization
 
+var noTablesContainerConnection tidb.TIDBConnection
+var noTablesMigrationContainer *tcpostgres.PostgresContainer
+
 var _ = Describe("TidbRepository", func() {
 	It("dummy test", func() {
 		Expect(true).To(BeTrue())
@@ -92,10 +95,45 @@ var _ = BeforeSuite(func() {
 		Country: countries.CL,
 	})
 	Expect(err).ToNot(HaveOccurred())
+
+	noTablesContainer, err := tcpostgres.Run(ctx,
+		"postgres:16-alpine",
+		tcpostgres.WithDatabase(dbName),
+		tcpostgres.WithUsername(dbUser),
+		tcpostgres.WithPassword(dbPassword),
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("database system is ready to accept connections").
+				WithOccurrence(2).
+				WithStartupTimeout(5*time.Second)),
+	)
+	Expect(err).ToNot(HaveOccurred())
+	noTablesMigrationContainer = noTablesContainer
+
+	noTablesHost, err := noTablesMigrationContainer.Host(ctx)
+	Expect(err).ToNot(HaveOccurred())
+
+	noTablesPort, err := noTablesMigrationContainer.MappedPort(ctx, "5432")
+	Expect(err).ToNot(HaveOccurred())
+
+	noTablesContainerConnection, err = tidb.NewTIDBConnection(
+		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
+		tidb.NewPostgreSQLConnectionStrategy(configuration.DBConfiguration{
+			DB_HOSTNAME:       noTablesHost,
+			DB_PORT:           noTablesPort.Port(),
+			DB_SSL_MODE:       "disable",
+			DB_NAME:           dbName,
+			DB_USERNAME:       dbUser,
+			DB_PASSWORD:       dbPassword,
+			DB_RUN_MIGRATIONS: "false", // importante: no ejecutar migraciones
+		}),
+		nil,
+	)
+	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
 	if container != nil {
 		_ = container.Terminate(context.Background())
+		_ = noTablesMigrationContainer.Terminate(context.Background())
 	}
 })

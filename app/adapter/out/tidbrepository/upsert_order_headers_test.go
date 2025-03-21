@@ -117,4 +117,20 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		Expect(count).To(Equal(int64(2)))
 	})
 
+	It("should fail when trying to upsert order header in DB without tables", func() {
+		ctx := context.Background()
+
+		h := domain.Headers{
+			Commerce:     "tienda-sin-tablas",
+			Consumer:     "cliente-sin-tablas",
+			Organization: organization1,
+		}
+
+		upsert := NewUpsertOrderHeaders(noTablesContainerConnection)
+		err := upsert(ctx, h)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("order_headers"))
+	})
+
 })
