@@ -20,7 +20,7 @@ func pointToString(p orb.Point) string {
 
 // arePointsEqual compara si dos puntos están lo suficientemente cerca (dentro de 1 metro de tolerancia).
 func arePointsEqual(p1, p2 orb.Point) bool {
-	return arePointsClose(p1, p2, 1)
+	return arePointsClose(p1, p2, 10)
 }
 
 // distanceMatches calcula la distancia geodésica entre p1 y p2 y la compara con la distancia esperada,

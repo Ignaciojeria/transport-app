@@ -24,6 +24,22 @@ jobs:
             version:
               - '.version'
 
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.21'
+
+      - name: Run Ginkgo tests with Testcontainers
+        run: |
+          go install github.com/onsi/ginkgo/v2/ginkgo@latest
+          ginkgo -r --trace --fail-on-pending --randomize-all
+
   build-and-push:
     runs-on: ubuntu-latest
     needs: check-version-change
