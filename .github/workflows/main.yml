@@ -38,7 +38,12 @@ jobs:
       - name: Run Ginkgo tests with Testcontainers
         run: |
           go install github.com/onsi/ginkgo/v2/ginkgo@latest
-          ginkgo -r --trace --fail-on-pending --randomize-all
+          ginkgo -r \
+            --trace \
+            --fail-on-pending \
+            --randomize-all \
+            --cover \
+            --coverprofile=coverage.out
 
   build-and-push:
     runs-on: ubuntu-latest
