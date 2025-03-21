@@ -5,9 +5,11 @@ import (
 	"testing"
 	"time"
 	"transport-app/app/adapter/out/tidbrepository/table"
+	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
 
+	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -23,6 +25,8 @@ func TestContainersSetup(t *testing.T) {
 
 var container *tcpostgres.PostgresContainer
 var connection tidb.TIDBConnection
+var organization1 domain.Organization
+var organization2 domain.Organization
 
 var _ = Describe("TidbRepository", func() {
 	It("dummy test", func() {
@@ -73,6 +77,20 @@ var _ = BeforeSuite(func() {
 	err = table.NewRunMigrations(connection, configuration.DBConfiguration{
 		DB_RUN_MIGRATIONS: "true",
 	})()
+	Expect(err).ToNot(HaveOccurred())
+	err = NewUpsertAccount(connection)(ctx, domain.Account{
+		Email: "ignaciovl.j@gmail.com",
+	})
+	Expect(err).ToNot(HaveOccurred())
+	organization1, err = NewSaveOrganization(connection)(ctx, domain.Organization{
+		Email:   "ignaciovl.j@gmail.com",
+		Country: countries.CL,
+	})
+	Expect(err).ToNot(HaveOccurred())
+	organization2, err = NewSaveOrganization(connection)(ctx, domain.Organization{
+		Email:   "ignaciovl.j@gmail.com",
+		Country: countries.CL,
+	})
 	Expect(err).ToNot(HaveOccurred())
 })
 

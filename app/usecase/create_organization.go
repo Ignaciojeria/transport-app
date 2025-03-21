@@ -14,29 +14,13 @@ func init() {
 	ioc.Registry(
 		NewCreateOrganization,
 		tidbrepository.NewSaveOrganization,
-		tidbrepository.NewFindOrganizationByEmail,
 	)
 }
 
 func NewCreateOrganization(
 	saveOrg tidbrepository.SaveOrganization,
-	findOrganizationByEmail tidbrepository.FindOrganizationByEmail,
 ) CreateOrganization {
 	return func(ctx context.Context, org domain.Organization) (domain.Organization, error) {
-		// Buscar si la organización ya existe
-		/*
-			_, err := findOrganizationByEmail(ctx, org.Email)
-			if err == nil {
-				// Si la organización ya existe, retornar el error específico
-				return domain.Organization{}, ErrOrganizationAlreadyExists.New("email already used")
-			}
-
-			// Si el error no es que no se encontró la organización, propagarlo
-			if !errorx.IsOfType(err, tidbrepository.ErrOrganizationNotFound) {
-				return domain.Organization{}, err
-			}
-			// Crear la organización si no existe
-		*/
 		return saveOrg(ctx, org)
 	}
 }
