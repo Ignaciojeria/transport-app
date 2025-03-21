@@ -21,8 +21,8 @@ type Order struct {
 	OrganizationID int64        `gorm:"default:null;uniqueIndex:idx_reference_organization"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 
-	OrderHeadersID int64        `gorm:"default:null"`
-	OrderHeaders   OrderHeaders `gorm:"foreignKey:OrderHeadersID"`
+	OrderHeadersReference string       `gorm:"type:char(32);index"`
+	OrderHeaders          OrderHeaders `gorm:"foreignKey:OrderHeadersReference;references:ReferenceID"`
 
 	OrderStatusID int64       `gorm:"default:null"`
 	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
@@ -656,17 +656,6 @@ type OrderStatus struct {
 	Status string `gorm:"not null"`
 }
 
-// Organization tables
-
-type ApiKey struct {
-	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"not null;index"`            // ID de la organización asociada
-	Organization   Organization `gorm:"foreignKey:OrganizationID"` // Relación con la tabla Organization
-	Key            string       `gorm:"not null;unique"`           // Clave única
-	Status         string       `gorm:"default:active"`            // Estado: activo, revocado, etc.
-}
-
 type Organization struct {
 	gorm.Model
 	ID      int64  `gorm:"primaryKey"`
@@ -818,6 +807,7 @@ func (vc VehicleCategory) Map() domain.VehicleCategory {
 type OrderHeaders struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
+	ReferenceID    string       `gorm:"type:char(32);uniqueIndex"`
 	Commerce       string       `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
 	Consumer       string       `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
 	OrganizationID int64        `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
@@ -828,7 +818,8 @@ func (m OrderHeaders) Map() domain.Headers {
 	return domain.Headers{
 		ID: m.ID,
 		Organization: domain.Organization{
-			ID: m.OrganizationID,
+			ID:      m.OrganizationID,
+			Country: countries.ByName(m.Organization.Country),
 		},
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,

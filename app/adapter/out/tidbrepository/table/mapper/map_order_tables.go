@@ -27,9 +27,9 @@ func MapOrderToTable(order domain.Order) table.Order {
 		OrganizationID: order.Organization.ID, // Completar según la lógica de negocio
 		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
 		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
-		OrderHeadersID: order.Headers.ID,
-		OrderStatusID:  order.OrderStatus.ID, // Completar según la lógica de negocio
-		OrderTypeID:    order.OrderType.ID,   // Completar según la lógica de negocio
+		OrderHeadersReference: order.Headers.ReferenceID(),
+		OrderStatusID:         order.OrderStatus.ID, // Completar según la lógica de negocio
+		OrderTypeID:           order.OrderType.ID,   // Completar según la lógica de negocio
 		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
 		OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,

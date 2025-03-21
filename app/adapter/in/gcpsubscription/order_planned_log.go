@@ -15,11 +15,12 @@ import (
 func init() {
 	ioc.Registry(
 		newOrderPlannedLog,
+		usecase.NewOrderPlannedLog,
 		subscriptionwrapper.NewSubscriptionManager)
 }
 func newOrderPlannedLog(
-	sm subscriptionwrapper.SubscriptionManager,
 	log usecase.OrderPlannedLog,
+	sm subscriptionwrapper.SubscriptionManager,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := "transport-app-events-order-planned-log"
 	subscriptionRef := sm.Subscription(subscriptionName)

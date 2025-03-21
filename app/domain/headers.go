@@ -7,6 +7,10 @@ type Headers struct {
 	Commerce     string `json:"commerce"`
 }
 
+func (h Headers) ReferenceID() string {
+	return Hash(h.Organization, h.Commerce, h.Consumer)
+}
+
 func (c Headers) UpdateIfChanged(newHeaders Headers) Headers {
 	if newHeaders.ID != 0 {
 		c.ID = newHeaders.ID
@@ -15,7 +19,7 @@ func (c Headers) UpdateIfChanged(newHeaders Headers) Headers {
 		c.Consumer = newHeaders.Consumer
 	}
 	if newHeaders.Commerce != "" {
-		c.Consumer = newHeaders.Commerce
+		c.Commerce = newHeaders.Commerce
 	}
 	if newHeaders.Organization.ID != 0 {
 		c.Organization = newHeaders.Organization

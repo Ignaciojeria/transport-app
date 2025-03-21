@@ -26,8 +26,9 @@ import (
 	_ "transport-app/app/shared/infrastructure/observability/strategy"
 	_ "transport-app/mocks"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	_ "transport-app/app/shared/infrastructure/gemini"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 //go:embed .version
