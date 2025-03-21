@@ -12,9 +12,9 @@ import (
 )
 
 func init() {
-	ioc.Registry(newTIDBConnectionStrategy, configuration.NewTiDBConfiguration)
+	ioc.Registry(NewTIDBConnectionStrategy, configuration.NewTiDBConfiguration)
 }
-func newTIDBConnectionStrategy(env configuration.DBConfiguration) connectionStrategy {
+func NewTIDBConnectionStrategy(env configuration.DBConfiguration) connectionStrategy {
 	return func() (*gorm.DB, error) {
 		err := tidbmysql.RegisterTLSConfig("tidb", &tls.Config{
 			MinVersion: tls.VersionTLS12,

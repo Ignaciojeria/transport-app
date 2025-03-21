@@ -12,8 +12,8 @@ func init() {
 	ioc.Registry(
 		NewTIDBConnection,
 		configuration.NewTiDBConfiguration,
-		newPostgreSQLConnectionStrategy,
-		newTIDBConnectionStrategy)
+		NewPostgreSQLConnectionStrategy,
+		NewTIDBConnectionStrategy)
 }
 
 type TIDBConnection struct {

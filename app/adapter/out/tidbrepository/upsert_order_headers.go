@@ -22,20 +22,15 @@ func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 		var orderHeaders table.OrderHeaders
 		err := conn.DB.WithContext(ctx).
 			Table("order_headers").
-			Where(
-				"commerce = ? AND consumer = ? AND organization_id = ?",
-				h.Commerce, h.Consumer, h.Organization.ID).
+			Where("reference_id = ?", h.ReferenceID()).
 			First(&orderHeaders).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
-		if orderHeaders.ID != 0 {
+		if err == nil {
 			return nil
 		}
 		orderHeadersTbl := mapper.MapOrderHeaders(h)
-		if err := conn.Save(&orderHeadersTbl).Error; err != nil {
-			return err
-		}
-		return nil
+		return conn.DB.WithContext(ctx).Create(&orderHeadersTbl).Error
 	}
 }

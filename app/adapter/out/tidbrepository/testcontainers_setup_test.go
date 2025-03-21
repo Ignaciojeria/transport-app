@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 	"time"
+	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
 
@@ -34,6 +35,7 @@ var _ = BeforeSuite(func() {
 	dbName := "users"
 	dbUser := "user"
 	dbPassword := "password"
+
 	postgresContainer, err := tcpostgres.Run(ctx,
 		"postgres:16-alpine",
 		tcpostgres.WithDatabase(dbName),
@@ -45,8 +47,33 @@ var _ = BeforeSuite(func() {
 				WithStartupTimeout(5*time.Second)),
 	)
 	Expect(err).ToNot(HaveOccurred())
-	tidb.NewTIDBConnection(configuration.DBConfiguration{}, nil, nil)
 	container = postgresContainer
+
+	// Obtener host y puerto del contenedor
+	host, err := container.Host(ctx)
+	Expect(err).ToNot(HaveOccurred())
+
+	port, err := container.MappedPort(ctx, "5432")
+	Expect(err).ToNot(HaveOccurred())
+
+	connection, err = tidb.NewTIDBConnection(
+		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
+		tidb.NewPostgreSQLConnectionStrategy(configuration.DBConfiguration{
+			DB_HOSTNAME:       host,
+			DB_PORT:           port.Port(), // devuelve string
+			DB_SSL_MODE:       "disable",   // SSL deshabilitado para test local
+			DB_NAME:           dbName,
+			DB_USERNAME:       dbUser,
+			DB_PASSWORD:       dbPassword,
+			DB_RUN_MIGRATIONS: "true",
+		}),
+		nil,
+	)
+	Expect(err).ToNot(HaveOccurred())
+	err = table.NewRunMigrations(connection, configuration.DBConfiguration{
+		DB_RUN_MIGRATIONS: "true",
+	})()
+	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {

@@ -12,9 +12,9 @@ import (
 )
 
 func init() {
-	ioc.Registry(newPostgreSQLConnectionStrategy, configuration.NewTiDBConfiguration)
+	ioc.Registry(NewPostgreSQLConnectionStrategy, configuration.NewTiDBConfiguration)
 }
-func newPostgreSQLConnectionStrategy(env configuration.DBConfiguration) connectionStrategy {
+func NewPostgreSQLConnectionStrategy(env configuration.DBConfiguration) connectionStrategy {
 	return func() (*gorm.DB, error) {
 		username := env.DB_USERNAME
 		pwd := env.DB_PASSWORD

@@ -44,8 +44,6 @@ func NewRunMigrations(
 			&OrderStatus{},
 			&Organization{},
 			&OrderType{},
-			//&ApiKey{},
-			//&OrganizationCountry{},
 			&Account{},
 			&AccountOrganization{},
 			&Contact{},
@@ -56,12 +54,13 @@ func NewRunMigrations(
 		}
 
 		// Opcional: Eliminar tablas si existen
-
-		for _, table := range tables {
-			if err := conn.Migrator().DropTable(table); err != nil {
-				return err
+		/*
+			for _, table := range tables {
+				if err := conn.Migrator().DropTable(table); err != nil {
+					return err
+				}
 			}
-		}
+		*/
 
 		// Crear las tablas nuevamente
 		if err := conn.AutoMigrate(tables...); err != nil {
