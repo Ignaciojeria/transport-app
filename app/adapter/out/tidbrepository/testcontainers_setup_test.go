@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 	"time"
+	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -22,6 +23,12 @@ func TestContainersSetup(t *testing.T) {
 var container *tcpostgres.PostgresContainer
 var connection tidb.TIDBConnection
 
+var _ = Describe("TidbRepository", func() {
+	It("dummy test", func() {
+		Expect(true).To(BeTrue())
+	})
+})
+
 var _ = BeforeSuite(func() {
 	ctx := context.Background()
 	dbName := "users"
@@ -38,6 +45,7 @@ var _ = BeforeSuite(func() {
 				WithStartupTimeout(5*time.Second)),
 	)
 	Expect(err).ToNot(HaveOccurred())
+	tidb.NewTIDBConnection(configuration.DBConfiguration{}, nil, nil)
 	container = postgresContainer
 })
 
