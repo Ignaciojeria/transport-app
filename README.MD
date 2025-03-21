@@ -1,20 +1,25 @@
+## transport-app
+
+[![codecov](https://codecov.io/gh/Ignaciojeria/transport-app/branch/main/graph/badge.svg)](https://codecov.io/gh/Ignaciojeria/transport-app) [![Go Report Card](https://goreportcard.com/badge/github.com/Ignaciojeria/transport-app)](https://goreportcard.com/report/github.com/Ignaciojeria/transport-app)
+
 ## 📌 Convención de Campos para Direcciones en Chile
 
-| Campo en JSON       | Descripción | Ejemplo |
-|---------------------|------------|---------|
-| `addressInfo.addressLine1` | Calle y número | `inglaterra 59` |
-| `addressInfo.addressLine2` | Información adicional (opcional) | `dpto 2214` |
-| `addressInfo.district` | Comuna | `la-florida` |
-| `addressInfo.province` | Provincia | `santiago` |
-| `addressInfo.state` | Región | `metropolitana-de-santiago` |
-| `addressInfo.latitude` | Latitud | `-33.5204181` |
-| `addressInfo.longitude` | Longitud | `-70.6006178` |
+| Campo en JSON                | Descripción                      | Ejemplo                       |
+| ---------------------------- | --------------------------------- | ----------------------------- |
+| `addressInfo.addressLine1` | Calle y número                   | `inglaterra 59`             |
+| `addressInfo.addressLine2` | Información adicional (opcional) | `dpto 2214`                 |
+| `addressInfo.district`     | Comuna                            | `la-florida`                |
+| `addressInfo.province`     | Provincia                         | `santiago`                  |
+| `addressInfo.state`        | Región                           | `metropolitana-de-santiago` |
+| `addressInfo.latitude`     | Latitud                           | `-33.5204181`               |
+| `addressInfo.longitude`    | Longitud                          | `-70.6006178`               |
 
 ---
 
 ## 🌐 Ejemplos de Direcciones en Chile
 
 ### 🏢 Ejemplo en Santiago (con departamento)
+
 ```json
 {
   "addressInfo": {
@@ -30,6 +35,7 @@
 ```
 
 ### 🏙️ Ejemplo en Santiago (sin departamento)
+
 ```json
 {
   "addressInfo": {
@@ -45,6 +51,7 @@
 ```
 
 ### 🏠 Ejemplo en el Sur (zona urbana)
+
 ```json
 {
   "addressInfo": {
@@ -60,6 +67,7 @@
 ```
 
 ### 🌿 Ejemplo en el Sur (zona rural)
+
 ```json
 {
   "addressInfo": {
@@ -73,4 +81,3 @@
   }
 }
 ```
-
