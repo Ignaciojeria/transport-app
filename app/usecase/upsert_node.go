@@ -33,7 +33,7 @@ func NewUpsertNode(
 			return err
 		}
 		nodeInfo.Contact.Organization = nodeInfo.Organization
-		contact, err := upsertContact(ctx, nodeInfo.Contact)
+		err = upsertContact(ctx, nodeInfo.Contact)
 		if err != nil {
 			return err
 		}
@@ -43,7 +43,7 @@ func NewUpsertNode(
 			return err
 		}
 		nodeInfo.NodeType = nodeType
-		nodeInfo.Contact = contact
+		//nodeInfo.Contact = contact
 		nodeInfo.AddressInfo = addressInfo
 		_, err = upsertNodeInfo(ctx, nodeInfo)
 		return err

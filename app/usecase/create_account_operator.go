@@ -25,7 +25,7 @@ func NewCreateAccountOperator(
 ) CreateAccountOperator {
 	return func(ctx context.Context, input domain.Operator) (domain.Operator, error) {
 		input.Contact.Organization = input.Organization
-		contact, err := upsertContact(ctx, input.Contact)
+		err := upsertContact(ctx, input.Contact)
 		if err != nil {
 			return domain.Operator{}, err
 		}
@@ -35,7 +35,6 @@ func NewCreateAccountOperator(
 			return domain.Operator{}, err
 		}
 
-		input.Contact = contact
 		input.OriginNode = nodeInfo
 		return upsertOperator(ctx, input)
 	}

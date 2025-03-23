@@ -1,6 +1,6 @@
 module transport-app
 
-go 1.24.1
+go 1.24
 
 require (
 	cloud.google.com/go/pubsub v1.48.0

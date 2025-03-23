@@ -44,13 +44,13 @@ func NewCreateOrder(
 		}
 
 		inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
-		originContact, err := upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
+		err = upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		if err != nil {
 			return domain.Order{}, err
 		}
 
 		inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
-		destinationContact, err := upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
+		err = upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
 		if err != nil {
 			return domain.Order{}, err
 		}
@@ -89,13 +89,14 @@ func NewCreateOrder(
 			return domain.Order{}, err
 		}
 		//inOrder.Headers = orderHeaders
+		//inOrder.Origin.AddressInfo.Contact = originContact
+		//inOrder.Destination.AddressInfo.Contact = destinationContact
 		inOrder.OrderType = orderType
 		inOrder.Origin = originNodeInfo
 		inOrder.Destination = destinationNodeInfo
 		inOrder.Origin.AddressInfo = originAddressInfo
-		inOrder.Origin.AddressInfo.Contact = originContact
 		inOrder.Destination.AddressInfo = destinationAddressInfo
-		inOrder.Destination.AddressInfo.Contact = destinationContact
+
 		inOrder.Packages = pcks
 		return upsertOrder(ctx, inOrder)
 	}

@@ -5,7 +5,7 @@ import (
 	"transport-app/app/domain"
 )
 
-func MapContactToTable(e domain.Contact, organizationCountryID int64) table.Contact {
+func MapContactToTable(e domain.Contact, organizationID int64) table.Contact {
 	return table.Contact{
 		ID:             e.ID,
 		FullName:       e.FullName,
@@ -13,6 +13,7 @@ func MapContactToTable(e domain.Contact, organizationCountryID int64) table.Cont
 		Phone:          e.PrimaryPhone,
 		Documents:      mapDocuments(e.Documents), // Serializar a JSON
 		NationalID:     e.NationalID,
-		OrganizationID: organizationCountryID,
+		OrganizationID: organizationID,
+		ReferenceID:    e.ReferenceID(),
 	}
 }

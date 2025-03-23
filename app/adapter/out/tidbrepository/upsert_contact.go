@@ -12,30 +12,41 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertContact func(ctx context.Context, c domain.Contact) (domain.Contact, error)
+type UpsertContact func(ctx context.Context, c domain.Contact) error
 
 func init() {
 	ioc.Registry(NewUpsertContact, tidb.NewTIDBConnection)
 }
 
 func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
-	return func(ctx context.Context, c domain.Contact) (domain.Contact, error) {
-		var contact table.Contact
+	return func(ctx context.Context, c domain.Contact) error {
+		var existing table.Contact
 		err := conn.DB.WithContext(ctx).
 			Table("contacts").
-			Where("full_name = ? AND email = ? AND phone = ? AND national_id = ? AND organization_id = ?",
-				c.FullName, c.PrimaryEmail, c.PrimaryPhone, c.NationalID, c.Organization.ID).
-			First(&contact).Error
+			Preload("Organization").
+			Where("reference_id = ?", c.ReferenceID()).
+			First(&existing).Error
+
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Contact{}, err
+			return err
 		}
-		contactWithChanges, _ := contact.Map().UpdateIfChanged(c)
-		dbContactToUpsert := mapper.MapContactToTable(contactWithChanges, c.Organization.ID)
-		dbContactToUpsert.CreatedAt = contact.CreatedAt
-		if err := conn.Omit("Organization").
-			Save(&dbContactToUpsert).Error; err != nil {
-			return domain.Contact{}, err
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe → insert
+			newContact := mapper.MapContactToTable(c, c.Organization.ID)
+			return conn.Omit("Organization").Create(&newContact).Error
 		}
-		return dbContactToUpsert.Map(), nil
+
+		// Ya existe → update solo si cambió algo
+		updated, changed := existing.Map().UpdateIfChanged(c)
+		if !changed {
+			return nil
+		}
+
+		updateData := mapper.MapContactToTable(updated, c.Organization.ID)
+		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+		updateData.CreatedAt = existing.CreatedAt
+
+		return conn.Omit("Organization").Save(&updateData).Error
 	}
 }

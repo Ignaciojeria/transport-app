@@ -306,6 +306,7 @@ func (j JSONItems) Value() (driver.Value, error) {
 type Contact struct {
 	gorm.Model
 	ID             int64         `gorm:"primaryKey"`
+	ReferenceID    string        `gorm:"type:char(32);uniqueIndex"`
 	OrganizationID int64         `gorm:"not null;uniqueIndex:idx_contact_unique"`
 	Organization   Organization  `gorm:"foreignKey:OrganizationID"`
 	FullName       string        `gorm:"type:varchar(191);not null;uniqueIndex:idx_contact_unique"`
@@ -319,7 +320,8 @@ func (c Contact) Map() domain.Contact {
 	return domain.Contact{
 		ID: c.ID,
 		Organization: domain.Organization{
-			ID: c.OrganizationID,
+			ID:      c.OrganizationID,
+			Country: countries.ByName(c.Organization.Country),
 		},
 		FullName:     c.FullName,
 		PrimaryEmail: c.Email,
