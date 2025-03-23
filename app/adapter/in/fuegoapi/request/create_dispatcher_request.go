@@ -15,8 +15,8 @@ type CreateDispatcherRequest struct {
 func (req CreateDispatcherRequest) Map() domain.Account {
 	return domain.Account{
 		Contact: domain.Contact{
-			Email:      req.Contact.Email,
-			NationalID: req.Contact.NationalID,
+			PrimaryEmail: req.Contact.Email,
+			NationalID:   req.Contact.NationalID,
 		},
 		Profiles: []domain.Profile{}, // Assuming profiles will be populated later
 	}

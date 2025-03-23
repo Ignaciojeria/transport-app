@@ -3,22 +3,28 @@ package domain
 import "github.com/google/uuid"
 
 type Contact struct {
-	ID           int64
-	Organization Organization `json:"organization"`
-	FullName     string       `json:"fullName"`
-	Email        string       `json:"email"`
-	Phone        string       `json:"phone"`
-	NationalID   string       `json:"nationalID"`
-	Documents    []Document   `json:"documents"`
+	ID                       int64
+	Organization             Organization
+	FullName                 string
+	PrimaryEmail             string
+	PrimaryPhone             string
+	NationalID               string
+	Documents                []Document
+	AdditionalContactMethods []ContactMethod
+}
+
+type ContactMethod struct {
+	Type  string `json:"type"`  // Ej: "email", "phone", "whatsapp"
+	Value string `json:"value"` // Ej: "ejemplo@correo.com"
 }
 
 func (c Contact) ReferenceID() string {
 	var key string
 	switch {
-	case c.Email != "":
-		key = c.Email
-	case c.Phone != "":
-		key = c.Phone
+	case c.PrimaryEmail != "":
+		key = c.PrimaryEmail
+	case c.PrimaryPhone != "":
+		key = c.PrimaryPhone
 	case c.NationalID != "":
 		key = c.NationalID
 	default:
@@ -34,12 +40,12 @@ func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
 		c.FullName = newContact.FullName
 		updated = true
 	}
-	if newContact.Email != "" && newContact.Email != c.Email {
-		c.Email = newContact.Email
+	if newContact.PrimaryEmail != "" && newContact.PrimaryEmail != c.PrimaryEmail {
+		c.PrimaryEmail = newContact.PrimaryEmail
 		updated = true
 	}
-	if newContact.Phone != "" && newContact.Phone != c.Phone {
-		c.Phone = newContact.Phone
+	if newContact.PrimaryPhone != "" && newContact.PrimaryPhone != c.PrimaryPhone {
+		c.PrimaryPhone = newContact.PrimaryPhone
 		updated = true
 	}
 	if newContact.NationalID != "" && newContact.NationalID != c.NationalID {

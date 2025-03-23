@@ -25,7 +25,7 @@ func searchAccountOperator(
 		func(c fuego.ContextNoBody) (response.SearchAccountResponse, error) {
 			operator := domain.Operator{
 				Contact: domain.Contact{
-					Email: c.QueryParam("email"),
+					PrimaryEmail: c.QueryParam("email"),
 				},
 			}
 			operator.Organization.SetKey(c.Header("organization"))

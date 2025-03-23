@@ -9,23 +9,23 @@ import (
 var _ = Describe("Contact ReferenceID", func() {
 	org := Organization{ID: 1, Country: countries.CL}
 
-	It("should use nationalID when available", func() {
+	It("should use primaryEmail when available", func() {
 		contact := Contact{
 			NationalID:   "12345678-9",
-			Email:        "test@example.com",
-			Phone:        "+56912345678",
+			PrimaryEmail: "test@example.com",
+			PrimaryPhone: "+56912345678",
 			Organization: org,
 		}
 
 		refID := contact.ReferenceID()
 		Expect(refID).ToNot(BeEmpty())
-		Expect(refID).To(Equal(Hash(org, "test@example.com"))) // <-- Actualizado
+		Expect(refID).To(Equal(Hash(org, "test@example.com")))
 	})
 
-	It("should fallback to email if nationalID is missing", func() {
+	It("should fallback to primaryEmail if nationalID is missing", func() {
 		contact := Contact{
-			Email:        "test@example.com",
-			Phone:        "+56912345678",
+			PrimaryEmail: "test@example.com",
+			PrimaryPhone: "+56912345678",
 			Organization: org,
 		}
 
@@ -33,9 +33,9 @@ var _ = Describe("Contact ReferenceID", func() {
 		Expect(refID).To(Equal(Hash(org, "test@example.com")))
 	})
 
-	It("should fallback to phone if nationalID and email are missing", func() {
+	It("should fallback to primaryPhone if primaryEmail and nationalID are missing", func() {
 		contact := Contact{
-			Phone:        "+56912345678",
+			PrimaryPhone: "+56912345678",
 			Organization: org,
 		}
 
@@ -63,8 +63,8 @@ var _ = Describe("Contact UpdateIfChanged", func() {
 	BeforeEach(func() {
 		original = Contact{
 			FullName:     "Juan Pérez",
-			Email:        "juan@correo.com",
-			Phone:        "+56900000000",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
 			NationalID:   "12345678-9",
 			Documents:    []Document{},
 			Organization: org,
@@ -83,16 +83,16 @@ var _ = Describe("Contact UpdateIfChanged", func() {
 		Expect(updated.FullName).To(Equal("Juan Pablo"))
 	})
 
-	It("should update Email", func() {
-		updated, changed := original.UpdateIfChanged(Contact{Email: "nuevo@correo.com"})
+	It("should update PrimaryEmail", func() {
+		updated, changed := original.UpdateIfChanged(Contact{PrimaryEmail: "nuevo@correo.com"})
 		Expect(changed).To(BeTrue())
-		Expect(updated.Email).To(Equal("nuevo@correo.com"))
+		Expect(updated.PrimaryEmail).To(Equal("nuevo@correo.com"))
 	})
 
-	It("should update Phone", func() {
-		updated, changed := original.UpdateIfChanged(Contact{Phone: "+56912345678"})
+	It("should update PrimaryPhone", func() {
+		updated, changed := original.UpdateIfChanged(Contact{PrimaryPhone: "+56912345678"})
 		Expect(changed).To(BeTrue())
-		Expect(updated.Phone).To(Equal("+56912345678"))
+		Expect(updated.PrimaryPhone).To(Equal("+56912345678"))
 	})
 
 	It("should update NationalID", func() {
@@ -110,13 +110,13 @@ var _ = Describe("Contact UpdateIfChanged", func() {
 
 	It("should update multiple fields", func() {
 		updated, changed := original.UpdateIfChanged(Contact{
-			FullName:   "Nombre nuevo",
-			Phone:      "+56911111111",
-			NationalID: "11111111-1",
+			FullName:     "Nombre nuevo",
+			PrimaryPhone: "+56911111111",
+			NationalID:   "11111111-1",
 		})
 		Expect(changed).To(BeTrue())
 		Expect(updated.FullName).To(Equal("Nombre nuevo"))
-		Expect(updated.Phone).To(Equal("+56911111111"))
+		Expect(updated.PrimaryPhone).To(Equal("+56911111111"))
 		Expect(updated.NationalID).To(Equal("11111111-1"))
 	})
 })

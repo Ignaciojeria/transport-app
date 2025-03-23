@@ -321,11 +321,11 @@ func (c Contact) Map() domain.Contact {
 		Organization: domain.Organization{
 			ID: c.OrganizationID,
 		},
-		FullName:   c.FullName,
-		Email:      c.Email,
-		Phone:      c.Phone,
-		NationalID: c.NationalID,
-		Documents:  c.Documents.MapDocuments(),
+		FullName:     c.FullName,
+		PrimaryEmail: c.Email,
+		PrimaryPhone: c.Phone,
+		NationalID:   c.NationalID,
+		Documents:    c.Documents.MapDocuments(),
 	}
 }
 

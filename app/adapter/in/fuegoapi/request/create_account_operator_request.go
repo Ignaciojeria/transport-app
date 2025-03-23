@@ -20,10 +20,10 @@ func (r CreateAccountOperatorRequest) Map() domain.Operator {
 			ReferenceID: domain.ReferenceID(r.OriginNodeReferenceID),
 		},
 		Contact: domain.Contact{
-			Email:      r.Contact.Email,
-			FullName:   r.Contact.FullName,
-			NationalID: r.Contact.NationalID,
-			Phone:      r.Contact.Phone,
+			PrimaryEmail: r.Contact.Email,
+			FullName:     r.Contact.FullName,
+			NationalID:   r.Contact.NationalID,
+			PrimaryPhone: r.Contact.Phone,
 		},
 	}
 }

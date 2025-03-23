@@ -72,10 +72,10 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			return refs
 		}(),
 		Contact: domain.Contact{
-			Email:      req.OperatorContact.Email,
-			Phone:      req.OperatorContact.Phone,
-			NationalID: req.OperatorContact.NationalID,
-			FullName:   req.OperatorContact.FullName,
+			PrimaryEmail: req.OperatorContact.Email,
+			PrimaryPhone: req.OperatorContact.Phone,
+			NationalID:   req.OperatorContact.NationalID,
+			FullName:     req.OperatorContact.FullName,
 			Documents: func() []domain.Document {
 				docs := make([]domain.Document, len(req.OperatorContact.Documents))
 				for i, doc := range req.OperatorContact.Documents {

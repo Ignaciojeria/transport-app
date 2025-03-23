@@ -31,10 +31,10 @@ func MapSearchAccountOperatorResponse(operator domain.Operator) SearchAccountRes
 			NationalID string "json:\"nationalID\""
 			Phone      string "json:\"phone\""
 		}{
-			Email:      operator.Contact.Email,
+			Email:      operator.Contact.PrimaryEmail,
 			FullName:   operator.Contact.FullName,
 			NationalID: operator.Contact.NationalID,
-			Phone:      operator.Contact.Phone,
+			Phone:      operator.Contact.PrimaryPhone,
 		},
 		OriginNode: struct {
 			ReferenceID string "json:\"referenceID\""

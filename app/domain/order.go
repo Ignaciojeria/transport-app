@@ -193,8 +193,8 @@ func (o Order) IsOriginAndDestinationContactEqual() bool {
 	destinationContact := o.Destination.AddressInfo.Contact
 
 	return originContact.FullName == destinationContact.FullName &&
-		originContact.Email == destinationContact.Email &&
-		originContact.Phone == destinationContact.Phone &&
+		originContact.PrimaryEmail == destinationContact.PrimaryEmail &&
+		originContact.PrimaryPhone == destinationContact.PrimaryPhone &&
 		originContact.NationalID == destinationContact.NationalID
 }
 

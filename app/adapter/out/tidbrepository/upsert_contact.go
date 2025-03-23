@@ -24,7 +24,7 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 		err := conn.DB.WithContext(ctx).
 			Table("contacts").
 			Where("full_name = ? AND email = ? AND phone = ? AND national_id = ? AND organization_id = ?",
-				c.FullName, c.Email, c.Phone, c.NationalID, c.Organization.ID).
+				c.FullName, c.PrimaryEmail, c.PrimaryPhone, c.NationalID, c.Organization.ID).
 			First(&contact).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Contact{}, err

@@ -38,11 +38,11 @@ func MapNodeInfoToDomain(nodeInfo struct {
 		Name:        nodeInfo.Name,
 		AddressInfo: domain.AddressInfo{
 			Contact: domain.Contact{
-				FullName:   addressInfo.Contact.FullName,
-				Email:      addressInfo.Contact.Email,
-				Phone:      addressInfo.Contact.Phone,
-				NationalID: addressInfo.Contact.NationalID,
-				Documents:  MapDocumentsToDomain(addressInfo.Contact.Documents),
+				FullName:     addressInfo.Contact.FullName,
+				PrimaryEmail: addressInfo.Contact.Email,
+				PrimaryPhone: addressInfo.Contact.Phone,
+				NationalID:   addressInfo.Contact.NationalID,
+				Documents:    MapDocumentsToDomain(addressInfo.Contact.Documents),
 			},
 			State:        addressInfo.State,
 			Locality:     addressInfo.Locality,
@@ -135,8 +135,8 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 
 	// Mapear contacto
 	responseAddressInfo.Contact.FullName = nodeInfo.Contact.FullName
-	responseAddressInfo.Contact.Email = nodeInfo.Contact.Email
-	responseAddressInfo.Contact.Phone = nodeInfo.Contact.Phone
+	responseAddressInfo.Contact.Email = nodeInfo.Contact.PrimaryEmail
+	responseAddressInfo.Contact.Phone = nodeInfo.Contact.PrimaryPhone
 	responseAddressInfo.Contact.NationalID = nodeInfo.Contact.NationalID
 	responseAddressInfo.Contact.Documents = MapDocumentsFromDomain(nodeInfo.Contact.Documents)
 
