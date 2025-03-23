@@ -51,7 +51,7 @@ func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) tabl
 		AddressLine1:   e.AddressLine1,
 		AddressLine2:   e.AddressLine2,
 		AddressLine3:   e.AddressLine3,
-		RawAddress:     e.RawAddress(),
+		RawAddress:     e.FullAddress(),
 		Latitude:       e.Location[1],
 		Longitude:      e.Location[0],
 		ZipCode:        e.ZipCode,

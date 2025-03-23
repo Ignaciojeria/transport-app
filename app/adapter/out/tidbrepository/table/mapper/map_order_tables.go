@@ -219,7 +219,7 @@ func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.A
 		AddressLine1:   address.AddressLine1,
 		AddressLine2:   address.AddressLine2,
 		AddressLine3:   address.AddressLine3,
-		RawAddress:     address.RawAddress(),
+		RawAddress:     address.FullAddress(),
 		Latitude:       address.Location[1],
 		Longitude:      address.Location[0],
 		ZipCode:        address.ZipCode,

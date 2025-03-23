@@ -77,7 +77,7 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 
 		prompt := fmt.Sprintf(`normaliza la siguiente direccion en chile segun el formato estandar
 
-			**direccion ingresada por el usuario:** %s 
+			**dirección ingresada por el usuario:** %s 
 			**Indicaciones ingresadas por el usuario:** %s   
 			**direccion sugerida por el proveedor:** %s  
 			**coordenadas:** %.6f, %.6f  
@@ -111,8 +111,11 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 			1. **la comuna ingresada debe ser una comuna valida de chile.**
 			2. **la provincia debe ser la correcta segun la comuna ingresada.**
 			3. **la region debe coincidir con la provincia correspondiente.**
-			4. **correccion ortografica minima solo en calles y nombres comunes.**
-			5. **no se deben modificar los nombres oficiales de comunas provincias o regiones.**`,
+			4. **solo se deben normalizar nombres oficiales de comunas, provincias y regiones.**
+			5. **los campos addressLine1 y addressLine2 deben mantenerse tal como los ingresó el usuario, sin modificar tildes, mayúsculas ni signos.**
+			6. **no se deben modificar los nombres oficiales de comunas provincias o regiones.**
+			7. **los nombres deben conservar tildes y la letra ñ si forman parte del nombre original. no reemplazar ni eliminar estos caracteres.**
+			`,
 			userText, userIndications, providerInputAddress, providerLat, providerLon,
 			strings.Join(validRegions, ", "),
 			strings.Join(validProvinces, "\n"),

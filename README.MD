@@ -6,11 +6,11 @@
 
 | Campo en JSON                | Descripción                      | Ejemplo                       |
 | ---------------------------- | --------------------------------- | ----------------------------- |
-| `addressInfo.addressLine1` | Calle y número                   | `inglaterra 59`             |
-| `addressInfo.addressLine2` | Información adicional (opcional) | `dpto 2214`                 |
+| `addressInfo.addressLine1` | Calle y número                    | `inglaterra 59`             |
+| `addressInfo.addressLine2` | Información adicional (opcional)  | `dpto 2214`                 |
 | `addressInfo.district`     | Comuna                            | `la-florida`                |
 | `addressInfo.province`     | Provincia                         | `santiago`                  |
-| `addressInfo.state`        | Región                           | `metropolitana-de-santiago` |
+| `addressInfo.state`        | Región                            | `metropolitana-de-santiago` |
 | `addressInfo.latitude`     | Latitud                           | `-33.5204181`               |
 | `addressInfo.longitude`    | Longitud                          | `-70.6006178`               |
 

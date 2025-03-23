@@ -54,7 +54,7 @@ func MapSearchAccountOperatorResponse(operator domain.Operator) SearchAccountRes
 				Latitude   float64 "json:\"latitude\""
 				Longitude  float64 "json:\"longitude\""
 			}{
-				RawAddress: operator.OriginNode.AddressInfo.RawAddress(),
+				RawAddress: operator.OriginNode.AddressInfo.FullAddress(),
 				Longitude:  operator.OriginNode.AddressInfo.Location[0],
 				Latitude:   operator.OriginNode.AddressInfo.Location[1],
 			},

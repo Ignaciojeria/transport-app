@@ -199,8 +199,8 @@ func (o Order) IsOriginAndDestinationContactEqual() bool {
 }
 
 func (o Order) IsOriginAndDestinationAddressEqual() bool {
-	originAddress := o.Origin.AddressInfo.RawAddress()
-	destinationAddress := o.Destination.AddressInfo.RawAddress()
+	originAddress := o.Origin.AddressInfo.FullAddress()
+	destinationAddress := o.Destination.AddressInfo.FullAddress()
 
 	return originAddress == destinationAddress
 }

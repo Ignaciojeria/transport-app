@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"strings"
 	"transport-app/app/shared/utils"
 
 	"github.com/paulmach/orb"
@@ -26,56 +25,88 @@ type AddressInfo struct {
 	TimeZone          string    `json:"timeZone"`
 }
 
+func (a AddressInfo) ReferenceID() string {
+	return Hash(
+		a.Organization,
+		a.AddressLine1,
+		a.AddressLine2,
+		a.District,
+		a.Province,
+		a.State)
+}
+
 // Normalize limpia y formatea los valores de State, Province y District.
 func (a *AddressInfo) Normalize() {
+	a.AddressLine1 = utils.NormalizeText(a.AddressLine1)
+	a.AddressLine2 = utils.NormalizeText(a.AddressLine2)
+	a.AddressLine3 = utils.NormalizeText(a.AddressLine3)
+	a.ProviderAddress = utils.NormalizeText(a.ProviderAddress)
 	a.State = utils.NormalizeText(a.State)
-	a.ProviderAddress = strings.ToLower(a.ProviderAddress)
-	a.AddressLine1 = strings.ToLower(a.AddressLine1)
-	a.AddressLine2 = strings.ToLower(a.AddressLine2)
 	a.Province = utils.NormalizeText(a.Province)
 	a.District = utils.NormalizeText(a.District)
 }
 
-func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) AddressInfo {
-	if newAddress.ID != 0 {
-		a.ID = newAddress.ID
+func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool) {
+	updated := a
+	changed := false
+
+	if newAddress.AddressLine1 != "" && newAddress.AddressLine1 != a.AddressLine1 {
+		updated.AddressLine1 = newAddress.AddressLine1
+		changed = true
 	}
-	if newAddress.AddressLine1 != "" {
-		a.AddressLine1 = newAddress.AddressLine1
+	if newAddress.AddressLine2 != "" && newAddress.AddressLine2 != a.AddressLine2 {
+		updated.AddressLine2 = newAddress.AddressLine2
+		changed = true
 	}
-	if newAddress.AddressLine2 != "" {
-		a.AddressLine2 = newAddress.AddressLine2
+	if newAddress.AddressLine3 != "" && newAddress.AddressLine3 != a.AddressLine3 {
+		updated.AddressLine3 = newAddress.AddressLine3
+		changed = true
 	}
-	if newAddress.AddressLine3 != "" {
-		a.AddressLine3 = newAddress.AddressLine3
+	if newAddress.Location[1] != 0 && newAddress.Location[1] != a.Location[1] {
+		updated.Location[1] = newAddress.Location[1]
+		changed = true
 	}
-	if newAddress.Location[1] != 0 { // Si la latitud no es 0
-		a.Location[1] = newAddress.Location[1]
+	if newAddress.Location[0] != 0 && newAddress.Location[0] != a.Location[0] {
+		updated.Location[0] = newAddress.Location[0]
+		changed = true
 	}
-	if newAddress.Location[0] != 0 { // Si la longitud no es 0
-		a.Location[0] = newAddress.Location[0]
+	if newAddress.State != "" && newAddress.State != a.State {
+		updated.State = newAddress.State
+		changed = true
 	}
-	if newAddress.State != "" {
-		a.State = newAddress.State
+	if newAddress.Locality != "" && newAddress.Locality != a.Locality {
+		updated.Locality = newAddress.Locality
+		changed = true
 	}
-	if newAddress.Locality != "" {
-		a.Locality = newAddress.Locality
+	if newAddress.Province != "" && newAddress.Province != a.Province {
+		updated.Province = newAddress.Province
+		changed = true
 	}
-	if newAddress.Province != "" {
-		a.Province = newAddress.Province
+	if newAddress.District != "" && newAddress.District != a.District {
+		updated.District = newAddress.District
+		changed = true
 	}
-	if newAddress.District != "" {
-		a.District = newAddress.District
+	if newAddress.ZipCode != "" && newAddress.ZipCode != a.ZipCode {
+		updated.ZipCode = newAddress.ZipCode
+		changed = true
 	}
-	if newAddress.ZipCode != "" {
-		a.ZipCode = newAddress.ZipCode
+	if newAddress.TimeZone != "" && newAddress.TimeZone != a.TimeZone {
+		updated.TimeZone = newAddress.TimeZone
+		changed = true
 	}
-	if newAddress.TimeZone != "" {
-		a.TimeZone = newAddress.TimeZone
-	}
-	return a
+
+	return updated, changed
 }
 
-func (addr AddressInfo) RawAddress() string {
-	return concatenateWithCommas(addr.AddressLine1, addr.AddressLine2, addr.AddressLine3)
+func (a AddressInfo) FullAddress() string {
+	parts := []string{
+		a.AddressLine1,
+		a.AddressLine2,
+		a.AddressLine3,
+		a.District,
+		a.Province,
+		a.State,
+		a.ZipCode,
+	}
+	return concatenateWithCommas(parts...)
 }
