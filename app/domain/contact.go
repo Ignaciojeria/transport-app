@@ -14,19 +14,16 @@ type Contact struct {
 
 func (c Contact) ReferenceID() string {
 	var key string
-
 	switch {
-	case c.NationalID != "":
-		key = c.NationalID
 	case c.Email != "":
 		key = c.Email
 	case c.Phone != "":
 		key = c.Phone
+	case c.NationalID != "":
+		key = c.NationalID
 	default:
-		// Caso extremo: no hay nada identificador. Se genera un UUID para evitar colisiones.
 		key = uuid.NewString()
 	}
-
 	return Hash(c.Organization, key)
 }
 

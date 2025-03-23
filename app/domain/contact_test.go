@@ -19,7 +19,7 @@ var _ = Describe("Contact ReferenceID", func() {
 
 		refID := contact.ReferenceID()
 		Expect(refID).ToNot(BeEmpty())
-		Expect(refID).To(Equal(Hash(org, "12345678-9")))
+		Expect(refID).To(Equal(Hash(org, "test@example.com"))) // <-- Actualizado
 	})
 
 	It("should fallback to email if nationalID is missing", func() {
