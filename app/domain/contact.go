@@ -30,38 +30,29 @@ func (c Contact) ReferenceID() string {
 	return Hash(c.Organization, key)
 }
 
-func (c Contact) UpdateIfChanged(newContact Contact) Contact {
-	// Copiamos la instancia actual
+func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
+	updated := false
 
-	// Actualizar FullName
-	if newContact.ID != 0 {
-		c.ID = newContact.ID
-	}
-
-	// Actualizar FullName
-	if newContact.FullName != "" {
+	if newContact.FullName != "" && newContact.FullName != c.FullName {
 		c.FullName = newContact.FullName
+		updated = true
 	}
-
-	// Actualizar Email
-	if newContact.Email != "" {
+	if newContact.Email != "" && newContact.Email != c.Email {
 		c.Email = newContact.Email
+		updated = true
 	}
-
-	// Actualizar Phone
-	if newContact.Phone != "" {
+	if newContact.Phone != "" && newContact.Phone != c.Phone {
 		c.Phone = newContact.Phone
+		updated = true
 	}
-
-	// Actualizar NationalID
-	if newContact.NationalID != "" {
+	if newContact.NationalID != "" && newContact.NationalID != c.NationalID {
 		c.NationalID = newContact.NationalID
+		updated = true
 	}
-
-	// Actualizar Documents
 	if len(newContact.Documents) > 0 {
 		c.Documents = newContact.Documents
+		updated = true
 	}
 
-	return c
+	return c, updated
 }

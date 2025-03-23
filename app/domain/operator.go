@@ -31,7 +31,7 @@ func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
 
 	o.OriginNode = o.OriginNode.UpdateIfChanged(newOperator.OriginNode)
 
-	o.Contact = o.Contact.UpdateIfChanged(newOperator.Contact)
+	o.Contact,_ = o.Contact.UpdateIfChanged(newOperator.Contact)
 
 	return o
 }

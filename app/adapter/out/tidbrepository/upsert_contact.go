@@ -29,7 +29,7 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Contact{}, err
 		}
-		contactWithChanges := contact.Map().UpdateIfChanged(c)
+		contactWithChanges, _ := contact.Map().UpdateIfChanged(c)
 		dbContactToUpsert := mapper.MapContactToTable(contactWithChanges, c.Organization.ID)
 		dbContactToUpsert.CreatedAt = contact.CreatedAt
 		if err := conn.Omit("Organization").

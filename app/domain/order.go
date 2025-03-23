@@ -32,9 +32,9 @@ type Order struct {
 func (o Order) UpdateIfChanged(newOrder Order) Order {
 	// Actualizar usando los métodos UpdateIfChanged existentes
 	o.Headers = o.Headers.UpdateIfChanged(newOrder.Headers)
-	o.Origin.AddressInfo.Contact =
+	o.Origin.AddressInfo.Contact, _ =
 		o.Origin.Contact.UpdateIfChanged(newOrder.Origin.AddressInfo.Contact)
-	o.Destination.AddressInfo.Contact =
+	o.Destination.AddressInfo.Contact, _ =
 		o.Origin.Contact.UpdateIfChanged(newOrder.Destination.AddressInfo.Contact)
 	o.OrderStatus = o.OrderStatus.UpdateIfChanged(newOrder.OrderStatus)
 	o.OrderType = o.OrderType.UpdateIfChanged(newOrder.OrderType)

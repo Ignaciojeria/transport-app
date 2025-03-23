@@ -55,3 +55,68 @@ var _ = Describe("Contact ReferenceID", func() {
 		Expect(ref1).ToNot(Equal(ref2)) // UUIDs aleatorios → distintos
 	})
 })
+
+var _ = Describe("Contact UpdateIfChanged", func() {
+	var original Contact
+	org := Organization{ID: 1, Country: countries.CL}
+
+	BeforeEach(func() {
+		original = Contact{
+			FullName:     "Juan Pérez",
+			Email:        "juan@correo.com",
+			Phone:        "+56900000000",
+			NationalID:   "12345678-9",
+			Documents:    []Document{},
+			Organization: org,
+		}
+	})
+
+	It("should not update if nothing changes", func() {
+		updated, changed := original.UpdateIfChanged(original)
+		Expect(changed).To(BeFalse())
+		Expect(updated).To(Equal(original))
+	})
+
+	It("should update FullName", func() {
+		updated, changed := original.UpdateIfChanged(Contact{FullName: "Juan Pablo"})
+		Expect(changed).To(BeTrue())
+		Expect(updated.FullName).To(Equal("Juan Pablo"))
+	})
+
+	It("should update Email", func() {
+		updated, changed := original.UpdateIfChanged(Contact{Email: "nuevo@correo.com"})
+		Expect(changed).To(BeTrue())
+		Expect(updated.Email).To(Equal("nuevo@correo.com"))
+	})
+
+	It("should update Phone", func() {
+		updated, changed := original.UpdateIfChanged(Contact{Phone: "+56912345678"})
+		Expect(changed).To(BeTrue())
+		Expect(updated.Phone).To(Equal("+56912345678"))
+	})
+
+	It("should update NationalID", func() {
+		updated, changed := original.UpdateIfChanged(Contact{NationalID: "98765432-1"})
+		Expect(changed).To(BeTrue())
+		Expect(updated.NationalID).To(Equal("98765432-1"))
+	})
+
+	It("should update Documents", func() {
+		newDocs := []Document{{Type: "RUT", Value: "1234"}}
+		updated, changed := original.UpdateIfChanged(Contact{Documents: newDocs})
+		Expect(changed).To(BeTrue())
+		Expect(updated.Documents).To(Equal(newDocs))
+	})
+
+	It("should update multiple fields", func() {
+		updated, changed := original.UpdateIfChanged(Contact{
+			FullName:   "Nombre nuevo",
+			Phone:      "+56911111111",
+			NationalID: "11111111-1",
+		})
+		Expect(changed).To(BeTrue())
+		Expect(updated.FullName).To(Equal("Nombre nuevo"))
+		Expect(updated.Phone).To(Equal("+56911111111"))
+		Expect(updated.NationalID).To(Equal("11111111-1"))
+	})
+})
