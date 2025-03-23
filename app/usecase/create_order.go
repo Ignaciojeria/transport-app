@@ -79,7 +79,7 @@ func NewCreateOrder(
 			return domain.Order{}, err
 		}
 		inOrder.OrderType.Organization = inOrder.Organization
-		orderType, err := upsertOrderType(ctx, inOrder.OrderType)
+		err = upsertOrderType(ctx, inOrder.OrderType)
 		if err != nil {
 			return domain.Order{}, err
 		}
@@ -91,7 +91,7 @@ func NewCreateOrder(
 		//inOrder.Headers = orderHeaders
 		//inOrder.Origin.AddressInfo.Contact = originContact
 		//inOrder.Destination.AddressInfo.Contact = destinationContact
-		inOrder.OrderType = orderType
+		//inOrder.OrderType = orderType
 		inOrder.Origin = originNodeInfo
 		inOrder.Destination = destinationNodeInfo
 		inOrder.Origin.AddressInfo = originAddressInfo

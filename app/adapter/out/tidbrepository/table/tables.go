@@ -635,6 +635,7 @@ func (j JSONWeight) Value() (driver.Value, error) {
 type OrderType struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
+	ReferenceID    string       `gorm:"type:char(32);uniqueIndex"`
 	Type           string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_organization"`
 	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_type_organization"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
@@ -647,7 +648,8 @@ func (o OrderType) Map() domain.OrderType {
 		Type:        o.Type,
 		Description: o.Description,
 		Organization: domain.Organization{
-			ID: o.OrganizationID,
+			ID:      o.OrganizationID,
+			Country: countries.ByName(o.Organization.Country),
 		},
 	}
 }

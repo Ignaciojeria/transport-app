@@ -13,28 +13,46 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertOrderType func(context.Context, domain.OrderType) (domain.OrderType, error)
+type UpsertOrderType func(context.Context, domain.OrderType) error
 
 func init() {
 	ioc.Registry(NewUpsertOrderType, tidb.NewTIDBConnection)
 }
 
 func NewUpsertOrderType(conn tidb.TIDBConnection) UpsertOrderType {
-	return func(ctx context.Context, ot domain.OrderType) (domain.OrderType, error) {
-		var orderType table.OrderType
+	return func(ctx context.Context, ot domain.OrderType) error {
+		var existing table.OrderType
+
 		err := conn.DB.WithContext(ctx).
 			Table("order_types").
-			Where("type = ? AND organization_id = ?", ot.Type, ot.Organization.ID).
-			First(&orderType).Error
+			Preload("Organization").
+			Where("reference_id = ?", ot.ReferenceID()).
+			First(&existing).Error
+
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.OrderType{}, err
+			return err
 		}
-		orderTypeWithChanges := orderType.Map().UpdateIfChanged(ot)
-		DBOrderTypeToUpdate := mapper.MapOrderType(orderTypeWithChanges)
-		DBOrderTypeToUpdate.CreatedAt = orderType.CreatedAt
-		if err := conn.Save(&DBOrderTypeToUpdate).Error; err != nil {
-			return domain.OrderType{}, err
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe → insertar nuevo
+			newRecord := mapper.MapOrderType(ot)
+			return conn.DB.WithContext(ctx).
+				Omit("Organization").
+				Create(&newRecord).Error
 		}
-		return DBOrderTypeToUpdate.Map(), nil
+
+		// Existe → ver si cambió
+		updated, changed := existing.Map().UpdateIfChanged(ot)
+		if !changed {
+			return nil
+		}
+
+		toUpdate := mapper.MapOrderType(updated)
+		toUpdate.ID = existing.ID
+		toUpdate.CreatedAt = existing.CreatedAt
+
+		return conn.DB.WithContext(ctx).
+			Omit("Organization").
+			Save(&toUpdate).Error
 	}
 }

@@ -37,7 +37,7 @@ func (o Order) UpdateIfChanged(newOrder Order) Order {
 	o.Destination.AddressInfo.Contact, _ =
 		o.Origin.Contact.UpdateIfChanged(newOrder.Destination.AddressInfo.Contact)
 	o.OrderStatus = o.OrderStatus.UpdateIfChanged(newOrder.OrderStatus)
-	o.OrderType = o.OrderType.UpdateIfChanged(newOrder.OrderType)
+	o.OrderType, _ = o.OrderType.UpdateIfChanged(newOrder.OrderType)
 	o.Origin = o.Origin.UpdateIfChanged(newOrder.Origin)
 	o.Destination = o.Destination.UpdateIfChanged(newOrder.Destination)
 
@@ -455,29 +455,6 @@ func compareItemReferences(oldRefs, newRefs []ItemReference) bool {
 		}
 	}
 	return true
-}
-
-type OrderType struct {
-	ID           int64
-	Organization Organization
-	Type         string `json:"type"`
-	Description  string `json:"description"`
-}
-
-func (ot OrderType) UpdateIfChanged(newOrderType OrderType) OrderType {
-	if newOrderType.ID != 0 {
-		ot.ID = newOrderType.ID
-	}
-	if newOrderType.Type != "" {
-		ot.Type = newOrderType.Type
-	}
-	if newOrderType.Description != "" {
-		ot.Description = newOrderType.Description
-	}
-	if newOrderType.Organization.ID != 0 {
-		ot.Organization = newOrderType.Organization
-	}
-	return ot
 }
 
 type OrderStatus struct {
