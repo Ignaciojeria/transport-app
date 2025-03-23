@@ -1,17 +1,10 @@
 package domain
 
 import (
-	"testing"
-
 	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
-
-func TestContactReferenceID(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Contact ReferenceID Suite")
-}
 
 var _ = Describe("Contact ReferenceID", func() {
 	org := Organization{ID: 1, Country: countries.CL}

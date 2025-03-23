@@ -1,0 +1,22 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Ginkgo - Tidb Repository",
+        "type": "go",
+        "request": "launch",
+        "mode": "test",
+        "program": "${workspaceFolder}/app/adapter/out/tidbrepository",
+        "args": ["-test.v", "-ginkgo.v"]
+      },
+      {
+        "name": "Debug Ginkgo - Order Service",
+        "type": "go",
+        "request": "launch",
+        "mode": "test",
+        "program": "${workspaceFolder}/app/order",
+        "args": ["-test.v", "-ginkgo.v"]
+      }
+    ]
+  }
+  
