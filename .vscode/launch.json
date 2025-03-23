@@ -10,11 +10,11 @@
         "args": ["-test.v", "-ginkgo.v"]
       },
       {
-        "name": "Debug Ginkgo - Order Service",
+        "name": "Debug Ginkgo - Domain",
         "type": "go",
         "request": "launch",
         "mode": "test",
-        "program": "${workspaceFolder}/app/order",
+        "program": "${workspaceFolder}/app/domain",
         "args": ["-test.v", "-ginkgo.v"]
       }
     ]
