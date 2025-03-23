@@ -36,12 +36,13 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		var accountOrg table.AccountOrganization
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := conn.DB.Create(&tableOrg).Error; err != nil {
-				return ErrOrganizationDatabase.New(err.Error())
+				return ErrOrganizationDatabase.New("failed to create organization: %v", err)
+
 			}
 			accountOrg.AccountID = account.ID
 			accountOrg.OrganizationID = tableOrg.ID
 			if err := conn.DB.Create(&accountOrg).Error; err != nil {
-				return ErrOrganizationDatabase.New(err.Error())
+				return ErrOrganizationDatabase.New("failed to link account to organization: %v", err)
 			}
 			return nil
 		})

@@ -37,7 +37,8 @@ func NewFindOrganizationByEmail(conn tidb.TIDBConnection) FindOrganizationByEmai
 		if err != nil {
 			// Si no se encuentra, retornar un error específico
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return domain.Organization{}, ErrOrganizationNotFound.New(err.Error())
+				return domain.Organization{}, ErrOrganizationNotFound.
+					New("organization with email not found: %v", err)
 			}
 
 			// Retornar cualquier otro error
