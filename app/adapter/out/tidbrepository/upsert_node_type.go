@@ -29,7 +29,7 @@ func NewUpsertNodeType(conn tidb.TIDBConnection) UpsertNodeType {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.NodeType{}, err
 		}
-		nodeTypeWithChanges := nodeType.Map().UpdateIfChanged(nt)
+		nodeTypeWithChanges, _ := nodeType.Map().UpdateIfChange(nt)
 		DBNodeTypeToUpdate := mapper.MapNodeType(nodeTypeWithChanges)
 		DBNodeTypeToUpdate.CreatedAt = nodeType.CreatedAt
 		if err := conn.Save(&DBNodeTypeToUpdate).Error; err != nil {

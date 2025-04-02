@@ -17,14 +17,10 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 	var contactID, addressInfoID, nodeTypeID *int64
 	contactID = &e.Contact.ID
 
-	nodeTypeID = &e.NodeType.ID
 	if e.Contact.ID == 0 {
 		contactID = nil
 	}
 
-	if e.NodeType.ID == 0 {
-		nodeTypeID = nil
-	}
 	var nodeName *string = &e.Name
 	if e.Name == "" {
 		nodeName = nil

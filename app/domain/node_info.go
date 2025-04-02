@@ -33,13 +33,8 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 	}
 
 	// Actualizar NodeType
-	if newNode.NodeType.Value != "" && newNode.NodeType.Value != n.NodeType.Value {
-		updated.NodeType.Value = newNode.NodeType.Value
-		changed = true
-	}
-
-	if newNode.NodeType.ID != 0 && newNode.NodeType.ID != n.NodeType.ID {
-		updated.NodeType.ID = newNode.NodeType.ID
+	if newNodeType, changedNodeType := n.NodeType.UpdateIfChange(newNode.NodeType); changedNodeType {
+		updated.NodeType = newNodeType
 		changed = true
 	}
 
@@ -50,20 +45,20 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 		for i, ref := range n.References {
 			refMap[ref.Type] = i
 		}
-		
+
 		// Copiar las referencias actuales
 		updatedRefs := make([]Reference, len(n.References))
 		copy(updatedRefs, n.References)
-		
+
 		refsChanged := false
-		
+
 		// Procesar cada nueva referencia
 		for _, newRef := range newNode.References {
 			// No considerar referencias completamente vacías
 			if newRef.Type == "" && newRef.Value == "" {
 				continue
 			}
-			
+
 			// Buscar primero por Type para mantener el comportamiento existente
 			if idx, exists := refMap[newRef.Type]; exists {
 				// Si la referencia existe, intentar actualizarla
@@ -78,7 +73,7 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 				refsChanged = true
 			}
 		}
-		
+
 		if refsChanged {
 			updated.References = updatedRefs
 			changed = true

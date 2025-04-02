@@ -213,25 +213,6 @@ func (o Order) IsOriginAndDestinationNodeEqual() bool {
 
 type ReferenceID string
 
-type NodeType struct {
-	ID           int64
-	Organization Organization
-	Value        string `json:"type"`
-}
-
-func (nt NodeType) UpdateIfChanged(newNodeType NodeType) NodeType {
-	if newNodeType.ID != 0 {
-		nt.ID = newNodeType.ID
-	}
-	if newNodeType.Value != "" {
-		nt.Value = newNodeType.Value
-	}
-	if newNodeType.ID != 0 {
-		nt.ID = newNodeType.ID
-	}
-	nt.Organization = newNodeType.Organization
-	return nt
-}
 
 
 

@@ -43,7 +43,6 @@ var _ = Describe("NodeInfo", func() {
 				Name:         "Nodo Original",
 				Organization: org1,
 				NodeType: NodeType{
-					ID:    1,
 					Value: "WAREHOUSE",
 				},
 				AddressInfo: AddressInfo{
@@ -82,13 +81,9 @@ var _ = Describe("NodeInfo", func() {
 		It("should update node type", func() {
 			newNode := baseNode
 			newNode.NodeType.Value = "STORE"
-			newNode.NodeType.ID = 2
-
 			updated, changed := baseNode.UpdateIfChanged(newNode)
-
 			Expect(changed).To(BeTrue())
 			Expect(updated.NodeType.Value).To(Equal("STORE"))
-			Expect(updated.NodeType.ID).To(Equal(int64(2)))
 		})
 
 		It("should update existing references by type", func() {
@@ -404,7 +399,6 @@ var _ = Describe("NodeInfo", func() {
 				AddressLine2: "",
 				AddressLine3: "",
 				NodeType: NodeType{
-					ID:    0,
 					Value: "",
 				},
 				References: []Reference{

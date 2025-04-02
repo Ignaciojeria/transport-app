@@ -454,10 +454,11 @@ type OrderReferences struct {
 type NodeInfo struct {
 	gorm.Model
 	ID             int64         `gorm:"primaryKey"`
-	ReferenceID    string        `gorm:"type:varchar(191);not null;uniqueIndex:idx_reference_organization"`                 // Parte del índice único con OrganizationCountryID
-	OrganizationID int64         `gorm:"not null;uniqueIndex:idx_reference_organization;uniqueIndex:idx_name_organization"` // Parte de ambos índices únicos
-	Organization   Organization  `gorm:"foreignKey:OrganizationID"`                                                         // Relación con OrganizationCountry
-	Name           *string       `gorm:"type:varchar(191);default:null;uniqueIndex:idx_name_organization"`                  // Parte del índice único con OrganizationCountryID
+	DocID          string        `gorm:"type:varchar(191);not null;uniqueIndex"`
+	ReferenceID    string        `gorm:"type:varchar(191);not null;"` // Parte del índice único con OrganizationCountryID
+	OrganizationID int64         `gorm:"not null;"`                   // Parte de ambos índices únicos
+	Organization   Organization  `gorm:"foreignKey:OrganizationID"`   // Relación con OrganizationCountry
+	Name           *string       `gorm:"type:varchar(191);"`          // Parte del índice único con OrganizationCountryID
 	NodeTypeID     *int64        `gorm:"default:null"`
 	NodeType       NodeType      `gorm:"foreignKey:NodeTypeID"`
 	ContactID      *int64        `gorm:"default:null"`
@@ -468,14 +469,11 @@ type NodeInfo struct {
 }
 
 func (n NodeInfo) Map() domain.NodeInfo {
-	var contactID, nodeTypeID int64
+	var contactID int64
 	if n.ContactID != nil {
 		contactID = *n.ContactID
 	}
 
-	if n.NodeTypeID != nil {
-		nodeTypeID = *n.NodeTypeID
-	}
 	var nodeName string
 	if n.Name != nil {
 		nodeName = *n.Name
@@ -486,9 +484,6 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		Name:        nodeName,
 		Organization: domain.Organization{
 			ID: n.OrganizationID,
-		},
-		NodeType: domain.NodeType{
-			ID: nodeTypeID,
 		},
 		References: n.NodeReferences.Map(),
 		Contact: domain.Contact{
@@ -870,7 +865,6 @@ type NodeType struct {
 
 func (n NodeType) Map() domain.NodeType {
 	return domain.NodeType{
-		ID: n.ID,
 		Organization: domain.Organization{
 			ID: n.OrganizationID,
 		},
