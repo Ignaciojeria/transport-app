@@ -60,7 +60,10 @@ var _ = Describe("NodeInfo", func() {
 				},
 				AddressLine2: "Dpto 1402",
 				AddressLine3: "Torre Norte",
-				References:   []Reference{},
+				References: []Reference{
+					{Type: "CODE", Value: "REF001"},
+					{Type: "ALT_CODE", Value: "ALT001"},
+				},
 			}
 		})
 
@@ -88,8 +91,112 @@ var _ = Describe("NodeInfo", func() {
 			Expect(updated.NodeType.ID).To(Equal(int64(2)))
 		})
 
-		It("should update references", func() {
+		It("should update existing references by type", func() {
 			newNode := baseNode
+			// Actualizar solo el valor de la referencia con Type "CODE"
+			newNode.References = []Reference{
+				{Type: "CODE", Value: "REF001-UPDATED"},
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
+			Expect(changed).To(BeTrue())
+			Expect(updated.References).To(HaveLen(2)) // Se mantienen las 2 referencias
+			
+			// Buscar la referencia actualizada por Type
+			var codeRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CODE" {
+					codeRef = ref
+					break
+				}
+			}
+			
+			Expect(codeRef.Value).To(Equal("REF001-UPDATED"))
+			
+			// Verificar que la otra referencia no cambió
+			var altRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "ALT_CODE" {
+					altRef = ref
+					break
+				}
+			}
+			
+			Expect(altRef.Value).To(Equal("ALT001"))
+		})
+
+		It("should add new references when type doesn't exist", func() {
+			newNode := baseNode
+			// Agregar una nueva referencia con Type "NEW_TYPE"
+			newNode.References = []Reference{
+				{Type: "NEW_TYPE", Value: "NEW001"},
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
+			Expect(changed).To(BeTrue())
+			Expect(updated.References).To(HaveLen(3)) // Ahora hay 3 referencias
+			
+			// Buscar la nueva referencia
+			var found bool
+			for _, ref := range updated.References {
+				if ref.Type == "NEW_TYPE" && ref.Value == "NEW001" {
+					found = true
+					break
+				}
+			}
+			
+			Expect(found).To(BeTrue())
+		})
+
+		It("should both update existing and add new references", func() {
+			newNode := baseNode
+			// Actualizar una existente y agregar una nueva
+			newNode.References = []Reference{
+				{Type: "ALT_CODE", Value: "ALT001-UPDATED"}, // Actualizar
+				{Type: "CUSTOM", Value: "CUSTOM001"}, // Agregar
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
+			Expect(changed).To(BeTrue())
+			Expect(updated.References).To(HaveLen(3)) // Ahora hay 3 referencias
+			
+			// Verificar que se actualizó la referencia ALT_CODE
+			var altRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "ALT_CODE" {
+					altRef = ref
+					break
+				}
+			}
+			Expect(altRef.Value).To(Equal("ALT001-UPDATED"))
+			
+			// Verificar que se agregó la nueva referencia
+			var customRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CUSTOM" {
+					customRef = ref
+					break
+				}
+			}
+			Expect(customRef.Value).To(Equal("CUSTOM001"))
+			
+			// Verificar que CODE se mantuvo igual
+			var codeRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CODE" {
+					codeRef = ref
+					break
+				}
+			}
+			Expect(codeRef.Value).To(Equal("REF001"))
+		})
+
+		It("should not update references if no changes", func() {
+			newNode := baseNode
+			// Mismas referencias que ya existen
 			newNode.References = []Reference{
 				{Type: "CODE", Value: "REF001"},
 				{Type: "ALT_CODE", Value: "ALT001"},
@@ -97,10 +204,86 @@ var _ = Describe("NodeInfo", func() {
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
+			// Solo las referencias no deberían causar cambios
+			Expect(changed).To(BeFalse())
+			Expect(updated.References).To(Equal(baseNode.References))
+		})
+
+		It("should handle partial updates to references", func() {
+			newNode := baseNode
+			// Solo actualizar el valor de la referencia, manteniendo el Type
+			newNode.References = []Reference{
+				{Type: "CODE", Value: "REF001-NEW"},
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
 			Expect(changed).To(BeTrue())
-			Expect(updated.References).To(HaveLen(2))
-			Expect(updated.References[0].Value).To(Equal("REF001"))
-			Expect(updated.References[1].Value).To(Equal("ALT001"))
+			
+			// Buscar la referencia actualizada
+			var codeRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CODE" {
+					codeRef = ref
+					break
+				}
+			}
+			
+			Expect(codeRef.Value).To(Equal("REF001-NEW"))
+		})
+
+		It("should handle multiple reference operations in single update", func() {
+			// Preparar un nodo base con 3 referencias
+			baseNode.References = []Reference{
+				{Type: "CODE", Value: "REF001"},
+				{Type: "ALT_CODE", Value: "ALT001"},
+				{Type: "INTERNAL", Value: "INT001"},
+			}
+
+			newNode := baseNode
+			// En un solo update: modificar una, agregar otra
+			newNode.References = []Reference{
+				{Type: "CODE", Value: "REF001-NEW"}, // Modificar
+				{Type: "EXTERNAL", Value: "EXT001"}, // Agregar
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
+			Expect(changed).To(BeTrue())
+			Expect(updated.References).To(HaveLen(4)) // 3 originales + 1 nueva
+			
+			// Verificar la que se actualizó
+			var codeRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CODE" {
+					codeRef = ref
+					break
+				}
+			}
+			Expect(codeRef.Value).To(Equal("REF001-NEW"))
+			
+			// Verificar la nueva
+			var extRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "EXTERNAL" {
+					extRef = ref
+					break
+				}
+			}
+			Expect(extRef.Value).To(Equal("EXT001"))
+			
+			// Verificar que las otras no cambiaron
+			var altRef, intRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "ALT_CODE" {
+					altRef = ref
+				}
+				if ref.Type == "INTERNAL" {
+					intRef = ref
+				}
+			}
+			Expect(altRef.Value).To(Equal("ALT001"))
+			Expect(intRef.Value).To(Equal("INT001"))
 		})
 
 		It("should update AddressLine2 and AddressLine3", func() {
@@ -157,6 +340,9 @@ var _ = Describe("NodeInfo", func() {
 					ID:    0,
 					Value: "",
 				},
+				References: []Reference{
+					{Type: "CODE", Value: ""}, // Valor vacío en referencia
+				},
 			}
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
@@ -171,6 +357,9 @@ var _ = Describe("NodeInfo", func() {
 			newNode.AddressLine2 = "Oficina 303"
 			newNode.Contact.FullName = "Carlos Ramírez"
 			newNode.AddressInfo.District = "Vitacura"
+			newNode.References = []Reference{
+				{Type: "CODE", Value: "MULTI-UPDATE"},
+			}
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
@@ -179,9 +368,19 @@ var _ = Describe("NodeInfo", func() {
 			Expect(updated.AddressLine2).To(Equal("Oficina 303"))
 			Expect(updated.Contact.FullName).To(Equal("Carlos Ramírez"))
 			Expect(updated.AddressInfo.District).To(Equal("Vitacura"))
+			
+			// Verificar que se actualizó la referencia CODE
+			var codeRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CODE" {
+					codeRef = ref
+					break
+				}
+			}
+			Expect(codeRef.Value).To(Equal("MULTI-UPDATE"))
 		})
 
-		It("should detect changes in references even if length is the same", func() {
+		It("should detect changes in references by type", func() {
 			baseNode.References = []Reference{
 				{Type: "CODE", Value: "OLD001"},
 			}

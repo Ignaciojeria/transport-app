@@ -43,10 +43,46 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 		changed = true
 	}
 
-	// Actualizar References
+	// Actualizar las Referencias usando DocID como identificador
 	if len(newNode.References) > 0 {
-		updated.References = newNode.References
-		changed = true
+		// Crear un mapa de referencias existentes por Type para rápida búsqueda
+		refMap := make(map[string]int) // Type -> índice en el slice
+		for i, ref := range n.References {
+			refMap[ref.Type] = i
+		}
+		
+		// Copiar las referencias actuales
+		updatedRefs := make([]Reference, len(n.References))
+		copy(updatedRefs, n.References)
+		
+		refsChanged := false
+		
+		// Procesar cada nueva referencia
+		for _, newRef := range newNode.References {
+			// No considerar referencias completamente vacías
+			if newRef.Type == "" && newRef.Value == "" {
+				continue
+			}
+			
+			// Buscar primero por Type para mantener el comportamiento existente
+			if idx, exists := refMap[newRef.Type]; exists {
+				// Si la referencia existe, intentar actualizarla
+				updatedRef, refChanged := updatedRefs[idx].UpdateIfChange(newRef)
+				if refChanged {
+					updatedRefs[idx] = updatedRef
+					refsChanged = true
+				}
+			} else {
+				// Si la referencia no existe, agregarla
+				updatedRefs = append(updatedRefs, newRef)
+				refsChanged = true
+			}
+		}
+		
+		if refsChanged {
+			updated.References = updatedRefs
+			changed = true
+		}
 	}
 
 	// Actualizar campos AddressLine que se movieron de AddressInfo a NodeInfo

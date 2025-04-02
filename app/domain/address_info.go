@@ -7,7 +7,6 @@ import (
 )
 
 type AddressInfo struct {
-	ID                int64
 	Organization      Organization
 	Contact           Contact   `json:"contact"`
 	State             string    `json:"state"`

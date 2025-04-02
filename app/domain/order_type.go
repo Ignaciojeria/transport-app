@@ -1,7 +1,6 @@
 package domain
 
 type OrderType struct {
-	ID           int64
 	Organization Organization
 	Type         string `json:"type"`
 	Description  string `json:"description"`

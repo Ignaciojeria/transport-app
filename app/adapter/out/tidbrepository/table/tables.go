@@ -235,12 +235,14 @@ func (o Order) Map() domain.Order {
 	}
 
 	// Mapear AddressInfo IDs
-	if o.OriginAddressInfoID != 0 {
-		order.Origin.AddressInfo.ID = o.OriginAddressInfoID
-	}
-	if o.DestinationAddressInfoID != 0 {
-		order.Destination.AddressInfo.ID = o.DestinationAddressInfoID
-	}
+	/*
+		if o.OriginAddressInfoID != 0 {
+			order.Origin.AddressInfo.ID = o.OriginAddressInfoID
+		}*/
+	/*
+		if o.DestinationAddressInfoID != 0 {
+			order.Destination.AddressInfo.ID = o.DestinationAddressInfoID
+		}*/
 
 	// Mapear NodeInfo IDs
 	if o.OriginNodeInfoID != 0 {
@@ -466,13 +468,11 @@ type NodeInfo struct {
 }
 
 func (n NodeInfo) Map() domain.NodeInfo {
-	var contactID, addressID, nodeTypeID int64
+	var contactID, nodeTypeID int64
 	if n.ContactID != nil {
 		contactID = *n.ContactID
 	}
-	if n.AddressID != nil {
-		addressID = *n.AddressID
-	}
+
 	if n.NodeTypeID != nil {
 		nodeTypeID = *n.NodeTypeID
 	}
@@ -493,9 +493,6 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		References: n.NodeReferences.Map(),
 		Contact: domain.Contact{
 			ID: contactID,
-		},
-		AddressInfo: domain.AddressInfo{
-			ID: addressID,
 		},
 	}
 	return nodeInfo
@@ -526,7 +523,6 @@ type AddressInfo struct {
 
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
-		ID:           a.ID,
 		Organization: a.Organization.Map(),
 		State:        a.State,
 		Province:     a.Province,
@@ -633,15 +629,14 @@ type OrderType struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
 	ReferenceID    string       `gorm:"type:char(32);uniqueIndex"`
-	Type           string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_type_organization"`
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_type_organization"`
+	Type           string       `gorm:"type:varchar(191);not null;"`
+	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 	Description    string       `gorm:"type:text"`
 }
 
 func (o OrderType) Map() domain.OrderType {
 	return domain.OrderType{
-		ID:          o.ID,
 		Type:        o.Type,
 		Description: o.Description,
 		Organization: domain.Organization{

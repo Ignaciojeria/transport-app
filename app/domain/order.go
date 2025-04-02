@@ -213,12 +213,6 @@ func (o Order) IsOriginAndDestinationNodeEqual() bool {
 
 type ReferenceID string
 
-type Reference struct {
-	ID    int64
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
 type NodeType struct {
 	ID           int64
 	Organization Organization

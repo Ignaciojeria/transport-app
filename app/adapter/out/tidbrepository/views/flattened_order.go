@@ -122,7 +122,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	references := make([]domain.Reference, len(refs))
 	for i, ref := range refs {
 		references[i] = domain.Reference{
-			ID:    ref.ReferenceID,
 			Type:  ref.Type,
 			Value: ref.Value,
 		}
@@ -159,7 +158,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			Status: o.OrderStatus,
 		},
 		OrderType: domain.OrderType{
-			ID:          o.OrderTypeID,
+			//ID:          o.OrderTypeID,
 			Type:        o.OrderType,
 			Description: o.OrderTypeDescription,
 		},

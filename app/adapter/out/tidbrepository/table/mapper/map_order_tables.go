@@ -29,7 +29,6 @@ func MapOrderToTable(order domain.Order) table.Order {
 		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
 		OrderHeadersReference: order.Headers.DocID(),
 		OrderStatusID:         order.OrderStatus.ID, // Completar según la lógica de negocio
-		OrderTypeID:           order.OrderType.ID,   // Completar según la lógica de negocio
 		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
 		OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
@@ -38,10 +37,6 @@ func MapOrderToTable(order domain.Order) table.Order {
 		OriginNodeInfoID: order.Origin.ID, // Completar según la lógica de negocio
 		//OriginNodeInfo:   MapNodeInfoTable(order.Origin),
 
-		OriginAddressInfoID: order.Origin.AddressInfo.ID, // Completar según la lógica de negocio
-		//OriginAddressInfo:   MapAddressInfoToTable(order.Origin.AddressInfo, orgCountryID),
-
-		DestinationAddressInfoID: order.Destination.AddressInfo.ID, // Completar según la lógica de negocio
 		//DestinationAddressInfo:   MapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
 		OriginContactID: order.Origin.AddressInfo.Contact.ID,
 		//OriginContact:            MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
@@ -78,7 +73,6 @@ func mapReferencesToTable(references []domain.Reference) []table.OrderReferences
 	mapped := make([]table.OrderReferences, len(references))
 	for i, ref := range references {
 		mapped[i] = table.OrderReferences{
-			ID:    ref.ID,
 			Type:  ref.Type,
 			Value: ref.Value,
 		}
@@ -203,17 +197,17 @@ func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders 
 func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 	return table.OrderType{
 		OrganizationID: orgCountry,
-		ID:             t.ID,
-		Type:           t.Type,
-		Description:    t.Description,
+
+		Type:        t.Type,
+		Description: t.Description,
 	}
 }
 
 func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.AddressInfo {
 	return table.AddressInfo{
 		OrganizationID: orgCountry,
-		ID:             address.ID,
-		State:          address.State,
+
+		State: address.State,
 		//	Locality:       address.Locality,
 		District:     address.District,
 		AddressLine1: address.AddressLine1,

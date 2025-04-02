@@ -16,14 +16,12 @@ func MapAccountTable(e domain.Account) table.Account {
 func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 	var contactID, addressInfoID, nodeTypeID *int64
 	contactID = &e.Contact.ID
-	addressInfoID = &e.AddressInfo.ID
+
 	nodeTypeID = &e.NodeType.ID
 	if e.Contact.ID == 0 {
 		contactID = nil
 	}
-	if e.AddressInfo.ID == 0 {
-		addressInfoID = nil
-	}
+
 	if e.NodeType.ID == 0 {
 		nodeTypeID = nil
 	}
@@ -44,7 +42,6 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 
 func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
 	return table.AddressInfo{
-		ID:    e.ID,
 		State: e.State,
 		//	Locality:       e.Locality,
 		District:     e.District,

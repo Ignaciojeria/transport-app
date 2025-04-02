@@ -51,7 +51,7 @@ func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 			Documents:    mapDocuments(n.OperatorDocuments),
 		},
 		AddressInfo: domain.AddressInfo{
-			ID:           n.AddressID,
+			//ID:           n.AddressID,
 			AddressLine1: n.AddressLine1,
 			//	AddressLine2: n.AddressLine2,
 			//	AddressLine3: n.AddressLine3,
