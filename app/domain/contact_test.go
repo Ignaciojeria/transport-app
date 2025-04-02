@@ -322,3 +322,129 @@ var _ = Describe("Contact AdditionalContactMethods Continue", func() {
 		Expect(telegramFound).To(BeTrue())
 	})
 })
+
+var _ = Describe("Contact DocID Function", func() {
+	org := Organization{ID: 1, Country: countries.CL}
+
+	It("should use PrimaryEmail as key when present", func() {
+		contact := Contact{
+			PrimaryEmail: "test@example.com",
+			PrimaryPhone: "+56912345678",
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+
+		docID := contact.DocID()
+		Expect(docID).To(Equal(Hash(org, "test@example.com")))
+	})
+
+	It("should fallback to PrimaryPhone when PrimaryEmail is missing", func() {
+		contact := Contact{
+			PrimaryEmail: "", // Vacío
+			PrimaryPhone: "+56912345678",
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+
+		docID := contact.DocID()
+		Expect(docID).To(Equal(Hash(org, "+56912345678")))
+	})
+
+	It("should fallback to NationalID when PrimaryEmail and PrimaryPhone are missing", func() {
+		contact := Contact{
+			PrimaryEmail: "", // Vacío
+			PrimaryPhone: "", // Vacío
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+
+		docID := contact.DocID()
+		Expect(docID).To(Equal(Hash(org, "12345678-9")))
+	})
+
+	It("should generate a UUID when all identifiers are missing", func() {
+		contact := Contact{
+			PrimaryEmail: "", // Vacío
+			PrimaryPhone: "", // Vacío
+			NationalID:   "", // Vacío
+			Organization: org,
+		}
+
+		// Generar dos IDs para verificar que son diferentes (UUIDs)
+		docID1 := contact.DocID()
+		docID2 := contact.DocID()
+
+		Expect(docID1).ToNot(BeEmpty())
+		Expect(docID2).ToNot(BeEmpty())
+		Expect(docID1).ToNot(Equal(docID2)) // Deberían ser diferentes UUIDs
+	})
+})
+
+var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
+	var original Contact
+	org := Organization{ID: 1, Country: countries.CL}
+
+	BeforeEach(func() {
+		original = Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+	})
+
+	It("should update PrimaryEmail when different and not empty", func() {
+		newContact := Contact{
+			PrimaryEmail: "nuevo@correo.com", // Diferente y no vacío
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeTrue())
+		Expect(updated.PrimaryEmail).To(Equal("nuevo@correo.com"))
+	})
+
+	It("should not update PrimaryEmail when same", func() {
+		newContact := Contact{
+			PrimaryEmail: "juan@correo.com", // Igual al original
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeFalse())
+		Expect(updated.PrimaryEmail).To(Equal("juan@correo.com"))
+	})
+
+	It("should not update PrimaryEmail when empty", func() {
+		newContact := Contact{
+			PrimaryEmail: "", // Vacío
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeFalse())
+		Expect(updated.PrimaryEmail).To(Equal("juan@correo.com")) // Mantiene el valor original
+	})
+
+	It("should verify both conditions together for PrimaryEmail update", func() {
+		// Crear tres contactos para probar las tres combinaciones posibles
+		contact1 := Contact{PrimaryEmail: "diferente@correo.com"} // Diferente y no vacío -> debe actualizar
+		contact2 := Contact{PrimaryEmail: "juan@correo.com"}      // Igual -> no debe actualizar
+		contact3 := Contact{PrimaryEmail: ""}                     // Vacío -> no debe actualizar
+
+		updated1, changed1 := original.UpdateIfChanged(contact1)
+		updated2, changed2 := original.UpdateIfChanged(contact2)
+		updated3, changed3 := original.UpdateIfChanged(contact3)
+
+		// Verificar resultados
+		Expect(changed1).To(BeTrue())
+		Expect(updated1.PrimaryEmail).To(Equal("diferente@correo.com"))
+
+		Expect(changed2).To(BeFalse())
+		Expect(updated2.PrimaryEmail).To(Equal("juan@correo.com"))
+
+		Expect(changed3).To(BeFalse())
+		Expect(updated3.PrimaryEmail).To(Equal("juan@correo.com"))
+	})
+})
