@@ -12,27 +12,41 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertAddressInfo func(context.Context, domain.AddressInfo) (domain.AddressInfo, error)
+type UpsertAddressInfo func(context.Context, domain.AddressInfo) error
 
 func init() {
 	ioc.Registry(NewUpsertAddressInfo, tidb.NewTIDBConnection)
 }
+
 func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
-	return func(ctx context.Context, ai domain.AddressInfo) (domain.AddressInfo, error) {
-		var addressInfo table.AddressInfo
+	return func(ctx context.Context, ai domain.AddressInfo) error {
+		var existing table.AddressInfo
 		err := conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("raw_address = ? AND organization_id = ?", ai.FullAddress(), ai.Organization.ID).
-			First(&addressInfo).Error
+			Preload("Organization").
+			Where("reference_id = ?", ai.ReferenceID()).
+			First(&existing).Error
+
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.AddressInfo{}, err
+			return err
 		}
-		addrInfoUpdated, _ := addressInfo.Map().UpdateIfChanged(ai)
-		dbAddressInfoToUpsert := mapper.MapAddressInfoTable(addrInfoUpdated, ai.Organization.ID)
-		dbAddressInfoToUpsert.CreatedAt = addressInfo.CreatedAt
-		if err := conn.Save(&dbAddressInfoToUpsert).Error; err != nil {
-			return domain.AddressInfo{}, err
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe → insert
+			newAddressInfo := mapper.MapAddressInfoTable(ai, ai.Organization.ID)
+			return conn.Omit("Organization").Create(&newAddressInfo).Error
 		}
-		return dbAddressInfoToUpsert.Map(), nil
+
+		// Ya existe → update solo si cambió algo
+		updated, changed := existing.Map().UpdateIfChanged(ai)
+		if !changed {
+			return nil // No hay cambios, no hacemos nada
+		}
+
+		updateData := mapper.MapAddressInfoTable(updated, ai.Organization.ID)
+		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+		updateData.CreatedAt = existing.CreatedAt
+
+		return conn.Omit("Organization").Save(&updateData).Error
 	}
 }

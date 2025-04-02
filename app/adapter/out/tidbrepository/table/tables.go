@@ -511,16 +511,13 @@ func nilIfEmpty(s string) *string {
 type AddressInfo struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"not null;uniqueIndex:idx_raw_address_organization"`                   // Parte del índice único
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`                                           // Relación con la tabla
-	RawAddress     string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_raw_address_organization"` // Parte del índice único
+	OrganizationID int64        `gorm:"not null;"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	ReferenceID    string       `gorm:"not null;uniqueIndex"`
 	State          string       `gorm:"default:null"`
 	Province       string       `gorm:"default:null"`
-	Locality       string       `gorm:"default:null"`
 	District       string       `gorm:"default:null"`
 	AddressLine1   string       `gorm:"not null"`
-	AddressLine2   string       `gorm:"default:null"`
-	AddressLine3   string       `gorm:"default:null"`
 	Latitude       float64      `gorm:"default:null"`
 	Longitude      float64      `gorm:"default:null"`
 	ZipCode        string       `gorm:"default:null"`
@@ -533,14 +530,14 @@ func (a AddressInfo) Map() domain.AddressInfo {
 		Organization: a.Organization.Map(),
 		State:        a.State,
 		Province:     a.Province,
-	//	Locality:     a.Locality,
+		//	Locality:     a.Locality,
 		District:     a.District,
 		AddressLine1: a.AddressLine1,
-	//	AddressLine2: a.AddressLine2,
-	//	AddressLine3: a.AddressLine3,
-		Location:     orb.Point{a.Longitude, a.Latitude},
-		ZipCode:      a.ZipCode,
-		TimeZone:     a.TimeZone,
+		//	AddressLine2: a.AddressLine2,
+		//	AddressLine3: a.AddressLine3,
+		Location: orb.Point{a.Longitude, a.Latitude},
+		ZipCode:  a.ZipCode,
+		TimeZone: a.TimeZone,
 	}
 }
 
