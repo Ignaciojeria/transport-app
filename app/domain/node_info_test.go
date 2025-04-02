@@ -102,7 +102,7 @@ var _ = Describe("NodeInfo", func() {
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.References).To(HaveLen(2)) // Se mantienen las 2 referencias
-			
+
 			// Buscar la referencia actualizada por Type
 			var codeRef Reference
 			for _, ref := range updated.References {
@@ -111,9 +111,9 @@ var _ = Describe("NodeInfo", func() {
 					break
 				}
 			}
-			
+
 			Expect(codeRef.Value).To(Equal("REF001-UPDATED"))
-			
+
 			// Verificar que la otra referencia no cambió
 			var altRef Reference
 			for _, ref := range updated.References {
@@ -122,7 +122,7 @@ var _ = Describe("NodeInfo", func() {
 					break
 				}
 			}
-			
+
 			Expect(altRef.Value).To(Equal("ALT001"))
 		})
 
@@ -137,7 +137,7 @@ var _ = Describe("NodeInfo", func() {
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.References).To(HaveLen(3)) // Ahora hay 3 referencias
-			
+
 			// Buscar la nueva referencia
 			var found bool
 			for _, ref := range updated.References {
@@ -146,7 +146,7 @@ var _ = Describe("NodeInfo", func() {
 					break
 				}
 			}
-			
+
 			Expect(found).To(BeTrue())
 		})
 
@@ -155,14 +155,14 @@ var _ = Describe("NodeInfo", func() {
 			// Actualizar una existente y agregar una nueva
 			newNode.References = []Reference{
 				{Type: "ALT_CODE", Value: "ALT001-UPDATED"}, // Actualizar
-				{Type: "CUSTOM", Value: "CUSTOM001"}, // Agregar
+				{Type: "CUSTOM", Value: "CUSTOM001"},        // Agregar
 			}
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.References).To(HaveLen(3)) // Ahora hay 3 referencias
-			
+
 			// Verificar que se actualizó la referencia ALT_CODE
 			var altRef Reference
 			for _, ref := range updated.References {
@@ -172,7 +172,7 @@ var _ = Describe("NodeInfo", func() {
 				}
 			}
 			Expect(altRef.Value).To(Equal("ALT001-UPDATED"))
-			
+
 			// Verificar que se agregó la nueva referencia
 			var customRef Reference
 			for _, ref := range updated.References {
@@ -182,7 +182,7 @@ var _ = Describe("NodeInfo", func() {
 				}
 			}
 			Expect(customRef.Value).To(Equal("CUSTOM001"))
-			
+
 			// Verificar que CODE se mantuvo igual
 			var codeRef Reference
 			for _, ref := range updated.References {
@@ -219,7 +219,7 @@ var _ = Describe("NodeInfo", func() {
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
 			Expect(changed).To(BeTrue())
-			
+
 			// Buscar la referencia actualizada
 			var codeRef Reference
 			for _, ref := range updated.References {
@@ -228,7 +228,7 @@ var _ = Describe("NodeInfo", func() {
 					break
 				}
 			}
-			
+
 			Expect(codeRef.Value).To(Equal("REF001-NEW"))
 		})
 
@@ -251,7 +251,7 @@ var _ = Describe("NodeInfo", func() {
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.References).To(HaveLen(4)) // 3 originales + 1 nueva
-			
+
 			// Verificar la que se actualizó
 			var codeRef Reference
 			for _, ref := range updated.References {
@@ -261,7 +261,7 @@ var _ = Describe("NodeInfo", func() {
 				}
 			}
 			Expect(codeRef.Value).To(Equal("REF001-NEW"))
-			
+
 			// Verificar la nueva
 			var extRef Reference
 			for _, ref := range updated.References {
@@ -271,7 +271,7 @@ var _ = Describe("NodeInfo", func() {
 				}
 			}
 			Expect(extRef.Value).To(Equal("EXT001"))
-			
+
 			// Verificar que las otras no cambiaron
 			var altRef, intRef Reference
 			for _, ref := range updated.References {
@@ -284,6 +284,73 @@ var _ = Describe("NodeInfo", func() {
 			}
 			Expect(altRef.Value).To(Equal("ALT001"))
 			Expect(intRef.Value).To(Equal("INT001"))
+		})
+
+		It("should skip completely empty references with continue", func() {
+			newNode := baseNode
+			// Incluir referencias vacías entre otras válidas para probar el continue
+			newNode.References = []Reference{
+				{Type: "NEW_TYPE", Value: "NEW001"},     // Válida - debe agregarse
+				{Type: "", Value: ""},                   // Vacía - debe ignorarse por el continue
+				{Type: "CODE", Value: "REF001-UPDATED"}, // Válida - debe actualizar existente
+				{Type: "", Value: ""},                   // Otra vacía - debe ignorarse
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
+			// Debe haber cambios
+			Expect(changed).To(BeTrue())
+
+			// Solo debería haber 3 referencias: las 2 originales + 1 nueva
+			// Las vacías deben ser ignoradas por el continue
+			Expect(updated.References).To(HaveLen(3))
+
+			// Verificar que la nueva referencia se agregó
+			var newTypeFound bool
+			for _, ref := range updated.References {
+				if ref.Type == "NEW_TYPE" && ref.Value == "NEW001" {
+					newTypeFound = true
+					break
+				}
+			}
+			Expect(newTypeFound).To(BeTrue(), "La nueva referencia válida debe agregarse")
+
+			// Verificar que la referencia existente se actualizó
+			var codeRef Reference
+			for _, ref := range updated.References {
+				if ref.Type == "CODE" {
+					codeRef = ref
+					break
+				}
+			}
+			Expect(codeRef.Value).To(Equal("REF001-UPDATED"), "La referencia existente debe actualizarse")
+
+			// Verificar que ninguna referencia vacía fue agregada
+			emptyRefs := 0
+			for _, ref := range updated.References {
+				if ref.Type == "" && ref.Value == "" {
+					emptyRefs++
+				}
+			}
+			Expect(emptyRefs).To(Equal(0), "No debe haber referencias vacías en el resultado")
+		})
+
+		It("should handle updates with only empty references", func() {
+			newNode := baseNode
+			// Lista con solo referencias vacías
+			newNode.References = []Reference{
+				{Type: "", Value: ""},
+				{Type: "", Value: ""},
+				{Type: "", Value: ""},
+			}
+
+			updated, changed := baseNode.UpdateIfChanged(newNode)
+
+			// No debe haber cambios porque todas las referencias están vacías y serán ignoradas
+			Expect(changed).To(BeFalse(), "No debe haber cambios con solo referencias vacías")
+
+			// Las referencias originales deben mantenerse sin cambios
+			Expect(updated.References).To(Equal(baseNode.References))
 		})
 
 		It("should update AddressLine2 and AddressLine3", func() {
@@ -368,7 +435,7 @@ var _ = Describe("NodeInfo", func() {
 			Expect(updated.AddressLine2).To(Equal("Oficina 303"))
 			Expect(updated.Contact.FullName).To(Equal("Carlos Ramírez"))
 			Expect(updated.AddressInfo.District).To(Equal("Vitacura"))
-			
+
 			// Verificar que se actualizó la referencia CODE
 			var codeRef Reference
 			for _, ref := range updated.References {
@@ -396,7 +463,5 @@ var _ = Describe("NodeInfo", func() {
 			Expect(updated.References[0].Value).To(Equal("NEW001"))
 		})
 	})
-
-	
 
 })
