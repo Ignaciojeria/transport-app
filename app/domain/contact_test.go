@@ -33,6 +33,16 @@ var _ = Describe("Contact ReferenceID", func() {
 		Expect(refID).To(Equal(Hash(org, "test@example.com")))
 	})
 
+	It("should use nationalID if primaryEmail and primaryPhone are missing", func() {
+		contact := Contact{
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+
+		refID := contact.ReferenceID()
+		Expect(refID).To(Equal(Hash(org, "12345678-9")))
+	})
+
 	It("should fallback to primaryPhone if primaryEmail and nationalID are missing", func() {
 		contact := Contact{
 			PrimaryPhone: "+56912345678",

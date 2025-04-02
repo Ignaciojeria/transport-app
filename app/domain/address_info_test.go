@@ -4,6 +4,7 @@ import (
 	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/paulmach/orb"
 )
 
 var _ = Describe("AddressInfo", func() {
@@ -32,6 +33,27 @@ var _ = Describe("AddressInfo", func() {
 			Expect(addr1.ReferenceID()).ToNot(Equal(addr2.ReferenceID()))
 		})
 
+		It("should generate same ReferenceID even with different AddressLine2", func() {
+			addr1 := AddressInfo{
+				Organization: org1,
+				AddressLine1: "Av Providencia 1234",
+				AddressLine2: "Dpto 1402",
+				District:     "Providencia",
+				Province:     "Santiago",
+				State:        "Metropolitana",
+			}
+			addr2 := AddressInfo{
+				Organization: org1,
+				AddressLine1: "Av Providencia 1234",
+				AddressLine2: "Dpto 1403", // Diferente pero no debería afectar el hash
+				District:     "Providencia",
+				Province:     "Santiago",
+				State:        "Metropolitana",
+			}
+
+			Expect(addr1.ReferenceID()).To(Equal(addr2.ReferenceID()))
+		})
+
 		It("should generate same ReferenceID for same input", func() {
 			addr1 := AddressInfo{
 				Organization: org1,
@@ -48,42 +70,124 @@ var _ = Describe("AddressInfo", func() {
 	})
 
 	Describe("UpdateIfChanged", func() {
-		It("should mark as changed when district is updated", func() {
-			original := AddressInfo{District: "Ñuñoa"}
-			input := AddressInfo{District: "Providencia"}
+		var original AddressInfo
 
+		BeforeEach(func() {
+			original = AddressInfo{
+				Organization:    org1,
+				AddressLine1:    "Av Providencia 1234",
+				AddressLine2:    "Dpto 1402",
+				AddressLine3:    "Torre Norte",
+				State:           "Metropolitana",
+				Locality:        "Santiago",
+				Province:        "Santiago",
+				District:        "Providencia",
+				ZipCode:         "7500000",
+				TimeZone:        "America/Santiago",
+				Location:        orb.Point{-33.4372, -70.6506}, // Coordenadas de ejemplo
+				ProviderAddress: "AV PROVIDENCIA 1234",
+			}
+		})
+
+		It("should mark as changed when AddressLine1 is updated", func() {
+			input := AddressInfo{AddressLine1: "Av Las Condes 5678"}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.District).To(Equal("Providencia"))
+			Expect(updated.AddressLine1).To(Equal("Av Las Condes 5678"))
+		})
+
+		It("should mark as changed when AddressLine2 is updated", func() {
+			input := AddressInfo{AddressLine2: "Dpto 102"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.AddressLine2).To(Equal("Dpto 102"))
+		})
+
+		It("should mark as changed when AddressLine3 is updated", func() {
+			input := AddressInfo{AddressLine3: "Torre Sur"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.AddressLine3).To(Equal("Torre Sur"))
+		})
+
+		It("should mark as changed when Location is updated", func() {
+			newLocation := orb.Point{-33.4400, -70.6600} // Coordenadas diferentes
+			input := AddressInfo{Location: newLocation}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Location).To(Equal(newLocation))
+		})
+
+		It("should mark as changed when State is updated", func() {
+			input := AddressInfo{State: "Valparaíso"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.State).To(Equal("Valparaíso"))
+		})
+
+		It("should mark as changed when Locality is updated", func() {
+			input := AddressInfo{Locality: "Viña del Mar"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Locality).To(Equal("Viña del Mar"))
+		})
+
+		It("should mark as changed when Province is updated", func() {
+			input := AddressInfo{Province: "Valparaíso"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Province).To(Equal("Valparaíso"))
+		})
+
+		It("should mark as changed when District is updated", func() {
+			input := AddressInfo{District: "Las Condes"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.District).To(Equal("Las Condes"))
+		})
+
+		It("should mark as changed when ZipCode is updated", func() {
+			input := AddressInfo{ZipCode: "7550000"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.ZipCode).To(Equal("7550000"))
+		})
+
+		It("should mark as changed when TimeZone is updated", func() {
+			input := AddressInfo{TimeZone: "America/Argentina/Buenos_Aires"}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.TimeZone).To(Equal("America/Argentina/Buenos_Aires"))
 		})
 
 		It("should not change when all fields are the same", func() {
-			original := AddressInfo{
-				AddressLine1: "calle 123",
-				District:     "Ñuñoa",
-				State:        "Metropolitana",
-			}
-			input := AddressInfo{
-				AddressLine1: "calle 123",
-				District:     "Ñuñoa",
-				State:        "Metropolitana",
-			}
-
+			input := original
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeFalse())
 			Expect(updated).To(Equal(original))
 		})
 
 		It("should ignore empty fields in input", func() {
-			original := AddressInfo{
-				AddressLine1: "calle 123",
-				District:     "Ñuñoa",
-			}
-			input := AddressInfo{} // no hay cambios
-
+			input := AddressInfo{} // Sin campos
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeFalse())
 			Expect(updated).To(Equal(original))
+		})
+
+		It("should update multiple fields at once", func() {
+			input := AddressInfo{
+				AddressLine1: "Av Las Condes 5678",
+				District:     "Las Condes",
+				ZipCode:      "7550000",
+			}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.AddressLine1).To(Equal("Av Las Condes 5678"))
+			Expect(updated.District).To(Equal("Las Condes"))
+			Expect(updated.ZipCode).To(Equal("7550000"))
+			// Otros campos deben permanecer igual
+			Expect(updated.AddressLine2).To(Equal(original.AddressLine2))
+			Expect(updated.State).To(Equal(original.State))
 		})
 	})
 
@@ -108,6 +212,60 @@ var _ = Describe("AddressInfo", func() {
 			Expect(addr.State).To(Equal("metropolitana"))
 			Expect(addr.Province).To(Equal("santiago"))
 			Expect(addr.District).To(Equal("providencia"))
+		})
+	})
+
+	Describe("FullAddress", func() {
+		It("should concatenate address fields excluding AddressLine2 and AddressLine3", func() {
+			addr := AddressInfo{
+				AddressLine1: "Av Providencia 1234",
+				AddressLine2: "Dpto 1402",   // No debe incluirse
+				AddressLine3: "Torre Norte", // No debe incluirse
+				District:     "Providencia",
+				Province:     "Santiago",
+				State:        "Metropolitana",
+				ZipCode:      "7500000",
+			}
+
+			fullAddress := addr.FullAddress()
+
+			// Comprueba que el resultado contiene los campos correctos
+			Expect(fullAddress).To(ContainSubstring("Av Providencia 1234"))
+			Expect(fullAddress).To(ContainSubstring("Providencia"))
+			Expect(fullAddress).To(ContainSubstring("Santiago"))
+			Expect(fullAddress).To(ContainSubstring("Metropolitana"))
+			Expect(fullAddress).To(ContainSubstring("7500000"))
+
+			// Comprueba que no contiene los campos excluidos
+			Expect(fullAddress).NotTo(ContainSubstring("Dpto 1402"))
+			Expect(fullAddress).NotTo(ContainSubstring("Torre Norte"))
+		})
+
+		It("should correctly handle empty fields", func() {
+			addr := AddressInfo{
+				AddressLine1: "Av Providencia 1234",
+				District:     "Providencia",
+				// Province vacío
+				State:   "Metropolitana",
+				ZipCode: "", // Vacío
+			}
+
+			fullAddress := addr.FullAddress()
+
+			// Verifica que los campos vacíos se manejen correctamente
+			Expect(fullAddress).To(ContainSubstring("Av Providencia 1234"))
+			Expect(fullAddress).To(ContainSubstring("Providencia"))
+			Expect(fullAddress).To(ContainSubstring("Metropolitana"))
+			Expect(fullAddress).NotTo(ContainSubstring(",,")) // No debe haber comas consecutivas
+		})
+
+		It("should return just AddressLine1 if other fields are empty", func() {
+			addr := AddressInfo{
+				AddressLine1: "Av Providencia 1234",
+			}
+
+			fullAddress := addr.FullAddress()
+			Expect(fullAddress).To(Equal("Av Providencia 1234"))
 		})
 	})
 })

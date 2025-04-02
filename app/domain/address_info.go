@@ -29,7 +29,6 @@ func (a AddressInfo) ReferenceID() string {
 	return Hash(
 		a.Organization,
 		a.AddressLine1,
-		a.AddressLine2,
 		a.District,
 		a.Province,
 		a.State)
@@ -101,8 +100,6 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 func (a AddressInfo) FullAddress() string {
 	parts := []string{
 		a.AddressLine1,
-		a.AddressLine2,
-		a.AddressLine3,
 		a.District,
 		a.Province,
 		a.State,
