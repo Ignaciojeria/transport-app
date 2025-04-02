@@ -7,7 +7,7 @@ type OrderType struct {
 	Description  string `json:"description"`
 }
 
-func (ot OrderType) ReferenceID() string {
+func (ot OrderType) DocID() string {
 	return Hash(ot.Organization, ot.Type)
 }
 

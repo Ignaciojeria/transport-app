@@ -29,9 +29,9 @@ func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
 		o.Organization = newOperator.Organization
 	}
 
-	o.OriginNode = o.OriginNode.UpdateIfChanged(newOperator.OriginNode)
+	o.OriginNode, _ = o.OriginNode.UpdateIfChanged(newOperator.OriginNode)
 
-	o.Contact,_ = o.Contact.UpdateIfChanged(newOperator.Contact)
+	o.Contact, _ = o.Contact.UpdateIfChanged(newOperator.Contact)
 
 	return o
 }

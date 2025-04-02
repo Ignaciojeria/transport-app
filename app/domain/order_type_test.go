@@ -18,21 +18,21 @@ var _ = Describe("OrderType", func() {
 			orderType1 := OrderType{Organization: org1, Type: "retail"}
 			orderType2 := OrderType{Organization: org2, Type: "retail"}
 
-			Expect(orderType1.ReferenceID()).ToNot(Equal(orderType2.ReferenceID()))
+			Expect(orderType1.DocID()).ToNot(Equal(orderType2.DocID()))
 		})
 
 		It("should generate different reference IDs for different types", func() {
 			orderType1 := OrderType{Organization: org1, Type: "retail"}
 			orderType2 := OrderType{Organization: org1, Type: "b2b"}
 
-			Expect(orderType1.ReferenceID()).ToNot(Equal(orderType2.ReferenceID()))
+			Expect(orderType1.DocID()).ToNot(Equal(orderType2.DocID()))
 		})
 
 		It("should generate the same reference ID for same org and type", func() {
 			orderType1 := OrderType{Organization: org1, Type: "express"}
 			orderType2 := OrderType{Organization: org1, Type: "express"}
 
-			Expect(orderType1.ReferenceID()).To(Equal(orderType2.ReferenceID()))
+			Expect(orderType1.DocID()).To(Equal(orderType2.DocID()))
 		})
 	})
 

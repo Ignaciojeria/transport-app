@@ -26,7 +26,7 @@ func NewUpsertOrderType(conn tidb.TIDBConnection) UpsertOrderType {
 		err := conn.DB.WithContext(ctx).
 			Table("order_types").
 			Preload("Organization").
-			Where("reference_id = ?", ot.ReferenceID()).
+			Where("reference_id = ?", ot.DocID()).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

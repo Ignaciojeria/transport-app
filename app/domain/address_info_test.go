@@ -28,7 +28,7 @@ var _ = Describe("AddressInfo", func() {
 				State:        "Metropolitana",
 			}
 
-			Expect(addr1.ReferenceID()).ToNot(Equal(addr2.ReferenceID()))
+			Expect(addr1.DocID()).ToNot(Equal(addr2.DocID()))
 		})
 
 		It("should generate same ReferenceID for same input", func() {
@@ -41,7 +41,7 @@ var _ = Describe("AddressInfo", func() {
 			}
 			addr2 := addr1
 
-			Expect(addr1.ReferenceID()).To(Equal(addr2.ReferenceID()))
+			Expect(addr1.DocID()).To(Equal(addr2.DocID()))
 		})
 
 		// Aunque AddressLine2 ya no es parte de la estructura, este test demuestra
@@ -64,7 +64,7 @@ var _ = Describe("AddressInfo", func() {
 				ZipCode:      "7550000", // Diferente pero no debería afectar el hash
 			}
 
-			Expect(addr1.ReferenceID()).To(Equal(addr2.ReferenceID()))
+			Expect(addr1.DocID()).To(Equal(addr2.DocID()))
 		})
 	})
 

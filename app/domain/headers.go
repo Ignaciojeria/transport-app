@@ -7,7 +7,7 @@ type Headers struct {
 	Commerce     string `json:"commerce"`
 }
 
-func (h Headers) ReferenceID() string {
+func (h Headers) DocID() string {
 	return Hash(h.Organization, h.Commerce, h.Consumer)
 }
 

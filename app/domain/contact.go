@@ -18,7 +18,7 @@ type ContactMethod struct {
 	Value string `json:"value"` // Ej: "ejemplo@correo.com"
 }
 
-func (c Contact) ReferenceID() string {
+func (c Contact) DocID() string {
 	var key string
 	switch {
 	case c.PrimaryEmail != "":

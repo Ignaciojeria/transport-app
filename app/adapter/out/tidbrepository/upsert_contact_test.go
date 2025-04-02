@@ -29,7 +29,7 @@ var _ = Describe("UpsertContact", func() {
 		var dbContact table.Contact
 		err = connection.DB.WithContext(ctx).
 			Table("contacts").
-			Where("reference_id = ?", contact.ReferenceID()).
+			Where("reference_id = ?", contact.DocID()).
 			First(&dbContact).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbContact.FullName).To(Equal("Juan Pérez"))
@@ -64,7 +64,7 @@ var _ = Describe("UpsertContact", func() {
 		var dbContact table.Contact
 		err = connection.DB.WithContext(ctx).
 			Table("contacts").
-			Where("reference_id = ?", modified.ReferenceID()).
+			Where("reference_id = ?", modified.DocID()).
 			First(&dbContact).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbContact.FullName).To(Equal("Nombre Modificado"))
@@ -93,7 +93,7 @@ var _ = Describe("UpsertContact", func() {
 		var dbContact table.Contact
 		err = connection.DB.WithContext(ctx).
 			Table("contacts").
-			Where("reference_id = ?", contact.ReferenceID()).
+			Where("reference_id = ?", contact.DocID()).
 			First(&dbContact).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbContact.FullName).To(Equal("Sin Cambios"))
@@ -150,7 +150,7 @@ var _ = Describe("UpsertContact", func() {
 		var dbContact table.Contact
 		err = connection.DB.WithContext(ctx).
 			Table("contacts").
-			Where("reference_id = ?", contact.ReferenceID()).
+			Where("reference_id = ?", contact.DocID()).
 			First(&dbContact).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbContact.NationalID).To(Equal("12345678-9"))

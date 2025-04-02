@@ -22,7 +22,7 @@ func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 		var orderHeaders table.OrderHeaders
 		err := conn.WithContext(ctx).
 			Table("order_headers").
-			Where("reference_id = ?", h.ReferenceID()).
+			Where("reference_id = ?", h.DocID()).
 			First(&orderHeaders).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err

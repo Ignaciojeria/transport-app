@@ -40,8 +40,8 @@ func (o Order) UpdateIfChanged(newOrder Order) Order {
 		o.Origin.Contact.UpdateIfChanged(newOrder.Destination.AddressInfo.Contact)
 	o.OrderStatus = o.OrderStatus.UpdateIfChanged(newOrder.OrderStatus)
 	o.OrderType, _ = o.OrderType.UpdateIfChanged(newOrder.OrderType)
-	o.Origin = o.Origin.UpdateIfChanged(newOrder.Origin)
-	o.Destination = o.Destination.UpdateIfChanged(newOrder.Destination)
+	o.Origin, _ = o.Origin.UpdateIfChanged(newOrder.Origin)
+	o.Destination, _ = o.Destination.UpdateIfChanged(newOrder.Destination)
 
 	// Actualizar referencias - reemplazar directamente si hay nuevas
 	if len(newOrder.References) > 0 {

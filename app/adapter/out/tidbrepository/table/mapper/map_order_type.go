@@ -11,6 +11,6 @@ func MapOrderType(ot domain.OrderType) table.OrderType {
 		Type:           ot.Type,
 		Description:    ot.Description,
 		OrganizationID: ot.Organization.ID,
-		ReferenceID:    ot.ReferenceID(),
+		ReferenceID:    ot.DocID(),
 	}
 }

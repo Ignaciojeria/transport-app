@@ -52,7 +52,7 @@ func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) tabl
 		//	AddressLine2:   e.AddressLine2,
 		//	AddressLine3:   e.AddressLine3,
 		//RawAddress:     e.FullAddress(),
-		ReferenceID:    e.ReferenceID(),
+		ReferenceID:    e.DocID(),
 		Latitude:       e.Location[1],
 		Longitude:      e.Location[0],
 		ZipCode:        e.ZipCode,

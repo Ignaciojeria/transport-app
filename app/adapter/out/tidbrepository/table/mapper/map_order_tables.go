@@ -27,7 +27,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		OrganizationID: order.Organization.ID, // Completar según la lógica de negocio
 		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
 		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
-		OrderHeadersReference: order.Headers.ReferenceID(),
+		OrderHeadersReference: order.Headers.DocID(),
 		OrderStatusID:         order.OrderStatus.ID, // Completar según la lógica de negocio
 		OrderTypeID:           order.OrderType.ID,   // Completar según la lógica de negocio
 		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
@@ -220,7 +220,7 @@ func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.A
 		//	AddressLine2:   address.AddressLine2,
 		//	AddressLine3:   address.AddressLine3,
 		//	RawAddress:     address.FullAddress(),
-		ReferenceID: address.ReferenceID(),
+		ReferenceID: address.DocID(),
 		Latitude:    address.Location[1],
 		Longitude:   address.Location[0],
 		ZipCode:     address.ZipCode,

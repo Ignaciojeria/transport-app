@@ -27,7 +27,7 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 			return domain.NodeInfo{}, err
 		}
 		m := nodeInfo.Map()
-		nodeWithChanges := m.UpdateIfChanged(ni)
+		nodeWithChanges, _ := m.UpdateIfChanged(ni)
 		dbNodeToUpsert := mapper.MapNodeInfoTable(nodeWithChanges)
 		dbNodeToUpsert.CreatedAt = nodeInfo.CreatedAt
 		upsertQuery := conn.DB

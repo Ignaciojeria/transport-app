@@ -13,40 +13,67 @@ type NodeInfo struct {
 	AddressLine3 string       `json:"addressLine3"`
 }
 
-func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) NodeInfo {
-	// Actualizar ReferenceID
-	if newNode.ID != 0 {
-		n.ID = newNode.ID
+func (n NodeInfo) DocID() string {
+	return Hash(n.Organization, string(n.ReferenceID))
+}
+
+func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
+	updated := n
+	changed := false
+
+	// Actualizar campos básicos
+	if newNode.ReferenceID != "" && newNode.ReferenceID != n.ReferenceID {
+		updated.ReferenceID = newNode.ReferenceID
+		changed = true
 	}
-	if newNode.ReferenceID != "" && n.ReferenceID != newNode.ReferenceID {
-		n.ReferenceID = newNode.ReferenceID
+
+	if newNode.Name != "" && newNode.Name != n.Name {
+		updated.Name = newNode.Name
+		changed = true
 	}
-	// Actualizar Name
-	if newNode.Name != "" {
-		n.Name = newNode.Name
+
+	// Actualizar NodeType
+	if newNode.NodeType.Value != "" && newNode.NodeType.Value != n.NodeType.Value {
+		updated.NodeType.Value = newNode.NodeType.Value
+		changed = true
 	}
-	// Actualizar Type
-	if newNode.NodeType.Value != "" && n.NodeType.Value != newNode.NodeType.Value {
-		n.NodeType.Value = newNode.NodeType.Value
+
+	if newNode.NodeType.ID != 0 && newNode.NodeType.ID != n.NodeType.ID {
+		updated.NodeType.ID = newNode.NodeType.ID
+		changed = true
 	}
-	// Actualizar NodeReferences
+
+	// Actualizar References
 	if len(newNode.References) > 0 {
-		n.References = newNode.References
+		updated.References = newNode.References
+		changed = true
 	}
-	if newNode.AddressInfo.ID != 0 {
-		n.AddressInfo.ID = newNode.AddressInfo.ID
+
+	// Actualizar campos AddressLine que se movieron de AddressInfo a NodeInfo
+	if newNode.AddressLine2 != "" && newNode.AddressLine2 != n.AddressLine2 {
+		updated.AddressLine2 = newNode.AddressLine2
+		changed = true
 	}
-	if newNode.Contact.ID != 0 {
-		n.Contact.ID = newNode.Contact.ID
+
+	if newNode.AddressLine3 != "" && newNode.AddressLine3 != n.AddressLine3 {
+		updated.AddressLine3 = newNode.AddressLine3
+		changed = true
 	}
-	if newNode.Contact.ID != 0 {
-		n.Contact.ID = newNode.Contact.ID
+
+	// Reutilizar los métodos UpdateIfChanged para objetos complejos
+	// AddressInfo
+	updatedAddressInfo, addressChanged := n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
+	if addressChanged {
+		updated.AddressInfo = updatedAddressInfo
+		changed = true
 	}
-	if newNode.NodeType.ID != 0 {
-		n.NodeType.ID = newNode.NodeType.ID
+
+	// Contact
+	updatedContact, contactChanged := n.Contact.UpdateIfChanged(newNode.Contact)
+	if contactChanged {
+		updated.Contact = updatedContact
+		changed = true
 	}
-	n.Organization = newNode.Organization
-	//n.AddressInfo = n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
-	//n.NodeType = n.NodeType.UpdateIfChanged(newNode.NodeType)
-	return n
+
+	return updated, changed
 }

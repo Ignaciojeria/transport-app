@@ -17,7 +17,7 @@ var _ = Describe("Contact ReferenceID", func() {
 			Organization: org,
 		}
 
-		refID := contact.ReferenceID()
+		refID := contact.DocID()
 		Expect(refID).ToNot(BeEmpty())
 		Expect(refID).To(Equal(Hash(org, "test@example.com")))
 	})
@@ -29,7 +29,7 @@ var _ = Describe("Contact ReferenceID", func() {
 			Organization: org,
 		}
 
-		refID := contact.ReferenceID()
+		refID := contact.DocID()
 		Expect(refID).To(Equal(Hash(org, "test@example.com")))
 	})
 
@@ -39,7 +39,7 @@ var _ = Describe("Contact ReferenceID", func() {
 			Organization: org,
 		}
 
-		refID := contact.ReferenceID()
+		refID := contact.DocID()
 		Expect(refID).To(Equal(Hash(org, "12345678-9")))
 	})
 
@@ -49,7 +49,7 @@ var _ = Describe("Contact ReferenceID", func() {
 			Organization: org,
 		}
 
-		refID := contact.ReferenceID()
+		refID := contact.DocID()
 		Expect(refID).To(Equal(Hash(org, "+56912345678")))
 	})
 
@@ -57,8 +57,8 @@ var _ = Describe("Contact ReferenceID", func() {
 		contact1 := Contact{Organization: org}
 		contact2 := Contact{Organization: org}
 
-		ref1 := contact1.ReferenceID()
-		ref2 := contact2.ReferenceID()
+		ref1 := contact1.DocID()
+		ref2 := contact2.DocID()
 
 		Expect(ref1).ToNot(BeEmpty())
 		Expect(ref2).ToNot(BeEmpty())

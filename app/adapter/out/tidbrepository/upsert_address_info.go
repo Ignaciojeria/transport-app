@@ -24,7 +24,7 @@ func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
 		err := conn.DB.WithContext(ctx).
 			Table("address_infos").
 			Preload("Organization").
-			Where("reference_id = ?", ai.ReferenceID()).
+			Where("reference_id = ?", ai.DocID()).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
