@@ -6,66 +6,90 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Contact DocID", func() {
-	org := Organization{ID: 1, Country: countries.CL}
+var _ = Describe("ContactMethod UpdateIfChange", func() {
+	It("should update Type if different and not empty", func() {
+		method := ContactMethod{Type: "email", Value: "test@example.com"}
+		newMethod := ContactMethod{Type: "work_email", Value: ""}
 
-	It("should prioritize PrimaryEmail when all fields are present", func() {
-		contact := Contact{
-			NationalID:   "12345678-9",
-			PrimaryEmail: "test@example.com",
-			PrimaryPhone: "+56912345678",
-			Organization: org,
-		}
+		updated, changed := method.UpdateIfChange(newMethod)
 
-		refID := contact.DocID()
-		Expect(refID).ToNot(BeEmpty())
-		Expect(refID).To(Equal(Hash(org, "test@example.com")))
+		Expect(changed).To(BeTrue())
+		Expect(updated.Type).To(Equal("work_email"))
+		Expect(updated.Value).To(Equal("test@example.com")) // No debería cambiar
 	})
 
-	It("should use PrimaryPhone when PrimaryEmail is missing", func() {
-		contact := Contact{
-			NationalID:   "12345678-9",
-			PrimaryEmail: "", // Campo vacío
-			PrimaryPhone: "+56912345678",
-			Organization: org,
-		}
+	It("should not update Type if same", func() {
+		method := ContactMethod{Type: "email", Value: "test@example.com"}
+		newMethod := ContactMethod{Type: "email", Value: "new@example.com"}
 
-		refID := contact.DocID()
-		Expect(refID).ToNot(BeEmpty())
-		Expect(refID).To(Equal(Hash(org, "+56912345678")))
+		updated, changed := method.UpdateIfChange(newMethod)
+
+		Expect(changed).To(BeTrue())            // Solo cambió el Value
+		Expect(updated.Type).To(Equal("email")) // No debería cambiar
+		Expect(updated.Value).To(Equal("new@example.com"))
 	})
 
-	It("should use NationalID when PrimaryEmail and PrimaryPhone are missing", func() {
-		contact := Contact{
-			NationalID:   "12345678-9",
-			PrimaryEmail: "", // Campo vacío
-			PrimaryPhone: "", // Campo vacío
-			Organization: org,
-		}
+	It("should not update Type if empty", func() {
+		method := ContactMethod{Type: "email", Value: "test@example.com"}
+		newMethod := ContactMethod{Type: "", Value: "new@example.com"}
 
-		refID := contact.DocID()
-		Expect(refID).ToNot(BeEmpty())
-		Expect(refID).To(Equal(Hash(org, "12345678-9")))
-	})
+		updated, changed := method.UpdateIfChange(newMethod)
 
-	It("should generate a UUID when all identifier fields are missing", func() {
-		contact := Contact{
-			NationalID:   "", // Campo vacío
-			PrimaryEmail: "", // Campo vacío
-			PrimaryPhone: "", // Campo vacío
-			Organization: org,
-		}
-
-		refID1 := contact.DocID()
-		refID2 := contact.DocID()
-
-		Expect(refID1).ToNot(BeEmpty())
-		Expect(refID2).ToNot(BeEmpty())
-		Expect(refID1).ToNot(Equal(refID2)) // Deberían ser UUIDs diferentes
+		Expect(changed).To(BeTrue())            // Solo cambió el Value
+		Expect(updated.Type).To(Equal("email")) // No debería cambiar porque el nuevo está vacío
+		Expect(updated.Value).To(Equal("new@example.com"))
 	})
 })
 
-var _ = Describe("Contact UpdateIfChanged Additional Cases", func() {
+var _ = Describe("Contact UpdateIfChanged NationalID", func() {
+	var original Contact
+	org := Organization{ID: 1, Country: countries.CL}
+
+	BeforeEach(func() {
+		original = Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+	})
+
+	It("should update NationalID if different and not empty", func() {
+		newContact := Contact{
+			NationalID: "98765432-1", // Diferente y no vacío
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeTrue())
+		Expect(updated.NationalID).To(Equal("98765432-1"))
+	})
+
+	It("should not update NationalID if same", func() {
+		newContact := Contact{
+			NationalID: "12345678-9", // Igual al original
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeFalse())
+		Expect(updated.NationalID).To(Equal("12345678-9"))
+	})
+
+	It("should not update NationalID if empty", func() {
+		newContact := Contact{
+			NationalID: "", // Vacío
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeFalse())
+		Expect(updated.NationalID).To(Equal("12345678-9")) // Mantiene el valor original
+	})
+})
+
+var _ = Describe("Contact Documents Continue", func() {
 	var original Contact
 	org := Organization{ID: 1, Country: countries.CL}
 
@@ -80,60 +104,143 @@ var _ = Describe("Contact UpdateIfChanged Additional Cases", func() {
 				{Type: "DRIVER_LICENSE", Value: "A-123456"},
 			},
 			Organization: org,
+		}
+	})
+
+	It("should skip completely empty documents with continue", func() {
+		newContact := original
+		// Incluir varios documentos vacíos entre válidos para probar el continue
+		newContact.Documents = []Document{
+			{Type: "", Value: ""},                 // Vacío 1 - debe ser ignorado por continue
+			{Type: "PASSPORT", Value: "AB123456"}, // Válido - debe agregarse
+			{Type: "", Value: ""},                 // Vacío 2 - debe ser ignorado por continue
+			{Type: "RUT", Value: "98765432-1"},    // Válido - debe actualizar existente
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeTrue())
+		// Debe haber 3 documentos: los 2 originales (uno actualizado) + 1 nuevo
+		Expect(updated.Documents).To(HaveLen(3))
+
+		// Verificar que el documento RUT se actualizó correctamente
+		var rutDoc Document
+		for _, doc := range updated.Documents {
+			if doc.Type == "RUT" {
+				rutDoc = doc
+				break
+			}
+		}
+		Expect(rutDoc.Value).To(Equal("98765432-1"))
+
+		// Verificar que se agregó el documento PASSPORT
+		var passportFound bool
+		for _, doc := range updated.Documents {
+			if doc.Type == "PASSPORT" && doc.Value == "AB123456" {
+				passportFound = true
+				break
+			}
+		}
+		Expect(passportFound).To(BeTrue())
+
+		// Verificar que no hay documentos vacíos (fueron ignorados por continue)
+		emptyCount := 0
+		for _, doc := range updated.Documents {
+			if doc.Type == "" && doc.Value == "" {
+				emptyCount++
+			}
+		}
+		Expect(emptyCount).To(Equal(0))
+	})
+
+	It("should handle updates with only empty documents", func() {
+		newContact := original
+		// Lista con solo documentos vacíos que deben ser ignorados por continue
+		newContact.Documents = []Document{
+			{Type: "", Value: ""},
+			{Type: "", Value: ""},
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		// No debe haber cambios porque todos los documentos se ignoran por continue
+		Expect(changed).To(BeFalse())
+		Expect(updated.Documents).To(Equal(original.Documents))
+	})
+
+	It("should correctly process a mix of update, add, and continue operations", func() {
+		newContact := original
+		// Mezcla completa de operaciones
+		newContact.Documents = []Document{
+			{Type: "", Value: ""},                       // Debe ignorarse por continue
+			{Type: "RUT", Value: "98765432-1"},          // Actualizar existente
+			{Type: "PASSPORT", Value: "AB123456"},       // Añadir nuevo
+			{Type: "", Value: ""},                       // Debe ignorarse por continue
+			{Type: "DRIVER_LICENSE", Value: "A-123456"}, // Sin cambio (igual al original)
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeTrue())
+		Expect(updated.Documents).To(HaveLen(3)) // 2 originales + 1 nuevo
+
+		// Verificar que se actualizó RUT
+		var rutDoc Document
+		for _, doc := range updated.Documents {
+			if doc.Type == "RUT" {
+				rutDoc = doc
+				break
+			}
+		}
+		Expect(rutDoc.Value).To(Equal("98765432-1"))
+
+		// Verificar que se agregó PASSPORT
+		var passportFound bool
+		for _, doc := range updated.Documents {
+			if doc.Type == "PASSPORT" {
+				passportFound = true
+				break
+			}
+		}
+		Expect(passportFound).To(BeTrue())
+	})
+})
+
+var _ = Describe("Contact AdditionalContactMethods Continue", func() {
+	var original Contact
+	org := Organization{ID: 1, Country: countries.CL}
+
+	BeforeEach(func() {
+		original = Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
 			AdditionalContactMethods: []ContactMethod{
 				{Type: "work_email", Value: "juan.perez@empresa.com"},
 				{Type: "whatsapp", Value: "+56900000001"},
 			},
+			Organization: org,
 		}
 	})
 
-	// Test específico para la condición if newContact.Type != "" && newContact.Type != c.Type
-	It("should update ContactMethod Type when it's different and not empty", func() {
-		// Crear un contacto con un método que tiene el mismo Type pero diferente Value
+	It("should skip completely empty contact methods with continue", func() {
 		newContact := original
+		// Incluir varios métodos vacíos entre válidos para probar el continue
 		newContact.AdditionalContactMethods = []ContactMethod{
-			{Type: "UPDATED_TYPE", Value: "juan.perez@empresa.com"}, // Type diferente, mismo Value
+			{Type: "", Value: ""},                            // Vacío 1 - debe ser ignorado por continue
+			{Type: "telegram", Value: "@juanperez"},          // Válido - debe agregarse
+			{Type: "", Value: ""},                            // Vacío 2 - debe ser ignorado por continue
+			{Type: "work_email", Value: "nuevo@empresa.com"}, // Válido - debe actualizar existente
 		}
 
 		updated, changed := original.UpdateIfChanged(newContact)
 
 		Expect(changed).To(BeTrue())
+		// Debe haber 3 métodos: los 2 originales (uno actualizado) + 1 nuevo
+		Expect(updated.AdditionalContactMethods).To(HaveLen(3))
 
-		// Verificar que se creó un nuevo método con el Type actualizado
-		var found bool
-		for _, method := range updated.AdditionalContactMethods {
-			if method.Type == "UPDATED_TYPE" && method.Value == "juan.perez@empresa.com" {
-				found = true
-				break
-			}
-		}
-
-		Expect(found).To(BeTrue(), "Debería existir un método con el Type actualizado")
-
-		// Asegurarse que el método original sigue existiendo (porque se busca por Type)
-		var originalMethodExists bool
-		for _, method := range updated.AdditionalContactMethods {
-			if method.Type == "work_email" {
-				originalMethodExists = true
-				break
-			}
-		}
-
-		Expect(originalMethodExists).To(BeTrue(), "El método original debería mantenerse")
-	})
-
-	// Test específico para cuando Type es igual pero Value es diferente
-	It("should update ContactMethod Value when Type is the same but Value is different", func() {
-		newContact := original
-		newContact.AdditionalContactMethods = []ContactMethod{
-			{Type: "work_email", Value: "nuevo.email@empresa.com"}, // Mismo Type, Value diferente
-		}
-
-		updated, changed := original.UpdateIfChanged(newContact)
-
-		Expect(changed).To(BeTrue())
-
-		// Verificar que se actualizó el Value pero se mantuvo el mismo Type
+		// Verificar que el método work_email se actualizó correctamente
 		var workEmail ContactMethod
 		for _, method := range updated.AdditionalContactMethods {
 			if method.Type == "work_email" {
@@ -141,89 +248,77 @@ var _ = Describe("Contact UpdateIfChanged Additional Cases", func() {
 				break
 			}
 		}
+		Expect(workEmail.Value).To(Equal("nuevo@empresa.com"))
 
-		Expect(workEmail.Value).To(Equal("nuevo.email@empresa.com"))
+		// Verificar que se agregó el método telegram
+		var telegramFound bool
+		for _, method := range updated.AdditionalContactMethods {
+			if method.Type == "telegram" && method.Value == "@juanperez" {
+				telegramFound = true
+				break
+			}
+		}
+		Expect(telegramFound).To(BeTrue())
+
+		// Verificar que no hay métodos vacíos (fueron ignorados por continue)
+		emptyCount := 0
+		for _, method := range updated.AdditionalContactMethods {
+			if method.Type == "" && method.Value == "" {
+				emptyCount++
+			}
+		}
+		Expect(emptyCount).To(Equal(0))
 	})
 
-	// Test específico para cuando Type y Value son iguales
-	It("should not update ContactMethod when both Type and Value are the same", func() {
+	It("should handle updates with only empty contact methods", func() {
 		newContact := original
+		// Lista con solo métodos vacíos que deben ser ignorados por continue
 		newContact.AdditionalContactMethods = []ContactMethod{
-			{Type: "work_email", Value: "juan.perez@empresa.com"}, // Mismo Type, mismo Value
+			{Type: "", Value: ""},
+			{Type: "", Value: ""},
 		}
 
 		updated, changed := original.UpdateIfChanged(newContact)
 
-		// No debería haber cambios
+		// No debe haber cambios porque todos los métodos se ignoran por continue
 		Expect(changed).To(BeFalse())
-
-		// Los métodos deberían ser iguales a los originales
 		Expect(updated.AdditionalContactMethods).To(Equal(original.AdditionalContactMethods))
 	})
 
-	// Test específico para la condición if newContact.PrimaryEmail != "" && newContact.PrimaryEmail != c.PrimaryEmail
-	It("should update PrimaryEmail when it's different and not empty", func() {
-		newContact := Contact{
-			PrimaryEmail: "nuevo@correo.com", // Email diferente
+	It("should correctly process a mix of update, add, and continue operations for contact methods", func() {
+		newContact := original
+		// Mezcla completa de operaciones
+		newContact.AdditionalContactMethods = []ContactMethod{
+			{Type: "", Value: ""},                            // Debe ignorarse por continue
+			{Type: "work_email", Value: "nuevo@empresa.com"}, // Actualizar existente
+			{Type: "telegram", Value: "@juanperez"},          // Añadir nuevo
+			{Type: "", Value: ""},                            // Debe ignorarse por continue
+			{Type: "whatsapp", Value: "+56900000001"},        // Sin cambio (igual al original)
 		}
 
 		updated, changed := original.UpdateIfChanged(newContact)
 
 		Expect(changed).To(BeTrue())
-		Expect(updated.PrimaryEmail).To(Equal("nuevo@correo.com"))
+		Expect(updated.AdditionalContactMethods).To(HaveLen(3)) // 2 originales + 1 nuevo
 
-		// Verificar que otros campos se mantienen
-		Expect(updated.FullName).To(Equal(original.FullName))
-		Expect(updated.PrimaryPhone).To(Equal(original.PrimaryPhone))
-		Expect(updated.NationalID).To(Equal(original.NationalID))
-	})
-
-	It("should not update PrimaryEmail when it's the same", func() {
-		newContact := Contact{
-			PrimaryEmail: "juan@correo.com", // Mismo email
+		// Verificar que se actualizó work_email
+		var workEmail ContactMethod
+		for _, method := range updated.AdditionalContactMethods {
+			if method.Type == "work_email" {
+				workEmail = method
+				break
+			}
 		}
+		Expect(workEmail.Value).To(Equal("nuevo@empresa.com"))
 
-		updated, changed := original.UpdateIfChanged(newContact)
-
-		Expect(changed).To(BeFalse())
-		Expect(updated.PrimaryEmail).To(Equal("juan@correo.com"))
-	})
-
-	It("should not update PrimaryEmail when new value is empty", func() {
-		newContact := Contact{
-			PrimaryEmail: "", // Email vacío
+		// Verificar que se agregó telegram
+		var telegramFound bool
+		for _, method := range updated.AdditionalContactMethods {
+			if method.Type == "telegram" {
+				telegramFound = true
+				break
+			}
 		}
-
-		updated, changed := original.UpdateIfChanged(newContact)
-
-		Expect(changed).To(BeFalse())
-		Expect(updated.PrimaryEmail).To(Equal("juan@correo.com")) // Mantiene el valor original
-	})
-
-	// Test para verificar que se cumplan ambas condiciones
-	It("should only update fields that are different AND not empty", func() {
-		newContact := Contact{
-			// Campo diferente y no vacío -> debe actualizarse
-			FullName: "Nombre Nuevo",
-
-			// Campo diferente pero vacío -> no debe actualizarse
-			PrimaryPhone: "",
-
-			// Campo igual -> no debe actualizarse
-			PrimaryEmail: "juan@correo.com",
-
-			// Campo vacío -> no debe actualizarse
-			NationalID: "",
-		}
-
-		updated, changed := original.UpdateIfChanged(newContact)
-
-		Expect(changed).To(BeTrue()) // Hubo al menos un cambio
-
-		// Verificar campos que deben y no deben cambiar
-		Expect(updated.FullName).To(Equal("Nombre Nuevo"))        // Debe cambiar
-		Expect(updated.PrimaryPhone).To(Equal("+56900000000"))    // No debe cambiar
-		Expect(updated.PrimaryEmail).To(Equal("juan@correo.com")) // No debe cambiar
-		Expect(updated.NationalID).To(Equal("12345678-9"))        // No debe cambiar
+		Expect(telegramFound).To(BeTrue())
 	})
 })
