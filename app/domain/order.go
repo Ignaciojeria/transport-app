@@ -233,23 +233,7 @@ func (nt NodeType) UpdateIfChanged(newNodeType NodeType) NodeType {
 	return nt
 }
 
-type Document struct {
-	Value string `json:"value"`
-	Type  string `json:"type"`
-}
 
-// Función auxiliar para comparar arreglos de documentos
-func compareDocuments(oldDocs, newDocs []Document) bool {
-	if len(oldDocs) != len(newDocs) {
-		return false
-	}
-	for i := range oldDocs {
-		if oldDocs[i] != newDocs[i] {
-			return false
-		}
-	}
-	return true
-}
 
 func concatenateWithCommas(values ...string) string {
 	result := ""

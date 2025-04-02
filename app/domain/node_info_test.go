@@ -396,4 +396,7 @@ var _ = Describe("NodeInfo", func() {
 			Expect(updated.References[0].Value).To(Equal("NEW001"))
 		})
 	})
+
+	
+
 })
