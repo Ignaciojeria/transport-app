@@ -23,7 +23,7 @@ type AddressNormalizationRequest struct {
 func (req AddressNormalizationRequest) Map() (domain.AddressInfo, domain.AddressInfo) {
 	return domain.AddressInfo{
 			AddressLine1: req.UserInput.AddressLine1,
-			AddressLine2: req.UserInput.AddressLine2,
+			//AddressLine2: req.UserInput.AddressLine2,
 			State:        req.UserInput.State,
 			District:     req.UserInput.District,
 		}, domain.AddressInfo{

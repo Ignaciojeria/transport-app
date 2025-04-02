@@ -82,8 +82,8 @@ func getResponse(resp *genai.GenerateContentResponse) (domain.AddressInfo, error
 
 	return domain.AddressInfo{
 		AddressLine1:    data.AddressLine1,
-		AddressLine2:    data.AddressLine2,
-		ProviderAddress: data.ProviderAddress,
+	//	AddressLine2:    data.AddressLine2,
+	//	ProviderAddress: data.ProviderAddress,
 		District:        data.District,
 		State:           data.State,
 		Province:        data.Province,

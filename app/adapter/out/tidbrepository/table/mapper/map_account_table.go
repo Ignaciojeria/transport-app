@@ -44,13 +44,13 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 
 func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
 	return table.AddressInfo{
-		ID:             e.ID,
-		State:          e.State,
-		Locality:       e.Locality,
-		District:       e.District,
-		AddressLine1:   e.AddressLine1,
-		AddressLine2:   e.AddressLine2,
-		AddressLine3:   e.AddressLine3,
+		ID:    e.ID,
+		State: e.State,
+		//	Locality:       e.Locality,
+		District:     e.District,
+		AddressLine1: e.AddressLine1,
+		//	AddressLine2:   e.AddressLine2,
+		//	AddressLine3:   e.AddressLine3,
 		RawAddress:     e.FullAddress(),
 		Latitude:       e.Location[1],
 		Longitude:      e.Location[0],

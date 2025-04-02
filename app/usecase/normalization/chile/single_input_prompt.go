@@ -50,7 +50,7 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 
 	return func(c context.Context, userInput, providerInput domain.AddressInfo) string {
 		userText := userInput.AddressLine1
-		userIndications := userInput.AddressLine2
+		userIndications := ""
 		providerInputAddress := providerInput.AddressLine1
 		providerLat := providerInput.Location.Lat()
 		providerLon := providerInput.Location.Lon()

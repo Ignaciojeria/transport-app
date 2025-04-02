@@ -48,10 +48,10 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 		},
 		AddressInfo: domain.AddressInfo{
 			AddressLine1: req.NodeAddress.AddressLine1,
-			AddressLine2: req.NodeAddress.AddressLine2,
-			AddressLine3: req.NodeAddress.AddressLine3,
-			Locality:     req.NodeAddress.Locality,
-			District:     req.NodeAddress.District,
+			//AddressLine2: req.NodeAddress.AddressLine2,
+			//AddressLine3: req.NodeAddress.AddressLine3,
+			//Locality: req.NodeAddress.Locality,
+			District: req.NodeAddress.District,
 			Location: orb.Point{
 				req.NodeAddress.Longitude, // orb.Point espera [lon, lat]
 				req.NodeAddress.Latitude,
