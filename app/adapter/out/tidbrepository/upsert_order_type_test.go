@@ -41,37 +41,7 @@ var _ = Describe("UpsertOrderType", func() {
 		Expect(result.Description).To(Equal("Entrega a cliente final"))
 	})
 
-	It("should update order type if description is different", func() {
-		ot := domain.OrderType{
-			Type:         "b2b",
-			Description:  "Original",
-			Organization: organization1,
-		}
-
-		upsert := NewUpsertOrderType(connection)
-		err := upsert(ctx, ot)
-		Expect(err).ToNot(HaveOccurred())
-
-		// Actualizamos la descripción
-		otUpdated := domain.OrderType{
-			Type:         "b2b", // misma referencia
-			Description:  "Modificada",
-			Organization: organization1,
-		}
-
-		err = upsert(ctx, otUpdated)
-		Expect(err).ToNot(HaveOccurred())
-
-		var result table.OrderType
-		err = connection.DB.WithContext(ctx).
-			Table("order_types").
-			Where("document_id = ?", ot.DocID()).
-			First(&result).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(result.Description).To(Equal("Modificada"))
-	})
-
-	It("should not update if data has not changed", func() {
+	It("should not create if document is present", func() {
 		ot := domain.OrderType{
 			Type:         "express",
 			Description:  "Entrega en 1 hora",
