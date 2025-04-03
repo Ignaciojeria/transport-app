@@ -32,22 +32,11 @@ func NewUpsertNodeType(conn tidb.TIDBConnection) UpsertNodeType {
 			return err
 		}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newRecord := mapper.MapNodeType(nt)
-			return conn.Omit("Organization").Create(&newRecord).Error
-		}
-
-		// Ya existe → actualizar solo si hubo cambios
-		updated, changed := existing.Map().UpdateIfChange(nt)
-		if !changed {
+		if err == nil {
+			// Ya existe → no hacer nada
 			return nil
 		}
-
-		updateData := mapper.MapNodeType(updated)
-		updateData.ID = existing.ID
-		updateData.CreatedAt = existing.CreatedAt
-
-		return conn.Omit("Organization").Save(&updateData).Error
+		newRecord := mapper.MapNodeType(nt)
+		return conn.Omit("Organization").Create(&newRecord).Error
 	}
 }
