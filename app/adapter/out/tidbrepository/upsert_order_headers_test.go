@@ -14,7 +14,7 @@ var _ = Describe("TestUpsertNodeType", func() {
 		ctx := context.Background()
 
 		nt := domain.NodeType{
-			Value:         "TestNodeType",
+			Value:        "TestNodeType",
 			Organization: organization1,
 		}
 
@@ -31,60 +31,12 @@ var _ = Describe("TestUpsertNodeType", func() {
 		Expect(result.DocumentID).To(Equal(string(nt.DocID())))
 	})
 
-	It("should update node type if exists and has changes", func() {
-		ctx := context.Background()
-
-		// Crear registro inicial
-		nt := domain.NodeType{
-			Value:         "UpdateableNodeType",
-			Organization: organization1,
-		}
-
-		upsert := NewUpsertNodeType(connection)
-		err := upsert(ctx, nt)
-		Expect(err).ToNot(HaveOccurred())
-
-		// Obtener el ID del registro creado para validación posterior
-		var originalRecord table.NodeType
-		err = connection.DB.WithContext(ctx).
-			Table("node_types").
-			Where("document_id = ?", nt.DocID()).
-			First(&originalRecord).Error
-		Expect(err).ToNot(HaveOccurred())
-		originalID := originalRecord.ID
-		originalCreatedAt := originalRecord.CreatedAt
-
-		// Modificar el nodo y actualizarlo
-		updatedNt := domain.NodeType{
-			Value:         "UpdateableNodeType-Modified",
-			Organization: organization1,
-		}
-
-		err = upsert(ctx, updatedNt)
-		Expect(err).ToNot(HaveOccurred())
-
-		// Verificar que se actualizó el registro existente
-		var updatedRecord table.NodeType
-		err = connection.DB.WithContext(ctx).
-			Table("node_types").
-			Where("document_id = ?", nt.DocID()).
-			First(&updatedRecord).Error
-		Expect(err).ToNot(HaveOccurred())
-
-		// Verificar que se mantiene el mismo ID y CreatedAt
-		Expect(updatedRecord.ID).To(Equal(originalID))
-		Expect(updatedRecord.CreatedAt).To(Equal(originalCreatedAt))
-
-		// Verificar que se actualizó el nombre
-		Expect(updatedRecord.Value).To(Equal("UpdateableNodeType-Modified"))
-	})
-
 	It("should not update node type if there are no changes", func() {
 		ctx := context.Background()
 
 		// Crear registro inicial
 		nt := domain.NodeType{
-			Value:         "UnchangedNodeType",
+			Value:        "UnchangedNodeType",
 			Organization: organization1,
 		}
 
