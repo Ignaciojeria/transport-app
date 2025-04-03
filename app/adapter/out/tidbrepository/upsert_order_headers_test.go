@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 
@@ -10,114 +9,125 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("TestUpsertOrderHeaders", func() {
-	It("should insert order header if not exists", func() {
+var _ = Describe("TestUpsertNodeType", func() {
+	It("should insert node type if not exists", func() {
 		ctx := context.Background()
 
-		h := domain.Headers{
-			Commerce:     "tienda-123",
-			Consumer:     "cliente-xyz",
+		nt := domain.NodeType{
+			Value:         "TestNodeType",
 			Organization: organization1,
 		}
 
-		upsert := NewUpsertOrderHeaders(connection)
-		err := upsert(ctx, h)
+		upsert := NewUpsertNodeType(connection)
+		err := upsert(ctx, nt)
 		Expect(err).ToNot(HaveOccurred())
 
-		var result table.OrderHeaders
+		var result table.NodeType
 		err = connection.DB.WithContext(ctx).
-			Table("order_headers").
-			Where("document_id = ?", h.DocID()). // Cast aquí
+			Table("node_types").
+			Where("document_id = ?", nt.DocID()).
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result.DocumentID).To(Equal(string(h.DocID()))) // Cast aquí
+		Expect(result.DocumentID).To(Equal(string(nt.DocID())))
 	})
 
-	It("should fail to insert order header if organization is missing", func() {
+	It("should update node type if exists and has changes", func() {
 		ctx := context.Background()
 
-		h := domain.Headers{
-			Commerce:     "tienda-123",
-			Consumer:     "cliente-xyz",
-			Organization: domain.Organization{}, // ID=0, Country=""
-		}
-
-		upsert := NewUpsertOrderHeaders(connection)
-		err := upsert(ctx, h)
-		Expect(err).To(HaveOccurred())
-	})
-
-	It("should not insert the same order header twice for the same organization", func() {
-		ctx := context.Background()
-
-		h := domain.Headers{
-			Commerce:     "tienda-repetida",
-			Consumer:     "cliente-repetido",
+		// Crear registro inicial
+		nt := domain.NodeType{
+			Value:         "UpdateableNodeType",
 			Organization: organization1,
 		}
 
-		upsert := NewUpsertOrderHeaders(connection)
-
-		err := upsert(ctx, h)
+		upsert := NewUpsertNodeType(connection)
+		err := upsert(ctx, nt)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = upsert(ctx, h)
-		Expect(err).ToNot(HaveOccurred())
-
-		var count int64
+		// Obtener el ID del registro creado para validación posterior
+		var originalRecord table.NodeType
 		err = connection.DB.WithContext(ctx).
-			Table("order_headers").
-			Where("document_id = ?", h.DocID()).
-			Count(&count).Error
+			Table("node_types").
+			Where("document_id = ?", nt.DocID()).
+			First(&originalRecord).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(1)))
-	})
+		originalID := originalRecord.ID
+		originalCreatedAt := originalRecord.CreatedAt
 
-	It("should insert the same order header in different organizations", func() {
-		ctx := context.Background()
-
-		h1 := domain.Headers{
-			Commerce:     "tienda-repetida",
-			Consumer:     "cliente-repetido",
+		// Modificar el nodo y actualizarlo
+		updatedNt := domain.NodeType{
+			Value:         "UpdateableNodeType-Modified",
 			Organization: organization1,
 		}
 
-		h2 := domain.Headers{
-			Commerce:     "tienda-repetida",
-			Consumer:     "cliente-repetido",
-			Organization: organization2,
-		}
-
-		upsert := NewUpsertOrderHeaders(connection)
-
-		err := upsert(ctx, h1)
+		err = upsert(ctx, updatedNt)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = upsert(ctx, h2)
-		Expect(err).ToNot(HaveOccurred())
-
-		var count int64
+		// Verificar que se actualizó el registro existente
+		var updatedRecord table.NodeType
 		err = connection.DB.WithContext(ctx).
-			Table("order_headers").
-			Where("document_id IN (?, ?)", h1.DocID(), h2.DocID()).
-			Count(&count).Error
+			Table("node_types").
+			Where("document_id = ?", nt.DocID()).
+			First(&updatedRecord).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(2)))
+
+		// Verificar que se mantiene el mismo ID y CreatedAt
+		Expect(updatedRecord.ID).To(Equal(originalID))
+		Expect(updatedRecord.CreatedAt).To(Equal(originalCreatedAt))
+
+		// Verificar que se actualizó el nombre
+		Expect(updatedRecord.Value).To(Equal("UpdateableNodeType-Modified"))
 	})
 
-	It("should fail when trying to upsert order header in DB without tables", func() {
+	It("should not update node type if there are no changes", func() {
 		ctx := context.Background()
 
-		h := domain.Headers{
-			Commerce:     "tienda-sin-tablas",
-			Consumer:     "cliente-sin-tablas",
+		// Crear registro inicial
+		nt := domain.NodeType{
+			Value:         "UnchangedNodeType",
 			Organization: organization1,
 		}
 
-		upsert := NewUpsertOrderHeaders(noTablesContainerConnection)
-		err := upsert(ctx, h)
+		upsert := NewUpsertNodeType(connection)
+		err := upsert(ctx, nt)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Obtener el registro original para comparar después
+		var originalRecord table.NodeType
+		err = connection.DB.WithContext(ctx).
+			Table("node_types").
+			Where("document_id = ?", nt.DocID()).
+			First(&originalRecord).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Intentar actualizar con los mismos datos
+		err = upsert(ctx, nt)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que no hubo cambios en el registro
+		var updatedRecord table.NodeType
+		err = connection.DB.WithContext(ctx).
+			Table("node_types").
+			Where("document_id = ?", nt.DocID()).
+			First(&updatedRecord).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Los campos deben mantenerse iguales
+		Expect(updatedRecord).To(Equal(originalRecord))
+	})
+
+	It("should fail when trying to upsert node type in DB without tables", func() {
+		ctx := context.Background()
+
+		nt := domain.NodeType{
+			Value:        "NodeTypeNoTables",
+			Organization: organization1,
+		}
+
+		upsert := NewUpsertNodeType(noTablesContainerConnection)
+		err := upsert(ctx, nt)
 
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("order_headers"))
+		Expect(err.Error()).To(ContainSubstring("node_types"))
 	})
 })
