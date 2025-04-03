@@ -13,35 +13,11 @@ func MapAccountTable(e domain.Account) table.Account {
 	}
 }
 
-func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
-	var contactID, addressInfoID *int64
-	contactID = &e.Contact.ID
-
-	if e.Contact.ID == 0 {
-		contactID = nil
-	}
-
-	return table.NodeInfo{
-		ID:             e.ID,
-		ReferenceID:    string(e.ReferenceID),
-		DocumentID:     string(e.DocID()),
-		NodeTypeDoc:    string(e.NodeType.DocID()),
-		Name:           e.Name,
-		ContactID:      contactID,
-		OrganizationID: e.Organization.ID,
-		AddressID:      addressInfoID,
-	}
-}
-
 func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
 	return table.AddressInfo{
-		State: e.State,
-		//	Locality:       e.Locality,
-		District:     e.District,
-		AddressLine1: e.AddressLine1,
-		//	AddressLine2:   e.AddressLine2,
-		//	AddressLine3:   e.AddressLine3,
-		//RawAddress:     e.FullAddress(),
+		State:          e.State,
+		District:       e.District,
+		AddressLine1:   e.AddressLine1,
 		DocumentID:     string(e.DocID()),
 		Latitude:       e.Location[1],
 		Longitude:      e.Location[0],

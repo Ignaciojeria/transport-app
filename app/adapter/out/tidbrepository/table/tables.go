@@ -453,27 +453,29 @@ type OrderReferences struct {
 
 type NodeInfo struct {
 	gorm.Model
-	ID             int64         `gorm:"primaryKey"`
-	DocumentID     string        `gorm:"type:varchar(191);not null;uniqueIndex"`
-	ReferenceID    string        `gorm:"type:varchar(191);not null;"` // Parte del índice único con OrganizationCountryID
-	OrganizationID int64         `gorm:"not null;"`                   // Parte de ambos índices únicos
-	Organization   Organization  `gorm:"foreignKey:OrganizationID"`   // Relación con OrganizationCountry
-	Name           string        `gorm:"type:varchar(191);"`          // Parte del índice único con OrganizationCountryID
-	NodeTypeDoc    string        `gorm:"type:char(32)"`
-	NodeType       NodeType      `gorm:"foreignKey:NodeTypeDoc;references:DocumentID"`
-	ContactID      *int64        `gorm:"default:null"`
-	Contact        Contact       `gorm:"foreignKey:ContactID"` // Relación con Operator
-	AddressID      *int64        `gorm:"default:null"`         // Clave foránea a AddressInfo
-	AddressInfo    AddressInfo   `gorm:"foreignKey:AddressID"` // Relación con AddressInfo
-	NodeReferences JSONReference `gorm:"type:json"`            // Relación con NodeReferences
+	ID             int64        `gorm:"primaryKey"`
+	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	ReferenceID    string       `gorm:"type:varchar(191);not null;"`
+	OrganizationID int64        `gorm:"not null;"`
+	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	Name           string       `gorm:"type:varchar(191);"`
+
+	// Store document hashes without enforcing constraints
+	NodeTypeDoc string   `gorm:"type:char(32)"`
+	NodeType    NodeType `gorm:"-"` // Use "-" to tell GORM to ignore this field for DB operations
+
+	ContactDoc string  `gorm:"type:char(32)"`
+	Contact    Contact `gorm:"-"` // Ignore relationship for DB operations
+
+	AddressInfoDoc string      `gorm:"type:char(32)"`
+	AddressInfo    AddressInfo `gorm:"-"` // Ignore relationship for DB operations
+
+	AddressLine2   string
+	AddressLine3   string
+	NodeReferences JSONReference `gorm:"type:json"`
 }
 
 func (n NodeInfo) Map() domain.NodeInfo {
-	var contactID int64
-	if n.ContactID != nil {
-		contactID = *n.ContactID
-	}
-
 	nodeInfo := domain.NodeInfo{
 		ID:          n.ID,
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
@@ -481,19 +483,11 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		Organization: domain.Organization{
 			ID: n.OrganizationID,
 		},
-		References: n.NodeReferences.Map(),
-		Contact: domain.Contact{
-			ID: contactID,
-		},
+		References:   n.NodeReferences.Map(),
+		AddressLine2: n.AddressLine2,
+		AddressLine3: n.AddressLine3,
 	}
 	return nodeInfo
-}
-
-func nilIfEmpty(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
 }
 
 type AddressInfo struct {

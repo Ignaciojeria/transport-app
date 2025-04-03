@@ -23,9 +23,16 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 	return func(ctx context.Context, ni domain.NodeInfo) error {
 		var existing table.NodeInfo
 
+		// Create the document ID once to ensure consistency
+		docID := ni.DocID()
+
+		if docID.IsZero() {
+			return errors.New("cannot persist node info with empty ReferenceID")
+		}
+
 		err := conn.DB.WithContext(ctx).
 			Table("node_infos").
-			Where("document_id = ?", ni.DocID()).
+			Where("document_id = ?", docID).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -34,7 +41,8 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			newRecord := mapper.MapNodeInfoTable(ni)
-			return conn.Omit("Organization", "NodeType", "Contact", "AddressInfo").
+			// Use the same Omit pattern for consistency
+			return conn.
 				Create(&newRecord).Error
 		}
 
@@ -46,16 +54,17 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 			updated.NodeType = ni.NodeType
 			changed = true
 		}
-		/*
-			if ni.Contact.DocID().ShouldUpdate(existing.ContactDoc) {
-				updated.Contact = ni.Contact
-				changed = true
-			}
-			if ni.AddressInfo.DocID().ShouldUpdate(existing.AddressDoc) {
-				updated.AddressInfo = ni.AddressInfo
-				changed = true
-			}
-		*/
+
+		contactHash := ni.Contact.DocID()
+		if contactHash.ShouldUpdate(existing.ContactDoc) {
+			updated.Contact = ni.Contact
+			changed = true
+		}
+
+		if ni.AddressInfo.DocID().ShouldUpdate(existing.AddressInfoDoc) {
+			updated.AddressInfo = ni.AddressInfo
+			changed = true
+		}
 
 		if !changed {
 			return nil
@@ -64,8 +73,10 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 		updateData := mapper.MapNodeInfoTable(updated)
 		updateData.ID = existing.ID
 		updateData.CreatedAt = existing.CreatedAt
+		updateData.DocumentID = existing.DocumentID // Ensure we keep the same document ID
 
-		return conn.Omit("Organization", "NodeType", "Contact", "AddressInfo").
+		// Use the same Omit pattern for consistency
+		return conn.
 			Save(&updateData).Error
 	}
 }

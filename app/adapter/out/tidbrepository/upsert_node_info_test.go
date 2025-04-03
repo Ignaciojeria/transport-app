@@ -1,0 +1,547 @@
+package tidbrepository
+
+import (
+	"context"
+
+	"github.com/paulmach/orb"
+
+	"transport-app/app/adapter/out/tidbrepository/table"
+	"transport-app/app/domain"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
+
+var _ = Describe("UpsertNodeInfo", func() {
+	var (
+		ctx                        context.Context
+		nodeType1, nodeType2       domain.NodeType
+		contact1, contact2         domain.Contact
+		addressInfo1, addressInfo2 domain.AddressInfo
+	)
+
+	BeforeEach(func() {
+		ctx = context.Background()
+
+		// Create node types
+		nodeType1 = domain.NodeType{
+			Organization: organization1,
+			Value:        "warehouse",
+		}
+
+		nodeType2 = domain.NodeType{
+			Organization: organization1,
+			Value:        "distribution-center",
+		}
+
+		// Create contacts
+		contact1 = domain.Contact{
+			Organization: organization1,
+			FullName:     "John Smith",
+			PrimaryEmail: "john@example.com",
+			PrimaryPhone: "123456789",
+			Documents: []domain.Document{
+				{Type: "ID", Value: "123456789"},
+			},
+			AdditionalContactMethods: []domain.ContactMethod{
+				{Type: "whatsapp", Value: "+56987654321"},
+			},
+		}
+
+		contact2 = domain.Contact{
+			Organization: organization2,
+			FullName:     "Jane Doe",
+			PrimaryEmail: "jane@example.com",
+			PrimaryPhone: "987654321",
+		}
+
+		// Create address info
+		addressInfo1 = domain.AddressInfo{
+			Organization: organization1,
+			Contact:      contact1,
+			State:        "State1",
+			Province:     "Province1",
+			District:     "District1",
+			AddressLine1: "123 Main St",
+			Location:     orb.Point{-70.123, -33.456}, // longitude, latitude
+			ZipCode:      "12345",
+			TimeZone:     "America/Santiago",
+		}
+
+		addressInfo2 = domain.AddressInfo{
+			Organization: organization1,
+			Contact:      contact2,
+			State:        "State2",
+			Province:     "Province2",
+			District:     "District2",
+			AddressLine1: "456 Second Ave",
+			Location:     orb.Point{-71.234, -34.567},
+			ZipCode:      "54321",
+			TimeZone:     "America/Santiago",
+		}
+	})
+
+	It("should insert node info if not exists", func() {
+		nodeInfo := domain.NodeInfo{
+			Name:         "Warehouse Alpha",
+			ReferenceID:  "WH-001", // Ensure we have a valid ReferenceID
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			AddressLine2: "Floor 3",
+			AddressLine3: "Building C",
+			References: []domain.Reference{
+				{Type: "ERP", Value: "WH001"},
+			},
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, nodeInfo)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", nodeInfo.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo.Name).To(Equal("Warehouse Alpha"))
+		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType1.DocID().String()))
+		Expect(dbNodeInfo.ContactDoc).To(Equal(contact1.DocID().String()))
+		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo1.DocID().String()))
+		Expect(dbNodeInfo.AddressLine2).To(Equal("Floor 3"))
+		Expect(dbNodeInfo.AddressLine3).To(Equal("Building C"))
+
+		// Verify that the JSON references were saved correctly
+		references := dbNodeInfo.NodeReferences.Map()
+		Expect(len(references)).To(Equal(1))
+		Expect(references[0].Type).To(Equal("ERP"))
+		Expect(references[0].Value).To(Equal("WH001"))
+	})
+
+	It("should not persist node info with empty ReferenceID", func() {
+		nodeInfo := domain.NodeInfo{
+			Name:         "Invalid Node",
+			ReferenceID:  "", // Empty ReferenceID should cause error
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, nodeInfo)
+
+		// Should return an error
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("empty ReferenceID"))
+
+		// Verify no record was created
+		var count int64
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("name = ?", nodeInfo.Name).
+			Count(&count).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(count).To(Equal(int64(0)))
+	})
+
+	It("should update node info if fields are different", func() {
+		original := domain.NodeInfo{
+			Name:         "Original Name",
+			ReferenceID:  "REF-001",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			AddressLine2: "Original Floor",
+			AddressLine3: "Original Building",
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+
+		err := upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		modified := domain.NodeInfo{
+			Name:         "Modified Name",
+			ReferenceID:  "REF-001", // Keep same ReferenceID to ensure same DocID
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			AddressLine2: "Modified Floor",
+			AddressLine3: "Modified Building",
+		}
+
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", original.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo.Name).To(Equal("Modified Name"))
+		Expect(dbNodeInfo.AddressLine2).To(Equal("Modified Floor"))
+		Expect(dbNodeInfo.AddressLine3).To(Equal("Modified Building"))
+	})
+
+	It("should not update if no fields changed", func() {
+		nodeInfo := domain.NodeInfo{
+			Name:         "Unchanged Node",
+			ReferenceID:  "REF-002",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			AddressLine2: "Same Floor",
+			AddressLine3: "Same Building",
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+
+		err := upsert(ctx, nodeInfo)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the initial update timestamp
+		var initialNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", nodeInfo.DocID()).
+			First(&initialNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		initialUpdatedAt := initialNodeInfo.UpdatedAt
+
+		// Execute again without changes
+		err = upsert(ctx, nodeInfo)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify timestamp hasn't changed, indicating no update occurred
+		var finalNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", nodeInfo.DocID()).
+			First(&finalNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(finalNodeInfo.UpdatedAt).To(Equal(initialUpdatedAt))
+	})
+
+	It("should allow same node info for different organizations", func() {
+		nodeInfo1 := domain.NodeInfo{
+			Name:         "Multi Org Node",
+			ReferenceID:  "REF-ORG-1",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		// Create a similar node info for organization2
+		nodeType1Org2 := domain.NodeType{
+			Organization: organization2,
+			Value:        "warehouse",
+		}
+
+		contact1Org2 := domain.Contact{
+			Organization: organization2,
+			FullName:     "John Smith",
+			PrimaryEmail: "john@example.com",
+		}
+
+		addressInfo1Org2 := domain.AddressInfo{
+			Organization: organization2,
+			Contact:      contact1Org2,
+			State:        "State1",
+			Province:     "Province1",
+			District:     "District1",
+			AddressLine1: "123 Main St",
+		}
+
+		nodeInfo2 := domain.NodeInfo{
+			Name:         "Multi Org Node",
+			ReferenceID:  "REF-ORG-2",
+			Organization: organization2,
+			NodeType:     nodeType1Org2,
+			Contact:      contact1Org2,
+			AddressInfo:  addressInfo1Org2,
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+
+		err := upsert(ctx, nodeInfo1)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = upsert(ctx, nodeInfo2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify we have two distinct records
+		var count int64
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("name = ?", nodeInfo1.Name).
+			Count(&count).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(count).To(Equal(int64(2)))
+
+		// Verify they have different document IDs
+		Expect(nodeInfo1.DocID()).ToNot(Equal(nodeInfo2.DocID()))
+	})
+
+	It("should update when related node type changes", func() {
+		original := domain.NodeInfo{
+			Name:         "Node With Type Change",
+			ReferenceID:  "REF-TYPE",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		modified := domain.NodeInfo{
+			Name:         "Node With Type Change",
+			ReferenceID:  "REF-TYPE",
+			Organization: organization1,
+			NodeType:     nodeType2, // Changed node type
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", original.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType2.DocID().String()))
+	})
+
+	It("should update when related contact changes", func() {
+		original := domain.NodeInfo{
+			Name:         "Node With Contact Change",
+			ReferenceID:  "REF-CONTACT",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		modified := domain.NodeInfo{
+			Name:         "Node With Contact Change",
+			ReferenceID:  "REF-CONTACT",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact2, // Changed contact
+			AddressInfo:  addressInfo1,
+		}
+
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", original.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo.ContactDoc).To(Equal(contact2.DocID().String()))
+	})
+
+	It("should update when related address info changes", func() {
+		original := domain.NodeInfo{
+			Name:         "Node With Address Change",
+			ReferenceID:  "REF-ADDRESS",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		modified := domain.NodeInfo{
+			Name:         "Node With Address Change",
+			ReferenceID:  "REF-ADDRESS",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo2, // Changed address
+		}
+
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", original.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo2.DocID().String()))
+	})
+
+	It("should update addressLine2 and addressLine3 when they change", func() {
+		original := domain.NodeInfo{
+			Name:         "Node With Address Lines",
+			ReferenceID:  "REF-ADDRLINES",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			AddressLine2: "Original Line 2",
+			AddressLine3: "Original Line 3",
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		modified := domain.NodeInfo{
+			Name:         "Node With Address Lines",
+			ReferenceID:  "REF-ADDRLINES",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			AddressLine2: "Updated Line 2",
+			AddressLine3: "Updated Line 3",
+		}
+
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", original.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo.AddressLine2).To(Equal("Updated Line 2"))
+		Expect(dbNodeInfo.AddressLine3).To(Equal("Updated Line 3"))
+	})
+
+	It("should update references when they change", func() {
+		original := domain.NodeInfo{
+			Name:         "Node With References",
+			ReferenceID:  "REF-REFS",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			References: []domain.Reference{
+				{Type: "ERP", Value: "WH001"},
+			},
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		modified := domain.NodeInfo{
+			Name:         "Node With References",
+			ReferenceID:  "REF-REFS",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+			References: []domain.Reference{
+				{Type: "ERP", Value: "WH001-UPDATED"},
+				{Type: "SAP", Value: "1000002"},
+			},
+		}
+
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbNodeInfo table.NodeInfo
+		err = connection.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", original.DocID()).
+			First(&dbNodeInfo).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify the references were updated
+		references := dbNodeInfo.NodeReferences.Map()
+		Expect(len(references)).To(Equal(2))
+
+		// Check if the first reference was updated
+		erp := findReferenceByType(references, "ERP")
+		Expect(erp).ToNot(BeNil())
+		Expect(erp.Value).To(Equal("WH001-UPDATED"))
+
+		// Check if the new reference was added
+		sap := findReferenceByType(references, "SAP")
+		Expect(sap).ToNot(BeNil())
+		Expect(sap.Value).To(Equal("1000002"))
+	})
+
+	It("should generate consistent DocIDs for same input", func() {
+		// Create two identical NodeInfo objects
+		nodeInfo1 := domain.NodeInfo{
+			Name:         "Hash Test Node",
+			ReferenceID:  "REF-HASH",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		nodeInfo2 := domain.NodeInfo{
+			Name:         "Hash Test Node",
+			ReferenceID:  "REF-HASH",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		// DocIDs should be identical for identical input
+		Expect(nodeInfo1.DocID()).To(Equal(nodeInfo2.DocID()))
+
+		// Change organization and verify different DocID
+		nodeInfo2.Organization = organization2
+		Expect(nodeInfo1.DocID()).ToNot(Equal(nodeInfo2.DocID()))
+	})
+
+	It("should fail if database has no node_infos table", func() {
+		nodeInfo := domain.NodeInfo{
+			Name:         "Expected Error",
+			ReferenceID:  "REF-ERROR",
+			Organization: organization1,
+			NodeType:     nodeType1,
+			Contact:      contact1,
+			AddressInfo:  addressInfo1,
+		}
+
+		upsert := NewUpsertNodeInfo(noTablesContainerConnection)
+		err := upsert(ctx, nodeInfo)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("node_infos"))
+	})
+})
+
+// Helper function to find a reference by its type
+func findReferenceByType(references []domain.Reference, refType string) *domain.Reference {
+	for _, ref := range references {
+		if ref.Type == refType {
+			return &ref
+		}
+	}
+	return nil
+}

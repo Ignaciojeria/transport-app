@@ -13,3 +13,7 @@ func (id DocumentID) Equals(other string) bool {
 func (id DocumentID) ShouldUpdate(existing string) bool {
 	return !id.IsZero() && !id.Equals(existing)
 }
+
+func (id DocumentID) String() string {
+	return string(id)
+}
