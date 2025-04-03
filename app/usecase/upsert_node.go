@@ -28,7 +28,7 @@ func NewUpsertNode(
 ) UpsertNode {
 	return func(ctx context.Context, nodeInfo domain.NodeInfo) error {
 		nodeInfo.NodeType.Organization = nodeInfo.Organization
-		nodeType, err := upsertNodeType(ctx, nodeInfo.NodeType)
+		err := upsertNodeType(ctx, nodeInfo.NodeType)
 		if err != nil {
 			return err
 		}
@@ -42,8 +42,6 @@ func NewUpsertNode(
 		if err != nil {
 			return err
 		}
-		nodeInfo.NodeType = nodeType
-		_, err = upsertNodeInfo(ctx, nodeInfo)
-		return err
+		return upsertNodeInfo(ctx, nodeInfo)
 	}
 }

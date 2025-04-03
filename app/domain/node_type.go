@@ -8,6 +8,9 @@ type NodeType struct {
 // DocID genera un identificador único para NodeType basado en Organization y Value.
 // Si Value está vacío, se usa un string vacío como clave.
 func (nt NodeType) DocID() string {
+	if nt.Value == "" {
+		return ""
+	}
 	return Hash(nt.Organization, nt.Value)
 }
 
@@ -18,12 +21,6 @@ func (nt NodeType) UpdateIfChange(newNodeType NodeType) (NodeType, bool) {
 	// Actualizar Value si es diferente y no está vacío
 	if newNodeType.Value != "" && newNodeType.Value != nt.Value {
 		updated.Value = newNodeType.Value
-		changed = true
-	}
-
-	// Actualizar Organization si es diferente
-	if newNodeType.Organization != nt.Organization {
-		updated.Organization = newNodeType.Organization
 		changed = true
 	}
 

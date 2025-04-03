@@ -14,6 +14,9 @@ type NodeInfo struct {
 }
 
 func (n NodeInfo) DocID() string {
+	if n.ReferenceID == "" {
+		return ""
+	}
 	return Hash(n.Organization, string(n.ReferenceID))
 }
 
@@ -29,12 +32,6 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 
 	if newNode.Name != "" && newNode.Name != n.Name {
 		updated.Name = newNode.Name
-		changed = true
-	}
-
-	// Actualizar NodeType
-	if newNodeType, changedNodeType := n.NodeType.UpdateIfChange(newNode.NodeType); changedNodeType {
-		updated.NodeType = newNodeType
 		changed = true
 	}
 
@@ -88,21 +85,6 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 
 	if newNode.AddressLine3 != "" && newNode.AddressLine3 != n.AddressLine3 {
 		updated.AddressLine3 = newNode.AddressLine3
-		changed = true
-	}
-
-	// Reutilizar los métodos UpdateIfChanged para objetos complejos
-	// AddressInfo
-	updatedAddressInfo, addressChanged := n.AddressInfo.UpdateIfChanged(newNode.AddressInfo)
-	if addressChanged {
-		updated.AddressInfo = updatedAddressInfo
-		changed = true
-	}
-
-	// Contact
-	updatedContact, contactChanged := n.Contact.UpdateIfChanged(newNode.Contact)
-	if contactChanged {
-		updated.Contact = updatedContact
 		changed = true
 	}
 

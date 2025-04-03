@@ -24,7 +24,7 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 		err := conn.DB.WithContext(ctx).
 			Table("contacts").
 			Preload("Organization").
-			Where("reference_id = ?", c.DocID()).
+			Where("document_id = ?", c.DocID()).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

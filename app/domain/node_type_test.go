@@ -24,9 +24,9 @@ var _ = Describe("NodeType", func() {
 			Expect(node1.DocID()).ToNot(Equal(node3.DocID()))
 		})
 
-		It("should use empty string as fallback if Value is empty", func() {
+		It("should return empty hash if Value is empty", func() {
 			node := NodeType{Organization: org1, Value: ""}
-			Expect(node.DocID()).To(Equal(Hash(org1, "")))
+			Expect(node.DocID()).To(Equal(""))
 		})
 	})
 
@@ -43,7 +43,7 @@ var _ = Describe("NodeType", func() {
 		It("should update Value if new Value is not empty and different", func() {
 			updated, changed := base.UpdateIfChange(NodeType{
 				Value:        "new-type",
-				Organization: org1, // mismo para que no afecte
+				Organization: org1, // Ignorado
 			})
 
 			Expect(changed).To(BeTrue())
@@ -59,6 +59,7 @@ var _ = Describe("NodeType", func() {
 
 			Expect(changed).To(BeFalse())
 			Expect(updated.Value).To(Equal("initial-type"))
+			Expect(updated.Organization).To(Equal(org1))
 		})
 
 		It("should not update Value if new Value is same", func() {
@@ -69,19 +70,20 @@ var _ = Describe("NodeType", func() {
 
 			Expect(changed).To(BeFalse())
 			Expect(updated.Value).To(Equal("initial-type"))
+			Expect(updated.Organization).To(Equal(org1))
 		})
 
-		It("should update Organization if different", func() {
+		It("should not update Organization even if different", func() {
 			updated, changed := base.UpdateIfChange(NodeType{
 				Value:        "initial-type",
 				Organization: org2,
 			})
 
-			Expect(changed).To(BeTrue())
-			Expect(updated.Organization).To(Equal(org2))
+			Expect(changed).To(BeFalse())
+			Expect(updated.Organization).To(Equal(org1)) // Se mantiene
 		})
 
-		It("should update both fields if both are different and valid", func() {
+		It("should only update Value if both fields are different and Value is valid", func() {
 			updated, changed := base.UpdateIfChange(NodeType{
 				Value:        "new-type",
 				Organization: org2,
@@ -89,7 +91,7 @@ var _ = Describe("NodeType", func() {
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.Value).To(Equal("new-type"))
-			Expect(updated.Organization).To(Equal(org2))
+			Expect(updated.Organization).To(Equal(org1)) // No cambia
 		})
 
 		It("should not change anything if both fields are equal or empty", func() {

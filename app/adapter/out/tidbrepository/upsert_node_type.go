@@ -3,6 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"errors"
+
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
@@ -12,29 +13,41 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertNodeType func(context.Context, domain.NodeType) (domain.NodeType, error)
+type UpsertNodeType func(context.Context, domain.NodeType) error
 
 func init() {
 	ioc.Registry(NewUpsertNodeType, tidb.NewTIDBConnection)
 }
+
 func NewUpsertNodeType(conn tidb.TIDBConnection) UpsertNodeType {
-	return func(ctx context.Context, nt domain.NodeType) (domain.NodeType, error) {
-		var nodeType table.NodeType
+	return func(ctx context.Context, nt domain.NodeType) error {
+		var existing table.NodeType
+
 		err := conn.DB.WithContext(ctx).
 			Table("node_types").
-			Where("name = ? AND organization_id = ?",
-				nt.Value,
-				nt.Organization.ID).
-			First(&nodeType).Error
+			Where("document_id = ?", nt.DocID()).
+			First(&existing).Error
+
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.NodeType{}, err
+			return err
 		}
-		nodeTypeWithChanges, _ := nodeType.Map().UpdateIfChange(nt)
-		DBNodeTypeToUpdate := mapper.MapNodeType(nodeTypeWithChanges)
-		DBNodeTypeToUpdate.CreatedAt = nodeType.CreatedAt
-		if err := conn.Save(&DBNodeTypeToUpdate).Error; err != nil {
-			return domain.NodeType{}, err
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe → insert
+			newRecord := mapper.MapNodeType(nt)
+			return conn.Omit("Organization").Create(&newRecord).Error
 		}
-		return DBNodeTypeToUpdate.Map(), nil
+
+		// Ya existe → actualizar solo si hubo cambios
+		updated, changed := existing.Map().UpdateIfChange(nt)
+		if !changed {
+			return nil
+		}
+
+		updateData := mapper.MapNodeType(updated)
+		updateData.ID = existing.ID
+		updateData.CreatedAt = existing.CreatedAt
+
+		return conn.Omit("Organization").Save(&updateData).Error
 	}
 }

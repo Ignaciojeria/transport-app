@@ -12,34 +12,60 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertNodeInfo func(context.Context, domain.NodeInfo) (domain.NodeInfo, error)
+type UpsertNodeInfo func(context.Context, domain.NodeInfo) error
 
 func init() {
 	ioc.Registry(NewUpsertNodeInfo, tidb.NewTIDBConnection)
 }
 func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
-	return func(ctx context.Context, ni domain.NodeInfo) (domain.NodeInfo, error) {
-		nodeInfo := table.NodeInfo{}
-		err := conn.DB.WithContext(ctx).Table("node_infos").
-			Where("reference_id = ? AND organization_id = ?",
-				string(ni.ReferenceID), ni.Organization.ID).First(&nodeInfo).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.NodeInfo{}, err
-		}
-		m := nodeInfo.Map()
-		nodeWithChanges, _ := m.UpdateIfChanged(ni)
-		dbNodeToUpsert := mapper.MapNodeInfoTable(nodeWithChanges)
-		dbNodeToUpsert.CreatedAt = nodeInfo.CreatedAt
-		upsertQuery := conn.DB
+	return func(ctx context.Context, ni domain.NodeInfo) error {
+		var existing table.NodeInfo
 
-		if err := upsertQuery.
-			Omit("Organization").
-			Omit("NodeType").
-			Omit("Contact").
-			Omit("AddressInfo").
-			Save(&dbNodeToUpsert).Error; err != nil {
-			return domain.NodeInfo{}, err
+		err := conn.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", ni.DocID()).
+			First(&existing).Error
+
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
 		}
-		return dbNodeToUpsert.Map(), nil
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe → insert
+			newRecord := mapper.MapNodeInfoTable(ni)
+			return conn.Omit("Organization", "NodeType", "Contact", "AddressInfo").
+				Create(&newRecord).Error
+		}
+
+		// Ya existe → mapear y verificar cambios
+		existingMapped := existing.Map()
+		updated, changed := existingMapped.UpdateIfChanged(ni)
+
+		// Comparación de relaciones por DocID()
+		if nodeTypeDocID := ni.NodeType.DocID(); nodeTypeDocID != "" && nodeTypeDocID != existing.NodeTypeDoc {
+			updated.NodeType = ni.NodeType
+			changed = true
+		}
+		/*
+			if contactDocID := ni.Contact.DocID(); contactDocID != "" && contactDocID != existing.ContactDoc {
+				updated.Contact = ni.Contact
+				changed = true
+			}
+
+			if addressDocID := ni.AddressInfo.DocID(); addressDocID != "" && addressDocID != existing.AddressDoc {
+				updated.AddressInfo = ni.AddressInfo
+				changed = true
+			}
+		*/
+		if !changed {
+			return nil
+		}
+
+		updateData := mapper.MapNodeInfoTable(updated)
+		updateData.ID = existing.ID
+		updateData.CreatedAt = existing.CreatedAt
+
+		return conn.Omit("Organization", "NodeType", "Contact", "AddressInfo").
+			Save(&updateData).Error
 	}
 }

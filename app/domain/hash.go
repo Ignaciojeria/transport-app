@@ -20,3 +20,17 @@ func Hash(org Organization, inputs ...string) string {
 	// Retornar los primeros 128 bits (32 caracteres hex)
 	return hex.EncodeToString(hash[:16])
 }
+
+func EmptyHash(org Organization) string {
+	// Obtener la clave de la organización
+	orgKey := org.GetOrgKey()
+
+	// Unir todos los inputs asegurando que la key de la organización esté al inicio
+	joined := strings.Join(append([]string{orgKey}, ""), "|")
+
+	// Generar el hash SHA-256
+	hash := sha256.Sum256([]byte(joined))
+
+	// Retornar los primeros 128 bits (32 caracteres hex)
+	return hex.EncodeToString(hash[:16])
+}

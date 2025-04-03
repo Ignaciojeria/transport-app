@@ -8,9 +8,8 @@ import (
 func MapOrderType(ot domain.OrderType) table.OrderType {
 	return table.OrderType{
 		Type:           ot.Type,
-		
 		Description:    ot.Description,
 		OrganizationID: ot.Organization.ID,
-		ReferenceID:    ot.DocID(),
+		DocumentID:     ot.DocID(),
 	}
 }

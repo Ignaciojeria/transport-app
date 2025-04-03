@@ -33,7 +33,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		var dbAddressInfo table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("reference_id = ?", addressInfo.DocID()).
+			Where("document_id = ?", addressInfo.DocID()).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Av Providencia 1234"))
@@ -75,7 +75,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		var dbAddressInfo table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("reference_id = ?", modified.DocID()).
+			Where("document_id = ?", modified.DocID()).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Dirección Modificada"))
@@ -104,7 +104,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		var originalRecord table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("reference_id = ?", addressInfo.DocID()).
+			Where("document_id = ?", addressInfo.DocID()).
 			First(&originalRecord).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -115,7 +115,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		var dbAddressInfo table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("reference_id = ?", addressInfo.DocID()).
+			Where("document_id = ?", addressInfo.DocID()).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Sin Cambios"))
@@ -182,7 +182,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		var dbAddressInfo table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("reference_id = ?", modified.DocID()).
+			Where("document_id = ?", modified.DocID()).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -209,7 +209,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		var dbAddressInfo table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("reference_id = ?", addressInfo.DocID()).
+			Where("document_id = ?", addressInfo.DocID()).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Sin Coordenadas"))

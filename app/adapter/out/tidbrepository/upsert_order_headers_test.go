@@ -30,10 +30,10 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var result table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("reference_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID()).
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result.ReferenceID).To(Equal(h.DocID()))
+		Expect(result.DocumentID).To(Equal(h.DocID()))
 	})
 
 	It("should fail to insert order header if organization is missing", func() {
@@ -75,7 +75,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var count int64
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("reference_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID()).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(1)))
@@ -111,7 +111,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var count int64
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("reference_id IN (?, ?)", h1.DocID(), h2.DocID()).
+			Where("document_id IN (?, ?)", h1.DocID(), h2.DocID()).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))

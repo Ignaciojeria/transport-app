@@ -30,12 +30,12 @@ func NewCreateAccountOperator(
 			return domain.Operator{}, err
 		}
 		input.OriginNode.Organization = input.Organization
-		nodeInfo, err := upsertNodeInfo(ctx, input.OriginNode)
+		err = upsertNodeInfo(ctx, input.OriginNode)
 		if err != nil {
 			return domain.Operator{}, err
 		}
 
-		input.OriginNode = nodeInfo
+		//input.OriginNode = nodeInfo
 		return upsertOperator(ctx, input)
 	}
 }

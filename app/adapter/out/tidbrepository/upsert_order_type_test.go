@@ -34,7 +34,7 @@ var _ = Describe("UpsertOrderType", func() {
 		var result table.OrderType
 		err = connection.DB.WithContext(ctx).
 			Table("order_types").
-			Where("reference_id = ?", ot.DocID()).
+			Where("document_id = ?", ot.DocID()).
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Type).To(Equal("retail"))
@@ -65,7 +65,7 @@ var _ = Describe("UpsertOrderType", func() {
 		var result table.OrderType
 		err = connection.DB.WithContext(ctx).
 			Table("order_types").
-			Where("reference_id = ?", ot.DocID()).
+			Where("document_id = ?", ot.DocID()).
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.Description).To(Equal("Modificada"))
@@ -89,7 +89,7 @@ var _ = Describe("UpsertOrderType", func() {
 		var count int64
 		err = connection.DB.WithContext(ctx).
 			Table("order_types").
-			Where("reference_id = ?", ot.DocID()).
+			Where("document_id = ?", ot.DocID()).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(1))) // sigue habiendo solo uno
