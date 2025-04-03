@@ -481,7 +481,8 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
 		Name:        n.Name,
 		Organization: domain.Organization{
-			ID: n.OrganizationID,
+			ID:      n.OrganizationID,
+			Country: countries.ByName(n.Organization.Country),
 		},
 		References:   n.NodeReferences.Map(),
 		AddressLine2: n.AddressLine2,

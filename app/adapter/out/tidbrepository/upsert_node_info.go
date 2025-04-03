@@ -23,15 +23,14 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 	return func(ctx context.Context, ni domain.NodeInfo) error {
 		var existing table.NodeInfo
 
-		// Create the document ID once to ensure consistency
 		docID := ni.DocID()
-
 		if docID.IsZero() {
 			return errors.New("cannot persist node info with empty ReferenceID")
 		}
 
 		err := conn.DB.WithContext(ctx).
 			Table("node_infos").
+			Preload("Organization").
 			Where("document_id = ?", docID).
 			First(&existing).Error
 
@@ -73,7 +72,6 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 		updateData := mapper.MapNodeInfoTable(updated)
 		updateData.ID = existing.ID
 		updateData.CreatedAt = existing.CreatedAt
-		updateData.DocumentID = existing.DocumentID // Ensure we keep the same document ID
 
 		// Use the same Omit pattern for consistency
 		return conn.
