@@ -102,7 +102,7 @@ type FlattenedPackageView struct {
 	Lpn                   string                   `gorm:"column:lpn"`
 	Height                float64                  `gorm:"column:height"`
 	Width                 float64                  `gorm:"column:width"`
-	Depth                 float64                  `gorm:"column:depth"`
+	Length                float64                  `gorm:"column:Length"`
 	Unit                  string                   `gorm:"column:unit"`
 	WeightValue           float64                  `gorm:"column:weight_value"`
 	WeightUnit            string                   `gorm:"column:weight_unit"`
@@ -287,12 +287,11 @@ func mapPackages(packages []FlattenedPackageView) []domain.Package {
 	result := make([]domain.Package, len(packages))
 	for i, p := range packages {
 		result[i] = domain.Package{
-			ID:  p.PackageID,
 			Lpn: p.Lpn,
 			Dimensions: domain.Dimensions{
 				Height: p.Height,
 				Width:  p.Width,
-				Depth:  p.Depth,
+				Length: p.Length,
 				Unit:   p.Unit,
 			},
 			Weight: domain.Weight{
@@ -352,7 +351,7 @@ func mapJSONItems(items table.JSONItems) []domain.Item {
 			Dimensions: domain.Dimensions{
 				Height: item.JSONDimensions.Height,
 				Width:  item.JSONDimensions.Width,
-				Depth:  item.JSONDimensions.Depth,
+				Length: item.JSONDimensions.Length,
 				Unit:   item.JSONDimensions.Unit,
 			},
 			Weight: domain.Weight{

@@ -146,7 +146,7 @@ func mapItems(items table.JSONItems) []domain.Item {
 			Dimensions: domain.Dimensions{
 				Height: item.JSONDimensions.Height,
 				Width:  item.JSONDimensions.Width,
-				Depth:  item.JSONDimensions.Depth,
+				Length: item.JSONDimensions.Length,
 				Unit:   item.JSONDimensions.Unit,
 			},
 			Weight: domain.Weight{
@@ -167,7 +167,7 @@ func mapPackages(packages []table.Package) []domain.Package {
 			Dimensions: domain.Dimensions{
 				Height: pkg.JSONDimensions.Height,
 				Width:  pkg.JSONDimensions.Width,
-				Depth:  pkg.JSONDimensions.Depth,
+				Length: pkg.JSONDimensions.Length,
 				Unit:   pkg.JSONDimensions.Unit,
 			},
 			Weight: domain.Weight{

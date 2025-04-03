@@ -170,7 +170,7 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
                 p.lpn,
                 p.json_dimensions->>'$.height' AS height,
                 p.json_dimensions->>'$.width' AS width,
-                p.json_dimensions->>'$.depth' AS depth,
+                p.json_dimensions->>'$.Length' AS Length,
                 p.json_dimensions->>'$.unit' AS unit,
                 p.json_weight->>'$.weight_value' AS weight_value,
                 p.json_weight->>'$.weight_unit' AS weight_unit,

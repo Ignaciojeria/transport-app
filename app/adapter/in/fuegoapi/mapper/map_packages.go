@@ -5,7 +5,7 @@ import "transport-app/app/domain"
 // MapPackagesToDomain convierte estructuras anónimas de paquetes a domain.Package
 func MapPackagesToDomain(packages []struct {
 	Dimensions struct {
-		Depth  float64 `json:"depth"`
+		Length float64 `json:"length"`
 		Height float64 `json:"height"`
 		Unit   string  `json:"unit"`
 		Width  float64 `json:"width"`
@@ -34,7 +34,7 @@ func MapPackagesToDomain(packages []struct {
 			Dimensions: domain.Dimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,
-				Depth:  pkg.Dimensions.Depth,
+				Length: pkg.Dimensions.Length,
 				Unit:   pkg.Dimensions.Unit,
 			},
 			Weight: domain.Weight{
@@ -53,7 +53,7 @@ func MapPackagesToDomain(packages []struct {
 
 func MapPackagesFromDomain(packages []domain.Package) []struct {
 	Dimensions struct {
-		Depth  float64 `json:"depth"`
+		Length float64 `json:"length"`
 		Height float64 `json:"height"`
 		Unit   string  `json:"unit"`
 		Width  float64 `json:"width"`
@@ -77,7 +77,7 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 } {
 	mapped := make([]struct {
 		Dimensions struct {
-			Depth  float64 `json:"depth"`
+			Length float64 `json:"length"`
 			Height float64 `json:"height"`
 			Unit   string  `json:"unit"`
 			Width  float64 `json:"width"`
@@ -103,7 +103,7 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 	for i, pkg := range packages {
 		mapped[i] = struct {
 			Dimensions struct {
-				Depth  float64 `json:"depth"`
+				Length float64 `json:"length"`
 				Height float64 `json:"height"`
 				Unit   string  `json:"unit"`
 				Width  float64 `json:"width"`
@@ -126,12 +126,12 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 			} `json:"weight"`
 		}{
 			Dimensions: struct {
-				Depth  float64 `json:"depth"`
+				Length float64 `json:"length"`
 				Height float64 `json:"height"`
 				Unit   string  `json:"unit"`
 				Width  float64 `json:"width"`
 			}{
-				Depth:  pkg.Dimensions.Depth,
+				Length: pkg.Dimensions.Length,
 				Height: pkg.Dimensions.Height,
 				Unit:   pkg.Dimensions.Unit,
 				Width:  pkg.Dimensions.Width,

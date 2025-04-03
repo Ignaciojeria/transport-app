@@ -213,9 +213,6 @@ func (o Order) IsOriginAndDestinationNodeEqual() bool {
 
 type ReferenceID string
 
-
-
-
 func concatenateWithCommas(values ...string) string {
 	result := ""
 	for _, value := range values {
@@ -242,7 +239,7 @@ type Insurance struct {
 type Dimensions struct {
 	Height float64 `json:"height"`
 	Width  float64 `json:"width"`
-	Depth  float64 `json:"depth"`
+	Length float64 `json:"length"`
 	Unit   string  `json:"unit"`
 }
 
@@ -307,53 +304,6 @@ func (o *Order) ValidatePackages() error {
 	}
 
 	return nil
-}
-
-type Package struct {
-	ID             int64
-	Lpn            string `json:"lpn"`
-	Organization   Organization
-	Dimensions     Dimensions      `json:"dimensions"`
-	Weight         Weight          `json:"weight"`
-	Insurance      Insurance       `json:"insurance"`
-	ItemReferences []ItemReference `json:"itemReferences"`
-}
-
-func SearchPackageByLpn(pcks []Package, lpn string) Package {
-	for _, pck := range pcks {
-		if pck.Lpn == lpn {
-			return pck
-		}
-	}
-	return Package{}
-}
-
-func (p Package) UpdateIfChanged(newPackage Package) Package {
-	// Actualizar Lpn
-	if newPackage.Lpn != "" {
-		p.Lpn = newPackage.Lpn
-	}
-
-	// Actualizar dimensiones si no están vacías
-	if newPackage.Dimensions != (Dimensions{}) {
-		p.Dimensions = newPackage.Dimensions
-	}
-
-	// Actualizar peso si no está vacío
-	if newPackage.Weight != (Weight{}) {
-		p.Weight = newPackage.Weight
-	}
-
-	// Actualizar seguro si no está vacío
-	if newPackage.Insurance != (Insurance{}) {
-		p.Insurance = newPackage.Insurance
-	}
-
-	// Actualizar referencias de ítems
-	if len(newPackage.ItemReferences) > 0 {
-		p.ItemReferences = newPackage.ItemReferences
-	}
-	return p
 }
 
 // Función auxiliar para comparar arreglos de referencias de ítems

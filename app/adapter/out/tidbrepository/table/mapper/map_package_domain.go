@@ -21,7 +21,7 @@ func mapTableDimensionsToDomain(dim table.JSONDimensions) domain.Dimensions {
 	return domain.Dimensions{
 		Height: dim.Height,
 		Width:  dim.Width,
-		Depth:  dim.Depth,
+		Length: dim.Length,
 		Unit:   dim.Unit,
 	}
 }

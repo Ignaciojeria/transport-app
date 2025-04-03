@@ -5,7 +5,7 @@ import "transport-app/app/domain"
 func MapItemsToDomain(items []struct {
 	Description string `json:"description"`
 	Dimensions  struct {
-		Depth  float64 `json:"depth"`
+		Length float64 `json:"length"`
 		Height float64 `json:"height"`
 		Unit   string  `json:"unit"`
 		Width  float64 `json:"width"`
@@ -42,7 +42,7 @@ func MapItemsToDomain(items []struct {
 			Dimensions: domain.Dimensions{
 				Height: item.Dimensions.Height,
 				Width:  item.Dimensions.Width,
-				Depth:  item.Dimensions.Depth,
+				Length: item.Dimensions.Length,
 				Unit:   item.Dimensions.Unit,
 			},
 			Weight: domain.Weight{
@@ -57,7 +57,7 @@ func MapItemsToDomain(items []struct {
 func MapItemsFromDomain(items []domain.Item) []struct {
 	Description string `json:"description"`
 	Dimensions  struct {
-		Depth  float64 `json:"depth"`
+		Length float64 `json:"length"`
 		Height float64 `json:"height"`
 		Unit   string  `json:"unit"`
 		Width  float64 `json:"width"`
@@ -80,7 +80,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 	mapped := make([]struct {
 		Description string `json:"description"`
 		Dimensions  struct {
-			Depth  float64 `json:"depth"`
+			Length float64 `json:"length"`
 			Height float64 `json:"height"`
 			Unit   string  `json:"unit"`
 			Width  float64 `json:"width"`
@@ -105,7 +105,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		mapped[i] = struct {
 			Description string `json:"description"`
 			Dimensions  struct {
-				Depth  float64 `json:"depth"`
+				Length float64 `json:"length"`
 				Height float64 `json:"height"`
 				Unit   string  `json:"unit"`
 				Width  float64 `json:"width"`
@@ -127,12 +127,12 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		}{
 			Description: item.Description,
 			Dimensions: struct {
-				Depth  float64 `json:"depth"`
+				Length float64 `json:"length"`
 				Height float64 `json:"height"`
 				Unit   string  `json:"unit"`
 				Width  float64 `json:"width"`
 			}{
-				Depth:  item.Dimensions.Depth,
+				Length: item.Dimensions.Length,
 				Height: item.Dimensions.Height,
 				Unit:   item.Dimensions.Unit,
 				Width:  item.Dimensions.Width,

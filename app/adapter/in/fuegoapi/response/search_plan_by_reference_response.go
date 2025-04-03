@@ -77,7 +77,7 @@ type SearchPlanByReferenceOrdersResponse struct {
 	Items []struct {
 		Description string `json:"description"`
 		Dimensions  struct {
-			Depth  float64 `json:"depth"`
+			Length float64 `json:"length"`
 			Height float64 `json:"height"`
 			Unit   string  `json:"unit"`
 			Width  float64 `json:"width"`
@@ -133,7 +133,7 @@ type SearchPlanByReferenceOrdersResponse struct {
 	} `json:"origin"`
 	Packages []struct {
 		Dimensions struct {
-			Depth  float64 `json:"depth"`
+			Length float64 `json:"length"`
 			Height float64 `json:"height"`
 			Unit   string  `json:"unit"`
 			Width  float64 `json:"width"`

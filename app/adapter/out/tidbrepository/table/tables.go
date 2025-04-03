@@ -426,7 +426,6 @@ type Package struct {
 
 func (p Package) Map() domain.Package {
 	return domain.Package{
-		ID:             p.ID,
 		Organization:   p.Organization.Map(),
 		Lpn:            p.Lpn,
 		Dimensions:     p.JSONDimensions.Map(),
@@ -554,7 +553,7 @@ func (j JSONInsurance) Value() (driver.Value, error) {
 type Dimensions struct {
 	Height float64 `gorm:"not null" json:"height"`
 	Width  float64 `gorm:"not null" json:"width"`
-	Depth  float64 `gorm:"not null" json:"depth"`
+	Length float64 `gorm:"not null" json:"length"`
 	Unit   string  `gorm:"not null" json:"unit"`
 }
 
@@ -564,7 +563,7 @@ func (j JSONDimensions) Map() domain.Dimensions {
 	return domain.Dimensions{
 		Height: j.Height,
 		Width:  j.Width,
-		Depth:  j.Depth,
+		Length: j.Length,
 		Unit:   j.Unit,
 	}
 }

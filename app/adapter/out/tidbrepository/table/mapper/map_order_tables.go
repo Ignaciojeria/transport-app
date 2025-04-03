@@ -96,7 +96,7 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 			JSONDimensions: table.JSONDimensions{
 				Height: item.Dimensions.Height,
 				Width:  item.Dimensions.Width,
-				Depth:  item.Dimensions.Depth,
+				Length: item.Dimensions.Length,
 				Unit:   item.Dimensions.Unit,
 			},
 			JSONWeight: table.JSONWeight{
@@ -114,12 +114,11 @@ func MapPackagesToTable(packages []domain.Package, orgCountryID int64) []table.P
 	for i, pkg := range packages {
 		mapped[i] = table.Package{
 			OrganizationID: orgCountryID,
-			ID:             pkg.ID,
 			Lpn:            pkg.Lpn,
 			JSONDimensions: table.JSONDimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,
-				Depth:  pkg.Dimensions.Depth,
+				Length: pkg.Dimensions.Length,
 				Unit:   pkg.Dimensions.Unit,
 			},
 			JSONWeight: table.JSONWeight{
@@ -151,12 +150,11 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 func MapPackageToTable(pkg domain.Package, orgCountryID int64) table.Package {
 	return table.Package{
 		OrganizationID: orgCountryID,
-		ID:             pkg.ID,
 		Lpn:            pkg.Lpn,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
 			Width:  pkg.Dimensions.Width,
-			Depth:  pkg.Dimensions.Depth,
+			Length: pkg.Dimensions.Length,
 			Unit:   pkg.Dimensions.Unit,
 		},
 		JSONWeight: table.JSONWeight{
