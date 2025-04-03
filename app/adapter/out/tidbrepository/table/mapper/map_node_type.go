@@ -9,6 +9,6 @@ func MapNodeType(nt domain.NodeType) table.NodeType {
 	return table.NodeType{
 		OrganizationID: nt.Organization.ID,
 		Value:          nt.Value,
-		DocumentID:     nt.DocID(),
+		DocumentID:     string(nt.DocID()),
 	}
 }

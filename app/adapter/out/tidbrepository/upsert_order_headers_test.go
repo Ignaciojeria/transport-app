@@ -12,10 +12,8 @@ import (
 
 var _ = Describe("TestUpsertOrderHeaders", func() {
 	It("should insert order header if not exists", func() {
-		// Preparar contexto y limpiar la tabla
 		ctx := context.Background()
 
-		// Crear datos de prueba
 		h := domain.Headers{
 			Commerce:     "tienda-123",
 			Consumer:     "cliente-xyz",
@@ -26,20 +24,18 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		err := upsert(ctx, h)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verificar que el registro existe
 		var result table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("document_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID()). // Cast aquí
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result.DocumentID).To(Equal(h.DocID()))
+		Expect(result.DocumentID).To(Equal(string(h.DocID()))) // Cast aquí
 	})
 
 	It("should fail to insert order header if organization is missing", func() {
 		ctx := context.Background()
 
-		// Organización vacía
 		h := domain.Headers{
 			Commerce:     "tienda-123",
 			Consumer:     "cliente-xyz",
@@ -48,13 +44,12 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 
 		upsert := NewUpsertOrderHeaders(connection)
 		err := upsert(ctx, h)
-		Expect(err).To(HaveOccurred()) // Debe fallar
+		Expect(err).To(HaveOccurred())
 	})
 
 	It("should not insert the same order header twice for the same organization", func() {
 		ctx := context.Background()
 
-		// Crear cabecera de prueba
 		h := domain.Headers{
 			Commerce:     "tienda-repetida",
 			Consumer:     "cliente-repetido",
@@ -63,15 +58,12 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 
 		upsert := NewUpsertOrderHeaders(connection)
 
-		// Primera inserción
 		err := upsert(ctx, h)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Segunda inserción (debe ser ignorada sin fallar)
 		err = upsert(ctx, h)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verificar que solo hay una fila
 		var count int64
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
@@ -84,7 +76,6 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 	It("should insert the same order header in different organizations", func() {
 		ctx := context.Background()
 
-		// Crear cabecera con misma referencia, pero diferente organización
 		h1 := domain.Headers{
 			Commerce:     "tienda-repetida",
 			Consumer:     "cliente-repetido",
@@ -99,15 +90,12 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 
 		upsert := NewUpsertOrderHeaders(connection)
 
-		// Insertar en la primera organización
 		err := upsert(ctx, h1)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Insertar en la segunda organización
 		err = upsert(ctx, h2)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verificar que ambos registros fueron insertados correctamente
 		var count int64
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
@@ -132,5 +120,4 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("order_headers"))
 	})
-
 })

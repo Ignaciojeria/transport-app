@@ -3,6 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"errors"
+
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
@@ -17,21 +18,28 @@ type UpsertOrderHeaders func(context.Context, domain.Headers) error
 func init() {
 	ioc.Registry(NewUpsertOrderHeaders, tidb.NewTIDBConnection)
 }
+
 func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 	return func(ctx context.Context, h domain.Headers) error {
 		var orderHeaders table.OrderHeaders
-		err := conn.WithContext(ctx).
+
+		err := conn.DB.WithContext(ctx).
 			Table("order_headers").
 			Where("document_id = ?", h.DocID()).
 			First(&orderHeaders).Error
+
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
+
 		if err == nil {
+			// Ya existe → no hacer nada
 			return nil
 		}
+
 		orderHeadersTbl := mapper.MapOrderHeaders(h)
-		return conn.
+
+		return conn.DB.
 			WithContext(ctx).
 			Omit("Organization").
 			Create(&orderHeadersTbl).Error

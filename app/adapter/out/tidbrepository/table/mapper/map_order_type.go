@@ -10,6 +10,6 @@ func MapOrderType(ot domain.OrderType) table.OrderType {
 		Type:           ot.Type,
 		Description:    ot.Description,
 		OrganizationID: ot.Organization.ID,
-		DocumentID:     ot.DocID(),
+		DocumentID:     string(ot.DocID()),
 	}
 }

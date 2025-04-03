@@ -16,9 +16,9 @@ var _ = Describe("NodeType", func() {
 			node2 := NodeType{Organization: org1, Value: "bar"}
 			node3 := NodeType{Organization: org2, Value: "foo"}
 
-			Expect(node1.DocID()).To(Equal(Hash(org1, "foo")))
-			Expect(node2.DocID()).To(Equal(Hash(org1, "bar")))
-			Expect(node3.DocID()).To(Equal(Hash(org2, "foo")))
+			Expect(node1.DocID()).To(Equal(DocumentID(Hash(org1, "foo"))))
+			Expect(node2.DocID()).To(Equal(DocumentID(Hash(org1, "bar"))))
+			Expect(node3.DocID()).To(Equal(DocumentID(Hash(org2, "foo"))))
 
 			Expect(node1.DocID()).ToNot(Equal(node2.DocID()))
 			Expect(node1.DocID()).ToNot(Equal(node3.DocID()))
@@ -26,7 +26,7 @@ var _ = Describe("NodeType", func() {
 
 		It("should return empty hash if Value is empty", func() {
 			node := NodeType{Organization: org1, Value: ""}
-			Expect(node.DocID()).To(Equal(""))
+			Expect(node.DocID()).To(Equal(DocumentID("")))
 		})
 	})
 
@@ -43,7 +43,7 @@ var _ = Describe("NodeType", func() {
 		It("should update Value if new Value is not empty and different", func() {
 			updated, changed := base.UpdateIfChange(NodeType{
 				Value:        "new-type",
-				Organization: org1, // Ignorado
+				Organization: org1,
 			})
 
 			Expect(changed).To(BeTrue())
@@ -80,7 +80,7 @@ var _ = Describe("NodeType", func() {
 			})
 
 			Expect(changed).To(BeFalse())
-			Expect(updated.Organization).To(Equal(org1)) // Se mantiene
+			Expect(updated.Organization).To(Equal(org1)) // No cambia
 		})
 
 		It("should only update Value if both fields are different and Value is valid", func() {

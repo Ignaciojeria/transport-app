@@ -13,7 +13,7 @@ type NodeInfo struct {
 	AddressLine3 string       `json:"addressLine3"`
 }
 
-func (n NodeInfo) DocID() string {
+func (n NodeInfo) DocID() DocumentID {
 	if n.ReferenceID == "" {
 		return ""
 	}

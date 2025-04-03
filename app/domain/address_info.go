@@ -20,7 +20,7 @@ type AddressInfo struct {
 	TimeZone          string    `json:"timeZone"`
 }
 
-func (a AddressInfo) DocID() string {
+func (a AddressInfo) DocID() DocumentID {
 	return Hash(
 		a.Organization,
 		a.AddressLine1,

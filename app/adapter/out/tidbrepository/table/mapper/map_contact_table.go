@@ -14,6 +14,6 @@ func MapContactToTable(e domain.Contact, organizationID int64) table.Contact {
 		Documents:      mapDocuments(e.Documents), // Serializar a JSON
 		NationalID:     e.NationalID,
 		OrganizationID: organizationID,
-		DocumentID:     e.DocID(),
+		DocumentID:     string(e.DocID()),
 	}
 }

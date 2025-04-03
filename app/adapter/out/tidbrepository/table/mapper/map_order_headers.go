@@ -10,7 +10,7 @@ func MapOrderHeaders(c domain.Headers) table.OrderHeaders {
 		ID:             c.ID,
 		Commerce:       c.Commerce,
 		Consumer:       c.Consumer,
-		DocumentID:     c.DocID(),
+		DocumentID:     string(c.DocID()),
 		OrganizationID: c.Organization.ID,
 	}
 }

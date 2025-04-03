@@ -3,6 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"errors"
+
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
@@ -17,6 +18,7 @@ type UpsertNodeInfo func(context.Context, domain.NodeInfo) error
 func init() {
 	ioc.Registry(NewUpsertNodeInfo, tidb.NewTIDBConnection)
 }
+
 func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 	return func(ctx context.Context, ni domain.NodeInfo) error {
 		var existing table.NodeInfo
@@ -31,32 +33,30 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 		}
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
 			newRecord := mapper.MapNodeInfoTable(ni)
 			return conn.Omit("Organization", "NodeType", "Contact", "AddressInfo").
 				Create(&newRecord).Error
 		}
 
-		// Ya existe → mapear y verificar cambios
 		existingMapped := existing.Map()
 		updated, changed := existingMapped.UpdateIfChanged(ni)
 
-		// Comparación de relaciones por DocID()
-		if nodeTypeDocID := ni.NodeType.DocID(); nodeTypeDocID != "" && nodeTypeDocID != existing.NodeTypeDoc {
+		// Verificación por hash de relaciones anidadas
+		if ni.NodeType.DocID().ShouldUpdate(existing.NodeTypeDoc) {
 			updated.NodeType = ni.NodeType
 			changed = true
 		}
 		/*
-			if contactDocID := ni.Contact.DocID(); contactDocID != "" && contactDocID != existing.ContactDoc {
+			if ni.Contact.DocID().ShouldUpdate(existing.ContactDoc) {
 				updated.Contact = ni.Contact
 				changed = true
 			}
-
-			if addressDocID := ni.AddressInfo.DocID(); addressDocID != "" && addressDocID != existing.AddressDoc {
+			if ni.AddressInfo.DocID().ShouldUpdate(existing.AddressDoc) {
 				updated.AddressInfo = ni.AddressInfo
 				changed = true
 			}
 		*/
+
 		if !changed {
 			return nil
 		}

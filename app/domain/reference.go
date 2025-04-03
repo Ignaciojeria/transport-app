@@ -5,7 +5,7 @@ type Reference struct {
 	Value string `json:"value"`
 }
 
-func DocID(org Organization, r Reference) string {
+func DocID(org Organization, r Reference) DocumentID {
 	return Hash(org, r.Type, r.Value)
 }
 

@@ -31,12 +31,12 @@ var _ = Describe("NodeInfo", func() {
 			Expect(node1.DocID()).ToNot(Equal(node3.DocID()))
 		})
 
-		It("should return empty string if ReferenceID is empty", func() {
+		It("should return empty DocumentID if ReferenceID is empty", func() {
 			node := NodeInfo{
 				Organization: org1,
 				ReferenceID:  "",
 			}
-			Expect(node.DocID()).To(Equal(""))
+			Expect(node.DocID()).To(Equal(DocumentID("")))
 		})
 	})
 
@@ -123,7 +123,6 @@ var _ = Describe("NodeInfo", func() {
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.References).To(HaveLen(3))
-
 			Expect(updated.References).To(ContainElement(Reference{Type: "CODE", Value: "REF001-UPDATED"}))
 			Expect(updated.References).To(ContainElement(Reference{Type: "ALT_CODE", Value: "ALT001"}))
 			Expect(updated.References).To(ContainElement(Reference{Type: "CUSTOM", Value: "CUST001"}))
@@ -131,11 +130,10 @@ var _ = Describe("NodeInfo", func() {
 
 		It("should ignore empty references", func() {
 			newNode := baseNode
-			newNode.References = []Reference{
-				{Type: "", Value: ""},
-			}
+			newNode.References = []Reference{{Type: "", Value: ""}}
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
+
 			Expect(changed).To(BeFalse())
 			Expect(updated.References).To(Equal(baseNode.References))
 		})
@@ -154,6 +152,7 @@ var _ = Describe("NodeInfo", func() {
 
 		It("should not update if no fields changed", func() {
 			updated, changed := baseNode.UpdateIfChanged(baseNode)
+
 			Expect(changed).To(BeFalse())
 			Expect(updated).To(Equal(baseNode))
 		})

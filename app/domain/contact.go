@@ -39,7 +39,7 @@ func (c ContactMethod) UpdateIfChange(newContact ContactMethod) (ContactMethod, 
 	return updated, changed
 }
 
-func (c Contact) DocID() string {
+func (c Contact) DocID() DocumentID {
 	var key string
 	switch {
 	case c.PrimaryEmail != "":
@@ -74,7 +74,7 @@ func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
 		updated.NationalID = newContact.NationalID
 		changed = true
 	}
-	
+
 	// Actualizar documentos usando UpdateIfChange
 	if len(newContact.Documents) > 0 {
 		// Crear un mapa de documentos existentes por Type para facilitar la búsqueda
@@ -82,20 +82,20 @@ func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
 		for i, doc := range c.Documents {
 			docMap[doc.Type] = i
 		}
-		
+
 		// Copiar los documentos actuales como base
 		updatedDocs := make([]Document, len(c.Documents))
 		copy(updatedDocs, c.Documents)
-		
+
 		docsChanged := false
-		
+
 		// Procesar cada nuevo documento
 		for _, newDoc := range newContact.Documents {
 			// No considerar documentos completamente vacíos
 			if newDoc.Type == "" && newDoc.Value == "" {
 				continue
 			}
-			
+
 			// Buscar por Type para mantener consistencia con otros métodos
 			if idx, exists := docMap[newDoc.Type]; exists {
 				// Si el documento existe, intentar actualizarlo
@@ -110,7 +110,7 @@ func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
 				docsChanged = true
 			}
 		}
-		
+
 		if docsChanged {
 			updated.Documents = updatedDocs
 			changed = true
@@ -124,20 +124,20 @@ func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
 		for i, method := range c.AdditionalContactMethods {
 			methodMap[method.Type] = i
 		}
-		
+
 		// Copiar los métodos actuales como base
 		updatedMethods := make([]ContactMethod, len(c.AdditionalContactMethods))
 		copy(updatedMethods, c.AdditionalContactMethods)
-		
+
 		methodsChanged := false
-		
+
 		// Procesar cada nuevo método de contacto
 		for _, newMethod := range newContact.AdditionalContactMethods {
 			// No considerar métodos completamente vacíos
 			if newMethod.Type == "" && newMethod.Value == "" {
 				continue
 			}
-			
+
 			// Buscar por Type para mantener el comportamiento similar a References
 			if idx, exists := methodMap[newMethod.Type]; exists {
 				// Si el método existe, intentar actualizarlo
@@ -152,7 +152,7 @@ func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {
 				methodsChanged = true
 			}
 		}
-		
+
 		if methodsChanged {
 			updated.AdditionalContactMethods = updatedMethods
 			changed = true
