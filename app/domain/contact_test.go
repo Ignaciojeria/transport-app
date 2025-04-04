@@ -448,3 +448,40 @@ var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
 		Expect(updated3.PrimaryEmail).To(Equal("juan@correo.com"))
 	})
 })
+
+var _ = Describe("Contact UpdateIfChanged (missing fields)", func() {
+	var original Contact
+	org := Organization{ID: 1}
+
+	BeforeEach(func() {
+		original = Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			Organization: org,
+		}
+	})
+
+	It("should update FullName if different and not empty", func() {
+		newContact := Contact{
+			FullName: "Juan Pedro Pérez",
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeTrue())
+		Expect(updated.FullName).To(Equal("Juan Pedro Pérez"))
+	})
+
+	It("should update PrimaryPhone if different and not empty", func() {
+		newContact := Contact{
+			PrimaryPhone: "+56911111111",
+		}
+
+		updated, changed := original.UpdateIfChanged(newContact)
+
+		Expect(changed).To(BeTrue())
+		Expect(updated.PrimaryPhone).To(Equal("+56911111111"))
+	})
+})

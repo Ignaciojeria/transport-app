@@ -49,4 +49,12 @@ var _ = Describe("DocumentID", func() {
 			Expect(id.ShouldUpdate("same-value")).To(BeFalse())
 		})
 	})
+
+	Describe("String", func() {
+		It("should return the underlying string value", func() {
+			id := DocumentID("test-123")
+			Expect(id.String()).To(Equal("test-123"))
+		})
+	})
+
 })
