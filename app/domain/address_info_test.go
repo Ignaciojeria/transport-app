@@ -245,4 +245,32 @@ var _ = Describe("AddressInfo", func() {
 			Expect(fullAddress).To(Equal("Av Providencia 1234"))
 		})
 	})
+
+	Describe("concatenateWithCommas", func() {
+		It("should concatenate multiple non-empty strings with commas", func() {
+			result := concatenateWithCommas("uno", "dos", "tres")
+			Expect(result).To(Equal("uno, dos, tres"))
+		})
+	
+		It("should skip empty strings", func() {
+			result := concatenateWithCommas("uno", "", "tres")
+			Expect(result).To(Equal("uno, tres"))
+		})
+	
+		It("should return a single value without comma if only one non-empty string", func() {
+			result := concatenateWithCommas("", "", "único")
+			Expect(result).To(Equal("único"))
+		})
+	
+		It("should return empty string if all inputs are empty", func() {
+			result := concatenateWithCommas("", "", "")
+			Expect(result).To(BeEmpty())
+		})
+	
+		It("should return empty string if no values are passed", func() {
+			result := concatenateWithCommas()
+			Expect(result).To(BeEmpty())
+		})
+	})
 })
+

@@ -177,7 +177,7 @@ func (o Order) Map() domain.Order {
 	}
 
 	order := domain.Order{
-		ID:          o.ID,
+	//	ID:          o.ID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		Headers: domain.Headers{
 			Organization: domain.Organization{

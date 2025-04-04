@@ -88,3 +88,16 @@ func (a AddressInfo) FullAddress() string {
 	}
 	return concatenateWithCommas(parts...)
 }
+
+func concatenateWithCommas(values ...string) string {
+	result := ""
+	for _, value := range values {
+		if value != "" {
+			if result != "" {
+				result += ", "
+			}
+			result += value
+		}
+	}
+	return result
+}

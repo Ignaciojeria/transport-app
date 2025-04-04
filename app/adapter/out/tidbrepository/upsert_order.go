@@ -30,7 +30,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Order{}, err
 		}
-		orderWithChanges := order.Map().UpdateIfChanged(o)
+		orderWithChanges, _ := order.Map().UpdateIfChanged(o)
 		DBOrderToUpdate := mapper.MapOrderToTable(orderWithChanges)
 		DBOrderToUpdate.CreatedAt = order.CreatedAt
 		if err := conn.Transaction(func(tx *gorm.DB) error {

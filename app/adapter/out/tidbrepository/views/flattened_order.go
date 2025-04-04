@@ -140,7 +140,7 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 	}
 
 	return domain.Order{
-		ID:          o.OrderID,
+		//ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		Headers: domain.Headers{
 			ID: o.HeaderID,
