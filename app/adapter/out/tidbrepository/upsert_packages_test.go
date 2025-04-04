@@ -97,30 +97,30 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPackage1.Lpn).To(Equal("PKG001"))
 		Expect(dbPackage1.OrganizationID).To(Equal(organization1.ID))
-        
-        // Verificar las dimensiones (que están en JSON)
-        dimensions := dbPackage1.JSONDimensions.Map()
-        Expect(dimensions.Length).To(Equal(10.0))
-        Expect(dimensions.Width).To(Equal(20.0))
-        Expect(dimensions.Height).To(Equal(30.0))
-        Expect(dimensions.Unit).To(Equal("cm"))
-        
-        // Verificar el peso (que está en JSON)
-        weight := dbPackage1.JSONWeight.Map()
-        Expect(weight.Value).To(Equal(5.0))
-        Expect(weight.Unit).To(Equal("kg"))
-        
-        // Verificar el seguro (que está en JSON)
-        insurance := dbPackage1.JSONInsurance.Map()
-        Expect(insurance.UnitValue).To(Equal(1000.0))
-        Expect(insurance.Currency).To(Equal("USD"))
 
-        // Verificar referencias de items (esto está en JSON)
-        itemRefs := dbPackage1.JSONItemsReferences.Map()
-        Expect(itemRefs).To(HaveLen(1))
-        Expect(itemRefs[0].ReferenceID).To(Equal(domain.ReferenceID("ITEM001")))
-        Expect(itemRefs[0].Quantity.QuantityNumber).To(Equal(2))
-        Expect(itemRefs[0].Quantity.QuantityUnit).To(Equal("unit"))
+		// Verificar las dimensiones (que están en JSON)
+		dimensions := dbPackage1.JSONDimensions.Map()
+		Expect(dimensions.Length).To(Equal(10.0))
+		Expect(dimensions.Width).To(Equal(20.0))
+		Expect(dimensions.Height).To(Equal(30.0))
+		Expect(dimensions.Unit).To(Equal("cm"))
+
+		// Verificar el peso (que está en JSON)
+		weight := dbPackage1.JSONWeight.Map()
+		Expect(weight.Value).To(Equal(5.0))
+		Expect(weight.Unit).To(Equal("kg"))
+
+		// Verificar el seguro (que está en JSON)
+		insurance := dbPackage1.JSONInsurance.Map()
+		Expect(insurance.UnitValue).To(Equal(1000.0))
+		Expect(insurance.Currency).To(Equal("USD"))
+
+		// Verificar referencias de items (esto está en JSON)
+		itemRefs := dbPackage1.JSONItemsReferences.Map()
+		Expect(itemRefs).To(HaveLen(1))
+		Expect(itemRefs[0].ReferenceID).To(Equal(domain.ReferenceID("ITEM001")))
+		Expect(itemRefs[0].Quantity.QuantityNumber).To(Equal(2))
+		Expect(itemRefs[0].Quantity.QuantityUnit).To(Equal("unit"))
 	})
 
 	It("should update existing packages", func() {
@@ -176,7 +176,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Crear versión actualizada del paquete
 		updatedPackage := domain.Package{
-			Lpn:          "PKG-UPDATE", // Mismo LPN para que se actualice
+			Lpn:          "PKG-UPDATE",  // Mismo LPN para que se actualice
 			Organization: organization1, // Crítico: misma organización para que el DocID sea el mismo
 			Dimensions: domain.Dimensions{
 				Length: 15.0, // Cambiar dimensiones
@@ -185,7 +185,7 @@ var _ = Describe("UpsertPackages", func() {
 				Unit:   "mm", // Cambiar unidad
 			},
 			Weight: domain.Weight{
-				Value: 7.5, // Cambiar peso
+				Value: 7.5,  // Cambiar peso
 				Unit:  "lb", // Cambiar unidad
 			},
 			Insurance: domain.Insurance{
@@ -258,7 +258,7 @@ var _ = Describe("UpsertPackages", func() {
 				Unit:   "cm",
 			},
 		}
-		
+
 		// Guardar el DocID del paquete existente
 		existingDocID := existingPackage.DocID()
 
@@ -290,7 +290,7 @@ var _ = Describe("UpsertPackages", func() {
 				Unit:   "mm",
 			},
 		}
-		
+
 		// Verificar que el DocID del paquete actualizado coincide con el original
 		updatedDocID := updatedExistingPackage.DocID()
 		Expect(updatedDocID).To(Equal(existingDocID), "Los DocIDs deben ser iguales para actualizar")
@@ -315,7 +315,7 @@ var _ = Describe("UpsertPackages", func() {
 			Where("document_id = ?", string(existingDocID)).
 			First(&updatedDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
-		
+
 		updatedDimensions := updatedDBPackage.JSONDimensions.Map()
 		Expect(updatedDimensions.Unit).To(Equal("mm"))
 
@@ -390,8 +390,30 @@ var _ = Describe("UpsertPackages", func() {
 
 		upsert := NewUpsertPackages(noTablesContainerConnection)
 		err := upsert(ctx, []domain.Package{package1}, organization1)
-		
+
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("packages"))
 	})
+
+	It("should fail when saving packages if the table does not exist", func() {
+		// Crear un paquete válido
+		pkg := domain.Package{
+			Lpn:          "PKG-NOTABLE",
+			Organization: organization1,
+			Dimensions: domain.Dimensions{
+				Length: 10.0,
+				Width:  10.0,
+				Height: 10.0,
+				Unit:   "cm",
+			},
+		}
+
+		// Usar conexión sin tablas
+		upsert := NewUpsertPackages(noTablesContainerConnection)
+		err := upsert(ctx, []domain.Package{pkg}, organization1)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("packages"))
+	})
+
 })

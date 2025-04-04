@@ -2,3 +2,5 @@ nats-user.creds
 .env
 design
 key.json
+coverage.html
+coverage.out
