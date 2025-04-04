@@ -414,10 +414,11 @@ func (j JSONReference) Value() (driver.Value, error) {
 
 type Package struct {
 	gorm.Model
-	OrganizationID      int64              `gorm:"not null;uniqueIndex:idx_lpn_org"`
-	Organization        Organization       `gorm:"foreignKey:OrganizationID"`
 	ID                  int64              `gorm:"primaryKey"`
-	Lpn                 string             `gorm:"type:varchar(191);not null;uniqueIndex:idx_lpn_org"`
+	OrganizationID      int64              `gorm:"not null;"`
+	Organization        Organization       `gorm:"foreignKey:OrganizationID"`
+	DocumentID          string             `gorm:"type:char(32);uniqueIndex"`
+	Lpn                 string             `gorm:"type:varchar(191);not null;"`
 	JSONDimensions      JSONDimensions     `gorm:"type:json"`
 	JSONWeight          JSONWeight         `gorm:"type:json"`
 	JSONInsurance       JSONInsurance      `gorm:"type:json"`

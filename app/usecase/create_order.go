@@ -84,7 +84,7 @@ func NewCreateOrder(
 			return domain.Order{}, err
 		}
 
-		pcks, err := upsertPackages(ctx, inOrder.Packages, inOrder.Organization)
+		err = upsertPackages(ctx, inOrder.Packages, inOrder.Organization)
 		if err != nil {
 			return domain.Order{}, err
 		}
@@ -97,7 +97,7 @@ func NewCreateOrder(
 		//inOrder.Origin.AddressInfo = originAddressInfo
 		//inOrder.Destination.AddressInfo = destinationAddressInfo
 
-		inOrder.Packages = pcks
+		//inOrder.Packages = pcks
 		return upsertOrder(ctx, inOrder)
 	}
 }

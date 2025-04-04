@@ -147,9 +147,10 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 	return mapped
 }
 
-func MapPackageToTable(pkg domain.Package, orgCountryID int64) table.Package {
+func MapPackageToTable(pkg domain.Package) table.Package {
 	return table.Package{
-		OrganizationID: orgCountryID,
+		OrganizationID: pkg.Organization.ID,
+		DocumentID:     pkg.DocID().String(),
 		Lpn:            pkg.Lpn,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
