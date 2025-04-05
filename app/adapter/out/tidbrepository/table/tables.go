@@ -15,45 +15,44 @@ import (
 
 type Order struct {
 	gorm.Model
-	ID int64 `gorm:"primaryKey"`
+	ID          int64  `gorm:"primaryKey"`
+	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+	ReferenceID string `gorm:"not null"`
 
-	ReferenceID    string       `gorm:"type:varchar(191);default:null;uniqueIndex:idx_reference_organization"`
-	OrganizationID int64        `gorm:"default:null;uniqueIndex:idx_reference_organization"`
+	OrganizationID int64        `gorm:"not null"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 
 	OrderHeadersDoc string       `gorm:"type:char(32);index"`
-	OrderHeaders    OrderHeaders `gorm:"foreignKey:OrderHeadersDoc;references:DocumentID"`
+	OrderHeaders    OrderHeaders `gorm:"-"`
 
-	OrderStatusID int64       `gorm:"default:null"`
-	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
+	OrderStatusDoc string      `gorm:"type:char(32);index"`
+	OrderStatus    OrderStatus `gorm:"-"`
 
-	OrderTypeID int64     `gorm:"default:null"`
-	OrderType   OrderType `gorm:"foreignKey:OrderTypeID"`
+	OrderTypeDoc string    `gorm:"type:char(32);index"`
+	OrderType    OrderType `gorm:"-"`
 
-	RouteID *int64 `gorm:"default:null"`
-	Route   Route  `gorm:"foreignKey:RouteID"`
+	RouteDoc string `gorm:"type:char(32);index"`
+	Route    Route  `gorm:"-"`
 
-	PlanID *int64 `gorm:"default:null"`
-	Plan   Plan   `gorm:"foreignKey:PlanID"`
+	OrderReferences []OrderReferences `gorm:"foreignKey:OrderID"`
 
-	OrderReferences      []OrderReferences `gorm:"foreignKey:OrderID"`
-	DeliveryInstructions string            `gorm:"type:text"`
+	DeliveryInstructions string `gorm:"type:text"`
 
 	// Contacto asociado a la orden
-	OriginContactID int64   `gorm:"default:null"`               // Clave foránea al Contact
-	OriginContact   Contact `gorm:"foreignKey:OriginContactID"` // Relación con Contact
+	OriginContactDoc string  `gorm:"type:char(32);index"`
+	OriginContact    Contact `gorm:"-"`
 
 	// Contacto asociado a la orden
-	DestinationContactID int64   `gorm:"default:null"`                    // Clave foránea al Contact
-	DestinationContact   Contact `gorm:"foreignKey:DestinationContactID"` // Relación con Contact
+	DestinationContactDoc string  `gorm:"type:char(32);index"`
+	DestinationContact    Contact `gorm:"-"`
 
 	// Dirección de oriden de la orden de compra
-	OriginAddressInfoID int64       `gorm:"default:null"`                   // Clave foránea al AddressInfo
-	OriginAddressInfo   AddressInfo `gorm:"foreignKey:OriginAddressInfoID"` // Relación con AddressInfo
+	OriginAddressInfoDoc string      `gorm:"type:char(32);index"`
+	OriginAddressInfo    AddressInfo `gorm:"-"`
 
 	// Dirección de destino de la orden de compra
-	DestinationAddressInfoID int64       `gorm:"default:null"`                        // Clave foránea al AddressInfo
-	DestinationAddressInfo   AddressInfo `gorm:"foreignKey:DestinationAddressInfoID"` // Relación con AddressInfo
+	DestinationAddressInfoDoc string      `gorm:"type:char(32);index"`
+	DestinationAddressInfo    AddressInfo `gorm:"-"`
 
 	// Nodo de Origen de la orden (en caso de que tenga)
 	OriginNodeInfoID int64    `gorm:"default:null"`
@@ -167,14 +166,6 @@ func (j JSONEvidencePhotos) Value() (driver.Value, error) {
 
 func (o Order) Map() domain.Order {
 	// Mapear la orden base
-	var planID int64
-	if o.PlanID != nil {
-		planID = *o.PlanID
-	}
-	var routeID int64
-	if o.RouteID != nil {
-		routeID = *o.RouteID
-	}
 
 	order := domain.Order{
 		//	ID:          o.ID,
@@ -184,14 +175,7 @@ func (o Order) Map() domain.Order {
 				ID: o.OrganizationID,
 			},
 		},
-		Plan: domain.Plan{
-			ID: planID,
-			Routes: []domain.Route{
-				{
-					ID: routeID,
-				},
-			},
-		},
+		Plan:                 domain.Plan{},
 		DeliveryInstructions: o.DeliveryInstructions,
 	}
 

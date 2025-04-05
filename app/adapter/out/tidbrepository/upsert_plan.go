@@ -157,14 +157,14 @@ func NewUpsertPlan(conn tidb.TIDBConnection, loadOrderStatuses LoadOrderStatuses
 					continue
 				}
 				newOrder := mapper.MapOrderToTable(order)
-				newOrder.PlanID = &plan.ID
-				newOrder.OrderStatusID = plannedStatusID
+				//newOrder.PlanID = &plan.ID
+				//newOrder.OrderStatusID = plannedStatusID
 				newOrder.OrganizationID = p.Organization.ID
-
-				if routeID, exists := routeIDMap[string(order.ReferenceID)]; exists {
-					newOrder.RouteID = routeID
-				}
-
+				/*
+					if routeID, exists := routeIDMap[string(order.ReferenceID)]; exists {
+						newOrder.RouteID = routeID
+					}
+				*/
 				newOrders = append(newOrders, newOrder)
 			}
 			if len(newOrders) > 0 {

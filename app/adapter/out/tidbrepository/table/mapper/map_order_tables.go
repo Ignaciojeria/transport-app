@@ -20,14 +20,13 @@ func MapOrderToTable(order domain.Order) table.Order {
 		*routeID = order.Plan.Routes[0].ID
 	}
 	tbl := table.Order{
-		PlanID:         planId,
-		RouteID:        routeID,
+
 		ReferenceID:    string(order.ReferenceID),
 		OrganizationID: order.Organization.ID, // Completar según la lógica de negocio
 		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
 		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
 		OrderHeadersDoc: string(order.Headers.DocID()),
-		OrderStatusID:   order.OrderStatus.ID, // Completar según la lógica de negocio
+
 		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
 		OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
