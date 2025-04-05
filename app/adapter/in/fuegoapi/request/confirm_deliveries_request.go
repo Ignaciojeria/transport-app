@@ -48,8 +48,8 @@ type ConfirmDeliveriesRequest struct {
 	} `json:"plan"`
 }
 
-func MapCheckout(request ConfirmDeliveriesRequest) []domain.Checkout {
-	var checkouts []domain.Checkout
+func MapCheckout(request ConfirmDeliveriesRequest) []domain.ConfirmDelivery {
+	var checkouts []domain.ConfirmDelivery
 
 	for _, route := range request.Plan.Routes {
 		for _, order := range route.Orders {
@@ -62,7 +62,7 @@ func MapCheckout(request ConfirmDeliveriesRequest) []domain.Checkout {
 				}
 			}
 
-			checkouts = append(checkouts, domain.Checkout{
+			checkouts = append(checkouts, domain.ConfirmDelivery{
 				Order: domain.Order{
 					Headers: domain.Headers{
 						Consumer: order.BusinessIdentifiers.Consumer,

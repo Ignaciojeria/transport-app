@@ -2,7 +2,7 @@ package domain
 
 import "time"
 
-type Checkout struct {
+type ConfirmDelivery struct {
 	Order             Order
 	Route             Route
 	OrderStatus       OrderStatus

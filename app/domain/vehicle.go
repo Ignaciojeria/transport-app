@@ -33,6 +33,10 @@ type Vehicle struct {
 	Carrier Carrier
 }
 
+func (v Vehicle) DocID() DocumentID {
+	return Hash(v.Organization, v.Plate)
+}
+
 func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 	if in.Plate != "" {
 		v.Plate = in.Plate
@@ -40,7 +44,6 @@ func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 	if in.CertificateDate != "" {
 		v.CertificateDate = in.CertificateDate
 	}
-
 	if in.Weight.Value != 0 {
 		v.Weight.Value = in.Weight.Value
 	}
@@ -90,20 +93,4 @@ func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 		v.VehicleCategory = in.VehicleCategory
 	}
 	return v
-}
-
-type VehicleCategory struct {
-	Organization        Organization
-	Type                string
-	MaxPackagesQuantity int
-}
-
-func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {
-	if in.Type != "" {
-		vc.Type = in.Type
-	}
-	if in.MaxPackagesQuantity != 0 {
-		vc.MaxPackagesQuantity = in.MaxPackagesQuantity
-	}
-	return vc
 }
