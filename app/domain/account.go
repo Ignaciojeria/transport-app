@@ -1,5 +1,6 @@
 package domain
 
+/*
 type Account struct {
 	ID           int64
 	Organization Organization `json:"organization"`
@@ -12,4 +13,4 @@ type Account struct {
 type Profile struct {
 	Role        string
 	Permissions []string
-}
+}*/

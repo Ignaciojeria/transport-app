@@ -265,7 +265,7 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 			Operator: struct {
 				ReferenceID string `json:"referenceID"`
 			}{
-				ReferenceID: route.Operator.ReferenceID,
+				//	ReferenceID: route.Operator.ReferenceID,
 			},
 			EndLocation: struct {
 				NodeReferenceID string  `json:"nodeReferenceID"`

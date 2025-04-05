@@ -8,6 +8,7 @@ type OrderStatus struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
+/*
 func (os OrderStatus) UpdateIfChanged(newOrderStatus OrderStatus) OrderStatus {
 	// Actualizar ID si es diferente de 0
 	if newOrderStatus.ID != 0 {
@@ -25,4 +26,4 @@ func (os OrderStatus) UpdateIfChanged(newOrderStatus OrderStatus) OrderStatus {
 	}
 
 	return os
-}
+}*/

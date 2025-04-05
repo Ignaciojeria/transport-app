@@ -1,37 +1,43 @@
 package domain
 
 type Operator struct {
-	ID           int64
-	ReferenceID  string
 	Organization Organization
 	OriginNode   NodeInfo
 	Contact      Contact `json:"contact"`
-	Type         string  `json:"type"`
+	Carrier      Carrier
+	Role         Role `json:"type"`
+}
+
+func (o Operator) DocID() DocumentID {
+	return Hash(o.Organization, o.Contact.PrimaryEmail)
+}
+
+type Role string
+
+func (r Role) IsValid() bool {
+	switch r {
+	case RoleAdmin, RoleDriver, RolePlanner, RoleDispatcher, RoleSeller:
+		return true
+	default:
+		return false
+	}
+}
+
+const (
+	RoleAdmin      Role = "admin"
+	RoleDriver     Role = "driver"
+	RolePlanner    Role = "planner"
+	RoleDispatcher Role = "dispatcher"
+	RoleSeller     Role = "seller"
+)
+
+func (r Role) String() string {
+	return string(r)
 }
 
 func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
-	// Copiamos la instancia actual
-
-	if newOperator.ID != 0 {
-		o.ID = newOperator.ID
+	if newOperator.Role.String() != "" {
+		o.Role = newOperator.Role
 	}
-
-	// Actualizar campos primitivos solo si tienen valores no vacíos
-	if newOperator.ReferenceID != "" {
-		o.ReferenceID = newOperator.ReferenceID
-	}
-	if newOperator.Type != "" {
-		o.Type = newOperator.Type
-	}
-
-	// Actualizar Organization si tiene valores nuevos
-	if newOperator.Organization.ID != 0 {
-		o.Organization = newOperator.Organization
-	}
-
-	o.OriginNode, _ = o.OriginNode.UpdateIfChanged(newOperator.OriginNode)
-
-	o.Contact, _ = o.Contact.UpdateIfChanged(newOperator.Contact)
-
 	return o
 }

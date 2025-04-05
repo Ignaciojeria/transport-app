@@ -12,12 +12,12 @@ type CreateDispatcherRequest struct {
 	NodeReferenceIDs []string `json:"nodeReferenceIDs"`
 }
 
-func (req CreateDispatcherRequest) Map() domain.Account {
-	return domain.Account{
+func (req CreateDispatcherRequest) Map() domain.Operator {
+	return domain.Operator{
 		Contact: domain.Contact{
 			PrimaryEmail: req.Contact.Email,
 			NationalID:   req.Contact.NationalID,
 		},
-		Profiles: []domain.Profile{}, // Assuming profiles will be populated later
+		Role: domain.RoleDispatcher, // Assuming profiles will be populated later
 	}
 }

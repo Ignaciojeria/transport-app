@@ -179,15 +179,13 @@ type OptimizePlanRequest struct {
 			Longitude       float64 `json:"longitude"`
 		} `json:"endLocation"`
 		Operator struct {
-			ReferenceID string `json:"referenceID"`
+			Email string `json:"email"`
 		} `json:"operator"`
 		Vehicle *struct {
-			ReferenceID string `json:"referenceID"`
-			Plate       string `json:"plate"`
+			Plate string `json:"plate"`
 		} `json:"vehicle,omitempty"`
 		Driver *struct {
-			ReferenceID string `json:"referenceID"`
-			Email       string `json:"email"`
+			Email string `json:"email"`
 		} `json:"driver,omitempty"`
 	} `json:"routes"`
 }
@@ -246,14 +244,13 @@ func (r OptimizePlanRequest) Map() domain.Plan {
 				},
 			},
 			Operator: domain.Operator{
-				ReferenceID: routeData.Operator.ReferenceID,
+				//	ReferenceID: routeData.Operator.ReferenceID,
 			},
 		}
 
 		if routeData.Vehicle != nil {
 			route.Vehicle = domain.Vehicle{
-				ReferenceID: routeData.Vehicle.ReferenceID,
-				Plate:       routeData.Vehicle.Plate,
+				Plate: routeData.Vehicle.Plate,
 			}
 		}
 

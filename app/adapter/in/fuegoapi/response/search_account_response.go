@@ -24,7 +24,7 @@ type SearchAccountResponse struct {
 
 func MapSearchAccountOperatorResponse(operator domain.Operator) SearchAccountResponse {
 	return SearchAccountResponse{
-		ReferenceID: operator.ReferenceID,
+		//ReferenceID: operator.ReferenceID,
 		Contact: struct {
 			Email      string "json:\"email\""
 			FullName   string "json:\"fullName\""
@@ -48,7 +48,7 @@ func MapSearchAccountOperatorResponse(operator domain.Operator) SearchAccountRes
 		}{
 			ReferenceID: string(operator.OriginNode.ReferenceID),
 			Name:        operator.OriginNode.Name,
-			Type:        operator.Type,
+			Type:        operator.OriginNode.NodeType.Value,
 			AddressInfo: struct {
 				RawAddress string  "json:\"rawAddress\""
 				Latitude   float64 "json:\"latitude\""

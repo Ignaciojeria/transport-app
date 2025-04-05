@@ -3,6 +3,7 @@ package domain
 import (
 	"time"
 
+	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -376,4 +377,24 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 		Expect(err.Error()).To(ContainSubstring("item reference ID 'INVALID'"))
 	})
 
+})
+
+var _ = Describe("Order DocID", func() {
+	It("should return the hash of the Organization and ReferenceID", func() {
+		org := Organization{
+			ID:      99,
+			Country: countries.CL,
+			Name:    "LastMile",
+		}
+
+		order := Order{
+			Headers: Headers{
+				Organization: org,
+			},
+			ReferenceID: "REF-0001",
+		}
+
+		expected := Hash(org, "REF-0001")
+		Expect(order.DocID()).To(Equal(expected))
+	})
 })

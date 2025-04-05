@@ -22,7 +22,7 @@ func NewUpsertOperator(conn tidb.TIDBConnection) UpsertOperator {
 		err := conn.DB.WithContext(ctx).
 			Table("accounts").
 			Where("reference_id = ? AND organization_id = ?",
-				o.ReferenceID,
+				//o.ReferenceID,
 				o.Organization.ID).
 			First(&operatorTBL).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {

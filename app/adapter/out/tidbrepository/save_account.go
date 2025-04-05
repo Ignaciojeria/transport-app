@@ -14,7 +14,7 @@ func init() {
 
 type SaveAccount func(
 	context.Context,
-	domain.Account) (domain.Account, error)
+	domain.Operator) (domain.Operator, error)
 
 func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 	type SaveAccountQuery struct {
@@ -24,7 +24,7 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 		NodeInfoID            int64
 	}
 
-	return func(ctx context.Context, o domain.Account) (domain.Account, error) {
+	return func(ctx context.Context, o domain.Operator) (domain.Operator, error) {
 		/*
 			var query SaveAccountQuery
 
@@ -112,6 +112,6 @@ func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
 				Origin:       o.Origin,
 				Contact:      o.Contact,
 			}, nil*/
-		return domain.Account{}, nil
+		return domain.Operator{}, nil
 	}
 }

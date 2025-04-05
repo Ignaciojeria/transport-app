@@ -81,18 +81,28 @@ var _ = BeforeSuite(func() {
 		DB_RUN_MIGRATIONS: "true",
 	})()
 	Expect(err).ToNot(HaveOccurred())
-	err = NewUpsertAccount(connection)(ctx, domain.Account{
-		Email: "ignaciovl.j@gmail.com",
+	err = NewUpsertAccount(connection)(ctx, domain.Operator{
+		Contact: domain.Contact{
+			PrimaryEmail: "ignaciovl.j@gmail.com",
+		},
 	})
 	Expect(err).ToNot(HaveOccurred())
-	organization1, err = NewSaveOrganization(connection)(ctx, domain.Organization{
-		Email:   "ignaciovl.j@gmail.com",
-		Country: countries.CL,
+	organization1, err = NewSaveOrganization(connection)(ctx, domain.Operator{
+		Contact: domain.Contact{
+			PrimaryEmail: "ignaciovl.j@gmail.com",
+		},
+		Organization: domain.Organization{
+			Country: countries.CL,
+		},
 	})
 	Expect(err).ToNot(HaveOccurred())
-	organization2, err = NewSaveOrganization(connection)(ctx, domain.Organization{
-		Email:   "ignaciovl.j@gmail.com",
-		Country: countries.CL,
+	organization2, err = NewSaveOrganization(connection)(ctx, domain.Operator{
+		Contact: domain.Contact{
+			PrimaryEmail: "ignaciovl.j@gmail.com",
+		},
+		Organization: domain.Organization{
+			Country: countries.CL,
+		},
 	})
 	Expect(err).ToNot(HaveOccurred())
 

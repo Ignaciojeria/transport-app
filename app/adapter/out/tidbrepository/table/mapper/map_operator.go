@@ -7,7 +7,6 @@ import (
 
 func MapOperator(e domain.Operator) table.Account {
 	return table.Account{
-		ID:       e.ID,
 		IsActive: true,
 	}
 }

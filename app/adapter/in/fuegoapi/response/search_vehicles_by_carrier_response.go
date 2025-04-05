@@ -15,7 +15,6 @@ func MapSearchVehiclesByCarrierResponse(vehicles []domain.Vehicle) []SearchVehic
 	response := make([]SearchVehiclesByCarrierResponse, len(vehicles))
 	for i, vehicle := range vehicles {
 		response[i] = SearchVehiclesByCarrierResponse{
-			ReferenceID:         vehicle.ReferenceID,
 			Plate:               vehicle.Plate,
 			Category:            vehicle.VehicleCategory.Type,
 			MaxPackageQuantity:  vehicle.VehicleCategory.MaxPackagesQuantity,

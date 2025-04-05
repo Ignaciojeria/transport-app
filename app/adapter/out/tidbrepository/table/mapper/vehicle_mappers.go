@@ -15,20 +15,16 @@ func DomainToTableVehicle(d domain.Vehicle) table.Vehicle {
 	if d.VehicleCategory.ID != 0 {
 		vehicleCategoryID = &d.VehicleCategory.ID
 	}
-	var carrierID *int64 = nil
-	if d.Carrier.ID != 0 {
-		carrierID = &d.Carrier.ID
-	}
+
 	return table.Vehicle{
-		ID:                d.ID,
-		ReferenceID:       d.ReferenceID,
+		ID: d.ID,
+		//ReferenceID:       d.ReferenceID,
 		Plate:             d.Plate,
 		IsActive:          d.IsActive,
 		CertificateDate:   d.CertificateDate,
 		VehicleCategoryID: vehicleCategoryID,
 		VehicleHeadersID:  d.Headers.ID,
 		OrganizationID:    d.Organization.ID,
-		CarrierID:         carrierID,
 		Weight:            table.JSONB(weight),
 		Insurance:         table.JSONB(insurance),
 		TechnicalReview:   table.JSONB(technicalReview),

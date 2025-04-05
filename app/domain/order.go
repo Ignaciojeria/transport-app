@@ -12,22 +12,26 @@ import (
 type Order struct {
 	Headers
 	Plan                    Plan
-	AddressLine2            string                  `json:"addressLine2"`
-	AddressLine3            string                  `json:"addressLine3"`
-	ReferenceID             ReferenceID             `json:"referenceID"`
-	SequenceNumber          *int                    `json:"sequenceNumber"`
-	OrderStatus             OrderStatus             `json:"orderStatus"`
-	OrderType               OrderType               `json:"orderType"`
-	References              []Reference             `json:"references"`
-	Origin                  NodeInfo                `json:"origin"`
-	Destination             NodeInfo                `json:"destination"`
-	Items                   []Item                  `json:"items"`
-	Packages                []Package               `json:"packages"`
-	CollectAvailabilityDate CollectAvailabilityDate `json:"collectAvailabilityDate"`
-	PromisedDate            PromisedDate            `json:"promisedDate"`
+	AddressLine2            string
+	AddressLine3            string
+	ReferenceID             ReferenceID
+	SequenceNumber          *int
+	OrderStatus             OrderStatus
+	OrderType               OrderType
+	References              []Reference
+	Origin                  NodeInfo
+	Destination             NodeInfo
+	Items                   []Item
+	Packages                []Package
+	CollectAvailabilityDate CollectAvailabilityDate
+	PromisedDate            PromisedDate
 	UnassignedReason        string
-	DeliveryInstructions    string      `json:"deliveryInstructions"`
-	TransportRequirements   []Reference `json:"transportRequirements"`
+	DeliveryInstructions    string
+	TransportRequirements   []Reference
+}
+
+func (o Order) DocID() DocumentID {
+	return Hash(o.Organization, string(o.ReferenceID))
 }
 
 func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {

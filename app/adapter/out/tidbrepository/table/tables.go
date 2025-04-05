@@ -177,7 +177,7 @@ func (o Order) Map() domain.Order {
 	}
 
 	order := domain.Order{
-	//	ID:          o.ID,
+		//	ID:          o.ID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		Headers: domain.Headers{
 			Organization: domain.Organization{
@@ -673,7 +673,7 @@ type AccountOrganization struct {
 func (a Account) MapOperator(org domain.Organization) domain.Operator {
 	// Inicializamos un Operator base
 	operator := domain.Operator{
-		ID: a.ID,
+		//	ID: a.ID,
 		Organization: domain.Organization{
 			ID: org.ID,
 		},
@@ -711,17 +711,14 @@ type Carrier struct {
 	ID             int64        `gorm:"primaryKey"`
 	OrganizationID int64        `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	ReferenceID    string       `gorm:"type:varchar(50);uniqueIndex:idx_carrier_ref_org"`
 	Name           string       `gorm:"not null"`
 	NationalID     string       `gorm:"type:varchar(20);default:null;uniqueIndex:idx_carrier_national_org"`
 }
 
 func (c Carrier) Map() domain.Carrier {
 	return domain.Carrier{
-		ID:          c.ID,
-		ReferenceID: c.ReferenceID,
-		Name:        c.Name,
-		NationalID:  c.NationalID,
+		Name:       c.Name,
+		NationalID: c.NationalID,
 		Organization: domain.Organization{
 			ID: c.OrganizationID,
 		},
@@ -752,8 +749,7 @@ type Vehicle struct {
 
 func (v Vehicle) Map() domain.Vehicle {
 	return domain.Vehicle{
-		ID:              v.ID,
-		ReferenceID:     v.ReferenceID,
+		//ReferenceID:     v.ReferenceID,
 		Plate:           v.Plate,
 		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,

@@ -10,12 +10,10 @@ type ConfirmDeliveriesRequest struct {
 		Routes []struct {
 			ReferenceID string `json:"referenceID"`
 			Vehicle     struct {
-				ReferenceID string `json:"referenceID"`
-				Plate       string `json:"plate"`
+				Plate string `json:"plate"`
 			} `json:"vehicle"`
 			Carrier struct {
-				ReferenceID string `json:"referenceID"`
-				NationalID  string `json:"nationalID"`
+				NationalID string `json:"nationalID"`
 			} `json:"carrier"`
 			Orders []struct {
 				ReferenceID         string    `json:"referenceID"`
@@ -81,11 +79,9 @@ func MapCheckout(request ConfirmDeliveriesRequest) []domain.Checkout {
 				},
 				DeliveredAt: order.DeliveredAt,
 				Vehicle: domain.Vehicle{
-					ReferenceID: route.Vehicle.ReferenceID,
-					Plate:       route.Vehicle.Plate,
+					Plate: route.Vehicle.Plate,
 					Carrier: domain.Carrier{
-						ReferenceID: route.Carrier.ReferenceID,
-						NationalID:  route.Carrier.NationalID,
+						NationalID: route.Carrier.NationalID,
 					},
 				},
 				Recipient: domain.Recipient{

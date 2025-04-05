@@ -4,12 +4,10 @@ type OutForDeliveryRequest struct {
 	Plan struct {
 		Routes []struct {
 			Carrier struct {
-				NationalID  string `json:"nationalID"`
-				ReferenceID string `json:"referenceID"`
+				NationalID string `json:"nationalID"`
 			} `json:"carrier"`
 			Vehicle struct {
-				Plate       string `json:"plate"`
-				ReferenceID string `json:"referenceID"`
+				Plate string `json:"plate"`
 			} `json:"vehicle"`
 			Orders []struct {
 				ReferenceID         string `json:"referenceID"`

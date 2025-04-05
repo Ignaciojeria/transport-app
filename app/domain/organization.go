@@ -12,7 +12,6 @@ type Organization struct {
 	ID      int64
 	Country countries.CountryCode `json:"country"`
 	Name    string                `json:"name"`
-	Email   string                `json:"email"`
 }
 
 func (o Organization) GetOrgKey() string {

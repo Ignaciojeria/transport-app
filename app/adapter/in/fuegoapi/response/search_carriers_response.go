@@ -12,9 +12,8 @@ func MapSearchCarriersResponse(carriers []domain.Carrier) []SearchCarriersRespon
 	response := make([]SearchCarriersResponse, len(carriers))
 	for i, carrier := range carriers {
 		response[i] = SearchCarriersResponse{
-			ReferenceID: carrier.ReferenceID,
-			Name:        carrier.Name,
-			NationalID:  carrier.NationalID,
+			Name:       carrier.Name,
+			NationalID: carrier.NationalID,
 		}
 	}
 	return response

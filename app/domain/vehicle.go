@@ -2,8 +2,6 @@ package domain
 
 type Vehicle struct {
 	Headers
-	ID              int64
-	ReferenceID     string          `json:"referenceID"`
 	Plate           string          `json:"plate"`
 	IsActive        bool            `json:"isActive"`
 	CertificateDate string          `json:"certificateDate"`
@@ -37,9 +35,7 @@ type Vehicle struct {
 
 func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 	v.Organization = in.Organization
-	if in.ReferenceID != "" {
-		v.ReferenceID = in.ReferenceID
-	}
+
 	if in.Plate != "" {
 		v.Plate = in.Plate
 	}
@@ -92,15 +88,6 @@ func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 	if in.Dimensions.UnitOfMeasure != "" {
 		v.Dimensions.UnitOfMeasure = in.Dimensions.UnitOfMeasure
 	}
-	if in.Carrier.ID != 0 {
-		v.Carrier.ID = in.Carrier.ID
-	}
-	if in.VehicleCategory.ID != 0 {
-		v.VehicleCategory.ID = in.VehicleCategory.ID
-	}
-	if in.Headers.ID != 0 {
-		v.Headers.ID = in.Headers.ID
-	}
 	if in.VehicleCategory.Type != "" {
 		v.VehicleCategory = in.VehicleCategory
 	}
@@ -128,29 +115,4 @@ func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {
 		vc.ID = in.ID
 	}
 	return vc
-}
-
-type Carrier struct {
-	ID           int64
-	Organization Organization `json:"organization"`
-	ReferenceID  string       `json:"referenceID"`
-	Name         string       `json:"name"`
-	NationalID   string       `json:"nationalID"`
-}
-
-func (c Carrier) UpdateIfChanged(newCarrier Carrier) Carrier {
-	updatedCarrier := c
-	if newCarrier.ReferenceID != "" {
-		updatedCarrier.ReferenceID = newCarrier.ReferenceID
-	}
-	if newCarrier.Name != "" {
-		updatedCarrier.Name = newCarrier.Name
-	}
-	if newCarrier.NationalID != "" {
-		updatedCarrier.NationalID = newCarrier.NationalID
-	}
-	if newCarrier.Organization.ID != 0 {
-		updatedCarrier.Organization = newCarrier.Organization
-	}
-	return updatedCarrier
 }

@@ -8,7 +8,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type CreateAccount func(ctx context.Context, account domain.Account) (domain.Account, error)
+type CreateAccount func(ctx context.Context, account domain.Operator) (domain.Operator, error)
 
 func init() {
 	ioc.Registry(
@@ -20,9 +20,9 @@ func init() {
 func NewCreateAccount(
 	ensureOrganizationForCountry tidbrepository.EnsureOrganizationForCountry,
 	saveAccount tidbrepository.SaveAccount) CreateAccount {
-	return func(ctx context.Context, e domain.Account) (domain.Account, error) {
+	return func(ctx context.Context, e domain.Operator) (domain.Operator, error) {
 		if _, err := ensureOrganizationForCountry(ctx, e.Organization); err != nil {
-			return domain.Account{}, err
+			return domain.Operator{}, err
 		}
 		return saveAccount(ctx, e)
 	}

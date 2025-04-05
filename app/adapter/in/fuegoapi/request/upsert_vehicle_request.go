@@ -33,15 +33,13 @@ type UpsertVehicleRequest struct {
 		UnitOfMeasure string  `json:"unitOfMeasure"`
 	} `json:"dimensions"`
 	Carrier struct {
-		ReferenceID string `json:"referenceID" validate:"required_with=Name NationalID"`
-		Name        string `json:"name"`
-		NationalID  string `json:"nationalID"`
+		Name       string `json:"name"`
+		NationalID string `json:"nationalID"`
 	} `json:"carrier"`
 }
 
 func (v UpsertVehicleRequest) Map() domain.Vehicle {
 	return domain.Vehicle{
-		ReferenceID:     v.ReferenceID,
 		Plate:           v.Plate,
 		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
@@ -96,15 +94,11 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			UnitOfMeasure: v.Dimensions.UnitOfMeasure,
 		},
 		Carrier: struct {
-			ID           int64
 			Organization domain.Organization `json:"organization"`
-			ReferenceID  string              `json:"referenceID"`
 			Name         string              `json:"name"`
 			NationalID   string              `json:"nationalID"`
 		}{
-			ID:           0,                     // Si el ID no está presente en la solicitud
 			Organization: domain.Organization{}, // Ajustar según tu lógica de negocio
-			ReferenceID:  v.Carrier.ReferenceID,
 			Name:         v.Carrier.Name,
 			NationalID:   v.Carrier.NationalID,
 		},
