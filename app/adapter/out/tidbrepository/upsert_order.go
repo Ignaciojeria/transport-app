@@ -12,7 +12,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertOrder func(context.Context, domain.Order) (domain.Order, error)
+type UpsertOrder func(context.Context, domain.Order) error
 
 func init() {
 	ioc.Registry(
@@ -20,7 +20,7 @@ func init() {
 		tidb.NewTIDBConnection)
 }
 func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
-	return func(ctx context.Context, o domain.Order) (domain.Order, error) {
+	return func(ctx context.Context, o domain.Order) error {
 		var order table.Order
 		err := conn.DB.WithContext(ctx).
 			Table("orders").
@@ -28,7 +28,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				o.ReferenceID, o.Organization.ID).
 			First(&order).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.Order{}, err
+			return err
 		}
 		orderWithChanges, _ := order.Map().UpdateIfChanged(o)
 		DBOrderToUpdate := mapper.MapOrderToTable(orderWithChanges)
@@ -62,8 +62,8 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 			}
 			return nil
 		}); err != nil {
-			return domain.Order{}, err
+			return err
 		}
-		return domain.Order{}, nil
+		return nil
 	}
 }

@@ -38,7 +38,7 @@ func newOrderSubmitted(
 		domainOBJ.Commerce = m.Attributes["commerce"]
 		domainOBJ.Consumer = m.Attributes["consumer"]
 		domainOBJ.Organization.SetKey(m.Attributes["organization"])
-		if _, err := createOrder(ctx, domainOBJ); err != nil {
+		if err := createOrder(ctx, domainOBJ); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}

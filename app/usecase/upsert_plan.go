@@ -36,7 +36,7 @@ func NewUpsertPlan(
 
 		for _, order := range plan.UnassignedOrders {
 			order.Organization = plan.Organization
-			_, err := upsertOrder(ctx, order)
+			err := upsertOrder(ctx, order)
 			if err != nil {
 				return domain.Plan{}, err
 			}
@@ -45,7 +45,7 @@ func NewUpsertPlan(
 		for _, route := range plan.Routes {
 			for _, order := range route.Orders {
 				order.Organization = plan.Organization
-				_, err := upsertOrder(ctx, order)
+				err := upsertOrder(ctx, order)
 				if err != nil {
 					return domain.Plan{}, err
 				}

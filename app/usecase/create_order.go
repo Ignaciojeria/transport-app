@@ -8,7 +8,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type CreateOrder func(ctx context.Context, input domain.Order) (domain.Order, error)
+type CreateOrder func(ctx context.Context, input domain.Order) error
 
 func init() {
 	ioc.Registry(
@@ -34,59 +34,59 @@ func NewCreateOrder(
 	upsertOrderType tidbrepository.UpsertOrderType,
 	upsertOrder tidbrepository.UpsertOrder,
 ) CreateOrder {
-	return func(ctx context.Context, inOrder domain.Order) (domain.Order, error) {
+	return func(ctx context.Context, inOrder domain.Order)  error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
 
 		inOrder.Headers.Organization = inOrder.Organization
 		err := upsertOrderHeaders(ctx, inOrder.Headers)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 
 		inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
 		err = upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 
 		inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
 		err = upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 
 		inOrder.Origin.AddressInfo.Organization = inOrder.Organization
 		err = upsertAddressInfo(ctx, inOrder.Origin.AddressInfo)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 
 		inOrder.Destination.AddressInfo.Organization = inOrder.Organization
 		err = upsertAddressInfo(ctx, inOrder.Destination.AddressInfo)
 		if err != nil {
-			return domain.Order{}, err
+			return err
 		}
 
 		inOrder.Origin.Organization = inOrder.Organization
 		err = upsertNodeInfo(ctx, inOrder.Origin)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 
 		inOrder.Destination.Organization = inOrder.Organization
 		err = upsertNodeInfo(ctx, inOrder.Destination)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 		inOrder.OrderType.Organization = inOrder.Organization
 		err = upsertOrderType(ctx, inOrder.OrderType)
 		if err != nil {
-			return domain.Order{}, err
+			return err
 		}
 
 		err = upsertPackages(ctx, inOrder.Packages, inOrder.Organization)
 		if err != nil {
-			return domain.Order{}, err
+			return  err
 		}
 		//inOrder.Headers = orderHeaders
 		//inOrder.Origin.AddressInfo.Contact = originContact
