@@ -71,30 +71,10 @@ var _ = Describe("Headers", func() {
 		BeforeEach(func() {
 			// Configurar headers base para cada test
 			baseHeaders = Headers{
-				ID:           123,
 				Organization: org1,
 				Commerce:     "original-store",
 				Consumer:     "original-customer",
 			}
-		})
-
-		It("should update ID if new value is not zero", func() {
-			newHeaders := Headers{ID: 456}
-
-			updated := baseHeaders.UpdateIfChanged(newHeaders)
-
-			Expect(updated.ID).To(Equal(int64(456)))
-			Expect(updated.Organization).To(Equal(org1))            // No debería cambiar
-			Expect(updated.Commerce).To(Equal("original-store"))    // No debería cambiar
-			Expect(updated.Consumer).To(Equal("original-customer")) // No debería cambiar
-		})
-
-		It("should not update ID if new value is zero", func() {
-			newHeaders := Headers{ID: 0}
-
-			updated := baseHeaders.UpdateIfChanged(newHeaders)
-
-			Expect(updated.ID).To(Equal(int64(123))) // Debería mantener el valor original
 		})
 
 		It("should update Consumer if new value is not empty", func() {
@@ -103,7 +83,6 @@ var _ = Describe("Headers", func() {
 			updated := baseHeaders.UpdateIfChanged(newHeaders)
 
 			Expect(updated.Consumer).To(Equal("new-customer"))
-			Expect(updated.ID).To(Equal(int64(123)))             // No debería cambiar
 			Expect(updated.Organization).To(Equal(org1))         // No debería cambiar
 			Expect(updated.Commerce).To(Equal("original-store")) // No debería cambiar
 		})
@@ -122,7 +101,6 @@ var _ = Describe("Headers", func() {
 			updated := baseHeaders.UpdateIfChanged(newHeaders)
 
 			Expect(updated.Commerce).To(Equal("new-store"))
-			Expect(updated.ID).To(Equal(int64(123)))                // No debería cambiar
 			Expect(updated.Organization).To(Equal(org1))            // No debería cambiar
 			Expect(updated.Consumer).To(Equal("original-customer")) // No debería cambiar
 		})
@@ -141,7 +119,6 @@ var _ = Describe("Headers", func() {
 			updated := baseHeaders.UpdateIfChanged(newHeaders)
 
 			Expect(updated.Organization).To(Equal(org2))
-			Expect(updated.ID).To(Equal(int64(123)))                // No debería cambiar
 			Expect(updated.Commerce).To(Equal("original-store"))    // No debería cambiar
 			Expect(updated.Consumer).To(Equal("original-customer")) // No debería cambiar
 		})
@@ -156,7 +133,6 @@ var _ = Describe("Headers", func() {
 
 		It("should update multiple fields at once", func() {
 			newHeaders := Headers{
-				ID:           456,
 				Organization: org2,
 				Commerce:     "new-store",
 				Consumer:     "new-customer",
@@ -164,7 +140,6 @@ var _ = Describe("Headers", func() {
 
 			updated := baseHeaders.UpdateIfChanged(newHeaders)
 
-			Expect(updated.ID).To(Equal(int64(456)))
 			Expect(updated.Organization).To(Equal(org2))
 			Expect(updated.Commerce).To(Equal("new-store"))
 			Expect(updated.Consumer).To(Equal("new-customer"))
@@ -172,7 +147,6 @@ var _ = Describe("Headers", func() {
 
 		It("should update only non-zero and non-empty fields", func() {
 			newHeaders := Headers{
-				ID:           456,
 				Organization: Organization{ID: 0}, // No debería actualizar
 				Commerce:     "",                  // No debería actualizar
 				Consumer:     "new-customer",
@@ -180,7 +154,6 @@ var _ = Describe("Headers", func() {
 
 			updated := baseHeaders.UpdateIfChanged(newHeaders)
 
-			Expect(updated.ID).To(Equal(int64(456)))
 			Expect(updated.Organization).To(Equal(org1))         // No debería cambiar
 			Expect(updated.Commerce).To(Equal("original-store")) // No debería cambiar
 			Expect(updated.Consumer).To(Equal("new-customer"))
@@ -188,7 +161,6 @@ var _ = Describe("Headers", func() {
 
 		It("should not change anything if all new values are empty or zero", func() {
 			newHeaders := Headers{
-				ID:           0,
 				Organization: Organization{ID: 0},
 				Commerce:     "",
 				Consumer:     "",

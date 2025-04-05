@@ -20,7 +20,6 @@ func MapOrderToTable(order domain.Order) table.Order {
 		*routeID = order.Plan.Routes[0].ID
 	}
 	tbl := table.Order{
-		ID:             order.ID,
 		PlanID:         planId,
 		RouteID:        routeID,
 		ReferenceID:    string(order.ReferenceID),
@@ -32,19 +31,6 @@ func MapOrderToTable(order domain.Order) table.Order {
 		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
 		OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
-
-		// Origen
-		OriginNodeInfoID: order.Origin.ID, // Completar según la lógica de negocio
-		//OriginNodeInfo:   MapNodeInfoTable(order.Origin),
-
-		//DestinationAddressInfo:   MapAddressInfoToTable(order.Destination.AddressInfo, orgCountryID),
-		OriginContactID: order.Origin.AddressInfo.Contact.ID,
-		//OriginContact:            MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
-		DestinationContactID: order.Destination.AddressInfo.Contact.ID,
-		//DestinationContact:       MapContactToTable(order.Destination.AddressInfo.Contact, orgCountryID),
-		// Destino
-		DestinationNodeInfoID: order.Destination.ID, // Completar según la lógica de negocio
-		//DestinationNodeInfo:   MapNodeInfoTable(order.Destination),
 
 		CollectAvailabilityDate:           safePtrTime(order.CollectAvailabilityDate.Date),
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
@@ -84,7 +70,7 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 	mapped := make(table.JSONItems, len(items))
 	for i, item := range items {
 		mapped[i] = table.Items{
-			ReferenceID:       string(item.ReferenceID),
+			Sku:               item.Sku,
 			LogisticCondition: item.LogisticCondition,
 			QuantityNumber:    item.Quantity.QuantityNumber,
 			QuantityUnit:      item.Quantity.QuantityUnit,
@@ -139,7 +125,7 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 	mapped := make(table.JSONItemReferences, len(items))
 	for i, item := range items {
 		mapped[i] = table.ItemReference{ // Cambiado de JSONItemReferences a JSONItemReference
-			ReferenceID:    string(item.ReferenceID),
+			Sku:            item.Sku,
 			QuantityNumber: item.Quantity.QuantityNumber,
 			QuantityUnit:   item.Quantity.QuantityUnit,
 		}
@@ -184,7 +170,6 @@ func mapTransportRequirementsToTable(requirements []domain.Reference) table.JSON
 
 func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders {
 	return table.OrderHeaders{
-		ID:       c.ID,
 		Commerce: c.Commerce,
 		Consumer: c.Consumer,
 		Organization: table.Organization{

@@ -8,11 +8,6 @@ import (
 func MapRoute(route domain.Route) table.Route {
 	var accountID, vehicleID, carrierID *int64
 
-	// Verificar si Vehicle existe y tiene ID válido
-	if route.Vehicle.ID != 0 {
-		vehicleID = &route.Vehicle.ID
-	}
-
 	return table.Route{
 		ID:                 route.ID,
 		EndNodeReferenceID: string(route.Destination.ReferenceID),

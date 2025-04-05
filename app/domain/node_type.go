@@ -2,7 +2,7 @@ package domain
 
 type NodeType struct {
 	Organization Organization
-	Value        string `json:"type"`
+	Value        string
 }
 
 // DocID genera un identificador único para NodeType basado en Organization y Value.

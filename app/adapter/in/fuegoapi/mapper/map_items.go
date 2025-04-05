@@ -19,8 +19,8 @@ func MapItemsToDomain(items []struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
-	ReferenceID string `json:"referenceID"`
-	Weight      struct {
+	Sku    string `json:"sku"`
+	Weight struct {
 		Unit  string  `json:"unit"`
 		Value float64 `json:"value"`
 	} `json:"weight"`
@@ -28,7 +28,7 @@ func MapItemsToDomain(items []struct {
 	mapped := make([]domain.Item, len(items))
 	for i, item := range items {
 		mapped[i] = domain.Item{
-			ReferenceID:       domain.ReferenceID(item.ReferenceID),
+			Sku:               item.Sku,
 			LogisticCondition: item.LogisticCondition,
 			Quantity: domain.Quantity{
 				QuantityNumber: item.Quantity.QuantityNumber,
@@ -71,8 +71,8 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
-	ReferenceID string `json:"referenceID"`
-	Weight      struct {
+	Sku    string `json:"sku"`
+	Weight struct {
 		Unit  string  `json:"unit"`
 		Value float64 `json:"value"`
 	} `json:"weight"`
@@ -94,8 +94,8 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceID"`
-		Weight      struct {
+		Sku    string `json:"sku"`
+		Weight struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
 		} `json:"weight"`
@@ -119,8 +119,8 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceID"`
-			Weight      struct {
+			Sku    string `json:"sku"`
+			Weight struct {
 				Unit  string  `json:"unit"`
 				Value float64 `json:"value"`
 			} `json:"weight"`
@@ -152,7 +152,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				QuantityNumber: item.Quantity.QuantityNumber,
 				QuantityUnit:   item.Quantity.QuantityUnit,
 			},
-			ReferenceID: string(item.ReferenceID),
+			Sku: item.Sku,
 			Weight: struct {
 				Unit  string  `json:"unit"`
 				Value float64 `json:"value"`

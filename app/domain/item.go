@@ -1,18 +1,18 @@
 package domain
 
 type Item struct {
-	ReferenceID       ReferenceID `json:"referenceID"`
-	LogisticCondition string      `json:"logisticCondition"`
-	Quantity          Quantity    `json:"quantity"`
-	Insurance         Insurance   `json:"insurance"`
-	Description       string      `json:"description"`
-	Dimensions        Dimensions  `json:"dimensions"`
-	Weight            Weight      `json:"weight"`
+	Sku               string
+	LogisticCondition string
+	Quantity          Quantity
+	Insurance         Insurance
+	Description       string
+	Dimensions        Dimensions
+	Weight            Weight
 }
 
 type ItemReference struct {
-	ReferenceID ReferenceID `json:"referenceID"`
-	Quantity    Quantity    `json:"quantity"`
+	Sku      string
+	Quantity Quantity
 }
 
 // Función auxiliar para comparar arreglos de referencias de ítems

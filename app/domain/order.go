@@ -206,9 +206,9 @@ func (o Order) IsOriginAndDestinationNodeEqual() bool {
 
 func (o *Order) ValidatePackages() error {
 	// Crear un mapa para verificar rápidamente si un ReferenceID pertenece a los ítems de la orden
-	itemMap := make(map[ReferenceID]bool)
+	itemMap := make(map[string]bool)
 	for _, item := range o.Items {
-		itemMap[item.ReferenceID] = true
+		itemMap[item.Sku] = true
 	}
 
 	if len(o.Packages) == 1 {
@@ -216,15 +216,15 @@ func (o *Order) ValidatePackages() error {
 		if len(o.Packages[0].ItemReferences) == 0 {
 			for _, item := range o.Items {
 				o.Packages[0].ItemReferences = append(o.Packages[0].ItemReferences, ItemReference{
-					ReferenceID: item.ReferenceID,
-					Quantity:    item.Quantity,
+					Sku:      item.Sku,
+					Quantity: item.Quantity,
 				})
 			}
 		} else {
 			// Validar que todas las referencias del paquete sean válidas
 			for _, ref := range o.Packages[0].ItemReferences {
-				if !itemMap[ref.ReferenceID] {
-					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.ReferenceID)
+				if !itemMap[ref.Sku] {
+					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.Sku)
 				}
 			}
 		}
@@ -237,8 +237,8 @@ func (o *Order) ValidatePackages() error {
 
 			// Validar que todas las referencias del paquete sean válidas
 			for _, ref := range p.ItemReferences {
-				if !itemMap[ref.ReferenceID] {
-					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.ReferenceID)
+				if !itemMap[ref.Sku] {
+					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.Sku)
 				}
 			}
 		}

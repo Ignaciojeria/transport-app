@@ -1,16 +1,15 @@
 package domain
 
 type NodeInfo struct {
-	ID           int64
-	ReferenceID  ReferenceID  `json:"referenceID"`
-	Organization Organization `json:"organization"`
-	Name         string       `json:"name"`
-	NodeType     NodeType     `json:"type"`
-	Contact      Contact      `json:"contact"`
-	References   []Reference  `json:"references"`
-	AddressInfo  AddressInfo  `json:"addressInfo"`
-	AddressLine2 string       `json:"addressLine2"`
-	AddressLine3 string       `json:"addressLine3"`
+	ReferenceID  ReferenceID
+	Organization Organization
+	Name         string
+	NodeType     NodeType
+	Contact      Contact
+	References   []Reference
+	AddressInfo  AddressInfo
+	AddressLine2 string
+	AddressLine3 string
 }
 
 func (n NodeInfo) DocID() DocumentID {

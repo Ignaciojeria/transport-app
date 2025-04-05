@@ -64,8 +64,8 @@ type SearchOrdersResponse struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceID"`
-		Weight      struct {
+		Sku    string `json:"sku"`
+		Weight struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
 		} `json:"weight"`
@@ -120,7 +120,7 @@ type SearchOrdersResponse struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceID"`
+			Sku string `json:"sku"`
 		} `json:"itemReferences"`
 		Lpn    string `json:"lpn"`
 		Weight struct {

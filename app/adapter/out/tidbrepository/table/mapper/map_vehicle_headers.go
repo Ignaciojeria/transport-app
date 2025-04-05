@@ -7,7 +7,6 @@ import (
 
 func MapVehicleHeaders(c domain.Headers) table.VehicleHeaders {
 	return table.VehicleHeaders{
-		ID:       c.ID,
 		Commerce: c.Commerce,
 		Consumer: c.Consumer,
 		Organization: table.Organization{

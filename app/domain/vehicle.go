@@ -2,40 +2,38 @@ package domain
 
 type Vehicle struct {
 	Headers
-	Plate           string          `json:"plate"`
-	IsActive        bool            `json:"isActive"`
-	CertificateDate string          `json:"certificateDate"`
-	VehicleCategory VehicleCategory `json:"category"`
+	Plate           string
+	IsActive        bool
+	CertificateDate string
+	VehicleCategory VehicleCategory
 	Weight          struct {
-		Value         int    `json:"value"`
-		UnitOfMeasure string `json:"unitOfMeasure"`
-	} `json:"weight"`
+		Value         int
+		UnitOfMeasure string
+	}
 	Insurance struct {
-		PolicyStartDate      string `json:"policyStartDate"`
-		PolicyExpirationDate string `json:"policyExpirationDate"`
-		PolicyRenewalDate    string `json:"policyRenewalDate"`
+		PolicyStartDate      string
+		PolicyExpirationDate string
+		PolicyRenewalDate    string
 		MaxInsuranceCoverage struct {
-			Amount   float64 `json:"amount"`
-			Currency string  `json:"currency"`
-		} `json:"maxInsuranceCoverage"`
-	} `json:"insurance"`
+			Amount   float64
+			Currency string
+		}
+	}
 	TechnicalReview struct {
-		LastReviewDate string `json:"lastReviewDate"`
-		NextReviewDate string `json:"nextReviewDate"`
-		ReviewedBy     string `json:"reviewedBy"`
-	} `json:"technicalReview"`
+		LastReviewDate string
+		NextReviewDate string
+		ReviewedBy     string
+	}
 	Dimensions struct {
-		Width         float64 `json:"width"`
-		Length        float64 `json:"length"`
-		Height        int     `json:"height"`
-		UnitOfMeasure string  `json:"unitOfMeasure"`
-	} `json:"dimensions"`
-	Carrier Carrier `json:"carrier"`
+		Width         float64
+		Length        float64
+		Height        int
+		UnitOfMeasure string
+	}
+	Carrier Carrier
 }
 
 func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
-	v.Organization = in.Organization
-
 	if in.Plate != "" {
 		v.Plate = in.Plate
 	}
@@ -96,7 +94,6 @@ func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
 
 type VehicleCategory struct {
 	Organization        Organization
-	ID                  int64
 	Type                string
 	MaxPackagesQuantity int
 }
@@ -107,12 +104,6 @@ func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {
 	}
 	if in.MaxPackagesQuantity != 0 {
 		vc.MaxPackagesQuantity = in.MaxPackagesQuantity
-	}
-	if in.Organization.ID != 0 {
-		vc.Organization = in.Organization
-	}
-	if in.ID != 0 {
-		vc.ID = in.ID
 	}
 	return vc
 }

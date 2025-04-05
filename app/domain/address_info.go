@@ -8,16 +8,16 @@ import (
 
 type AddressInfo struct {
 	Organization      Organization
-	Contact           Contact   `json:"contact"`
-	State             string    `json:"state"`
-	Province          string    `json:"province"`
-	District          string    `json:"district"`
-	AddressLine1      string    `json:"addressLine1"`
-	Location          orb.Point // Punto original
-	CorrectedLocation orb.Point // Punto corregido del plan (snapped)
-	CorrectedDistance float64   // Distancia aplicada al punto corregido del plan
-	ZipCode           string    `json:"zipCode"`
-	TimeZone          string    `json:"timeZone"`
+	Contact           Contact
+	State             string
+	Province          string
+	District          string
+	AddressLine1      string
+	Location          orb.Point
+	CorrectedLocation orb.Point
+	CorrectedDistance float64
+	ZipCode           string
+	TimeZone          string
 }
 
 func (a AddressInfo) DocID() DocumentID {

@@ -35,7 +35,6 @@ type FlattenedNodeView struct {
 
 func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 	return domain.NodeInfo{
-		ID:          n.NodeID,
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
 		Name:        n.NodeName,
 		NodeType: domain.NodeType{
@@ -43,7 +42,6 @@ func (n FlattenedNodeView) ToNodeInfo() domain.NodeInfo {
 		},
 		References: mapReferences(n.NodeReferences),
 		Contact: domain.Contact{
-			ID:           n.OperatorID,
 			FullName:     n.OperatorName,
 			PrimaryEmail: n.OperatorEmail,
 			PrimaryPhone: n.OperatorPhone,

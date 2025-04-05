@@ -3,7 +3,6 @@ package domain
 import "github.com/google/uuid"
 
 type Contact struct {
-	ID                       int64
 	Organization             Organization
 	FullName                 string
 	PrimaryEmail             string

@@ -77,7 +77,7 @@ var _ = Describe("Order UpdateIfChanged", func() {
 
 	It("should return true when Items, Packages, References or TransportRequirements are replaced", func() {
 		updated := Order{
-			Items:                 []Item{{ReferenceID: "ITEM001"}},
+			Items:                 []Item{{Sku: "ITEM001"}},
 			Packages:              []Package{{Lpn: "PKG001"}},
 			References:            []Reference{{Type: "X", Value: "1"}},
 			TransportRequirements: []Reference{{Type: "TEMP", Value: "COND"}},
@@ -89,7 +89,7 @@ var _ = Describe("Order UpdateIfChanged", func() {
 
 	It("should return false when attempting to update with empty slices or zero values", func() {
 		original := Order{
-			Items: []Item{{ReferenceID: "ITEM001"}},
+			Items: []Item{{Sku: "ITEM001"}},
 		}
 
 		// newOrder no tiene nada nuevo (vacío)
@@ -123,12 +123,12 @@ var _ = Describe("Order Validate", func() {
 				},
 			},
 			Items: []Item{
-				{ReferenceID: "ITEM001"},
+				{Sku: "ITEM001"},
 			},
 			Packages: []Package{
 				{
 					ItemReferences: []ItemReference{
-						{ReferenceID: "ITEM001"},
+						{Sku: "ITEM001"},
 					},
 				},
 			},
@@ -167,12 +167,12 @@ var _ = Describe("Order Validate", func() {
 	It("should fail if packages are invalid", func() {
 		order := Order{
 			Items: []Item{
-				{ReferenceID: "ITEM001"},
+				{Sku: "ITEM001"},
 			},
 			Packages: []Package{
 				{
 					ItemReferences: []ItemReference{
-						{ReferenceID: "UNKNOWN"},
+						{Sku: "UNKNOWN"},
 					},
 				},
 			},
@@ -295,13 +295,13 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 	It("should fail if multiple packages are defined and one has no item references", func() {
 		order := Order{
 			Items: []Item{
-				{ReferenceID: "ITEM001"},
-				{ReferenceID: "ITEM002"},
+				{Sku: "ITEM001"},
+				{Sku: "ITEM002"},
 			},
 			Packages: []Package{
 				{
 					ItemReferences: []ItemReference{
-						{ReferenceID: "ITEM001"},
+						{Sku: "ITEM001"},
 					},
 				},
 				{
@@ -319,8 +319,8 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 	It("should assign all items to package when only one package and no item references", func() {
 		order := Order{
 			Items: []Item{
-				{ReferenceID: "ITEM001", Quantity: Quantity{QuantityNumber: 1, QuantityUnit: "unit"}},
-				{ReferenceID: "ITEM002", Quantity: Quantity{QuantityNumber: 2, QuantityUnit: "box"}},
+				{Sku: "ITEM001", Quantity: Quantity{QuantityNumber: 1, QuantityUnit: "unit"}},
+				{Sku: "ITEM002", Quantity: Quantity{QuantityNumber: 2, QuantityUnit: "box"}},
 			},
 			Packages: []Package{
 				{}, // sin referencias explícitas
@@ -330,19 +330,19 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 		err := order.Validate()
 		Expect(err).To(Succeed())
 		Expect(len(order.Packages[0].ItemReferences)).To(Equal(2))
-		Expect(order.Packages[0].ItemReferences[0].ReferenceID).To(Equal(ReferenceID("ITEM001")))
-		Expect(order.Packages[0].ItemReferences[1].ReferenceID).To(Equal(ReferenceID("ITEM002")))
+		Expect(order.Packages[0].ItemReferences[0].Sku).To(Equal("ITEM001"))
+		Expect(order.Packages[0].ItemReferences[1].Sku).To(Equal("ITEM002"))
 	})
 
 	It("should fail when a package contains invalid item reference", func() {
 		order := Order{
 			Items: []Item{
-				{ReferenceID: "ITEM001"},
+				{Sku: "ITEM001"},
 			},
 			Packages: []Package{
 				{
 					ItemReferences: []ItemReference{
-						{ReferenceID: "NON_EXISTENT"},
+						{Sku: "NON_EXISTENT"},
 					},
 				},
 			},
@@ -356,17 +356,17 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 	It("should fail when one of multiple packages contains invalid item reference", func() {
 		order := Order{
 			Items: []Item{
-				{ReferenceID: "ITEM001"},
+				{Sku: "ITEM001"},
 			},
 			Packages: []Package{
 				{
 					ItemReferences: []ItemReference{
-						{ReferenceID: "ITEM001"}, // válido
+						{Sku: "ITEM001"}, // válido
 					},
 				},
 				{
 					ItemReferences: []ItemReference{
-						{ReferenceID: "INVALID"}, // este rompe
+						{Sku: "INVALID"}, // este rompe
 					},
 				},
 			},

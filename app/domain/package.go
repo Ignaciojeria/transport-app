@@ -1,12 +1,12 @@
 package domain
 
 type Package struct {
-	Lpn            string `json:"lpn"`
+	Lpn            string
 	Organization   Organization
-	Dimensions     Dimensions      `json:"dimensions"`
-	Weight         Weight          `json:"weight"`
-	Insurance      Insurance       `json:"insurance"`
-	ItemReferences []ItemReference `json:"itemReferences"`
+	Dimensions     Dimensions
+	Weight         Weight
+	Insurance      Insurance
+	ItemReferences []ItemReference
 }
 
 func (p Package) DocID() DocumentID {

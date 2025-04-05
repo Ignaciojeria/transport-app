@@ -50,7 +50,7 @@ var _ = Describe("UpsertPackages", func() {
 			},
 			ItemReferences: []domain.ItemReference{
 				{
-					ReferenceID: "ITEM001",
+					Sku: "ITEM001",
 					Quantity: domain.Quantity{
 						QuantityNumber: 2,
 						QuantityUnit:   "unit",
@@ -118,7 +118,7 @@ var _ = Describe("UpsertPackages", func() {
 		// Verificar referencias de items (esto está en JSON)
 		itemRefs := dbPackage1.JSONItemsReferences.Map()
 		Expect(itemRefs).To(HaveLen(1))
-		Expect(itemRefs[0].ReferenceID).To(Equal(domain.ReferenceID("ITEM001")))
+		Expect(itemRefs[0].Sku).To(Equal("ITEM001"))
 		Expect(itemRefs[0].Quantity.QuantityNumber).To(Equal(2))
 		Expect(itemRefs[0].Quantity.QuantityUnit).To(Equal("unit"))
 	})
@@ -144,7 +144,7 @@ var _ = Describe("UpsertPackages", func() {
 			},
 			ItemReferences: []domain.ItemReference{
 				{
-					ReferenceID: "ITEM001",
+					Sku: "ITEM001",
 					Quantity: domain.Quantity{
 						QuantityNumber: 2,
 						QuantityUnit:   "unit",
@@ -194,7 +194,7 @@ var _ = Describe("UpsertPackages", func() {
 			},
 			ItemReferences: []domain.ItemReference{
 				{
-					ReferenceID: "ITEM002", // Cambiar referencia
+					Sku: "ITEM002", // Cambiar referencia
 					Quantity: domain.Quantity{
 						QuantityNumber: 3,
 						QuantityUnit:   "box",
@@ -241,7 +241,7 @@ var _ = Describe("UpsertPackages", func() {
 		// Verificar que las referencias se actualizaron
 		updatedItemRefs := updatedDBPackage.JSONItemsReferences.Map()
 		Expect(updatedItemRefs).To(HaveLen(1))
-		Expect(updatedItemRefs[0].ReferenceID).To(Equal(domain.ReferenceID("ITEM002")))
+		Expect(updatedItemRefs[0].Sku).To(Equal("ITEM002"))
 		Expect(updatedItemRefs[0].Quantity.QuantityNumber).To(Equal(3))
 		Expect(updatedItemRefs[0].Quantity.QuantityUnit).To(Equal("box"))
 	})

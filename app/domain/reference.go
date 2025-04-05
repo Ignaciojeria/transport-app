@@ -1,8 +1,8 @@
 package domain
 
 type Reference struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  string
+	Value string
 }
 
 func DocID(org Organization, r Reference) DocumentID {

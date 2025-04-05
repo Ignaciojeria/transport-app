@@ -28,7 +28,8 @@ type EvidencePhotos struct {
 }
 
 type NotDeliveryReason struct {
-	ID          int64
-	ReferenceID string
-	Detail      string
+	Organization Organization
+	ID           int64
+	ReferenceID  string
+	Detail       string
 }

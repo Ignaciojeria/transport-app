@@ -2,7 +2,6 @@ package domain
 
 type Headers struct {
 	Organization Organization
-	ID           int64
 	Consumer     string `json:"consumer"`
 	Commerce     string `json:"commerce"`
 }
@@ -12,9 +11,6 @@ func (h Headers) DocID() DocumentID {
 }
 
 func (c Headers) UpdateIfChanged(newHeaders Headers) Headers {
-	if newHeaders.ID != 0 {
-		c.ID = newHeaders.ID
-	}
 	if newHeaders.Consumer != "" {
 		c.Consumer = newHeaders.Consumer
 	}

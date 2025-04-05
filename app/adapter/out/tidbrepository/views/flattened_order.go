@@ -143,7 +143,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		//ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		Headers: domain.Headers{
-			ID: o.HeaderID,
 			Organization: domain.Organization{
 				ID:      o.OrganizationID,
 				Country: countries.ByName(o.OrganizationCountry),
@@ -171,7 +170,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				Value: o.OriginNodeType,
 			},
 			Contact: domain.Contact{
-				ID:           o.OriginContactID,
 				FullName:     o.OriginContactName,
 				PrimaryPhone: o.OriginContactPhone,
 				PrimaryEmail: o.OriginContactEmail,
@@ -203,7 +201,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 				Value: o.DestinationNodeType,
 			},
 			Contact: domain.Contact{
-				ID:           o.DestinationContactID,
 				FullName:     o.DestinationContactName,
 				PrimaryPhone: o.DestinationContactPhone,
 				PrimaryEmail: o.DestinationContactEmail,
@@ -312,7 +309,7 @@ func mapItemReferences(items table.JSONItemReferences) []domain.ItemReference {
 	result := make([]domain.ItemReference, len(items))
 	for i, item := range items {
 		result[i] = domain.ItemReference{
-			ReferenceID: domain.ReferenceID(item.ReferenceID),
+			Sku: item.Sku,
 			Quantity: domain.Quantity{
 				QuantityNumber: item.QuantityNumber,
 				QuantityUnit:   item.QuantityUnit,
@@ -337,7 +334,7 @@ func mapJSONItems(items table.JSONItems) []domain.Item {
 	result := make([]domain.Item, len(items))
 	for i, item := range items {
 		result[i] = domain.Item{
-			ReferenceID:       domain.ReferenceID(item.ReferenceID),
+			Sku:               item.Sku,
 			LogisticCondition: item.LogisticCondition,
 			Quantity: domain.Quantity{
 				QuantityNumber: item.QuantityNumber,

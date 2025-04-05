@@ -47,46 +47,46 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			Type: v.Category,
 		},
 		Weight: struct {
-			Value         int    `json:"value"`
-			UnitOfMeasure string `json:"unitOfMeasure"`
+			Value         int
+			UnitOfMeasure string
 		}{
 			Value:         v.Weight.Value,
 			UnitOfMeasure: v.Weight.UnitOfMeasure,
 		},
 		Insurance: struct {
-			PolicyStartDate      string `json:"policyStartDate"`
-			PolicyExpirationDate string `json:"policyExpirationDate"`
-			PolicyRenewalDate    string `json:"policyRenewalDate"`
+			PolicyStartDate      string
+			PolicyExpirationDate string
+			PolicyRenewalDate    string
 			MaxInsuranceCoverage struct {
-				Amount   float64 `json:"amount"`
-				Currency string  `json:"currency"`
-			} `json:"maxInsuranceCoverage"`
+				Amount   float64
+				Currency string
+			}
 		}{
 			PolicyStartDate:      v.Insurance.PolicyStartDate,
 			PolicyExpirationDate: v.Insurance.PolicyExpirationDate,
 			PolicyRenewalDate:    v.Insurance.PolicyRenewalDate,
 			MaxInsuranceCoverage: struct {
-				Amount   float64 `json:"amount"`
-				Currency string  `json:"currency"`
+				Amount   float64 
+				Currency string  
 			}{
 				Amount:   v.Insurance.MaxInsuranceCoverage.Amount,
 				Currency: v.Insurance.MaxInsuranceCoverage.Currency,
 			},
 		},
 		TechnicalReview: struct {
-			LastReviewDate string `json:"lastReviewDate"`
-			NextReviewDate string `json:"nextReviewDate"`
-			ReviewedBy     string `json:"reviewedBy"`
+			LastReviewDate string 
+			NextReviewDate string 
+			ReviewedBy     string 
 		}{
 			LastReviewDate: v.TechnicalReview.LastReviewDate,
 			NextReviewDate: v.TechnicalReview.NextReviewDate,
 			ReviewedBy:     v.TechnicalReview.ReviewedBy,
 		},
 		Dimensions: struct {
-			Width         float64 `json:"width"`
-			Length        float64 `json:"length"`
-			Height        int     `json:"height"`
-			UnitOfMeasure string  `json:"unitOfMeasure"`
+			Width         float64 
+			Length        float64 
+			Height        int     
+			UnitOfMeasure string  
 		}{
 			Width:         v.Dimensions.Width,
 			Length:        v.Dimensions.Length,
@@ -94,9 +94,9 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			UnitOfMeasure: v.Dimensions.UnitOfMeasure,
 		},
 		Carrier: struct {
-			Organization domain.Organization `json:"organization"`
-			Name         string              `json:"name"`
-			NationalID   string              `json:"nationalID"`
+			Organization domain.Organization
+			Name         string             
+			NationalID   string             
 		}{
 			Organization: domain.Organization{}, // Ajustar según tu lógica de negocio
 			Name:         v.Carrier.Name,

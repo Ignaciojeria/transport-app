@@ -19,7 +19,7 @@ func MapPackagesToDomain(packages []struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceID"`
+		Sku string `json:"sku"`
 	} `json:"itemReferences"`
 	Lpn    string `json:"lpn"`
 	Weight struct {
@@ -67,7 +67,7 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
-		ReferenceID string `json:"referenceID"`
+		Sku string `json:"sku"`
 	} `json:"itemReferences"`
 	Lpn    string `json:"lpn"`
 	Weight struct {
@@ -91,7 +91,7 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			ReferenceID string `json:"referenceID"`
+			Sku string `json:"sku"`
 		} `json:"itemReferences"`
 		Lpn    string `json:"lpn"`
 		Weight struct {
@@ -117,7 +117,7 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 					QuantityNumber int    `json:"quantityNumber"`
 					QuantityUnit   string `json:"quantityUnit"`
 				} `json:"quantity"`
-				ReferenceID string `json:"referenceID"`
+				Sku string `json:"sku"`
 			} `json:"itemReferences"`
 			Lpn    string `json:"lpn"`
 			Weight struct {

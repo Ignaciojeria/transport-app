@@ -226,32 +226,6 @@ func (o Order) Map() domain.Order {
 	}
 	order.Items = items
 
-	// Mapear Contact IDs
-	if o.OriginContactID != 0 {
-		order.Origin.Contact.ID = o.OriginContactID
-	}
-	if o.DestinationContactID != 0 {
-		order.Destination.Contact.ID = o.DestinationContactID
-	}
-
-	// Mapear AddressInfo IDs
-	/*
-		if o.OriginAddressInfoID != 0 {
-			order.Origin.AddressInfo.ID = o.OriginAddressInfoID
-		}*/
-	/*
-		if o.DestinationAddressInfoID != 0 {
-			order.Destination.AddressInfo.ID = o.DestinationAddressInfoID
-		}*/
-
-	// Mapear NodeInfo IDs
-	if o.OriginNodeInfoID != 0 {
-		order.Origin.ID = o.OriginNodeInfoID
-	}
-	if o.DestinationNodeInfoID != 0 {
-		order.Destination.ID = o.DestinationNodeInfoID
-	}
-
 	return order
 }
 
@@ -264,7 +238,7 @@ func safeTime(t *time.Time) time.Time {
 }
 
 type Items struct {
-	ReferenceID       string         `gorm:"not null" json:"reference_id"`
+	Sku               string         `gorm:"not null" json:"sku"`
 	LogisticCondition string         `gorm:"default:null" json:"logistic_condition"`
 	QuantityNumber    int            `gorm:"not null" json:"quantity_number"`
 	QuantityUnit      string         `gorm:"not null" json:"quantity_unit"`
@@ -278,7 +252,7 @@ type JSONItems []Items
 
 func (i Items) Map() domain.Item {
 	return domain.Item{
-		ReferenceID:       domain.ReferenceID(i.ReferenceID),
+		Sku:               i.Sku,
 		LogisticCondition: i.LogisticCondition,
 		Quantity: domain.Quantity{
 			QuantityNumber: i.QuantityNumber,
@@ -320,7 +294,6 @@ type Contact struct {
 
 func (c Contact) Map() domain.Contact {
 	return domain.Contact{
-		ID: c.ID,
 		Organization: domain.Organization{
 			ID:      c.OrganizationID,
 			Country: countries.ByName(c.Organization.Country),
@@ -339,7 +312,7 @@ type Reference struct {
 }
 
 type ItemReference struct {
-	ReferenceID    string `json:"reference_id"`
+	Sku            string `json:"sku"`
 	QuantityNumber int    `json:"quantity_number"`
 	QuantityUnit   string `json:"quantity_unit"`
 }
@@ -350,7 +323,7 @@ func (j JSONItemReferences) Map() []domain.ItemReference {
 	mappedReferences := make([]domain.ItemReference, len(j))
 	for i, ref := range j {
 		mappedReferences[i] = domain.ItemReference{
-			ReferenceID: domain.ReferenceID(ref.ReferenceID),
+			Sku: ref.Sku,
 			Quantity: domain.Quantity{
 				QuantityNumber: ref.QuantityNumber,
 				QuantityUnit:   ref.QuantityUnit,
@@ -477,7 +450,6 @@ type NodeInfo struct {
 
 func (n NodeInfo) Map() domain.NodeInfo {
 	nodeInfo := domain.NodeInfo{
-		ID:          n.ID,
 		ReferenceID: domain.ReferenceID(n.ReferenceID),
 		Name:        n.Name,
 		Organization: domain.Organization{
@@ -754,7 +726,6 @@ func (v Vehicle) Map() domain.Vehicle {
 		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
 		VehicleCategory: domain.VehicleCategory{
-			ID:                  v.VehicleCategory.ID,
 			Type:                v.VehicleCategory.Type,
 			MaxPackagesQuantity: v.VehicleCategory.MaxPackagesQuantity,
 		},
@@ -774,7 +745,6 @@ type VehicleCategory struct {
 
 func (vc VehicleCategory) Map() domain.VehicleCategory {
 	return domain.VehicleCategory{
-		ID:                  vc.ID,
 		MaxPackagesQuantity: vc.MaxPackagesQuantity,
 		Type:                vc.Type,
 
@@ -794,7 +764,6 @@ type OrderHeaders struct {
 
 func (m OrderHeaders) Map() domain.Headers {
 	return domain.Headers{
-		ID: m.ID,
 		Organization: domain.Organization{
 			ID:      m.OrganizationID,
 			Country: countries.ByName(m.Organization.Country),
@@ -814,7 +783,6 @@ type VehicleHeaders struct {
 
 func (m VehicleHeaders) Map() domain.Headers {
 	return domain.Headers{
-		ID: m.ID,
 		Organization: domain.Organization{
 			ID: m.OrganizationID,
 		},
@@ -833,7 +801,6 @@ type NodeHeaders struct {
 
 func (m NodeHeaders) Map() domain.Headers {
 	return domain.Headers{
-		ID: m.ID,
 		Organization: domain.Organization{
 			ID: m.OrganizationID,
 		},

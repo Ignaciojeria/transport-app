@@ -14,7 +14,6 @@ func MapNodeInfoTable(e domain.NodeInfo) table.NodeInfo {
 		})
 	}
 	return table.NodeInfo{
-		ID:             e.ID,
 		ReferenceID:    string(e.ReferenceID),
 		DocumentID:     string(e.DocID()),
 		NodeTypeDoc:    string(e.NodeType.DocID()),

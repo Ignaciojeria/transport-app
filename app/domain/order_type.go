@@ -2,8 +2,8 @@ package domain
 
 type OrderType struct {
 	Organization Organization
-	Type         string `json:"type"`
-	Description  string `json:"description"`
+	Type         string
+	Description  string
 }
 
 func (ot OrderType) DocID() DocumentID {

@@ -98,8 +98,8 @@ var _ = Describe("Package", func() {
 					Currency:  "USD",
 				},
 				ItemReferences: []ItemReference{
-					{ReferenceID: "ITEM001", Quantity: Quantity{QuantityNumber: 2, QuantityUnit: "unit"}},
-					{ReferenceID: "ITEM002", Quantity: Quantity{QuantityNumber: 1, QuantityUnit: "unit"}},
+					{Sku: "ITEM001", Quantity: Quantity{QuantityNumber: 2, QuantityUnit: "unit"}},
+					{Sku: "ITEM002", Quantity: Quantity{QuantityNumber: 1, QuantityUnit: "unit"}},
 				},
 			}
 		})
@@ -182,8 +182,8 @@ var _ = Describe("Package", func() {
 		It("should update ItemReferences", func() {
 			newPackage := Package{
 				ItemReferences: []ItemReference{
-					{ReferenceID: "ITEM003", Quantity: Quantity{QuantityNumber: 3, QuantityUnit: "unit"}},
-					{ReferenceID: "ITEM004", Quantity: Quantity{QuantityNumber: 4, QuantityUnit: "box"}},
+					{Sku: "ITEM003", Quantity: Quantity{QuantityNumber: 3, QuantityUnit: "unit"}},
+					{Sku: "ITEM004", Quantity: Quantity{QuantityNumber: 4, QuantityUnit: "box"}},
 				},
 			}
 
@@ -218,7 +218,7 @@ var _ = Describe("Package", func() {
 					Unit:  "oz",
 				},
 				ItemReferences: []ItemReference{
-					{ReferenceID: "ITEM005", Quantity: Quantity{QuantityNumber: 5, QuantityUnit: "pallet"}},
+					{Sku: "ITEM005", Quantity: Quantity{QuantityNumber: 5, QuantityUnit: "pallet"}},
 				},
 			}
 

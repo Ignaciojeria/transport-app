@@ -7,7 +7,6 @@ import (
 
 func MapContactToTable(e domain.Contact, organizationID int64) table.Contact {
 	return table.Contact{
-		ID:             e.ID,
 		FullName:       e.FullName,
 		Email:          e.PrimaryEmail,
 		Phone:          e.PrimaryPhone,

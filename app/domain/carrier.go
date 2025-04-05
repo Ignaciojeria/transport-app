@@ -1,9 +1,9 @@
 package domain
 
 type Carrier struct {
-	Organization Organization `json:"organization"`
-	Name         string       `json:"name"`
-	NationalID   string       `json:"nationalID"`
+	Organization Organization
+	Name         string
+	NationalID   string
 }
 
 func (c Carrier) DocID() DocumentID {
