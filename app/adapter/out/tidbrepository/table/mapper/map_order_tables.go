@@ -8,7 +8,9 @@ import (
 
 func MapOrderToTable(order domain.Order) table.Order {
 	orgCountryID := order.Organization.ID
+		/*
 	var planId *int64
+
 	if order.Plan.ID != 0 { // Si el ID es distinto de 0, creamos un puntero
 		planId = new(int64)
 		*planId = order.Plan.ID
@@ -18,7 +20,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 	if len(order.Plan.Routes) != 0 && order.Plan.Routes[0].ID != 0 { // Verifica que exista al menos una ruta y que su ID sea válido
 		routeID = new(int64)
 		*routeID = order.Plan.Routes[0].ID
-	}
+	}*/
 	tbl := table.Order{
 
 		ReferenceID:    string(order.ReferenceID),

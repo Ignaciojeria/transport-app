@@ -261,7 +261,7 @@ func MapSearchPlanByReferenceResponse(p domain.Plan) SearchPlanByReferenceRespon
 				Orders    []SearchPlanByReferenceOrdersResponse `json:"orders"`
 			} `json:"visits"`
 		}{
-			ReferenceID: string(route.ReferenceID),
+			//	ReferenceID: string(route.ReferenceID),
 			Operator: struct {
 				ReferenceID string `json:"referenceID"`
 			}{

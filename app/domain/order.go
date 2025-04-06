@@ -11,7 +11,6 @@ import (
 
 type Order struct {
 	Headers
-	Plan                    Plan
 	AddressLine2            string
 	AddressLine3            string
 	ReferenceID             ReferenceID

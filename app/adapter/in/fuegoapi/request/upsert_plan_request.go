@@ -312,7 +312,7 @@ func (r UpsertPlanRequest) Map() domain.Plan {
 		}
 
 		route := domain.Route{
-			ReferenceID: routeData.ReferenceID,
+			//	ReferenceID: routeData.ReferenceID,
 			Destination: domain.NodeInfo{
 				ReferenceID: domain.ReferenceID(routeData.EndLocation.NodeReferenceID),
 				AddressInfo: domain.AddressInfo{

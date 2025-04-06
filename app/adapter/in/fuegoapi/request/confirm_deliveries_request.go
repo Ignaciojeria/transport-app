@@ -70,9 +70,10 @@ func MapCheckout(request ConfirmDeliveriesRequest) []domain.ConfirmDelivery {
 					},
 					ReferenceID: domain.ReferenceID(order.ReferenceID),
 				},
-				Route: domain.Route{
-					ReferenceID: route.ReferenceID,
-				},
+				/*
+					Route: domain.Route{
+						ReferenceID: route.ReferenceID,
+					},*/
 				OrderStatus: domain.OrderStatus{
 					Status:    order.Status,
 					CreatedAt: time.Now(),

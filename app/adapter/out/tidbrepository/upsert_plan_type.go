@@ -12,29 +12,23 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertPlanType func(context.Context, domain.PlanType) (domain.PlanType, error)
+type UpsertPlanType func(context.Context, domain.PlanType) error
 
 func init() {
 	ioc.Registry(NewUpsertPlanType, tidb.NewTIDBConnection)
 }
 func NewUpsertPlanType(conn tidb.TIDBConnection) UpsertPlanType {
-	return func(ctx context.Context, pt domain.PlanType) (domain.PlanType, error) {
+	return func(ctx context.Context, pt domain.PlanType) error {
 		var planType table.PlanType
 		err := conn.DB.WithContext(ctx).
 			Table("plan_types").
-			Where("name = ? AND organization_id = ?", pt.Value, pt.Organization.ID).
+			Where("document_id = ?", pt.DocID()).
 			First(&planType).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.PlanType{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return conn.
+				Omit("Organization").
+				Save(mapper.MapPlanType(pt)).Error
 		}
-		planTypeWithChanges := planType.Map().UpdateIfChanged(pt)
-		DBOrderTypeToUpdate := mapper.MapPlanType(planTypeWithChanges)
-		DBOrderTypeToUpdate.CreatedAt = planType.CreatedAt
-		if err := conn.
-			Omit("Organization").
-			Save(&DBOrderTypeToUpdate).Error; err != nil {
-			return domain.PlanType{}, err
-		}
-		return DBOrderTypeToUpdate.Map(), nil
+		return nil
 	}
 }

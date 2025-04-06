@@ -32,7 +32,7 @@ func NewUpsertPlan(
 ) UpsertPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
 		plan.PlanType.Organization = plan.Organization
-		planType, err := upsertPlanType(ctx, plan.PlanType)
+		err := upsertPlanType(ctx, plan.PlanType)
 
 		for _, order := range plan.UnassignedOrders {
 			order.Organization = plan.Organization
@@ -56,7 +56,7 @@ func NewUpsertPlan(
 			return domain.Plan{}, err
 		}
 		plan.PlanningStatus.Organization = plan.Organization
-		planningStatus, err := upsertPlanningStatus(ctx, plan.PlanningStatus)
+		err = upsertPlanningStatus(ctx, plan.PlanningStatus)
 		if err != nil {
 			return domain.Plan{}, err
 		}
@@ -70,9 +70,6 @@ func NewUpsertPlan(
 			plan.Routes[index].Operator = operator
 			plan.Routes[index].Organization = plan.Organization
 		}
-		plan.PlanType = planType
-		plan.PlanningStatus = planningStatus
-
 		return domain.Plan{}, upsertPlan(ctx, plan)
 	}
 }

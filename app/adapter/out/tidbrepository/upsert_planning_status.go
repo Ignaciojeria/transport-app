@@ -12,29 +12,24 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertPlanningStatus func(context.Context, domain.PlanningStatus) (domain.PlanningStatus, error)
+type UpsertPlanningStatus func(context.Context, domain.PlanningStatus) error
 
 func init() {
 	ioc.Registry(NewUpsertPlanningStatus, tidb.NewTIDBConnection)
 }
+
 func NewUpsertPlanningStatus(conn tidb.TIDBConnection) UpsertPlanningStatus {
-	return func(ctx context.Context, ps domain.PlanningStatus) (domain.PlanningStatus, error) {
+	return func(ctx context.Context, ps domain.PlanningStatus) error {
 		var planningStatus table.PlanningStatus
 		err := conn.DB.WithContext(ctx).
 			Table("planning_statuses").
-			Where("name = ? AND organization_id = ?", ps.Value, ps.Organization.ID).
+			Where("document_id = ?", ps.Value, ps.Organization.ID).
 			First(&planningStatus).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return domain.PlanningStatus{}, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return conn.
+				Omit("Organization").
+				Save(mapper.MapPlanningStatus(ps)).Error
 		}
-		planningStatusWithChanges := planningStatus.Map().UpdateIfChanged(ps)
-		DBPlanningStatusToUpdate := mapper.MapPlanningStatus(planningStatusWithChanges)
-		DBPlanningStatusToUpdate.CreatedAt = planningStatus.CreatedAt
-		if err := conn.
-			Omit("Organization").
-			Save(&DBPlanningStatusToUpdate).Error; err != nil {
-			return domain.PlanningStatus{}, err
-		}
-		return DBPlanningStatusToUpdate.Map(), nil
+		return nil
 	}
 }

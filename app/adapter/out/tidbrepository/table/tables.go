@@ -175,7 +175,7 @@ func (o Order) Map() domain.Order {
 				ID: o.OrganizationID,
 			},
 		},
-		Plan:                 domain.Plan{},
+		//	Plan:                 domain.Plan{},
 		DeliveryInstructions: o.DeliveryInstructions,
 	}
 

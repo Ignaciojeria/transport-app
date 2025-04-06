@@ -24,13 +24,15 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		var order table.Order
 		err := conn.DB.WithContext(ctx).
 			Table("orders").
-			Where("reference_id = ? AND organization_id = ?",
-				o.ReferenceID, o.Organization.ID).
+			Preload("Organization").
+			Where("document_id = ?",
+				o.DocID()).
 			First(&order).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
 		orderWithChanges, _ := order.Map().UpdateIfChanged(o)
+
 		DBOrderToUpdate := mapper.MapOrderToTable(orderWithChanges)
 		DBOrderToUpdate.CreatedAt = order.CreatedAt
 		if err := conn.Transaction(func(tx *gorm.DB) error {
@@ -56,7 +58,6 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				Omit("OriginNodeInfo").
 				Omit("DestinationNodeInfo").
 				Omit("Route").
-				Omit("Plan").
 				Save(&DBOrderToUpdate).Error; err != nil {
 				return err
 			}

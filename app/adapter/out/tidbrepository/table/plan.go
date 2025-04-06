@@ -48,7 +48,6 @@ func (j JSONPlanLocation) Value() (driver.Value, error) {
 
 func (p Plan) Map() domain.Plan {
 	return domain.Plan{
-		ID:             p.ID,
 		ReferenceID:    p.ReferenceID,
 		PlannedDate:    p.PlannedDate,
 		PlanningStatus: p.PlanningStatus.Map(),
@@ -67,7 +66,6 @@ type PlanType struct {
 func (pt PlanType) Map() domain.PlanType {
 	return domain.PlanType{
 		Organization: pt.Organization.Map(),
-		ID:           pt.ID,
 		Value:        pt.Name,
 	}
 }
@@ -75,15 +73,15 @@ func (pt PlanType) Map() domain.PlanType {
 type PlanningStatus struct {
 	gorm.Model
 	ID             int64        `gorm:"type:bigint;primaryKey;autoIncrement"`
-	OrganizationID int64        `gorm:"type:bigint;not null;index;uniqueIndex:idx_planning_status_org_name"`
+	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	OrganizationID int64        `gorm:"type:bigint;not null;index;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID;references:ID"`
-	Name           string       `gorm:"type:varchar(100);not null;uniqueIndex:idx_planning_status_org_name"`
+	Name           string       `gorm:"type:varchar(100);not null;"`
 }
 
 func (ps PlanningStatus) Map() domain.PlanningStatus {
 	return domain.PlanningStatus{
 		Organization: ps.Organization.Map(),
-		ID:           ps.ID,
 		Value:        ps.Name,
 	}
 }
@@ -109,10 +107,7 @@ type Route struct {
 func (r Route) Map() domain.Route {
 	return domain.Route{
 		Organization: r.Organization.Map(),
-		ReferenceID:  r.ReferenceID,
-		ID:           r.ID,
 		Vehicle:      r.Vehicle.Map(),
 		Operator:     r.Account.MapOperator(r.Organization.Map()),
-		PlanID:       r.Plan.ID,
 	}
 }

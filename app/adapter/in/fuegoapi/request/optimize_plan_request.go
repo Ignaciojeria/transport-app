@@ -78,8 +78,8 @@ type OptimizePlanRequest struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			Sku string `json:"sku"`
-			Weight      struct {
+			Sku    string `json:"sku"`
+			Weight struct {
 				Unit  string  `json:"unit"`
 				Value float64 `json:"value"`
 			} `json:"weight"`
@@ -233,7 +233,7 @@ func (r OptimizePlanRequest) Map() domain.Plan {
 	var routes []domain.Route
 	for _, routeData := range r.Routes {
 		route := domain.Route{
-			ReferenceID: routeData.ReferenceID,
+			//ReferenceID: routeData.ReferenceID,
 			Destination: domain.NodeInfo{
 				ReferenceID: domain.ReferenceID(routeData.EndLocation.NodeReferenceID),
 				AddressInfo: domain.AddressInfo{

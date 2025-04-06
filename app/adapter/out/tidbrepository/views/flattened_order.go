@@ -225,31 +225,32 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		},
 
 		// ✅ Mapeo de Plan y Ruta
-		Plan: domain.Plan{
-			ID:          o.PlanID,
-			PlannedDate: o.PlannedDate,
-			ReferenceID: o.PlanReferenceID,
-			Origin: domain.NodeInfo{
-				AddressInfo: domain.AddressInfo{
-					Location: orb.Point{o.PlanStartLocation.Longitude, o.PlanStartLocation.Latitude},
+		/*
+			Plan: domain.Plan{
+				ID:          o.PlanID,
+				PlannedDate: o.PlannedDate,
+				ReferenceID: o.PlanReferenceID,
+				Origin: domain.NodeInfo{
+					AddressInfo: domain.AddressInfo{
+						Location: orb.Point{o.PlanStartLocation.Longitude, o.PlanStartLocation.Latitude},
+					},
 				},
-			},
-			Routes: []domain.Route{
-				{
-					ID:          o.RouteID,
-					ReferenceID: o.RouteReferenceID,
-					Destination: domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(o.RouteEndNodeReferenceID),
-						AddressInfo: domain.AddressInfo{
-							Location: orb.Point{o.RouteEndLocation.Longitude, o.RouteEndLocation.Latitude},
+				Routes: []domain.Route{
+					{
+						ID:          o.RouteID,
+						ReferenceID: o.RouteReferenceID,
+						Destination: domain.NodeInfo{
+							ReferenceID: domain.ReferenceID(o.RouteEndNodeReferenceID),
+							AddressInfo: domain.AddressInfo{
+								Location: orb.Point{o.RouteEndLocation.Longitude, o.RouteEndLocation.Latitude},
+							},
+						},
+						Organization: domain.Organization{
+							ID: o.RouteAccountID,
 						},
 					},
-					Organization: domain.Organization{
-						ID: o.RouteAccountID,
-					},
 				},
-			},
-		},
+			},*/
 
 		// ✅ Mapeo de paquetes, referencias e ítems
 		Packages:              mapPackages(packages),
