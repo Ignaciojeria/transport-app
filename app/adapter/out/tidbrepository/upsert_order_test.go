@@ -357,72 +357,117 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(err.Error()).To(ContainSubstring("orders"))
 	})
 
-	
-// Este test se puede añadir al conjunto de tests de UpsertOrder
-It("should update document references when related entities change", func() {
-	// Configurar orden inicial
-	order := domain.Order{
+	// Este test se puede añadir al conjunto de tests de UpsertOrder
+	It("should update document references when related entities change", func() {
+		order := domain.Order{
+			Headers: domain.Headers{
+				Organization: organization1,
+				Commerce:     "Tienda Online",
+				Consumer:     "Distribución Nacional",
+			},
+			ReferenceID: "ORDER-DOC-TEST",
+			OrderStatus: domain.OrderStatus{
+				Status: "pending",
+			},
+			OrderType: domain.OrderType{
+				Type:         "retail",
+				Organization: organization1,
+			},
+			Origin:      originNode,
+			Destination: destNode,
+		}
+
+		upsert := NewUpsertOrder(connection)
+		err := upsert(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		var initialOrder table.Order
+		err = connection.DB.WithContext(ctx).
+			Table("orders").
+			Where("document_id = ?", order.DocID()).
+			First(&initialOrder).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear una nueva versión con todos los campos modificados
+		modifiedOrder := order
+		modifiedOrder.OrderStatus = domain.OrderStatus{
+			Status: "in_progress",
+		}
+		modifiedOrder.OrderType = domain.OrderType{
+			Type:         "express",
+			Organization: organization1,
+		}
+		modifiedOrder.Headers = domain.Headers{
+			Organization: organization1,
+			Commerce:     "Nuevo Comercio",
+			Consumer:     "Nuevo Consumidor",
+		}
+		modifiedOrder.Origin = domain.NodeInfo{
+			ReferenceID:  "modified-origin-node-001",
+			Name:         "Nuevo Nodo Origen",
+			Organization: organization1,
+			AddressInfo: domain.AddressInfo{
+				Organization: organization1,
+				AddressLine1: "Nueva dirección origen",
+				Location:     orb.Point{-70.5, -33.5},
+			},
+			Contact: domain.Contact{
+				FullName:     "Nuevo contacto origen",
+				PrimaryEmail: "nuevo-origen@example.com",
+				Organization: organization1,
+			},
+		}
+		modifiedOrder.Destination = domain.NodeInfo{
+			ReferenceID:  "modified-dest-node-002",
+			Name:         "Nuevo Nodo Destino",
+			Organization: organization1,
+			AddressInfo: domain.AddressInfo{
+				Organization: organization1,
+				AddressLine1: "Nueva dirección destino",
+				Location:     orb.Point{-70.1, -33.1},
+			},
+			Contact: domain.Contact{
+				FullName:     "Nuevo contacto destino",
+				PrimaryEmail: "nuevo-destino@example.com",
+				Organization: organization1,
+			},
+		}
+
+		err = upsert(ctx, modifiedOrder)
+		Expect(err).ToNot(HaveOccurred())
+
+		var updatedOrder table.Order
+		err = connection.DB.WithContext(ctx).
+			Table("orders").
+			Where("document_id = ?", order.DocID()).
+			First(&updatedOrder).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Validaciones de DocIDs actualizados
+		Expect(updatedOrder.OrderStatusDoc).To(Equal(modifiedOrder.OrderStatus.DocID().String()))
+		Expect(updatedOrder.OrderTypeDoc).To(Equal(modifiedOrder.OrderType.DocID().String()))
+		Expect(updatedOrder.OrderHeadersDoc).To(Equal(modifiedOrder.Headers.DocID().String()))
+
+		Expect(updatedOrder.OriginNodeInfoDoc).To(Equal(modifiedOrder.Origin.DocID().String()))
+		Expect(updatedOrder.OriginContactDoc).To(Equal(modifiedOrder.Origin.Contact.DocID().String()))
+		Expect(updatedOrder.OriginAddressInfoDoc).To(Equal(modifiedOrder.Origin.AddressInfo.DocID().String()))
+
+		Expect(updatedOrder.DestinationNodeInfoDoc).To(Equal(modifiedOrder.Destination.DocID().String()))
+		Expect(updatedOrder.DestinationContactDoc).To(Equal(modifiedOrder.Destination.Contact.DocID().String()))
+		Expect(updatedOrder.DestinationAddressInfoDoc).To(Equal(modifiedOrder.Destination.AddressInfo.DocID().String()))
+	})
+
+})
+
+func createMinimalOrder() domain.Order {
+	return domain.Order{
 		Headers: domain.Headers{
 			Organization: organization1,
-			Commerce:     "Tienda Online",
-			Consumer:     "Distribución Nacional",
+			Commerce:     "Tienda",
+			Consumer:     "Cliente",
 		},
-		ReferenceID: "ORDER-DOC-TEST",
-		OrderStatus: domain.OrderStatus{
-			Status: "pending",
-		},
-		OrderType: domain.OrderType{
-			Type:         "retail",
-			Organization: organization1,
-		},
-		Origin:      originNode,
-		Destination: destNode,
+		ReferenceID: "ORDER-FAIL-TEST",
+		OrderStatus: domain.OrderStatus{Status: "pending"},
+		OrderType:   domain.OrderType{Type: "retail", Organization: organization1},
 	}
-
-	upsert := NewUpsertOrder(connection)
-	err := upsert(ctx, order)
-	Expect(err).ToNot(HaveOccurred())
-
-	// Verificar IDs de documento iniciales
-	var initialOrder table.Order
-	err = connection.DB.WithContext(ctx).
-		Table("orders").
-		Where("document_id = ?", order.DocID()).
-		First(&initialOrder).Error
-	Expect(err).ToNot(HaveOccurred())
-	initialOrderStatusDoc := initialOrder.OrderStatusDoc
-	initialOriginNodeDoc := initialOrder.OriginNodeInfoDoc
-
-	// Modificar la orden con un estado diferente y un nodo de origen diferente
-	modifiedOrder := order
-	modifiedOrder.OrderStatus = domain.OrderStatus{
-		Status: "in_progress", // Estado diferente
-	}
-	
-	modifiedOrder.Origin = domain.NodeInfo{
-		ReferenceID:  "modified-node-001",
-		Name:         "Nuevo Nodo",
-		Organization: organization1,
-	}
-
-	err = upsert(ctx, modifiedOrder)
-	Expect(err).ToNot(HaveOccurred())
-
-	// Verificar que los IDs de documento han cambiado
-	var updatedOrder table.Order
-	err = connection.DB.WithContext(ctx).
-		Table("orders").
-		Where("document_id = ?", order.DocID()).
-		First(&updatedOrder).Error
-	Expect(err).ToNot(HaveOccurred())
-	
-	// Verificar que los DocIDs cambiaron
-	Expect(updatedOrder.OrderStatusDoc).ToNot(Equal(initialOrderStatusDoc))
-	Expect(updatedOrder.OriginNodeInfoDoc).ToNot(Equal(initialOriginNodeDoc))
-	
-	// Verificar que los nuevos DocIDs corresponden a las entidades modificadas
-	Expect(updatedOrder.OrderStatusDoc).To(Equal(modifiedOrder.OrderStatus.DocID().String()))
-	Expect(updatedOrder.OriginNodeInfoDoc).To(Equal(modifiedOrder.Origin.DocID().String()))
-})
-
-})
+}

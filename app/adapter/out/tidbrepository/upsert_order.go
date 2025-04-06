@@ -34,7 +34,6 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			DBOrderToCreate := mapper.MapOrderToTable(o)
-			// Use the same Omit pattern for consistency
 			return conn.
 				Create(&DBOrderToCreate).Error
 		}
@@ -103,12 +102,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 				DBOrderToUpdate.ID).Error; err != nil {
 				return err
 			}
-			if err := tx.
-				Omit("Organization").
-				Save(&DBOrderToUpdate).Error; err != nil {
-				return err
-			}
-			return nil
+			return tx.Omit("Organization").Save(&DBOrderToUpdate).Error
 		}); err != nil {
 			return err
 		}
