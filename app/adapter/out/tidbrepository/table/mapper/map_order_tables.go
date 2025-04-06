@@ -8,28 +8,24 @@ import (
 
 func MapOrderToTable(order domain.Order) table.Order {
 	orgCountryID := order.Organization.ID
-		/*
-	var planId *int64
-
-	if order.Plan.ID != 0 { // Si el ID es distinto de 0, creamos un puntero
-		planId = new(int64)
-		*planId = order.Plan.ID
-	}
-
-	var routeID *int64
-	if len(order.Plan.Routes) != 0 && order.Plan.Routes[0].ID != 0 { // Verifica que exista al menos una ruta y que su ID sea válido
-		routeID = new(int64)
-		*routeID = order.Plan.Routes[0].ID
-	}*/
 	tbl := table.Order{
-
+		DocumentID:     order.DocID().String(), // Agregar DocumentID
 		ReferenceID:    string(order.ReferenceID),
-		OrganizationID: order.Organization.ID, // Completar según la lógica de negocio
-		//CommerceID:            order.Commerce.ID,                        // Completar según la lógica de negocio
-		//ConsumerID:            order.Consumer.ID,                        // Completar según la lógica de negocio
-		OrderHeadersDoc: string(order.Headers.DocID()),
+		OrganizationID: order.Organization.ID,
 
-		//OrderType:       mapOrderTypeToTable(order.OrderType, orgCountryID),
+		// Mapear IDs de documentos relacionados
+		OrderHeadersDoc:        order.Headers.DocID().String(),
+		OrderStatusDoc:         order.OrderStatus.DocID().String(),
+		OrderTypeDoc:           order.OrderType.DocID().String(),
+		OriginNodeInfoDoc:      order.Origin.DocID().String(),
+		DestinationNodeInfoDoc: order.Destination.DocID().String(),
+
+		// Si están disponibles, también mapear los contactos y direcciones
+		OriginContactDoc:          order.Origin.Contact.DocID().String(),
+		DestinationContactDoc:     order.Destination.Contact.DocID().String(),
+		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID().String(),
+		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID().String(),
+
 		OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
 
@@ -41,10 +37,8 @@ func MapOrderToTable(order domain.Order) table.Order {
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		JSONItems:                         mapItemsToTable(order.Items),
-		//Visits:                            mapVisitsToTable(order.Visits),
-		TransportRequirements: mapTransportRequirementsToTable(order.TransportRequirements),
-		OrderHeaders:          mapHeadersToTable(order.Headers, orgCountryID),
-		Packages:              MapPackagesToTable(order.Packages, orgCountryID),
+		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
+		Packages:                          MapPackagesToTable(order.Packages, orgCountryID),
 	}
 	return tbl
 }

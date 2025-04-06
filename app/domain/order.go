@@ -34,71 +34,70 @@ func (o Order) DocID() DocumentID {
 }
 
 func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
-	updated := o
 	changed := false
 
 	if newOrder.DeliveryInstructions != "" && newOrder.DeliveryInstructions != o.DeliveryInstructions {
-		updated.DeliveryInstructions = newOrder.DeliveryInstructions
+		o.DeliveryInstructions = newOrder.DeliveryInstructions
 		changed = true
 	}
 
 	if len(newOrder.References) > 0 {
-		updated.References = newOrder.References
+		o.References = newOrder.References
 		changed = true
 	}
 
 	if len(newOrder.Packages) > 0 {
-		updated.Packages = newOrder.Packages
+		o.Packages = newOrder.Packages
 		changed = true
 	}
 
 	if len(newOrder.Items) > 0 {
-		updated.Items = newOrder.Items
+		o.Items = newOrder.Items
 		changed = true
 	}
 
 	if len(newOrder.TransportRequirements) > 0 {
-		updated.TransportRequirements = newOrder.TransportRequirements
+		o.TransportRequirements = newOrder.TransportRequirements
 		changed = true
 	}
 
 	// PromisedDate
 	if !newOrder.PromisedDate.DateRange.StartDate.IsZero() && !newOrder.PromisedDate.DateRange.StartDate.Equal(o.PromisedDate.DateRange.StartDate) {
-		updated.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
+		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate
 		changed = true
 	}
 	if !newOrder.PromisedDate.DateRange.EndDate.IsZero() && !newOrder.PromisedDate.DateRange.EndDate.Equal(o.PromisedDate.DateRange.EndDate) {
-		updated.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
+		o.PromisedDate.DateRange.EndDate = newOrder.PromisedDate.DateRange.EndDate
 		changed = true
 	}
 	if newOrder.PromisedDate.TimeRange.StartTime != "" && newOrder.PromisedDate.TimeRange.StartTime != o.PromisedDate.TimeRange.StartTime {
-		updated.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
+		o.PromisedDate.TimeRange.StartTime = newOrder.PromisedDate.TimeRange.StartTime
 		changed = true
 	}
 	if newOrder.PromisedDate.TimeRange.EndTime != "" && newOrder.PromisedDate.TimeRange.EndTime != o.PromisedDate.TimeRange.EndTime {
-		updated.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
+		o.PromisedDate.TimeRange.EndTime = newOrder.PromisedDate.TimeRange.EndTime
 		changed = true
 	}
 	if newOrder.PromisedDate.ServiceCategory != "" && newOrder.PromisedDate.ServiceCategory != o.PromisedDate.ServiceCategory {
-		updated.PromisedDate.ServiceCategory = newOrder.PromisedDate.ServiceCategory
+		o.PromisedDate.ServiceCategory = newOrder.PromisedDate.ServiceCategory
 		changed = true
 	}
 
 	// CollectAvailabilityDate
 	if !newOrder.CollectAvailabilityDate.Date.IsZero() && !newOrder.CollectAvailabilityDate.Date.Equal(o.CollectAvailabilityDate.Date) {
-		updated.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
+		o.CollectAvailabilityDate.Date = newOrder.CollectAvailabilityDate.Date
 		changed = true
 	}
 	if newOrder.CollectAvailabilityDate.TimeRange.StartTime != "" && newOrder.CollectAvailabilityDate.TimeRange.StartTime != o.CollectAvailabilityDate.TimeRange.StartTime {
-		updated.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
+		o.CollectAvailabilityDate.TimeRange.StartTime = newOrder.CollectAvailabilityDate.TimeRange.StartTime
 		changed = true
 	}
 	if newOrder.CollectAvailabilityDate.TimeRange.EndTime != "" && newOrder.CollectAvailabilityDate.TimeRange.EndTime != o.CollectAvailabilityDate.TimeRange.EndTime {
-		updated.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
+		o.CollectAvailabilityDate.TimeRange.EndTime = newOrder.CollectAvailabilityDate.TimeRange.EndTime
 		changed = true
 	}
 
-	return updated, changed
+	return o, changed
 }
 
 func (o Order) Validate() error {
