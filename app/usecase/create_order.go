@@ -6,6 +6,7 @@ import (
 	"transport-app/app/domain"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"golang.org/x/sync/errgroup"
 )
 
 type CreateOrder func(ctx context.Context, input domain.Order) error
@@ -34,70 +35,59 @@ func NewCreateOrder(
 	upsertOrderType tidbrepository.UpsertOrderType,
 	upsertOrder tidbrepository.UpsertOrder,
 ) CreateOrder {
-	return func(ctx context.Context, inOrder domain.Order)  error {
+	return func(ctx context.Context, inOrder domain.Order) error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
-
 		inOrder.Headers.Organization = inOrder.Organization
-		err := upsertOrderHeaders(ctx, inOrder.Headers)
-		if err != nil {
-			return  err
-		}
 
-		inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
-		err = upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
-		if err != nil {
-			return  err
-		}
+		group, ctx := errgroup.WithContext(ctx)
 
-		inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
-		err = upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
-		if err != nil {
-			return  err
-		}
+		group.Go(func() error {
+			return upsertOrderHeaders(ctx, inOrder.Headers)
+		})
 
-		inOrder.Origin.AddressInfo.Organization = inOrder.Organization
-		err = upsertAddressInfo(ctx, inOrder.Origin.AddressInfo)
-		if err != nil {
-			return  err
-		}
+		group.Go(func() error {
+			inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
+			return upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
+		})
 
-		inOrder.Destination.AddressInfo.Organization = inOrder.Organization
-		err = upsertAddressInfo(ctx, inOrder.Destination.AddressInfo)
-		if err != nil {
-			return err
-		}
+		group.Go(func() error {
+			inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
+			return upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
+		})
 
-		inOrder.Origin.Organization = inOrder.Organization
-		err = upsertNodeInfo(ctx, inOrder.Origin)
-		if err != nil {
-			return  err
-		}
+		group.Go(func() error {
+			inOrder.Origin.AddressInfo.Organization = inOrder.Organization
+			return upsertAddressInfo(ctx, inOrder.Origin.AddressInfo)
+		})
 
-		inOrder.Destination.Organization = inOrder.Organization
-		err = upsertNodeInfo(ctx, inOrder.Destination)
-		if err != nil {
-			return  err
-		}
-		inOrder.OrderType.Organization = inOrder.Organization
-		err = upsertOrderType(ctx, inOrder.OrderType)
-		if err != nil {
-			return err
-		}
+		group.Go(func() error {
+			inOrder.Destination.AddressInfo.Organization = inOrder.Organization
+			return upsertAddressInfo(ctx, inOrder.Destination.AddressInfo)
+		})
 
-		err = upsertPackages(ctx, inOrder.Packages, inOrder.Organization)
-		if err != nil {
-			return  err
-		}
-		//inOrder.Headers = orderHeaders
-		//inOrder.Origin.AddressInfo.Contact = originContact
-		//inOrder.Destination.AddressInfo.Contact = destinationContact
-		//inOrder.OrderType = orderType
-		//inOrder.Origin = originNodeInfo
-		//inOrder.Destination = destinationNodeInfo
-		//inOrder.Origin.AddressInfo = originAddressInfo
-		//inOrder.Destination.AddressInfo = destinationAddressInfo
+		group.Go(func() error {
+			inOrder.Origin.Organization = inOrder.Organization
+			return upsertNodeInfo(ctx, inOrder.Origin)
+		})
 
-		//inOrder.Packages = pcks
-		return upsertOrder(ctx, inOrder)
+		group.Go(func() error {
+			inOrder.Destination.Organization = inOrder.Organization
+			return upsertNodeInfo(ctx, inOrder.Destination)
+		})
+
+		group.Go(func() error {
+			inOrder.OrderType.Organization = inOrder.Organization
+			return upsertOrderType(ctx, inOrder.OrderType)
+		})
+
+		group.Go(func() error {
+			return upsertPackages(ctx, inOrder.Packages, inOrder.Organization)
+		})
+
+		group.Go(func() error {
+			return upsertOrder(ctx, inOrder)
+		})
+
+		return group.Wait()
 	}
 }
