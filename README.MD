@@ -8,9 +8,9 @@
 | ---------------------------- | --------------------------------- | ----------------------------- |
 | `addressInfo.addressLine1` | Calle y número                    | `inglaterra 59`             |
 | `addressInfo.addressLine2` | Información adicional (opcional)  | `dpto 2214`                 |
-| `addressInfo.district`     | Comuna                            | `la-florida`                |
+| `addressInfo.district`     | Comuna                            | `la florida`                |
 | `addressInfo.province`     | Provincia                         | `santiago`                  |
-| `addressInfo.state`        | Región                            | `metropolitana-de-santiago` |
+| `addressInfo.state`        | Región                            | `metropolitana de santiago` |
 | `addressInfo.latitude`     | Latitud                           | `-33.5204181`               |
 | `addressInfo.longitude`    | Longitud                          | `-70.6006178`               |
 
@@ -27,9 +27,9 @@
     "addressLine2": "depto 1202",
     "district": "providencia",
     "province": "santiago",
-    "state": "metropolitana-de-santiago",
-    "latitude": "-33.4263",
-    "longitude": "-70.6200"
+    "state": "región metropolitana de santiago",
+    "latitude": -33.4263,
+    "longitude": -70.6200
   }
 }
 ```
@@ -41,43 +41,63 @@
   "addressInfo": {
     "addressLine1": "avenida las condes 7890",
     "addressLine2": "",
-    "district": "las-condes",
+    "district": "las condes",
     "province": "santiago",
-    "state": "metropolitana-de-santiago",
+    "state": "región metropolitana de santiago",
     "latitude": "-33.4085",
     "longitude": "-70.5666"
   }
 }
 ```
 
-### 🏠 Ejemplo en el Sur (zona urbana)
+# 🔄 Context Propagation in Transport App
+
+En esta aplicación utilizamos OpenTelemetry Baggage para propagar contexto entre componentes (API → eventos Pub/Sub → consumidores) de forma trazable, desacoplada y estandarizada.
+
+---
+
+## 🧾 Headers del API
+
+El consumidor de la API debe enviar los siguientes headers en cada request:
+
+| Header         | Ejemplo              | Descripción                            |
+|----------------|----------------------|----------------------------------------|
+| `organization` | `2-CL`               | ID del tenant + país (`tenantId-country`) |
+| `consumer`     | `CONSUMER_EXAMPLE`   | Identificador del consumidor del API   |
+| `commerce`     | `COMMERCE_EXAMPLE`   | Identificador del comercio             |
+
+Estos headers son procesados por un middleware que:
+
+- Desglosa el `organization` en `tenant.id` y `tenant.country`.
+- Carga todos los valores como `baggage` en el contexto de OpenTelemetry.
+
+---
+
+## 🧠 OpenTelemetry Baggage Keys
+
+Estas claves viven dentro del contexto propagado (`context.Context`) y son visibles desde trazas (Jaeger, OpenObserve, etc).
+
+| Clave Baggage       | Ejemplo              | Fuente               |
+|---------------------|----------------------|----------------------|
+| `tenant.id`         | `2`                  | Derivado de `organization` |
+| `tenant.country`    | `CL`                 | Derivado de `organization` |
+| `business.consumer` | `CONSUMER_EXAMPLE`   | Header `consumer`    |
+| `business.commerce` | `COMMERCE_EXAMPLE`   | Header `commerce`    |
+| `event.type`        | `orderSubmitted`     | Inyectado por código |
+| `entity.type`       | `order`              | Inyectado por código |
+
+---
+
+## 📦 Pub/Sub Message Attributes
+
+Cuando se publica un evento (como `orderSubmitted`), los atributos del contexto son exportados al mensaje en formato `camelCase`:
 
 ```json
 {
-  "addressInfo": {
-    "addressLine1": "avenida diego portales 1010",
-    "addressLine2": "edificio costanera piso 5",
-    "district": "puerto-montt",
-    "province": "llanquihue",
-    "state": "los-lagos",
-    "latitude": "-41.4717",
-    "longitude": "-72.9361"
-  }
+  "tenantId": "2",
+  "tenantCountry": "CL",
+  "consumer": "CONSUMER_EXAMPLE",
+  "commerce": "COMMERCE_EXAMPLE",
+  "eventType": "orderSubmitted",
+  "entityType": "order"
 }
-```
-
-### 🌿 Ejemplo en el Sur (zona rural)
-
-```json
-{
-  "addressInfo": {
-    "addressLine1": "ruta 5 sur km 789",
-    "addressLine2": "sector rucapequen",
-    "district": "san-carlos",
-    "province": "punilla",
-    "state": "nuble",
-    "latitude": "-36.4241",
-    "longitude": "-71.9598"
-  }
-}
-```
