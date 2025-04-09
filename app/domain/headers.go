@@ -6,6 +6,9 @@ type Headers struct {
 	Commerce     string `json:"commerce"`
 }
 
+const ConsumerKey = "consumer"
+const CommerceKey = "consumer"
+
 func (h Headers) DocID() DocumentID {
 	return Hash(h.Organization, h.Commerce, h.Consumer)
 }

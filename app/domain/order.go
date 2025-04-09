@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -31,6 +32,10 @@ type Order struct {
 
 func (o Order) DocID() DocumentID {
 	return Hash(o.Organization, string(o.ReferenceID))
+}
+
+func (o Order) DocIDCtx(ctx context.Context) DocumentID {
+	return HashCtx(ctx, string(o.ReferenceID))
 }
 
 func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {

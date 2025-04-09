@@ -5,9 +5,12 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub"
+	"transport-app/app/shared/sharedcontext"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 type ApplicationEvents func(ctx context.Context, outbox domain.Outbox) error
@@ -24,31 +27,15 @@ func NewApplicationEvents(
 	topicName := conf.OUTBOX_TOPIC_NAME
 	topic := c.Topic(topicName)
 	return func(ctx context.Context, outbox domain.Outbox) error {
-
-		outbox.Attributes["createdAt"] = outbox.CreatedAt
-		outbox.Attributes["updatedAt"] = outbox.UpdatedAt
-		message := &pubsub.Message{
-			Attributes: map[string]string{
-				"referenceID":  outbox.Attributes["referenceID"],
-				"createdAt":    outbox.CreatedAt,
-				"updatedAt":    outbox.UpdatedAt,
-				"eventType":    outbox.Attributes["eventType"],
-				"entityType":   outbox.Attributes["entityType"],
-				"organization": outbox.Attributes["organization"],
-				"commerce":     outbox.Attributes["commerce"],
-				"consumer":     outbox.Attributes["consumer"],
-			},
-			Data: outbox.Payload,
+		msg := &pubsub.Message{
+			Attributes: map[string]string{},
+			Data:       outbox.Payload,
 		}
-
-		result := topic.Publish(ctx, message)
-		// Get the server-generated message ID.
+		// 📦 Propagar baggage y trace context al pubsub message
+		otel.GetTextMapPropagator().Inject(ctx, propagation.MapCarrier(msg.Attributes))
+		sharedcontext.CopyBaggageToAttributesCamelCase(ctx, msg.Attributes)
+		result := topic.Publish(ctx, msg)
 		_, err := result.Get(ctx)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }

@@ -10,6 +10,8 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 func init() {
@@ -27,6 +29,7 @@ func newOrderSubmitted(
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 1
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
+		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(m.Attributes))
 		var input request.UpsertOrderRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
@@ -34,6 +37,7 @@ func newOrderSubmitted(
 		}
 		// Mapear al dominio desde el request
 		domainOBJ := input.Map()
+		domainOBJ.DocIDCtx(ctx)
 		// Completar datos adicionales desde los atributos del mensaje
 		domainOBJ.Commerce = m.Attributes["commerce"]
 		domainOBJ.Consumer = m.Attributes["consumer"]

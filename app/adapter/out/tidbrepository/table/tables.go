@@ -97,7 +97,6 @@ func (j JSONEvidencePhotos) Value() (driver.Value, error) {
 	return json.Marshal(j)
 }
 
-
 // 🔥 Función auxiliar para manejar punteros de time.Time de manera segura
 func safeTime(t *time.Time) time.Time {
 	if t == nil {
@@ -337,7 +336,7 @@ type AddressInfo struct {
 	ID             int64        `gorm:"primaryKey"`
 	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	DocumentID     string       `gorm:"not null;uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
 	State          string       `gorm:"default:null"`
 	Province       string       `gorm:"default:null"`
 	District       string       `gorm:"default:null"`

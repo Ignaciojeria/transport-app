@@ -11,6 +11,7 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
@@ -29,7 +30,7 @@ func init() {
 func createOrder(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
-	saveOutboxTrx gcppublisher.ApplicationEvents,
+	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/orders",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
@@ -40,15 +41,7 @@ func createOrder(
 				return response.UpsertOrderResponse{}, err
 			}
 			mappedTO := requestBody.Map()
-			mappedTO.Organization.SetKey(c.Header("organization"))
-			mappedTO.Headers.Consumer = c.Header("consumer")
-			mappedTO.Headers.Commerce = c.Header("commerce")
-			if c.Header("consumer") == "" {
-				mappedTO.Headers.Consumer = "UNSPECIFIED"
-			}
-			if c.Header("commerce") == "" {
-				mappedTO.Headers.Commerce = "UNSPECIFIED"
-			}
+
 			if err := mappedTO.Validate(); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",
@@ -57,18 +50,15 @@ func createOrder(
 				}
 			}
 			eventPayload, _ := json.Marshal(requestBody)
-			if err := saveOutboxTrx(spanCtx, domain.Outbox{
-				Attributes: map[string]string{
-					"entityType":   "order",
-					"eventType":    "orderSubmitted",
-					"country":      mappedTO.Organization.Country.Alpha2(),
-					"organization": mappedTO.Organization.GetOrgKey(),
-					"consumer":     c.Header("consumer"),
-					"commerce":     c.Header("commerce"),
-					"referenceID":  requestBody.ReferenceID,
-				},
+
+			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
+				sharedcontext.EventContext{
+					EntityType: "order",
+					EventType:  "orderSubmitted",
+				})
+
+			if err := publish(eventCtx, domain.Outbox{
 				Payload: eventPayload,
-				Status:  "pending",
 			}); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{
 					Title:  "error creating order",

@@ -47,11 +47,13 @@ func NewCreateOrder(
 
 		group.Go(func() error {
 			inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
+			inOrder.Origin.AddressInfo.Normalize()
 			return upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		})
 
 		group.Go(func() error {
 			inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
+			inOrder.Destination.AddressInfo.Normalize()
 			return upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
 		})
 
