@@ -1,38 +1,42 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("PlanningStatus", func() {
-
 	var (
-		org1 = Organization{ID: 1, Country: countries.CL}
-		org2 = Organization{ID: 2, Country: countries.AR}
+		ctx1 context.Context
+		ctx2 context.Context
 	)
 
-	Describe("DocID", func() {
-		It("should generate different document IDs for different organizations", func() {
-			planningStatus1 := PlanningStatus{Organization: org1, Value: "pending"}
-			planningStatus2 := PlanningStatus{Organization: org2, Value: "pending"}
+	BeforeEach(func() {
+		ctx1 = buildCtx("org1", "CL")
+		ctx2 = buildCtx("org2", "AR")
+	})
 
-			Expect(planningStatus1.DocID()).ToNot(Equal(planningStatus2.DocID()))
+	Describe("DocID", func() {
+		It("should generate different document IDs for different contexts", func() {
+			planningStatus := PlanningStatus{Value: "pending"}
+
+			Expect(planningStatus.DocID(ctx1)).ToNot(Equal(planningStatus.DocID(ctx2)))
 		})
 
 		It("should generate different document IDs for different status values", func() {
-			planningStatus1 := PlanningStatus{Organization: org1, Value: "pending"}
-			planningStatus2 := PlanningStatus{Organization: org1, Value: "in_progress"}
+			planningStatus1 := PlanningStatus{Value: "pending"}
+			planningStatus2 := PlanningStatus{Value: "in_progress"}
 
-			Expect(planningStatus1.DocID()).ToNot(Equal(planningStatus2.DocID()))
+			Expect(planningStatus1.DocID(ctx1)).ToNot(Equal(planningStatus2.DocID(ctx1)))
 		})
 
-		It("should generate the same document ID for same org and status value", func() {
-			planningStatus1 := PlanningStatus{Organization: org1, Value: "completed"}
-			planningStatus2 := PlanningStatus{Organization: org1, Value: "completed"}
+		It("should generate the same document ID for same context and status value", func() {
+			planningStatus1 := PlanningStatus{Value: "completed"}
+			planningStatus2 := PlanningStatus{Value: "completed"}
 
-			Expect(planningStatus1.DocID()).To(Equal(planningStatus2.DocID()))
+			Expect(planningStatus1.DocID(ctx1)).To(Equal(planningStatus2.DocID(ctx1)))
 		})
 	})
 })

@@ -1,42 +1,41 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/paulmach/orb"
 )
 
 var _ = Describe("NodeInfo", func() {
-	var org1 = Organization{ID: 1, Country: countries.CL}
-	var org2 = Organization{ID: 2, Country: countries.AR}
+	var ctx1, ctx2 context.Context
+
+	BeforeEach(func() {
+		ctx1 = buildCtx("org1", "CL")
+		ctx2 = buildCtx("org2", "AR")
+	})
 
 	Describe("DocID", func() {
-		It("should generate unique ID based on Organization and ReferenceID", func() {
+		It("should generate unique ID based on context and ReferenceID", func() {
 			node1 := NodeInfo{
-				Organization: org1,
-				ReferenceID:  "node-1",
+				ReferenceID: "node-1",
 			}
 			node2 := NodeInfo{
-				Organization: org1,
-				ReferenceID:  "node-2",
-			}
-			node3 := NodeInfo{
-				Organization: org2,
-				ReferenceID:  "node-1",
+				ReferenceID: "node-2",
 			}
 
-			Expect(node1.DocID()).To(Equal(Hash(org1, "node-1")))
-			Expect(node1.DocID()).ToNot(Equal(node2.DocID()))
-			Expect(node1.DocID()).ToNot(Equal(node3.DocID()))
+			// Mismo nodo con diferentes contextos
+			Expect(node1.DocID(ctx1)).To(Equal(Hash(ctx1, "node-1")))
+			Expect(node1.DocID(ctx1)).ToNot(Equal(node2.DocID(ctx1)))
+			Expect(node1.DocID(ctx1)).ToNot(Equal(node1.DocID(ctx2)))
 		})
 
 		It("should return empty DocumentID if ReferenceID is empty", func() {
 			node := NodeInfo{
-				Organization: org1,
-				ReferenceID:  "",
+				ReferenceID: "",
 			}
-			Expect(node.DocID()).To(Equal(DocumentID("")))
+			Expect(node.DocID(ctx1)).To(Equal(DocumentID("")))
 		})
 	})
 
@@ -45,10 +44,9 @@ var _ = Describe("NodeInfo", func() {
 
 		BeforeEach(func() {
 			baseNode = NodeInfo{
-				ReferenceID:  "node-test",
-				Name:         "Nodo Original",
-				Organization: org1,
-				NodeType:     NodeType{Value: "WAREHOUSE"},
+				ReferenceID: "node-test",
+				Name:        "Nodo Original",
+				NodeType:    NodeType{Value: "WAREHOUSE"},
 				AddressInfo: AddressInfo{
 					AddressLine1: "Av Providencia 1234",
 					District:     "Providencia",

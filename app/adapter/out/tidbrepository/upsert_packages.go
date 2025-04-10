@@ -52,7 +52,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		for _, docID := range docIDs {
 			domainPkg := docIDToPackage[docID]
 			if existingPkg, found := existingMap[docID]; found {
-				updatedDomainPkg := existingPkg.Map().UpdateIfChanged(domainPkg)
+				updatedDomainPkg, _ := existingPkg.Map().UpdateIfChanged(domainPkg)
 				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg)
 
 				// Preservar campos importantes

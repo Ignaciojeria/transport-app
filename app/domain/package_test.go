@@ -1,41 +1,39 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Package", func() {
-	var org1 = Organization{ID: 1, Country: countries.CL}
-	var org2 = Organization{ID: 2, Country: countries.AR}
+	var ctx1, ctx2 context.Context
+
+	BeforeEach(func() {
+		ctx1 = buildCtx("org1", "CL")
+		ctx2 = buildCtx("org2", "AR")
+	})
 
 	Describe("DocID", func() {
-		It("should generate unique ID based on Organization and Lpn", func() {
+		It("should generate unique ID based on context and Lpn", func() {
 			package1 := Package{
-				Organization: org1,
-				Lpn:          "PKG001",
+				Lpn: "PKG001",
 			}
 			package2 := Package{
-				Organization: org1,
-				Lpn:          "PKG002",
-			}
-			package3 := Package{
-				Organization: org2,
-				Lpn:          "PKG001",
+				Lpn: "PKG002",
 			}
 
-			Expect(package1.DocID()).To(Equal(Hash(org1, "PKG001")))
-			Expect(package1.DocID()).ToNot(Equal(package2.DocID()))
-			Expect(package1.DocID()).ToNot(Equal(package3.DocID()))
+			Expect(package1.DocID(ctx1)).To(Equal(Hash(ctx1, "PKG001")))
+			Expect(package1.DocID(ctx1)).ToNot(Equal(package2.DocID(ctx1)))
+			Expect(package1.DocID(ctx1)).ToNot(Equal(package1.DocID(ctx2)))
 		})
 
-		It("should return empty DocumentID if Lpn is empty", func() {
+		It("should return hashed empty string if Lpn is empty", func() {
 			pkg := Package{
-				Organization: org1,
-				Lpn:          "",
+				Lpn: "",
 			}
-			Expect(pkg.DocID()).To(Equal(Hash(org1, "")))
+			Expect(pkg.DocID(ctx1)).To(Equal(Hash(ctx1, "")))
 		})
 	})
 
@@ -44,16 +42,15 @@ var _ = Describe("Package", func() {
 
 		BeforeEach(func() {
 			packages = []Package{
-				{Lpn: "PKG001", Organization: org1},
-				{Lpn: "PKG002", Organization: org1},
-				{Lpn: "PKG003", Organization: org2},
+				{Lpn: "PKG001"},
+				{Lpn: "PKG002"},
+				{Lpn: "PKG003"},
 			}
 		})
 
 		It("should find package by lpn when it exists", func() {
 			result := SearchPackageByLpn(packages, "PKG002")
 			Expect(result.Lpn).To(Equal("PKG002"))
-			Expect(result.Organization).To(Equal(org1))
 		})
 
 		It("should return empty package when lpn doesn't exist", func() {
@@ -63,11 +60,10 @@ var _ = Describe("Package", func() {
 
 		It("should return first matching package when multiple matches exist", func() {
 			// Agregar un duplicado con el mismo Lpn
-			duplicatePackages := append(packages, Package{Lpn: "PKG001", Organization: org2})
+			duplicatePackages := append(packages, Package{Lpn: "PKG001"})
 
 			result := SearchPackageByLpn(duplicatePackages, "PKG001")
 			Expect(result.Lpn).To(Equal("PKG001"))
-			Expect(result.Organization).To(Equal(org1)) // Debería devolver la primera coincidencia
 		})
 
 		It("should handle empty package slice", func() {
@@ -81,8 +77,7 @@ var _ = Describe("Package", func() {
 
 		BeforeEach(func() {
 			basePackage = Package{
-				Lpn:          "PKG-TEST",
-				Organization: org1,
+				Lpn: "PKG-TEST",
 				Dimensions: Dimensions{
 					Length: 10.0,
 					Width:  20.0,
@@ -109,11 +104,11 @@ var _ = Describe("Package", func() {
 				Lpn: "PKG-UPDATED",
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
+			Expect(changed).To(BeTrue())
 			Expect(updated.Lpn).To(Equal("PKG-UPDATED"))
 			// Verificar que otros campos se mantienen igual
-			Expect(updated.Organization).To(Equal(basePackage.Organization))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
@@ -130,12 +125,12 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
+			Expect(changed).To(BeTrue())
 			Expect(updated.Dimensions).To(Equal(newPackage.Dimensions))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Organization).To(Equal(basePackage.Organization))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
@@ -149,12 +144,12 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
+			Expect(changed).To(BeTrue())
 			Expect(updated.Weight).To(Equal(newPackage.Weight))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Organization).To(Equal(basePackage.Organization))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
@@ -168,12 +163,12 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
+			Expect(changed).To(BeTrue())
 			Expect(updated.Insurance).To(Equal(newPackage.Insurance))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Organization).To(Equal(basePackage.Organization))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
@@ -187,26 +182,27 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
+			Expect(changed).To(BeTrue())
 			Expect(updated.ItemReferences).To(Equal(newPackage.ItemReferences))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Organization).To(Equal(basePackage.Organization))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 		})
 
-		It("should not update fields when new UnitValues are empty", func() {
+		It("should not update fields when new values are empty", func() {
 			newPackage := Package{
 				Lpn: "",
 				// Todos los demás campos están vacíos o con sus valores por defecto
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
 			// Nada debería cambiar
+			Expect(changed).To(BeFalse())
 			Expect(updated).To(Equal(basePackage))
 		})
 
@@ -222,13 +218,13 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
+			Expect(changed).To(BeTrue())
 			Expect(updated.Lpn).To(Equal("PKG-MULTI-UPDATE"))
 			Expect(updated.Weight).To(Equal(newPackage.Weight))
 			Expect(updated.ItemReferences).To(Equal(newPackage.ItemReferences))
 			// Estos campos no deberían cambiar
-			Expect(updated.Organization).To(Equal(basePackage.Organization))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 		})
@@ -242,10 +238,11 @@ var _ = Describe("Package", func() {
 				ItemReferences: []ItemReference{},
 			}
 
-			updated := basePackage.UpdateIfChanged(newPackage)
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
 			// Las referencias deberían mantenerse sin cambios, ya que el array vacío
 			// no debería sobrescribir los valores existentes según la lógica del método
+			Expect(changed).To(BeFalse())
 			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
 		})
 	})

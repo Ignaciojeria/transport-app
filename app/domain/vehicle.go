@@ -1,5 +1,7 @@
 package domain
 
+import "context"
+
 type Vehicle struct {
 	Headers
 	Plate           string
@@ -33,65 +35,96 @@ type Vehicle struct {
 	Carrier Carrier
 }
 
-func (v Vehicle) DocID() DocumentID {
-	//return Hash(v.Organization, v.Plate)
-	return ""
+func (v Vehicle) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, v.Plate)
 }
 
-func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {
-	if in.Plate != "" {
+func (v Vehicle) UpdateIfChanged(in Vehicle) (Vehicle, bool) {
+	changed := false
+
+	if in.Plate != "" && in.Plate != v.Plate {
 		v.Plate = in.Plate
+		changed = true
 	}
-	if in.CertificateDate != "" {
+	if in.CertificateDate != "" && in.CertificateDate != v.CertificateDate {
 		v.CertificateDate = in.CertificateDate
+		changed = true
 	}
-	if in.Weight.Value != 0 {
+	if in.Weight.Value != 0 && in.Weight.Value != v.Weight.Value {
 		v.Weight.Value = in.Weight.Value
+		changed = true
 	}
-	if in.Weight.UnitOfMeasure != "" {
+	if in.Weight.UnitOfMeasure != "" && in.Weight.UnitOfMeasure != v.Weight.UnitOfMeasure {
 		v.Weight.UnitOfMeasure = in.Weight.UnitOfMeasure
+		changed = true
 	}
 
-	if in.Insurance.PolicyStartDate != "" {
+	if in.Insurance.PolicyStartDate != "" && in.Insurance.PolicyStartDate != v.Insurance.PolicyStartDate {
 		v.Insurance.PolicyStartDate = in.Insurance.PolicyStartDate
+		changed = true
 	}
-	if in.Insurance.PolicyExpirationDate != "" {
+	if in.Insurance.PolicyExpirationDate != "" && in.Insurance.PolicyExpirationDate != v.Insurance.PolicyExpirationDate {
 		v.Insurance.PolicyExpirationDate = in.Insurance.PolicyExpirationDate
+		changed = true
 	}
-	if in.Insurance.PolicyRenewalDate != "" {
+	if in.Insurance.PolicyRenewalDate != "" && in.Insurance.PolicyRenewalDate != v.Insurance.PolicyRenewalDate {
 		v.Insurance.PolicyRenewalDate = in.Insurance.PolicyRenewalDate
+		changed = true
 	}
-	if in.Insurance.MaxInsuranceCoverage.Amount != 0 {
+	if in.Insurance.MaxInsuranceCoverage.Amount != 0 && in.Insurance.MaxInsuranceCoverage.Amount != v.Insurance.MaxInsuranceCoverage.Amount {
 		v.Insurance.MaxInsuranceCoverage.Amount = in.Insurance.MaxInsuranceCoverage.Amount
+		changed = true
 	}
-	if in.Insurance.MaxInsuranceCoverage.Currency != "" {
+	if in.Insurance.MaxInsuranceCoverage.Currency != "" && in.Insurance.MaxInsuranceCoverage.Currency != v.Insurance.MaxInsuranceCoverage.Currency {
 		v.Insurance.MaxInsuranceCoverage.Currency = in.Insurance.MaxInsuranceCoverage.Currency
+		changed = true
 	}
 
-	if in.TechnicalReview.LastReviewDate != "" {
+	if in.TechnicalReview.LastReviewDate != "" && in.TechnicalReview.LastReviewDate != v.TechnicalReview.LastReviewDate {
 		v.TechnicalReview.LastReviewDate = in.TechnicalReview.LastReviewDate
+		changed = true
 	}
-	if in.TechnicalReview.NextReviewDate != "" {
+	if in.TechnicalReview.NextReviewDate != "" && in.TechnicalReview.NextReviewDate != v.TechnicalReview.NextReviewDate {
 		v.TechnicalReview.NextReviewDate = in.TechnicalReview.NextReviewDate
+		changed = true
 	}
-	if in.TechnicalReview.ReviewedBy != "" {
+	if in.TechnicalReview.ReviewedBy != "" && in.TechnicalReview.ReviewedBy != v.TechnicalReview.ReviewedBy {
 		v.TechnicalReview.ReviewedBy = in.TechnicalReview.ReviewedBy
+		changed = true
 	}
 
-	if in.Dimensions.Width != 0 {
+	if in.Dimensions.Width != 0 && in.Dimensions.Width != v.Dimensions.Width {
 		v.Dimensions.Width = in.Dimensions.Width
+		changed = true
 	}
-	if in.Dimensions.Length != 0 {
+	if in.Dimensions.Length != 0 && in.Dimensions.Length != v.Dimensions.Length {
 		v.Dimensions.Length = in.Dimensions.Length
+		changed = true
 	}
-	if in.Dimensions.Height != 0 {
+	if in.Dimensions.Height != 0 && in.Dimensions.Height != v.Dimensions.Height {
 		v.Dimensions.Height = in.Dimensions.Height
+		changed = true
 	}
-	if in.Dimensions.UnitOfMeasure != "" {
+	if in.Dimensions.UnitOfMeasure != "" && in.Dimensions.UnitOfMeasure != v.Dimensions.UnitOfMeasure {
 		v.Dimensions.UnitOfMeasure = in.Dimensions.UnitOfMeasure
+		changed = true
 	}
-	if in.VehicleCategory.Type != "" {
-		v.VehicleCategory = in.VehicleCategory
+
+	// Para VehicleCategory, actualizamos cada campo individualmente
+	if in.VehicleCategory.Type != "" && in.VehicleCategory.Type != v.VehicleCategory.Type {
+		v.VehicleCategory.Type = in.VehicleCategory.Type
+		changed = true
 	}
-	return v
+	if in.VehicleCategory.MaxPackagesQuantity != 0 && in.VehicleCategory.MaxPackagesQuantity != v.VehicleCategory.MaxPackagesQuantity {
+		v.VehicleCategory.MaxPackagesQuantity = in.VehicleCategory.MaxPackagesQuantity
+		changed = true
+	}
+
+	// Para IsActive, simplemente verificamos si es diferente
+	if in.IsActive != v.IsActive {
+		v.IsActive = in.IsActive
+		changed = true
+	}
+
+	return v, changed
 }

@@ -30,7 +30,7 @@ func NewUpsertVehicleCategory(conn tidb.TIDBConnection) UpsertVehicleCategory {
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.VehicleCategory{}, err
 		}
-		vehicleCategoryWithChanged := vehicleCategoryTbl.Map().UpdateIfChanged(vc)
+		vehicleCategoryWithChanged, _ := vehicleCategoryTbl.Map().UpdateIfChanged(vc)
 		DBVehicleCategoryToUpdate := mapper.MapVehicleCategory(ctx, vehicleCategoryWithChanged)
 		DBVehicleCategoryToUpdate.CreatedAt = vehicleCategoryTbl.CreatedAt
 		if err := conn.Save(&DBVehicleCategoryToUpdate).Error; err != nil {

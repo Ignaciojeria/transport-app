@@ -35,10 +35,3 @@ const (
 func (r Role) String() string {
 	return string(r)
 }
-
-func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
-	if newOperator.Role.String() != "" {
-		o.Role = newOperator.Role
-	}
-	return o
-}
