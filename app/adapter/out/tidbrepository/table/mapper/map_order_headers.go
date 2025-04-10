@@ -7,9 +7,9 @@ import (
 
 func MapOrderHeaders(c domain.Headers) table.OrderHeaders {
 	return table.OrderHeaders{
-		Commerce:       c.Commerce,
-		Consumer:       c.Consumer,
-		DocumentID:     string(c.DocID()),
-		OrganizationID: c.Organization.ID,
+		Commerce: c.Commerce,
+		Consumer: c.Consumer,
+		//DocumentID: string(c.DocID()),
+		//	OrganizationID: c.Organization.ID,
 	}
 }

@@ -22,12 +22,12 @@ func NewUpsertPlanType(conn tidb.TIDBConnection) UpsertPlanType {
 		var planType table.PlanType
 		err := conn.DB.WithContext(ctx).
 			Table("plan_types").
-			Where("document_id = ?", pt.DocID()).
+			Where("document_id = ?", pt.DocID(ctx)).
 			First(&planType).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return conn.
 				Omit("Organization").
-				Save(mapper.MapPlanType(pt)).Error
+				Save(mapper.MapPlanType(ctx, pt)).Error
 		}
 		return nil
 	}

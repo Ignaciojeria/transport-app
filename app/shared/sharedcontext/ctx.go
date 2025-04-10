@@ -1,16 +1,19 @@
-// sharedcontext/baggage_keys.go
 package sharedcontext
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
 	"go.opentelemetry.io/otel/baggage"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 const (
 	BaggageTenantID      = "tenant.id"
 	BaggageTenantCountry = "tenant.country"
+	BaggageAccountEmail  = "account.email"
 	BaggageConsumer      = "business.consumer"
 	BaggageCommerce      = "business.commerce"
 )
@@ -40,23 +43,41 @@ func AddEventContextToBaggage(ctx context.Context, evt EventContext) context.Con
 // CopyBaggageToAttributesCamelCase transforma keys tipo "tenant.id" -> "tenantId"
 func CopyBaggageToAttributesCamelCase(ctx context.Context, attrs map[string]string) {
 	bag := baggage.FromContext(ctx)
+	capitalizer := cases.Title(language.English)
 
 	for _, m := range bag.Members() {
-		// Convierte la clave a camelCase si tiene punto
 		keyParts := strings.Split(m.Key(), ".")
 		if len(keyParts) == 1 {
 			attrs[m.Key()] = m.Value()
 			continue
 		}
 
-		// Ejemplo: ["tenant", "id"] => "tenantId"
 		camelKey := keyParts[0]
 		for _, part := range keyParts[1:] {
 			if len(part) > 0 {
-				camelKey += strings.Title(part) // o usar capitalizeFirst(part)
+				camelKey += capitalizer.String(part)
 			}
 		}
 
 		attrs[camelKey] = m.Value()
 	}
+}
+
+func TenantIDFromContext(ctx context.Context) int64 {
+	bag := baggage.FromContext(ctx)
+	raw := bag.Member(BaggageTenantID).Value()
+	if raw == "" {
+		return 0
+	}
+	id, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil {
+		return 0
+	}
+	return id
+}
+
+func TenantCountryFromContext(ctx context.Context) string {
+	bag := baggage.FromContext(ctx)
+	raw := bag.Member(BaggageTenantCountry).Value()
+	return strings.ToUpper(raw)
 }

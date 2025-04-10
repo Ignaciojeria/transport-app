@@ -28,7 +28,7 @@ func searchAccountOperator(
 					PrimaryEmail: c.QueryParam("email"),
 				},
 			}
-			operator.Organization.SetKey(c.Header("organization"))
+
 			operator, err := search(c.Context(), operator)
 			if err != nil {
 				return response.SearchAccountResponse{}, err

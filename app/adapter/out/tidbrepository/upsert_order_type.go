@@ -19,28 +19,28 @@ func init() {
 	ioc.Registry(NewUpsertOrderType, tidb.NewTIDBConnection)
 }
 func NewUpsertOrderType(conn tidb.TIDBConnection) UpsertOrderType {
-    return func(ctx context.Context, ot domain.OrderType) error {
-        var existing table.OrderType
+	return func(ctx context.Context, ot domain.OrderType) error {
+		var existing table.OrderType
 
-        err := conn.DB.WithContext(ctx).
-            Table("order_types").
-            Where("document_id = ?", ot.DocID()).
-            First(&existing).Error
+		err := conn.DB.WithContext(ctx).
+			Table("order_types").
+			Where("document_id = ?", ot.DocID(ctx)).
+			First(&existing).Error
 
-        if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-            return err
-        }
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
 
-        if err == nil {
-            // Ya existe, no hacer nada
-            return nil
-        }
+		if err == nil {
+			// Ya existe, no hacer nada
+			return nil
+		}
 
-        // No existe - crear nuevo registro
-        newRecord := mapper.MapOrderType(ot) // Usando el mapper correcto
-        
-        return conn.DB.WithContext(ctx).
-            Omit("Organization").
-            Create(&newRecord).Error
-    }
+		// No existe - crear nuevo registro
+		newRecord := mapper.MapOrderType(ctx, ot) // Usando el mapper correcto
+
+		return conn.DB.WithContext(ctx).
+			Omit("Organization").
+			Create(&newRecord).Error
+	}
 }

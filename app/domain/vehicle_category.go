@@ -1,13 +1,14 @@
 package domain
 
+import "context"
+
 type VehicleCategory struct {
-	Organization        Organization
 	Type                string
 	MaxPackagesQuantity int
 }
 
-func (vc VehicleCategory) DocID() DocumentID {
-	return Hash(vc.Organization, vc.Type)
+func (vc VehicleCategory) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, vc.Type)
 }
 
 func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) VehicleCategory {

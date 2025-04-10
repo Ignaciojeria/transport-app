@@ -6,6 +6,7 @@ import (
 	views "transport-app/app/adapter/out/tidbrepository/views"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -120,7 +121,7 @@ func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
             o.organization_id = ?`
 
 		params := []interface{}{
-			osf.Organization.ID,
+			sharedcontext.TenantIDFromContext(ctx),
 		}
 
 		// Condición dinámica para LPNs

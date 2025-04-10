@@ -30,12 +30,8 @@ type Order struct {
 	TransportRequirements   []Reference
 }
 
-func (o Order) DocID() DocumentID {
-	return Hash(o.Organization, string(o.ReferenceID))
-}
-
-func (o Order) DocIDCtx(ctx context.Context) DocumentID {
-	return HashCtx(ctx, string(o.ReferenceID))
+func (o Order) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, string(o.ReferenceID))
 }
 
 func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {

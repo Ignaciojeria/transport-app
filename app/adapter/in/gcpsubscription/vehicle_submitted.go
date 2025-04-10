@@ -35,7 +35,7 @@ func newVehicleSubmitted(
 		// Completar datos adicionales desde los atributos del mensaje
 		domainOBJ.Commerce = m.Attributes["commerce"]
 		domainOBJ.Consumer = m.Attributes["consumer"]
-		domainOBJ.Organization.SetKey(m.Attributes["organization"])
+		//domainOBJ.Organization.SetKey(m.Attributes["organization"])
 		if err := upsert(ctx, domainOBJ); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

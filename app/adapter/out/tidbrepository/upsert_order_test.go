@@ -103,9 +103,9 @@ var _ = Describe("UpsertOrder", func() {
 	It("should insert a new order if it doesn't exist", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				//	Organization: organization1,
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID:          "ORDER-001",
 			OrderStatus:          orderStatus,
@@ -143,9 +143,9 @@ var _ = Describe("UpsertOrder", func() {
 	It("should update an existing order if delivery instructions changed", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				//	Organization: organization1,
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID:          "ORDER-002",
 			OrderStatus:          orderStatus,

@@ -34,7 +34,8 @@ type Vehicle struct {
 }
 
 func (v Vehicle) DocID() DocumentID {
-	return Hash(v.Organization, v.Plate)
+	//return Hash(v.Organization, v.Plate)
+	return ""
 }
 
 func (v Vehicle) UpdateIfChanged(in Vehicle) Vehicle {

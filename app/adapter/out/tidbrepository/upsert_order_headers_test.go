@@ -15,9 +15,9 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		ctx := context.Background()
 
 		h := domain.Headers{
-			Commerce:     "tienda-123",
-			Consumer:     "cliente-xyz",
-			Organization: organization1,
+			Commerce: "tienda-123",
+			Consumer: "cliente-xyz",
+			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
@@ -27,7 +27,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var result table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("document_id = ?", h.DocID()). 
+			Where("document_id = ?", h.DocID()).
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(result.DocumentID).To(Equal(string(h.DocID())))
@@ -38,17 +38,17 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		ctx := context.Background()
 
 		h := domain.Headers{
-			Commerce:     "tienda-existente",
-			Consumer:     "cliente-existente",
-			Organization: organization1,
+			Commerce: "tienda-existente",
+			Consumer: "cliente-existente",
+			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
-		
+
 		// Primera inserción
 		err := upsert(ctx, h)
 		Expect(err).ToNot(HaveOccurred())
-		
+
 		// Obtener timestamp de creación para comparar después
 		var firstRecord table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
@@ -56,15 +56,15 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 			Where("document_id = ?", h.DocID()).
 			First(&firstRecord).Error
 		Expect(err).ToNot(HaveOccurred())
-		
+
 		// Guardar el estado inicial
 		initialTimestamp := firstRecord.CreatedAt
 		initialID := firstRecord.ID
-		
+
 		// Intentar insertar el mismo registro de nuevo
 		err = upsert(ctx, h)
 		Expect(err).ToNot(HaveOccurred()) // No debería dar error
-		
+
 		// Verificar que no se creó un nuevo registro y que el existente no fue modificado
 		var count int64
 		err = connection.DB.WithContext(ctx).
@@ -73,7 +73,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(1))) // Solo debe existir un registro
-		
+
 		// Verificar que los datos no cambiaron
 		var updatedRecord table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
@@ -81,7 +81,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 			Where("document_id = ?", h.DocID()).
 			First(&updatedRecord).Error
 		Expect(err).ToNot(HaveOccurred())
-		
+
 		Expect(updatedRecord.ID).To(Equal(initialID))
 		Expect(updatedRecord.CreatedAt).To(Equal(initialTimestamp))
 	})
@@ -95,16 +95,16 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		// Esto simulará un error durante la consulta inicial
 		badConnection := connection
 		badConnection.DB = noTablesContainerConnection.DB
-		
+
 		h := domain.Headers{
-			Commerce:     "tienda-error",
-			Consumer:     "cliente-error",
-			Organization: organization1,
+			Commerce: "tienda-error",
+			Consumer: "cliente-error",
+			//	Organization: organization1,
 		}
-		
+
 		upsert := NewUpsertOrderHeaders(badConnection)
 		err := upsert(ctx, h)
-		
+
 		// Verificar que retorna un error
 		Expect(err).To(HaveOccurred())
 	})
@@ -114,9 +114,9 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		ctx := context.Background()
 
 		h := domain.Headers{
-			Commerce:     "tienda-123",
-			Consumer:     "cliente-xyz",
-			Organization: domain.Organization{}, // ID=0, Country=""
+			Commerce: "tienda-123",
+			Consumer: "cliente-xyz",
+			//	Organization: domain.Organization{}, // ID=0, Country=""
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
@@ -129,15 +129,15 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		ctx := context.Background()
 
 		h1 := domain.Headers{
-			Commerce:     "tienda-repetida",
-			Consumer:     "cliente-repetido",
-			Organization: organization1,
+			Commerce: "tienda-repetida",
+			Consumer: "cliente-repetido",
+			//	Organization: organization1,
 		}
 
 		h2 := domain.Headers{
-			Commerce:     "tienda-repetida",
-			Consumer:     "cliente-repetido",
-			Organization: organization2,
+			Commerce: "tienda-repetida",
+			Consumer: "cliente-repetido",
+			//	Organization: organization2,
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
@@ -162,9 +162,9 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		ctx := context.Background()
 
 		h := domain.Headers{
-			Commerce:     "tienda-sin-tablas",
-			Consumer:     "cliente-sin-tablas",
-			Organization: organization1,
+			Commerce: "tienda-sin-tablas",
+			Consumer: "cliente-sin-tablas",
+			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(noTablesContainerConnection)

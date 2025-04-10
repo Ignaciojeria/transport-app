@@ -1,11 +1,11 @@
 package domain
 
 import (
+	"context"
 	"time"
 )
 
 type Plan struct {
-	Headers
 	ReferenceID      string
 	Origin           NodeInfo
 	PlannedDate      time.Time
@@ -15,8 +15,8 @@ type Plan struct {
 	PlanType         PlanType
 }
 
-func (p Plan) DocID() DocumentID {
-	return Hash(p.Organization, p.ReferenceID)
+func (p Plan) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, p.ReferenceID)
 }
 
 func (p Plan) UpdateIfChanged(newPlan Plan) Plan {

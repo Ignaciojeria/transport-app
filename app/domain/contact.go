@@ -1,9 +1,12 @@
 package domain
 
-import "github.com/google/uuid"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type Contact struct {
-	Organization             Organization
 	FullName                 string
 	PrimaryEmail             string
 	PrimaryPhone             string
@@ -38,7 +41,7 @@ func (c ContactMethod) UpdateIfChange(newContact ContactMethod) (ContactMethod, 
 	return updated, changed
 }
 
-func (c Contact) DocID() DocumentID {
+func (c Contact) DocID(ctx context.Context) DocumentID {
 	var key string
 	switch {
 	case c.PrimaryEmail != "":
@@ -50,7 +53,7 @@ func (c Contact) DocID() DocumentID {
 	default:
 		key = uuid.NewString()
 	}
-	return Hash(c.Organization, key)
+	return Hash(ctx, key)
 }
 
 func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {

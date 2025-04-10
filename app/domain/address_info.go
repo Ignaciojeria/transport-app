@@ -1,13 +1,13 @@
 package domain
 
 import (
+	"context"
 	"transport-app/app/shared/utils"
 
 	"github.com/paulmach/orb"
 )
 
 type AddressInfo struct {
-	Organization      Organization
 	Contact           Contact
 	State             string
 	Province          string
@@ -20,9 +20,9 @@ type AddressInfo struct {
 	TimeZone          string
 }
 
-func (a AddressInfo) DocID() DocumentID {
+func (a AddressInfo) DocID(ctx context.Context) DocumentID {
 	return Hash(
-		a.Organization,
+		ctx,
 		a.AddressLine1,
 		a.District,
 		a.Province,

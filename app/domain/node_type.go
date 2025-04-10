@@ -1,17 +1,18 @@
 package domain
 
+import "context"
+
 type NodeType struct {
-	Organization Organization
-	Value        string
+	Value string
 }
 
 // DocID genera un identificador único para NodeType basado en Organization y Value.
 // Si Value está vacío, se usa un string vacío como clave.
-func (nt NodeType) DocID() DocumentID {
+func (nt NodeType) DocID(ctx context.Context) DocumentID {
 	if nt.Value == "" {
 		return ""
 	}
-	return DocumentID(Hash(nt.Organization, nt.Value))
+	return DocumentID(Hash(ctx, nt.Value))
 }
 
 func (nt NodeType) UpdateIfChange(newNodeType NodeType) (NodeType, bool) {

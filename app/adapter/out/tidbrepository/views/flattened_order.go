@@ -5,7 +5,6 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 
-	"github.com/biter777/countries"
 	"github.com/paulmach/orb"
 )
 
@@ -143,10 +142,6 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 		//ID:          o.OrderID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
 		Headers: domain.Headers{
-			Organization: domain.Organization{
-				ID:      o.OrganizationID,
-				Country: countries.ByName(o.OrganizationCountry),
-			},
 			Consumer: o.ConsumerName,
 			Commerce: o.CommerceName,
 		},

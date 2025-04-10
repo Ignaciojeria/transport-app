@@ -23,7 +23,6 @@ func searchPlanByReference(
 			searchFilters := domain.OrderSearchFilters{}
 			//searchFilters.Organization.Key = c.Header("organization-key")
 			//searchFilters.Organization.Country = countries.ByName(c.Header("country"))
-			searchFilters.Organization.SetKey(c.Header("organization"))
 			searchFilters.PlanReferenceID = c.PathParam("referenceID")
 			plan, err := searchPlan(c.Context(), searchFilters)
 			if err != nil {

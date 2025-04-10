@@ -5,6 +5,7 @@ import (
 	views "transport-app/app/adapter/out/tidbrepository/views"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -25,7 +26,9 @@ func NewSearchNodesQuery(conn tidb.TIDBConnection) SearchNodesQuery {
         WHERE org.id = ?
         LIMIT ? OFFSET ?
     `
-		params := []interface{}{p.Organization.ID, p.Size, p.Page}
+		params := []interface{}{
+			sharedcontext.TenantIDFromContext(ctx),
+			p.Size, p.Page}
 
 		if err := conn.DB.WithContext(ctx).Raw(query, params...).Scan(&nodes).Error; err != nil {
 			return nil, err

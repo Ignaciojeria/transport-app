@@ -1,13 +1,14 @@
 package domain
 
+import "context"
+
 type Carrier struct {
-	Organization Organization
-	Name         string
-	NationalID   string
+	Name       string
+	NationalID string
 }
 
-func (c Carrier) DocID() DocumentID {
-	return Hash(c.Organization, c.NationalID)
+func (c Carrier) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, c.NationalID)
 }
 
 func (c Carrier) UpdateIfChanged(newCarrier Carrier) (Carrier, bool) {

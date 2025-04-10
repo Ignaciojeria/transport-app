@@ -31,45 +31,46 @@ func NewUpsertPlan(
 	upsertOrder CreateOrder,
 ) UpsertPlan {
 	return func(ctx context.Context, plan domain.Plan) (domain.Plan, error) {
-		plan.PlanType.Organization = plan.Organization
-		err := upsertPlanType(ctx, plan.PlanType)
+		/*
+			plan.PlanType.Organization = plan.Organization
+			err := upsertPlanType(ctx, plan.PlanType)
 
-		for _, order := range plan.UnassignedOrders {
-			order.Organization = plan.Organization
-			err := upsertOrder(ctx, order)
-			if err != nil {
-				return domain.Plan{}, err
-			}
-		}
-
-		for _, route := range plan.Routes {
-			for _, order := range route.Orders {
+			for _, order := range plan.UnassignedOrders {
 				order.Organization = plan.Organization
 				err := upsertOrder(ctx, order)
 				if err != nil {
 					return domain.Plan{}, err
 				}
 			}
-		}
 
-		if err != nil {
-			return domain.Plan{}, err
-		}
-		plan.PlanningStatus.Organization = plan.Organization
-		err = upsertPlanningStatus(ctx, plan.PlanningStatus)
-		if err != nil {
-			return domain.Plan{}, err
-		}
-		for index := range plan.Routes {
-			plan.Routes[index].Organization = plan.Organization
-			plan.Routes[index].Operator.Organization = plan.Organization
-			operator, err := upsertOperator(ctx, plan.Routes[index].Operator)
+			for _, route := range plan.Routes {
+				for _, order := range route.Orders {
+					order.Organization = plan.Organization
+					err := upsertOrder(ctx, order)
+					if err != nil {
+						return domain.Plan{}, err
+					}
+				}
+			}
+
 			if err != nil {
 				return domain.Plan{}, err
 			}
-			plan.Routes[index].Operator = operator
-			plan.Routes[index].Organization = plan.Organization
-		}
+			plan.PlanningStatus.Organization = plan.Organization
+			err = upsertPlanningStatus(ctx, plan.PlanningStatus)
+			if err != nil {
+				return domain.Plan{}, err
+			}
+			for index := range plan.Routes {
+				plan.Routes[index].Organization = plan.Organization
+				plan.Routes[index].Operator.Organization = plan.Organization
+				operator, err := upsertOperator(ctx, plan.Routes[index].Operator)
+				if err != nil {
+					return domain.Plan{}, err
+				}
+				plan.Routes[index].Operator = operator
+				plan.Routes[index].Organization = plan.Organization
+			}*/
 		return domain.Plan{}, upsertPlan(ctx, plan)
 	}
 }

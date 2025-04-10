@@ -24,12 +24,10 @@ func NewCreateAccountOperator(
 	upsertOperator tidbrepository.UpsertOperator,
 ) CreateAccountOperator {
 	return func(ctx context.Context, input domain.Operator) (domain.Operator, error) {
-		input.Contact.Organization = input.Organization
 		err := upsertContact(ctx, input.Contact)
 		if err != nil {
 			return domain.Operator{}, err
 		}
-		input.OriginNode.Organization = input.Organization
 		err = upsertNodeInfo(ctx, input.OriginNode)
 		if err != nil {
 			return domain.Operator{}, err

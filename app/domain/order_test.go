@@ -388,9 +388,6 @@ var _ = Describe("Order DocID", func() {
 		}
 
 		order := Order{
-			Headers: Headers{
-				Organization: org,
-			},
 			ReferenceID: "REF-0001",
 		}
 

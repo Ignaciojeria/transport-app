@@ -32,7 +32,7 @@ func newOperatorSubmitted(
 			return http.StatusAccepted, err
 		}
 		operator := input.Map()
-		operator.Organization.SetKey(m.Attributes["organization"])
+		//operator.Organization.SetKey(m.Attributes["organization"])
 		if _, err := upsertOperator(ctx, operator); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

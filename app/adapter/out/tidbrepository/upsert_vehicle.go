@@ -22,7 +22,7 @@ func NewUpsertVehicle(conn tidb.TIDBConnection) UpsertVehicle {
 		vehicle := table.Vehicle{}
 		err := conn.DB.WithContext(ctx).Table("vehicles").
 			Where("reference_id = ? AND organization_id = ?",
-				string("TODO"), v.Organization.ID).First(&vehicle).Error
+				string("TODO"), "TODO").First(&vehicle).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Vehicle{}, err
 		}

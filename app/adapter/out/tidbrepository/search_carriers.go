@@ -5,6 +5,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -21,7 +22,7 @@ func NewSearchCarriers(conn tidb.TIDBConnection) SearchCarriers {
 		var carriers []table.Carrier
 		if err := conn.DB.WithContext(ctx).
 			Joins("JOIN organizations org ON carriers.organization_id = org.id"). // Se une directamente con organizations
-			Where("org.id = ?", csf.Organization.ID).                             // Filtra solo por organization_id
+			Where("org.id = ?", sharedcontext.TenantIDFromContext(ctx)).          // Filtra solo por organization_id
 			Limit(csf.Size).
 			Offset(csf.Page).
 			Find(&carriers).Error; err != nil {

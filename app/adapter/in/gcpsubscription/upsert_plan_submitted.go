@@ -33,7 +33,7 @@ func newPlanSubmitted(
 		}
 
 		inputMapped := input.Map()
-		inputMapped.Organization.SetKey(m.Attributes["organization"])
+		//inputMapped.Organization.SetKey(m.Attributes["organization"])
 
 		_, err := upsertPlan(ctx, inputMapped)
 		if err != nil {

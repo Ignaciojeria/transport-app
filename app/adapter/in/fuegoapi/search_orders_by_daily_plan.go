@@ -27,7 +27,6 @@ func searchOrdersByDailyPlan(
 				return nil, err
 			}
 			searchFilters := req.Map()
-			searchFilters.Organization.SetKey(c.Header("organization"))
 			orders, err := search(c.Context(), searchFilters)
 			if err != nil {
 				return nil, err

@@ -37,7 +37,6 @@ func upsertVehicle(
 
 			organization := domain.Organization{}
 			organization.SetKey(c.Header("organization"))
-			org, err := ensureOrg(c.Context(), organization)
 			if err != nil {
 				return response.UpsertVehicleResponse{}, fuego.HTTPError{
 					Title:  "error creating order",
@@ -58,9 +57,8 @@ func upsertVehicle(
 					"commerce":     c.Header("commerce"),
 					"referenceID":  requestBody.ReferenceID,
 				},
-				Status:       "pending",
-				Organization: org,
-				Payload:      requestBodyBytes,
+				Status:  "pending",
+				Payload: requestBodyBytes,
 			}); err != nil {
 				return response.UpsertVehicleResponse{}, err
 			}

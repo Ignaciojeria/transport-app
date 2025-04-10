@@ -72,9 +72,7 @@ func NewLogin(
 			return domain.ProviderToken{}, err
 		}
 
-		customClaims := map[string]interface{}{
-			"primary_org": uc.PrimaryOrganization.GetOrgKey(),
-		}
+		customClaims := map[string]interface{}{} // TODO
 
 		err = authClient.SetCustomUserClaims(ctx, uid, customClaims)
 		if err != nil {

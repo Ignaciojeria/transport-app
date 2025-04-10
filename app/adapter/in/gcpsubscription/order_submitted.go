@@ -35,15 +35,8 @@ func newOrderSubmitted(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		// Mapear al dominio desde el request
-		domainOBJ := input.Map()
-		domainOBJ.DocIDCtx(ctx)
-		// Completar datos adicionales desde los atributos del mensaje
-		domainOBJ.Commerce = m.Attributes["commerce"]
-		domainOBJ.Consumer = m.Attributes["consumer"]
-		domainOBJ.Organization.SetKey(m.Attributes["organization"])
-		if err := createOrder(ctx, domainOBJ); err != nil {
-			m.Ack()
+		if err := createOrder(ctx, input.Map()); err != nil {
+			m.Nack()
 			return http.StatusAccepted, err
 		}
 		m.Ack()

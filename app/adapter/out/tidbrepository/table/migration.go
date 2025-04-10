@@ -25,7 +25,6 @@ func NewRunMigrations(
 		}
 		// Lista de tablas que tienen un campo ID como clave primaria
 		tables := []interface{}{
-			&EventOutbox{},
 			&PlanType{},
 			&PlanningStatus{},
 			&PlanType{},

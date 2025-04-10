@@ -23,7 +23,6 @@ func searchCarriers(s httpserver.Server, search usecase.SearchCarriers) {
 	fuego.Get(s.Manager, "/carriers",
 		func(c fuego.ContextNoBody) ([]response.SearchCarriersResponse, error) {
 			searchFilters := domain.CarrierSearchFilters{}
-			searchFilters.Organization.SetKey(c.Header("organization"))
 
 			page := c.QueryParam("page")
 			if page == "" {

@@ -33,7 +33,7 @@ func newNodeSubmitted(
 			return http.StatusAccepted, err
 		}
 		node := input.Map()
-		node.Organization.SetKey(m.Attributes["organization"])
+		//node.Organization.SetKey(m.Attributes["organization"])
 		if err := upsert(ctx, node); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

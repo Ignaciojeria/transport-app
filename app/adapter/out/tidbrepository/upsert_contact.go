@@ -24,7 +24,7 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 		err := conn.DB.WithContext(ctx).
 			Table("contacts").
 			Preload("Organization").
-			Where("document_id = ?", c.DocID()).
+			Where("document_id = ?", c.DocID(ctx)).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -33,7 +33,7 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// No existe → insert
-			newContact := mapper.MapContactToTable(c, c.Organization.ID)
+			newContact := mapper.MapContactToTable(ctx, c)
 			return conn.Omit("Organization").Create(&newContact).Error
 		}
 
@@ -43,7 +43,7 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 			return nil
 		}
 
-		updateData := mapper.MapContactToTable(updated, c.Organization.ID)
+		updateData := mapper.MapContactToTable(ctx, updated)
 		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 		updateData.CreatedAt = existing.CreatedAt
 

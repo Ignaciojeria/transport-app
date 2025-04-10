@@ -1,13 +1,14 @@
 package domain
 
+import "context"
+
 type OrderType struct {
-	Organization Organization
-	Type         string
-	Description  string
+	Type        string
+	Description string
 }
 
-func (ot OrderType) DocID() DocumentID {
-	return Hash(ot.Organization, ot.Type)
+func (ot OrderType) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, ot.Type)
 }
 
 func (ot OrderType) UpdateIfChanged(newOrderType OrderType) (OrderType, bool) {

@@ -1,10 +1,9 @@
 package domain
 
 type Outbox struct {
-	CreatedAt    string
-	UpdatedAt    string
-	Organization Organization
-	Attributes   map[string]string
-	Payload      []byte
-	Status       string
+	CreatedAt  string
+	UpdatedAt  string
+	Attributes map[string]string
+	Payload    []byte
+	Status     string
 }

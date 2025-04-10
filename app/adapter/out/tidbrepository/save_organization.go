@@ -6,8 +6,10 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"gorm.io/gorm"
 )
 
@@ -21,12 +23,13 @@ func init() {
 type SaveOrganization func(
 	context.Context,
 	domain.Operator,
+	string,
 ) (domain.Organization, error)
 
 func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
-	return func(ctx context.Context, o domain.Operator) (domain.Organization, error) {
+	return func(ctx context.Context, o domain.Operator, orgName string) (domain.Organization, error) {
 		// Mapear la entidad del dominio a la tabla
-		tableOrg := mapper.MapOrganizationToTable(o.Organization)
+		tableOrg := mapper.MapOrganizationToTable(ctx, orgName)
 
 		var account table.Account
 		err := conn.Where("email = ?", o.Contact.PrimaryEmail).Find(&account).Error
@@ -37,7 +40,6 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := conn.DB.Create(&tableOrg).Error; err != nil {
 				return ErrOrganizationDatabase.New("failed to create organization: %v", err)
-
 			}
 			accountOrg.AccountID = account.ID
 			accountOrg.OrganizationID = tableOrg.ID
@@ -52,8 +54,8 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		// Mapear de vuelta a la entidad de dominio
 		savedOrg := domain.Organization{
 			ID:      tableOrg.ID,
-			Country: o.Organization.Country,
-			Name:    o.Organization.Name,
+			Country: countries.ByName(sharedcontext.TenantCountryFromContext(ctx)),
+			Name:    orgName,
 		}
 		return savedOrg, nil
 	}

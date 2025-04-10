@@ -1,16 +1,17 @@
 package domain
 
+import "context"
+
 type Package struct {
 	Lpn            string
-	Organization   Organization
 	Dimensions     Dimensions
 	Weight         Weight
 	Insurance      Insurance
 	ItemReferences []ItemReference
 }
 
-func (p Package) DocID() DocumentID {
-	return Hash(p.Organization, p.Lpn)
+func (p Package) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, p.Lpn)
 }
 
 func SearchPackageByLpn(pcks []Package, lpn string) Package {

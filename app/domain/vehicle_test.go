@@ -1,9 +1,9 @@
 package domain
 
 import (
+	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/biter777/countries"
 )
 
 var _ = Describe("Vehicle", func() {
@@ -12,8 +12,7 @@ var _ = Describe("Vehicle", func() {
 	Describe("DocID", func() {
 		It("should generate DocumentID based on Organization and Plate", func() {
 			vehicle := Vehicle{
-				Headers: Headers{Organization: org},
-				Plate:   "ABC123",
+				Plate: "ABC123",
 			}
 
 			Expect(vehicle.DocID()).To(Equal(Hash(org, "ABC123")))
@@ -25,7 +24,6 @@ var _ = Describe("Vehicle", func() {
 
 		BeforeEach(func() {
 			base = Vehicle{
-				Headers:         Headers{Organization: org},
 				Plate:           "ABC123",
 				IsActive:        true,
 				CertificateDate: "2024-01-01",

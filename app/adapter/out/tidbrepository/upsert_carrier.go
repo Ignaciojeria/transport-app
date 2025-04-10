@@ -22,12 +22,12 @@ func NewUpsertCarrier(conn tidb.TIDBConnection) UpsertCarrier {
 		carrier := table.Carrier{}
 		err := conn.DB.WithContext(ctx).Table("carriers").
 			Where("reference_id = ? AND organization_id = ?",
-				string("TODO"), c.Organization.ID).First(&carrier).Error
+				string("TODO"), "TODO").First(&carrier).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Carrier{}, err
 		}
 		carrierWithChanges, _ := carrier.Map().UpdateIfChanged(c)
-		DBCarrierToUpsert := mapper.MapCarrierToTable(carrierWithChanges)
+		DBCarrierToUpsert := mapper.MapCarrierToTable(ctx, carrierWithChanges)
 		DBCarrierToUpsert.CreatedAt = carrier.CreatedAt
 		if err := conn.Save(&DBCarrierToUpsert).Error; err != nil {
 			return domain.Carrier{}, err
