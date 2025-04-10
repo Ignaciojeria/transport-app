@@ -41,7 +41,6 @@ var _ = Describe("Vehicle", func() {
 		BeforeEach(func() {
 			base = Vehicle{
 				Plate:           "ABC123",
-				IsActive:        true,
 				CertificateDate: "2024-01-01",
 				VehicleCategory: VehicleCategory{
 					Type:                "VAN",
@@ -195,19 +194,11 @@ var _ = Describe("Vehicle", func() {
 			updated, changed := base.UpdateIfChanged(Vehicle{
 				Plate:           "ABC123",     // Mismo valor que base
 				CertificateDate: "2024-01-01", // Mismo valor que base
-				IsActive:        true,         // Mismo valor que base
+
 			})
 
 			Expect(changed).To(BeFalse())
 			Expect(updated).To(Equal(base))
-		})
-
-		It("should only update IsActive when it changes", func() {
-			updated, changed := base.UpdateIfChanged(Vehicle{
-				IsActive: false, // Valor diferente al original (true)
-			})
-			Expect(changed).To(BeTrue())
-			Expect(updated.IsActive).To(BeFalse())
 		})
 
 		It("should update vehicle category MaxPackagesQuantity even if Type is the same", func() {

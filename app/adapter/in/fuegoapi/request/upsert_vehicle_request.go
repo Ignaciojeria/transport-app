@@ -41,7 +41,6 @@ type UpsertVehicleRequest struct {
 func (v UpsertVehicleRequest) Map() domain.Vehicle {
 	return domain.Vehicle{
 		Plate:           v.Plate,
-		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
 		VehicleCategory: domain.VehicleCategory{
 			Type: v.Category,

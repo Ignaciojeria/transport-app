@@ -567,7 +567,6 @@ func (v Vehicle) Map() domain.Vehicle {
 	return domain.Vehicle{
 		//ReferenceID:     v.ReferenceID,
 		Plate:           v.Plate,
-		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
 		VehicleCategory: domain.VehicleCategory{
 			Type:                v.VehicleCategory.Type,

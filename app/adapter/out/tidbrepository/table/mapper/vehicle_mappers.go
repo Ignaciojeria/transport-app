@@ -15,7 +15,6 @@ func DomainToTableVehicle(d domain.Vehicle) table.Vehicle {
 
 	return table.Vehicle{
 		Plate:             d.Plate,
-		IsActive:          d.IsActive,
 		CertificateDate:   d.CertificateDate,
 		VehicleCategoryID: vehicleCategoryID,
 		//	OrganizationID:    d.Organization.ID,

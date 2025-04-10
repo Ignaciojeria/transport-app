@@ -5,7 +5,6 @@ import "context"
 type Vehicle struct {
 	Headers
 	Plate           string
-	IsActive        bool
 	CertificateDate string
 	VehicleCategory VehicleCategory
 	Weight          struct {
@@ -117,12 +116,6 @@ func (v Vehicle) UpdateIfChanged(in Vehicle) (Vehicle, bool) {
 	}
 	if in.VehicleCategory.MaxPackagesQuantity != 0 && in.VehicleCategory.MaxPackagesQuantity != v.VehicleCategory.MaxPackagesQuantity {
 		v.VehicleCategory.MaxPackagesQuantity = in.VehicleCategory.MaxPackagesQuantity
-		changed = true
-	}
-
-	// Para IsActive, simplemente verificamos si es diferente
-	if in.IsActive != v.IsActive {
-		v.IsActive = in.IsActive
 		changed = true
 	}
 
