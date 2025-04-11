@@ -10,13 +10,13 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertPackages func(context.Context, []domain.Package) error
+type UpsertPackages func(context.Context, []domain.Package, string) error
 
 func init() {
 	ioc.Registry(NewUpsertPackages, tidb.NewTIDBConnection)
 }
 func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
-	return func(ctx context.Context, pcks []domain.Package) error {
+	return func(ctx context.Context, pcks []domain.Package, orderReference string) error {
 		if len(pcks) == 0 {
 			return nil
 		}
@@ -25,7 +25,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		docIDs := make([]string, 0, len(pcks))
 		docIDToPackage := make(map[string]domain.Package, len(pcks))
 		for _, p := range pcks {
-			docID := string(p.DocID(ctx))
+			docID := string(p.DocID(ctx, orderReference))
 			docIDs = append(docIDs, docID)
 			docIDToPackage[docID] = p
 		}
@@ -52,7 +52,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 			domainPkg := docIDToPackage[docID]
 			if existingPkg, found := existingMap[docID]; found {
 				updatedDomainPkg, _ := existingPkg.Map().UpdateIfChanged(domainPkg)
-				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg)
+				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg, orderReference)
 
 				// Preservar campos importantes
 				updatedTablePkg.ID = existingPkg.ID
@@ -61,7 +61,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 
 				DBpackagesToUpsert = append(DBpackagesToUpsert, updatedTablePkg)
 			} else {
-				newTablePkg := mapper.MapPackageToTable(ctx, domainPkg)
+				newTablePkg := mapper.MapPackageToTable(ctx, domainPkg, orderReference)
 				DBpackagesToUpsert = append(DBpackagesToUpsert, newTablePkg)
 			}
 		}

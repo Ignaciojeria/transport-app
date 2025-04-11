@@ -40,7 +40,7 @@ var _ = Describe("UpsertPackages", func() {
 
 	It("should handle empty package slice", func() {
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx1, []domain.Package{})
+		err := upsert(ctx1, []domain.Package{}, "")
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -95,7 +95,7 @@ var _ = Describe("UpsertPackages", func() {
 		// Insertar los paquetes
 		packages := []domain.Package{package1, package2}
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx1, packages)
+		err := upsert(ctx1, packages, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se insertaron correctamente
@@ -179,11 +179,11 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Importante: Guardamos el DocID del paquete inicial para usarlo en la actualización
-		initialDocID := initialPackage.DocID(ctx1)
+		initialDocID := initialPackage.DocID(ctx1, "")
 
 		// Insertar el paquete inicial
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx1, []domain.Package{initialPackage})
+		err := upsert(ctx1, []domain.Package{initialPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Obtener el registro creado y su timestamp
@@ -233,11 +233,11 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Verificar que generan el mismo DocID
-		updatedDocID := updatedPackage.DocID(ctx1)
+		updatedDocID := updatedPackage.DocID(ctx1, "")
 		Expect(updatedDocID).To(Equal(initialDocID), "Los DocIDs deben ser iguales para la actualización")
 
 		// Actualizar el paquete
-		err = upsert(ctx1, []domain.Package{updatedPackage})
+		err = upsert(ctx1, []domain.Package{updatedPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
@@ -291,11 +291,11 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Guardar el DocID del paquete existente
-		existingDocID := existingPackage.DocID(ctx1)
+		existingDocID := existingPackage.DocID(ctx1, "")
 
 		// Insertar el paquete inicial
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx1, []domain.Package{existingPackage})
+		err := upsert(ctx1, []domain.Package{existingPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un nuevo paquete para inserción
@@ -321,12 +321,12 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Verificar que el DocID del paquete actualizado coincide con el original
-		updatedDocID := updatedExistingPackage.DocID(ctx1)
+		updatedDocID := updatedExistingPackage.DocID(ctx1, "")
 		Expect(updatedDocID).To(Equal(existingDocID), "Los DocIDs deben ser iguales para actualizar")
 
 		// Insertar ambos paquetes
 		mixedPackages := []domain.Package{newPackage, updatedExistingPackage}
-		err = upsert(ctx1, mixedPackages)
+		err = upsert(ctx1, mixedPackages, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que hay dos paquetes en la base de datos
@@ -383,11 +383,11 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar paquete para org1
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx1, []domain.Package{package1})
+		err := upsert(ctx1, []domain.Package{package1}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Insertar paquete para org2
-		err = upsert(ctx2, []domain.Package{package2})
+		err = upsert(ctx2, []domain.Package{package2}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que hay dos paquetes en la base de datos
@@ -409,7 +409,7 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(orgs[organization2.ID]).To(BeTrue())
 
 		// Verify they have different document IDs
-		Expect(package1.DocID(ctx1)).ToNot(Equal(package2.DocID(ctx2)))
+		Expect(package1.DocID(ctx1, "")).ToNot(Equal(package2.DocID(ctx2, "")))
 	})
 
 	It("should fail when database has no packages table", func() {
@@ -418,7 +418,7 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		upsert := NewUpsertPackages(noTablesContainerConnection)
-		err := upsert(ctx1, []domain.Package{package1})
+		err := upsert(ctx1, []domain.Package{package1}, "")
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("packages"))
@@ -438,9 +438,229 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Usar conexión sin tablas
 		upsert := NewUpsertPackages(noTablesContainerConnection)
-		err := upsert(ctx1, []domain.Package{pkg})
+		err := upsert(ctx1, []domain.Package{pkg}, "")
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("packages"))
 	})
+
+	It("should correctly handle packages without LPN", func() {
+		// Crear un paquete sin LPN pero con items
+		package1 := domain.Package{
+			Lpn: "",
+			Items: []domain.Item{
+				{
+					Sku:         "NO-LPN-ITEM-001",
+					Description: "Item sin LPN",
+					Quantity: domain.Quantity{
+						QuantityNumber: 2,
+						QuantityUnit:   "unit",
+					},
+				},
+			},
+		}
+
+		// Insertar el paquete
+		orderRef := "ORDER-REF-001"
+		upsert := NewUpsertPackages(connection)
+		err := upsert(ctx1, []domain.Package{package1}, orderRef)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar DocID generado
+		expectedDocID := package1.DocID(ctx1, orderRef)
+
+		// Verificar que se insertó correctamente
+		var dbPackage table.Package
+		err = connection.DB.WithContext(ctx1).
+			Table("packages").
+			Where("document_id = ?", string(expectedDocID)).
+			First(&dbPackage).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que el LPN se mantiene vacío en la BD
+		Expect(dbPackage.Lpn).To(Equal(""))
+
+		// Verificar items
+		items := dbPackage.JSONItems.Map()
+		Expect(items).To(HaveLen(1))
+		Expect(items[0].Sku).To(Equal("NO-LPN-ITEM-001"))
+	})
+
+	It("should correctly update packages without LPN", func() {
+		// Crear un paquete sin LPN pero con items
+		initialPackage := domain.Package{
+			Lpn: "",
+			Items: []domain.Item{
+				{
+					Sku:         "UPDATE-NO-LPN-001",
+					Description: "Item inicial sin LPN",
+					Quantity: domain.Quantity{
+						QuantityNumber: 1,
+						QuantityUnit:   "unit",
+					},
+				},
+			},
+		}
+
+		// Insertar el paquete
+		orderRef := "ORDER-REF-002"
+		upsert := NewUpsertPackages(connection)
+		err := upsert(ctx1, []domain.Package{initialPackage}, orderRef)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Guardar el DocID
+		initialDocID := initialPackage.DocID(ctx1, orderRef)
+
+		// Crear un paquete actualizado (mismo SKU para generar mismo DocID)
+		updatedPackage := domain.Package{
+			Lpn: "",
+			Items: []domain.Item{
+				{
+					Sku:         "UPDATE-NO-LPN-001",        // Mismo SKU
+					Description: "Item actualizado sin LPN", // Descripción cambiada
+					Quantity: domain.Quantity{
+						QuantityNumber: 3, // Cantidad cambiada
+						QuantityUnit:   "unit",
+					},
+				},
+			},
+		}
+
+		// Verificar que generan el mismo DocID
+		updatedDocID := updatedPackage.DocID(ctx1, orderRef)
+		Expect(updatedDocID).To(Equal(initialDocID))
+
+		// Actualizar el paquete
+		err = upsert(ctx1, []domain.Package{updatedPackage}, orderRef)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que se actualizó correctamente
+		var dbPackage table.Package
+		err = connection.DB.WithContext(ctx1).
+			Table("packages").
+			Where("document_id = ?", string(initialDocID)).
+			First(&dbPackage).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que el paquete se actualizó correctamente
+		items := dbPackage.JSONItems.Map()
+		Expect(items[0].Description).To(Equal("Item actualizado sin LPN"))
+		Expect(items[0].Quantity.QuantityNumber).To(Equal(3))
+	})
+
+	It("should handle partial updates correctly", func() {
+		// Crear un paquete completo
+		initialPackage := domain.Package{
+			Lpn: "PARTIAL-UPDATE-PKG",
+			Dimensions: domain.Dimensions{
+				Length: 10.0,
+				Width:  20.0,
+				Height: 30.0,
+				Unit:   "cm",
+			},
+			Weight: domain.Weight{
+				Value: 5.0,
+				Unit:  "kg",
+			},
+			Insurance: domain.Insurance{
+				UnitValue: 1000.0,
+				Currency:  "USD",
+			},
+			Items: []domain.Item{
+				{
+					Sku:         "ITEM-PARTIAL",
+					Description: "Item original",
+					Quantity: domain.Quantity{
+						QuantityNumber: 1,
+						QuantityUnit:   "unit",
+					},
+				},
+			},
+		}
+
+		// Insertar el paquete
+		upsert := NewUpsertPackages(connection)
+		err := upsert(ctx1, []domain.Package{initialPackage}, "")
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear un paquete con solo algunos campos actualizados
+		partialUpdate := domain.Package{
+			Lpn: "PARTIAL-UPDATE-PKG", // Mismo LPN
+			Weight: domain.Weight{ // Solo actualizar peso
+				Value: 10.0,
+				Unit:  "kg",
+			},
+			// Otros campos vacíos o con valores por defecto
+		}
+
+		// Actualizar el paquete
+		err = upsert(ctx1, []domain.Package{partialUpdate}, "")
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que solo se actualizó el campo de peso
+		var dbPackage table.Package
+		err = connection.DB.WithContext(ctx1).
+			Table("packages").
+			Where("lpn = ?", "PARTIAL-UPDATE-PKG").
+			First(&dbPackage).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar peso actualizado
+		weight := dbPackage.JSONWeight.Map()
+		Expect(weight.Value).To(Equal(10.0))
+
+		// Verificar que otros campos se mantuvieron igual
+		dimensions := dbPackage.JSONDimensions.Map()
+		Expect(dimensions.Length).To(Equal(10.0))
+		Expect(dimensions.Unit).To(Equal("cm"))
+
+		insurance := dbPackage.JSONInsurance.Map()
+		Expect(insurance.UnitValue).To(Equal(1000.0))
+
+		items := dbPackage.JSONItems.Map()
+		Expect(items[0].Description).To(Equal("Item original"))
+	})
+
+	It("should handle packages with different orderReference", func() {
+		// Crear un paquete sin LPN
+		package1 := domain.Package{
+			Lpn: "",
+			Items: []domain.Item{
+				{
+					Sku:         "ORDER-REF-ITEM",
+					Description: "Item referencia orden",
+				},
+			},
+		}
+
+		// Insertar con una referencia de orden
+		orderRef1 := "ORDER-REF-A"
+		upsert := NewUpsertPackages(connection)
+		err := upsert(ctx1, []domain.Package{package1}, orderRef1)
+		Expect(err).ToNot(HaveOccurred())
+
+		// DocID con la primera referencia
+		docID1 := package1.DocID(ctx1, orderRef1)
+
+		// Insertar el mismo paquete con otra referencia de orden
+		orderRef2 := "ORDER-REF-B"
+		err = upsert(ctx1, []domain.Package{package1}, orderRef2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// DocID con la segunda referencia
+		docID2 := package1.DocID(ctx1, orderRef2)
+
+		// Los DocIDs deberían ser diferentes
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verificar que ambos paquetes existen en la BD
+		var count int64
+		err = connection.DB.WithContext(ctx1).
+			Table("packages").
+			Where("document_id IN ?", []string{string(docID1), string(docID2)}).
+			Count(&count).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(count).To(Equal(int64(2)))
+	})
+
 })

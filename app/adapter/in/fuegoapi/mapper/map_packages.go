@@ -61,6 +61,7 @@ func MapPackagesToDomain(packages []struct {
 				Currency:  pkg.Insurance.Currency,
 				UnitValue: pkg.Insurance.UnitValue,
 			},
+			Items: MapItemsToDomain(pkg.Items),
 		}
 	}
 	return mapped

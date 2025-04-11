@@ -75,7 +75,10 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-			return upsertPackages(ctx, inOrder.Packages)
+			return upsertPackages(ctx, inOrder.Packages,
+				inOrder.
+					ReferenceID.
+					String())
 		})
 
 		group.Go(func() error {
