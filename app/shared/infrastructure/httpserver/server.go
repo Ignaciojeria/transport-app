@@ -89,6 +89,10 @@ func injectBaggageMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
+		if strings.HasPrefix(r.URL.Path, "/swagger/") {
+			next.ServeHTTP(w, r)
+			return
+		}
 		orgHeader := r.Header.Get("organization")
 		if orgHeader == "" {
 			http.Error(w, "missing organization header", http.StatusBadRequest)

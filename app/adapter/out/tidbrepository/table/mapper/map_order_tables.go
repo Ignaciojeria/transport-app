@@ -3,6 +3,7 @@ package mapper
 import (
 	"context"
 	"time"
+
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/sharedcontext"
@@ -42,7 +43,6 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		PromisedDateRangeEnd:              safePtrTime(order.PromisedDate.DateRange.EndDate),
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
-		JSONItems:                         mapItemsToTable(order.Items),
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
 		Packages:                          MapPackagesToTable(ctx, order.Packages),
 	}
@@ -116,7 +116,6 @@ func MapPackagesToTable(ctx context.Context, packages []domain.Package) []table.
 				UnitValue: pkg.Insurance.UnitValue,
 				Currency:  pkg.Insurance.Currency,
 			},
-			JSONItemsReferences: mapDomainItemsToTable(pkg.ItemReferences),
 		}
 	}
 	return mapped
@@ -153,7 +152,7 @@ func MapPackageToTable(ctx context.Context, pkg domain.Package) table.Package {
 			UnitValue: pkg.Insurance.UnitValue,
 			Currency:  pkg.Insurance.Currency,
 		},
-		JSONItemsReferences: mapDomainItemsToTable(pkg.ItemReferences),
+		JSONItems: mapItemsToTable(pkg.Items),
 	}
 }
 

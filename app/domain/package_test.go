@@ -92,9 +92,25 @@ var _ = Describe("Package", func() {
 					UnitValue: 1000.0,
 					Currency:  "USD",
 				},
-				ItemReferences: []ItemReference{
-					{Sku: "ITEM001", Quantity: Quantity{QuantityNumber: 2, QuantityUnit: "unit"}},
-					{Sku: "ITEM002", Quantity: Quantity{QuantityNumber: 1, QuantityUnit: "unit"}},
+				Items: []Item{
+					{
+						Sku:         "ITEM001",
+						Description: "Item 1 Description",
+						Quantity:    Quantity{QuantityNumber: 2, QuantityUnit: "unit"},
+						Weight: Weight{
+							Value: 1.0,
+							Unit:  "kg",
+						},
+					},
+					{
+						Sku:         "ITEM002",
+						Description: "Item 2 Description",
+						Quantity:    Quantity{QuantityNumber: 1, QuantityUnit: "unit"},
+						Weight: Weight{
+							Value: 0.5,
+							Unit:  "kg",
+						},
+					},
 				},
 			}
 		})
@@ -112,7 +128,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
-			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
+			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
 		It("should update Dimensions", func() {
@@ -133,7 +149,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
-			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
+			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
 		It("should update Weight", func() {
@@ -152,7 +168,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
-			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
+			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
 		It("should update Insurance", func() {
@@ -171,21 +187,37 @@ var _ = Describe("Package", func() {
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
+			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
-		It("should update ItemReferences", func() {
+		It("should update Items", func() {
 			newPackage := Package{
-				ItemReferences: []ItemReference{
-					{Sku: "ITEM003", Quantity: Quantity{QuantityNumber: 3, QuantityUnit: "unit"}},
-					{Sku: "ITEM004", Quantity: Quantity{QuantityNumber: 4, QuantityUnit: "box"}},
+				Items: []Item{
+					{
+						Sku:         "ITEM003",
+						Description: "New Item 3",
+						Quantity:    Quantity{QuantityNumber: 3, QuantityUnit: "unit"},
+						Weight: Weight{
+							Value: 1.5,
+							Unit:  "kg",
+						},
+					},
+					{
+						Sku:         "ITEM004",
+						Description: "New Item 4",
+						Quantity:    Quantity{QuantityNumber: 4, QuantityUnit: "box"},
+						Weight: Weight{
+							Value: 2.0,
+							Unit:  "kg",
+						},
+					},
 				},
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
 			Expect(changed).To(BeTrue())
-			Expect(updated.ItemReferences).To(Equal(newPackage.ItemReferences))
+			Expect(updated.Items).To(Equal(newPackage.Items))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
@@ -213,8 +245,16 @@ var _ = Describe("Package", func() {
 					Value: 8.0,
 					Unit:  "oz",
 				},
-				ItemReferences: []ItemReference{
-					{Sku: "ITEM005", Quantity: Quantity{QuantityNumber: 5, QuantityUnit: "pallet"}},
+				Items: []Item{
+					{
+						Sku:         "ITEM005",
+						Description: "New Item for Multi-update",
+						Quantity:    Quantity{QuantityNumber: 5, QuantityUnit: "pallet"},
+						Weight: Weight{
+							Value: 3.0,
+							Unit:  "kg",
+						},
+					},
 				},
 			}
 
@@ -223,27 +263,27 @@ var _ = Describe("Package", func() {
 			Expect(changed).To(BeTrue())
 			Expect(updated.Lpn).To(Equal("PKG-MULTI-UPDATE"))
 			Expect(updated.Weight).To(Equal(newPackage.Weight))
-			Expect(updated.ItemReferences).To(Equal(newPackage.ItemReferences))
+			Expect(updated.Items).To(Equal(newPackage.Items))
 			// Estos campos no deberían cambiar
 			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 		})
 
-		It("should handle empty ItemReferences array", func() {
-			// Primero confirmar que tenemos referencias iniciales
-			Expect(basePackage.ItemReferences).ToNot(BeEmpty())
+		It("should handle empty Items array", func() {
+			// Primero confirmar que tenemos items iniciales
+			Expect(basePackage.Items).ToNot(BeEmpty())
 
 			// Intentar actualizar con un array vacío
 			newPackage := Package{
-				ItemReferences: []ItemReference{},
+				Items: []Item{},
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
-			// Las referencias deberían mantenerse sin cambios, ya que el array vacío
+			// Los items deberían mantenerse sin cambios, ya que el array vacío
 			// no debería sobrescribir los valores existentes según la lógica del método
 			Expect(changed).To(BeFalse())
-			Expect(updated.ItemReferences).To(Equal(basePackage.ItemReferences))
+			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 	})
 })

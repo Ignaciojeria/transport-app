@@ -251,25 +251,34 @@ func (j JSONReference) Value() (driver.Value, error) {
 
 type Package struct {
 	gorm.Model
-	ID                  int64              `gorm:"primaryKey"`
-	OrganizationID      int64              `gorm:"not null;"`
-	Organization        Organization       `gorm:"foreignKey:OrganizationID"`
-	DocumentID          string             `gorm:"type:char(32);uniqueIndex"`
-	Lpn                 string             `gorm:"type:varchar(191);not null;"`
-	JSONDimensions      JSONDimensions     `gorm:"type:json"`
-	JSONWeight          JSONWeight         `gorm:"type:json"`
-	JSONInsurance       JSONInsurance      `gorm:"type:json"`
-	JSONItemsReferences JSONItemReferences `gorm:"type:json"`
+	ID             int64          `gorm:"primaryKey"`
+	OrganizationID int64          `gorm:"not null;"`
+	Organization   Organization   `gorm:"foreignKey:OrganizationID"`
+	DocumentID     string         `gorm:"type:char(32);uniqueIndex"`
+	Lpn            string         `gorm:"type:varchar(191);not null;"`
+	JSONDimensions JSONDimensions `gorm:"type:json"`
+	JSONWeight     JSONWeight     `gorm:"type:json"`
+	JSONInsurance  JSONInsurance  `gorm:"type:json"`
+	JSONItems      JSONItems      `gorm:"type:json"`
 }
 
 func (p Package) Map() domain.Package {
 	return domain.Package{
-		Lpn:            p.Lpn,
-		Dimensions:     p.JSONDimensions.Map(),
-		Weight:         p.JSONWeight.Map(),
-		Insurance:      p.JSONInsurance.Map(),
-		ItemReferences: p.JSONItemsReferences.Map(),
+		Lpn:        p.Lpn,
+		Dimensions: p.JSONDimensions.Map(),
+		Weight:     p.JSONWeight.Map(),
+		Insurance:  p.JSONInsurance.Map(),
+		Items:      p.JSONItems.Map(),
 	}
+}
+
+// Map convierte una colección de Items de tabla a un array de domain.Item
+func (j JSONItems) Map() []domain.Item {
+	items := make([]domain.Item, len(j))
+	for i, item := range j {
+		items[i] = item.Map()
+	}
+	return items
 }
 
 type OrderPackage struct {

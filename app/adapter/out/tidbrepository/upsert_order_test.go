@@ -105,13 +105,18 @@ var _ = Describe("UpsertOrder", func() {
 			Origin:               originNode,
 			Destination:          destNode,
 			DeliveryInstructions: "Dejar con el conserje",
-			Items: []domain.Item{
+			Packages: []domain.Package{
 				{
-					Sku:         "SKU-001",
-					Description: "Producto de prueba",
-					Quantity: domain.Quantity{
-						QuantityNumber: 2,
-						QuantityUnit:   "unidades",
+					Lpn: "PKG-001",
+					Items: []domain.Item{
+						{
+							Sku:         "SKU-001",
+							Description: "Producto de prueba",
+							Quantity: domain.Quantity{
+								QuantityNumber: 2,
+								QuantityUnit:   "unidades",
+							},
+						},
 					},
 				},
 			},
@@ -264,7 +269,7 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(dbOrder.OrderStatusDoc).To(Equal(newStatus.DocID().String()))
 	})
 
-	It("should update items if changed", func() {
+	It("should update packages if changed", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
 				Commerce: "Tienda Online",
@@ -275,13 +280,18 @@ var _ = Describe("UpsertOrder", func() {
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
-			Items: []domain.Item{
+			Packages: []domain.Package{
 				{
-					Sku:         "SKU-001",
-					Description: "Producto inicial",
-					Quantity: domain.Quantity{
-						QuantityNumber: 1,
-						QuantityUnit:   "unidad",
+					Lpn: "PKG-001",
+					Items: []domain.Item{
+						{
+							Sku:         "SKU-001",
+							Description: "Producto inicial",
+							Quantity: domain.Quantity{
+								QuantityNumber: 1,
+								QuantityUnit:   "unidad",
+							},
+						},
 					},
 				},
 			},
@@ -291,23 +301,33 @@ var _ = Describe("UpsertOrder", func() {
 		err := upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Añadir un nuevo ítem
+		// Añadir un nuevo paquete
 		modifiedOrder := order
-		modifiedOrder.Items = []domain.Item{
+		modifiedOrder.Packages = []domain.Package{
 			{
-				Sku:         "SKU-001",
-				Description: "Producto inicial",
-				Quantity: domain.Quantity{
-					QuantityNumber: 1,
-					QuantityUnit:   "unidad",
+				Lpn: "PKG-001",
+				Items: []domain.Item{
+					{
+						Sku:         "SKU-001",
+						Description: "Producto inicial",
+						Quantity: domain.Quantity{
+							QuantityNumber: 1,
+							QuantityUnit:   "unidad",
+						},
+					},
 				},
 			},
 			{
-				Sku:         "SKU-002",
-				Description: "Producto adicional",
-				Quantity: domain.Quantity{
-					QuantityNumber: 3,
-					QuantityUnit:   "unidades",
+				Lpn: "PKG-002",
+				Items: []domain.Item{
+					{
+						Sku:         "SKU-002",
+						Description: "Producto adicional",
+						Quantity: domain.Quantity{
+							QuantityNumber: 3,
+							QuantityUnit:   "unidades",
+						},
+					},
 				},
 			},
 		}
@@ -321,7 +341,6 @@ var _ = Describe("UpsertOrder", func() {
 			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(len(dbOrder.JSONItems)).To(Equal(2))
 	})
 
 	It("should fail if the orders table does not exist", func() {

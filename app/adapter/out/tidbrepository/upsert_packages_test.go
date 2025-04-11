@@ -62,12 +62,17 @@ var _ = Describe("UpsertPackages", func() {
 				UnitValue: 1000.0,
 				Currency:  "USD",
 			},
-			ItemReferences: []domain.ItemReference{
+			Items: []domain.Item{
 				{
-					Sku: "ITEM001",
+					Sku:         "ITEM001",
+					Description: "Item de prueba",
 					Quantity: domain.Quantity{
 						QuantityNumber: 2,
 						QuantityUnit:   "unit",
+					},
+					Weight: domain.Weight{
+						Value: 1.0,
+						Unit:  "kg",
 					},
 				},
 			},
@@ -128,12 +133,15 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(insurance.UnitValue).To(Equal(1000.0))
 		Expect(insurance.Currency).To(Equal("USD"))
 
-		// Verificar referencias de items (esto está en JSON)
-		itemRefs := dbPackage1.JSONItemsReferences.Map()
-		Expect(itemRefs).To(HaveLen(1))
-		Expect(itemRefs[0].Sku).To(Equal("ITEM001"))
-		Expect(itemRefs[0].Quantity.QuantityNumber).To(Equal(2))
-		Expect(itemRefs[0].Quantity.QuantityUnit).To(Equal("unit"))
+		// Verificar items dentro del paquete
+		items := dbPackage1.JSONItems.Map()
+		Expect(items).To(HaveLen(1))
+		Expect(items[0].Sku).To(Equal("ITEM001"))
+		Expect(items[0].Description).To(Equal("Item de prueba"))
+		Expect(items[0].Quantity.QuantityNumber).To(Equal(2))
+		Expect(items[0].Quantity.QuantityUnit).To(Equal("unit"))
+		Expect(items[0].Weight.Value).To(Equal(1.0))
+		Expect(items[0].Weight.Unit).To(Equal("kg"))
 	})
 
 	It("should update existing packages", func() {
@@ -154,12 +162,17 @@ var _ = Describe("UpsertPackages", func() {
 				UnitValue: 1000.0,
 				Currency:  "USD",
 			},
-			ItemReferences: []domain.ItemReference{
+			Items: []domain.Item{
 				{
-					Sku: "ITEM001",
+					Sku:         "ITEM001",
+					Description: "Item inicial",
 					Quantity: domain.Quantity{
 						QuantityNumber: 2,
 						QuantityUnit:   "unit",
+					},
+					Weight: domain.Weight{
+						Value: 1.0,
+						Unit:  "kg",
 					},
 				},
 			},
@@ -203,12 +216,17 @@ var _ = Describe("UpsertPackages", func() {
 				UnitValue: 2000.0, // Cambiar valor de seguro
 				Currency:  "EUR",  // Cambiar moneda
 			},
-			ItemReferences: []domain.ItemReference{
+			Items: []domain.Item{
 				{
-					Sku: "ITEM002", // Cambiar referencia
+					Sku:         "ITEM002", // Cambiar referencia
+					Description: "Item actualizado",
 					Quantity: domain.Quantity{
 						QuantityNumber: 3,
 						QuantityUnit:   "box",
+					},
+					Weight: domain.Weight{
+						Value: 1.5,
+						Unit:  "lb",
 					},
 				},
 			},
@@ -249,12 +267,15 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(updatedInsurance.UnitValue).To(Equal(2000.0))
 		Expect(updatedInsurance.Currency).To(Equal("EUR"))
 
-		// Verificar que las referencias se actualizaron
-		updatedItemRefs := updatedDBPackage.JSONItemsReferences.Map()
-		Expect(updatedItemRefs).To(HaveLen(1))
-		Expect(updatedItemRefs[0].Sku).To(Equal("ITEM002"))
-		Expect(updatedItemRefs[0].Quantity.QuantityNumber).To(Equal(3))
-		Expect(updatedItemRefs[0].Quantity.QuantityUnit).To(Equal("box"))
+		// Verificar que los items se actualizaron
+		updatedItems := updatedDBPackage.JSONItems.Map()
+		Expect(updatedItems).To(HaveLen(1))
+		Expect(updatedItems[0].Sku).To(Equal("ITEM002"))
+		Expect(updatedItems[0].Description).To(Equal("Item actualizado"))
+		Expect(updatedItems[0].Quantity.QuantityNumber).To(Equal(3))
+		Expect(updatedItems[0].Quantity.QuantityUnit).To(Equal("box"))
+		Expect(updatedItems[0].Weight.Value).To(Equal(1.5))
+		Expect(updatedItems[0].Weight.Unit).To(Equal("lb"))
 	})
 
 	It("should handle mix of new and existing packages", func() {

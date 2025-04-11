@@ -2,8 +2,6 @@ package domain
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"regexp"
 	"time"
 
@@ -21,7 +19,6 @@ type Order struct {
 	References              []Reference
 	Origin                  NodeInfo
 	Destination             NodeInfo
-	Items                   []Item
 	Packages                []Package
 	CollectAvailabilityDate CollectAvailabilityDate
 	PromisedDate            PromisedDate
@@ -49,11 +46,6 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 
 	if len(newOrder.Packages) > 0 {
 		o.Packages = newOrder.Packages
-		changed = true
-	}
-
-	if len(newOrder.Items) > 0 {
-		o.Items = newOrder.Items
 		changed = true
 	}
 
@@ -111,13 +103,6 @@ func (o Order) Validate() error {
 	if err := o.ValidatePromisedDate(); err != nil {
 		return errorx.Decorate(err, "validation failed for PromisedDate")
 	}
-
-	if err := o.ValidatePackages(); err != nil {
-		return errorx.Decorate(err, "validation failed for Packages")
-	}
-
-	// Validar otras reglas de dominio (si las hay)
-	// Por ejemplo, puedes agregar reglas adicionales aquí
 
 	return nil
 }
@@ -201,49 +186,6 @@ func (o Order) IsOriginAndDestinationAddressEqual() bool {
 
 func (o Order) IsOriginAndDestinationNodeEqual() bool {
 	return o.Origin.ReferenceID == o.Destination.ReferenceID
-}
-
-func (o *Order) ValidatePackages() error {
-	// Crear un mapa para verificar rápidamente si un ReferenceID pertenece a los ítems de la orden
-	itemMap := make(map[string]bool)
-	for _, item := range o.Items {
-		itemMap[item.Sku] = true
-	}
-
-	if len(o.Packages) == 1 {
-		// Si solo hay un paquete y no tiene referencias de ítems, asignar todos los ítems de la orden
-		if len(o.Packages[0].ItemReferences) == 0 {
-			for _, item := range o.Items {
-				o.Packages[0].ItemReferences = append(o.Packages[0].ItemReferences, ItemReference{
-					Sku:      item.Sku,
-					Quantity: item.Quantity,
-				})
-			}
-		} else {
-			// Validar que todas las referencias del paquete sean válidas
-			for _, ref := range o.Packages[0].ItemReferences {
-				if !itemMap[ref.Sku] {
-					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.Sku)
-				}
-			}
-		}
-	} else {
-		// Si hay más de un paquete, validar que todos los paquetes tengan referencias de ítems
-		for _, p := range o.Packages {
-			if len(p.ItemReferences) == 0 {
-				return errors.New("validation failed: packages with no item references must be explicitly defined when there are multiple packages")
-			}
-
-			// Validar que todas las referencias del paquete sean válidas
-			for _, ref := range p.ItemReferences {
-				if !itemMap[ref.Sku] {
-					return fmt.Errorf("validation failed: item reference ID '%s' in package is not part of the order items", ref.Sku)
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 type PromisedDate struct {

@@ -47,29 +47,6 @@ type SearchOrdersResponse struct {
 			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
-	Items []struct {
-		Description string `json:"description"`
-		Dimensions  struct {
-			Length float64 `json:"length"`
-			Height float64 `json:"height"`
-			Unit   string  `json:"unit"`
-			Width  float64 `json:"width"`
-		} `json:"dimensions"`
-		Insurance struct {
-			Currency  string  `json:"currency"`
-			UnitValue float64 `json:"unitValue"`
-		} `json:"insurance"`
-		LogisticCondition string `json:"logisticCondition"`
-		Quantity          struct {
-			QuantityNumber int    `json:"quantityNumber"`
-			QuantityUnit   string `json:"quantityUnit"`
-		} `json:"quantity"`
-		Sku    string `json:"sku"`
-		Weight struct {
-			Unit  string  `json:"unit"`
-			Value float64 `json:"value"`
-		} `json:"weight"`
-	} `json:"items"`
 	OrderType struct {
 		Description string `json:"description"`
 		Type        string `json:"type"`
@@ -115,13 +92,29 @@ type SearchOrdersResponse struct {
 			Currency  string  `json:"currency"`
 			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
-		ItemReferences []struct {
-			Quantity struct {
+		Items []struct {
+			Description string `json:"description"`
+			Dimensions  struct {
+				Length float64 `json:"length"`
+				Height float64 `json:"height"`
+				Unit   string  `json:"unit"`
+				Width  float64 `json:"width"`
+			} `json:"dimensions"`
+			Insurance struct {
+				Currency  string  `json:"currency"`
+				UnitValue float64 `json:"unitValue"`
+			} `json:"insurance"`
+			LogisticCondition string `json:"logisticCondition"`
+			Quantity          struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
-			Sku string `json:"sku"`
-		} `json:"itemReferences"`
+			Sku    string `json:"sku"`
+			Weight struct {
+				Unit  string  `json:"unit"`
+				Value float64 `json:"value"`
+			} `json:"weight"`
+		} `json:"items"`
 		Lpn    string `json:"lpn"`
 		Weight struct {
 			Unit  string  `json:"unit"`
@@ -176,7 +169,6 @@ func (res SearchOrdersResponse) Map() domain.Order {
 		},
 		SequenceNumber: sequenceNumber,
 		// Mapear utilizando los mappers genéricos existentes
-		Items:                   mapper.MapItemsToDomain(res.Items),
 		OrderType:               mapper.MapOrderTypeToDomain(res.OrderType),
 		References:              mapper.MapReferencesToDomain(res.References),
 		TransportRequirements:   mapper.MapReferencesToDomain(res.TransportRequirements),
@@ -218,7 +210,6 @@ func MapOrdersToSearchOrdersResponse(orders []domain.Order) []SearchOrdersRespon
 		response.Destination.DeliveryInstructions = order.DeliveryInstructions
 
 		// Items, Packages
-		response.Items = mapper.MapItemsFromDomain(order.Items)
 		response.Packages = mapper.MapPackagesFromDomain(order.Packages)
 
 		// References, Requirements

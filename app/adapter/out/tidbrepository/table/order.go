@@ -64,8 +64,6 @@ type Order struct {
 
 	Packages []Package `gorm:"many2many:order_packages"`
 
-	JSONItems JSONItems `gorm:"type:json"`
-
 	CollectAvailabilityDate           *time.Time    `gorm:"type:date;default:null"`
 	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
 	CollectAvailabilityTimeRangeEnd   string        `gorm:"default:null"`
@@ -119,11 +117,6 @@ func (o Order) Map() domain.Order {
 	order.TransportRequirements = o.TransportRequirements.Map()
 
 	// Mapear items
-	items := make([]domain.Item, len(o.JSONItems))
-	for i, item := range o.JSONItems {
-		items[i] = item.Map()
-	}
-	order.Items = items
 
 	return order
 }

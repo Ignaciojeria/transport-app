@@ -75,10 +75,16 @@ var _ = Describe("Order UpdateIfChanged", func() {
 		Expect(changed).To(BeTrue())
 	})
 
-	It("should return true when Items, Packages, References or TransportRequirements are replaced", func() {
+	It("should return true when Packages, References or TransportRequirements are replaced", func() {
 		updated := Order{
-			Items:                 []Item{{Sku: "ITEM001"}},
-			Packages:              []Package{{Lpn: "PKG001"}},
+			Packages: []Package{
+				{
+					Lpn: "PKG001",
+					Items: []Item{
+						{Sku: "ITEM001"},
+					},
+				},
+			},
 			References:            []Reference{{Type: "X", Value: "1"}},
 			TransportRequirements: []Reference{{Type: "TEMP", Value: "COND"}},
 		}
@@ -89,7 +95,14 @@ var _ = Describe("Order UpdateIfChanged", func() {
 
 	It("should return false when attempting to update with empty slices or zero values", func() {
 		original := Order{
-			Items: []Item{{Sku: "ITEM001"}},
+			Packages: []Package{
+				{
+					Lpn: "PKG001",
+					Items: []Item{
+						{Sku: "ITEM001"},
+					},
+				},
+			},
 		}
 
 		// newOrder no tiene nada nuevo (vacío)
@@ -122,12 +135,10 @@ var _ = Describe("Order Validate", func() {
 					EndTime:   "12:00",
 				},
 			},
-			Items: []Item{
-				{Sku: "ITEM001"},
-			},
 			Packages: []Package{
 				{
-					ItemReferences: []ItemReference{
+					Lpn: "PKG001",
+					Items: []Item{
 						{Sku: "ITEM001"},
 					},
 				},
@@ -164,23 +175,7 @@ var _ = Describe("Order Validate", func() {
 		Expect(err.Error()).To(ContainSubstring("CollectAvailabilityDate"))
 	})
 
-	It("should fail if packages are invalid", func() {
-		order := Order{
-			Items: []Item{
-				{Sku: "ITEM001"},
-			},
-			Packages: []Package{
-				{
-					ItemReferences: []ItemReference{
-						{Sku: "UNKNOWN"},
-					},
-				},
-			},
-		}
-		err := order.Validate()
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("Packages"))
-	})
+	// Eliminamos el test de validación de paquetes que ya no es necesario
 })
 
 var _ = Describe("Order Origin and Destination Comparison", func() {
@@ -292,90 +287,7 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 		Expect(err.Error()).To(ContainSubstring("collect endTime"))
 	})
 
-	It("should fail if multiple packages are defined and one has no item references", func() {
-		order := Order{
-			Items: []Item{
-				{Sku: "ITEM001"},
-				{Sku: "ITEM002"},
-			},
-			Packages: []Package{
-				{
-					ItemReferences: []ItemReference{
-						{Sku: "ITEM001"},
-					},
-				},
-				{
-					// este paquete no tiene referencias y debe fallar
-					ItemReferences: []ItemReference{},
-				},
-			},
-		}
-
-		err := order.Validate()
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("packages with no item references"))
-	})
-
-	It("should assign all items to package when only one package and no item references", func() {
-		order := Order{
-			Items: []Item{
-				{Sku: "ITEM001", Quantity: Quantity{QuantityNumber: 1, QuantityUnit: "unit"}},
-				{Sku: "ITEM002", Quantity: Quantity{QuantityNumber: 2, QuantityUnit: "box"}},
-			},
-			Packages: []Package{
-				{}, // sin referencias explícitas
-			},
-		}
-
-		err := order.Validate()
-		Expect(err).To(Succeed())
-		Expect(len(order.Packages[0].ItemReferences)).To(Equal(2))
-		Expect(order.Packages[0].ItemReferences[0].Sku).To(Equal("ITEM001"))
-		Expect(order.Packages[0].ItemReferences[1].Sku).To(Equal("ITEM002"))
-	})
-
-	It("should fail when a package contains invalid item reference", func() {
-		order := Order{
-			Items: []Item{
-				{Sku: "ITEM001"},
-			},
-			Packages: []Package{
-				{
-					ItemReferences: []ItemReference{
-						{Sku: "NON_EXISTENT"},
-					},
-				},
-			},
-		}
-
-		err := order.Validate()
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("item reference ID 'NON_EXISTENT'"))
-	})
-
-	It("should fail when one of multiple packages contains invalid item reference", func() {
-		order := Order{
-			Items: []Item{
-				{Sku: "ITEM001"},
-			},
-			Packages: []Package{
-				{
-					ItemReferences: []ItemReference{
-						{Sku: "ITEM001"}, // válido
-					},
-				},
-				{
-					ItemReferences: []ItemReference{
-						{Sku: "INVALID"}, // este rompe
-					},
-				},
-			},
-		}
-
-		err := order.Validate()
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("item reference ID 'INVALID'"))
-	})
+	// Eliminamos todos los test relacionados con la validación de paquetes e ItemReferences
 })
 
 var _ = Describe("Order DocID", func() {

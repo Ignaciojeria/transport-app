@@ -250,8 +250,8 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			},*/
 
 		// ✅ Mapeo de paquetes, referencias e ítems
-		Packages:              mapPackages(packages),
-		Items:                 mapJSONItems(o.Items),
+		Packages: mapPackages(packages),
+		//Items:                 mapJSONItems(o.Items),
 		References:            references,
 		TransportRequirements: transportReqs,
 
@@ -297,7 +297,7 @@ func mapPackages(packages []FlattenedPackageView) []domain.Package {
 				UnitValue: p.UnitValue,
 				Currency:  p.Currency,
 			},
-			ItemReferences: mapItemReferences(p.Items),
+			//	ItemReferences: mapItemReferences(p.Items),
 		}
 	}
 	return result

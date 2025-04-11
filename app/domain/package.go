@@ -3,11 +3,11 @@ package domain
 import "context"
 
 type Package struct {
-	Lpn            string
-	Dimensions     Dimensions
-	Weight         Weight
-	Insurance      Insurance
-	ItemReferences []ItemReference
+	Lpn        string
+	Dimensions Dimensions
+	Weight     Weight
+	Insurance  Insurance
+	Items      []Item
 }
 
 func (p Package) DocID(ctx context.Context) DocumentID {
@@ -50,8 +50,8 @@ func (p Package) UpdateIfChanged(newPackage Package) (Package, bool) {
 	}
 
 	// Actualizar referencias de ítems
-	if len(newPackage.ItemReferences) > 0 {
-		p.ItemReferences = newPackage.ItemReferences
+	if len(newPackage.Items) > 0 {
+		p.Items = newPackage.Items
 		changed = true
 	}
 
