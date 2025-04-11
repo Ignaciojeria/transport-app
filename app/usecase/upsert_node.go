@@ -31,7 +31,7 @@ func NewUpsertNode(
 		if err != nil {
 			return err
 		}
-		err = upsertContact(ctx, nodeInfo.Contact)
+		err = upsertContact(ctx, nodeInfo.AddressInfo.Contact)
 		if err != nil {
 			return err
 		}

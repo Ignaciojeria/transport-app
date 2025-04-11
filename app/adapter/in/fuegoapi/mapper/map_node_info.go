@@ -133,11 +133,11 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	}
 
 	// Mapear contacto
-	responseAddressInfo.Contact.FullName = nodeInfo.Contact.FullName
-	responseAddressInfo.Contact.Email = nodeInfo.Contact.PrimaryEmail
-	responseAddressInfo.Contact.Phone = nodeInfo.Contact.PrimaryPhone
-	responseAddressInfo.Contact.NationalID = nodeInfo.Contact.NationalID
-	responseAddressInfo.Contact.Documents = MapDocumentsFromDomain(nodeInfo.Contact.Documents)
+	responseAddressInfo.Contact.FullName = nodeInfo.AddressInfo.Contact.FullName
+	responseAddressInfo.Contact.Email = nodeInfo.AddressInfo.Contact.PrimaryEmail
+	responseAddressInfo.Contact.Phone = nodeInfo.AddressInfo.Contact.PrimaryPhone
+	responseAddressInfo.Contact.NationalID = nodeInfo.AddressInfo.Contact.NationalID
+	responseAddressInfo.Contact.Documents = MapDocumentsFromDomain(nodeInfo.AddressInfo.Contact.Documents)
 
 	return responseNodeInfo, responseAddressInfo
 }

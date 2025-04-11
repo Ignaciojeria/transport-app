@@ -6,7 +6,6 @@ type NodeInfo struct {
 	ReferenceID  ReferenceID
 	Name         string
 	NodeType     NodeType
-	Contact      Contact
 	References   []Reference
 	AddressInfo  AddressInfo
 	AddressLine2 string

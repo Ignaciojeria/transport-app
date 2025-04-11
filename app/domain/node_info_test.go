@@ -54,11 +54,7 @@ var _ = Describe("NodeInfo", func() {
 					State:        "Metropolitana",
 					Location:     orb.Point{-70.6506, -33.4372},
 				},
-				Contact: Contact{
-					FullName:     "Juan Pérez",
-					PrimaryEmail: "juan@example.com",
-					PrimaryPhone: "+56912345678",
-				},
+
 				AddressLine2: "Dpto 1402",
 				AddressLine3: "Torre Norte",
 				References: []Reference{
@@ -98,16 +94,6 @@ var _ = Describe("NodeInfo", func() {
 
 			Expect(changed).To(BeFalse())
 			Expect(updated.AddressInfo.District).To(Equal("Providencia"))
-		})
-
-		It("should not update nested Contact from domain logic", func() {
-			newNode := baseNode
-			newNode.Contact.FullName = "María López"
-
-			updated, changed := baseNode.UpdateIfChanged(newNode)
-
-			Expect(changed).To(BeFalse())
-			Expect(updated.Contact.FullName).To(Equal("Juan Pérez"))
 		})
 
 		It("should update references", func() {

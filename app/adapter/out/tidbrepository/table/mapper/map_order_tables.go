@@ -27,8 +27,8 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		DestinationNodeInfoDoc: order.Destination.DocID(ctx).String(),
 
 		// Si están disponibles, también mapear los contactos y direcciones
-		OriginContactDoc:          order.Origin.Contact.DocID(ctx).String(),
-		DestinationContactDoc:     order.Destination.Contact.DocID(ctx).String(),
+		OriginContactDoc:          order.Origin.AddressInfo.Contact.DocID(ctx).String(),
+		DestinationContactDoc:     order.Destination.AddressInfo.Contact.DocID(ctx).String(),
 		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID(ctx).String(),
 		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID(ctx).String(),
 

@@ -45,7 +45,6 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-
 			inOrder.Origin.AddressInfo.Normalize()
 			return upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		})

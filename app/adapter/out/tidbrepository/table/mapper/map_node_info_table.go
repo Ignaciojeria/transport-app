@@ -20,7 +20,7 @@ func MapNodeInfoTable(ctx context.Context, e domain.NodeInfo) table.NodeInfo {
 		DocumentID:     string(e.DocID(ctx)),
 		NodeTypeDoc:    string(e.NodeType.DocID(ctx)),
 		Name:           e.Name,
-		ContactDoc:     string(e.Contact.DocID(ctx)),
+		ContactDoc:     string(e.AddressInfo.Contact.DocID(ctx)),
 		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 		AddressInfoDoc: string(e.AddressInfo.DocID(ctx)),
 		AddressLine2:   e.AddressLine2,

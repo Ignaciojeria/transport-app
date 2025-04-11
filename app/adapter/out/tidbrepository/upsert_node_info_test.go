@@ -65,7 +65,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			PrimaryPhone: "987654321",
 		}
 
-		// Create address info
+		// Create address info with contacts embedded
 		addressInfo1 = domain.AddressInfo{
 			Contact:      contact1,
 			State:        "State1",
@@ -94,8 +94,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:         "Warehouse Alpha",
 			ReferenceID:  "WH-001", // Ensure we have a valid ReferenceID
 			NodeType:     nodeType1,
-			Contact:      contact1,
-			AddressInfo:  addressInfo1,
+			AddressInfo:  addressInfo1, // This now contains contact1
 			AddressLine2: "Floor 3",
 			AddressLine3: "Building C",
 			References: []domain.Reference{
@@ -115,7 +114,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.Name).To(Equal("Warehouse Alpha"))
 		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType1.DocID(ctx1).String()))
-		Expect(dbNodeInfo.ContactDoc).To(Equal(contact1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Floor 3"))
 		Expect(dbNodeInfo.AddressLine3).To(Equal("Building C"))
@@ -132,8 +130,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Invalid Node",
 			ReferenceID: "", // Empty ReferenceID should cause error
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -158,8 +155,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:         "Original Name",
 			ReferenceID:  "REF-001",
 			NodeType:     nodeType1,
-			Contact:      contact1,
-			AddressInfo:  addressInfo1,
+			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Original Floor",
 			AddressLine3: "Original Building",
 		}
@@ -173,8 +169,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:         "Modified Name",
 			ReferenceID:  "REF-001", // Keep same ReferenceID to ensure same DocID
 			NodeType:     nodeType1,
-			Contact:      contact1,
-			AddressInfo:  addressInfo1,
+			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Modified Floor",
 			AddressLine3: "Modified Building",
 		}
@@ -198,8 +193,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:         "Unchanged Node",
 			ReferenceID:  "REF-002",
 			NodeType:     nodeType1,
-			Contact:      contact1,
-			AddressInfo:  addressInfo1,
+			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Same Floor",
 			AddressLine3: "Same Building",
 		}
@@ -237,8 +231,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Multi Org Node",
 			ReferenceID: "REF-ORG-1",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		// Same node info structure for organization2
@@ -246,8 +239,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Multi Org Node",
 			ReferenceID: "REF-ORG-2",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -276,8 +268,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Node With Type Change",
 			ReferenceID: "REF-TYPE",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -287,9 +278,8 @@ var _ = Describe("UpsertNodeInfo", func() {
 		modified := domain.NodeInfo{
 			Name:        "Node With Type Change",
 			ReferenceID: "REF-TYPE",
-			NodeType:    nodeType2, // Changed node type
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			NodeType:    nodeType2,    // Changed node type
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		err = upsert(ctx1, modified)
@@ -304,46 +294,12 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType2.DocID(ctx1).String()))
 	})
 
-	It("should update when related contact changes", func() {
-		original := domain.NodeInfo{
-			Name:        "Node With Contact Change",
-			ReferenceID: "REF-CONTACT",
-			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
-		}
-
-		upsert := NewUpsertNodeInfo(connection)
-		err := upsert(ctx1, original)
-		Expect(err).ToNot(HaveOccurred())
-
-		modified := domain.NodeInfo{
-			Name:        "Node With Contact Change",
-			ReferenceID: "REF-CONTACT",
-			NodeType:    nodeType1,
-			Contact:     contact2, // Changed contact
-			AddressInfo: addressInfo1,
-		}
-
-		err = upsert(ctx1, modified)
-		Expect(err).ToNot(HaveOccurred())
-
-		var dbNodeInfo table.NodeInfo
-		err = connection.DB.WithContext(ctx1).
-			Table("node_infos").
-			Where("document_id = ?", original.DocID(ctx1)).
-			First(&dbNodeInfo).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dbNodeInfo.ContactDoc).To(Equal(contact2.DocID(ctx1).String()))
-	})
-
-	It("should update when related address info changes", func() {
+	It("should update when related address info with different contact changes", func() {
 		original := domain.NodeInfo{
 			Name:        "Node With Address Change",
 			ReferenceID: "REF-ADDRESS",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contains contact1
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -354,8 +310,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Node With Address Change",
 			ReferenceID: "REF-ADDRESS",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo2, // Changed address
+			AddressInfo: addressInfo2, // Contains contact2
 		}
 
 		err = upsert(ctx1, modified)
@@ -375,8 +330,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:         "Node With Address Lines",
 			ReferenceID:  "REF-ADDRLINES",
 			NodeType:     nodeType1,
-			Contact:      contact1,
-			AddressInfo:  addressInfo1,
+			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Original Line 2",
 			AddressLine3: "Original Line 3",
 		}
@@ -389,8 +343,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:         "Node With Address Lines",
 			ReferenceID:  "REF-ADDRLINES",
 			NodeType:     nodeType1,
-			Contact:      contact1,
-			AddressInfo:  addressInfo1,
+			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Updated Line 2",
 			AddressLine3: "Updated Line 3",
 		}
@@ -413,8 +366,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Node With References",
 			ReferenceID: "REF-REFS",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 			References: []domain.Reference{
 				{Type: "ERP", Value: "WH001"},
 			},
@@ -428,8 +380,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Node With References",
 			ReferenceID: "REF-REFS",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 			References: []domain.Reference{
 				{Type: "ERP", Value: "WH001-UPDATED"},
 				{Type: "SAP", Value: "1000002"},
@@ -467,16 +418,14 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Hash Test Node",
 			ReferenceID: "REF-HASH",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		nodeInfo2 := domain.NodeInfo{
 			Name:        "Hash Test Node",
 			ReferenceID: "REF-HASH",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		// DocIDs should be identical for identical input in the same context
@@ -491,8 +440,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name:        "Expected Error",
 			ReferenceID: "REF-ERROR",
 			NodeType:    nodeType1,
-			Contact:     contact1,
-			AddressInfo: addressInfo1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		upsert := NewUpsertNodeInfo(noTablesContainerConnection)

@@ -17,13 +17,12 @@ import (
 
 var _ = Describe("UpsertOrder", func() {
 	var (
-		ctx           context.Context
-		orderStatus   domain.OrderStatus
-		orderType     domain.OrderType
-		originNode    domain.NodeInfo
-		destNode      domain.NodeInfo
-		originContact domain.Contact
-		destContact   domain.Contact
+		ctx         context.Context
+		orderStatus domain.OrderStatus
+		orderType   domain.OrderType
+		originNode  domain.NodeInfo
+		destNode    domain.NodeInfo
+
 		originAddress domain.AddressInfo
 		destAddress   domain.AddressInfo
 	)
@@ -63,28 +62,16 @@ var _ = Describe("UpsertOrder", func() {
 			Location:     orb.Point{-70.5714, -33.4012},
 		}
 
-		originContact = domain.Contact{
-			FullName:     "Cliente Origen",
-			PrimaryEmail: "origen@example.com",
-		}
-
-		destContact = domain.Contact{
-			FullName:     "Cliente Destino",
-			PrimaryEmail: "destino@example.com",
-		}
-
 		originNode = domain.NodeInfo{
 			ReferenceID: "node-origin-001",
 			Name:        "Centro de Distribución Central",
 			AddressInfo: originAddress,
-			Contact:     originContact,
 		}
 
 		destNode = domain.NodeInfo{
 			ReferenceID: "node-dest-001",
 			Name:        "Punto de Entrega",
 			AddressInfo: destAddress,
-			Contact:     destContact,
 		}
 
 		// Preparamos únicamente OrderStatus para los tests ya que es requerido
@@ -405,10 +392,6 @@ var _ = Describe("UpsertOrder", func() {
 				AddressLine1: "Nueva dirección origen",
 				Location:     orb.Point{-70.5, -33.5},
 			},
-			Contact: domain.Contact{
-				FullName:     "Nuevo contacto origen",
-				PrimaryEmail: "nuevo-origen@example.com",
-			},
 		}
 		modifiedOrder.Destination = domain.NodeInfo{
 			ReferenceID: "modified-dest-node-002",
@@ -416,10 +399,6 @@ var _ = Describe("UpsertOrder", func() {
 			AddressInfo: domain.AddressInfo{
 				AddressLine1: "Nueva dirección destino",
 				Location:     orb.Point{-70.1, -33.1},
-			},
-			Contact: domain.Contact{
-				FullName:     "Nuevo contacto destino",
-				PrimaryEmail: "nuevo-destino@example.com",
 			},
 		}
 
@@ -439,11 +418,11 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(updatedOrder.OrderHeadersDoc).To(Equal(modifiedOrder.Headers.DocID(ctx).String()))
 
 		Expect(updatedOrder.OriginNodeInfoDoc).To(Equal(modifiedOrder.Origin.DocID(ctx).String()))
-		Expect(updatedOrder.OriginContactDoc).To(Equal(modifiedOrder.Origin.Contact.DocID(ctx).String()))
+
 		Expect(updatedOrder.OriginAddressInfoDoc).To(Equal(modifiedOrder.Origin.AddressInfo.DocID(ctx).String()))
 
 		Expect(updatedOrder.DestinationNodeInfoDoc).To(Equal(modifiedOrder.Destination.DocID(ctx).String()))
-		Expect(updatedOrder.DestinationContactDoc).To(Equal(modifiedOrder.Destination.Contact.DocID(ctx).String()))
+
 		Expect(updatedOrder.DestinationAddressInfoDoc).To(Equal(modifiedOrder.Destination.AddressInfo.DocID(ctx).String()))
 	})
 })

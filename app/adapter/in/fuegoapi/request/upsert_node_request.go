@@ -47,6 +47,22 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			Value: req.Type,
 		},
 		AddressInfo: domain.AddressInfo{
+			Contact: domain.Contact{
+				PrimaryEmail: req.OperatorContact.Email,
+				PrimaryPhone: req.OperatorContact.Phone,
+				NationalID:   req.OperatorContact.NationalID,
+				FullName:     req.OperatorContact.FullName,
+				Documents: func() []domain.Document {
+					docs := make([]domain.Document, len(req.OperatorContact.Documents))
+					for i, doc := range req.OperatorContact.Documents {
+						docs[i] = domain.Document{
+							Type:  doc.Type,
+							Value: doc.Value,
+						}
+					}
+					return docs
+				}(),
+			},
 			AddressLine1: req.NodeAddress.AddressLine1,
 			//AddressLine2: req.NodeAddress.AddressLine2,
 			//AddressLine3: req.NodeAddress.AddressLine3,
@@ -71,22 +87,6 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			}
 			return refs
 		}(),
-		Contact: domain.Contact{
-			PrimaryEmail: req.OperatorContact.Email,
-			PrimaryPhone: req.OperatorContact.Phone,
-			NationalID:   req.OperatorContact.NationalID,
-			FullName:     req.OperatorContact.FullName,
-			Documents: func() []domain.Document {
-				docs := make([]domain.Document, len(req.OperatorContact.Documents))
-				for i, doc := range req.OperatorContact.Documents {
-					docs[i] = domain.Document{
-						Type:  doc.Type,
-						Value: doc.Value,
-					}
-				}
-				return docs
-			}(),
-		},
 	}
 	return nodeInfo
 }

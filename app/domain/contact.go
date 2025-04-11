@@ -2,8 +2,6 @@ package domain
 
 import (
 	"context"
-
-	"github.com/google/uuid"
 )
 
 type Contact struct {
@@ -51,7 +49,7 @@ func (c Contact) DocID(ctx context.Context) DocumentID {
 	case c.NationalID != "":
 		key = c.NationalID
 	default:
-		key = uuid.NewString()
+		key = ""
 	}
 	return Hash(ctx, key)
 }

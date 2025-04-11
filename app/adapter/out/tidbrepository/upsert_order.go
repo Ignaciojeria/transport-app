@@ -78,12 +78,13 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 			DBOrderToUpdate.OrderTypeDoc = o.OrderType.DocID(ctx).String()
 		}
 
-		if o.Origin.Contact.DocID(ctx).ShouldUpdate(order.OriginContactDoc) {
-			DBOrderToUpdate.OriginContactDoc = o.Origin.Contact.DocID(ctx).String()
+		originContactDoc := o.Origin.AddressInfo.Contact.DocID(ctx)
+		if originContactDoc.ShouldUpdate(order.OriginContactDoc) {
+			DBOrderToUpdate.OriginContactDoc = originContactDoc.String()
 		}
 
-		if o.Destination.Contact.DocID(ctx).ShouldUpdate(order.DestinationContactDoc) {
-			DBOrderToUpdate.DestinationContactDoc = o.Destination.Contact.DocID(ctx).String()
+		if o.Destination.AddressInfo.Contact.DocID(ctx).ShouldUpdate(order.DestinationContactDoc) {
+			DBOrderToUpdate.DestinationContactDoc = o.Destination.AddressInfo.Contact.DocID(ctx).String()
 		}
 
 		if o.Origin.AddressInfo.DocID(ctx).ShouldUpdate(order.OriginAddressInfoDoc) {

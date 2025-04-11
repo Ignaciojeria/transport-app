@@ -164,13 +164,14 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			NodeType: domain.NodeType{
 				Value: o.OriginNodeType,
 			},
-			Contact: domain.Contact{
-				FullName:     o.OriginContactName,
-				PrimaryPhone: o.OriginContactPhone,
-				PrimaryEmail: o.OriginContactEmail,
-				NationalID:   o.OriginContactNationalID,
-				Documents:    mapDocuments(o.OriginContactDocuments),
-			},
+			/*
+				Contact: domain.Contact{
+					FullName:     o.OriginContactName,
+					PrimaryPhone: o.OriginContactPhone,
+					PrimaryEmail: o.OriginContactEmail,
+					NationalID:   o.OriginContactNationalID,
+					Documents:    mapDocuments(o.OriginContactDocuments),
+				},*/
 			AddressInfo: domain.AddressInfo{
 				AddressLine1: o.OriginAddressLine1,
 				//	AddressLine2: o.OriginAddressLine2,
@@ -195,13 +196,14 @@ func (o FlattenedOrderView) ToOrder(packages []FlattenedPackageView, refs []Flat
 			NodeType: domain.NodeType{
 				Value: o.DestinationNodeType,
 			},
-			Contact: domain.Contact{
-				FullName:     o.DestinationContactName,
-				PrimaryPhone: o.DestinationContactPhone,
-				PrimaryEmail: o.DestinationContactEmail,
-				NationalID:   o.DestinationContactNationalID,
-				Documents:    mapDocuments(o.DestinationContactDocuments),
-			},
+			/*
+				Contact: domain.Contact{
+					FullName:     o.DestinationContactName,
+					PrimaryPhone: o.DestinationContactPhone,
+					PrimaryEmail: o.DestinationContactEmail,
+					NationalID:   o.DestinationContactNationalID,
+					Documents:    mapDocuments(o.DestinationContactDocuments),
+				},*/
 			AddressInfo: domain.AddressInfo{
 				AddressLine1: o.DestinationAddressLine1,
 				//	AddressLine2: o.DestinationAddressLine2,

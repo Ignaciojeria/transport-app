@@ -53,9 +53,9 @@ func NewUpsertNodeInfo(conn tidb.TIDBConnection) UpsertNodeInfo {
 			changed = true
 		}
 
-		contactHash := ni.Contact.DocID(ctx)
+		contactHash := ni.AddressInfo.Contact.DocID(ctx)
 		if contactHash.ShouldUpdate(existing.ContactDoc) {
-			updated.Contact = ni.Contact
+			updated.AddressInfo.Contact = ni.AddressInfo.Contact
 			changed = true
 		}
 
