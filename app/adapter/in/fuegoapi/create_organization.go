@@ -29,13 +29,14 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 			}
 			org := domain.Organization{
 				Name:    requestBody.Name,
-				Country: countries.ByName(c.Header("country")),
-			}
-			org, err = createOrg(c.Context(), domain.Operator{
-				Contact: domain.Contact{
-					PrimaryEmail: requestBody.Email,
+				Country: countries.ByName(requestBody.Country),
+				Operator: domain.Operator{
+					Contact: domain.Contact{
+						PrimaryEmail: requestBody.Email,
+					},
 				},
-			}, requestBody.Name)
+			}
+			org, err = createOrg(c.Context(), org)
 			if err != nil {
 				return response.CreateOrganizationResponse{}, fuego.HTTPError{
 					Title:  "error creating organization",

@@ -78,7 +78,17 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 }
 
 func injectBaggageMiddleware(next http.Handler) http.Handler {
+	skipPaths := map[string]struct{}{
+		"/login":         {},
+		"/register":      {},
+		"/health":        {},
+		"/organizations": {},
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, skip := skipPaths[r.URL.Path]; skip {
+			next.ServeHTTP(w, r)
+			return
+		}
 		orgHeader := r.Header.Get("organization")
 		if orgHeader == "" {
 			http.Error(w, "missing organization header", http.StatusBadRequest)

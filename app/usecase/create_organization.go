@@ -8,7 +8,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type CreateOrganization func(ctx context.Context, org domain.Operator, orgName string) (domain.Organization, error)
+type CreateOrganization func(ctx context.Context, org domain.Organization) (domain.Organization, error)
 
 func init() {
 	ioc.Registry(
@@ -20,7 +20,7 @@ func init() {
 func NewCreateOrganization(
 	saveOrg tidbrepository.SaveOrganization,
 ) CreateOrganization {
-	return func(ctx context.Context, op domain.Operator, orgName string) (domain.Organization, error) {
-		return saveOrg(ctx, op, orgName)
+	return func(ctx context.Context, org domain.Organization) (domain.Organization, error) {
+		return saveOrg(ctx, org)
 	}
 }

@@ -8,9 +8,6 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
-	"transport-app/app/shared/sharedcontext"
-
-	"go.opentelemetry.io/otel/baggage"
 
 	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
@@ -39,7 +36,6 @@ var _ = Describe("TidbRepository", func() {
 		Expect(true).To(BeTrue())
 	})
 })
-
 var _ = BeforeSuite(func() {
 	ctx := context.Background()
 	dbName := "users"
@@ -93,34 +89,39 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	// Create baggage member for tenant country
-	countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, countries.Chile.String())
-	bag, _ := baggage.New(countryMember)
-	ctxWithCountry := baggage.ContextWithBaggage(ctx, bag)
+	// Setup context with country information
 
-	// Create first organization using the new function
+	// Create first organization using the new function signature
 	saveOrganization := NewSaveOrganization(connection)
-	organization1, err = saveOrganization(
-		ctxWithCountry,
-		domain.Operator{
+
+	// Create organization entity with required fields
+	orgToSave1 := domain.Organization{
+		Country: countries.CL,
+		Name:    "Organization 1",
+		Operator: domain.Operator{
 			Contact: domain.Contact{
 				PrimaryEmail: "ignaciovl.j@gmail.com",
 			},
 		},
-		"Organization 1",
-	)
+	}
+
+	// Save the first organization
+	organization1, err = saveOrganization(ctx, orgToSave1)
 	Expect(err).ToNot(HaveOccurred())
 
-	// Create second organization using the new function
-	organization2, err = saveOrganization(
-		ctxWithCountry,
-		domain.Operator{
+	// Create second organization
+	orgToSave2 := domain.Organization{
+		Country: countries.CL,
+		Name:    "Organization 2",
+		Operator: domain.Operator{
 			Contact: domain.Contact{
 				PrimaryEmail: "ignaciovl.j@gmail.com",
 			},
 		},
-		"Organization 2",
-	)
+	}
+
+	// Save the second organization
+	organization2, err = saveOrganization(ctx, orgToSave2)
 	Expect(err).ToNot(HaveOccurred())
 
 	// No tables container setup (remains unchanged)
@@ -157,13 +158,4 @@ var _ = BeforeSuite(func() {
 		nil,
 	)
 	Expect(err).ToNot(HaveOccurred())
-})
-
-var _ = AfterSuite(func() {
-	if container != nil {
-		_ = container.Terminate(context.Background())
-	}
-	if noTablesMigrationContainer != nil {
-		_ = noTablesMigrationContainer.Terminate(context.Background())
-	}
 })

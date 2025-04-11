@@ -9,9 +9,10 @@ import (
 )
 
 type Organization struct {
-	ID      int64
-	Country countries.CountryCode `json:"country"`
-	Name    string                `json:"name"`
+	ID       int64
+	Operator Operator
+	Country  countries.CountryCode `json:"country"`
+	Name     string                `json:"name"`
 }
 
 func (o Organization) GetOrgKey() string {
