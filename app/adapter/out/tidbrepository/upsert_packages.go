@@ -10,13 +10,13 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertPackages func(context.Context, []domain.Package, domain.Organization) error
+type UpsertPackages func(context.Context, []domain.Package) error
 
 func init() {
 	ioc.Registry(NewUpsertPackages, tidb.NewTIDBConnection)
 }
 func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
-	return func(ctx context.Context, pcks []domain.Package, org domain.Organization) error {
+	return func(ctx context.Context, pcks []domain.Package) error {
 		if len(pcks) == 0 {
 			return nil
 		}
@@ -34,7 +34,6 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		var existingDBPackages []table.Package
 		err := conn.DB.WithContext(ctx).
 			Table("packages").
-			Preload("Organization").
 			Where("document_id IN ?", docIDs).
 			Find(&existingDBPackages).Error
 		if err != nil {

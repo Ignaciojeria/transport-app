@@ -23,7 +23,6 @@ func NewUpsertContact(conn tidb.TIDBConnection) UpsertContact {
 		var existing table.Contact
 		err := conn.DB.WithContext(ctx).
 			Table("contacts").
-			Preload("Organization").
 			Where("document_id = ?", c.DocID(ctx)).
 			First(&existing).Error
 

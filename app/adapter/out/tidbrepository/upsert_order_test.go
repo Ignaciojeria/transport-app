@@ -2,14 +2,17 @@ package tidbrepository
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/paulmach/orb"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertOrder", func() {
@@ -25,8 +28,18 @@ var _ = Describe("UpsertOrder", func() {
 		destAddress   domain.AddressInfo
 	)
 
+	// Helper function to create context with organization
+	createOrgContext := func(org domain.Organization) context.Context {
+		ctx := context.Background()
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(org.ID, 10))
+		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
+		bag, _ := baggage.New(orgIDMember, countryMember)
+		return baggage.ContextWithBaggage(ctx, bag)
+	}
+
 	BeforeEach(func() {
-		ctx = context.Background()
+		// Create context with organization1
+		ctx = createOrgContext(organization1)
 
 		// Datos básicos para los tests
 		orderStatus = domain.OrderStatus{
@@ -34,20 +47,17 @@ var _ = Describe("UpsertOrder", func() {
 		}
 
 		orderType = domain.OrderType{
-			Type:         "retail",
-			Description:  "Entrega estándar",
-			Organization: organization1,
+			Type:        "retail",
+			Description: "Entrega estándar",
 		}
 
 		originAddress = domain.AddressInfo{
-			Organization: organization1,
 			State:        "Región Metropolitana",
 			AddressLine1: "Av. Providencia 1234",
 			Location:     orb.Point{-70.6199, -33.4342},
 		}
 
 		destAddress = domain.AddressInfo{
-			Organization: organization1,
 			State:        "Región Metropolitana",
 			AddressLine1: "Av. Las Condes 5678",
 			Location:     orb.Point{-70.5714, -33.4012},
@@ -56,29 +66,25 @@ var _ = Describe("UpsertOrder", func() {
 		originContact = domain.Contact{
 			FullName:     "Cliente Origen",
 			PrimaryEmail: "origen@example.com",
-			Organization: organization1,
 		}
 
 		destContact = domain.Contact{
 			FullName:     "Cliente Destino",
 			PrimaryEmail: "destino@example.com",
-			Organization: organization1,
 		}
 
 		originNode = domain.NodeInfo{
-			ReferenceID:  "node-origin-001",
-			Name:         "Centro de Distribución Central",
-			Organization: organization1,
-			AddressInfo:  originAddress,
-			Contact:      originContact,
+			ReferenceID: "node-origin-001",
+			Name:        "Centro de Distribución Central",
+			AddressInfo: originAddress,
+			Contact:     originContact,
 		}
 
 		destNode = domain.NodeInfo{
-			ReferenceID:  "node-dest-001",
-			Name:         "Punto de Entrega",
-			Organization: organization1,
-			AddressInfo:  destAddress,
-			Contact:      destContact,
+			ReferenceID: "node-dest-001",
+			Name:        "Punto de Entrega",
+			AddressInfo: destAddress,
+			Contact:     destContact,
 		}
 
 		// Preparamos únicamente OrderStatus para los tests ya que es requerido
@@ -103,7 +109,6 @@ var _ = Describe("UpsertOrder", func() {
 	It("should insert a new order if it doesn't exist", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				//	Organization: organization1,
 				Commerce: "Tienda Online",
 				Consumer: "Distribución Nacional",
 			},
@@ -132,7 +137,7 @@ var _ = Describe("UpsertOrder", func() {
 		var dbOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbOrder.ReferenceID).To(Equal(string(order.ReferenceID)))
@@ -143,7 +148,6 @@ var _ = Describe("UpsertOrder", func() {
 	It("should update an existing order if delivery instructions changed", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				//	Organization: organization1,
 				Commerce: "Tienda Online",
 				Consumer: "Distribución Nacional",
 			},
@@ -170,7 +174,7 @@ var _ = Describe("UpsertOrder", func() {
 		var dbOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbOrder.DeliveryInstructions).To(Equal("Instrucciones modificadas"))
@@ -182,9 +186,8 @@ var _ = Describe("UpsertOrder", func() {
 
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-003",
 			OrderStatus: orderStatus,
@@ -226,7 +229,7 @@ var _ = Describe("UpsertOrder", func() {
 		var dbOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -244,9 +247,8 @@ var _ = Describe("UpsertOrder", func() {
 
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-004",
 			OrderStatus: orderStatus, // status pendiente
@@ -269,7 +271,7 @@ var _ = Describe("UpsertOrder", func() {
 		var dbOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbOrder.OrderStatusDoc).To(Equal(newStatus.DocID().String()))
@@ -278,9 +280,8 @@ var _ = Describe("UpsertOrder", func() {
 	It("should update items if changed", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-005",
 			OrderStatus: orderStatus,
@@ -330,7 +331,7 @@ var _ = Describe("UpsertOrder", func() {
 		var dbOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(len(dbOrder.JSONItems)).To(Equal(2))
@@ -339,9 +340,8 @@ var _ = Describe("UpsertOrder", func() {
 	It("should fail if the orders table does not exist", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-ERROR",
 			OrderStatus: orderStatus,
@@ -361,17 +361,15 @@ var _ = Describe("UpsertOrder", func() {
 	It("should update document references when related entities change", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
-				Organization: organization1,
-				Commerce:     "Tienda Online",
-				Consumer:     "Distribución Nacional",
+				Commerce: "Tienda Online",
+				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-DOC-TEST",
 			OrderStatus: domain.OrderStatus{
 				Status: "pending",
 			},
 			OrderType: domain.OrderType{
-				Type:         "retail",
-				Organization: organization1,
+				Type: "retail",
 			},
 			Origin:      originNode,
 			Destination: destNode,
@@ -384,7 +382,7 @@ var _ = Describe("UpsertOrder", func() {
 		var initialOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&initialOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -394,42 +392,34 @@ var _ = Describe("UpsertOrder", func() {
 			Status: "in_progress",
 		}
 		modifiedOrder.OrderType = domain.OrderType{
-			Type:         "express",
-			Organization: organization1,
+			Type: "express",
 		}
 		modifiedOrder.Headers = domain.Headers{
-			Organization: organization1,
-			Commerce:     "Nuevo Comercio",
-			Consumer:     "Nuevo Consumidor",
+			Commerce: "Nuevo Comercio",
+			Consumer: "Nuevo Consumidor",
 		}
 		modifiedOrder.Origin = domain.NodeInfo{
-			ReferenceID:  "modified-origin-node-001",
-			Name:         "Nuevo Nodo Origen",
-			Organization: organization1,
+			ReferenceID: "modified-origin-node-001",
+			Name:        "Nuevo Nodo Origen",
 			AddressInfo: domain.AddressInfo{
-				Organization: organization1,
 				AddressLine1: "Nueva dirección origen",
 				Location:     orb.Point{-70.5, -33.5},
 			},
 			Contact: domain.Contact{
 				FullName:     "Nuevo contacto origen",
 				PrimaryEmail: "nuevo-origen@example.com",
-				Organization: organization1,
 			},
 		}
 		modifiedOrder.Destination = domain.NodeInfo{
-			ReferenceID:  "modified-dest-node-002",
-			Name:         "Nuevo Nodo Destino",
-			Organization: organization1,
+			ReferenceID: "modified-dest-node-002",
+			Name:        "Nuevo Nodo Destino",
 			AddressInfo: domain.AddressInfo{
-				Organization: organization1,
 				AddressLine1: "Nueva dirección destino",
 				Location:     orb.Point{-70.1, -33.1},
 			},
 			Contact: domain.Contact{
 				FullName:     "Nuevo contacto destino",
 				PrimaryEmail: "nuevo-destino@example.com",
-				Organization: organization1,
 			},
 		}
 
@@ -439,35 +429,33 @@ var _ = Describe("UpsertOrder", func() {
 		var updatedOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID()).
+			Where("document_id = ?", order.DocID(ctx)).
 			First(&updatedOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 
 		// Validaciones de DocIDs actualizados
 		Expect(updatedOrder.OrderStatusDoc).To(Equal(modifiedOrder.OrderStatus.DocID().String()))
-		Expect(updatedOrder.OrderTypeDoc).To(Equal(modifiedOrder.OrderType.DocID().String()))
-		Expect(updatedOrder.OrderHeadersDoc).To(Equal(modifiedOrder.Headers.DocID().String()))
+		Expect(updatedOrder.OrderTypeDoc).To(Equal(modifiedOrder.OrderType.DocID(ctx).String()))
+		Expect(updatedOrder.OrderHeadersDoc).To(Equal(modifiedOrder.Headers.DocID(ctx).String()))
 
-		Expect(updatedOrder.OriginNodeInfoDoc).To(Equal(modifiedOrder.Origin.DocID().String()))
-		Expect(updatedOrder.OriginContactDoc).To(Equal(modifiedOrder.Origin.Contact.DocID().String()))
-		Expect(updatedOrder.OriginAddressInfoDoc).To(Equal(modifiedOrder.Origin.AddressInfo.DocID().String()))
+		Expect(updatedOrder.OriginNodeInfoDoc).To(Equal(modifiedOrder.Origin.DocID(ctx).String()))
+		Expect(updatedOrder.OriginContactDoc).To(Equal(modifiedOrder.Origin.Contact.DocID(ctx).String()))
+		Expect(updatedOrder.OriginAddressInfoDoc).To(Equal(modifiedOrder.Origin.AddressInfo.DocID(ctx).String()))
 
-		Expect(updatedOrder.DestinationNodeInfoDoc).To(Equal(modifiedOrder.Destination.DocID().String()))
-		Expect(updatedOrder.DestinationContactDoc).To(Equal(modifiedOrder.Destination.Contact.DocID().String()))
-		Expect(updatedOrder.DestinationAddressInfoDoc).To(Equal(modifiedOrder.Destination.AddressInfo.DocID().String()))
+		Expect(updatedOrder.DestinationNodeInfoDoc).To(Equal(modifiedOrder.Destination.DocID(ctx).String()))
+		Expect(updatedOrder.DestinationContactDoc).To(Equal(modifiedOrder.Destination.Contact.DocID(ctx).String()))
+		Expect(updatedOrder.DestinationAddressInfoDoc).To(Equal(modifiedOrder.Destination.AddressInfo.DocID(ctx).String()))
 	})
-
 })
 
-func createMinimalOrder() domain.Order {
+func createMinimalOrder(ctx context.Context) domain.Order {
 	return domain.Order{
 		Headers: domain.Headers{
-			Organization: organization1,
-			Commerce:     "Tienda",
-			Consumer:     "Cliente",
+			Commerce: "Tienda",
+			Consumer: "Cliente",
 		},
 		ReferenceID: "ORDER-FAIL-TEST",
 		OrderStatus: domain.OrderStatus{Status: "pending"},
-		OrderType:   domain.OrderType{Type: "retail", Organization: organization1},
+		OrderType:   domain.OrderType{Type: "retail"},
 	}
 }

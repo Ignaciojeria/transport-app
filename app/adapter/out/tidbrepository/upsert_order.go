@@ -24,7 +24,6 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		var order table.Order
 		err := conn.DB.WithContext(ctx).
 			Table("orders").
-			Preload("Organization").
 			Where("document_id = ?",
 				o.DocID(ctx)).
 			First(&order).Error
@@ -57,6 +56,10 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		// Actualizar IDs de documento si han cambiado
 		if o.Headers.DocID(ctx).ShouldUpdate(order.OrderHeadersDoc) {
 			DBOrderToUpdate.OrderHeadersDoc = o.Headers.DocID(ctx).String()
+		}
+
+		if o.OrderStatus.DocID().ShouldUpdate(order.OrderStatusDoc) {
+			DBOrderToUpdate.OrderStatusDoc = o.OrderStatus.DocID().String()
 		}
 
 		if o.Origin.DocID(ctx).ShouldUpdate(order.OriginNodeInfoDoc) {

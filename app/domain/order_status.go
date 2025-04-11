@@ -1,7 +1,7 @@
 package domain
 
 import (
-	"strconv"
+	"context"
 	"time"
 )
 
@@ -12,5 +12,5 @@ type OrderStatus struct {
 }
 
 func (oe OrderStatus) DocID() DocumentID {
-	return DocumentID(strconv.Itoa(int(oe.ID)))
+	return Hash(context.Background(), oe.Status)
 }

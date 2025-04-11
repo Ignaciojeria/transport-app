@@ -25,7 +25,6 @@ func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 
 		err := conn.DB.WithContext(ctx).
 			Table("order_headers").
-			Preload("Organization").
 			Where("document_id = ?", h.DocID(ctx)).
 			First(&orderHeaders).Error
 
@@ -38,7 +37,7 @@ func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
 			return nil
 		}
 
-		orderHeadersTbl := mapper.MapOrderHeaders(h)
+		orderHeadersTbl := mapper.MapOrderHeaders(ctx, h)
 
 		return conn.DB.
 			WithContext(ctx).

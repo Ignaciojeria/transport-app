@@ -17,7 +17,10 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 			OrganizationID: order.Organization.ID,
 		*/
 		// Mapear IDs de documentos relacionados
-		//OrderHeadersDoc:        order.Headers.DocID().String(),
+		OrganizationID:         sharedcontext.TenantIDFromContext(ctx),
+		ReferenceID:            string(order.ReferenceID),
+		DocumentID:             order.DocID(ctx).String(),
+		OrderHeadersDoc:        order.Headers.DocID(ctx).String(),
 		OrderStatusDoc:         order.OrderStatus.DocID().String(),
 		OrderTypeDoc:           order.OrderType.DocID(ctx).String(),
 		OriginNodeInfoDoc:      order.Origin.DocID(ctx).String(),
@@ -41,7 +44,7 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		JSONItems:                         mapItemsToTable(order.Items),
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
-		//	Packages:                          MapPackagesToTable(order.Packages, orgCountryID),
+		Packages:                          MapPackagesToTable(ctx, order.Packages),
 	}
 	return tbl
 }
@@ -93,11 +96,11 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 	return mapped
 }
 
-func MapPackagesToTable(packages []domain.Package, orgCountryID int64) []table.Package {
+func MapPackagesToTable(ctx context.Context, packages []domain.Package) []table.Package {
 	mapped := make([]table.Package, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = table.Package{
-			OrganizationID: orgCountryID,
+			OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 			Lpn:            pkg.Lpn,
 			JSONDimensions: table.JSONDimensions{
 				Height: pkg.Dimensions.Height,

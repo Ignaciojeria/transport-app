@@ -76,7 +76,7 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-			return upsertPackages(ctx, inOrder.Packages, domain.Organization{})
+			return upsertPackages(ctx, inOrder.Packages)
 		})
 
 		group.Go(func() error {

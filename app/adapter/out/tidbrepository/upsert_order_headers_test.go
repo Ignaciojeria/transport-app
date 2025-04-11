@@ -2,22 +2,33 @@ package tidbrepository
 
 import (
 	"context"
+	"strconv"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("TestUpsertOrderHeaders", func() {
-	// Scenario 1: Insert order header if not exists (ya cubierto por tu test existente)
-	It("should insert order header if not exists", func() {
+	// Helper function to create context with organization
+	createOrgContext := func(org domain.Organization) context.Context {
 		ctx := context.Background()
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(org.ID, 10))
+		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
+		bag, _ := baggage.New(orgIDMember, countryMember)
+		return baggage.ContextWithBaggage(ctx, bag)
+	}
+
+	// Scenario 1: Insert order header if not exists
+	It("should insert order header if not exists", func() {
+		ctx := createOrgContext(organization1)
 
 		h := domain.Headers{
 			Commerce: "tienda-123",
 			Consumer: "cliente-xyz",
-			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
@@ -27,20 +38,19 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var result table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("document_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID(ctx)).
 			First(&result).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result.DocumentID).To(Equal(string(h.DocID())))
+		Expect(result.DocumentID).To(Equal(string(h.DocID(ctx))))
 	})
 
 	// Scenario 2: Do nothing if order header already exists
 	It("should do nothing if order header already exists", func() {
-		ctx := context.Background()
+		ctx := createOrgContext(organization1)
 
 		h := domain.Headers{
 			Commerce: "tienda-existente",
 			Consumer: "cliente-existente",
-			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
@@ -53,7 +63,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var firstRecord table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("document_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID(ctx)).
 			First(&firstRecord).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -69,7 +79,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var count int64
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("document_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(1))) // Solo debe existir un registro
@@ -78,7 +88,7 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		var updatedRecord table.OrderHeaders
 		err = connection.DB.WithContext(ctx).
 			Table("order_headers").
-			Where("document_id = ?", h.DocID()).
+			Where("document_id = ?", h.DocID(ctx)).
 			First(&updatedRecord).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -87,9 +97,8 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 	})
 
 	// Scenario 3: Return error when DB query fails
-	// Para este escenario usaremos la conexión sin tablas que ya tienes
 	It("should return error when DB query fails", func() {
-		ctx := context.Background()
+		ctx := createOrgContext(organization1)
 
 		// Modificamos la conexión para que falle al hacer la consulta
 		// Esto simulará un error durante la consulta inicial
@@ -99,7 +108,6 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		h := domain.Headers{
 			Commerce: "tienda-error",
 			Consumer: "cliente-error",
-			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(badConnection)
@@ -109,14 +117,14 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		Expect(err).To(HaveOccurred())
 	})
 
-	// Escenario adicional: falla si la organización no es válida (ya cubierto por tu test existente)
-	It("should fail to insert order header if organization is missing", func() {
+	// Escenario adicional: falla si la organización no es válida
+	It("should fail to insert order header if organization is missing from context", func() {
+		// Use a context without organization information
 		ctx := context.Background()
 
 		h := domain.Headers{
 			Commerce: "tienda-123",
 			Consumer: "cliente-xyz",
-			//	Organization: domain.Organization{}, // ID=0, Country=""
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
@@ -124,47 +132,48 @@ var _ = Describe("TestUpsertOrderHeaders", func() {
 		Expect(err).To(HaveOccurred())
 	})
 
-	// Escenario adicional: prueba de concurrencia con dos organizaciones diferentes (ya cubierto por tu test existente)
+	// Escenario adicional: prueba de concurrencia con dos organizaciones diferentes
 	It("should insert the same order header in different organizations", func() {
-		ctx := context.Background()
+		ctx1 := createOrgContext(organization1)
+		ctx2 := createOrgContext(organization2)
 
 		h1 := domain.Headers{
 			Commerce: "tienda-repetida",
 			Consumer: "cliente-repetido",
-			//	Organization: organization1,
 		}
 
 		h2 := domain.Headers{
 			Commerce: "tienda-repetida",
 			Consumer: "cliente-repetido",
-			//	Organization: organization2,
 		}
 
 		upsert := NewUpsertOrderHeaders(connection)
 
-		err := upsert(ctx, h1)
+		err := upsert(ctx1, h1)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = upsert(ctx, h2)
+		err = upsert(ctx2, h2)
 		Expect(err).ToNot(HaveOccurred())
 
 		var count int64
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(context.Background()).
 			Table("order_headers").
-			Where("document_id IN (?, ?)", h1.DocID(), h2.DocID()).
+			Where("document_id IN (?, ?)", h1.DocID(ctx1), h2.DocID(ctx2)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
+
+		// Verify they have different document IDs
+		Expect(h1.DocID(ctx1)).ToNot(Equal(h2.DocID(ctx2)))
 	})
 
-	// Escenario adicional: error con conexión a BD sin tablas (ya cubierto por tu test existente)
+	// Escenario adicional: error con conexión a BD sin tablas
 	It("should fail when trying to upsert order header in DB without tables", func() {
-		ctx := context.Background()
+		ctx := createOrgContext(organization1)
 
 		h := domain.Headers{
 			Commerce: "tienda-sin-tablas",
 			Consumer: "cliente-sin-tablas",
-			//	Organization: organization1,
 		}
 
 		upsert := NewUpsertOrderHeaders(noTablesContainerConnection)

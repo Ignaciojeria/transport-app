@@ -23,7 +23,6 @@ func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
 		var existing table.AddressInfo
 		err := conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Preload("Organization").
 			Where("document_id = ?", ai.DocID(ctx)).
 			First(&existing).Error
 

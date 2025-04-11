@@ -8,6 +8,9 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/sharedcontext"
+
+	"go.opentelemetry.io/otel/baggage"
 
 	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
@@ -81,31 +84,46 @@ var _ = BeforeSuite(func() {
 		DB_RUN_MIGRATIONS: "true",
 	})()
 	Expect(err).ToNot(HaveOccurred())
+
+	// Create test account first
 	err = NewUpsertAccount(connection)(ctx, domain.Operator{
 		Contact: domain.Contact{
 			PrimaryEmail: "ignaciovl.j@gmail.com",
 		},
 	})
 	Expect(err).ToNot(HaveOccurred())
-	organization1, err = NewSaveOrganization(connection)(ctx, domain.Operator{
-		Contact: domain.Contact{
-			PrimaryEmail: "ignaciovl.j@gmail.com",
+
+	// Create baggage member for tenant country
+	countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, countries.Chile.String())
+	bag, _ := baggage.New(countryMember)
+	ctxWithCountry := baggage.ContextWithBaggage(ctx, bag)
+
+	// Create first organization using the new function
+	saveOrganization := NewSaveOrganization(connection)
+	organization1, err = saveOrganization(
+		ctxWithCountry,
+		domain.Operator{
+			Contact: domain.Contact{
+				PrimaryEmail: "ignaciovl.j@gmail.com",
+			},
 		},
-		Organization: domain.Organization{
-			Country: countries.CL,
-		},
-	})
-	Expect(err).ToNot(HaveOccurred())
-	organization2, err = NewSaveOrganization(connection)(ctx, domain.Operator{
-		Contact: domain.Contact{
-			PrimaryEmail: "ignaciovl.j@gmail.com",
-		},
-		Organization: domain.Organization{
-			Country: countries.CL,
-		},
-	})
+		"Organization 1",
+	)
 	Expect(err).ToNot(HaveOccurred())
 
+	// Create second organization using the new function
+	organization2, err = saveOrganization(
+		ctxWithCountry,
+		domain.Operator{
+			Contact: domain.Contact{
+				PrimaryEmail: "ignaciovl.j@gmail.com",
+			},
+		},
+		"Organization 2",
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	// No tables container setup (remains unchanged)
 	noTablesContainer, err := tcpostgres.Run(ctx,
 		"postgres:16-alpine",
 		tcpostgres.WithDatabase(dbName),
@@ -139,7 +157,6 @@ var _ = BeforeSuite(func() {
 		nil,
 	)
 	Expect(err).ToNot(HaveOccurred())
-
 })
 
 var _ = AfterSuite(func() {
