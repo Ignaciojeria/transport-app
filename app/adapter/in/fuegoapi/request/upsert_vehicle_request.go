@@ -41,7 +41,6 @@ type UpsertVehicleRequest struct {
 func (v UpsertVehicleRequest) Map() domain.Vehicle {
 	return domain.Vehicle{
 		Plate:           v.Plate,
-		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
 		VehicleCategory: domain.VehicleCategory{
 			Type: v.Category,
@@ -66,27 +65,27 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			PolicyExpirationDate: v.Insurance.PolicyExpirationDate,
 			PolicyRenewalDate:    v.Insurance.PolicyRenewalDate,
 			MaxInsuranceCoverage: struct {
-				Amount   float64 
-				Currency string  
+				Amount   float64
+				Currency string
 			}{
 				Amount:   v.Insurance.MaxInsuranceCoverage.Amount,
 				Currency: v.Insurance.MaxInsuranceCoverage.Currency,
 			},
 		},
 		TechnicalReview: struct {
-			LastReviewDate string 
-			NextReviewDate string 
-			ReviewedBy     string 
+			LastReviewDate string
+			NextReviewDate string
+			ReviewedBy     string
 		}{
 			LastReviewDate: v.TechnicalReview.LastReviewDate,
 			NextReviewDate: v.TechnicalReview.NextReviewDate,
 			ReviewedBy:     v.TechnicalReview.ReviewedBy,
 		},
 		Dimensions: struct {
-			Width         float64 
-			Length        float64 
-			Height        int     
-			UnitOfMeasure string  
+			Width         float64
+			Length        float64
+			Height        int
+			UnitOfMeasure string
 		}{
 			Width:         v.Dimensions.Width,
 			Length:        v.Dimensions.Length,
@@ -94,13 +93,11 @@ func (v UpsertVehicleRequest) Map() domain.Vehicle {
 			UnitOfMeasure: v.Dimensions.UnitOfMeasure,
 		},
 		Carrier: struct {
-			Organization domain.Organization
-			Name         string             
-			NationalID   string             
+			Name       string
+			NationalID string
 		}{
-			Organization: domain.Organization{}, // Ajustar según tu lógica de negocio
-			Name:         v.Carrier.Name,
-			NationalID:   v.Carrier.NationalID,
+			Name:       v.Carrier.Name,
+			NationalID: v.Carrier.NationalID,
 		},
 	}
 }

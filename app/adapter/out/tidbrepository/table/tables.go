@@ -97,7 +97,6 @@ func (j JSONEvidencePhotos) Value() (driver.Value, error) {
 	return json.Marshal(j)
 }
 
-
 // 🔥 Función auxiliar para manejar punteros de time.Time de manera segura
 func safeTime(t *time.Time) time.Time {
 	if t == nil {
@@ -163,10 +162,6 @@ type Contact struct {
 
 func (c Contact) Map() domain.Contact {
 	return domain.Contact{
-		Organization: domain.Organization{
-			ID:      c.OrganizationID,
-			Country: countries.ByName(c.Organization.Country),
-		},
 		FullName:     c.FullName,
 		PrimaryEmail: c.Email,
 		PrimaryPhone: c.Phone,
@@ -269,7 +264,6 @@ type Package struct {
 
 func (p Package) Map() domain.Package {
 	return domain.Package{
-		Organization:   p.Organization.Map(),
 		Lpn:            p.Lpn,
 		Dimensions:     p.JSONDimensions.Map(),
 		Weight:         p.JSONWeight.Map(),
@@ -319,12 +313,8 @@ type NodeInfo struct {
 
 func (n NodeInfo) Map() domain.NodeInfo {
 	nodeInfo := domain.NodeInfo{
-		ReferenceID: domain.ReferenceID(n.ReferenceID),
-		Name:        n.Name,
-		Organization: domain.Organization{
-			ID:      n.OrganizationID,
-			Country: countries.ByName(n.Organization.Country),
-		},
+		ReferenceID:  domain.ReferenceID(n.ReferenceID),
+		Name:         n.Name,
 		References:   n.NodeReferences.Map(),
 		AddressLine2: n.AddressLine2,
 		AddressLine3: n.AddressLine3,
@@ -337,7 +327,7 @@ type AddressInfo struct {
 	ID             int64        `gorm:"primaryKey"`
 	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	DocumentID     string       `gorm:"not null;uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
 	State          string       `gorm:"default:null"`
 	Province       string       `gorm:"default:null"`
 	District       string       `gorm:"default:null"`
@@ -350,9 +340,8 @@ type AddressInfo struct {
 
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
-		Organization: a.Organization.Map(),
-		State:        a.State,
-		Province:     a.Province,
+		State:    a.State,
+		Province: a.Province,
 		//	Locality:     a.Locality,
 		District:     a.District,
 		AddressLine1: a.AddressLine1,
@@ -466,10 +455,6 @@ func (o OrderType) Map() domain.OrderType {
 	return domain.OrderType{
 		Type:        o.Type,
 		Description: o.Description,
-		Organization: domain.Organization{
-			ID:      o.OrganizationID,
-			Country: countries.ByName(o.Organization.Country),
-		},
 	}
 }
 
@@ -511,15 +496,8 @@ type AccountOrganization struct {
 	UpdatedAt      time.Time
 }
 
-func (a Account) MapOperator(org domain.Organization) domain.Operator {
-	// Inicializamos un Operator base
-	operator := domain.Operator{
-		//	ID: a.ID,
-		Organization: domain.Organization{
-			ID: org.ID,
-		},
-	}
-	return operator
+func (a Account) MapOperator() domain.Operator {
+	return domain.Operator{}
 }
 
 type JSONB json.RawMessage
@@ -560,9 +538,6 @@ func (c Carrier) Map() domain.Carrier {
 	return domain.Carrier{
 		Name:       c.Name,
 		NationalID: c.NationalID,
-		Organization: domain.Organization{
-			ID: c.OrganizationID,
-		},
 	}
 }
 
@@ -592,7 +567,6 @@ func (v Vehicle) Map() domain.Vehicle {
 	return domain.Vehicle{
 		//ReferenceID:     v.ReferenceID,
 		Plate:           v.Plate,
-		IsActive:        v.IsActive,
 		CertificateDate: v.CertificateDate,
 		VehicleCategory: domain.VehicleCategory{
 			Type:                v.VehicleCategory.Type,
@@ -616,8 +590,6 @@ func (vc VehicleCategory) Map() domain.VehicleCategory {
 	return domain.VehicleCategory{
 		MaxPackagesQuantity: vc.MaxPackagesQuantity,
 		Type:                vc.Type,
-
-		Organization: domain.Organization{ID: vc.OrganizationID},
 	}
 }
 
@@ -633,10 +605,11 @@ type OrderHeaders struct {
 
 func (m OrderHeaders) Map() domain.Headers {
 	return domain.Headers{
-		Organization: domain.Organization{
-			ID:      m.OrganizationID,
-			Country: countries.ByName(m.Organization.Country),
-		},
+		/*
+			Organization: domain.Organization{
+				ID:      m.OrganizationID,
+				Country: countries.ByName(m.Organization.Country),
+			},*/
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
@@ -652,9 +625,10 @@ type VehicleHeaders struct {
 
 func (m VehicleHeaders) Map() domain.Headers {
 	return domain.Headers{
-		Organization: domain.Organization{
-			ID: m.OrganizationID,
-		},
+		/*
+			Organization: domain.Organization{
+				ID: m.OrganizationID,
+			},*/
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
@@ -670,9 +644,10 @@ type NodeHeaders struct {
 
 func (m NodeHeaders) Map() domain.Headers {
 	return domain.Headers{
-		Organization: domain.Organization{
-			ID: m.OrganizationID,
-		},
+		/*
+			Organization: domain.Organization{
+				ID: m.OrganizationID,
+			},*/
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
@@ -689,9 +664,6 @@ type NodeType struct {
 
 func (n NodeType) Map() domain.NodeType {
 	return domain.NodeType{
-		Organization: domain.Organization{
-			ID: n.OrganizationID,
-		},
 		Value: n.Value,
 	}
 }

@@ -1,22 +1,22 @@
 package domain
 
+import "context"
+
 type NodeInfo struct {
 	ReferenceID  ReferenceID
-	Organization Organization
 	Name         string
 	NodeType     NodeType
-	Contact      Contact
 	References   []Reference
 	AddressInfo  AddressInfo
 	AddressLine2 string
 	AddressLine3 string
 }
 
-func (n NodeInfo) DocID() DocumentID {
+func (n NodeInfo) DocID(ctx context.Context) DocumentID {
 	if n.ReferenceID == "" {
 		return ""
 	}
-	return Hash(n.Organization, string(n.ReferenceID))
+	return Hash(ctx, string(n.ReferenceID))
 }
 
 func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {

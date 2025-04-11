@@ -46,9 +46,8 @@ func createAccountOperator(
 					"commerce":     c.Header("commerce"),
 					"referenceID":  requestBody.ReferenceID,
 				},
-				Status:       "pending",
-				Organization: organization,
-				Payload:      requestBodyBytes,
+				Status:  "pending",
+				Payload: requestBodyBytes,
 			}); err != nil {
 				return response.CreateAccountResponse{}, err
 			}

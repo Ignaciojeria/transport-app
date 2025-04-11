@@ -2,6 +2,12 @@
     "version": "0.2.0",
     "configurations": [
       {
+        "name": "Debug Main",
+        "type": "go",
+        "request": "launch",
+        "program": "${workspaceFolder}",
+      },
+      {
         "name": "Debug Ginkgo - Tidb Repository",
         "type": "go",
         "request": "launch",

@@ -27,17 +27,14 @@ func NewUpsertNode(
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 ) UpsertNode {
 	return func(ctx context.Context, nodeInfo domain.NodeInfo) error {
-		nodeInfo.NodeType.Organization = nodeInfo.Organization
 		err := upsertNodeType(ctx, nodeInfo.NodeType)
 		if err != nil {
 			return err
 		}
-		nodeInfo.Contact.Organization = nodeInfo.Organization
-		err = upsertContact(ctx, nodeInfo.Contact)
+		err = upsertContact(ctx, nodeInfo.AddressInfo.Contact)
 		if err != nil {
 			return err
 		}
-		nodeInfo.AddressInfo.Organization = nodeInfo.Organization
 		err = upsertAddressInfo(ctx, nodeInfo.AddressInfo)
 		if err != nil {
 			return err

@@ -1,12 +1,14 @@
 package domain
 
+import "context"
+
 type Reference struct {
 	Type  string
 	Value string
 }
 
-func DocID(org Organization, r Reference) DocumentID {
-	return Hash(org, r.Type, r.Value)
+func DocID(ctx context.Context, r Reference) DocumentID {
+	return Hash(ctx, r.Type, r.Value)
 }
 
 // UpdateIfChange actualiza los campos de Reference solo si son diferentes

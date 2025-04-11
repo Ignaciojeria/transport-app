@@ -20,16 +20,16 @@ func init() {
 
 type SaveOrganization func(
 	context.Context,
-	domain.Operator,
+	domain.Organization,
 ) (domain.Organization, error)
 
 func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
-	return func(ctx context.Context, o domain.Operator) (domain.Organization, error) {
+	return func(ctx context.Context, o domain.Organization) (domain.Organization, error) {
 		// Mapear la entidad del dominio a la tabla
-		tableOrg := mapper.MapOrganizationToTable(o.Organization)
+		tableOrg := mapper.MapOrganizationToTable(ctx, o.Name)
 
 		var account table.Account
-		err := conn.Where("email = ?", o.Contact.PrimaryEmail).Find(&account).Error
+		err := conn.Where("email = ?", o.Operator.Contact.PrimaryEmail).Find(&account).Error
 		if err != nil {
 			return domain.Organization{}, err
 		}
@@ -37,7 +37,6 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := conn.DB.Create(&tableOrg).Error; err != nil {
 				return ErrOrganizationDatabase.New("failed to create organization: %v", err)
-
 			}
 			accountOrg.AccountID = account.ID
 			accountOrg.OrganizationID = tableOrg.ID
@@ -52,8 +51,8 @@ func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
 		// Mapear de vuelta a la entidad de dominio
 		savedOrg := domain.Organization{
 			ID:      tableOrg.ID,
-			Country: o.Organization.Country,
-			Name:    o.Organization.Name,
+			Country: o.Country,
+			Name:    o.Name,
 		}
 		return savedOrg, nil
 	}

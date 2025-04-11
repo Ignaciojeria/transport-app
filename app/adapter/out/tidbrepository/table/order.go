@@ -4,7 +4,6 @@ import (
 	"time"
 	"transport-app/app/domain"
 
-	"github.com/biter777/countries"
 	"gorm.io/gorm"
 )
 
@@ -83,12 +82,14 @@ func (o Order) Map() domain.Order {
 	order := domain.Order{
 		//	ID:          o.ID,
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
-		Headers: domain.Headers{
-			Organization: domain.Organization{
-				ID:      o.OrganizationID,
-				Country: countries.ByName(o.Organization.Country),
+		/*
+			Headers: domain.Headers{
+				Organization: domain.Organization{
+					ID:      o.OrganizationID,
+					Country: countries.ByName(o.Organization.Country),
+				},
 			},
-		},
+		*/
 		//	Plan:                 domain.Plan{},
 		DeliveryInstructions: o.DeliveryInstructions,
 	}

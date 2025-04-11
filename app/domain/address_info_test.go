@@ -1,39 +1,40 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/paulmach/orb"
 )
 
 var _ = Describe("AddressInfo", func() {
+	var ctx context.Context
 
-	var org1 = Organization{ID: 1, Country: countries.CL}
+	BeforeEach(func() {
+		ctx = buildCtx("org1", "CL")
+	})
 
-	Describe("ReferenceID", func() {
+	Describe("ReferenceID / DocID", func() {
 		It("should generate different reference IDs for different address lines", func() {
 			addr1 := AddressInfo{
-				Organization: org1,
 				AddressLine1: "Av Providencia 1234",
 				District:     "Providencia",
 				Province:     "Santiago",
 				State:        "Metropolitana",
 			}
 			addr2 := AddressInfo{
-				Organization: org1,
 				AddressLine1: "Av Providencia 5678", // distinto
 				District:     "Providencia",
 				Province:     "Santiago",
 				State:        "Metropolitana",
 			}
 
-			Expect(addr1.DocID()).ToNot(Equal(addr2.DocID()))
+			Expect(addr1.DocID(ctx)).ToNot(Equal(addr2.DocID(ctx)))
 		})
 
 		It("should generate same ReferenceID for same input", func() {
 			addr1 := AddressInfo{
-				Organization: org1,
 				AddressLine1: "Av Providencia 1234",
 				District:     "Providencia",
 				Province:     "Santiago",
@@ -41,30 +42,26 @@ var _ = Describe("AddressInfo", func() {
 			}
 			addr2 := addr1
 
-			Expect(addr1.DocID()).To(Equal(addr2.DocID()))
+			Expect(addr1.DocID(ctx)).To(Equal(addr2.DocID(ctx)))
 		})
 
-		// Aunque AddressLine2 ya no es parte de la estructura, este test demuestra
-		// que el diseño es correcto y solo se incluyen los campos relevantes en el hash
 		It("should confirm hash only includes specified fields", func() {
 			addr1 := AddressInfo{
-				Organization: org1,
 				AddressLine1: "Av Providencia 1234",
 				District:     "Providencia",
 				Province:     "Santiago",
 				State:        "Metropolitana",
-				ZipCode:      "7500000", // No debería afectar el hash
+				ZipCode:      "7500000",
 			}
 			addr2 := AddressInfo{
-				Organization: org1,
 				AddressLine1: "Av Providencia 1234",
 				District:     "Providencia",
 				Province:     "Santiago",
 				State:        "Metropolitana",
-				ZipCode:      "7550000", // Diferente pero no debería afectar el hash
+				ZipCode:      "7550000", // No debería afectar el hash
 			}
 
-			Expect(addr1.DocID()).To(Equal(addr2.DocID()))
+			Expect(addr1.DocID(ctx)).To(Equal(addr2.DocID(ctx)))
 		})
 	})
 
@@ -73,14 +70,13 @@ var _ = Describe("AddressInfo", func() {
 
 		BeforeEach(func() {
 			original = AddressInfo{
-				Organization: org1,
 				AddressLine1: "Av Providencia 1234",
 				State:        "Metropolitana",
 				Province:     "Santiago",
 				District:     "Providencia",
 				ZipCode:      "7500000",
 				TimeZone:     "America/Santiago",
-				Location:     orb.Point{-33.4372, -70.6506}, // Coordenadas de ejemplo
+				Location:     orb.Point{-33.4372, -70.6506},
 			}
 		})
 
@@ -92,7 +88,7 @@ var _ = Describe("AddressInfo", func() {
 		})
 
 		It("should mark as changed when Location is updated", func() {
-			newLocation := orb.Point{-33.4400, -70.6600} // Coordenadas diferentes
+			newLocation := orb.Point{-33.4400, -70.6600}
 			input := AddressInfo{Location: newLocation}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
@@ -142,7 +138,7 @@ var _ = Describe("AddressInfo", func() {
 		})
 
 		It("should ignore empty fields in input", func() {
-			input := AddressInfo{} // Sin campos
+			input := AddressInfo{}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeFalse())
 			Expect(updated).To(Equal(original))
@@ -159,7 +155,6 @@ var _ = Describe("AddressInfo", func() {
 			Expect(updated.AddressLine1).To(Equal("Av Las Condes 5678"))
 			Expect(updated.District).To(Equal("Las Condes"))
 			Expect(updated.ZipCode).To(Equal("7550000"))
-			// Otros campos deben permanecer igual
 			Expect(updated.State).To(Equal(original.State))
 		})
 	})
@@ -194,7 +189,6 @@ var _ = Describe("AddressInfo", func() {
 
 			fullAddress := addr.FullAddress()
 
-			// Comprueba que el resultado contiene los campos correctos
 			Expect(fullAddress).To(ContainSubstring("Av Providencia 1234"))
 			Expect(fullAddress).To(ContainSubstring("Providencia"))
 			Expect(fullAddress).To(ContainSubstring("Santiago"))
@@ -212,65 +206,45 @@ var _ = Describe("AddressInfo", func() {
 			}
 
 			fullAddress := addr.FullAddress()
-
-			// Verifica que solo se incluyen los campos especificados
 			Expect(fullAddress).To(Equal("Av Providencia 1234, Providencia, Santiago, Metropolitana, 7500000"))
-			Expect(fullAddress).NotTo(ContainSubstring("AV PROVIDENCIA 1234"))
 		})
 
 		It("should correctly handle empty fields", func() {
 			addr := AddressInfo{
 				AddressLine1: "Av Providencia 1234",
 				District:     "Providencia",
-				// Province vacío
-				State:   "Metropolitana",
-				ZipCode: "", // Vacío
+				State:        "Metropolitana",
 			}
 
 			fullAddress := addr.FullAddress()
-
-			// Verifica que los campos vacíos se manejen correctamente
-			Expect(fullAddress).To(ContainSubstring("Av Providencia 1234"))
-			Expect(fullAddress).To(ContainSubstring("Providencia"))
-			Expect(fullAddress).To(ContainSubstring("Metropolitana"))
-			Expect(fullAddress).NotTo(ContainSubstring(",,")) // No debe haber comas consecutivas
+			Expect(fullAddress).To(Equal("Av Providencia 1234, Providencia, Metropolitana"))
 		})
 
 		It("should return just AddressLine1 if other fields are empty", func() {
-			addr := AddressInfo{
-				AddressLine1: "Av Providencia 1234",
-			}
-
-			fullAddress := addr.FullAddress()
-			Expect(fullAddress).To(Equal("Av Providencia 1234"))
+			addr := AddressInfo{AddressLine1: "Av Providencia 1234"}
+			Expect(addr.FullAddress()).To(Equal("Av Providencia 1234"))
 		})
 	})
 
 	Describe("concatenateWithCommas", func() {
 		It("should concatenate multiple non-empty strings with commas", func() {
-			result := concatenateWithCommas("uno", "dos", "tres")
-			Expect(result).To(Equal("uno, dos, tres"))
+			Expect(concatenateWithCommas("uno", "dos", "tres")).To(Equal("uno, dos, tres"))
 		})
-	
+
 		It("should skip empty strings", func() {
-			result := concatenateWithCommas("uno", "", "tres")
-			Expect(result).To(Equal("uno, tres"))
+			Expect(concatenateWithCommas("uno", "", "tres")).To(Equal("uno, tres"))
 		})
-	
+
 		It("should return a single value without comma if only one non-empty string", func() {
-			result := concatenateWithCommas("", "", "único")
-			Expect(result).To(Equal("único"))
+			Expect(concatenateWithCommas("", "", "único")).To(Equal("único"))
 		})
-	
+
 		It("should return empty string if all inputs are empty", func() {
-			result := concatenateWithCommas("", "", "")
-			Expect(result).To(BeEmpty())
+			Expect(concatenateWithCommas("", "", "")).To(BeEmpty())
 		})
-	
+
 		It("should return empty string if no values are passed", func() {
-			result := concatenateWithCommas()
-			Expect(result).To(BeEmpty())
+			Expect(concatenateWithCommas()).To(BeEmpty())
 		})
 	})
 })
-

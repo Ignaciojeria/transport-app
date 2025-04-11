@@ -23,7 +23,6 @@ func searchNodes(s httpserver.Server, search usecase.SearchNodes) {
 	fuego.Get(s.Manager, "/nodes",
 		func(c fuego.ContextNoBody) ([]response.SearchNodesResponse, error) {
 			searchFilters := domain.NodeSearchFilters{}
-			searchFilters.Organization.SetKey(c.Header("organization"))
 			page := c.QueryParam("page")
 			if page == "" {
 				page = "0"

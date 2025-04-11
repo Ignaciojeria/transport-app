@@ -23,12 +23,12 @@ func NewUpsertPlanningStatus(conn tidb.TIDBConnection) UpsertPlanningStatus {
 		var planningStatus table.PlanningStatus
 		err := conn.DB.WithContext(ctx).
 			Table("planning_statuses").
-			Where("document_id = ?", ps.Value, ps.Organization.ID).
+			Where("document_id = ?", ps.Value, "TODO").
 			First(&planningStatus).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return conn.
 				Omit("Organization").
-				Save(mapper.MapPlanningStatus(ps)).Error
+				Save(mapper.MapPlanningStatus(ctx, ps)).Error
 		}
 		return nil
 	}

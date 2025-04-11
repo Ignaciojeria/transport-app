@@ -26,7 +26,6 @@ func searchVehiclesByCarrier(
 			searchFilters := domain.VehicleSearchFilters{
 				CarrierReferenceID: c.PathParam("referenceID"),
 			}
-			searchFilters.Organization.SetKey(c.Header("organization"))
 			vehicles, err := search(c.Context(), searchFilters)
 			if err != nil {
 				return nil, err

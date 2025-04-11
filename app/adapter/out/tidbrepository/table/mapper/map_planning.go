@@ -1,11 +1,13 @@
 package mapper
 
 import (
+	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 )
 
-func MapPlan(plan domain.Plan) table.Plan {
+func MapPlan(ctx context.Context, plan domain.Plan) table.Plan {
 	return table.Plan{
 		ReferenceID:          plan.ReferenceID,
 		StartNodeReferenceID: string(plan.Origin.ReferenceID),
@@ -13,9 +15,7 @@ func MapPlan(plan domain.Plan) table.Plan {
 			Latitude:  plan.Origin.AddressInfo.Location.Lat(),
 			Longitude: plan.Origin.AddressInfo.Location.Lon(),
 		},
-		OrganizationID:   plan.Organization.ID,
-		PlannedDate:      plan.PlannedDate,
-		PlanTypeID:       plan.PlanType.ID,
-		PlanningStatusID: plan.PlanningStatus.ID,
+		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
+		PlannedDate:    plan.PlannedDate,
 	}
 }

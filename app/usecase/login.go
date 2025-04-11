@@ -23,11 +23,6 @@ func NewLogin(
 	login firebaseauth.Login,
 ) Login {
 	return func(ctx context.Context, userCreds domain.UserCredentials) (domain.ProviderToken, error) {
-		primaryOrg, err := findOrganizationByEmail(ctx, userCreds.Email)
-		if err != nil {
-			return domain.ProviderToken{}, err
-		}
-		userCreds.PrimaryOrganization = primaryOrg
 		return login(ctx, userCreds)
 	}
 }

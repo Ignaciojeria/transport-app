@@ -1,8 +1,10 @@
 package mapper
 
 import (
+	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 )
 
 func MapAccountTable(e domain.Operator) table.Account {
@@ -12,17 +14,17 @@ func MapAccountTable(e domain.Operator) table.Account {
 	}
 }
 
-func MapAddressInfoTable(e domain.AddressInfo, organizationCountryID int64) table.AddressInfo {
+func MapAddressInfoTable(ctx context.Context, e domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
 		State:          e.State,
 		District:       e.District,
 		AddressLine1:   e.AddressLine1,
-		DocumentID:     string(e.DocID()),
+		DocumentID:     string(e.DocID(ctx)),
 		Latitude:       e.Location[1],
 		Longitude:      e.Location[0],
 		ZipCode:        e.ZipCode,
 		TimeZone:       e.TimeZone,
-		OrganizationID: organizationCountryID,
+		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 		Province:       e.Province,
 	}
 }

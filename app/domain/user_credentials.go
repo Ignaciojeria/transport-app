@@ -1,10 +1,8 @@
 package domain
 
 type UserCredentials struct {
-	PrimaryOrganization  Organization
-	InvitedOrganizations []Organization
-	Email                string
-	Password             string
+	Email    string
+	Password string
 }
 
 type ProviderToken struct {

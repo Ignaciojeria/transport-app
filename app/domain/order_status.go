@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 )
 
@@ -11,5 +12,5 @@ type OrderStatus struct {
 }
 
 func (oe OrderStatus) DocID() DocumentID {
-	return Hash(GlobalOrganization, oe.Status)
+	return Hash(context.Background(), oe.Status)
 }

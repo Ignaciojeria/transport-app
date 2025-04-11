@@ -1,15 +1,16 @@
 package domain
 
+import "context"
+
 type Operator struct {
-	Organization Organization
-	OriginNode   NodeInfo
-	Contact      Contact `json:"contact"`
-	Carrier      Carrier
-	Role         Role `json:"type"`
+	OriginNode NodeInfo
+	Contact    Contact `json:"contact"`
+	Carrier    Carrier
+	Role       Role `json:"type"`
 }
 
-func (o Operator) DocID() DocumentID {
-	return Hash(o.Organization, o.Contact.PrimaryEmail)
+func (o Operator) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, o.Contact.PrimaryEmail)
 }
 
 type Role string
@@ -33,11 +34,4 @@ const (
 
 func (r Role) String() string {
 	return string(r)
-}
-
-func (o Operator) UpdateIfChanged(newOperator Operator) Operator {
-	if newOperator.Role.String() != "" {
-		o.Role = newOperator.Role
-	}
-	return o
 }

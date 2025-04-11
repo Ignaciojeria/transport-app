@@ -26,27 +26,29 @@ func NewUpsertVehicle(
 	upsertVehicle tidbrepository.UpsertVehicle,
 ) UpsertVehicle {
 	return func(ctx context.Context, vehicle domain.Vehicle) error {
-		vehicle.Headers.Organization = vehicle.Organization
-		vehicleHeaders, err := upsertVehicleHeaders(ctx, vehicle.Headers)
-		if err != nil {
-			return err
-		}
+		/*
+			vehicle.Headers.Organization = vehicle.Organization
+			vehicleHeaders, err := upsertVehicleHeaders(ctx, vehicle.Headers)
+			if err != nil {
+				return err
+			}
 
-		vehicle.VehicleCategory.Organization = vehicle.Organization
-		category, err := upsertVehicleCategory(ctx, vehicle.VehicleCategory)
-		if err != nil {
-			return err
-		}
+			vehicle.VehicleCategory.Organization = vehicle.Organization
+			category, err := upsertVehicleCategory(ctx, vehicle.VehicleCategory)
+			if err != nil {
+				return err
+			}
 
-		vehicle.Carrier.Organization = vehicle.Organization
-		carrier, err := upsertCarrier(ctx, vehicle.Carrier)
-		if err != nil {
-			return err
-		}
-		vehicle.Headers = vehicleHeaders
-		vehicle.VehicleCategory = category
-		vehicle.Carrier = carrier
-		_, err = upsertVehicle(ctx, vehicle)
-		return err
+			vehicle.Carrier.Organization = vehicle.Organization
+			carrier, err := upsertCarrier(ctx, vehicle.Carrier)
+			if err != nil {
+				return err
+			}
+			vehicle.Headers = vehicleHeaders
+			vehicle.VehicleCategory = category
+			vehicle.Carrier = carrier
+			_, err = upsertVehicle(ctx, vehicle)
+			return err*/
+		return nil
 	}
 }

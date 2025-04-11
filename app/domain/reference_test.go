@@ -1,30 +1,35 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Reference", func() {
-	var org1 = Organization{ID: 1, Country: countries.CL}
-	var org2 = Organization{ID: 2, Country: countries.AR}
+	var ctx1, ctx2 context.Context
+
+	BeforeEach(func() {
+		ctx1 = buildCtx("org1", "CL")
+		ctx2 = buildCtx("org2", "AR")
+	})
 
 	Describe("DocID", func() {
-		It("should generate consistent IDs for the same Organization, Type and Value", func() {
+		It("should generate consistent IDs for the same context, Type and Value", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 
-			id1 := DocID(org1, ref)
-			id2 := DocID(org1, ref)
+			id1 := DocID(ctx1, ref)
+			id2 := DocID(ctx1, ref)
 
 			Expect(id1).To(Equal(id2))
 		})
 
-		It("should generate different IDs for different Organizations", func() {
+		It("should generate different IDs for different contexts", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 
-			id1 := DocID(org1, ref)
-			id2 := DocID(org2, ref)
+			id1 := DocID(ctx1, ref)
+			id2 := DocID(ctx2, ref)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -33,8 +38,8 @@ var _ = Describe("Reference", func() {
 			ref1 := Reference{Type: "CODE", Value: "ABC123"}
 			ref2 := Reference{Type: "ALT_CODE", Value: "ABC123"}
 
-			id1 := DocID(org1, ref1)
-			id2 := DocID(org1, ref2)
+			id1 := DocID(ctx1, ref1)
+			id2 := DocID(ctx1, ref2)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -43,8 +48,8 @@ var _ = Describe("Reference", func() {
 			ref1 := Reference{Type: "CODE", Value: "ABC123"}
 			ref2 := Reference{Type: "CODE", Value: "XYZ789"}
 
-			id1 := DocID(org1, ref1)
-			id2 := DocID(org1, ref2)
+			id1 := DocID(ctx1, ref1)
+			id2 := DocID(ctx1, ref2)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -141,9 +146,9 @@ var _ = Describe("Reference", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 			newRef := Reference{Type: "NEW_CODE", Value: "XYZ789"}
 
-			originalID := DocID(org1, ref)
+			originalID := DocID(ctx1, ref)
 			updated, _ := ref.UpdateIfChange(newRef)
-			newID := DocID(org1, updated)
+			newID := DocID(ctx1, updated)
 
 			Expect(newID).ToNot(Equal(originalID))
 		})

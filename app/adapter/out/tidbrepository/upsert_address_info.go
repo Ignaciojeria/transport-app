@@ -23,8 +23,7 @@ func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
 		var existing table.AddressInfo
 		err := conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Preload("Organization").
-			Where("document_id = ?", ai.DocID()).
+			Where("document_id = ?", ai.DocID(ctx)).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -33,7 +32,7 @@ func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// No existe → insert
-			newAddressInfo := mapper.MapAddressInfoTable(ai, ai.Organization.ID)
+			newAddressInfo := mapper.MapAddressInfoTable(ctx, ai)
 			return conn.Omit("Organization").Create(&newAddressInfo).Error
 		}
 
@@ -43,7 +42,7 @@ func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
 			return nil // No hay cambios, no hacemos nada
 		}
 
-		updateData := mapper.MapAddressInfoTable(updated, ai.Organization.ID)
+		updateData := mapper.MapAddressInfoTable(ctx, updated)
 		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 		updateData.CreatedAt = existing.CreatedAt
 

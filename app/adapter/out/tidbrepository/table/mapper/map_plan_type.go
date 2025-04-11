@@ -1,14 +1,15 @@
 package mapper
 
 import (
+	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 )
 
-func MapPlanType(pt domain.PlanType) table.PlanType {
+func MapPlanType(ctx context.Context, pt domain.PlanType) table.PlanType {
 	return table.PlanType{
-		ID:             pt.ID,
 		Name:           pt.Value,
-		OrganizationID: pt.Organization.ID,
+		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 	}
 }

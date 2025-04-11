@@ -2,22 +2,37 @@ package tidbrepository
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertPackages", func() {
 	var (
-		ctx context.Context
+		ctx1, ctx2 context.Context
 	)
 
+	// Helper function to create context with organization
+	createOrgContext := func(org domain.Organization) context.Context {
+		ctx := context.Background()
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(org.ID, 10))
+		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
+		bag, _ := baggage.New(orgIDMember, countryMember)
+		return baggage.ContextWithBaggage(ctx, bag)
+	}
+
 	BeforeEach(func() {
-		ctx = context.Background()
+		// Create contexts with different organizations
+		ctx1 = createOrgContext(organization1)
+		ctx2 = createOrgContext(organization2)
+
 		// Limpia la tabla antes de cada test
 		err := connection.DB.Exec("DELETE FROM packages").Error
 		Expect(err).ToNot(HaveOccurred())
@@ -25,15 +40,14 @@ var _ = Describe("UpsertPackages", func() {
 
 	It("should handle empty package slice", func() {
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx, []domain.Package{}, organization1)
+		err := upsert(ctx1, []domain.Package{})
 		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should insert new packages when they don't exist", func() {
 		// Crear paquetes para insertar
 		package1 := domain.Package{
-			Lpn:          "PKG001",
-			Organization: organization1,
+			Lpn: "PKG001",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
 				Width:  20.0,
@@ -60,8 +74,7 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		package2 := domain.Package{
-			Lpn:          "PKG002",
-			Organization: organization1,
+			Lpn: "PKG002",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
 				Width:  25.0,
@@ -77,12 +90,12 @@ var _ = Describe("UpsertPackages", func() {
 		// Insertar los paquetes
 		packages := []domain.Package{package1, package2}
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx, packages, organization1)
+		err := upsert(ctx1, packages)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se insertaron correctamente
 		var dbPackages []table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Find(&dbPackages).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -90,7 +103,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Verificar el primer paquete
 		var dbPackage1 table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Where("lpn = ?", "PKG001").
 			First(&dbPackage1).Error
@@ -126,8 +139,7 @@ var _ = Describe("UpsertPackages", func() {
 	It("should update existing packages", func() {
 		// Crear un paquete inicial
 		initialPackage := domain.Package{
-			Lpn:          "PKG-UPDATE",
-			Organization: organization1,
+			Lpn: "PKG-UPDATE",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
 				Width:  20.0,
@@ -154,16 +166,16 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Importante: Guardamos el DocID del paquete inicial para usarlo en la actualización
-		initialDocID := initialPackage.DocID()
+		initialDocID := initialPackage.DocID(ctx1)
 
 		// Insertar el paquete inicial
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx, []domain.Package{initialPackage}, organization1)
+		err := upsert(ctx1, []domain.Package{initialPackage})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Obtener el registro creado y su timestamp
 		var initialDBPackage table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Where("document_id = ?", string(initialDocID)).
 			First(&initialDBPackage).Error
@@ -176,8 +188,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Crear versión actualizada del paquete
 		updatedPackage := domain.Package{
-			Lpn:          "PKG-UPDATE",  // Mismo LPN para que se actualice
-			Organization: organization1, // Crítico: misma organización para que el DocID sea el mismo
+			Lpn: "PKG-UPDATE", // Mismo LPN para que se actualice
 			Dimensions: domain.Dimensions{
 				Length: 15.0, // Cambiar dimensiones
 				Width:  25.0,
@@ -204,16 +215,16 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Verificar que generan el mismo DocID
-		updatedDocID := updatedPackage.DocID()
+		updatedDocID := updatedPackage.DocID(ctx1)
 		Expect(updatedDocID).To(Equal(initialDocID), "Los DocIDs deben ser iguales para la actualización")
 
 		// Actualizar el paquete
-		err = upsert(ctx, []domain.Package{updatedPackage}, organization1)
+		err = upsert(ctx1, []domain.Package{updatedPackage})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
 		var updatedDBPackage table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Where("document_id = ?", string(initialDocID)).
 			First(&updatedDBPackage).Error
@@ -249,8 +260,7 @@ var _ = Describe("UpsertPackages", func() {
 	It("should handle mix of new and existing packages", func() {
 		// Crear un paquete inicial
 		existingPackage := domain.Package{
-			Lpn:          "PKG-EXISTING",
-			Organization: organization1,
+			Lpn: "PKG-EXISTING",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
 				Width:  20.0,
@@ -260,17 +270,16 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Guardar el DocID del paquete existente
-		existingDocID := existingPackage.DocID()
+		existingDocID := existingPackage.DocID(ctx1)
 
 		// Insertar el paquete inicial
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx, []domain.Package{existingPackage}, organization1)
+		err := upsert(ctx1, []domain.Package{existingPackage})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un nuevo paquete para inserción
 		newPackage := domain.Package{
-			Lpn:          "PKG-NEW",
-			Organization: organization1,
+			Lpn: "PKG-NEW",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
 				Width:  25.0,
@@ -281,8 +290,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Crear versión actualizada del paquete existente
 		updatedExistingPackage := domain.Package{
-			Lpn:          "PKG-EXISTING",
-			Organization: organization1, // Mantener la misma organización
+			Lpn: "PKG-EXISTING",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
 				Width:  25.0,
@@ -292,17 +300,17 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Verificar que el DocID del paquete actualizado coincide con el original
-		updatedDocID := updatedExistingPackage.DocID()
+		updatedDocID := updatedExistingPackage.DocID(ctx1)
 		Expect(updatedDocID).To(Equal(existingDocID), "Los DocIDs deben ser iguales para actualizar")
 
 		// Insertar ambos paquetes
 		mixedPackages := []domain.Package{newPackage, updatedExistingPackage}
-		err = upsert(ctx, mixedPackages, organization1)
+		err = upsert(ctx1, mixedPackages)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que hay dos paquetes en la base de datos
 		var count int64
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -310,7 +318,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Verificar el paquete existente se actualizó
 		var updatedDBPackage table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Where("document_id = ?", string(existingDocID)).
 			First(&updatedDBPackage).Error
@@ -321,7 +329,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Verificar el nuevo paquete se insertó
 		var newDBPackage table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(ctx1).
 			Table("packages").
 			Where("lpn = ?", "PKG-NEW").
 			First(&newDBPackage).Error
@@ -332,8 +340,7 @@ var _ = Describe("UpsertPackages", func() {
 	It("should allow same LPN in different organizations", func() {
 		// Crear paquete para organización 1
 		package1 := domain.Package{
-			Lpn:          "PKG-MULTIORG",
-			Organization: organization1,
+			Lpn: "PKG-MULTIORG",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
 				Width:  20.0,
@@ -344,8 +351,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Crear paquete para organización 2 con el mismo LPN
 		package2 := domain.Package{
-			Lpn:          "PKG-MULTIORG",
-			Organization: organization2,
+			Lpn: "PKG-MULTIORG",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
 				Width:  25.0,
@@ -356,16 +362,16 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar paquete para org1
 		upsert := NewUpsertPackages(connection)
-		err := upsert(ctx, []domain.Package{package1}, organization1)
+		err := upsert(ctx1, []domain.Package{package1})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Insertar paquete para org2
-		err = upsert(ctx, []domain.Package{package2}, organization2)
+		err = upsert(ctx2, []domain.Package{package2})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que hay dos paquetes en la base de datos
 		var packages []table.Package
-		err = connection.DB.WithContext(ctx).
+		err = connection.DB.WithContext(context.Background()).
 			Table("packages").
 			Where("lpn = ?", "PKG-MULTIORG").
 			Find(&packages).Error
@@ -380,16 +386,18 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(orgs).To(HaveLen(2))
 		Expect(orgs[organization1.ID]).To(BeTrue())
 		Expect(orgs[organization2.ID]).To(BeTrue())
+
+		// Verify they have different document IDs
+		Expect(package1.DocID(ctx1)).ToNot(Equal(package2.DocID(ctx2)))
 	})
 
 	It("should fail when database has no packages table", func() {
 		package1 := domain.Package{
-			Lpn:          "PKG-ERROR",
-			Organization: organization1,
+			Lpn: "PKG-ERROR",
 		}
 
 		upsert := NewUpsertPackages(noTablesContainerConnection)
-		err := upsert(ctx, []domain.Package{package1}, organization1)
+		err := upsert(ctx1, []domain.Package{package1})
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("packages"))
@@ -398,8 +406,7 @@ var _ = Describe("UpsertPackages", func() {
 	It("should fail when saving packages if the table does not exist", func() {
 		// Crear un paquete válido
 		pkg := domain.Package{
-			Lpn:          "PKG-NOTABLE",
-			Organization: organization1,
+			Lpn: "PKG-NOTABLE",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
 				Width:  10.0,
@@ -410,10 +417,9 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Usar conexión sin tablas
 		upsert := NewUpsertPackages(noTablesContainerConnection)
-		err := upsert(ctx, []domain.Package{pkg}, organization1)
+		err := upsert(ctx1, []domain.Package{pkg})
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("packages"))
 	})
-
 })

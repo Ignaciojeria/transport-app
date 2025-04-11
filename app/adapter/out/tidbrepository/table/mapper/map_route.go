@@ -1,15 +1,17 @@
 package mapper
 
 import (
+	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 )
 
-func MapRoute(route domain.Route) table.Route {
+func MapRoute(ctx context.Context, route domain.Route) table.Route {
 	var accountID, vehicleID, carrierID *int64
 
 	return table.Route{
-		ID:                 route.ID,
+		//ID:                 route.ID,
 		EndNodeReferenceID: string(route.Destination.ReferenceID),
 		JSONEndLocation: table.JSONPlanLocation{
 			Longitude: route.Destination.AddressInfo.Location.Lon(),
@@ -18,6 +20,6 @@ func MapRoute(route domain.Route) table.Route {
 		AccountID:      accountID,
 		VehicleID:      vehicleID,
 		CarrierID:      carrierID,
-		OrganizationID: route.Organization.ID,
+		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 	}
 }

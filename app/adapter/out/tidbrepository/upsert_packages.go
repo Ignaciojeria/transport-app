@@ -10,13 +10,13 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertPackages func(context.Context, []domain.Package, domain.Organization) error
+type UpsertPackages func(context.Context, []domain.Package) error
 
 func init() {
 	ioc.Registry(NewUpsertPackages, tidb.NewTIDBConnection)
 }
 func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
-	return func(ctx context.Context, pcks []domain.Package, org domain.Organization) error {
+	return func(ctx context.Context, pcks []domain.Package) error {
 		if len(pcks) == 0 {
 			return nil
 		}
@@ -25,7 +25,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		docIDs := make([]string, 0, len(pcks))
 		docIDToPackage := make(map[string]domain.Package, len(pcks))
 		for _, p := range pcks {
-			docID := string(p.DocID())
+			docID := string(p.DocID(ctx))
 			docIDs = append(docIDs, docID)
 			docIDToPackage[docID] = p
 		}
@@ -34,7 +34,6 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		var existingDBPackages []table.Package
 		err := conn.DB.WithContext(ctx).
 			Table("packages").
-			Preload("Organization").
 			Where("document_id IN ?", docIDs).
 			Find(&existingDBPackages).Error
 		if err != nil {
@@ -52,8 +51,8 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 		for _, docID := range docIDs {
 			domainPkg := docIDToPackage[docID]
 			if existingPkg, found := existingMap[docID]; found {
-				updatedDomainPkg := existingPkg.Map().UpdateIfChanged(domainPkg)
-				updatedTablePkg := mapper.MapPackageToTable(updatedDomainPkg)
+				updatedDomainPkg, _ := existingPkg.Map().UpdateIfChanged(domainPkg)
+				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg)
 
 				// Preservar campos importantes
 				updatedTablePkg.ID = existingPkg.ID
@@ -62,7 +61,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 
 				DBpackagesToUpsert = append(DBpackagesToUpsert, updatedTablePkg)
 			} else {
-				newTablePkg := mapper.MapPackageToTable(domainPkg)
+				newTablePkg := mapper.MapPackageToTable(ctx, domainPkg)
 				DBpackagesToUpsert = append(DBpackagesToUpsert, newTablePkg)
 			}
 		}

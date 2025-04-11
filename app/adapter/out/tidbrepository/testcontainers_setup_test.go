@@ -31,73 +31,11 @@ var organization2 domain.Organization
 var noTablesContainerConnection tidb.TIDBConnection
 var noTablesMigrationContainer *tcpostgres.PostgresContainer
 
-/*
-func createContainerAndDropTables(tablesToDrop []string) (tidb.TIDBConnection, testcontainers.Container, error) {
-	ctx := context.Background()
-	dbName := "users"
-	dbUser := "user"
-	dbPassword := "password"
-
-	postgresContainer, err := tcpostgres.Run(ctx,
-		"postgres:16-alpine",
-		tcpostgres.WithDatabase(dbName),
-		tcpostgres.WithUsername(dbUser),
-		tcpostgres.WithPassword(dbPassword),
-		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
-	)
-	if err != nil {
-		return tidb.TIDBConnection{}, nil, err
-	}
-
-	host, _ := postgresContainer.Host(ctx)
-	port, _ := postgresContainer.MappedPort(ctx, "5432")
-
-	conn, err := tidb.NewTIDBConnection(
-		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
-		tidb.NewPostgreSQLConnectionStrategy(configuration.DBConfiguration{
-			DB_HOSTNAME:       host,
-			DB_PORT:           port.Port(),
-			DB_SSL_MODE:       "disable",
-			DB_NAME:           dbName,
-			DB_USERNAME:       dbUser,
-			DB_PASSWORD:       dbPassword,
-			DB_RUN_MIGRATIONS: "true",
-		}),
-		nil,
-	)
-	if err != nil {
-		return tidb.TIDBConnection{}, nil, err
-	}
-
-	// Ejecutar todas las migraciones normalmente
-	err = table.NewRunMigrations(conn, configuration.DBConfiguration{
-		DB_RUN_MIGRATIONS: "true",
-	})()
-	if err != nil {
-		return tidb.TIDBConnection{}, nil, err
-	}
-
-	// Borrar las tablas específicas que quieras omitir
-	for _, tableName := range tablesToDrop {
-		err := conn.DB.Exec(fmt.Sprintf(`DROP TABLE IF EXISTS "%s" CASCADE`, tableName)).Error
-		if err != nil {
-			return tidb.TIDBConnection{}, nil, err
-		}
-	}
-
-	return conn, postgresContainer, nil
-}
-*/
-
 var _ = Describe("TidbRepository", func() {
 	It("dummy test", func() {
 		Expect(true).To(BeTrue())
 	})
 })
-
 var _ = BeforeSuite(func() {
 	ctx := context.Background()
 	dbName := "users"
@@ -142,31 +80,51 @@ var _ = BeforeSuite(func() {
 		DB_RUN_MIGRATIONS: "true",
 	})()
 	Expect(err).ToNot(HaveOccurred())
+
+	// Create test account first
 	err = NewUpsertAccount(connection)(ctx, domain.Operator{
 		Contact: domain.Contact{
 			PrimaryEmail: "ignaciovl.j@gmail.com",
 		},
 	})
 	Expect(err).ToNot(HaveOccurred())
-	organization1, err = NewSaveOrganization(connection)(ctx, domain.Operator{
-		Contact: domain.Contact{
-			PrimaryEmail: "ignaciovl.j@gmail.com",
+
+	// Setup context with country information
+
+	// Create first organization using the new function signature
+	saveOrganization := NewSaveOrganization(connection)
+
+	// Create organization entity with required fields
+	orgToSave1 := domain.Organization{
+		Country: countries.CL,
+		Name:    "Organization 1",
+		Operator: domain.Operator{
+			Contact: domain.Contact{
+				PrimaryEmail: "ignaciovl.j@gmail.com",
+			},
 		},
-		Organization: domain.Organization{
-			Country: countries.CL,
-		},
-	})
-	Expect(err).ToNot(HaveOccurred())
-	organization2, err = NewSaveOrganization(connection)(ctx, domain.Operator{
-		Contact: domain.Contact{
-			PrimaryEmail: "ignaciovl.j@gmail.com",
-		},
-		Organization: domain.Organization{
-			Country: countries.CL,
-		},
-	})
+	}
+
+	// Save the first organization
+	organization1, err = saveOrganization(ctx, orgToSave1)
 	Expect(err).ToNot(HaveOccurred())
 
+	// Create second organization
+	orgToSave2 := domain.Organization{
+		Country: countries.CL,
+		Name:    "Organization 2",
+		Operator: domain.Operator{
+			Contact: domain.Contact{
+				PrimaryEmail: "ignaciovl.j@gmail.com",
+			},
+		},
+	}
+
+	// Save the second organization
+	organization2, err = saveOrganization(ctx, orgToSave2)
+	Expect(err).ToNot(HaveOccurred())
+
+	// No tables container setup (remains unchanged)
 	noTablesContainer, err := tcpostgres.Run(ctx,
 		"postgres:16-alpine",
 		tcpostgres.WithDatabase(dbName),
@@ -200,14 +158,4 @@ var _ = BeforeSuite(func() {
 		nil,
 	)
 	Expect(err).ToNot(HaveOccurred())
-
-})
-
-var _ = AfterSuite(func() {
-	if container != nil {
-		_ = container.Terminate(context.Background())
-	}
-	if noTablesMigrationContainer != nil {
-		_ = noTablesMigrationContainer.Terminate(context.Background())
-	}
 })

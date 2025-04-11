@@ -1,56 +1,56 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Operator", func() {
+	var ctx context.Context
 
-	Describe("DocID", func() {
-		It("should generate DocID based on Organization and PrimaryEmail", func() {
-			org := Organization{ID: 1, Country: countries.CL}
-			email := "operador@ejemplo.com"
-			operator := Operator{
-				Organization: org,
-				Contact:      Contact{PrimaryEmail: email},
-			}
-
-			expected := Hash(org, email)
-			Expect(operator.DocID()).To(Equal(expected))
-		})
+	BeforeEach(func() {
+		ctx = buildCtx("org1", "CL")
 	})
 
-	Describe("UpdateIfChanged", func() {
-		It("should update Role if the new one is not empty", func() {
-			original := Operator{
-				Role: RolePlanner,
-			}
-			newOperator := Operator{
-				Role: RoleDispatcher,
+	Describe("DocID", func() {
+		It("should generate DocID based on context and PrimaryEmail", func() {
+			email := "operador@ejemplo.com"
+			operator := Operator{
+				Contact: Contact{PrimaryEmail: email},
 			}
 
-			updated := original.UpdateIfChanged(newOperator)
-			Expect(updated.Role).To(Equal(RoleDispatcher))
+			expected := Hash(ctx, email)
+			Expect(operator.DocID(ctx)).To(Equal(expected))
 		})
 
-		It("should not update Role if the new one is empty", func() {
-			original := Operator{
-				Role: RolePlanner,
-			}
-			newOperator := Operator{
-				Role: "",
+		It("should generate different DocIDs for different contexts", func() {
+			email := "operador@ejemplo.com"
+			operator := Operator{
+				Contact: Contact{PrimaryEmail: email},
 			}
 
-			updated := original.UpdateIfChanged(newOperator)
-			Expect(updated.Role).To(Equal(RolePlanner))
+			ctx1 := buildCtx("org1", "CL")
+			ctx2 := buildCtx("org2", "AR")
+
+			Expect(operator.DocID(ctx1)).ToNot(Equal(operator.DocID(ctx2)))
+		})
+
+		It("should generate different DocIDs for different emails", func() {
+			operator1 := Operator{
+				Contact: Contact{PrimaryEmail: "operador1@ejemplo.com"},
+			}
+			operator2 := Operator{
+				Contact: Contact{PrimaryEmail: "operador2@ejemplo.com"},
+			}
+
+			Expect(operator1.DocID(ctx)).ToNot(Equal(operator2.DocID(ctx)))
 		})
 	})
 })
 
 var _ = Describe("Role", func() {
-
 	DescribeTable("IsValid",
 		func(role Role, expected bool) {
 			Expect(role.IsValid()).To(Equal(expected))

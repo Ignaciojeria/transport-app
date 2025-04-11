@@ -24,22 +24,21 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		var order table.Order
 		err := conn.DB.WithContext(ctx).
 			Table("orders").
-			Preload("Organization").
 			Where("document_id = ?",
-				o.DocID()).
+				o.DocID(ctx)).
 			First(&order).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err
 		}
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			DBOrderToCreate := mapper.MapOrderToTable(o)
+			DBOrderToCreate := mapper.MapOrderToTable(ctx, o)
 			return conn.
 				Create(&DBOrderToCreate).Error
 		}
 
 		orderWithChanges, _ := order.Map().UpdateIfChanged(o)
-		DBOrderToUpdate := mapper.MapOrderToTable(orderWithChanges)
+		DBOrderToUpdate := mapper.MapOrderToTable(ctx, orderWithChanges)
 		// Preservar todos los IDs de documento actuales
 		DBOrderToUpdate.ID = order.ID
 		DBOrderToUpdate.OrderHeadersDoc = order.OrderHeadersDoc
@@ -55,40 +54,45 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 		DBOrderToUpdate.RouteDoc = order.RouteDoc
 
 		// Actualizar IDs de documento si han cambiado
-		if o.Headers.DocID().ShouldUpdate(order.OrderHeadersDoc) {
-			DBOrderToUpdate.OrderHeadersDoc = o.Headers.DocID().String()
-		}
-
-		if o.Origin.DocID().ShouldUpdate(order.OriginNodeInfoDoc) {
-			DBOrderToUpdate.OriginNodeInfoDoc = o.Origin.DocID().String()
-		}
-
-		if o.Destination.DocID().ShouldUpdate(order.DestinationNodeInfoDoc) {
-			DBOrderToUpdate.DestinationNodeInfoDoc = o.Destination.DocID().String()
+		if o.Headers.DocID(ctx).ShouldUpdate(order.OrderHeadersDoc) {
+			DBOrderToUpdate.OrderHeadersDoc = o.Headers.DocID(ctx).String()
 		}
 
 		if o.OrderStatus.DocID().ShouldUpdate(order.OrderStatusDoc) {
 			DBOrderToUpdate.OrderStatusDoc = o.OrderStatus.DocID().String()
 		}
 
-		if o.OrderType.DocID().ShouldUpdate(order.OrderTypeDoc) {
-			DBOrderToUpdate.OrderTypeDoc = o.OrderType.DocID().String()
+		if o.Origin.DocID(ctx).ShouldUpdate(order.OriginNodeInfoDoc) {
+			DBOrderToUpdate.OriginNodeInfoDoc = o.Origin.DocID(ctx).String()
 		}
 
-		if o.Origin.Contact.DocID().ShouldUpdate(order.OriginContactDoc) {
-			DBOrderToUpdate.OriginContactDoc = o.Origin.Contact.DocID().String()
+		if o.Destination.DocID(ctx).ShouldUpdate(order.DestinationNodeInfoDoc) {
+			DBOrderToUpdate.DestinationNodeInfoDoc = o.Destination.DocID(ctx).String()
 		}
 
-		if o.Destination.Contact.DocID().ShouldUpdate(order.DestinationContactDoc) {
-			DBOrderToUpdate.DestinationContactDoc = o.Destination.Contact.DocID().String()
+		if o.OrderStatus.DocID().ShouldUpdate(order.OrderStatusDoc) {
+			DBOrderToUpdate.OrderStatusDoc = o.OrderStatus.DocID().String()
 		}
 
-		if o.Origin.AddressInfo.DocID().ShouldUpdate(order.OriginAddressInfoDoc) {
-			DBOrderToUpdate.OriginAddressInfoDoc = o.Origin.AddressInfo.DocID().String()
+		if o.OrderType.DocID(ctx).ShouldUpdate(order.OrderTypeDoc) {
+			DBOrderToUpdate.OrderTypeDoc = o.OrderType.DocID(ctx).String()
 		}
 
-		if o.Destination.AddressInfo.DocID().ShouldUpdate(order.DestinationAddressInfoDoc) {
-			DBOrderToUpdate.DestinationAddressInfoDoc = o.Destination.AddressInfo.DocID().String()
+		originContactDoc := o.Origin.AddressInfo.Contact.DocID(ctx)
+		if originContactDoc.ShouldUpdate(order.OriginContactDoc) {
+			DBOrderToUpdate.OriginContactDoc = originContactDoc.String()
+		}
+
+		if o.Destination.AddressInfo.Contact.DocID(ctx).ShouldUpdate(order.DestinationContactDoc) {
+			DBOrderToUpdate.DestinationContactDoc = o.Destination.AddressInfo.Contact.DocID(ctx).String()
+		}
+
+		if o.Origin.AddressInfo.DocID(ctx).ShouldUpdate(order.OriginAddressInfoDoc) {
+			DBOrderToUpdate.OriginAddressInfoDoc = o.Origin.AddressInfo.DocID(ctx).String()
+		}
+
+		if o.Destination.AddressInfo.DocID(ctx).ShouldUpdate(order.DestinationAddressInfoDoc) {
+			DBOrderToUpdate.DestinationAddressInfoDoc = o.Destination.AddressInfo.DocID(ctx).String()
 		}
 
 		if err := conn.Transaction(func(tx *gorm.DB) error {

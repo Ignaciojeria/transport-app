@@ -4,7 +4,9 @@ import (
 	"log/slog"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"go.opentelemetry.io/otel"
 	otelmeter "go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -25,6 +27,10 @@ func NewObservability(
 	tracer trace.Tracer,
 	logger *slog.Logger,
 	meter otelmeter.Meter) Observability {
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
 	return Observability{
 		Tracer: tracer,
 		Logger: logger,

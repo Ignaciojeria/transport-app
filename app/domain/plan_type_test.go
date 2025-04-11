@@ -1,38 +1,42 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("PlanType", func() {
-
 	var (
-		org1 = Organization{ID: 1, Country: countries.CL}
-		org2 = Organization{ID: 2, Country: countries.AR}
+		ctx1 context.Context
+		ctx2 context.Context
 	)
 
-	Describe("DocID", func() {
-		It("should generate different document IDs for different organizations", func() {
-			planType1 := PlanType{Organization: org1, Value: "dispatch"}
-			planType2 := PlanType{Organization: org2, Value: "dispatch"}
+	BeforeEach(func() {
+		ctx1 = buildCtx("org1", "CL")
+		ctx2 = buildCtx("org2", "AR")
+	})
 
-			Expect(planType1.DocID()).ToNot(Equal(planType2.DocID()))
+	Describe("DocID", func() {
+		It("should generate different document IDs for different contexts", func() {
+			planType := PlanType{Value: "dispatch"}
+
+			Expect(planType.DocID(ctx1)).ToNot(Equal(planType.DocID(ctx2)))
 		})
 
 		It("should generate different document IDs for different plan types", func() {
-			planType1 := PlanType{Organization: org1, Value: "dispatch"}
-			planType2 := PlanType{Organization: org1, Value: "web"}
+			planType1 := PlanType{Value: "dispatch"}
+			planType2 := PlanType{Value: "web"}
 
-			Expect(planType1.DocID()).ToNot(Equal(planType2.DocID()))
+			Expect(planType1.DocID(ctx1)).ToNot(Equal(planType2.DocID(ctx1)))
 		})
 
-		It("should generate the same document ID for same org and plan type", func() {
-			planType1 := PlanType{Organization: org1, Value: "pickup"}
-			planType2 := PlanType{Organization: org1, Value: "pickup"}
+		It("should generate the same document ID for same context and plan type", func() {
+			planType1 := PlanType{Value: "pickup"}
+			planType2 := PlanType{Value: "pickup"}
 
-			Expect(planType1.DocID()).To(Equal(planType2.DocID()))
+			Expect(planType1.DocID(ctx1)).To(Equal(planType2.DocID(ctx1)))
 		})
 	})
 })

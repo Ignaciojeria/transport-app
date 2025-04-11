@@ -37,7 +37,6 @@ func NewCreateOrder(
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
-		inOrder.Headers.Organization = inOrder.Organization
 
 		group, ctx := errgroup.WithContext(ctx)
 
@@ -46,42 +45,37 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-			inOrder.Origin.AddressInfo.Contact.Organization = inOrder.Organization
+			inOrder.Origin.AddressInfo.Normalize()
 			return upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		})
 
 		group.Go(func() error {
-			inOrder.Destination.AddressInfo.Contact.Organization = inOrder.Organization
+			inOrder.Destination.AddressInfo.Normalize()
 			return upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
 		})
 
 		group.Go(func() error {
-			inOrder.Origin.AddressInfo.Organization = inOrder.Organization
 			return upsertAddressInfo(ctx, inOrder.Origin.AddressInfo)
 		})
 
 		group.Go(func() error {
-			inOrder.Destination.AddressInfo.Organization = inOrder.Organization
 			return upsertAddressInfo(ctx, inOrder.Destination.AddressInfo)
 		})
 
 		group.Go(func() error {
-			inOrder.Origin.Organization = inOrder.Organization
 			return upsertNodeInfo(ctx, inOrder.Origin)
 		})
 
 		group.Go(func() error {
-			inOrder.Destination.Organization = inOrder.Organization
 			return upsertNodeInfo(ctx, inOrder.Destination)
 		})
 
 		group.Go(func() error {
-			inOrder.OrderType.Organization = inOrder.Organization
 			return upsertOrderType(ctx, inOrder.OrderType)
 		})
 
 		group.Go(func() error {
-			return upsertPackages(ctx, inOrder.Packages, inOrder.Organization)
+			return upsertPackages(ctx, inOrder.Packages)
 		})
 
 		group.Go(func() error {

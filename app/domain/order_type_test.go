@@ -1,64 +1,50 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("OrderType", func() {
-
 	var (
-		org1 = Organization{ID: 1, Country: countries.CL}
-		org2 = Organization{ID: 2, Country: countries.AR}
+		ctx1 context.Context
+		ctx2 context.Context
 	)
 
-	Describe("ReferenceID", func() {
-		It("should generate different reference IDs for different organizations", func() {
-			orderType1 := OrderType{Organization: org1, Type: "retail"}
-			orderType2 := OrderType{Organization: org2, Type: "retail"}
+	BeforeEach(func() {
+		ctx1 = buildCtx("org1", "CL")
+		ctx2 = buildCtx("org2", "AR")
+	})
 
-			Expect(orderType1.DocID()).ToNot(Equal(orderType2.DocID()))
+	Describe("DocID", func() {
+		It("should generate different reference IDs for different contexts", func() {
+			orderType := OrderType{Type: "retail"}
+
+			Expect(orderType.DocID(ctx1)).ToNot(Equal(orderType.DocID(ctx2)))
 		})
 
 		It("should generate different reference IDs for different types", func() {
-			orderType1 := OrderType{Organization: org1, Type: "retail"}
-			orderType2 := OrderType{Organization: org1, Type: "b2b"}
+			orderType1 := OrderType{Type: "retail"}
+			orderType2 := OrderType{Type: "b2b"}
 
-			Expect(orderType1.DocID()).ToNot(Equal(orderType2.DocID()))
+			Expect(orderType1.DocID(ctx1)).ToNot(Equal(orderType2.DocID(ctx1)))
 		})
 
-		It("should generate the same reference ID for same org and type", func() {
-			orderType1 := OrderType{Organization: org1, Type: "express"}
-			orderType2 := OrderType{Organization: org1, Type: "express"}
+		It("should generate the same reference ID for same context and type", func() {
+			orderType1 := OrderType{Type: "express"}
+			orderType2 := OrderType{Type: "express"}
 
-			Expect(orderType1.DocID()).To(Equal(orderType2.DocID()))
+			Expect(orderType1.DocID(ctx1)).To(Equal(orderType2.DocID(ctx1)))
 		})
 	})
 
 	Describe("UpdateIfChanged", func() {
-		It("should return updated order type if type is different", func() {
-			original := OrderType{
-				Type:         "retail",
-				Description:  "Entrega normal",
-				Organization: org1,
-			}
-			input := OrderType{
-				Type:        "express",
-				Description: "Entrega normal", // igual
-			}
-
-			updated, changed := original.UpdateIfChanged(input)
-			Expect(changed).To(BeTrue())
-			Expect(updated.Type).To(Equal("express"))
-			Expect(updated.Description).To(Equal("Entrega normal"))
-		})
-
 		It("should return updated order type if description is different", func() {
 			original := OrderType{
-				Type:         "retail",
-				Description:  "Descripción vieja",
-				Organization: org1,
+				Type:        "retail",
+				Description: "Descripción vieja",
 			}
 			input := OrderType{
 				Type:        "retail",
@@ -68,13 +54,13 @@ var _ = Describe("OrderType", func() {
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
 			Expect(updated.Description).To(Equal("Descripción nueva"))
+			Expect(updated.Type).To(Equal("retail")) // Type no cambia
 		})
 
 		It("should not mark as changed if values are the same", func() {
 			original := OrderType{
-				Type:         "retail",
-				Description:  "Estándar",
-				Organization: org1,
+				Type:        "retail",
+				Description: "Estándar",
 			}
 			input := OrderType{
 				Type:        "retail",
@@ -88,12 +74,11 @@ var _ = Describe("OrderType", func() {
 
 		It("should ignore empty fields in input", func() {
 			original := OrderType{
-				Type:         "retail",
-				Description:  "Estándar",
-				Organization: org1,
+				Type:        "retail",
+				Description: "Estándar",
 			}
 			input := OrderType{
-				Type:        "", // no cambia
+				Type:        "",
 				Description: "",
 			}
 
@@ -102,21 +87,35 @@ var _ = Describe("OrderType", func() {
 			Expect(updated).To(Equal(original))
 		})
 
-		It("should not update organization", func() {
+		It("should ignore Type changes as per implementation", func() {
 			original := OrderType{
-				Type:         "retail",
-				Description:  "Estándar",
-				Organization: org1,
+				Type:        "retail",
+				Description: "Estándar",
 			}
 			input := OrderType{
-				Type:         "retail",
-				Description:  "Estándar",
-				Organization: org2, // distinto pero no se debería aplicar
+				Type:        "express", // Este cambio debe ser ignorado
+				Description: "Estándar",
 			}
 
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeFalse())
-			Expect(updated.Organization).To(Equal(org1))
+			Expect(updated.Type).To(Equal("retail")) // Type no cambia
+		})
+
+		It("should only update Description field", func() {
+			original := OrderType{
+				Type:        "retail",
+				Description: "Descripción vieja",
+			}
+			input := OrderType{
+				Type:        "express", // Este cambio debe ser ignorado
+				Description: "Descripción nueva",
+			}
+
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Type).To(Equal("retail")) // Type no cambia
+			Expect(updated.Description).To(Equal("Descripción nueva"))
 		})
 	})
 })

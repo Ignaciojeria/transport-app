@@ -6,14 +6,17 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 	"transport-app/app/shared/configuration"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 func init() {
@@ -27,36 +30,14 @@ type Server struct {
 }
 
 func New(conf configuration.Conf) Server {
-	s := fuego.NewServer(fuego.WithAddr(":" + conf.PORT))
+	s := fuego.NewServer(
+		fuego.WithAddr(":"+conf.PORT),
+		fuego.WithGlobalMiddlewares(injectBaggageMiddleware))
 	server := Server{
 		Manager: s,
 		conf:    conf,
 	}
 	server.healthCheck()
-	/*
-		fuego.Use(s, func(next http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				countryCode := r.Header.Get("country")
-				country := countries.ByName(countryCode)
-				if country == countries.Unknown {
-					// Crear una instancia de BadRequestError
-					err := fuego.BadRequestError{
-						Err: errors.New("invalid country code"),
-					}
-
-					// Escribir la respuesta HTTP
-					w.Header().Set("Content-Type", "application/json")
-					w.WriteHeader(err.StatusCode())
-					fmt.Fprintf(w, `{"type": "%s", "title": "%s", "status": %d, "detail": "%s"}`,
-						err.Type, err.Title, err.StatusCode(), err)
-					return
-				}
-
-				// Continuar con el flujo si no hay error
-				next.ServeHTTP(w, r)
-			})
-		})*/
-
 	ctx, cancel := context.WithCancel(context.Background())
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -94,4 +75,53 @@ func (s Server) healthCheck() error {
 
 func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Request)) {
 	fuego.PostStd(s.Manager, path, f)
+}
+
+func injectBaggageMiddleware(next http.Handler) http.Handler {
+	skipPaths := map[string]struct{}{
+		"/login":         {},
+		"/register":      {},
+		"/health":        {},
+		"/organizations": {},
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, skip := skipPaths[r.URL.Path]; skip {
+			next.ServeHTTP(w, r)
+			return
+		}
+		orgHeader := r.Header.Get("organization")
+		if orgHeader == "" {
+			http.Error(w, "missing organization header", http.StatusBadRequest)
+			return
+		}
+
+		parts := strings.SplitN(orgHeader, "-", 2)
+		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+			http.Error(w, "invalid organization format, expected tenant-country (e.g., 1-CL)", http.StatusBadRequest)
+			return
+		}
+
+		tenantID := parts[0]
+		country := strings.ToUpper(parts[1])
+
+		members := make([]baggage.Member, 0, 3)
+
+		mTenant, _ := baggage.NewMember(sharedcontext.BaggageTenantID, tenantID)
+		mCountry, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, country)
+		members = append(members, mTenant, mCountry)
+
+		if v := r.Header.Get("consumer"); v != "" {
+			m, _ := baggage.NewMember(sharedcontext.BaggageConsumer, v)
+			members = append(members, m)
+		}
+
+		if v := r.Header.Get("commerce"); v != "" {
+			m, _ := baggage.NewMember(sharedcontext.BaggageCommerce, v)
+			members = append(members, m)
+		}
+
+		bag, _ := baggage.New(members...)
+		ctx := baggage.ContextWithBaggage(r.Context(), bag)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }

@@ -65,8 +65,7 @@ type PlanType struct {
 
 func (pt PlanType) Map() domain.PlanType {
 	return domain.PlanType{
-		Organization: pt.Organization.Map(),
-		Value:        pt.Name,
+		Value: pt.Name,
 	}
 }
 
@@ -81,8 +80,7 @@ type PlanningStatus struct {
 
 func (ps PlanningStatus) Map() domain.PlanningStatus {
 	return domain.PlanningStatus{
-		Organization: ps.Organization.Map(),
-		Value:        ps.Name,
+		Value: ps.Name,
 	}
 }
 
@@ -106,8 +104,7 @@ type Route struct {
 
 func (r Route) Map() domain.Route {
 	return domain.Route{
-		Organization: r.Organization.Map(),
-		Vehicle:      r.Vehicle.Map(),
-		Operator:     r.Account.MapOperator(r.Organization.Map()),
+		Vehicle:  r.Vehicle.Map(),
+		Operator: r.Account.MapOperator(),
 	}
 }

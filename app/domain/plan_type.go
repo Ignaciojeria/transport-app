@@ -1,10 +1,11 @@
 package domain
 
+import "context"
+
 type PlanType struct {
-	Organization
 	Value string
 }
 
-func (pt PlanType) DocID() DocumentID {
-	return Hash(pt.Organization, pt.Value)
+func (pt PlanType) DocID(ctx context.Context) DocumentID {
+	return Hash(ctx, pt.Value)
 }

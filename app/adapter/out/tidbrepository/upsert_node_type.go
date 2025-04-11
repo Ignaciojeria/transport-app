@@ -25,7 +25,7 @@ func NewUpsertNodeType(conn tidb.TIDBConnection) UpsertNodeType {
 
 		err := conn.DB.WithContext(ctx).
 			Table("node_types").
-			Where("document_id = ?", nt.DocID()).
+			Where("document_id = ?", nt.DocID(ctx)).
 			First(&existing).Error
 
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -36,7 +36,7 @@ func NewUpsertNodeType(conn tidb.TIDBConnection) UpsertNodeType {
 			// Ya existe → no hacer nada
 			return nil
 		}
-		newRecord := mapper.MapNodeType(nt)
+		newRecord := mapper.MapNodeType(ctx, nt)
 		return conn.Omit("Organization").Create(&newRecord).Error
 	}
 }

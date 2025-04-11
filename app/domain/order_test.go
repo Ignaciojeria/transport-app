@@ -1,9 +1,9 @@
 package domain
 
 import (
+	"context"
 	"time"
 
-	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -376,25 +376,43 @@ var _ = Describe("Order Validate - Additional Cases", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("item reference ID 'INVALID'"))
 	})
-
 })
 
 var _ = Describe("Order DocID", func() {
-	It("should return the hash of the Organization and ReferenceID", func() {
-		org := Organization{
-			ID:      99,
-			Country: countries.CL,
-			Name:    "LastMile",
-		}
+	var ctx context.Context
 
+	BeforeEach(func() {
+		ctx = buildCtx("org1", "CL")
+	})
+
+	It("should return the hash of the context and ReferenceID", func() {
 		order := Order{
-			Headers: Headers{
-				Organization: org,
-			},
 			ReferenceID: "REF-0001",
 		}
 
-		expected := Hash(org, "REF-0001")
-		Expect(order.DocID()).To(Equal(expected))
+		expected := Hash(ctx, "REF-0001")
+		Expect(order.DocID(ctx)).To(Equal(expected))
+	})
+
+	It("should generate different IDs for different contexts", func() {
+		order := Order{
+			ReferenceID: "REF-0001",
+		}
+
+		ctx1 := buildCtx("org1", "CL")
+		ctx2 := buildCtx("org2", "AR")
+
+		Expect(order.DocID(ctx1)).ToNot(Equal(order.DocID(ctx2)))
+	})
+
+	It("should generate different IDs for different reference IDs", func() {
+		order1 := Order{
+			ReferenceID: "REF-0001",
+		}
+		order2 := Order{
+			ReferenceID: "REF-0002",
+		}
+
+		Expect(order1.DocID(ctx)).ToNot(Equal(order2.DocID(ctx)))
 	})
 })

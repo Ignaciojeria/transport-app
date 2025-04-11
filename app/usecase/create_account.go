@@ -21,9 +21,6 @@ func NewCreateAccount(
 	ensureOrganizationForCountry tidbrepository.EnsureOrganizationForCountry,
 	saveAccount tidbrepository.SaveAccount) CreateAccount {
 	return func(ctx context.Context, e domain.Operator) (domain.Operator, error) {
-		if _, err := ensureOrganizationForCountry(ctx, e.Organization); err != nil {
-			return domain.Operator{}, err
-		}
 		return saveAccount(ctx, e)
 	}
 }

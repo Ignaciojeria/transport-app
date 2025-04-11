@@ -1,7 +1,8 @@
 package domain
 
 import (
-	"github.com/biter777/countries"
+	"context"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -42,20 +43,15 @@ var _ = Describe("ContactMethod UpdateIfChange", func() {
 })
 
 var _ = Describe("Contact UpdateIfChanged NationalID", func() {
-	var original Contact
-	org := Organization{ID: 1, Country: countries.CL}
 
-	BeforeEach(func() {
-		original = Contact{
+	It("should update NationalID if different and not empty", func() {
+		original := Contact{
 			FullName:     "Juan Pérez",
 			PrimaryEmail: "juan@correo.com",
 			PrimaryPhone: "+56900000000",
 			NationalID:   "12345678-9",
-			Organization: org,
 		}
-	})
 
-	It("should update NationalID if different and not empty", func() {
 		newContact := Contact{
 			NationalID: "98765432-1", // Diferente y no vacío
 		}
@@ -67,6 +63,13 @@ var _ = Describe("Contact UpdateIfChanged NationalID", func() {
 	})
 
 	It("should not update NationalID if same", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+		}
+
 		newContact := Contact{
 			NationalID: "12345678-9", // Igual al original
 		}
@@ -78,6 +81,13 @@ var _ = Describe("Contact UpdateIfChanged NationalID", func() {
 	})
 
 	It("should not update NationalID if empty", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+		}
+
 		newContact := Contact{
 			NationalID: "", // Vacío
 		}
@@ -90,11 +100,9 @@ var _ = Describe("Contact UpdateIfChanged NationalID", func() {
 })
 
 var _ = Describe("Contact Documents Continue", func() {
-	var original Contact
-	org := Organization{ID: 1, Country: countries.CL}
 
-	BeforeEach(func() {
-		original = Contact{
+	It("should skip completely empty documents with continue", func() {
+		original := Contact{
 			FullName:     "Juan Pérez",
 			PrimaryEmail: "juan@correo.com",
 			PrimaryPhone: "+56900000000",
@@ -103,11 +111,8 @@ var _ = Describe("Contact Documents Continue", func() {
 				{Type: "RUT", Value: "12345678-9"},
 				{Type: "DRIVER_LICENSE", Value: "A-123456"},
 			},
-			Organization: org,
 		}
-	})
 
-	It("should skip completely empty documents with continue", func() {
 		newContact := original
 		// Incluir varios documentos vacíos entre válidos para probar el continue
 		newContact.Documents = []Document{
@@ -154,6 +159,17 @@ var _ = Describe("Contact Documents Continue", func() {
 	})
 
 	It("should handle updates with only empty documents", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			Documents: []Document{
+				{Type: "RUT", Value: "12345678-9"},
+				{Type: "DRIVER_LICENSE", Value: "A-123456"},
+			},
+		}
+
 		newContact := original
 		// Lista con solo documentos vacíos que deben ser ignorados por continue
 		newContact.Documents = []Document{
@@ -169,6 +185,17 @@ var _ = Describe("Contact Documents Continue", func() {
 	})
 
 	It("should correctly process a mix of update, add, and continue operations", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			Documents: []Document{
+				{Type: "RUT", Value: "12345678-9"},
+				{Type: "DRIVER_LICENSE", Value: "A-123456"},
+			},
+		}
+
 		newContact := original
 		// Mezcla completa de operaciones
 		newContact.Documents = []Document{
@@ -207,11 +234,9 @@ var _ = Describe("Contact Documents Continue", func() {
 })
 
 var _ = Describe("Contact AdditionalContactMethods Continue", func() {
-	var original Contact
-	org := Organization{ID: 1, Country: countries.CL}
 
-	BeforeEach(func() {
-		original = Contact{
+	It("should skip completely empty contact methods with continue", func() {
+		original := Contact{
 			FullName:     "Juan Pérez",
 			PrimaryEmail: "juan@correo.com",
 			PrimaryPhone: "+56900000000",
@@ -220,11 +245,8 @@ var _ = Describe("Contact AdditionalContactMethods Continue", func() {
 				{Type: "work_email", Value: "juan.perez@empresa.com"},
 				{Type: "whatsapp", Value: "+56900000001"},
 			},
-			Organization: org,
 		}
-	})
 
-	It("should skip completely empty contact methods with continue", func() {
 		newContact := original
 		// Incluir varios métodos vacíos entre válidos para probar el continue
 		newContact.AdditionalContactMethods = []ContactMethod{
@@ -271,6 +293,17 @@ var _ = Describe("Contact AdditionalContactMethods Continue", func() {
 	})
 
 	It("should handle updates with only empty contact methods", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			AdditionalContactMethods: []ContactMethod{
+				{Type: "work_email", Value: "juan.perez@empresa.com"},
+				{Type: "whatsapp", Value: "+56900000001"},
+			},
+		}
+
 		newContact := original
 		// Lista con solo métodos vacíos que deben ser ignorados por continue
 		newContact.AdditionalContactMethods = []ContactMethod{
@@ -286,6 +319,17 @@ var _ = Describe("Contact AdditionalContactMethods Continue", func() {
 	})
 
 	It("should correctly process a mix of update, add, and continue operations for contact methods", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+			AdditionalContactMethods: []ContactMethod{
+				{Type: "work_email", Value: "juan.perez@empresa.com"},
+				{Type: "whatsapp", Value: "+56900000001"},
+			},
+		}
+
 		newContact := original
 		// Mezcla completa de operaciones
 		newContact.AdditionalContactMethods = []ContactMethod{
@@ -324,18 +368,21 @@ var _ = Describe("Contact AdditionalContactMethods Continue", func() {
 })
 
 var _ = Describe("Contact DocID Function", func() {
-	org := Organization{ID: 1, Country: countries.CL}
+	var ctx context.Context
+
+	BeforeEach(func() {
+		ctx = buildCtx("org1", "CL")
+	})
 
 	It("should use PrimaryEmail as key when present", func() {
 		contact := Contact{
 			PrimaryEmail: "test@example.com",
 			PrimaryPhone: "+56912345678",
 			NationalID:   "12345678-9",
-			Organization: org,
 		}
 
-		docID := contact.DocID()
-		Expect(docID).To(Equal(Hash(org, "test@example.com")))
+		docID := contact.DocID(ctx)
+		Expect(docID).To(Equal(Hash(ctx, "test@example.com")))
 	})
 
 	It("should fallback to PrimaryPhone when PrimaryEmail is missing", func() {
@@ -343,11 +390,10 @@ var _ = Describe("Contact DocID Function", func() {
 			PrimaryEmail: "", // Vacío
 			PrimaryPhone: "+56912345678",
 			NationalID:   "12345678-9",
-			Organization: org,
 		}
 
-		docID := contact.DocID()
-		Expect(docID).To(Equal(Hash(org, "+56912345678")))
+		docID := contact.DocID(ctx)
+		Expect(docID).To(Equal(Hash(ctx, "+56912345678")))
 	})
 
 	It("should fallback to NationalID when PrimaryEmail and PrimaryPhone are missing", func() {
@@ -355,11 +401,10 @@ var _ = Describe("Contact DocID Function", func() {
 			PrimaryEmail: "", // Vacío
 			PrimaryPhone: "", // Vacío
 			NationalID:   "12345678-9",
-			Organization: org,
 		}
 
-		docID := contact.DocID()
-		Expect(docID).To(Equal(Hash(org, "12345678-9")))
+		docID := contact.DocID(ctx)
+		Expect(docID).To(Equal(Hash(ctx, "12345678-9")))
 	})
 
 	It("should generate a UUID when all identifiers are missing", func() {
@@ -367,12 +412,11 @@ var _ = Describe("Contact DocID Function", func() {
 			PrimaryEmail: "", // Vacío
 			PrimaryPhone: "", // Vacío
 			NationalID:   "", // Vacío
-			Organization: org,
 		}
 
 		// Generar dos IDs para verificar que son diferentes (UUIDs)
-		docID1 := contact.DocID()
-		docID2 := contact.DocID()
+		docID1 := contact.DocID(ctx)
+		docID2 := contact.DocID(ctx)
 
 		Expect(docID1).ToNot(BeEmpty())
 		Expect(docID2).ToNot(BeEmpty())
@@ -381,20 +425,15 @@ var _ = Describe("Contact DocID Function", func() {
 })
 
 var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
-	var original Contact
-	org := Organization{ID: 1, Country: countries.CL}
 
-	BeforeEach(func() {
-		original = Contact{
+	It("should update PrimaryEmail when different and not empty", func() {
+		original := Contact{
 			FullName:     "Juan Pérez",
 			PrimaryEmail: "juan@correo.com",
 			PrimaryPhone: "+56900000000",
 			NationalID:   "12345678-9",
-			Organization: org,
 		}
-	})
 
-	It("should update PrimaryEmail when different and not empty", func() {
 		newContact := Contact{
 			PrimaryEmail: "nuevo@correo.com", // Diferente y no vacío
 		}
@@ -406,6 +445,13 @@ var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
 	})
 
 	It("should not update PrimaryEmail when same", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+		}
+
 		newContact := Contact{
 			PrimaryEmail: "juan@correo.com", // Igual al original
 		}
@@ -417,6 +463,13 @@ var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
 	})
 
 	It("should not update PrimaryEmail when empty", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+		}
+
 		newContact := Contact{
 			PrimaryEmail: "", // Vacío
 		}
@@ -428,6 +481,13 @@ var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
 	})
 
 	It("should verify both conditions together for PrimaryEmail update", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+		}
+
 		// Crear tres contactos para probar las tres combinaciones posibles
 		contact1 := Contact{PrimaryEmail: "diferente@correo.com"} // Diferente y no vacío -> debe actualizar
 		contact2 := Contact{PrimaryEmail: "juan@correo.com"}      // Igual -> no debe actualizar
@@ -450,20 +510,15 @@ var _ = Describe("Contact PrimaryEmail UpdateIfChanged", func() {
 })
 
 var _ = Describe("Contact UpdateIfChanged (missing fields)", func() {
-	var original Contact
-	org := Organization{ID: 1}
 
-	BeforeEach(func() {
-		original = Contact{
+	It("should update FullName if different and not empty", func() {
+		original := Contact{
 			FullName:     "Juan Pérez",
 			PrimaryEmail: "juan@correo.com",
 			PrimaryPhone: "+56900000000",
 			NationalID:   "12345678-9",
-			Organization: org,
 		}
-	})
 
-	It("should update FullName if different and not empty", func() {
 		newContact := Contact{
 			FullName: "Juan Pedro Pérez",
 		}
@@ -475,6 +530,13 @@ var _ = Describe("Contact UpdateIfChanged (missing fields)", func() {
 	})
 
 	It("should update PrimaryPhone if different and not empty", func() {
+		original := Contact{
+			FullName:     "Juan Pérez",
+			PrimaryEmail: "juan@correo.com",
+			PrimaryPhone: "+56900000000",
+			NationalID:   "12345678-9",
+		}
+
 		newContact := Contact{
 			PrimaryPhone: "+56911111111",
 		}

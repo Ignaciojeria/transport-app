@@ -1,30 +1,36 @@
 package mapper
 
 import (
+	"context"
 	"time"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 )
 
-func MapOrderToTable(order domain.Order) table.Order {
-	orgCountryID := order.Organization.ID
+func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
+	//	orgCountryID := order.Organization.ID
 	tbl := table.Order{
-		DocumentID:     order.DocID().String(), // Agregar DocumentID
-		ReferenceID:    string(order.ReferenceID),
-		OrganizationID: order.Organization.ID,
-
+		/*
+			DocumentID:     order.DocID().String(), // Agregar DocumentID
+			ReferenceID:    string(order.ReferenceID),
+			OrganizationID: order.Organization.ID,
+		*/
 		// Mapear IDs de documentos relacionados
-		OrderHeadersDoc:        order.Headers.DocID().String(),
+		OrganizationID:         sharedcontext.TenantIDFromContext(ctx),
+		ReferenceID:            string(order.ReferenceID),
+		DocumentID:             order.DocID(ctx).String(),
+		OrderHeadersDoc:        order.Headers.DocID(ctx).String(),
 		OrderStatusDoc:         order.OrderStatus.DocID().String(),
-		OrderTypeDoc:           order.OrderType.DocID().String(),
-		OriginNodeInfoDoc:      order.Origin.DocID().String(),
-		DestinationNodeInfoDoc: order.Destination.DocID().String(),
+		OrderTypeDoc:           order.OrderType.DocID(ctx).String(),
+		OriginNodeInfoDoc:      order.Origin.DocID(ctx).String(),
+		DestinationNodeInfoDoc: order.Destination.DocID(ctx).String(),
 
 		// Si están disponibles, también mapear los contactos y direcciones
-		OriginContactDoc:          order.Origin.Contact.DocID().String(),
-		DestinationContactDoc:     order.Destination.Contact.DocID().String(),
-		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID().String(),
-		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID().String(),
+		OriginContactDoc:          order.Origin.AddressInfo.Contact.DocID(ctx).String(),
+		DestinationContactDoc:     order.Destination.AddressInfo.Contact.DocID(ctx).String(),
+		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID(ctx).String(),
+		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID(ctx).String(),
 
 		OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
@@ -38,7 +44,7 @@ func MapOrderToTable(order domain.Order) table.Order {
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		JSONItems:                         mapItemsToTable(order.Items),
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
-		Packages:                          MapPackagesToTable(order.Packages, orgCountryID),
+		Packages:                          MapPackagesToTable(ctx, order.Packages),
 	}
 	return tbl
 }
@@ -90,11 +96,11 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 	return mapped
 }
 
-func MapPackagesToTable(packages []domain.Package, orgCountryID int64) []table.Package {
+func MapPackagesToTable(ctx context.Context, packages []domain.Package) []table.Package {
 	mapped := make([]table.Package, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = table.Package{
-			OrganizationID: orgCountryID,
+			OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 			Lpn:            pkg.Lpn,
 			JSONDimensions: table.JSONDimensions{
 				Height: pkg.Dimensions.Height,
@@ -128,10 +134,10 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 	return mapped
 }
 
-func MapPackageToTable(pkg domain.Package) table.Package {
+func MapPackageToTable(ctx context.Context, pkg domain.Package) table.Package {
 	return table.Package{
-		OrganizationID: pkg.Organization.ID,
-		DocumentID:     pkg.DocID().String(),
+		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
+		DocumentID:     pkg.DocID(ctx).String(),
 		Lpn:            pkg.Lpn,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
@@ -182,9 +188,9 @@ func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 	}
 }
 
-func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.AddressInfo {
+func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
-		OrganizationID: orgCountry,
+		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 
 		State: address.State,
 		//	Locality:       address.Locality,
@@ -193,7 +199,7 @@ func MapAddressInfoToTable(address domain.AddressInfo, orgCountry int64) table.A
 		//	AddressLine2:   address.AddressLine2,
 		//	AddressLine3:   address.AddressLine3,
 		//	RawAddress:     address.FullAddress(),
-		DocumentID: string(address.DocID()),
+		DocumentID: string(address.DocID(ctx)),
 		Latitude:   address.Location[1],
 		Longitude:  address.Location[0],
 		ZipCode:    address.ZipCode,

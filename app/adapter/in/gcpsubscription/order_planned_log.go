@@ -32,7 +32,7 @@ func newOrderPlannedLog(
 			return http.StatusAccepted, err
 		}
 		inputMapped := input.Map()
-		inputMapped.Organization.SetKey(m.Attributes["organization"])
+		//inputMapped.Organization.SetKey(m.Attributes["organization"])
 		err := log(ctx, inputMapped)
 		if err != nil {
 			m.Ack()

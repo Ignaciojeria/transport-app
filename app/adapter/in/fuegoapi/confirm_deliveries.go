@@ -42,9 +42,8 @@ func checkout(
 					"consumer":     c.Header("consumer"),
 					"commerce":     c.Header("commerce"),
 				},
-				Status:       "pending",
-				Organization: organization,
-				Payload:      requestBodyBytes,
+				Status:  "pending",
+				Payload: requestBodyBytes,
 			}); err != nil {
 				return response.ConfirmDeliveriesResponse{}, err
 			}
