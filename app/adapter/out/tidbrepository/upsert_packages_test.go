@@ -663,4 +663,56 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(count).To(Equal(int64(2)))
 	})
 
+	It("should explode items into separate packages when LPN is missing", func() {
+		// Crear un paquete sin LPN con múltiples items
+		original := domain.Package{
+			Lpn: "",
+			Items: []domain.Item{
+				{
+					Sku:         "EXPLODE-ITEM-1",
+					Description: "Item 1",
+					Quantity: domain.Quantity{
+						QuantityNumber: 1,
+						QuantityUnit:   "unit",
+					},
+				},
+				{
+					Sku:         "EXPLODE-ITEM-2",
+					Description: "Item 2",
+					Quantity: domain.Quantity{
+						QuantityNumber: 2,
+						QuantityUnit:   "unit",
+					},
+				},
+			},
+		}
+
+		orderRef := "ORDER-EXPLODE"
+		upsert := NewUpsertPackages(connection)
+		err := upsert(ctx1, []domain.Package{original}, orderRef)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Usamos ExplodeIfNoLpn para calcular qué paquetes debieron crearse
+		exploded := original.ExplodeIfNoLpn()
+
+		for _, pkg := range exploded {
+			docID := pkg.DocID(ctx1, orderRef)
+
+			var dbPackage table.Package
+			err := connection.DB.WithContext(ctx1).
+				Table("packages").
+				Where("document_id = ?", string(docID)).
+				First(&dbPackage).Error
+			Expect(err).ToNot(HaveOccurred(), "Expected to find package with docID %s", docID)
+
+			items := dbPackage.JSONItems.Map()
+			Expect(items).To(HaveLen(1))
+
+			Expect(items[0].Sku).To(Equal(pkg.Items[0].Sku))
+			Expect(items[0].Description).To(Equal(pkg.Items[0].Description))
+			Expect(items[0].Quantity.QuantityNumber).To(Equal(pkg.Items[0].Quantity.QuantityNumber))
+			Expect(items[0].Quantity.QuantityUnit).To(Equal(pkg.Items[0].Quantity.QuantityUnit))
+		}
+	})
+
 })

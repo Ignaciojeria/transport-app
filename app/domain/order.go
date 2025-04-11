@@ -8,6 +8,11 @@ import (
 	"github.com/joomcode/errorx"
 )
 
+var (
+	// Error general para validaciones de paquetes
+	ErrInvalidPackageFormat = errorx.NewNamespace("package_validation").NewType("invalid_format")
+)
+
 type Order struct {
 	Headers
 	AddressLine2            string
@@ -94,14 +99,32 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 }
 
 func (o Order) Validate() error {
-	// Validar fechas de disponibilidad de recolección
+	// Validaciones existentes
 	if err := o.ValidateCollectAvailabilityDate(); err != nil {
 		return errorx.Decorate(err, "validation failed for CollectAvailabilityDate")
 	}
-
-	// Validar fechas prometidas
 	if err := o.ValidatePromisedDate(); err != nil {
 		return errorx.Decorate(err, "validation failed for PromisedDate")
+	}
+
+	// Nueva validación sobre los paquetes
+	for _, pkg := range o.Packages {
+		if pkg.Lpn == "" {
+			if len(pkg.Items) == 0 {
+				return errorx.Decorate(
+					ErrInvalidPackageFormat.New("no items found in package without LPN"),
+					"package without LPN must have at least one item",
+				)
+			}
+			for _, item := range pkg.Items {
+				if item.Sku == "" {
+					return errorx.Decorate(
+						ErrInvalidPackageFormat.New("item missing SKU"),
+						"all items in package without LPN must have a non-empty SKU",
+					)
+				}
+			}
+		}
 	}
 
 	return nil

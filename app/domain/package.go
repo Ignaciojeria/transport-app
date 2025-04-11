@@ -74,3 +74,21 @@ func (p Package) UpdateIfChanged(newPackage Package) (Package, bool) {
 
 	return p, changed
 }
+
+func (p *Package) ExplodeIfNoLpn() []Package {
+	// Si el paquete tiene LPN, se considera agrupado y no se descompone
+	if p.Lpn != "" {
+		return []Package{*p}
+	}
+
+	var exploded []Package
+	for _, item := range p.Items {
+		exploded = append(exploded, Package{
+			Dimensions: p.Dimensions, // Puedes replicar si aplica
+			Weight:     item.Weight,  // O usar el general si prefieres
+			Insurance:  item.Insurance,
+			Items:      []Item{item},
+		})
+	}
+	return exploded
+}

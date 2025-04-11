@@ -485,4 +485,27 @@ var _ = Describe("Package", func() {
 			Expect(updatedDocID).To(Equal(Hash(ctx1, "NEW-LPN")))
 		})
 	})
+
+	It("should generate different IDs if item SKUs are in different order", func() {
+		pkg1 := Package{
+			Lpn: "",
+			Items: []Item{
+				{Sku: "SKU001"},
+				{Sku: "SKU002"},
+			},
+		}
+		pkg2 := Package{
+			Lpn: "",
+			Items: []Item{
+				{Sku: "SKU002"},
+				{Sku: "SKU001"}, // orden diferente
+			},
+		}
+
+		id1 := pkg1.DocID(ctx1, "REF001")
+		id2 := pkg2.DocID(ctx1, "REF001")
+
+		Expect(id1).ToNot(Equal(id2), "DocID debe depender del orden de los SKUs")
+	})
+
 })

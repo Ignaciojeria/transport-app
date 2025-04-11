@@ -15,22 +15,29 @@ type UpsertPackages func(context.Context, []domain.Package, string) error
 func init() {
 	ioc.Registry(NewUpsertPackages, tidb.NewTIDBConnection)
 }
+
 func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 	return func(ctx context.Context, pcks []domain.Package, orderReference string) error {
 		if len(pcks) == 0 {
 			return nil
 		}
 
-		// 1. Construimos una lista de DocumentIDs
-		docIDs := make([]string, 0, len(pcks))
-		docIDToPackage := make(map[string]domain.Package, len(pcks))
-		for _, p := range pcks {
+		// 1. Expandimos paquetes sin LPN en paquetes individuales
+		var normalized []domain.Package
+		for _, pkg := range pcks {
+			normalized = append(normalized, pkg.ExplodeIfNoLpn()...)
+		}
+
+		// 2. Construimos una lista de DocumentIDs
+		docIDs := make([]string, 0, len(normalized))
+		docIDToPackage := make(map[string]domain.Package, len(normalized))
+		for _, p := range normalized {
 			docID := string(p.DocID(ctx, orderReference))
 			docIDs = append(docIDs, docID)
 			docIDToPackage[docID] = p
 		}
 
-		// 2. Traemos todos los paquetes existentes con un IN
+		// 3. Traemos todos los paquetes existentes con un IN
 		var existingDBPackages []table.Package
 		err := conn.DB.WithContext(ctx).
 			Table("packages").
@@ -40,13 +47,13 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 			return err
 		}
 
-		// 3. Creamos un map de paquetes existentes por documentID
+		// 4. Creamos un map de paquetes existentes por documentID
 		existingMap := make(map[string]table.Package)
 		for _, pkg := range existingDBPackages {
 			existingMap[pkg.DocumentID] = pkg
 		}
 
-		// 4. Preparamos los paquetes a upsertear
+		// 5. Preparamos los paquetes a upsertear
 		var DBpackagesToUpsert []table.Package
 		for _, docID := range docIDs {
 			domainPkg := docIDToPackage[docID]
@@ -66,7 +73,7 @@ func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 			}
 		}
 
-		// 5. Guardamos
+		// 6. Guardamos
 		return conn.Save(&DBpackagesToUpsert).Error
 	}
 }

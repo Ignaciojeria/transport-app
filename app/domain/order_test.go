@@ -327,4 +327,49 @@ var _ = Describe("Order DocID", func() {
 
 		Expect(order1.DocID(ctx)).ToNot(Equal(order2.DocID(ctx)))
 	})
+
+	It("should fail if a package without LPN has no items", func() {
+		order := Order{
+			Packages: []Package{
+				{Lpn: "", Items: nil}, // ❌ sin ítems
+			},
+		}
+
+		err := order.Validate()
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("must have at least one item"))
+	})
+
+	It("should fail if a package without LPN has an item with empty SKU", func() {
+		order := Order{
+			Packages: []Package{
+				{
+					Lpn: "",
+					Items: []Item{
+						{Sku: ""},
+					},
+				},
+			},
+		}
+
+		err := order.Validate()
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("must have a non-empty SKU"))
+	})
+
+	It("should succeed if a package without LPN has item with valid SKU", func() {
+		order := Order{
+			Packages: []Package{
+				{
+					Lpn: "",
+					Items: []Item{
+						{Sku: "ITEM001"},
+					},
+				},
+			},
+		}
+
+		Expect(order.Validate()).To(Succeed())
+	})
+
 })
