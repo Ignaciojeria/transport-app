@@ -210,15 +210,15 @@ Cuando un paquete se envía sin LPN, el sistema:
    - La referencia de la orden (`referenceID`)
    - Los SKUs de los items contenidos en el paquete
 
-2. **Tratamiento lógico**: Trata el paquete como una unidad lógica de entrega, donde:
-   - Si hay un solo item: se considera como un item independiente
-   - Si hay múltiples items: se consideran agrupados para entrega conjunta
+2. **Tratamiento lógico**: Considera todos los items como parte de la misma orden, donde:
+   - La orden completa es la unidad principal de entrega
+   - Las agrupaciones de items sin LPN representan conjuntos lógicos sin asumir empaquetado físico específico
 
 3. **Trazabilidad**: Mantiene la trazabilidad a través del identificador generado, asegurando que:
    - Actualizaciones posteriores afecten al mismo conjunto de items
    - Se puedan realizar seguimientos coherentes aunque no exista un LPN explícito
 
-4. **Consistencia**: Asegura que el mismo conjunto de items en la misma orden siempre genere el mismo identificador.
+4. **Flexibilidad**: Permite adaptarse a diferentes flujos logísticos sin imponer restricciones en el empaquetado físico.
 
 ## Consideraciones para el Uso
 
@@ -299,12 +299,12 @@ Un pedido con múltiples items en packages sin LPN:
 ```
 
 En este escenario:
-- **Cada item se trata como una entidad entregable individual**
-- Aunque PROD-X y PROD-Z aparecen en el mismo objeto del array, al no tener LPN, el sistema los procesará como entregas independientes
-- La agrupación en el mismo objeto es puramente para conveniencia en la API pero no implica empaquetado conjunto
-- Este enfoque proporciona flexibilidad cuando no se conoce el empaquetado final
+- Los items se agrupan lógicamente en el API, pero el sistema no asume un empaquetado físico específico
+- La ausencia de LPN significa que no hay un identificador de empaquetado formal para estas agrupaciones
+- La orden completa sigue siendo la unidad principal de entrega que contiene todos estos items
+- Esta flexibilidad permite al sistema adaptarse a diferentes flujos logísticos y estrategias de empaquetado
 
-> **Nota importante**: Si los items deben ser entregados físicamente juntos como una unidad, se recomienda siempre asignar un LPN. La ausencia de LPN indica al sistema que los items son independientes para efectos logísticos.
+> **Nota importante**: El LPN es útil cuando necesita rastrear unidades de empaquetado específicas. Si lo que importa es solo la entrega del conjunto completo de items y no su empaquetado específico, los paquetes sin LPN ofrecen mayor flexibilidad.
 
 ### Escenario 3: Mezcla de Paquetes con y sin LPN
 
