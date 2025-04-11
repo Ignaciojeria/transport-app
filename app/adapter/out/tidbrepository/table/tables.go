@@ -316,7 +316,6 @@ type NodeInfo struct {
 	AddressInfo    AddressInfo `gorm:"-"` // Ignore relationship for DB operations
 
 	AddressLine2   string
-	AddressLine3   string
 	NodeReferences JSONReference `gorm:"type:json"`
 }
 
@@ -326,7 +325,6 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		Name:         n.Name,
 		References:   n.NodeReferences.Map(),
 		AddressLine2: n.AddressLine2,
-		AddressLine3: n.AddressLine3,
 	}
 	return nodeInfo
 }

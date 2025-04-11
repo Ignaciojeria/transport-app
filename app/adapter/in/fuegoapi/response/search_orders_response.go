@@ -18,11 +18,10 @@ type SearchOrdersResponse struct {
 	} `json:"collectAvailabilityDate"`
 	Destination struct {
 		AddressInfo struct {
-			ProviderAddress string `json:"providerAddress"`
-			AddressLine1    string `json:"addressLine1"`
-			AddressLine2    string `json:"addressLine2"`
-			AddressLine3    string `json:"addressLine3"`
-			Contact         struct {
+			AddressLine1 string `json:"addressLine1"`
+			AddressLine2 string `json:"addressLine2"`
+
+			Contact struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`
@@ -53,11 +52,10 @@ type SearchOrdersResponse struct {
 	} `json:"orderType"`
 	Origin struct {
 		AddressInfo struct {
-			ProviderAddress string `json:"providerAddress"`
-			AddressLine1    string `json:"addressLine1"`
-			AddressLine2    string `json:"addressLine2"`
-			AddressLine3    string `json:"addressLine3"`
-			Contact         struct {
+			AddressLine1 string `json:"addressLine1"`
+			AddressLine2 string `json:"addressLine2"`
+
+			Contact struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`

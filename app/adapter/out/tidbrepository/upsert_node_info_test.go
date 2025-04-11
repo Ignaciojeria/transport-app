@@ -96,7 +96,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			NodeType:     nodeType1,
 			AddressInfo:  addressInfo1, // This now contains contact1
 			AddressLine2: "Floor 3",
-			AddressLine3: "Building C",
 			References: []domain.Reference{
 				{Type: "ERP", Value: "WH001"},
 			},
@@ -116,7 +115,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Floor 3"))
-		Expect(dbNodeInfo.AddressLine3).To(Equal("Building C"))
 
 		// Verify that the JSON references were saved correctly
 		references := dbNodeInfo.NodeReferences.Map()
@@ -157,7 +155,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			NodeType:     nodeType1,
 			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Original Floor",
-			AddressLine3: "Original Building",
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -171,7 +168,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			NodeType:     nodeType1,
 			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Modified Floor",
-			AddressLine3: "Modified Building",
 		}
 
 		err = upsert(ctx1, modified)
@@ -185,7 +181,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.Name).To(Equal("Modified Name"))
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Modified Floor"))
-		Expect(dbNodeInfo.AddressLine3).To(Equal("Modified Building"))
 	})
 
 	It("should not update if no fields changed", func() {
@@ -195,7 +190,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			NodeType:     nodeType1,
 			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Same Floor",
-			AddressLine3: "Same Building",
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -332,7 +326,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			NodeType:     nodeType1,
 			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Original Line 2",
-			AddressLine3: "Original Line 3",
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -345,7 +338,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			NodeType:     nodeType1,
 			AddressInfo:  addressInfo1, // Contact is inside addressInfo
 			AddressLine2: "Updated Line 2",
-			AddressLine3: "Updated Line 3",
 		}
 
 		err = upsert(ctx1, modified)
@@ -358,7 +350,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Updated Line 2"))
-		Expect(dbNodeInfo.AddressLine3).To(Equal("Updated Line 3"))
 	})
 
 	It("should update references when they change", func() {

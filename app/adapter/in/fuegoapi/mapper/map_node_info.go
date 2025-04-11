@@ -10,11 +10,10 @@ func MapNodeInfoToDomain(nodeInfo struct {
 	ReferenceID string `json:"referenceID"`
 	Name        string `json:"name"`
 }, addressInfo struct {
-	ProviderAddress string `json:"providerAddress"`
-	AddressLine1    string `json:"addressLine1"`
-	AddressLine2    string `json:"addressLine2"`
-	AddressLine3    string `json:"addressLine3"`
-	Contact         struct {
+	AddressLine1 string `json:"addressLine1"`
+	AddressLine2 string `json:"addressLine2"`
+
+	Contact struct {
 		Email      string `json:"email"`
 		Phone      string `json:"phone"`
 		NationalID string `json:"nationalID"`
@@ -64,11 +63,10 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	ReferenceID string `json:"referenceID"`
 	Name        string `json:"name"`
 }, struct {
-	ProviderAddress string `json:"providerAddress"`
-	AddressLine1    string `json:"addressLine1"`
-	AddressLine2    string `json:"addressLine2"`
-	AddressLine3    string `json:"addressLine3"`
-	Contact         struct {
+	AddressLine1 string `json:"addressLine1"`
+	AddressLine2 string `json:"addressLine2"`
+
+	Contact struct {
 		Email      string `json:"email"`
 		Phone      string `json:"phone"`
 		NationalID string `json:"nationalID"`
@@ -96,11 +94,10 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	}
 
 	responseAddressInfo := struct {
-		ProviderAddress string `json:"providerAddress"`
-		AddressLine1    string `json:"addressLine1"`
-		AddressLine2    string `json:"addressLine2"`
-		AddressLine3    string `json:"addressLine3"`
-		Contact         struct {
+		AddressLine1 string `json:"addressLine1"`
+		AddressLine2 string `json:"addressLine2"`
+
+		Contact struct {
 			Email      string `json:"email"`
 			Phone      string `json:"phone"`
 			NationalID string `json:"nationalID"`

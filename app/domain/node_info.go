@@ -9,7 +9,6 @@ type NodeInfo struct {
 	References   []Reference
 	AddressInfo  AddressInfo
 	AddressLine2 string
-	AddressLine3 string
 }
 
 func (n NodeInfo) DocID(ctx context.Context) DocumentID {
@@ -79,11 +78,6 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 	// Actualizar campos AddressLine que se movieron de AddressInfo a NodeInfo
 	if newNode.AddressLine2 != "" && newNode.AddressLine2 != n.AddressLine2 {
 		updated.AddressLine2 = newNode.AddressLine2
-		changed = true
-	}
-
-	if newNode.AddressLine3 != "" && newNode.AddressLine3 != n.AddressLine3 {
-		updated.AddressLine3 = newNode.AddressLine3
 		changed = true
 	}
 

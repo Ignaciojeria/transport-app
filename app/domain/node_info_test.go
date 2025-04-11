@@ -56,7 +56,6 @@ var _ = Describe("NodeInfo", func() {
 				},
 
 				AddressLine2: "Dpto 1402",
-				AddressLine3: "Torre Norte",
 				References: []Reference{
 					{Type: "CODE", Value: "REF001"},
 					{Type: "ALT_CODE", Value: "ALT001"},
@@ -125,13 +124,12 @@ var _ = Describe("NodeInfo", func() {
 		It("should update AddressLine2 and AddressLine3", func() {
 			newNode := baseNode
 			newNode.AddressLine2 = "Nueva dirección 2"
-			newNode.AddressLine3 = "Nueva dirección 3"
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.AddressLine2).To(Equal("Nueva dirección 2"))
-			Expect(updated.AddressLine3).To(Equal("Nueva dirección 3"))
+
 		})
 
 		It("should not update if no fields changed", func() {

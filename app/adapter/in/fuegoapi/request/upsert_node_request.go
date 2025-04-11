@@ -13,7 +13,6 @@ type UpsertNodeRequest struct {
 	NodeAddress struct {
 		AddressLine1 string  `json:"addressLine1"`
 		AddressLine2 string  `json:"addressLine2"`
-		AddressLine3 string  `json:"addressLine3"`
 		Locality     string  `json:"locality"`
 		District     string  `json:"district"`
 		Latitude     float64 `json:"latitude"`

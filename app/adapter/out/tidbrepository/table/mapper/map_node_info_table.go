@@ -24,7 +24,6 @@ func MapNodeInfoTable(ctx context.Context, e domain.NodeInfo) table.NodeInfo {
 		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 		AddressInfoDoc: string(e.AddressInfo.DocID(ctx)),
 		AddressLine2:   e.AddressLine2,
-		AddressLine3:   e.AddressLine3,
 		NodeReferences: references,
 	}
 }
