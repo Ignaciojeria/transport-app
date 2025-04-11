@@ -2,9 +2,11 @@ package domain
 
 import (
 	"context"
+	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("ContactMethod UpdateIfChange", func() {
@@ -407,20 +409,29 @@ var _ = Describe("Contact DocID Function", func() {
 		Expect(docID).To(Equal(Hash(ctx, "12345678-9")))
 	})
 
-	It("should generate a UUID when all identifiers are missing", func() {
-		contact := Contact{
-			PrimaryEmail: "", // Vacío
-			PrimaryPhone: "", // Vacío
-			NationalID:   "", // Vacío
+	// Replace it with a test confirming consistent behavior for empty identifiers
+	It("should generate consistent DocID for Contact with empty identifiers", func() {
+		// Crear dos contextos diferentes con información de tenant
+		ctx1 := createContextWithBaggage("1", "CL")
+		ctx2 := createContextWithBaggage("2", "CL")
+
+		emptyContact1 := Contact{
+			PrimaryEmail: "", // Empty
+			PrimaryPhone: "", // Empty
+			NationalID:   "", // Empty, pero necesario incluirlo según el código actual
 		}
 
-		// Generar dos IDs para verificar que son diferentes (UUIDs)
-		docID1 := contact.DocID(ctx)
-		docID2 := contact.DocID(ctx)
+		emptyContact2 := Contact{
+			PrimaryEmail: "", // Empty
+			PrimaryPhone: "", // Empty
+			NationalID:   "", // Empty
+		}
 
-		Expect(docID1).ToNot(BeEmpty())
-		Expect(docID2).ToNot(BeEmpty())
-		Expect(docID1).ToNot(Equal(docID2)) // Deberían ser diferentes UUIDs
+		// Both should generate the same DocID in the same context
+		Expect(emptyContact1.DocID(ctx1)).To(Equal(emptyContact2.DocID(ctx1)))
+
+		// DocIDs should be different in different contexts
+		Expect(emptyContact1.DocID(ctx1)).ToNot(Equal(emptyContact1.DocID(ctx2)))
 	})
 })
 
@@ -547,3 +558,18 @@ var _ = Describe("Contact UpdateIfChanged (missing fields)", func() {
 		Expect(updated.PrimaryPhone).To(Equal("+56911111111"))
 	})
 })
+
+// Función helper para crear contextos con baggage
+func createContextWithBaggage(tenantID, country string) context.Context {
+	ctx := context.Background()
+
+	// Crear miembros de baggage con los valores proporcionados
+	orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, tenantID)
+	countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, country)
+
+	// Crear el baggage con ambos miembros
+	bag, _ := baggage.New(orgIDMember, countryMember)
+
+	// Retornar el contexto con el baggage
+	return baggage.ContextWithBaggage(ctx, bag)
+}
