@@ -282,8 +282,9 @@ func (j JSONItems) Map() []domain.Item {
 }
 
 type OrderPackage struct {
-	OrderDoc   string `gorm:"type:char(32);uniqueIndex"`
-	PackageDoc string `gorm:"type:char(32);uniqueIndex"`
+	ID         int64  `gorm:"primaryKey"`
+	OrderDoc   string `gorm:"type:char(32);"`
+	PackageDoc string `gorm:"type:char(32);"`
 }
 
 type OrderReferences struct {
