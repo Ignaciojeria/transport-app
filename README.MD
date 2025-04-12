@@ -3,72 +3,7 @@
 [![codecov](https://codecov.io/gh/Ignaciojeria/transport-app/branch/main/graph/badge.svg)](https://codecov.io/gh/Ignaciojeria/transport-app) [![Go Report Card](https://goreportcard.com/badge/github.com/Ignaciojeria/transport-app)](https://goreportcard.com/report/github.com/Ignaciojeria/transport-app)
 
 
-## 📌 Convención de Campos para Direcciones en Chile
-
-| Campo en JSON                | Descripción                      | Ejemplo                       |
-| ---------------------------- | --------------------------------- | ----------------------------- |
-| `addressInfo.addressLine1` | Calle y número                    | `inglaterra 59`                    |
-| `addressInfo.addressLine2` | Información adicional (opcional)  | `dpto 2214`                        |
-| `addressInfo.district`     | Comuna                            | `la florida`                       |
-| `addressInfo.province`     | Provincia                         | `santiago`                         |
-| `addressInfo.state`        | Región                            | `región metropolitana de santiago` |
-| `addressInfo.latitude`     | Latitud                           | `-33.5204181`                      |
-| `addressInfo.longitude`    | Longitud                          | `-70.6006178`               |      
----
-
-## 📌 Convención de Campos para Direcciones en México
-
-| Campo en JSON                | Descripción                      | Ejemplo                       |
-| ---------------------------- | --------------------------------- | ----------------------------- |
-| `addressInfo.addressLine1` | Calle y número                    | `av insurgentes 1234`              |
-| `addressInfo.addressLine2` | Información adicional (opcional)  | `interior 5` o `depto 202`         |
-| `addressInfo.district`     | Colonia                           | `condesa`                          |
-| `addressInfo.province`     | Alcaldía/Municipio                | `cuauhtémoc`                       |
-| `addressInfo.state`        | Estado                            | `ciudad de méxico`                 |
-| `addressInfo.latitude`     | Latitud                           | `19.4326`                          |
-| `addressInfo.longitude`    | Longitud                          | `-99.1332`                         |
----
-
-> ℹ️ **Nota:** El campo `province` representa:
-> - Una **alcaldía** si el estado es `ciudad de méxico`.
-> - Un **municipio** en el resto del país.
-
-
-## 🌐 Ejemplos de Direcciones en Chile
-
-### 🏢 Ejemplo en Santiago (con departamento)
-
-```json
-{
-  "addressInfo": {
-    "addressLine1": "av providencia 1234",
-    "addressLine2": "depto 1202",
-    "district": "providencia",
-    "province": "santiago",
-    "state": "región metropolitana de santiago",
-    "latitude": -33.4263,
-    "longitude": -70.6200
-  }
-}
-```
-
-### 🏙️ Ejemplo en Santiago (sin departamento)
-
-```json
-{
-  "addressInfo": {
-    "addressLine1": "avenida las condes 7890",
-    "addressLine2": "",
-    "district": "las condes",
-    "province": "santiago",
-    "state": "región metropolitana de santiago",
-    "latitude": -33.4085,
-    "longitude": -70.5666
-  }
-}
-```
-
-# 🔄 Context Propagation in Transport App
+# 🔄 Propagación de Contexto en Transport App
 
 En esta aplicación utilizamos OpenTelemetry Baggage para propagar contexto entre componentes (API → eventos Pub/Sub → consumidores) de forma trazable, desacoplada y estandarizada.
 
@@ -120,6 +55,70 @@ Cuando se publica un evento (como `orderSubmitted`), los atributos del contexto 
   "entityType": "order"
 }
 ```
+
+
+## 📌 Convención de Campos para Direcciones en Chile
+
+| Campo en JSON                | Descripción                      | Ejemplo                       |
+| ---------------------------- | --------------------------------- | ----------------------------- |
+| `addressInfo.addressLine1` | Calle y número                    | `inglaterra 59`                    |
+| `addressInfo.addressLine2` | Información adicional (opcional)  | `dpto 2214`                        |
+| `addressInfo.district`     | Comuna                            | `la florida`                       |
+| `addressInfo.province`     | Provincia                         | `santiago`                         |
+| `addressInfo.state`        | Región                            | `región metropolitana de santiago` |
+| `addressInfo.latitude`     | Latitud                           | `-33.5204181`                      |
+| `addressInfo.longitude`    | Longitud                          | `-70.6006178`               |      
+---
+
+## 🌐 Ejemplos de Direcciones en Chile
+
+### 🏢 Ejemplo en Santiago (con departamento)
+
+```json
+{
+  "addressInfo": {
+    "addressLine1": "av providencia 1234",
+    "addressLine2": "depto 1202",
+    "district": "providencia",
+    "province": "santiago",
+    "state": "región metropolitana de santiago",
+    "latitude": -33.4263,
+    "longitude": -70.6200
+  }
+}
+```
+
+### 🏙️ Ejemplo en Santiago (sin departamento)
+
+```json
+{
+  "addressInfo": {
+    "addressLine1": "avenida las condes 7890",
+    "addressLine2": "",
+    "district": "las condes",
+    "province": "santiago",
+    "state": "región metropolitana de santiago",
+    "latitude": -33.4085,
+    "longitude": -70.5666
+  }
+}
+```
+
+## 📌 Convención de Campos para Direcciones en México
+
+| Campo en JSON                | Descripción                      | Ejemplo                       |
+| ---------------------------- | --------------------------------- | ----------------------------- |
+| `addressInfo.addressLine1` | Calle y número                    | `av insurgentes 1234`              |
+| `addressInfo.addressLine2` | Información adicional (opcional)  | `interior 5` o `depto 202`         |
+| `addressInfo.district`     | Colonia                           | `condesa`                          |
+| `addressInfo.province`     | Alcaldía/Municipio                | `cuauhtémoc`                       |
+| `addressInfo.state`        | Estado                            | `ciudad de méxico`                 |
+| `addressInfo.latitude`     | Latitud                           | `19.4326`                          |
+| `addressInfo.longitude`    | Longitud                          | `-99.1332`                         |
+---
+> ℹ️ **Nota:** El campo `province` representa:
+> - Una **alcaldía** si el estado es `ciudad de méxico`.
+> - Un **municipio** en el resto del país.
 
 # 📦 Sistema de Gestión de Paquetes en Órdenes de Transporte
 
