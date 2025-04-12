@@ -33,7 +33,7 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID(ctx).String(),
 		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID(ctx).String(),
 
-		OrderReferences:      mapReferencesToTable(order.References),
+		//OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
 
 		CollectAvailabilityDate:           safePtrTime(order.CollectAvailabilityDate.Date),
@@ -44,7 +44,7 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
 		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
-		Packages:                          MapPackagesToTable(ctx, order.Packages),
+		//Packages:                          MapPackagesToTable(ctx, order.Packages),
 	}
 	return tbl
 }
@@ -54,17 +54,6 @@ func safePtrTime(t time.Time) *time.Time {
 		return nil // Retorna nil si la fecha es vacía en el dominio
 	}
 	return &t
-}
-
-func mapReferencesToTable(references []domain.Reference) []table.OrderReferences {
-	mapped := make([]table.OrderReferences, len(references))
-	for i, ref := range references {
-		mapped[i] = table.OrderReferences{
-			Type:  ref.Type,
-			Value: ref.Value,
-		}
-	}
-	return mapped
 }
 
 func mapItemsToTable(items []domain.Item) table.JSONItems {

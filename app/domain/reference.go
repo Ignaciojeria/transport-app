@@ -7,8 +7,8 @@ type Reference struct {
 	Value string
 }
 
-func DocID(ctx context.Context, r Reference) DocumentID {
-	return Hash(ctx, r.Type, r.Value)
+func (r Reference) DocID(ctx context.Context, orderReferenceID string) DocumentID {
+	return Hash(ctx, r.Type, r.Value, orderReferenceID)
 }
 
 // UpdateIfChange actualiza los campos de Reference solo si son diferentes

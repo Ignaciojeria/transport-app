@@ -30,7 +30,7 @@ type Order struct {
 	RouteDoc string `gorm:"type:char(32);index"`
 	Route    Route  `gorm:"-"`
 
-	OrderReferences []OrderReferences `gorm:"foreignKey:OrderID"`
+	OrderReferences []OrderReferences `gorm:"-"`
 
 	DeliveryInstructions string `gorm:"type:text"`
 
@@ -62,7 +62,7 @@ type Order struct {
 
 	JSONPlannedData JSONPlannedData `gorm:"type:json"`
 
-	Packages []Package `gorm:"many2many:order_packages"`
+	Packages []Package `gorm:"-"`
 
 	CollectAvailabilityDate           *time.Time    `gorm:"type:date;default:null"`
 	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
@@ -89,7 +89,7 @@ func (o Order) Map() domain.Order {
 			},
 		*/
 		//	Plan:                 domain.Plan{},
-		DeliveryInstructions: o.DeliveryInstructions,
+		//DeliveryInstructions: o.DeliveryInstructions,
 	}
 
 	// Mapear las fechas de disponibilidad de recolección

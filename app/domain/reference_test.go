@@ -19,8 +19,8 @@ var _ = Describe("Reference", func() {
 		It("should generate consistent IDs for the same context, Type and Value", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 
-			id1 := DocID(ctx1, ref)
-			id2 := DocID(ctx1, ref)
+			id1 := ref.DocID(ctx1, "ORDER-123")
+			id2 := ref.DocID(ctx1, "ORDER-123")
 
 			Expect(id1).To(Equal(id2))
 		})
@@ -28,8 +28,8 @@ var _ = Describe("Reference", func() {
 		It("should generate different IDs for different contexts", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 
-			id1 := DocID(ctx1, ref)
-			id2 := DocID(ctx2, ref)
+			id1 := ref.DocID(ctx1, "ORDER-123")
+			id2 := ref.DocID(ctx2, "ORDER-123")
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -38,8 +38,8 @@ var _ = Describe("Reference", func() {
 			ref1 := Reference{Type: "CODE", Value: "ABC123"}
 			ref2 := Reference{Type: "ALT_CODE", Value: "ABC123"}
 
-			id1 := DocID(ctx1, ref1)
-			id2 := DocID(ctx1, ref2)
+			id1 := ref1.DocID(ctx1, "ORDER-123")
+			id2 := ref2.DocID(ctx1, "ORDER-123")
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -48,8 +48,17 @@ var _ = Describe("Reference", func() {
 			ref1 := Reference{Type: "CODE", Value: "ABC123"}
 			ref2 := Reference{Type: "CODE", Value: "XYZ789"}
 
-			id1 := DocID(ctx1, ref1)
-			id2 := DocID(ctx1, ref2)
+			id1 := ref1.DocID(ctx1, "ORDER-123")
+			id2 := ref2.DocID(ctx1, "ORDER-123")
+
+			Expect(id1).ToNot(Equal(id2))
+		})
+
+		It("should generate different IDs for different OrderReferences", func() {
+			ref := Reference{Type: "CODE", Value: "ABC123"}
+
+			id1 := ref.DocID(ctx1, "ORDER-123")
+			id2 := ref.DocID(ctx1, "ORDER-999")
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -64,7 +73,7 @@ var _ = Describe("Reference", func() {
 
 			Expect(changed).To(BeTrue())
 			Expect(updated.Type).To(Equal("NEW_CODE"))
-			Expect(updated.Value).To(Equal("ABC123")) // No debería cambiar
+			Expect(updated.Value).To(Equal("ABC123"))
 		})
 
 		It("should update Value if different and not empty", func() {
@@ -74,7 +83,7 @@ var _ = Describe("Reference", func() {
 			updated, changed := ref.UpdateIfChange(newRef)
 
 			Expect(changed).To(BeTrue())
-			Expect(updated.Type).To(Equal("CODE")) // No debería cambiar
+			Expect(updated.Type).To(Equal("CODE"))
 			Expect(updated.Value).To(Equal("XYZ789"))
 		})
 
@@ -146,9 +155,9 @@ var _ = Describe("Reference", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 			newRef := Reference{Type: "NEW_CODE", Value: "XYZ789"}
 
-			originalID := DocID(ctx1, ref)
+			originalID := ref.DocID(ctx1, "ORDER-999")
 			updated, _ := ref.UpdateIfChange(newRef)
-			newID := DocID(ctx1, updated)
+			newID := updated.DocID(ctx1, "ORDER-999")
 
 			Expect(newID).ToNot(Equal(originalID))
 		})

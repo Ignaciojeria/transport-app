@@ -22,6 +22,7 @@ func init() {
 		tidbrepository.NewUpsertPackages,
 		tidbrepository.NewUpsertOrderType,
 		tidbrepository.NewUpsertOrder,
+		tidbrepository.NewUpsertOrderReferences,
 	)
 }
 
@@ -34,6 +35,7 @@ func NewCreateOrder(
 	upsertPackages tidbrepository.UpsertPackages,
 	upsertOrderType tidbrepository.UpsertOrderType,
 	upsertOrder tidbrepository.UpsertOrder,
+	upsertOrderReferences tidbrepository.UpsertOrderReferences,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
@@ -79,6 +81,10 @@ func NewCreateOrder(
 				inOrder.
 					ReferenceID.
 					String())
+		})
+
+		group.Go(func() error {
+			return upsertOrderReferences(ctx, inOrder)
 		})
 
 		group.Go(func() error {

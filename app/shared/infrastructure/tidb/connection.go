@@ -18,6 +18,7 @@ func init() {
 
 type TIDBConnection struct {
 	*gorm.DB
+	Strategy string
 }
 
 func NewTIDBConnection(
@@ -39,5 +40,5 @@ func NewTIDBConnection(
 	if strategy == nil {
 		return TIDBConnection{}, errors.New("unknown strategy: " + env.DB_STRATEGY)
 	}
-	return TIDBConnection{strategy}, err
+	return TIDBConnection{DB: strategy, Strategy: env.DB_STRATEGY}, err
 }
