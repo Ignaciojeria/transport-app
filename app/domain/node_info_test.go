@@ -30,13 +30,6 @@ var _ = Describe("NodeInfo", func() {
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node2.DocID(ctx1)))
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node1.DocID(ctx2)))
 		})
-
-		It("should return empty DocumentID if ReferenceID is empty", func() {
-			node := NodeInfo{
-				ReferenceID: "",
-			}
-			Expect(node.DocID(ctx1)).To(Equal(DocumentID("")))
-		})
 	})
 
 	Describe("UpdateIfChanged", func() {

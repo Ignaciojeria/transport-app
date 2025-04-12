@@ -95,24 +95,7 @@ func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
 			DBOrderToUpdate.DestinationAddressInfoDoc = o.Destination.AddressInfo.DocID(ctx).String()
 		}
 
-		//orderReferences := mapper.MapOrderReferences(ctx, o)
 		if err := conn.Transaction(func(tx *gorm.DB) error {
-			/*
-				if err := tx.
-					Where("order_doc = ?", o.DocID(ctx)).
-					Delete(&table.OrderReferences{}).Error; err != nil {
-					return err
-				}
-				if err := tx.Save(&orderReferences).Error; err != nil {
-					return err
-				}*/
-			/*
-				if err := tx.
-					Where("order_doc = ?", o.DocID(ctx)).
-					Delete(&table.OrderPackage{}).Error; err != nil {
-					return err
-				}
-			*/
 			return tx.
 				Omit("Organization").
 				Save(&DBOrderToUpdate).Error

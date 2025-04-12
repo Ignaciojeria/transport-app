@@ -123,31 +123,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(references[0].Value).To(Equal("WH001"))
 	})
 
-	It("should not persist node info with empty ReferenceID", func() {
-		nodeInfo := domain.NodeInfo{
-			Name:        "Invalid Node",
-			ReferenceID: "", // Empty ReferenceID should cause error
-			NodeType:    nodeType1,
-			AddressInfo: addressInfo1, // Contact is inside addressInfo
-		}
-
-		upsert := NewUpsertNodeInfo(connection)
-		err := upsert(ctx1, nodeInfo)
-
-		// Should return an error
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("empty ReferenceID"))
-
-		// Verify no record was created
-		var count int64
-		err = connection.DB.WithContext(ctx1).
-			Table("node_infos").
-			Where("name = ?", nodeInfo.Name).
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(0)))
-	})
-
 	It("should update node info if fields are different", func() {
 		original := domain.NodeInfo{
 			Name:         "Original Name",

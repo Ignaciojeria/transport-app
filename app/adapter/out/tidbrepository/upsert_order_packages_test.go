@@ -3,7 +3,9 @@ package tidbrepository
 import (
 	"context"
 	"strconv"
+	"strings"
 
+	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/sharedcontext"
 
@@ -134,4 +136,27 @@ var _ = Describe("UpsertOrderPackages", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("order_packages"))
 	})
+
+	It("should insert placeholder when no packages are provided", func() {
+		order := domain.Order{
+			ReferenceID: "ORD-PLACEHOLDER-001",
+			Headers:     domain.Headers{Commerce: "a", Consumer: "b"},
+			Packages:    []domain.Package{},
+		}
+
+		uop := NewUpsertOrderPackages(connection)
+		err := uop(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		var results []table.OrderPackage
+		err = connection.DB.WithContext(ctx).
+			Table("order_packages").
+			Where("order_doc = ?", order.DocID(ctx)).
+			Find(&results).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(len(results)).To(Equal(1))
+		Expect(strings.TrimSpace(results[0].PackageDoc)).To(Equal(""))
+
+	})
+
 })

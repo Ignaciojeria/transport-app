@@ -33,6 +33,13 @@ func NewUpsertOrderReferences(conn tidb.TIDBConnection) UpsertOrderReferences {
 					return err
 				}
 			}
+			if len(orderReferences) == 0 {
+				if err := tx.Create(&table.OrderReferences{
+					OrderDoc: orderDocID.String(),
+				}).Error; err != nil {
+					return err
+				}
+			}
 			return nil
 		})
 	}

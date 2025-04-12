@@ -103,4 +103,25 @@ var _ = Describe("UpsertOrderReferences", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("order_references"))
 	})
+
+	It("should insert placeholder when no references are provided", func() {
+		order := domain.Order{
+			ReferenceID: "ORD-REF-PLACEHOLDER-001",
+			Headers:     domain.Headers{Commerce: "z", Consumer: "w"},
+			References:  []domain.Reference{},
+		}
+
+		uor := NewUpsertOrderReferences(connection)
+		err := uor(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		var count int64
+		err = connection.DB.WithContext(ctx).
+			Table("order_references").
+			Where("order_doc = ?", order.DocID(ctx)).
+			Count(&count).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(count).To(Equal(int64(1)))
+	})
+
 })

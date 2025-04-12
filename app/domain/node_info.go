@@ -12,9 +12,6 @@ type NodeInfo struct {
 }
 
 func (n NodeInfo) DocID(ctx context.Context) DocumentID {
-	if n.ReferenceID == "" {
-		return ""
-	}
 	return Hash(ctx, string(n.ReferenceID))
 }
 

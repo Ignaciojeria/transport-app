@@ -31,6 +31,13 @@ func NewUpsertOrderPackages(conn tidb.TIDBConnection) UpsertOrderPackages {
 					return err
 				}
 			}
+
+			if len(orderPackages) == 0 {
+				if err := tx.Save(&table.OrderPackage{OrderDoc: order.DocID(ctx).String()}).Error; err != nil {
+					return err
+				}
+			}
+
 			return nil
 		})
 	}
