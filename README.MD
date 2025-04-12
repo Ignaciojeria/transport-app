@@ -276,35 +276,107 @@ Un pedido contiene dos productos que se entregan de forma independiente:
 }
 ```
 
-### Escenario 2.1: Múltiples Items sin LPN
+## 🎯 Ejemplo de Equivalencia entre Agrupaciones de Items sin LPN
 
-Un pedido con múltiples items en packages sin LPN:
+En el sistema, la ausencia de LPN implica que **no existe una unidad de embalaje físico identificable**. Esto permite representar ítems como agrupaciones lógicas, independientemente de cómo estén organizados en el cuerpo de la solicitud.
+
+A continuación se muestran dos formas distintas de estructurar los mismos ítems en una orden, que **son tratadas de forma equivalente** por el sistema.
+
+---
+
+#### 📦 Escenario A: Agrupación múltiple sin LPN
 
 ```json
 {
-    "packages": [
+  "packages": [
+    {
+      "items": [
         {
-            "items": [
-                {"sku": "PROD-X", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}},
-                {"sku": "PROD-Z", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
+          "sku": "PROD-A",
+          "quantity": {
+            "quantityNumber": 1,
+            "quantityUnit": "unit"
+          }
         },
         {
-            "items": [
-                {"sku": "PROD-Y", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
+          "sku": "PROD-B",
+          "quantity": {
+            "quantityNumber": 1,
+            "quantityUnit": "unit"
+          }
         }
-    ]
+      ]
+    },
+    {
+      "items": [
+        {
+          "sku": "PROD-C",
+          "quantity": {
+            "quantityNumber": 1,
+            "quantityUnit": "unit"
+          }
+        }
+      ]
+    }
+  ]
 }
 ```
 
-En este escenario:
-- Los items se agrupan lógicamente en el API, pero el sistema no asume un empaquetado físico específico
-- La ausencia de LPN significa que no hay un identificador de empaquetado formal para estas agrupaciones
-- La orden completa sigue siendo la unidad principal de entrega que contiene todos estos items
-- Esta flexibilidad permite al sistema adaptarse a diferentes flujos logísticos y estrategias de empaquetado
+#### 📦 Escenario B: Paquetes individuales sin LPN
 
-> **Nota importante**: El LPN es útil cuando necesita rastrear unidades de empaquetado específicas. Si lo que importa es solo la entrega del conjunto completo de items y no su empaquetado específico, los paquetes sin LPN ofrecen mayor flexibilidad.
+```json
+{
+  "packages": [
+    {
+      "items": [
+        {
+          "sku": "PROD-A",
+          "quantity": {
+            "quantityNumber": 1,
+            "quantityUnit": "unit"
+          }
+        }
+      ]
+    },
+    {
+      "items": [
+        {
+          "sku": "PROD-B",
+          "quantity": {
+            "quantityNumber": 1,
+            "quantityUnit": "unit"
+          }
+        }
+      ]
+    },
+    {
+      "items": [
+        {
+          "sku": "PROD-C",
+          "quantity": {
+            "quantityNumber": 1,
+            "quantityUnit": "unit"
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### ✅ Resultado en el sistema
+
+- Ambos escenarios representan los mismos ítems con las mismas cantidades.
+- Ambos omiten el LPN, por lo que no existe una referencia a un paquete físico específico.
+- Ambos son interpretados como una serie de ítems asociados directamente a la orden, no como unidades físicas independientes.
+- El sistema genera identificadores únicos por agrupación, pero todos están ligados al mismo orderReferenceId.
+
+### 🧠 Conclusión
+
+- Aunque la estructura visual difiere, el tratamiento lógico y funcional dentro del sistema es el mismo.
+- Lo relevante no es cómo se organizan los items en el payload, sino la ausencia de LPN, que indica que estas agrupaciones no representan una caja o contenedor físico formal.
+- Esto otorga al sistema una gran flexibilidad operativa, permitiendo representar tanto productos individuales como agrupaciones lógicas sin imponer restricciones rígidas de empaquetado.
+
 
 ### Escenario 3: Mezcla de Paquetes con y sin LPN
 
