@@ -2,6 +2,7 @@
 
 [![codecov](https://codecov.io/gh/Ignaciojeria/transport-app/branch/main/graph/badge.svg)](https://codecov.io/gh/Ignaciojeria/transport-app) [![Go Report Card](https://goreportcard.com/badge/github.com/Ignaciojeria/transport-app)](https://goreportcard.com/report/github.com/Ignaciojeria/transport-app)
 
+
 ## 📌 Convención de Campos para Direcciones en Chile
 
 | Campo en JSON                | Descripción                      | Ejemplo                       |
@@ -14,6 +15,24 @@
 | `addressInfo.latitude`     | Latitud                           | `-33.5204181`                      |
 | `addressInfo.longitude`    | Longitud                          | `-70.6006178`               |      
 ---
+
+## 📌 Convención de Campos para Direcciones en México
+
+| Campo en JSON                | Descripción                      | Ejemplo                       |
+| ---------------------------- | --------------------------------- | ----------------------------- |
+| `addressInfo.addressLine1` | Calle y número                    | `av insurgentes 1234`              |
+| `addressInfo.addressLine2` | Información adicional (opcional)  | `interior 5` o `depto 202`         |
+| `addressInfo.district`     | Colonia                           | `condesa`                          |
+| `addressInfo.province`     | Alcaldía/Municipio                | `cuauhtémoc`                       |
+| `addressInfo.state`        | Estado                            | `ciudad de méxico`                 |
+| `addressInfo.latitude`     | Latitud                           | `19.4326`                          |
+| `addressInfo.longitude`    | Longitud                          | `-99.1332`                         |
+---
+
+> ℹ️ **Nota:** El campo `province` representa:
+> - Una **alcaldía** si el estado es `ciudad de méxico`.
+> - Un **municipio** en el resto del país.
+
 
 ## 🌐 Ejemplos de Direcciones en Chile
 
