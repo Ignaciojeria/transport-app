@@ -33,7 +33,10 @@ func NewUpsertOrderPackages(conn tidb.TIDBConnection) UpsertOrderPackages {
 			}
 
 			if len(orderPackages) == 0 {
-				if err := tx.Save(&table.OrderPackage{OrderDoc: order.DocID(ctx).String()}).Error; err != nil {
+				pkg := domain.Package{}
+				if err := tx.Save(&table.OrderPackage{
+					OrderDoc:   order.DocID(ctx).String(),
+					PackageDoc: pkg.DocID(ctx, order.ReferenceID.String()).String()}).Error; err != nil {
 					return err
 				}
 			}

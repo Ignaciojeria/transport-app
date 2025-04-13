@@ -18,14 +18,15 @@ func init() {
 
 func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
 	return func(ctx context.Context, pcks []domain.Package, orderReference string) error {
-		if len(pcks) == 0 {
-			return nil
-		}
 
 		// 1. Expandimos paquetes sin LPN en paquetes individuales
 		var normalized []domain.Package
 		for _, pkg := range pcks {
 			normalized = append(normalized, pkg.ExplodeIfNoLpn()...)
+		}
+
+		if len(pcks) == 0 {
+			normalized = append(normalized, domain.Package{})
 		}
 
 		// 2. Construimos una lista de DocumentIDs

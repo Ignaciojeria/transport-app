@@ -3,7 +3,6 @@ package tidbrepository
 import (
 	"context"
 	"strconv"
-	"strings"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
@@ -137,11 +136,11 @@ var _ = Describe("UpsertOrderPackages", func() {
 		Expect(err.Error()).To(ContainSubstring("order_packages"))
 	})
 
-	It("should insert placeholder when no packages are provided", func() {
+	It("should insert placeholder package with a valid docID when no packages are provided", func() {
 		order := domain.Order{
 			ReferenceID: "ORD-PLACEHOLDER-001",
 			Headers:     domain.Headers{Commerce: "a", Consumer: "b"},
-			Packages:    []domain.Package{},
+			Packages:    []domain.Package{}, // no paquetes
 		}
 
 		uop := NewUpsertOrderPackages(connection)
@@ -154,9 +153,9 @@ var _ = Describe("UpsertOrderPackages", func() {
 			Where("order_doc = ?", order.DocID(ctx)).
 			Find(&results).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(len(results)).To(Equal(1))
-		Expect(strings.TrimSpace(results[0].PackageDoc)).To(Equal(""))
 
+		Expect(results).To(HaveLen(1))
+		Expect(results[0].PackageDoc).ToNot(BeEmpty()) // docID generado desde pkg vacío + refID
 	})
 
 })
