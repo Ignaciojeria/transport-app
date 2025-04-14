@@ -16,7 +16,6 @@ var (
 type Order struct {
 	Headers
 	AddressLine2            string
-	AddressLine3            string
 	ReferenceID             ReferenceID
 	SequenceNumber          *int
 	OrderStatus             OrderStatus

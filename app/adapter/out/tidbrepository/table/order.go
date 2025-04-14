@@ -64,6 +64,7 @@ type Order struct {
 
 	Packages []Package `gorm:"-"`
 
+	AddressLine2                      string        `gorm:"default:null"`
 	CollectAvailabilityDate           *time.Time    `gorm:"type:date;default:null"`
 	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
 	CollectAvailabilityTimeRangeEnd   string        `gorm:"default:null"`
@@ -79,7 +80,8 @@ func (o Order) Map() domain.Order {
 
 	order := domain.Order{
 		//	ID:          o.ID,
-		ReferenceID: domain.ReferenceID(o.ReferenceID),
+		AddressLine2: o.AddressLine2,
+		ReferenceID:  domain.ReferenceID(o.ReferenceID),
 		/*
 			Headers: domain.Headers{
 				Organization: domain.Organization{

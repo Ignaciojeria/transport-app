@@ -31,7 +31,7 @@ type SearchOrdersResponse struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			Locality  string  `json:"locality"`
+
 			District  string  `json:"district"`
 			Latitude  float64 `json:"latitude"`
 			Longitude float64 `json:"longitude"`
@@ -65,7 +65,7 @@ type SearchOrdersResponse struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			Locality  string  `json:"locality"`
+
 			District  string  `json:"district"`
 			Latitude  float64 `json:"latitude"`
 			Longitude float64 `json:"longitude"`
