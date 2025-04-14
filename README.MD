@@ -135,46 +135,21 @@ La API de órdenes de transporte permite definir paquetes de dos maneras diferen
 
 ```json
 {
-    "dimensions": {
-        "length": 10,
-        "height": 10,
-        "unit": "cm",
-        "width": 10
-    },
-    "insurance": {
-        "currency": "USD",
-        "unitValue": 10
-    },
+    "dimensions": {"length": 10, "height": 10, "unit": "cm", "width": 10},
+    "insurance": {"currency": "USD", "unitValue": 10},
     "items": [
         {
             "sku": "ITEM-001",
             "description": "Producto A",
-            "dimensions": {
-                "length": 1,
-                "height": 1,
-                "unit": "cm",
-                "width": 1
-            },
-            "insurance": {
-                "currency": "USD",
-                "unitValue": 100
-            },
+            "dimensions": {"length": 1, "height": 1, "unit": "cm", "width": 1},
+            "insurance": {"currency": "USD", "unitValue": 100},
             "logisticCondition": "normal",
-            "quantity": {
-                "quantityNumber": 1,
-                "quantityUnit": "unit"
-            },
-            "weight": {
-                "unit": "kg",
-                "value": 0.5
-            }
+            "quantity": {"quantityNumber": 1, "quantityUnit": "unit"},
+            "weight": {"unit": "kg", "value": 0.5}
         }
     ],
     "lpn": "PKG-12345",
-    "weight": {
-        "unit": "kg",
-        "value": 1
-    }
+    "weight": {"unit": "kg", "value": 1}
 }
 ```
 
@@ -186,25 +161,11 @@ La API de órdenes de transporte permite definir paquetes de dos maneras diferen
         {
             "sku": "ITEM-001",
             "description": "Producto A",
-            "dimensions": {
-                "length": 1,
-                "height": 1,
-                "unit": "cm",
-                "width": 1
-            },
-            "insurance": {
-                "currency": "USD",
-                "unitValue": 100
-            },
+            "dimensions": {"length": 1, "height": 1, "unit": "cm", "width": 1},
+            "insurance": {"currency": "USD", "unitValue": 100},
             "logisticCondition": "normal",
-            "quantity": {
-                "quantityNumber": 1,
-                "quantityUnit": "unit"
-            },
-            "weight": {
-                "unit": "kg",
-                "value": 0.5
-            }
+            "quantity": {"quantityNumber": 1, "quantityUnit": "unit"},
+            "weight": {"unit": "kg", "value": 0.5}
         }
     ]
 }
@@ -306,37 +267,19 @@ A continuación se muestran dos formas distintas de estructurar los mismos ítem
 
 ```json
 {
-  "packages": [
-    {
-      "items": [
+    "packages": [
         {
-          "sku": "PROD-A",
-          "quantity": {
-            "quantityNumber": 1,
-            "quantityUnit": "unit"
-          }
+            "items": [
+                {"sku": "PROD-A", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}},
+                {"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
+            ]
         },
         {
-          "sku": "PROD-B",
-          "quantity": {
-            "quantityNumber": 1,
-            "quantityUnit": "unit"
-          }
+            "items": [
+                {"sku": "PROD-C", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
+            ]
         }
-      ]
-    },
-    {
-      "items": [
-        {
-          "sku": "PROD-C",
-          "quantity": {
-            "quantityNumber": 1,
-            "quantityUnit": "unit"
-          }
-        }
-      ]
-    }
-  ]
+    ]
 }
 ```
 
@@ -344,41 +287,23 @@ A continuación se muestran dos formas distintas de estructurar los mismos ítem
 
 ```json
 {
-  "packages": [
-    {
-      "items": [
+    "packages": [
         {
-          "sku": "PROD-A",
-          "quantity": {
-            "quantityNumber": 1,
-            "quantityUnit": "unit"
-          }
-        }
-      ]
-    },
-    {
-      "items": [
+            "items": [
+                {"sku": "PROD-A", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
+            ]
+        },
         {
-          "sku": "PROD-B",
-          "quantity": {
-            "quantityNumber": 1,
-            "quantityUnit": "unit"
-          }
-        }
-      ]
-    },
-    {
-      "items": [
+            "items": [
+                {"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
+            ]
+        },
         {
-          "sku": "PROD-C",
-          "quantity": {
-            "quantityNumber": 1,
-            "quantityUnit": "unit"
-          }
+            "items": [
+                {"sku": "PROD-C", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
 ```
 
