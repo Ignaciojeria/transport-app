@@ -31,6 +31,7 @@ import (
 	_ "transport-app/app/shared/infrastructure/gemini"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	_ "transport-app/app/falabella/usecase"
 )
 
 //go:embed .version

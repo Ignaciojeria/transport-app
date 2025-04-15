@@ -30,7 +30,7 @@ var _ = Describe("District", func() {
 			docID := d.DocID(ctx)
 
 			// Expected hash: HashByCountry(context.Background(), "CL", "Ñuñoa")
-			joined := strings.Join([]string{"CL", "Ñuñoa"}, "|")
+			joined := strings.Join([]string{"CL", "district", "Ñuñoa"}, "|")
 			sum := sha256.Sum256([]byte(joined))
 			expected := hex.EncodeToString(sum[:16])
 

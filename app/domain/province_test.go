@@ -21,7 +21,7 @@ var _ = Describe("Province", func() {
 	})
 
 	Describe("DocID", func() {
-		It("should generate a deterministic DocID based on country and province", func() {
+		It("should generate a deterministic DocID based on country and province with type prefix", func() {
 			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
@@ -29,7 +29,7 @@ var _ = Describe("Province", func() {
 			p := Province("Santiago")
 			docID := p.DocID(ctx)
 
-			joined := strings.Join([]string{"CL", "Santiago"}, "|")
+			joined := strings.Join([]string{"CL", "province", "Santiago"}, "|")
 			sum := sha256.Sum256([]byte(joined))
 			expected := hex.EncodeToString(sum[:16])
 
@@ -60,6 +60,7 @@ var _ = Describe("Province", func() {
 			Expect(p.DocID(ctxCL)).ToNot(Equal(p.DocID(ctxAR)))
 		})
 	})
+
 })
 
 var _ = Describe("Province", func() {

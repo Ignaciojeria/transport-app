@@ -49,8 +49,6 @@ func NewCreateOrder(
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
-		inOrder.Origin.AddressInfo.ToLowerAndRemovePuntuation()
-		inOrder.Destination.AddressInfo.ToLowerAndRemovePuntuation()
 
 		normalizationGroup, ctx := errgroup.WithContext(ctx)
 		normalizationGroup.Go(func() error {
@@ -98,7 +96,6 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-
 			return upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
 		})
 

@@ -29,7 +29,8 @@ var _ = Describe("State", func() {
 			s := State("Región Metropolitana de Santiago")
 			docID := s.DocID(ctx)
 
-			joined := strings.Join([]string{"CL", "Región Metropolitana de Santiago"}, "|")
+			joined := strings.Join([]string{"CL", "state", "Región Metropolitana de Santiago"}, "|")
+
 			sum := sha256.Sum256([]byte(joined))
 			expected := hex.EncodeToString(sum[:16])
 
