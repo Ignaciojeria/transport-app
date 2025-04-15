@@ -20,9 +20,9 @@ var _ = Describe("NodeType", func() {
 			node1 := NodeType{Value: "foo"}
 			node2 := NodeType{Value: "bar"}
 
-			Expect(node1.DocID(ctx1)).To(Equal(DocumentID(Hash(ctx1, "foo"))))
-			Expect(node2.DocID(ctx1)).To(Equal(DocumentID(Hash(ctx1, "bar"))))
-			Expect(node1.DocID(ctx2)).To(Equal(DocumentID(Hash(ctx2, "foo"))))
+			Expect(node1.DocID(ctx1)).To(Equal(DocumentID(HashByTenant(ctx1, "foo"))))
+			Expect(node2.DocID(ctx1)).To(Equal(DocumentID(HashByTenant(ctx1, "bar"))))
+			Expect(node1.DocID(ctx2)).To(Equal(DocumentID(HashByTenant(ctx2, "foo"))))
 
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node2.DocID(ctx1)))
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node1.DocID(ctx2)))

@@ -41,7 +41,7 @@ var _ = Describe("OrderStatus", func() {
 			docID := orderStatus.DocID()
 
 			// En un escenario real, esta prueba verificaría algo como:
-			// Expect(orderStatus.DocID()).To(Equal(Hash(GlobalOrganization, "delivered")))
+			// Expect(orderStatus.DocID()).To(Equal(HashByTenant(GlobalOrganization, "delivered")))
 			//
 			// Pero como no tenemos acceso directo a la función Hash desde las pruebas,
 			// verificamos la consistencia del ID

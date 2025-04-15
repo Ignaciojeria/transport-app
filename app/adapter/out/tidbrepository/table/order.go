@@ -72,6 +72,7 @@ type Order struct {
 	PromisedDateRangeEnd              *time.Time    `gorm:"type:date;default:null"`
 	PromisedTimeRangeStart            string        `gorm:"default:null"`
 	PromisedTimeRangeEnd              string        `gorm:"default:null"`
+	ServiceCategory                   string        `gorm:"default:null"`
 	TransportRequirements             JSONReference `gorm:"type:json"`
 }
 

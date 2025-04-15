@@ -23,7 +23,7 @@ var _ = Describe("VehicleCategory", func() {
 				Type: "TRUCK",
 			}
 
-			Expect(vc1.DocID(ctx)).To(Equal(Hash(ctx, "VAN")))
+			Expect(vc1.DocID(ctx)).To(Equal(HashByTenant(ctx, "VAN")))
 			Expect(vc1.DocID(ctx)).ToNot(Equal(vc2.DocID(ctx)))
 		})
 

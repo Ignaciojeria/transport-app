@@ -66,13 +66,13 @@ func (req UpsertNodeRequest) Map() domain.NodeInfo {
 			//AddressLine2: req.NodeAddress.AddressLine2,
 			//AddressLine3: req.NodeAddress.AddressLine3,
 			//Locality: req.NodeAddress.Locality,
-			District: req.NodeAddress.District,
+			District: domain.District(req.NodeAddress.District),
 			Location: orb.Point{
 				req.NodeAddress.Longitude, // orb.Point espera [lon, lat]
 				req.NodeAddress.Latitude,
 			},
-			Province: req.NodeAddress.Province,
-			State:    req.NodeAddress.State,
+			Province: domain.Province(req.NodeAddress.Province),
+			State:    domain.State(req.NodeAddress.State),
 			TimeZone: req.NodeAddress.TimeZone,
 			ZipCode:  req.NodeAddress.ZipCode,
 		},

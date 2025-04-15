@@ -15,7 +15,7 @@ var _ = Describe("Headers", func() {
 				Consumer: "customer-1",
 			}
 
-			Expect(headers.DocID(ctx)).To(Equal(Hash(ctx, "store-1", "customer-1")))
+			Expect(headers.DocID(ctx)).To(Equal(HashByTenant(ctx, "store-1", "customer-1")))
 		})
 
 		It("should generate different IDs for different contexts", func() {

@@ -24,8 +24,8 @@ func (req AddressNormalizationRequest) Map() (domain.AddressInfo, domain.Address
 	return domain.AddressInfo{
 			AddressLine1: req.UserInput.AddressLine1,
 			//AddressLine2: req.UserInput.AddressLine2,
-			State:        req.UserInput.State,
-			District:     req.UserInput.District,
+			State:    domain.State(req.UserInput.State),
+			District: domain.District(req.UserInput.District),
 		}, domain.AddressInfo{
 			AddressLine1: req.ProviderInput.DisplayName,
 			Location: orb.Point{

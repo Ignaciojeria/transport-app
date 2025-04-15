@@ -10,7 +10,7 @@ type Operator struct {
 }
 
 func (o Operator) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, o.Contact.PrimaryEmail)
+	return HashByTenant(ctx, o.Contact.PrimaryEmail)
 }
 
 type Role string

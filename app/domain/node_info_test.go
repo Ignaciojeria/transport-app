@@ -26,7 +26,7 @@ var _ = Describe("NodeInfo", func() {
 			}
 
 			// Mismo nodo con diferentes contextos
-			Expect(node1.DocID(ctx1)).To(Equal(Hash(ctx1, "node-1")))
+			Expect(node1.DocID(ctx1)).To(Equal(HashByTenant(ctx1, "node-1")))
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node2.DocID(ctx1)))
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node1.DocID(ctx2)))
 		})
@@ -85,7 +85,7 @@ var _ = Describe("NodeInfo", func() {
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
 			Expect(changed).To(BeFalse())
-			Expect(updated.AddressInfo.District).To(Equal("Providencia"))
+			Expect(updated.AddressInfo.District.String()).To(Equal("Providencia"))
 		})
 
 		It("should update references", func() {

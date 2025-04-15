@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/gemini/cl"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/google/generative-ai-go/genai"
@@ -35,7 +34,7 @@ func NewGemini2Dot0FlashModelWrapper(client *genai.Client) Gemini2Dot0FlashModel
 	}
 	model := client.GenerativeModel("gemini-2.0-flash")
 	model.ResponseMIMEType = "application/json"
-	model.ResponseSchema = cl.AddressNormalizationSchema
+	model.ResponseSchema = AddressNormalizationSchema
 	return Gemini2Dot0FlashModelWrapper{
 		GenerativeModel: model,
 	}
@@ -81,12 +80,12 @@ func getResponse(resp *genai.GenerateContentResponse) (domain.AddressInfo, error
 	}
 
 	return domain.AddressInfo{
-		AddressLine1:    data.AddressLine1,
-	//	AddressLine2:    data.AddressLine2,
-	//	ProviderAddress: data.ProviderAddress,
-		District:        data.District,
-		State:           data.State,
-		Province:        data.Province,
+		AddressLine1: data.AddressLine1,
+		//	AddressLine2:    data.AddressLine2,
+		//	ProviderAddress: data.ProviderAddress,
+		District: domain.District(data.District),
+		State:    domain.State(data.State),
+		Province: domain.Province(data.Province),
 		Location: orb.Point{
 			data.Longitude,
 			data.Latitude,

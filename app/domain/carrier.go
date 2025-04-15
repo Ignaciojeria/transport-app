@@ -8,7 +8,7 @@ type Carrier struct {
 }
 
 func (c Carrier) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, c.NationalID)
+	return HashByTenant(ctx, c.NationalID)
 }
 
 func (c Carrier) UpdateIfChanged(newCarrier Carrier) (Carrier, bool) {

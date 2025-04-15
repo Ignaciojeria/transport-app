@@ -12,7 +12,7 @@ func (nt NodeType) DocID(ctx context.Context) DocumentID {
 	if nt.Value == "" {
 		return ""
 	}
-	return DocumentID(Hash(ctx, nt.Value))
+	return DocumentID(HashByTenant(ctx, nt.Value))
 }
 
 func (nt NodeType) UpdateIfChange(newNodeType NodeType) (NodeType, bool) {

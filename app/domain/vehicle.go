@@ -35,7 +35,7 @@ type Vehicle struct {
 }
 
 func (v Vehicle) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, v.Plate)
+	return HashByTenant(ctx, v.Plate)
 }
 
 func (v Vehicle) UpdateIfChanged(in Vehicle) (Vehicle, bool) {

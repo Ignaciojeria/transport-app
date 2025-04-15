@@ -26,7 +26,7 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		OrderTypeDoc:           order.OrderType.DocID(ctx).String(),
 		OriginNodeInfoDoc:      order.Origin.DocID(ctx).String(),
 		DestinationNodeInfoDoc: order.Destination.DocID(ctx).String(),
-
+		ServiceCategory:        order.PromisedDate.ServiceCategory,
 		// Si están disponibles, también mapear los contactos y direcciones
 		OriginContactDoc:          order.Origin.AddressInfo.Contact.DocID(ctx).String(),
 		DestinationContactDoc:     order.Destination.AddressInfo.Contact.DocID(ctx).String(),
@@ -181,9 +181,9 @@ func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) tabl
 	return table.AddressInfo{
 		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 
-		State: address.State,
+		State: address.State.String(),
 		//	Locality:       address.Locality,
-		District:     address.District,
+		District:     address.District.String(),
 		AddressLine1: address.AddressLine1,
 		//	AddressLine2:   address.AddressLine2,
 		//	AddressLine3:   address.AddressLine3,
@@ -192,7 +192,7 @@ func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) tabl
 		Latitude:   address.Location[1],
 		Longitude:  address.Location[0],
 		ZipCode:    address.ZipCode,
-		Province:   address.Province,
+		Province:   address.Province.String(),
 		TimeZone:   address.TimeZone,
 	}
 }

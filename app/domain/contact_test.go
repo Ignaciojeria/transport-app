@@ -384,7 +384,7 @@ var _ = Describe("Contact DocID Function", func() {
 		}
 
 		docID := contact.DocID(ctx)
-		Expect(docID).To(Equal(Hash(ctx, "test@example.com")))
+		Expect(docID).To(Equal(HashByTenant(ctx, "test@example.com")))
 	})
 
 	It("should fallback to PrimaryPhone when PrimaryEmail is missing", func() {
@@ -395,7 +395,7 @@ var _ = Describe("Contact DocID Function", func() {
 		}
 
 		docID := contact.DocID(ctx)
-		Expect(docID).To(Equal(Hash(ctx, "+56912345678")))
+		Expect(docID).To(Equal(HashByTenant(ctx, "+56912345678")))
 	})
 
 	It("should fallback to NationalID when PrimaryEmail and PrimaryPhone are missing", func() {
@@ -406,7 +406,7 @@ var _ = Describe("Contact DocID Function", func() {
 		}
 
 		docID := contact.DocID(ctx)
-		Expect(docID).To(Equal(Hash(ctx, "12345678-9")))
+		Expect(docID).To(Equal(HashByTenant(ctx, "12345678-9")))
 	})
 
 	// Replace it with a test confirming consistent behavior for empty identifiers

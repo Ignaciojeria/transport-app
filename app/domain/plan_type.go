@@ -7,5 +7,5 @@ type PlanType struct {
 }
 
 func (pt PlanType) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, pt.Value)
+	return HashByTenant(ctx, pt.Value)
 }

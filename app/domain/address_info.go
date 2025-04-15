@@ -9,32 +9,42 @@ import (
 
 type AddressInfo struct {
 	Contact           Contact
-	State             string
-	Province          string
-	District          string
+	State             State
+	Province          Province
+	District          District
 	AddressLine1      string
 	Location          orb.Point
-	CorrectedLocation orb.Point
 	CorrectedDistance float64
 	ZipCode           string
 	TimeZone          string
 }
 
 func (a AddressInfo) DocID(ctx context.Context) DocumentID {
-	return Hash(
+	return HashByTenant(
 		ctx,
 		a.AddressLine1,
-		a.District,
-		a.Province,
-		a.State)
+		a.District.String(),
+		a.Province.String(),
+		a.State.String())
 }
 
 // Normalize limpia y formatea los valores de State, Province y District.
-func (a *AddressInfo) Normalize() {
+func (a *AddressInfo) ToLowerAndRemovePuntuation() {
 	a.AddressLine1 = utils.NormalizeText(a.AddressLine1)
-	a.State = utils.NormalizeText(a.State)
-	a.Province = utils.NormalizeText(a.Province)
-	a.District = utils.NormalizeText(a.District)
+	a.State = State(utils.NormalizeText(a.State.String()))
+	a.Province = Province(utils.NormalizeText(a.Province.String()))
+	a.District = District(utils.NormalizeText(a.District.String()))
+}
+
+func (a *AddressInfo) ApplyNormalization(normalized AddressInfo) (changed bool) {
+	changed = a.State.UpdateIfChanged(normalized.State) || changed
+	changed = a.Province.UpdateIfChanged(normalized.Province) || changed
+	changed = a.District.UpdateIfChanged(normalized.District) || changed
+	return
+}
+
+func (a AddressInfo) IsFullyNormalized() bool {
+	return !a.State.IsEmpty() && !a.Province.IsEmpty() && !a.District.IsEmpty()
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool) {
@@ -53,19 +63,22 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		updated.Location[0] = newAddress.Location[0]
 		changed = true
 	}
-	if newAddress.State != "" && newAddress.State != a.State {
+
+	if !newAddress.State.IsEmpty() && !newAddress.State.Equals(a.State) {
 		updated.State = newAddress.State
 		changed = true
 	}
 
-	if newAddress.Province != "" && newAddress.Province != a.Province {
+	if !newAddress.Province.IsEmpty() && !newAddress.Province.Equals(a.Province) {
 		updated.Province = newAddress.Province
 		changed = true
 	}
-	if newAddress.District != "" && newAddress.District != a.District {
+
+	if !newAddress.District.IsEmpty() && !newAddress.District.Equals(a.District) {
 		updated.District = newAddress.District
 		changed = true
 	}
+
 	if newAddress.ZipCode != "" && newAddress.ZipCode != a.ZipCode {
 		updated.ZipCode = newAddress.ZipCode
 		changed = true
@@ -81,9 +94,9 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 func (a AddressInfo) FullAddress() string {
 	parts := []string{
 		a.AddressLine1,
-		a.District,
-		a.Province,
-		a.State,
+		a.District.String(),
+		a.Province.String(),
+		a.State.String(),
 		a.ZipCode,
 	}
 	return concatenateWithCommas(parts...)

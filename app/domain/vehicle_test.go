@@ -20,7 +20,7 @@ var _ = Describe("Vehicle", func() {
 				Plate: "ABC123",
 			}
 
-			Expect(vehicle.DocID(ctx)).To(Equal(Hash(ctx, "ABC123")))
+			Expect(vehicle.DocID(ctx)).To(Equal(HashByTenant(ctx, "ABC123")))
 		})
 
 		It("should generate different IDs for different contexts", func() {

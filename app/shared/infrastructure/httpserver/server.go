@@ -13,6 +13,7 @@ import (
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
@@ -106,7 +107,12 @@ func injectBaggageMiddleware(next http.Handler) http.Handler {
 		}
 
 		tenantID := parts[0]
-		country := strings.ToUpper(parts[1])
+		c := countries.ByName(strings.ToUpper(parts[1]))
+		if c == countries.Unknown {
+			http.Error(w, "invalid country code", http.StatusBadRequest)
+			return
+		}
+		country := c.Alpha2()
 
 		members := make([]baggage.Member, 0, 3)
 

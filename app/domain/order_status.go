@@ -12,5 +12,5 @@ type OrderStatus struct {
 }
 
 func (oe OrderStatus) DocID() DocumentID {
-	return Hash(context.Background(), oe.Status)
+	return HashByTenant(context.Background(), oe.Status)
 }

@@ -2,8 +2,6 @@ package request
 
 import (
 	"transport-app/app/domain"
-
-	"github.com/paulmach/orb"
 )
 
 type OptimizationResponse struct {
@@ -46,10 +44,10 @@ func (res OptimizationResponse) Map(route domain.Route) domain.Route {
 		wpIndex := idx + 1 // debido a que el primer waypoint es el origen
 		if wpIndex < len(res.Waypoints) {
 			wp := res.Waypoints[wpIndex]
-			correctedPoint := orb.Point{wp.Location[0], wp.Location[1]}
+			//correctedPoint := orb.Point{wp.Location[0], wp.Location[1]}
 			seq := wp.WaypointIndex
 			route.Orders[idx].SequenceNumber = &seq
-			route.Orders[idx].Destination.AddressInfo.CorrectedLocation = correctedPoint
+			//route.Orders[idx].Destination.AddressInfo.CorrectedLocation = correctedPoint
 			route.Orders[idx].Destination.AddressInfo.CorrectedDistance = wp.Distance
 		}
 	}

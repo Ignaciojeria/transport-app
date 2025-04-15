@@ -302,7 +302,7 @@ var _ = Describe("Order DocID", func() {
 			ReferenceID: "REF-0001",
 		}
 
-		expected := Hash(ctx, "REF-0001")
+		expected := HashByTenant(ctx, "REF-0001")
 		Expect(order.DocID(ctx)).To(Equal(expected))
 	})
 

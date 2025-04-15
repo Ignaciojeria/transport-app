@@ -64,7 +64,7 @@ var _ = Describe("Carrier", func() {
 				NationalID: "12345678-9",
 			}
 
-			expectedHash := Hash(ctx, "12345678-9")
+			expectedHash := HashByTenant(ctx, "12345678-9")
 			Expect(carrier.DocID(ctx)).To(Equal(expectedHash))
 		})
 	})

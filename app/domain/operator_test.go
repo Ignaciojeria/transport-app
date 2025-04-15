@@ -21,7 +21,7 @@ var _ = Describe("Operator", func() {
 				Contact: Contact{PrimaryEmail: email},
 			}
 
-			expected := Hash(ctx, email)
+			expected := HashByTenant(ctx, email)
 			Expect(operator.DocID(ctx)).To(Equal(expected))
 		})
 

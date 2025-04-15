@@ -345,12 +345,36 @@ type AddressInfo struct {
 	TimeZone       string       `gorm:"default:null"`
 }
 
+type State struct {
+	gorm.Model
+	ID          int64  `gorm:"primaryKey"`
+	Name        string `gorm:"default:null"`
+	CountryCode string `gorm:"not null"`
+	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+}
+
+type Province struct {
+	gorm.Model
+	ID          int64  `gorm:"primaryKey"`
+	Name        string `gorm:"default:null"`
+	CountryCode string `gorm:"not null"`
+	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+}
+
+type District struct {
+	gorm.Model
+	ID          int64  `gorm:"primaryKey"`
+	Name        string `gorm:"default:null"`
+	CountryCode string `gorm:"not null"`
+	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+}
+
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
-		State:    a.State,
-		Province: a.Province,
+		State:    domain.State(a.State),
+		Province: domain.Province(a.Province),
 		//	Locality:     a.Locality,
-		District:     a.District,
+		District:     domain.District(a.District),
 		AddressLine1: a.AddressLine1,
 		//	AddressLine2: a.AddressLine2,
 		//	AddressLine3: a.AddressLine3,

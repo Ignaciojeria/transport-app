@@ -7,5 +7,5 @@ type PlanningStatus struct {
 }
 
 func (ps PlanningStatus) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, ps.Value)
+	return HashByTenant(ctx, ps.Value)
 }

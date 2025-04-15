@@ -16,7 +16,7 @@ type Plan struct {
 }
 
 func (p Plan) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, p.ReferenceID)
+	return HashByTenant(ctx, p.ReferenceID)
 }
 
 func (p Plan) UpdateIfChanged(newPlan Plan) (Plan, bool) {

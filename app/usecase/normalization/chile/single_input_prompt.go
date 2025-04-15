@@ -33,7 +33,7 @@ var chileHierarchy []ChileHierarchy
 type SingleInputPrompt func(
 	c context.Context,
 	userInput domain.AddressInfo,
-	providerInput domain.AddressInfo) string
+) string
 
 func init() {
 	ioc.Registry(NewSingleInputPrompt)
@@ -48,12 +48,7 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 		return nil, err
 	}
 
-	return func(c context.Context, userInput, providerInput domain.AddressInfo) string {
-		userText := userInput.AddressLine1
-		userIndications := ""
-		providerInputAddress := providerInput.AddressLine1
-		providerLat := providerInput.Location.Lat()
-		providerLon := providerInput.Location.Lon()
+	return func(c context.Context, input domain.AddressInfo) string {
 
 		// Extraer listas dinámicamente respetando la estructura jerárquica oficial
 		var validRegions, validProvinces, validCommunes []string
@@ -77,10 +72,9 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 
 		prompt := fmt.Sprintf(`normaliza la siguiente direccion en chile segun el formato estandar
 
-			**dirección ingresada por el usuario:** %s 
-			**Indicaciones ingresadas por el usuario:** %s   
-			**direccion sugerida por el proveedor:** %s  
-			**coordenadas:** %.6f, %.6f  
+			**region de entrada:** %s   
+			**provincia de entrada:** %s  
+			**comuna de entrada:** %s 
 			
 			---
 			### jerarquia administrativa de chile (respetando nombres oficiales):
@@ -97,14 +91,9 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 			---
 			### **formato de salida esperado (json)**
 			{
-				"providerAddress":"direccion sugerida por el proveedor",
-				"addressLine1": "calle y numero normalizado",
-				"addressLine2": "informacion adicional si aplica obtener desde direccion ingresada por el usuario",
 				"district": "comuna normalizada",
-				"province": "provincia correspondiente",
-				"state": "region correspondiente",
-				"latitude": %.6f,
-				"longitude": %.6f
+				"province": "provincia normalizada",
+				"state": "region normalizada",
 			}
 			
 			### **reglas de normalizacion:**
@@ -112,15 +101,15 @@ func NewSingleInputPrompt() (SingleInputPrompt, error) {
 			2. **la provincia debe ser la correcta segun la comuna ingresada.**
 			3. **la region debe coincidir con la provincia correspondiente.**
 			4. **solo se deben normalizar nombres oficiales de comunas, provincias y regiones.**
-			5. **los campos addressLine1 y addressLine2 deben mantenerse tal como los ingresó el usuario, sin modificar tildes, mayúsculas ni signos.**
 			6. **no se deben modificar los nombres oficiales de comunas provincias o regiones.**
-			7. **los nombres deben conservar tildes y la letra ñ si forman parte del nombre original. no reemplazar ni eliminar estos caracteres.**
+			7. **los nombres deben conservar la letra ñ si forman parte del nombre original. no reemplazar ni eliminar estos caracteres.**
 			`,
-			userText, userIndications, providerInputAddress, providerLat, providerLon,
+			input.State.String(),
+			input.Province.String(),
+			input.District.String(),
 			strings.Join(validRegions, ", "),
 			strings.Join(validProvinces, "\n"),
-			strings.Join(validCommunes, ", "),
-			providerLat, providerLon)
+			strings.Join(validCommunes, ", "))
 
 		return prompt
 	}, nil

@@ -8,7 +8,7 @@ type VehicleCategory struct {
 }
 
 func (vc VehicleCategory) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, vc.Type)
+	return HashByTenant(ctx, vc.Type)
 }
 
 func (vc VehicleCategory) UpdateIfChanged(in VehicleCategory) (VehicleCategory, bool) {

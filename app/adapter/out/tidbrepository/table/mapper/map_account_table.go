@@ -16,8 +16,8 @@ func MapAccountTable(e domain.Operator) table.Account {
 
 func MapAddressInfoTable(ctx context.Context, e domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
-		State:          e.State,
-		District:       e.District,
+		State:          e.State.String(),
+		District:       e.District.String(),
 		AddressLine1:   e.AddressLine1,
 		DocumentID:     string(e.DocID(ctx)),
 		Latitude:       e.Location[1],
@@ -25,7 +25,7 @@ func MapAddressInfoTable(ctx context.Context, e domain.AddressInfo) table.Addres
 		ZipCode:        e.ZipCode,
 		TimeZone:       e.TimeZone,
 		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-		Province:       e.Province,
+		Province:       e.Province.String(),
 	}
 }
 

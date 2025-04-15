@@ -8,5 +8,5 @@ type Headers struct {
 }
 
 func (h Headers) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, h.Commerce, h.Consumer)
+	return HashByTenant(ctx, h.Commerce, h.Consumer)
 }

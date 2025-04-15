@@ -13,7 +13,7 @@ type Package struct {
 func (p Package) DocID(ctx context.Context, otherReference string) DocumentID {
 	// Si el LPN existe, usarlo para generar el hash
 	if p.Lpn != "" {
-		return Hash(ctx, p.Lpn)
+		return HashByTenant(ctx, p.Lpn)
 	}
 
 	// Si no hay LPN, concatenar las referencias externas con los SKUs de los items
@@ -28,7 +28,7 @@ func (p Package) DocID(ctx context.Context, otherReference string) DocumentID {
 	}
 
 	// Generamos el hash con todos los inputs concatenados
-	return Hash(ctx, allInputs...)
+	return HashByTenant(ctx, allInputs...)
 }
 
 func SearchPackageByLpn(pcks []Package, lpn string) Package {

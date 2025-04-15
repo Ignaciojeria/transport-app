@@ -99,21 +99,21 @@ var _ = Describe("AddressInfo", func() {
 			input := AddressInfo{State: "Valparaíso"}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.State).To(Equal("Valparaíso"))
+			Expect(updated.State.String()).To(Equal("Valparaíso"))
 		})
 
 		It("should mark as changed when Province is updated", func() {
 			input := AddressInfo{Province: "Valparaíso"}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Province).To(Equal("Valparaíso"))
+			Expect(updated.Province.String()).To(Equal("Valparaíso"))
 		})
 
 		It("should mark as changed when District is updated", func() {
 			input := AddressInfo{District: "Las Condes"}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.District).To(Equal("Las Condes"))
+			Expect(updated.District.String()).To(Equal("Las Condes"))
 		})
 
 		It("should mark as changed when ZipCode is updated", func() {
@@ -153,7 +153,7 @@ var _ = Describe("AddressInfo", func() {
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
 			Expect(updated.AddressLine1).To(Equal("Av Las Condes 5678"))
-			Expect(updated.District).To(Equal("Las Condes"))
+			Expect(updated.District.String()).To(Equal("Las Condes"))
 			Expect(updated.ZipCode).To(Equal("7550000"))
 			Expect(updated.State).To(Equal(original.State))
 		})
@@ -168,12 +168,12 @@ var _ = Describe("AddressInfo", func() {
 				District:     "PROVIDENCIA   ",
 			}
 
-			addr.Normalize()
+			addr.ToLowerAndRemovePuntuation()
 
 			Expect(addr.AddressLine1).To(Equal("avenida providencia 1234"))
-			Expect(addr.State).To(Equal("metropolitana"))
-			Expect(addr.Province).To(Equal("santiago"))
-			Expect(addr.District).To(Equal("providencia"))
+			Expect(addr.State.String()).To(Equal("metropolitana"))
+			Expect(addr.Province.String()).To(Equal("santiago"))
+			Expect(addr.District.String()).To(Equal("providencia"))
 		})
 	})
 

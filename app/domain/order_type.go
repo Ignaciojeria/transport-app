@@ -8,7 +8,7 @@ type OrderType struct {
 }
 
 func (ot OrderType) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, ot.Type)
+	return HashByTenant(ctx, ot.Type)
 }
 
 func (ot OrderType) UpdateIfChanged(newOrderType OrderType) (OrderType, bool) {

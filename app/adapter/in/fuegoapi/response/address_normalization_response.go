@@ -17,13 +17,13 @@ type AddressNormalizationResponse struct {
 // MapAddressNormalizationResponse convierte una estructura domain.AddressInfo en AddressNormalizationResponse.
 func MapAddressNormalizationResponse(addressInfo domain.AddressInfo) AddressNormalizationResponse {
 	return AddressNormalizationResponse{
-	//	ProviderAddress: addressInfo.ProviderAddress,
-		AddressLine1:    addressInfo.AddressLine1,
-	//	AddressLine2:    addressInfo.AddressLine2,
-		District:        addressInfo.District,
-		Province:        addressInfo.Province,
-		State:           addressInfo.State,
-		Latitude:        addressInfo.Location.Lat(),
-		Longitude:       addressInfo.Location.Lon(),
+		//	ProviderAddress: addressInfo.ProviderAddress,
+		AddressLine1: addressInfo.AddressLine1,
+		//	AddressLine2:    addressInfo.AddressLine2,
+		District:  addressInfo.District.String(),
+		Province:  addressInfo.Province.String(),
+		State:     addressInfo.State.String(),
+		Latitude:  addressInfo.Location.Lat(),
+		Longitude: addressInfo.Location.Lon(),
 	}
 }

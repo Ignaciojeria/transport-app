@@ -51,7 +51,7 @@ func (c Contact) DocID(ctx context.Context) DocumentID {
 	default:
 		key = ""
 	}
-	return Hash(ctx, key)
+	return HashByTenant(ctx, key)
 }
 
 func (c Contact) UpdateIfChanged(newContact Contact) (Contact, bool) {

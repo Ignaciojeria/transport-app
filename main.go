@@ -13,6 +13,8 @@ import (
 
 	_ "transport-app/app/shared/infrastructure/tidb"
 
+	_ "transport-app/app/shared/infrastructure/rediscache"
+
 	_ "transport-app/app/usecase"
 
 	_ "transport-app/app/adapter/in/gcpsubscription"

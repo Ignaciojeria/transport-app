@@ -32,7 +32,7 @@ type Order struct {
 }
 
 func (o Order) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, string(o.ReferenceID))
+	return HashByTenant(ctx, string(o.ReferenceID))
 }
 
 func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {

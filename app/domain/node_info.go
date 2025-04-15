@@ -12,7 +12,7 @@ type NodeInfo struct {
 }
 
 func (n NodeInfo) DocID(ctx context.Context) DocumentID {
-	return Hash(ctx, string(n.ReferenceID))
+	return HashByTenant(ctx, string(n.ReferenceID))
 }
 
 func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
