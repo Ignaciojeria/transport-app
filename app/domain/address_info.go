@@ -28,8 +28,42 @@ func (a AddressInfo) DocID(ctx context.Context) DocumentID {
 		a.State.String())
 }
 
+func (a *AddressInfo) UpdatePoint(point orb.Point) {
+	a.Location = point
+}
+
+func (a *AddressInfo) NormalizeAndGeocode(
+	ctx context.Context,
+	searchFn func(context.Context, AddressInfo) (AddressInfo, error),
+	normalizeFn func(context.Context, AddressInfo) (AddressInfo, error),
+	geocodeFn func(context.Context, AddressInfo) (orb.Point, error),
+) error {
+	a.ToLowerAndRemovePunctuation()
+
+	normalized, err := searchFn(ctx, *a)
+	if err != nil {
+		return err
+	}
+	a.ApplyNormalization(normalized)
+
+	if !a.IsFullyNormalized() {
+		normalized, err = normalizeFn(ctx, *a)
+		if err != nil {
+			return err
+		}
+		a.ApplyNormalization(normalized)
+	}
+
+	point, err := geocodeFn(ctx, *a)
+	if err != nil {
+		return err
+	}
+	a.UpdatePoint(point)
+	return nil
+}
+
 // Normalize limpia y formatea los valores de State, Province y District.
-func (a *AddressInfo) ToLowerAndRemovePuntuation() {
+func (a *AddressInfo) ToLowerAndRemovePunctuation() {
 	a.AddressLine1 = utils.NormalizeText(a.AddressLine1)
 	a.State = State(utils.NormalizeText(a.State.String()))
 	a.Province = Province(utils.NormalizeText(a.Province.String()))

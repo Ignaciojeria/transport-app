@@ -11,7 +11,7 @@ import (
 	"github.com/biter777/countries"
 )
 
-type NormalizeAddressInfo func(context.Context, domain.AddressInfo) (domain.AddressInfo, error)
+type NormalizeAddressInfo func(ctx context.Context, raw domain.AddressInfo) (domain.AddressInfo, error)
 
 func init() {
 	ioc.Registry(

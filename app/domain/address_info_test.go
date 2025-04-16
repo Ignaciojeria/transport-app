@@ -168,7 +168,7 @@ var _ = Describe("AddressInfo", func() {
 				District:     "PROVIDENCIA   ",
 			}
 
-			addr.ToLowerAndRemovePuntuation()
+			addr.ToLowerAndRemovePunctuation()
 
 			Expect(addr.AddressLine1).To(Equal("avenida providencia 1234"))
 			Expect(addr.State.String()).To(Equal("metropolitana"))

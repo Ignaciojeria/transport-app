@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"transport-app/app/adapter/out/geocoding"
 	"transport-app/app/adapter/out/redisrepository"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
@@ -29,6 +30,7 @@ func init() {
 		redisrepository.NewSearchAddressInfo,
 		redisrepository.NewSaveAddressInfo,
 		normalization.NewNormalizeAddressInfo,
+		geocoding.NewGeocodingStrategy,
 	)
 }
 
@@ -46,43 +48,28 @@ func NewCreateOrder(
 	searchAddressInfoFromCache redisrepository.SearchAddressInfo,
 	saveAddressInfoInCache redisrepository.SaveAddressInfo,
 	normalizeAddressInfo normalization.NormalizeAddressInfo,
+	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
 
 		normalizationGroup, ctx := errgroup.WithContext(ctx)
 		normalizationGroup.Go(func() error {
-			inOrder.Destination.AddressInfo.ToLowerAndRemovePuntuation()
-			normalized, err := searchAddressInfoFromCache(ctx, inOrder.Origin.AddressInfo)
-			if err != nil {
-				return err
-			}
-			inOrder.Origin.AddressInfo.ApplyNormalization(normalized)
-			if !normalized.IsFullyNormalized() {
-				normalized, err = normalizeAddressInfo(ctx, inOrder.Origin.AddressInfo)
-				inOrder.Origin.AddressInfo.ApplyNormalization(normalized)
-			}
-			if err != nil {
-				return err
-			}
-			return nil
+			return inOrder.Origin.AddressInfo.NormalizeAndGeocode(
+				ctx,
+				searchAddressInfoFromCache,
+				normalizeAddressInfo,
+				geocode,
+			)
 		})
 
 		normalizationGroup.Go(func() error {
-			inOrder.Destination.AddressInfo.ToLowerAndRemovePuntuation()
-			normalized, err := searchAddressInfoFromCache(ctx, inOrder.Destination.AddressInfo)
-			if err != nil {
-				return err
-			}
-			inOrder.Destination.AddressInfo.ApplyNormalization(normalized)
-			if !normalized.IsFullyNormalized() {
-				normalized, err = normalizeAddressInfo(ctx, inOrder.Destination.AddressInfo)
-				inOrder.Destination.AddressInfo.ApplyNormalization(normalized)
-			}
-			if err != nil {
-				return err
-			}
-			return nil
+			return inOrder.Destination.AddressInfo.NormalizeAndGeocode(
+				ctx,
+				searchAddressInfoFromCache,
+				normalizeAddressInfo,
+				geocode,
+			)
 		})
 
 		if err := normalizationGroup.Wait(); err != nil {
