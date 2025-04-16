@@ -6,7 +6,7 @@ import (
 	"sync"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -14,7 +14,7 @@ import (
 func init() {
 	ioc.Registry(
 		NewLoadOrderStatuses,
-		tidb.NewTIDBConnection)
+		database.NewConnectionFactory)
 }
 
 const (
@@ -28,7 +28,7 @@ const (
 
 type LoadOrderStatuses func() orderStatuses
 
-func NewLoadOrderStatuses(conn tidb.TIDBConnection) LoadOrderStatuses {
+func NewLoadOrderStatuses(conn database.ConnectionFactory) LoadOrderStatuses {
 	var once sync.Once
 	statuses := make(orderStatuses)
 	var records = []table.OrderStatus{

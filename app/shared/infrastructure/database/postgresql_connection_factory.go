@@ -1,4 +1,4 @@
-package tidb
+package database
 
 import (
 	"fmt"
@@ -12,9 +12,9 @@ import (
 )
 
 func init() {
-	ioc.Registry(NewPostgreSQLConnectionStrategy, configuration.NewTiDBConfiguration)
+	ioc.Registry(NewPostgreSQLConnectionFactory, configuration.NewTiDBConfiguration)
 }
-func NewPostgreSQLConnectionStrategy(env configuration.DBConfiguration) connectionStrategy {
+func NewPostgreSQLConnectionFactory(env configuration.DBConfiguration) connectionFactory {
 	return func() (*gorm.DB, error) {
 		username := env.DB_USERNAME
 		pwd := env.DB_PASSWORD

@@ -6,7 +6,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -15,10 +15,10 @@ import (
 type UpsertPlanningStatus func(context.Context, domain.PlanningStatus) error
 
 func init() {
-	ioc.Registry(NewUpsertPlanningStatus, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertPlanningStatus, database.NewConnectionFactory)
 }
 
-func NewUpsertPlanningStatus(conn tidb.TIDBConnection) UpsertPlanningStatus {
+func NewUpsertPlanningStatus(conn database.ConnectionFactory) UpsertPlanningStatus {
 	return func(ctx context.Context, ps domain.PlanningStatus) error {
 		var planningStatus table.PlanningStatus
 		err := conn.DB.WithContext(ctx).

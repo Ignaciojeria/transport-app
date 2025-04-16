@@ -7,7 +7,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -16,10 +16,10 @@ import (
 type UpsertOrderHeaders func(context.Context, domain.Headers) error
 
 func init() {
-	ioc.Registry(NewUpsertOrderHeaders, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertOrderHeaders, database.NewConnectionFactory)
 }
 
-func NewUpsertOrderHeaders(conn tidb.TIDBConnection) UpsertOrderHeaders {
+func NewUpsertOrderHeaders(conn database.ConnectionFactory) UpsertOrderHeaders {
 	return func(ctx context.Context, h domain.Headers) error {
 		var orderHeaders table.OrderHeaders
 

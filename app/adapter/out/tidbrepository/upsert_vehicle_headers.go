@@ -6,7 +6,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -15,9 +15,9 @@ import (
 type UpsertVehicleHeaders func(context.Context, domain.Headers) (domain.Headers, error)
 
 func init() {
-	ioc.Registry(NewUpsertVehicleHeaders, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertVehicleHeaders, database.NewConnectionFactory)
 }
-func NewUpsertVehicleHeaders(conn tidb.TIDBConnection) UpsertVehicleHeaders {
+func NewUpsertVehicleHeaders(conn database.ConnectionFactory) UpsertVehicleHeaders {
 	return func(ctx context.Context, h domain.Headers) (domain.Headers, error) {
 		var vehicleHeaders table.VehicleHeaders
 		err := conn.DB.WithContext(ctx).

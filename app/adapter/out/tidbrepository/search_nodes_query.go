@@ -4,7 +4,7 @@ import (
 	"context"
 	views "transport-app/app/adapter/out/tidbrepository/views"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -13,9 +13,9 @@ import (
 type SearchNodesQuery func(context.Context, domain.NodeSearchFilters) ([]domain.NodeInfo, error)
 
 func init() {
-	ioc.Registry(NewSearchNodesQuery, tidb.NewTIDBConnection)
+	ioc.Registry(NewSearchNodesQuery, database.NewConnectionFactory)
 }
-func NewSearchNodesQuery(conn tidb.TIDBConnection) SearchNodesQuery {
+func NewSearchNodesQuery(conn database.ConnectionFactory) SearchNodesQuery {
 	return func(ctx context.Context, p domain.NodeSearchFilters) ([]domain.NodeInfo, error) {
 		var nodes views.SearchNodesView
 

@@ -16,6 +16,8 @@ type Conf struct {
 	GOOGLE_PROJECT_ID        string `env:"GOOGLE_PROJECT_ID" envDefault:"einar-404623"`
 	OUTBOX_TOPIC_NAME        string `env:"OUTBOX_TOPIC_NAME" envDefault:"transport-app-events"`
 	OPTIMIZATION_STRATEGY    string `env:"OPTIMIZATION_STRATEGY" envDefault:"locationiq"`
+	GEOCODING_STRATEGY       string `env:"GEOCODING_STRATEGY" envDefault:"locationiq"`
+	GOOGLE_MAPS_API_KEY      string `env:"GOOGLE_MAPS_API_KEY"`
 	LOCATION_IQ_ACCESS_TOKEN string `env:"LOCATION_IQ_ACCESS_TOKEN"`
 	LOCATION_IQ_DNS          string `env:"LOCATION_IQ_DNS"`
 	REDIS_URL                string `env:"REDIS_URL,required"`

@@ -3,20 +3,20 @@ package tidbrepository
 import (
 	"context"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 func init() {
-	ioc.Registry(NewSaveAccount, tidb.NewTIDBConnection)
+	ioc.Registry(NewSaveAccount, database.NewConnectionFactory)
 }
 
 type SaveAccount func(
 	context.Context,
 	domain.Operator) (domain.Operator, error)
 
-func NewSaveAccount(conn tidb.TIDBConnection) SaveAccount {
+func NewSaveAccount(conn database.ConnectionFactory) SaveAccount {
 	type SaveAccountQuery struct {
 		OrganizationCountryID int64
 		ContactID             int64

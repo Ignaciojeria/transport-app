@@ -5,7 +5,7 @@ import (
 	"fmt"
 	views "transport-app/app/adapter/out/tidbrepository/views"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -14,14 +14,14 @@ import (
 func init() {
 	ioc.Registry(
 		NewFindOrdersByFilters,
-		tidb.NewTIDBConnection)
+		database.NewConnectionFactory)
 }
 
 type FindOrdersByFilters func(
 	context.Context,
 	domain.OrderSearchFilters) ([]domain.Order, error)
 
-func NewFindOrdersByFilters(conn tidb.TIDBConnection) FindOrdersByFilters {
+func NewFindOrdersByFilters(conn database.ConnectionFactory) FindOrdersByFilters {
 	return func(ctx context.Context, osf domain.OrderSearchFilters) ([]domain.Order, error) {
 		var orders []views.FlattenedOrderView
 

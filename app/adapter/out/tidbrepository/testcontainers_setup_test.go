@@ -7,7 +7,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
@@ -24,11 +24,11 @@ func TestContainersSetup(t *testing.T) {
 }
 
 var container *tcpostgres.PostgresContainer
-var connection tidb.TIDBConnection
+var connection database.ConnectionFactory
 var organization1 domain.Organization
 var organization2 domain.Organization
 
-var noTablesContainerConnection tidb.TIDBConnection
+var noTablesContainerConnection database.ConnectionFactory
 var noTablesMigrationContainer *tcpostgres.PostgresContainer
 
 var _ = Describe("TidbRepository", func() {
@@ -62,9 +62,9 @@ var _ = BeforeSuite(func() {
 	port, err := container.MappedPort(ctx, "5432")
 	Expect(err).ToNot(HaveOccurred())
 
-	connection, err = tidb.NewTIDBConnection(
+	connection, err = database.NewConnectionFactory(
 		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
-		tidb.NewPostgreSQLConnectionStrategy(configuration.DBConfiguration{
+		database.NewPostgreSQLConnectionFactory(configuration.DBConfiguration{
 			DB_HOSTNAME:       host,
 			DB_PORT:           port.Port(), // devuelve string
 			DB_SSL_MODE:       "disable",   // SSL deshabilitado para test local
@@ -144,9 +144,9 @@ var _ = BeforeSuite(func() {
 	noTablesPort, err := noTablesMigrationContainer.MappedPort(ctx, "5432")
 	Expect(err).ToNot(HaveOccurred())
 
-	noTablesContainerConnection, err = tidb.NewTIDBConnection(
+	noTablesContainerConnection, err = database.NewConnectionFactory(
 		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
-		tidb.NewPostgreSQLConnectionStrategy(configuration.DBConfiguration{
+		database.NewPostgreSQLConnectionFactory(configuration.DBConfiguration{
 			DB_HOSTNAME:       noTablesHost,
 			DB_PORT:           noTablesPort.Port(),
 			DB_SSL_MODE:       "disable",

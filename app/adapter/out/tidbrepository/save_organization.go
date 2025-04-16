@@ -5,7 +5,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -14,7 +14,7 @@ import (
 func init() {
 	ioc.Registry(
 		NewSaveOrganization,
-		tidb.NewTIDBConnection,
+		database.NewConnectionFactory,
 	)
 }
 
@@ -23,7 +23,7 @@ type SaveOrganization func(
 	domain.Organization,
 ) (domain.Organization, error)
 
-func NewSaveOrganization(conn tidb.TIDBConnection) SaveOrganization {
+func NewSaveOrganization(conn database.ConnectionFactory) SaveOrganization {
 	return func(ctx context.Context, o domain.Organization) (domain.Organization, error) {
 		// Mapear la entidad del dominio a la tabla
 		tableOrg := mapper.MapOrganizationToTable(ctx, o.Name)

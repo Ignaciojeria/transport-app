@@ -4,7 +4,7 @@ import (
 	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -13,9 +13,9 @@ import (
 type SearchOperatorByEmail func(context.Context, domain.Operator) (domain.Operator, error)
 
 func init() {
-	ioc.Registry(NewSearchOperatorByEmail, tidb.NewTIDBConnection)
+	ioc.Registry(NewSearchOperatorByEmail, database.NewConnectionFactory)
 }
-func NewSearchOperatorByEmail(conn tidb.TIDBConnection) SearchOperatorByEmail {
+func NewSearchOperatorByEmail(conn database.ConnectionFactory) SearchOperatorByEmail {
 	return func(ctx context.Context, o domain.Operator) (domain.Operator, error) {
 		var account table.Account
 		if err := conn.DB.WithContext(ctx).

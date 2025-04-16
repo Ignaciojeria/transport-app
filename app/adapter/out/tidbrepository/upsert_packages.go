@@ -5,7 +5,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -13,10 +13,10 @@ import (
 type UpsertPackages func(context.Context, []domain.Package, string) error
 
 func init() {
-	ioc.Registry(NewUpsertPackages, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertPackages, database.NewConnectionFactory)
 }
 
-func NewUpsertPackages(conn tidb.TIDBConnection) UpsertPackages {
+func NewUpsertPackages(conn database.ConnectionFactory) UpsertPackages {
 	return func(ctx context.Context, pcks []domain.Package, orderReference string) error {
 
 		// 1. Expandimos paquetes sin LPN en paquetes individuales

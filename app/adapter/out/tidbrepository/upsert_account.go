@@ -6,7 +6,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -15,9 +15,9 @@ import (
 type UpsertAccount func(context.Context, domain.Operator) error
 
 func init() {
-	ioc.Registry(NewUpsertAccount, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertAccount, database.NewConnectionFactory)
 }
-func NewUpsertAccount(conn tidb.TIDBConnection) UpsertAccount {
+func NewUpsertAccount(conn database.ConnectionFactory) UpsertAccount {
 	return func(ctx context.Context, a domain.Operator) error {
 		var accountTbl table.Account
 		err := conn.DB.WithContext(ctx).

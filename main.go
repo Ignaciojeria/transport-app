@@ -11,7 +11,7 @@ import (
 	"transport-app/app/shared/constants"
 	_ "transport-app/app/shared/infrastructure/httpserver"
 
-	_ "transport-app/app/shared/infrastructure/tidb"
+	_ "transport-app/app/shared/infrastructure/database"
 
 	_ "transport-app/app/shared/infrastructure/rediscache"
 
@@ -28,10 +28,10 @@ import (
 	_ "transport-app/app/shared/infrastructure/observability/strategy"
 	_ "transport-app/mocks"
 
+	_ "transport-app/app/adapter/out/geocoding"
 	_ "transport-app/app/shared/infrastructure/gemini"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	_ "transport-app/app/falabella/usecase"
 )
 
 //go:embed .version

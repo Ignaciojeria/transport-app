@@ -4,7 +4,7 @@ import (
 	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -15,10 +15,10 @@ type SearchVehiclesByCarrier func(
 	domain.VehicleSearchFilters) ([]domain.Vehicle, error)
 
 func init() {
-	ioc.Registry(NewSearchVehiclesByCarrier, tidb.NewTIDBConnection)
+	ioc.Registry(NewSearchVehiclesByCarrier, database.NewConnectionFactory)
 }
 
-func NewSearchVehiclesByCarrier(conn tidb.TIDBConnection) SearchVehiclesByCarrier {
+func NewSearchVehiclesByCarrier(conn database.ConnectionFactory) SearchVehiclesByCarrier {
 	return func(ctx context.Context, vsf domain.VehicleSearchFilters) ([]domain.Vehicle, error) {
 		var vehicles []table.Vehicle
 

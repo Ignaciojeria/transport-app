@@ -6,7 +6,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -17,9 +17,9 @@ type UpsertOrder func(context.Context, domain.Order) error
 func init() {
 	ioc.Registry(
 		NewUpsertOrder,
-		tidb.NewTIDBConnection)
+		database.NewConnectionFactory)
 }
-func NewUpsertOrder(conn tidb.TIDBConnection) UpsertOrder {
+func NewUpsertOrder(conn database.ConnectionFactory) UpsertOrder {
 	return func(ctx context.Context, o domain.Order) error {
 		var order table.Order
 		err := conn.DB.WithContext(ctx).

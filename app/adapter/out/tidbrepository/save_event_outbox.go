@@ -7,7 +7,7 @@ import (
 	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -15,7 +15,7 @@ import (
 func init() {
 	ioc.Registry(
 		NewSaveEventOutBox,
-		tidb.NewTIDBConnection,
+		database.NewConnectionFactory,
 		gcppublisher.NewApplicationEvents)
 }
 
@@ -24,7 +24,7 @@ type SaveEventOutBox func(
 	domain.Outbox) (domain.Outbox, error)
 
 func NewSaveEventOutBox(
-	conn tidb.TIDBConnection,
+	conn database.ConnectionFactory,
 	publishOutBoxEvent gcppublisher.ApplicationEvents,
 ) SaveEventOutBox {
 	return func(ctx context.Context, event domain.Outbox) (domain.Outbox, error) {

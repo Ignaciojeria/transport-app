@@ -4,7 +4,7 @@ import (
 	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -15,9 +15,9 @@ type SearchCarriers func(context.Context, domain.CarrierSearchFilters) ([]domain
 func init() {
 	ioc.Registry(
 		NewSearchCarriers,
-		tidb.NewTIDBConnection)
+		database.NewConnectionFactory)
 }
-func NewSearchCarriers(conn tidb.TIDBConnection) SearchCarriers {
+func NewSearchCarriers(conn database.ConnectionFactory) SearchCarriers {
 	return func(ctx context.Context, csf domain.CarrierSearchFilters) ([]domain.Carrier, error) {
 		var carriers []table.Carrier
 		if err := conn.DB.WithContext(ctx).

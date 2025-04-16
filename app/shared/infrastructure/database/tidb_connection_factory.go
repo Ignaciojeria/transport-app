@@ -1,4 +1,4 @@
-package tidb
+package database
 
 import (
 	"crypto/tls"
@@ -12,9 +12,9 @@ import (
 )
 
 func init() {
-	ioc.Registry(NewTIDBConnectionStrategy, configuration.NewTiDBConfiguration)
+	ioc.Registry(NewTiDBConnectionFactory, configuration.NewTiDBConfiguration)
 }
-func NewTIDBConnectionStrategy(env configuration.DBConfiguration) connectionStrategy {
+func NewTiDBConnectionFactory(env configuration.DBConfiguration) connectionFactory {
 	return func() (*gorm.DB, error) {
 		err := tidbmysql.RegisterTLSConfig("tidb", &tls.Config{
 			MinVersion: tls.VersionTLS12,

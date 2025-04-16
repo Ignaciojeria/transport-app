@@ -6,7 +6,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -15,10 +15,10 @@ import (
 type UpsertAddressInfo func(context.Context, domain.AddressInfo) error
 
 func init() {
-	ioc.Registry(NewUpsertAddressInfo, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertAddressInfo, database.NewConnectionFactory)
 }
 
-func NewUpsertAddressInfo(conn tidb.TIDBConnection) UpsertAddressInfo {
+func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 	return func(ctx context.Context, ai domain.AddressInfo) error {
 		var existing table.AddressInfo
 		err := conn.DB.WithContext(ctx).

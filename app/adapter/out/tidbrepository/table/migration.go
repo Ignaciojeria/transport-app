@@ -2,7 +2,7 @@ package table
 
 import (
 	"transport-app/app/shared/configuration"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -10,14 +10,14 @@ import (
 func init() {
 	ioc.Registry(
 		NewRunMigrations,
-		tidb.NewTIDBConnection,
+		database.NewConnectionFactory,
 		configuration.NewTiDBConfiguration)
 }
 
 type RunMigrations func() error
 
 func NewRunMigrations(
-	conn tidb.TIDBConnection,
+	conn database.ConnectionFactory,
 	conf configuration.DBConfiguration) RunMigrations {
 	return func() error {
 		if conf.DB_RUN_MIGRATIONS != "true" {

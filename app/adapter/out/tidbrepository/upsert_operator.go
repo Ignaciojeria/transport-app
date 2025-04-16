@@ -3,7 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -11,9 +11,9 @@ import (
 type UpsertOperator func(context.Context, domain.Operator) (domain.Operator, error)
 
 func init() {
-	ioc.Registry(NewUpsertOperator, tidb.NewTIDBConnection)
+	ioc.Registry(NewUpsertOperator, database.NewConnectionFactory)
 }
-func NewUpsertOperator(conn tidb.TIDBConnection) UpsertOperator {
+func NewUpsertOperator(conn database.ConnectionFactory) UpsertOperator {
 	return func(ctx context.Context, o domain.Operator) (domain.Operator, error) {
 		/*
 			operatorTBL := mapper.MapOperator(o)

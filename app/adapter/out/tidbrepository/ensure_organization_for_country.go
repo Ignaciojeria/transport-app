@@ -3,7 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/tidb"
+	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -13,9 +13,9 @@ type EnsureOrganizationForCountry func(context.Context, domain.Organization) (do
 func init() {
 	ioc.Registry(
 		NewEnsureOrganizationForCountry,
-		tidb.NewTIDBConnection)
+		database.NewConnectionFactory)
 }
-func NewEnsureOrganizationForCountry(conn tidb.TIDBConnection) EnsureOrganizationForCountry {
+func NewEnsureOrganizationForCountry(conn database.ConnectionFactory) EnsureOrganizationForCountry {
 	return func(ctx context.Context, org domain.Organization) (domain.Organization, error) {
 		/*
 					var result struct {
