@@ -2,10 +2,16 @@ package utils
 
 import (
 	"strings"
-	"unicode"
-
-	"golang.org/x/text/unicode/norm"
 )
+
+var replacements = map[rune]rune{
+	'á': 'a', 'é': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u',
+	'Á': 'a', 'É': 'e', 'Í': 'i', 'Ó': 'o', 'Ú': 'u',
+	'ä': 'a', 'ë': 'e', 'ï': 'i', 'ö': 'o', 'ü': 'u',
+	'Ä': 'a', 'Ë': 'e', 'Ï': 'i', 'Ö': 'o', 'Ü': 'u',
+	'à': 'a', 'è': 'e', 'ì': 'i', 'ò': 'o', 'ù': 'u',
+	'À': 'a', 'È': 'e', 'Ì': 'i', 'Ò': 'o', 'Ù': 'u',
+}
 
 func NormalizeInnerSpaces(s string) string {
 	parts := strings.Fields(s)
@@ -13,22 +19,15 @@ func NormalizeInnerSpaces(s string) string {
 }
 
 func NormalizeText(s string) string {
-	// 1. Minusculizar y quitar espacios extra
 	s = NormalizeInnerSpaces(strings.ToLower(strings.TrimSpace(s)))
 
-	// 2. Normalizar Unicode (NFD) para separar tildes
-	nfd := norm.NFD.String(s)
-
-	// 3. Eliminar tildes y puntuación, pero dejar la ñ
 	var b strings.Builder
-	for _, r := range nfd {
-		if unicode.Is(unicode.Mn, r) {
-			continue // Elimina marcas de acento
+	for _, r := range s {
+		if repl, ok := replacements[r]; ok {
+			b.WriteRune(repl)
+		} else {
+			b.WriteRune(r)
 		}
-		if unicode.IsPunct(r) {
-			continue // Elimina puntuación (.,;:!? etc.)
-		}
-		b.WriteRune(r)
 	}
 	return b.String()
 }
