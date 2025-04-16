@@ -12,7 +12,10 @@ import (
 type GeocodingStrategy func(context.Context, domain.AddressInfo) (orb.Point, error)
 
 func init() {
-	ioc.Registry(NewGeocodingStrategy, newGoogleGeocoding)
+	ioc.Registry(
+		NewGeocodingStrategy,
+		configuration.NewConf,
+		newGoogleGeocoding)
 }
 
 func NewGeocodingStrategy(
