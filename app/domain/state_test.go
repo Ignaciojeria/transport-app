@@ -32,7 +32,7 @@ var _ = Describe("State", func() {
 			joined := strings.Join([]string{"CL", "state", "Región Metropolitana de Santiago"}, "|")
 
 			sum := sha256.Sum256([]byte(joined))
-			expected := hex.EncodeToString(sum[:16])
+			expected := hex.EncodeToString(sum[:])
 
 			Expect(string(docID)).To(Equal(expected))
 		})

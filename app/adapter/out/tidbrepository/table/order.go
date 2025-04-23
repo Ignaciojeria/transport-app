@@ -11,23 +11,23 @@ type Order struct {
 	gorm.Model
 	ID int64 `gorm:"primaryKey"`
 
-	DocumentID string `gorm:"type:char(32);uniqueIndex"`
+	DocumentID string `gorm:"type:char(64);uniqueIndex"`
 
 	ReferenceID string `gorm:"not null"`
 
 	OrganizationID int64        `gorm:"not null"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 
-	OrderHeadersDoc string       `gorm:"type:char(32);index"`
+	OrderHeadersDoc string       `gorm:"type:char(64);index"`
 	OrderHeaders    OrderHeaders `gorm:"-"`
 
-	OrderStatusDoc string      `gorm:"type:char(32);index"`
+	OrderStatusDoc string      `gorm:"type:char(64);index"`
 	OrderStatus    OrderStatus `gorm:"-"`
 
-	OrderTypeDoc string    `gorm:"type:char(32);index"`
+	OrderTypeDoc string    `gorm:"type:char(64);index"`
 	OrderType    OrderType `gorm:"-"`
 
-	RouteDoc string `gorm:"type:char(32);index"`
+	RouteDoc string `gorm:"type:char(64);index"`
 	Route    Route  `gorm:"-"`
 
 	OrderReferences []OrderReferences `gorm:"-"`
@@ -35,27 +35,27 @@ type Order struct {
 	DeliveryInstructions string `gorm:"type:text"`
 
 	// Contacto asociado a la orden
-	OriginContactDoc string  `gorm:"type:char(32);index"`
+	OriginContactDoc string  `gorm:"type:char(64);index"`
 	OriginContact    Contact `gorm:"-"`
 
 	// Contacto asociado a la orden
-	DestinationContactDoc string  `gorm:"type:char(32);index"`
+	DestinationContactDoc string  `gorm:"type:char(64);index"`
 	DestinationContact    Contact `gorm:"-"`
 
 	// Dirección de oriden de la orden de compra
-	OriginAddressInfoDoc string      `gorm:"type:char(32);index"`
+	OriginAddressInfoDoc string      `gorm:"type:char(64);index"`
 	OriginAddressInfo    AddressInfo `gorm:"-"`
 
 	// Dirección de destino de la orden de compra
-	DestinationAddressInfoDoc string      `gorm:"type:char(32);index"`
+	DestinationAddressInfoDoc string      `gorm:"type:char(64);index"`
 	DestinationAddressInfo    AddressInfo `gorm:"-"`
 
 	// Nodo de Origen de la orden (en caso de que tenga)
-	OriginNodeInfoDoc string   `gorm:"type:char(32);index"`
+	OriginNodeInfoDoc string   `gorm:"type:char(64);index"`
 	OriginNodeInfo    NodeInfo `gorm:"-"`
 
 	// Nodo de Destino de la orden (en caso de que tenga)
-	DestinationNodeInfoDoc string   `gorm:"type:char(32);index"`
+	DestinationNodeInfoDoc string   `gorm:"type:char(64);index"`
 	DestinationNodeInfo    NodeInfo `gorm:"-"`
 
 	SequenceNumber *int `gorm:"default:null"`

@@ -150,7 +150,7 @@ func (j JSONItems) Value() (driver.Value, error) {
 type Contact struct {
 	gorm.Model
 	ID             int64         `gorm:"primaryKey"`
-	DocumentID     string        `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string        `gorm:"type:char(64);uniqueIndex"`
 	OrganizationID int64         `gorm:"not null;"`
 	Organization   Organization  `gorm:"foreignKey:OrganizationID"`
 	FullName       string        `gorm:"type:varchar(191);"`
@@ -254,7 +254,7 @@ type Package struct {
 	ID             int64          `gorm:"primaryKey"`
 	OrganizationID int64          `gorm:"not null;"`
 	Organization   Organization   `gorm:"foreignKey:OrganizationID"`
-	DocumentID     string         `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string         `gorm:"type:char(64);uniqueIndex"`
 	Lpn            string         `gorm:"type:varchar(191);not null;"`
 	JSONDimensions JSONDimensions `gorm:"type:json"`
 	JSONWeight     JSONWeight     `gorm:"type:json"`
@@ -283,36 +283,36 @@ func (j JSONItems) Map() []domain.Item {
 
 type OrderPackage struct {
 	ID         int64  `gorm:"primaryKey"`
-	OrderDoc   string `gorm:"type:char(32);"`
-	PackageDoc string `gorm:"type:char(32);"`
+	OrderDoc   string `gorm:"type:char(64);"`
+	PackageDoc string `gorm:"type:char(64);"`
 }
 
 type OrderReferences struct {
 	ID         int64  `gorm:"primaryKey"`
-	DocumentID string `gorm:"type:char(32);uniqueIndex"`
+	DocumentID string `gorm:"type:char(64);uniqueIndex"`
 	Type       string `gorm:"not null"`
 	Value      string `gorm:"not null"`
-	OrderDoc   string `gorm:"type:char(32)"`
+	OrderDoc   string `gorm:"type:char(64)"`
 	Order      Order  `gorm:"-"`
 }
 
 type NodeInfo struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
 	ReferenceID    string       `gorm:"type:varchar(191);not null;"`
 	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 	Name           string       `gorm:"type:varchar(191);"`
 
 	// Store document hashes without enforcing constraints
-	NodeTypeDoc string   `gorm:"type:char(32)"`
+	NodeTypeDoc string   `gorm:"type:char(64)"`
 	NodeType    NodeType `gorm:"-"` // Use "-" to tell GORM to ignore this field for DB operations
 
-	ContactDoc string  `gorm:"type:char(32)"`
+	ContactDoc string  `gorm:"type:char(64)"`
 	Contact    Contact `gorm:"-"` // Ignore relationship for DB operations
 
-	AddressInfoDoc string      `gorm:"type:char(32)"`
+	AddressInfoDoc string      `gorm:"type:char(64)"`
 	AddressInfo    AddressInfo `gorm:"-"` // Ignore relationship for DB operations
 
 	AddressLine2   string
@@ -334,7 +334,7 @@ type AddressInfo struct {
 	ID             int64        `gorm:"primaryKey"`
 	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
 	State          string       `gorm:"default:null"`
 	Province       string       `gorm:"default:null"`
 	District       string       `gorm:"default:null"`
@@ -350,7 +350,7 @@ type State struct {
 	ID          int64  `gorm:"primaryKey"`
 	Name        string `gorm:"default:null"`
 	CountryCode string `gorm:"not null"`
-	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+	DocumentID  string `gorm:"type:char(64);uniqueIndex"`
 }
 
 type Province struct {
@@ -358,7 +358,7 @@ type Province struct {
 	ID          int64  `gorm:"primaryKey"`
 	Name        string `gorm:"default:null"`
 	CountryCode string `gorm:"not null"`
-	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+	DocumentID  string `gorm:"type:char(64);uniqueIndex"`
 }
 
 type District struct {
@@ -366,7 +366,7 @@ type District struct {
 	ID          int64  `gorm:"primaryKey"`
 	Name        string `gorm:"default:null"`
 	CountryCode string `gorm:"not null"`
-	DocumentID  string `gorm:"type:char(32);uniqueIndex"`
+	DocumentID  string `gorm:"type:char(64);uniqueIndex"`
 }
 
 func (a AddressInfo) Map() domain.AddressInfo {
@@ -475,7 +475,7 @@ func (j JSONWeight) Value() (driver.Value, error) {
 type OrderType struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
 	Type           string       `gorm:"type:varchar(191);not null;"`
 	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
@@ -627,7 +627,7 @@ func (vc VehicleCategory) Map() domain.VehicleCategory {
 type OrderHeaders struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
 	Commerce       string       `gorm:"not null"`
 	Consumer       string       `gorm:"not null"`
 	OrganizationID int64        `gorm:"not null;index;"`
@@ -687,7 +687,7 @@ func (m NodeHeaders) Map() domain.Headers {
 type NodeType struct {
 	gorm.Model
 	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
 	OrganizationID int64        `gorm:"not null;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID"`
 	Value          string       `gorm:"type:varchar(191);"`

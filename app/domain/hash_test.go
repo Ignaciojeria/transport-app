@@ -33,7 +33,7 @@ var _ = Describe("HashByCountry", func() {
 		// Expected hash logic
 		joined := strings.Join([]string{country, "some", "value"}, "|")
 		sum := sha256.Sum256([]byte(joined))
-		expected := hex.EncodeToString(sum[:16]) // truncate to 128 bits
+		expected := hex.EncodeToString(sum[:]) // truncate to 128 bits
 
 		// Assert
 		Expect(string(hash)).To(Equal(expected))
@@ -70,7 +70,7 @@ var _ = Describe("HashByCountry", func() {
 			orgKey := tenantID + "-" + country
 			joined := strings.Join([]string{orgKey, "some", "value"}, "|")
 			sum := sha256.Sum256([]byte(joined))
-			expected := hex.EncodeToString(sum[:16]) // truncate to 128 bits
+			expected := hex.EncodeToString(sum[:]) // truncate to 128 bits
 
 			// Assert
 			Expect(string(hash)).To(Equal(expected))

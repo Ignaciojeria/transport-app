@@ -72,7 +72,7 @@ func (pt PlanType) Map() domain.PlanType {
 type PlanningStatus struct {
 	gorm.Model
 	ID             int64        `gorm:"type:bigint;primaryKey;autoIncrement"`
-	DocumentID     string       `gorm:"type:char(32);uniqueIndex"`
+	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
 	OrganizationID int64        `gorm:"type:bigint;not null;index;"`
 	Organization   Organization `gorm:"foreignKey:OrganizationID;references:ID"`
 	Name           string       `gorm:"type:varchar(100);not null;"`
