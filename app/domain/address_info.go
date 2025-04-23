@@ -34,26 +34,9 @@ func (a *AddressInfo) UpdatePoint(point orb.Point) {
 
 func (a *AddressInfo) NormalizeAndGeocode(
 	ctx context.Context,
-	searchFn func(context.Context, AddressInfo) (AddressInfo, error),
-	normalizeFn func(context.Context, AddressInfo) (AddressInfo, error),
 	geocodeFn func(context.Context, AddressInfo) (orb.Point, error),
 ) error {
 	a.ToLowerAndRemovePunctuation()
-
-	normalized, err := searchFn(ctx, *a)
-	if err != nil {
-		return err
-	}
-	a.ApplyNormalization(normalized)
-
-	if !a.IsFullyNormalized() {
-		normalized, err = normalizeFn(ctx, *a)
-		if err != nil {
-			return err
-		}
-		a.ApplyNormalization(normalized)
-	}
-
 	point, err := geocodeFn(ctx, *a)
 	if err != nil {
 		return err
@@ -68,17 +51,6 @@ func (a *AddressInfo) ToLowerAndRemovePunctuation() {
 	a.State = State(utils.NormalizeText(a.State.String()))
 	a.Province = Province(utils.NormalizeText(a.Province.String()))
 	a.District = District(utils.NormalizeText(a.District.String()))
-}
-
-func (a *AddressInfo) ApplyNormalization(normalized AddressInfo) (changed bool) {
-	changed = a.State.UpdateIfChanged(normalized.State) || changed
-	changed = a.Province.UpdateIfChanged(normalized.Province) || changed
-	changed = a.District.UpdateIfChanged(normalized.District) || changed
-	return
-}
-
-func (a AddressInfo) IsFullyNormalized() bool {
-	return !a.State.IsEmpty() && !a.Province.IsEmpty() && !a.District.IsEmpty()
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool) {

@@ -3,10 +3,8 @@ package usecase
 import (
 	"context"
 	"transport-app/app/adapter/out/geocoding"
-	"transport-app/app/adapter/out/redisrepository"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
-	"transport-app/app/usecase/normalization"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"golang.org/x/sync/errgroup"
@@ -27,9 +25,6 @@ func init() {
 		tidbrepository.NewUpsertOrder,
 		tidbrepository.NewUpsertOrderReferences,
 		tidbrepository.NewUpsertOrderPackages,
-		redisrepository.NewSearchAddressInfo,
-		redisrepository.NewSaveAddressInfo,
-		normalization.NewNormalizeAddressInfo,
 		geocoding.NewGeocodingStrategy,
 	)
 }
@@ -45,9 +40,6 @@ func NewCreateOrder(
 	upsertOrder tidbrepository.UpsertOrder,
 	upsertOrderReferences tidbrepository.UpsertOrderReferences,
 	upsertOrderPackages tidbrepository.UpsertOrderPackages,
-	searchAddressInfoFromCache redisrepository.SearchAddressInfo,
-	saveAddressInfoInCache redisrepository.SaveAddressInfo,
-	normalizeAddressInfo normalization.NormalizeAddressInfo,
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
@@ -57,8 +49,6 @@ func NewCreateOrder(
 		normalizationGroup.Go(func() error {
 			return inOrder.Origin.AddressInfo.NormalizeAndGeocode(
 				ctx,
-				searchAddressInfoFromCache,
-				normalizeAddressInfo,
 				geocode,
 			)
 		})
@@ -66,8 +56,6 @@ func NewCreateOrder(
 		normalizationGroup.Go(func() error {
 			return inOrder.Destination.AddressInfo.NormalizeAndGeocode(
 				ctx,
-				searchAddressInfoFromCache,
-				normalizeAddressInfo,
 				geocode,
 			)
 		})

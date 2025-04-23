@@ -106,19 +106,16 @@ Cuando se publica un evento (como `orderSubmitted`), los atributos del contexto 
 
 ## 📌 Convención de Campos para Direcciones en México
 
-| Campo en JSON                | Descripción                      | Ejemplo                       |
-| ---------------------------- | --------------------------------- | ----------------------------- |
+| Campo en JSON                | Descripción                      | Ejemplo                           |
+| ---------------------------- | --------------------------------- | -----------------------------    |
 | `addressInfo.addressLine1` | Calle y número                    | `av insurgentes 1234`              |
 | `addressInfo.addressLine2` | Información adicional (opcional)  | `interior 5` o `depto 202`         |
-| `addressInfo.district`     | Colonia                           | `condesa`                          |
-| `addressInfo.province`     | Alcaldía/Municipio                | `cuauhtémoc`                       |
 | `addressInfo.state`        | Estado                            | `ciudad de méxico`                 |
+| `addressInfo.province`     | Alcaldía/Municipio                | `cuauhtémoc`                       |
+| `addressInfo.district`     | Localidad                         | `condesa`                          |
 | `addressInfo.latitude`     | Latitud                           | `19.4326`                          |
 | `addressInfo.longitude`    | Longitud                          | `-99.1332`                         |
 ---
-> ℹ️ **Nota:** El campo `province` representa:
-> - Una **alcaldía** si el estado es `ciudad de méxico`.
-> - Un **municipio** en el resto del país.
 
 # 📦 Sistema de Gestión de Paquetes en Órdenes de Transporte
 

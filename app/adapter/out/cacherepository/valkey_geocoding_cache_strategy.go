@@ -1,9 +1,34 @@
-package redisrepository
+package cacherepository
 
 import (
 	"context"
 	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/rediscache"
+
+	"github.com/paulmach/orb"
+	"github.com/valkey-io/valkey-go"
+)
+
+type valkeyGeocodingCacheStrategy struct {
+	c valkey.Client
+}
+
+func newValkeyGeocodingCacheStrategy(c valkey.Client) GeocodingCacheStrategy {
+	return valkeyGeocodingCacheStrategy{c}
+}
+
+func (r valkeyGeocodingCacheStrategy) Save(ctx context.Context, adi domain.AddressInfo) error {
+	return nil
+}
+
+func (r valkeyGeocodingCacheStrategy) Get(context.Context, domain.AddressInfo) (orb.Point, error) {
+	return orb.Point{}, nil
+}
+
+/*
+import (
+	"context"
+	"transport-app/app/domain"
+	"transport-app/app/shared/infrastructure/cache"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/redis/go-redis/v9"
@@ -13,7 +38,7 @@ import (
 type SearchAddressInfo func(ctx context.Context, raw domain.AddressInfo) (domain.AddressInfo, error)
 
 func init() {
-	ioc.Registry(NewSearchAddressInfo, rediscache.NewRedisClient)
+	ioc.Registry(NewSearchAddressInfo, cache.NewCacheClientFactory)
 }
 
 func NewSearchAddressInfo(c *redis.Client) SearchAddressInfo {
@@ -65,3 +90,4 @@ func NewSearchAddressInfo(c *redis.Client) SearchAddressInfo {
 		return result, err
 	}
 }
+*/
