@@ -20,20 +20,26 @@ func init() {
 		googlemapsdk.NewClient,
 		cacherepository.NewGeocodingCacheStrategy)
 }
+
 func newGoogleGeocoding(
 	c *maps.Client,
-	cache cacherepository.GeocodingCacheStrategy) GeocodingStrategy {
+	cache cacherepository.GeocodingCacheStrategy,
+) GeocodingStrategy {
 	return func(ctx context.Context, ai domain.AddressInfo) (orb.Point, error) {
-		// Construir dirección formateada
+		// 1. Intentar obtener desde caché
+		if cachedPoint, err := cache.Get(ctx, ai); err == nil && (cachedPoint[0] != 0 || cachedPoint[1] != 0) {
+			return cachedPoint, nil
+		}
+
+		// 2. Armar dirección para geocodificar
 		fullAddress := buildFullAddress(ctx, ai)
 
-		// Construir request para geocoding
 		req := &maps.GeocodingRequest{
 			Address: fullAddress,
 			Region:  strings.ToLower(sharedcontext.TenantCountryFromContext(ctx)),
 		}
 
-		// Llamar a Google Maps
+		// 3. Geocodificar usando Google Maps
 		results, err := c.Geocode(ctx, req)
 		if err != nil {
 			return orb.Point{}, err
@@ -42,11 +48,15 @@ func newGoogleGeocoding(
 			return orb.Point{}, nil
 		}
 
-		// Extraer coordenadas
+		// 4. Guardar en caché
 		lat := results[0].Geometry.Location.Lat
 		lng := results[0].Geometry.Location.Lng
+		point := orb.Point{lng, lat}
 
-		return orb.Point{lng, lat}, nil
+		ai.UpdatePoint(point)   // importante para que Save use Location
+		_ = cache.Save(ctx, ai) // ignoramos error de cacheo
+
+		return point, nil
 	}
 }
 
