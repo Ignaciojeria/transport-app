@@ -3,6 +3,7 @@ package geocoding
 import (
 	"context"
 	"strings"
+	"transport-app/app/adapter/out/cacherepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/googlemapsdk"
 	"transport-app/app/shared/sharedcontext"
@@ -14,9 +15,14 @@ import (
 )
 
 func init() {
-	ioc.Registry(newGoogleGeocoding, googlemapsdk.NewClient)
+	ioc.Registry(
+		newGoogleGeocoding,
+		googlemapsdk.NewClient,
+		cacherepository.NewGeocodingCacheStrategy)
 }
-func newGoogleGeocoding(c *maps.Client) GeocodingStrategy {
+func newGoogleGeocoding(
+	c *maps.Client,
+	cache cacherepository.GeocodingCacheStrategy) GeocodingStrategy {
 	return func(ctx context.Context, ai domain.AddressInfo) (orb.Point, error) {
 		// Construir dirección formateada
 		fullAddress := buildFullAddress(ctx, ai)

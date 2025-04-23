@@ -1,5 +1,6 @@
 package normalization
 
+/*
 import (
 	"context"
 	"transport-app/app/domain"
@@ -31,3 +32,4 @@ func NewNormalizeAddressInfo(
 		return ai, nil
 	}
 }
+*/

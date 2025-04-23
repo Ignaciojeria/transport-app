@@ -17,7 +17,7 @@ type GeocodingCacheStrategy interface {
 }
 
 func init() {
-	ioc.Registry(newRedisGeocodingCacheStrategy, cache.NewCacheClientFactory)
+	ioc.Registry(NewGeocodingCacheStrategy, cache.NewCacheClientFactory)
 }
 func NewGeocodingCacheStrategy(factory any) GeocodingCacheStrategy {
 	if client, ok := factory.(*redis.Client); ok {

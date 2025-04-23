@@ -33,7 +33,6 @@ import (
 	_ "transport-app/mocks"
 
 	_ "transport-app/app/adapter/out/geocoding"
-	_ "transport-app/app/shared/infrastructure/gemini"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )

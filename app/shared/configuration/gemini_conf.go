@@ -9,7 +9,7 @@ func init() {
 }
 
 type GeminiConfiguration struct {
-	GEMINI_API_KEY string `env:"GEMINI_API_KEY,required"`
+	GEMINI_API_KEY string `env:"GEMINI_API_KEY"`
 }
 
 func NewGeminiConfiguration() (GeminiConfiguration, error) {
