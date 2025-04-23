@@ -2,6 +2,9 @@ package cacherepository
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"strings"
 	"transport-app/app/domain"
 
 	"github.com/paulmach/orb"
@@ -16,78 +19,42 @@ func newValkeyGeocodingCacheStrategy(c valkey.Client) GeocodingCacheStrategy {
 	return valkeyGeocodingCacheStrategy{c}
 }
 
-func (r valkeyGeocodingCacheStrategy) Save(ctx context.Context, adi domain.AddressInfo) error {
-	return nil
+func (v valkeyGeocodingCacheStrategy) Save(ctx context.Context, adi domain.AddressInfo) error {
+	lat := adi.Location.Lat()
+	lng := adi.Location.Lon()
+	concat := fmt.Sprintf("%.6f,%.6f", lat, lng)
+
+	cmd := v.c.B().Set().Key(adi.DocID(ctx).String()).Value(concat).Build()
+	return v.c.Do(ctx, cmd).Error()
 }
 
-func (r valkeyGeocodingCacheStrategy) Get(context.Context, domain.AddressInfo) (orb.Point, error) {
-	return orb.Point{}, nil
-}
+func (v valkeyGeocodingCacheStrategy) Get(ctx context.Context, adi domain.AddressInfo) (orb.Point, error) {
+	cmd := v.c.B().Get().Key(adi.DocID(ctx).String()).Build()
+	resp := v.c.Do(ctx, cmd)
 
-/*
-import (
-	"context"
-	"transport-app/app/domain"
-	"transport-app/app/shared/infrastructure/cache"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/redis/go-redis/v9"
-	"golang.org/x/sync/errgroup"
-)
-
-type SearchAddressInfo func(ctx context.Context, raw domain.AddressInfo) (domain.AddressInfo, error)
-
-func init() {
-	ioc.Registry(NewSearchAddressInfo, cache.NewCacheClientFactory)
-}
-
-func NewSearchAddressInfo(c *redis.Client) SearchAddressInfo {
-	return func(ctx context.Context, raw domain.AddressInfo) (domain.AddressInfo, error) {
-		var result domain.AddressInfo
-
-		group, ctx := errgroup.WithContext(ctx)
-
-		group.Go(func() error {
-			key := raw.Province.DocID(ctx).String()
-			val, err := c.Get(ctx, key).Result()
-			if err == redis.Nil {
-				return nil // no encontrada, pero no es error
-			}
-			if err != nil {
-				return err
-			}
-			result.Province = domain.Province(val)
-			return nil
-		})
-
-		group.Go(func() error {
-			key := raw.State.DocID(ctx).String()
-			val, err := c.Get(ctx, key).Result()
-			if err == redis.Nil {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			result.State = domain.State(val)
-			return nil
-		})
-
-		group.Go(func() error {
-			key := raw.District.DocID(ctx).String()
-			val, err := c.Get(ctx, key).Result()
-			if err == redis.Nil {
-				return nil
-			}
-			if err != nil {
-				return err
-			}
-			result.District = domain.District(val)
-			return nil
-		})
-
-		err := group.Wait()
-		return result, err
+	val, err := resp.ToString()
+	if err != nil {
+		// Si la key no existe, devolvemos orb.Point{} sin error
+		if strings.Contains(err.Error(), "nil") {
+			return orb.Point{}, nil
+		}
+		return orb.Point{}, err
 	}
+
+	parts := strings.Split(val, ",")
+	if len(parts) != 2 {
+		return orb.Point{}, fmt.Errorf("invalid coordinate format")
+	}
+
+	lat, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return orb.Point{}, fmt.Errorf("invalid latitude: %w", err)
+	}
+
+	lng, err := strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return orb.Point{}, fmt.Errorf("invalid longitude: %w", err)
+	}
+
+	return orb.Point{lng, lat}, nil
 }
-*/
