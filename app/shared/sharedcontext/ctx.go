@@ -26,6 +26,8 @@ const (
 type EventContext struct {
 	EventType  string
 	EntityType string
+	Consumer   string
+	Commerce   string
 }
 
 // AddEventContextToBaggage añade eventType y entityType al baggage del contexto

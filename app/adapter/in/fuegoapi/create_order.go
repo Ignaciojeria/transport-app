@@ -40,7 +40,7 @@ func createOrder(
 			if err != nil {
 				return response.UpsertOrderResponse{}, err
 			}
-			mappedTO := requestBody.Map()
+			mappedTO := requestBody.Map(spanCtx)
 
 			if err := mappedTO.Validate(); err != nil {
 				return response.UpsertOrderResponse{}, fuego.HTTPError{

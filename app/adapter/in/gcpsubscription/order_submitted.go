@@ -35,7 +35,7 @@ func newOrderSubmitted(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		if err := createOrder(ctx, input.Map()); err != nil {
+		if err := createOrder(ctx, input.Map(ctx)); err != nil {
 			m.Nack()
 			return http.StatusAccepted, err
 		}

@@ -1,6 +1,7 @@
 package request
 
 import (
+	"context"
 	"transport-app/app/adapter/in/fuegoapi/mapper"
 	"transport-app/app/domain"
 )
@@ -51,8 +52,7 @@ type UpsertOrderRequest struct {
 		AddressInfo struct {
 			AddressLine1 string `json:"addressLine1"`
 			AddressLine2 string `json:"addressLine2"`
-
-			Contact struct {
+			Contact      struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`
@@ -138,7 +138,7 @@ type UpsertOrderRequest struct {
 }
 
 // Map convierte el request a un objeto de dominio Order
-func (req UpsertOrderRequest) Map() domain.Order {
+func (req UpsertOrderRequest) Map(ctx context.Context) domain.Order {
 	order := domain.Order{
 		ReferenceID:             domain.ReferenceID(req.ReferenceID),
 		OrderType:               mapper.MapOrderTypeToDomain(req.OrderType),
@@ -151,6 +151,7 @@ func (req UpsertOrderRequest) Map() domain.Order {
 		DeliveryInstructions:    req.Destination.DeliveryInstructions,
 		TransportRequirements:   mapper.MapReferencesToDomain(req.TransportRequirements),
 	}
+	order.Headers.SetFromContext(ctx)
 	if order.Commerce == "" {
 		order.Commerce = "empty"
 	}

@@ -1,8 +1,12 @@
 package domain
 
 import (
+	"context"
+	"transport-app/app/shared/sharedcontext"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("Headers", func() {
@@ -60,4 +64,33 @@ var _ = Describe("Headers", func() {
 			Expect(headers1.DocID(ctx)).ToNot(Equal(headers2.DocID(ctx)))
 		})
 	})
+
+	Describe("SetFromContext", func() {
+		It("should populate commerce and consumer from baggage context", func() {
+			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageCommerce, "store-99",
+				sharedcontext.BaggageConsumer, "customer-99",
+			))
+
+			headers := &Headers{}
+			headers.SetFromContext(ctx)
+
+			Expect(headers.Commerce).To(Equal("store-99"))
+			Expect(headers.Consumer).To(Equal("customer-99"))
+		})
+
+		It("should not panic if baggage keys are missing", func() {
+			ctx := context.Background()
+
+			headers := &Headers{}
+			Expect(func() {
+				headers.SetFromContext(ctx)
+			}).ToNot(Panic())
+
+			// Esperamos campos vacíos
+			Expect(headers.Commerce).To(BeEmpty())
+			Expect(headers.Consumer).To(BeEmpty())
+		})
+	})
+
 })
