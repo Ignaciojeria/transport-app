@@ -45,17 +45,18 @@ func NewCreateOrder(
 	return func(ctx context.Context, inOrder domain.Order) error {
 		inOrder.OrderStatus = loadOrderStatuses().Available()
 
-		normalizationGroup, ctx := errgroup.WithContext(ctx)
+		normalizationGroup, group1Ctx := errgroup.WithContext(ctx)
+
 		normalizationGroup.Go(func() error {
 			return inOrder.Origin.AddressInfo.NormalizeAndGeocode(
-				ctx,
+				group1Ctx,
 				geocode,
 			)
 		})
 
 		normalizationGroup.Go(func() error {
 			return inOrder.Destination.AddressInfo.NormalizeAndGeocode(
-				ctx,
+				group1Ctx,
 				geocode,
 			)
 		})
@@ -64,57 +65,57 @@ func NewCreateOrder(
 			return err
 		}
 
-		group, ctx := errgroup.WithContext(ctx)
+		group, group2Ctx := errgroup.WithContext(ctx)
 
 		group.Go(func() error {
-			return upsertOrderHeaders(ctx, inOrder.Headers)
+			return upsertOrderHeaders(group2Ctx, inOrder.Headers)
 		})
 
 		group.Go(func() error {
-			return upsertContact(ctx, inOrder.Origin.AddressInfo.Contact)
+			return upsertContact(group2Ctx, inOrder.Origin.AddressInfo.Contact)
 		})
 
 		group.Go(func() error {
-			return upsertContact(ctx, inOrder.Destination.AddressInfo.Contact)
+			return upsertContact(group2Ctx, inOrder.Destination.AddressInfo.Contact)
 		})
 
 		group.Go(func() error {
-			return upsertAddressInfo(ctx, inOrder.Origin.AddressInfo)
+			return upsertAddressInfo(group2Ctx, inOrder.Origin.AddressInfo)
 		})
 
 		group.Go(func() error {
-			return upsertAddressInfo(ctx, inOrder.Destination.AddressInfo)
+			return upsertAddressInfo(group2Ctx, inOrder.Destination.AddressInfo)
 		})
 
 		group.Go(func() error {
-			return upsertNodeInfo(ctx, inOrder.Origin)
+			return upsertNodeInfo(group2Ctx, inOrder.Origin)
 		})
 
 		group.Go(func() error {
-			return upsertNodeInfo(ctx, inOrder.Destination)
+			return upsertNodeInfo(group2Ctx, inOrder.Destination)
 		})
 
 		group.Go(func() error {
-			return upsertOrderType(ctx, inOrder.OrderType)
+			return upsertOrderType(group2Ctx, inOrder.OrderType)
 		})
 
 		group.Go(func() error {
-			return upsertPackages(ctx, inOrder.Packages,
+			return upsertPackages(group2Ctx, inOrder.Packages,
 				inOrder.
 					ReferenceID.
 					String())
 		})
 
 		group.Go(func() error {
-			return upsertOrderReferences(ctx, inOrder)
+			return upsertOrderReferences(group2Ctx, inOrder)
 		})
 
 		group.Go(func() error {
-			return upsertOrderPackages(ctx, inOrder)
+			return upsertOrderPackages(group2Ctx, inOrder)
 		})
 
 		group.Go(func() error {
-			return upsertOrder(ctx, inOrder)
+			return upsertOrder(group2Ctx, inOrder)
 		})
 
 		return group.Wait()
