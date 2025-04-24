@@ -21,20 +21,20 @@ import (
 
 func init() {
 	ioc.Registry(
-		createOrder,
+		upsertOrder,
 		httpserver.New,
 		tidbrepository.NewEnsureOrganizationForCountry,
 		gcppublisher.NewApplicationEvents,
 		observability.NewObservability)
 }
-func createOrder(
+func upsertOrder(
 	s httpserver.Server,
 	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/orders",
 		func(c fuego.ContextWithBody[request.UpsertOrderRequest]) (response.UpsertOrderResponse, error) {
-			spanCtx, span := obs.Tracer.Start(c.Context(), "createOrder")
+			spanCtx, span := obs.Tracer.Start(c.Context(), "upsertOrder")
 			defer span.End()
 			requestBody, err := c.Body()
 			if err != nil {
@@ -74,7 +74,7 @@ func createOrder(
 				Message: "Order submitted successfully",
 				Status:  "pending",
 			}, err
-		}, option.Summary("createOrder"),
+		}, option.Summary("upsertOrder"),
 		option.Header("organization", "api organization key", param.Required()),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
