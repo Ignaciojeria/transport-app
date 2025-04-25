@@ -9,14 +9,21 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"transport-app/app/adapter/in/graphql/graph"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/sharedcontext"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
+	"github.com/vektah/gqlparser/v2/ast"
 	"go.opentelemetry.io/otel/baggage"
 )
 
@@ -63,6 +70,22 @@ func startAtEnd(e Server) error {
    ██║   ██║  ██║██║  ██║██║ ╚████║███████║██║     ╚██████╔╝██║  ██║   ██║       ██║  ██║██║     ██║     
    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚═╝  ╚═╝╚═╝     ╚═╝    
    `)
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+	srv.SetQueryCache(lru.New[*ast.QueryDocument](1000))
+	srv.Use(extension.Introspection{})
+	srv.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New[string](100),
+	})
+	fuego.PostStd(e.Manager, "/query", srv.ServeHTTP, option.Tags("graphql"))
+	fuego.GetStd(e.Manager,
+		"/",
+		playground.Handler("GraphQL playground", "/query"),
+		option.Summary("GraphQL Playground"),
+		option.Tags("graphql"))
+
 	return e.Manager.Run()
 }
 
@@ -88,6 +111,7 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 
 func injectBaggageMiddleware(next http.Handler) http.Handler {
 	skipPaths := map[string]struct{}{
+		"/":              {},
 		"/login":         {},
 		"/register":      {},
 		"/health":        {},
