@@ -1,0 +1,9 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Node {
+  id: ID!
+  text: String!
+  done: Boolean!
+}

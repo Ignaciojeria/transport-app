@@ -1,0 +1,8 @@
+type Order {
+  referenceId: String!
+}
+
+type Query {
+  orders(lpns: [String!], referenceIds: [String!]): [Order!]!
+}
+

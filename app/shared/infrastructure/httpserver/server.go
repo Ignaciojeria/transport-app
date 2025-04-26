@@ -29,7 +29,7 @@ import (
 
 func init() {
 	ioc.Registry(New, configuration.NewConf)
-	ioc.RegistryAtEnd(startAtEnd, New)
+	ioc.RegistryAtEnd(startAtEnd, New, graph.NewResolver)
 }
 
 type Server struct {
@@ -61,7 +61,7 @@ func New(conf configuration.Conf) Server {
 	return server
 }
 
-func startAtEnd(e Server) error {
+func startAtEnd(e Server, resolver *graph.Resolver) error {
 	fmt.Println(`
 ████████╗██████╗  █████╗ ███╗   ██╗███████╗██████╗  ██████╗ ██████╗ ████████╗     █████╗ ██████╗ ██████╗ 
 ╚══██╔══╝██╔══██╗██╔══██╗████╗  ██║██╔════╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝    ██╔══██╗██╔══██╗██╔══██╗
@@ -70,7 +70,7 @@ func startAtEnd(e Server) error {
    ██║   ██║  ██║██║  ██║██║ ╚████║███████║██║     ╚██████╔╝██║  ██║   ██║       ██║  ██║██║     ██║     
    ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚═╝  ╚═╝╚═╝     ╚═╝    
    `)
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
