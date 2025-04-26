@@ -9,7 +9,6 @@ type Node struct {
 }
 
 type Order struct {
-	ID          string `json:"id"`
 	ReferenceID string `json:"referenceId"`
 }
 

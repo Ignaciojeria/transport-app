@@ -1,0 +1,16 @@
+schema:
+  - app/adapter/in/graphql/graph/*.graphqls
+
+exec:
+  filename: app/adapter/in/graphql/graph/generated.go
+  package: graph
+
+model:
+  filename: app/adapter/in/graphql/graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: app/adapter/in/graphql/graph
+  package: graph
+  preserve_resolver: true

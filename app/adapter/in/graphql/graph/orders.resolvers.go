@@ -13,7 +13,7 @@ import (
 )
 
 // Orders is the resolver for the orders field.
-func (r *queryResolver) Orders(ctx context.Context) ([]*model.Order, error) {
+func (r *queryResolver) Orders(ctx context.Context, referenceIds, lpns []string) ([]*model.Order, error) {
 	fmt.Println("works")
 	domainOrders, err := r.SearchOrders(ctx, domain.OrderSearchFilters{})
 	if err != nil {
