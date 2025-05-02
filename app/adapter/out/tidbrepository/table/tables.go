@@ -59,8 +59,8 @@ type CheckoutHistory struct {
 	RouteID int64 `gorm:"not null;index"`
 	Route   Route `gorm:"foreignKey:RouteID"`
 
-	OrderStatusID int64       `gorm:"not null;index"`
-	OrderStatus   OrderStatus `gorm:"foreignKey:OrderStatusID"`
+	OrderStatusID int64  `gorm:"not null;index"`
+	OrderStatus   Status `gorm:"foreignKey:OrderStatusID"`
 
 	CheckoutRejectionID int64             `gorm:"not null;index"`
 	CheckoutRejection   CheckoutRejection `gorm:"foreignKey:CheckoutRejectionID"`
@@ -282,9 +282,11 @@ func (j JSONItems) Map() []domain.Item {
 }
 
 type OrderPackage struct {
-	ID         int64  `gorm:"primaryKey"`
-	OrderDoc   string `gorm:"type:char(64);"`
-	PackageDoc string `gorm:"type:char(64);"`
+	ID              int64  `gorm:"primaryKey"`
+	PackageStatusID *int64 `gorm:"default null;index"`
+	PackageStatus   Status `gorm:"foreignKey:PackageStatusID"`
+	OrderDoc        string `gorm:"type:char(64);"`
+	PackageDoc      string `gorm:"type:char(64);"`
 }
 
 type OrderReferences struct {
@@ -489,7 +491,7 @@ func (o OrderType) Map() domain.OrderType {
 	}
 }
 
-type OrderStatus struct {
+type Status struct {
 	gorm.Model
 	ID     int64  `gorm:"primaryKey"`
 	Status string `gorm:"not null"`

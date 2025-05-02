@@ -103,7 +103,7 @@ func NewFindOrdersByFilters(conn database.ConnectionFactory) FindOrdersByFilters
             a.reference_id AS route_account_reference_id
         FROM orders o
         LEFT JOIN order_headers headers ON o.order_headers_id = headers.id
-        LEFT JOIN order_statuses os ON o.order_status_id = os.id
+        LEFT JOIN statuses os ON o.order_status_id = os.id
         LEFT JOIN order_types ot ON o.order_type_id = ot.id
         LEFT JOIN organizations org ON o.organization_id = org.id  -- Se mantiene el filtro por Organization ID
         LEFT JOIN contacts oc ON o.origin_contact_id = oc.id

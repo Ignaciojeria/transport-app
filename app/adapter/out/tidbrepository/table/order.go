@@ -21,8 +21,8 @@ type Order struct {
 	OrderHeadersDoc string       `gorm:"type:char(64);index"`
 	OrderHeaders    OrderHeaders `gorm:"-"`
 
-	OrderStatusDoc string      `gorm:"type:char(64);index"`
-	OrderStatus    OrderStatus `gorm:"-"`
+	OrderStatusDoc string `gorm:"type:char(64);index"`
+	OrderStatus    Status `gorm:"-"`
 
 	OrderTypeDoc string    `gorm:"type:char(64);index"`
 	OrderType    OrderType `gorm:"-"`

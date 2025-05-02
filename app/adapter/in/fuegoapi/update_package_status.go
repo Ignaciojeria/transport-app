@@ -22,7 +22,7 @@ func init() {
 func checkout(
 	s httpserver.Server,
 	outbox gcppublisher.ApplicationEvents) {
-	fuego.Post(s.Manager, "/confirm-deliveries",
+	fuego.Post(s.Manager, "/package-status-updates",
 		func(c fuego.ContextWithBody[request.ConfirmDeliveriesRequest]) (
 			response.ConfirmDeliveriesResponse, error) {
 			requestBody, err := c.Body()
@@ -48,7 +48,7 @@ func checkout(
 				return response.ConfirmDeliveriesResponse{}, err
 			}
 			return response.ConfirmDeliveriesResponse{
-				Message: "checkout submission succedded",
+				Message: "packageStatusUpdates submission succedded",
 			}, nil
 		},
 		option.Summary("confirmDeliveries"),

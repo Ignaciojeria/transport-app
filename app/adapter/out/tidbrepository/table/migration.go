@@ -40,7 +40,7 @@ func NewRunMigrations(
 			&NodeInfo{},
 			&Package{},
 			&OrderPackage{},
-			&OrderStatus{},
+			&Status{},
 			&Organization{},
 			&OrderType{},
 			&Account{},
@@ -53,6 +53,7 @@ func NewRunMigrations(
 			&State{},
 			&District{},
 			&Province{},
+			&NonDeliveryReason{},
 		}
 
 		// Opcional: Eliminar tablas si existen

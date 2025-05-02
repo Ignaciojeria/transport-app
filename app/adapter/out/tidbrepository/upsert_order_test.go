@@ -76,18 +76,18 @@ var _ = Describe("UpsertOrder", func() {
 
 		// Preparamos únicamente OrderStatus para los tests ya que es requerido
 		err := connection.DB.WithContext(ctx).
-			Table("order_statuses").
+			Table("statuses").
 			Where("status = ?", orderStatus.Status).
-			FirstOrCreate(&table.OrderStatus{
+			FirstOrCreate(&table.Status{
 				Status: orderStatus.Status,
 			}).Error
 		Expect(err).ToNot(HaveOccurred())
 
 		// Y también inicializamos el OrderStatus "in_progress" que usaremos más adelante
 		err = connection.DB.WithContext(ctx).
-			Table("order_statuses").
+			Table("statuses").
 			Where("status = ?", "in_progress").
-			FirstOrCreate(&table.OrderStatus{
+			FirstOrCreate(&table.Status{
 				Status: "in_progress",
 			}).Error
 		Expect(err).ToNot(HaveOccurred())

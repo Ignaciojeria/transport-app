@@ -2,17 +2,17 @@ package domain
 
 import "time"
 
-type ConfirmDelivery struct {
+type OrderHistory struct {
 	Order             Order
 	Route             Route
 	OrderStatus       OrderStatus
-	DeliveredAt       time.Time
+	HandledAt         time.Time
 	Vehicle           Vehicle
 	Recipient         Recipient
 	EvidencePhotos    []EvidencePhotos
 	Latitude          float64
 	Longitude         float64
-	NotDeliveryReason NotDeliveryReason
+	NonDeliveryReason NonDeliveryReason
 }
 
 type Recipient struct {
@@ -25,10 +25,4 @@ type EvidencePhotos struct {
 	URL     string
 	Type    string
 	TakenAt time.Time
-}
-
-type NotDeliveryReason struct {
-	ID          int64
-	ReferenceID string
-	Detail      string
 }
