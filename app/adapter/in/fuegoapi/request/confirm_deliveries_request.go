@@ -56,7 +56,7 @@ type ConfirmDeliveriesRequest struct {
 	} `json:"routes"`
 }
 
-func MapCheckout(request ConfirmDeliveriesRequest) []domain.OrderHistory {
+func (request ConfirmDeliveriesRequest) Map() []domain.OrderHistory {
 	var histories []domain.OrderHistory
 
 	for _, route := range request.Routes {
