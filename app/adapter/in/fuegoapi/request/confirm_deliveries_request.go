@@ -6,15 +6,20 @@ import (
 )
 
 type ConfirmDeliveriesRequest struct {
+	Vehicle struct {
+		Plate string `json:"plate"`
+	} `json:"vehicle"`
+	Carrier struct {
+		NationalID string `json:"nationalID"`
+		Name       string `json:"name"`
+	} `json:"carrier"`
+	Driver struct {
+		NationalID string `json:"nationalID"`
+		Email      string `json:"email"`
+	} `json:"driver"`
 	Routes []struct {
 		ReferenceID string `json:"referenceID"`
-		Vehicle     struct {
-			Plate string `json:"plate"`
-		} `json:"vehicle"`
-		Carrier struct {
-			NationalID string `json:"nationalID"`
-		} `json:"carrier"`
-		Orders []struct {
+		Orders      []struct {
 			ReferenceID string `json:"referenceID"`
 			Packages    []struct {
 				LPN   string `json:"lpn"`
@@ -82,9 +87,9 @@ func (request ConfirmDeliveriesRequest) Map(rawPayload []byte) []domain.OrderHis
 				Route: domain.Route{
 					ReferenceID: route.ReferenceID,
 					Vehicle: domain.Vehicle{
-						Plate: route.Vehicle.Plate,
+						Plate: request.Vehicle.Plate,
 						Carrier: domain.Carrier{
-							NationalID: route.Carrier.NationalID,
+							NationalID: request.Carrier.NationalID,
 						},
 					},
 				},
@@ -93,9 +98,9 @@ func (request ConfirmDeliveriesRequest) Map(rawPayload []byte) []domain.OrderHis
 				},
 				HandledAt: order.Delivery.HandledAt,
 				Vehicle: domain.Vehicle{
-					Plate: route.Vehicle.Plate,
+					Plate: request.Vehicle.Plate,
 					Carrier: domain.Carrier{
-						NationalID: route.Carrier.NationalID,
+						NationalID: request.Carrier.NationalID,
 					},
 				},
 				Recipient: domain.Recipient{
