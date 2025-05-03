@@ -3,6 +3,7 @@ package domain
 import "time"
 
 type OrderHistory struct {
+	RequestBody       []byte
 	Order             Order
 	Route             Route
 	OrderStatus       OrderStatus

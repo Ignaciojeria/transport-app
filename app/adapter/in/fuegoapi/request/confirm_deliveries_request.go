@@ -17,7 +17,7 @@ type ConfirmDeliveriesRequest struct {
 		Orders []struct {
 			ReferenceID string `json:"referenceID"`
 			Packages    []struct {
-				LPN   string `json:"lpn,omitempty"`
+				LPN   string `json:"lpn"`
 				Items []struct {
 					SKU      string `json:"sku"`
 					Quantity struct {
@@ -25,7 +25,7 @@ type ConfirmDeliveriesRequest struct {
 						Expected  int    `json:"expected"`
 						Delivered int    `json:"delivered"`
 					} `json:"quantity"`
-				} `json:"items,omitempty"`
+				} `json:"items"`
 			} `json:"packages"`
 			BusinessIdentifiers struct {
 				Commerce string `json:"commerce"`
@@ -56,7 +56,7 @@ type ConfirmDeliveriesRequest struct {
 	} `json:"routes"`
 }
 
-func (request ConfirmDeliveriesRequest) Map() []domain.OrderHistory {
+func (request ConfirmDeliveriesRequest) Map(rawPayload []byte) []domain.OrderHistory {
 	var histories []domain.OrderHistory
 
 	for _, route := range request.Routes {
@@ -71,6 +71,7 @@ func (request ConfirmDeliveriesRequest) Map() []domain.OrderHistory {
 			}
 
 			history := domain.OrderHistory{
+				RequestBody: rawPayload,
 				Order: domain.Order{
 					Headers: domain.Headers{
 						Consumer: order.BusinessIdentifiers.Consumer,

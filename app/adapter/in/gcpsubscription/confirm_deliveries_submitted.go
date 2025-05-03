@@ -34,7 +34,7 @@ func newConfirmDeliveriesSubmitted(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		if err := confirmDeliveries(ctx, input.Map()); err != nil {
+		if err := confirmDeliveries(ctx, input.Map(m.Data)); err != nil {
 			m.Nack()
 			return http.StatusAccepted, err
 		}
