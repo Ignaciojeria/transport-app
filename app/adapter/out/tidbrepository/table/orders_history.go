@@ -19,7 +19,8 @@ type OrdersHistory struct {
 	EvidencePhotos       JSONEvidencePhotos `gorm:"type:json;default:'{}'"`
 	RecipientFullName    string             `gorm:"default:''"`
 	RecipientNationalID  string             `gorm:"default:''"`
-
+	ExpectedQuantity     int
+	DeliveredQuantity    int
 	/*
 
 		OrderReferenceID          int64              `gorm:"default:0"`

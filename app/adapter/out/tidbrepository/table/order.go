@@ -60,6 +60,8 @@ type Order struct {
 
 	SequenceNumber *int `gorm:"default:null"`
 
+	ExtraFields map[string]string `gorm:"type:json"`
+
 	JSONPlannedData JSONPlannedData `gorm:"type:json"`
 
 	Packages []Package `gorm:"-"`

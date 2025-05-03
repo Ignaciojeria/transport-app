@@ -32,6 +32,7 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		DestinationContactDoc:     order.Destination.AddressInfo.Contact.DocID(ctx).String(),
 		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID(ctx).String(),
 		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID(ctx).String(),
+		ExtraFields:               order.ExtraFields,
 
 		//OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,

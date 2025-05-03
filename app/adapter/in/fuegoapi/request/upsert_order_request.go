@@ -7,7 +7,8 @@ import (
 )
 
 type UpsertOrderRequest struct {
-	ReferenceID             string `json:"referenceID" validate:"required"`
+	ReferenceID             string            `json:"referenceID" validate:"required"`
+	ExtraFields             map[string]string `json:"extraFields"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
 		TimeRange struct {
@@ -150,6 +151,7 @@ func (req UpsertOrderRequest) Map(ctx context.Context) domain.Order {
 		PromisedDate:            mapper.MapPromisedDateToDomain(req.PromisedDate),
 		DeliveryInstructions:    req.Destination.DeliveryInstructions,
 		TransportRequirements:   mapper.MapReferencesToDomain(req.TransportRequirements),
+		ExtraFields:             req.ExtraFields,
 	}
 	order.Headers.SetFromContext(ctx)
 	if order.Commerce == "" {

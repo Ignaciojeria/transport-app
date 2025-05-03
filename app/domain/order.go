@@ -15,6 +15,7 @@ var (
 
 type Order struct {
 	Headers
+	ExtraFields             map[string]string
 	AddressLine2            string
 	ReferenceID             ReferenceID
 	SequenceNumber          *int
