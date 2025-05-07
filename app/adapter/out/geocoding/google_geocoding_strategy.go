@@ -3,7 +3,7 @@ package geocoding
 import (
 	"context"
 	"strings"
-	"transport-app/app/adapter/out/cacherepository"
+	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/googlemapsdk"
 	"transport-app/app/shared/sharedcontext"
@@ -18,44 +18,38 @@ func init() {
 	ioc.Registry(
 		newGoogleGeocoding,
 		googlemapsdk.NewClient,
-		cacherepository.NewGeocodingCacheStrategy)
+		tidbrepository.NewGetStoredCoordinates)
 }
 
 func newGoogleGeocoding(
 	c *maps.Client,
-	cache cacherepository.GeocodingCacheStrategy,
+	getCoords tidbrepository.GetStoredCoordinates,
 ) GeocodingStrategy {
 	return func(ctx context.Context, ai domain.AddressInfo) (orb.Point, error) {
-		// 1. Intentar obtener desde caché
-		if cachedPoint, err := cache.Get(ctx, ai); err == nil && (cachedPoint[0] != 0 || cachedPoint[1] != 0) {
-			return cachedPoint, nil
+		// 1. Consultar si ya fue geocodificada previamente
+		if point, err := getCoords(ctx, ai); err == nil && !point.Equal(orb.Point{}) {
+			return point, nil
 		}
 
-		// 2. Armar dirección para geocodificar
+		// 2. Geocodificar si no está en la BD
 		fullAddress := buildFullAddress(ctx, ai)
-
 		req := &maps.GeocodingRequest{
 			Address: fullAddress,
 			Region:  strings.ToLower(sharedcontext.TenantCountryFromContext(ctx)),
 		}
 
-		// 3. Geocodificar usando Google Maps
 		results, err := c.Geocode(ctx, req)
-		if err != nil {
+		if err != nil || len(results) == 0 {
 			return orb.Point{}, err
 		}
-		if len(results) == 0 {
-			return orb.Point{}, nil
+
+		point := orb.Point{
+			results[0].Geometry.Location.Lng,
+			results[0].Geometry.Location.Lat,
 		}
 
-		// 4. Guardar en caché
-		lat := results[0].Geometry.Location.Lat
-		lng := results[0].Geometry.Location.Lng
-		point := orb.Point{lng, lat}
-
-		ai.UpdatePoint(point)   // importante para que Save use Location
-		_ = cache.Save(ctx, ai) // ignoramos error de cacheo
-
+		// 3. No persistimos acá — eso se hará en otra capa cuando se guarde el AddressInfo
+		ai.UpdatePoint(point)
 		return point, nil
 	}
 }

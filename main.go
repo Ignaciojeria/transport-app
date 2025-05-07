@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	_ "transport-app/app/adapter/in/fuegoapi"
-	_ "transport-app/app/adapter/out/cacherepository"
 	_ "transport-app/app/adapter/out/tidbrepository"
 	_ "transport-app/app/adapter/out/tidbrepository/table"
 	_ "transport-app/app/shared/configuration"
@@ -13,8 +12,6 @@ import (
 	_ "transport-app/app/shared/infrastructure/httpserver"
 
 	_ "transport-app/app/shared/infrastructure/database"
-
-	_ "transport-app/app/shared/infrastructure/cache"
 
 	_ "transport-app/app/usecase"
 

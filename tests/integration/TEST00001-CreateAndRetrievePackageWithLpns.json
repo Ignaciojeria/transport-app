@@ -1,0 +1,163 @@
+{
+    "headers": {
+        "commerce":"TEST_COMMERCE",
+        "consumer":"TEST_CONSUMER",
+        "organization":"1-CL"
+    },
+    "body":{
+        "referenceID": "order_reference_1",
+        "collectAvailabilityDate": {
+            "date": "2022-03-10",
+            "timeRange": {
+                "endTime": "03:41",
+                "startTime": "03:41"
+            }
+        },
+        "destination": {
+            "addressInfo": {
+                "addressLine1": "string24",
+                "addressLine2": "string24",
+                "additionalContactMethods": [
+                    {
+                        "type": "phone2",
+                        "value": "+123456"
+                    }
+                ],
+                "contact": {
+                    "documents": [
+                        {
+                            "type": "string243",
+                            "value": "string243"
+                        }
+                    ],
+                    "email": "string24161380",
+                    "fullName": "string24name",
+                    "nationalID": "string24",
+                    "phone": "string242"
+                },
+                "district": "string24",
+                "latitude": 100,
+                "longitude": 100,
+                "province": "string24",
+                "state": "string24",
+                "timeZone": "string24",
+                "zipCode": "string24"
+            },
+            "deliveryInstructions": "entregar en mi house",
+            "nodeInfo": {
+                "referenceId": "string244XD",
+                "name": "Ignacio Node 2214"
+            }
+        },
+        "orderType": {
+            "description": "JOJOJO",
+            "type": "string24"
+        },
+        "origin": {
+            "addressInfo": {
+                "addressLine1": "string244",
+                "addressLine2": "string244",
+                "contact": {
+                    "documents": [
+                        {
+                            "type": "string243",
+                            "value": "string243"
+                        }
+                    ],
+                    "email": "string243",
+                    "fullName": "string24",
+                    "nationalID": "string24",
+                    "phone": "string24"
+                },
+                "district": "string24",
+                "latitude": 10.123,
+                "longitude": 10.1234,
+                "province": "string24",
+                "state": "string24",
+                "timeZone": "string24",
+                "zipCode": "string24"
+            },
+            "nodeInfo": {
+                "referenceId": "string24",
+                "name": "NAXONODE"
+            }
+        },
+        "packages": [
+            {
+                "dimensions": {
+                    "length": 10,
+                    "height": 10,
+                    "unit": "string24",
+                    "width": 10
+                },
+                "insurance": {
+                    "currency": "string242",
+                    "unitValue": 10
+                },
+                "items": [
+                    {
+                        "sku": "string24",
+                        "description": "string24",
+                        "dimensions": {
+                            "length": 1,
+                            "height": 1,
+                            "unit": "string24",
+                            "width": 1
+                        },
+                        "insurance": {
+                            "currency": "CLP",
+                            "unitValue": 100
+                        },
+                        "logisticCondition": "string24",
+                        "quantity": {
+                            "quantityNumber": 1,
+                            "quantityUnit": "C/U"
+                        },
+                        "weight": {
+                            "unit": "string24",
+                            "value": 100
+                        }
+                    }
+                ],
+                "lpn": "string246",
+                "weight": {
+                    "unit": "string24",
+                    "value": 10
+                }
+            }
+        ],
+        "promisedDate": {
+            "dateRange": {
+                "endDate": "2025-03-10",
+                "startDate": "2025-03-10"
+            },
+            "serviceCategory": "string24",
+            "timeRange": {
+                "endTime": "03:30",
+                "startTime": "03:30"
+            }
+        },
+        "references": [
+            {
+                "type": "string26",
+                "value": "string26"
+            },
+            {
+                "type": "string27",
+                "value": "string27"
+            }
+        ],
+        "extraFields": {
+            "destinationPoliticalAreaId": "uuid"
+        },
+        "transportRequirements": [
+            {
+                "type": "string24",
+                "value": "string24"
+            }
+        ]
+    }
+}
+
+
+

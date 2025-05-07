@@ -21,7 +21,7 @@ type Conf struct {
 	GOOGLE_MAPS_API_KEY      string `env:"GOOGLE_MAPS_API_KEY"`
 	LOCATION_IQ_ACCESS_TOKEN string `env:"LOCATION_IQ_ACCESS_TOKEN"`
 	LOCATION_IQ_DNS          string `env:"LOCATION_IQ_DNS"`
-	CACHE_URL                string `env:"CACHE_URL,required"`
+	CACHE_URL                string `env:"CACHE_URL"`
 	FIREBASE_API_KEY         string `env:"FIREBASE_API_KEY"`
 }
 
