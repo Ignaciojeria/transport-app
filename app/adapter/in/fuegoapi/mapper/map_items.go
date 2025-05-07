@@ -14,8 +14,11 @@ func MapItemsToDomain(items []struct {
 		Currency  string  `json:"currency"`
 		UnitValue float64 `json:"unitValue"`
 	} `json:"insurance"`
-	LogisticCondition string `json:"logisticCondition"`
-	Quantity          struct {
+	Skills []struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	}
+	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
@@ -28,8 +31,8 @@ func MapItemsToDomain(items []struct {
 	mapped := make([]domain.Item, len(items))
 	for i, item := range items {
 		mapped[i] = domain.Item{
-			Sku:               item.Sku,
-			LogisticCondition: item.LogisticCondition,
+			Sku:    item.Sku,
+			Skills: item.Skills,
 			Quantity: domain.Quantity{
 				QuantityNumber: item.Quantity.QuantityNumber,
 				QuantityUnit:   item.Quantity.QuantityUnit,
@@ -66,8 +69,11 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		Currency  string  `json:"currency"`
 		UnitValue float64 `json:"unitValue"`
 	} `json:"insurance"`
-	LogisticCondition string `json:"logisticCondition"`
-	Quantity          struct {
+	Skills []struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"skills"`
+	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
 	} `json:"quantity"`
@@ -89,8 +95,11 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			Currency  string  `json:"currency"`
 			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
-		LogisticCondition string `json:"logisticCondition"`
-		Quantity          struct {
+		Skills []struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"skills"`
+		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
 		} `json:"quantity"`
@@ -114,8 +123,11 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				Currency  string  `json:"currency"`
 				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
-			LogisticCondition string `json:"logisticCondition"`
-			Quantity          struct {
+			Skills []struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			} `json:"skills"`
+			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
@@ -144,7 +156,7 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				Currency:  item.Insurance.Currency,
 				UnitValue: item.Insurance.UnitValue,
 			},
-			LogisticCondition: item.LogisticCondition,
+			Skills: item.Skills,
 			Quantity: struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`

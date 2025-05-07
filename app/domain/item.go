@@ -1,13 +1,16 @@
 package domain
 
 type Item struct {
-	Sku               string
-	LogisticCondition string
-	Quantity          Quantity
-	Insurance         Insurance
-	Description       string
-	Dimensions        Dimensions
-	Weight            Weight
+	Sku    string
+	Skills []struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"skills"`
+	Quantity    Quantity
+	Insurance   Insurance
+	Description string
+	Dimensions  Dimensions
+	Weight      Weight
 }
 
 type ItemReference struct {

@@ -106,22 +106,25 @@ func safeTime(t *time.Time) time.Time {
 }
 
 type Items struct {
-	Sku               string         `gorm:"not null" json:"sku"`
-	LogisticCondition string         `gorm:"default:null" json:"logistic_condition"`
-	QuantityNumber    int            `gorm:"not null" json:"quantity_number"`
-	QuantityUnit      string         `gorm:"not null" json:"quantity_unit"`
-	JSONInsurance     JSONInsurance  `gorm:"type:json" json:"insurance"`
-	Description       string         `gorm:"type:text" json:"description"`
-	JSONDimensions    JSONDimensions `gorm:"type:json" json:"dimensions"`
-	JSONWeight        JSONWeight     `gorm:"type:json" json:"weight"`
+	Sku    string `gorm:"not null" json:"sku"`
+	Skills []struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `gorm:"default:null" json:"skills"`
+	QuantityNumber int            `gorm:"not null" json:"quantity_number"`
+	QuantityUnit   string         `gorm:"not null" json:"quantity_unit"`
+	JSONInsurance  JSONInsurance  `gorm:"type:json" json:"insurance"`
+	Description    string         `gorm:"type:text" json:"description"`
+	JSONDimensions JSONDimensions `gorm:"type:json" json:"dimensions"`
+	JSONWeight     JSONWeight     `gorm:"type:json" json:"weight"`
 }
 
 type JSONItems []Items
 
 func (i Items) Map() domain.Item {
 	return domain.Item{
-		Sku:               i.Sku,
-		LogisticCondition: i.LogisticCondition,
+		Sku:    i.Sku,
+		Skills: i.Skills,
 		Quantity: domain.Quantity{
 			QuantityNumber: i.QuantityNumber,
 			QuantityUnit:   i.QuantityUnit,

@@ -55,10 +55,10 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 	mapped := make(table.JSONItems, len(items))
 	for i, item := range items {
 		mapped[i] = table.Items{
-			Sku:               item.Sku,
-			LogisticCondition: item.LogisticCondition,
-			QuantityNumber:    item.Quantity.QuantityNumber,
-			QuantityUnit:      item.Quantity.QuantityUnit,
+			Sku:            item.Sku,
+			Skills:         item.Skills,
+			QuantityNumber: item.Quantity.QuantityNumber,
+			QuantityUnit:   item.Quantity.QuantityUnit,
 			JSONInsurance: table.JSONInsurance{
 				UnitValue: item.Insurance.UnitValue,
 				Currency:  item.Insurance.Currency,

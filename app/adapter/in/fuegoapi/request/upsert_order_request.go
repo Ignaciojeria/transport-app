@@ -107,8 +107,11 @@ type UpsertOrderRequest struct {
 				Currency  string  `json:"currency"`
 				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
-			LogisticCondition string `json:"logisticCondition"`
-			Quantity          struct {
+			Skills []struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			}
+			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
 			} `json:"quantity"`
