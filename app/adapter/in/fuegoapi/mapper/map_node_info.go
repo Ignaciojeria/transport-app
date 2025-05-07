@@ -12,8 +12,11 @@ func MapNodeInfoToDomain(nodeInfo struct {
 }, addressInfo struct {
 	AddressLine1 string `json:"addressLine1"`
 	AddressLine2 string `json:"addressLine2"`
-
-	Contact struct {
+	Contact      struct {
+		AdditionalContactMethods struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"additionalContactMethods"`
 		Email      string `json:"email"`
 		Phone      string `json:"phone"`
 		NationalID string `json:"nationalID"`
