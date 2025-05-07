@@ -11,7 +11,6 @@ import (
 	_ "transport-app/app/shared/configuration"
 	"transport-app/app/shared/constants"
 	_ "transport-app/app/shared/infrastructure/httpserver"
-	_ "transport-app/app/usecase/normalization/mexico"
 
 	_ "transport-app/app/shared/infrastructure/database"
 

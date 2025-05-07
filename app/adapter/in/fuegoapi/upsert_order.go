@@ -7,7 +7,6 @@ import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
-	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
@@ -23,13 +22,11 @@ func init() {
 	ioc.Registry(
 		upsertOrder,
 		httpserver.New,
-		tidbrepository.NewEnsureOrganizationForCountry,
 		gcppublisher.NewApplicationEvents,
 		observability.NewObservability)
 }
 func upsertOrder(
 	s httpserver.Server,
-	ensureOrg tidbrepository.EnsureOrganizationForCountry,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/orders",

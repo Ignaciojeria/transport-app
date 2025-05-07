@@ -8,7 +8,6 @@ import (
 
 func MapOrganizationToTable(ctx context.Context, orgName string) table.Organization {
 	return table.Organization{
-		//ID:      org.ID,
 		Name:    orgName,
 		Country: sharedcontext.TenantCountryFromContext(ctx),
 	}

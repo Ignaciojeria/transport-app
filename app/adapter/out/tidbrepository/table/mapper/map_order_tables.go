@@ -10,14 +10,7 @@ import (
 )
 
 func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
-	//	orgCountryID := order.Organization.ID
 	tbl := table.Order{
-		/*
-			DocumentID:     order.DocID().String(), // Agregar DocumentID
-			ReferenceID:    string(order.ReferenceID),
-			OrganizationID: order.Organization.ID,
-		*/
-		// Mapear IDs de documentos relacionados
 		OrganizationID:         sharedcontext.TenantIDFromContext(ctx),
 		ReferenceID:            string(order.ReferenceID),
 		DocumentID:             order.DocID(ctx).String(),
@@ -181,19 +174,14 @@ func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
 		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-
-		State: address.State.String(),
-		//	Locality:       address.Locality,
-		District:     address.District.String(),
-		AddressLine1: address.AddressLine1,
-		//	AddressLine2:   address.AddressLine2,
-		//	AddressLine3:   address.AddressLine3,
-		//	RawAddress:     address.FullAddress(),
-		DocumentID: string(address.DocID(ctx)),
-		Latitude:   address.Location[1],
-		Longitude:  address.Location[0],
-		ZipCode:    address.ZipCode,
-		Province:   address.Province.String(),
-		TimeZone:   address.TimeZone,
+		State:          address.State.String(),
+		District:       address.District.String(),
+		AddressLine1:   address.AddressLine1,
+		DocumentID:     string(address.DocID(ctx)),
+		Latitude:       address.Location[1],
+		Longitude:      address.Location[0],
+		ZipCode:        address.ZipCode,
+		Province:       address.Province.String(),
+		TimeZone:       address.TimeZone,
 	}
 }
