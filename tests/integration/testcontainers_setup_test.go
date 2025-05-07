@@ -15,6 +15,8 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/database"
 
+	pubsubtc "github.com/testcontainers/testcontainers-go/modules/gcloud/pubsub"
+
 	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -61,6 +63,7 @@ var container *tcpostgres.PostgresContainer
 var connection database.ConnectionFactory
 var organization1 domain.Organization
 var organization2 domain.Organization
+var pubsubContainer *pubsubtc.Container
 
 var noTablesContainerConnection database.ConnectionFactory
 var noTablesMigrationContainer *tcpostgres.PostgresContainer
@@ -92,6 +95,23 @@ var _ = BeforeSuite(func() {
 	// Obtener host y puerto del contenedor
 	host, err := container.Host(ctx)
 	Expect(err).ToNot(HaveOccurred())
+
+	pubsubContainer, err = pubsubtc.Run(
+		ctx,
+		"gcr.io/google.com/cloudsdktool/cloud-sdk:367.0.0-emulators",
+		testcontainers.WithEnv(map[string]string{
+			"PUBSUB_PROJECT_ID": "test-project",
+		}),
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	pubsubHost, err := pubsubContainer.Host(ctx)
+	Expect(err).ToNot(HaveOccurred())
+
+	pubsubPort, err := pubsubContainer.MappedPort(ctx, "8085")
+	Expect(err).ToNot(HaveOccurred())
+	os.Setenv("GOOGLE_PROJECT_ID", "test-project")
+	os.Setenv("PUBSUB_EMULATOR_HOST", fmt.Sprintf("%s:%s", pubsubHost, pubsubPort.Port()))
 
 	port, err := container.MappedPort(ctx, "5432")
 	Expect(err).ToNot(HaveOccurred())
@@ -227,6 +247,18 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	ctx := context.Background()
+
+	if container != nil {
+		_ = container.Terminate(ctx)
+	}
+	if noTablesMigrationContainer != nil {
+		_ = noTablesMigrationContainer.Terminate(ctx)
+	}
+	if pubsubContainer != nil {
+		_ = pubsubContainer.Terminate(ctx)
+	}
+
 	os.Exit(0)
 })
 
