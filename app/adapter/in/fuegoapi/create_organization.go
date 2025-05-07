@@ -49,7 +49,7 @@ func createOrganization(s httpserver.Server, createOrg usecase.CreateOrganizatio
 				Message:         "Organization created successfully",
 			}, nil
 		},
-		option.Summary("createOrganizationKey"),
+		option.Summary("create organization"),
 		option.Tags(tagOrganizations),
 	)
 }
