@@ -8,6 +8,7 @@ import (
 	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/cockroachdb/errors"
 	"gorm.io/gorm"
 )
 
@@ -36,12 +37,12 @@ func NewSaveOrganization(conn database.ConnectionFactory) SaveOrganization {
 		var accountOrg table.AccountOrganization
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := conn.DB.Create(&tableOrg).Error; err != nil {
-				return ErrOrganizationDatabase.New("failed to create organization: %v", err)
+				return errors.Wrap(ErrOrganizationDatabase, "failed to create organization")
 			}
 			accountOrg.AccountID = account.ID
 			accountOrg.OrganizationID = tableOrg.ID
 			if err := conn.DB.Create(&accountOrg).Error; err != nil {
-				return ErrOrganizationDatabase.New("failed to link account to organization: %v", err)
+				return errors.Wrap(ErrOrganizationDatabase, "failed to link account to organization")
 			}
 			return nil
 		})

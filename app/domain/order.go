@@ -4,13 +4,9 @@ import (
 	"context"
 	"regexp"
 	"time"
+	"transport-app/app/shared/apperrors"
 
-	"github.com/joomcode/errorx"
-)
-
-var (
-	// Error general para validaciones de paquetes
-	ErrInvalidPackageFormat = errorx.NewNamespace("package_validation").NewType("invalid_format")
+	"github.com/cockroachdb/errors"
 )
 
 type Order struct {
@@ -101,27 +97,23 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 func (o Order) Validate() error {
 	// Validaciones existentes
 	if err := o.ValidateCollectAvailabilityDate(); err != nil {
-		return errorx.Decorate(err, "validation failed for CollectAvailabilityDate")
+		return apperrors.MarkAsAlertable(errors.Wrap(err, "validation failed for CollectAvailabilityDate"))
 	}
 	if err := o.ValidatePromisedDate(); err != nil {
-		return errorx.Decorate(err, "validation failed for PromisedDate")
+		return apperrors.MarkAsAlertable(errors.Wrap(err, "validation failed for PromisedDate"))
 	}
 
 	// Nueva validación sobre los paquetes
 	for _, pkg := range o.Packages {
 		if pkg.Lpn == "" {
 			if len(pkg.Items) == 0 {
-				return errorx.Decorate(
-					ErrInvalidPackageFormat.New("no items found in package without LPN"),
-					"package without LPN must have at least one item",
-				)
+				return apperrors.MarkAsAlertable(
+					errors.Wrap(ErrInvalidPackageFormat, "no items found in package without LPN: package without LPN must have at least one item"))
 			}
 			for _, item := range pkg.Items {
 				if item.Sku == "" {
-					return errorx.Decorate(
-						ErrInvalidPackageFormat.New("item missing SKU"),
-						"all items in package without LPN must have a non-empty SKU",
-					)
+					return apperrors.MarkAsAlertable(
+						errors.Wrap(ErrInvalidPackageFormat, "item missing SKU: all items in package without LPN must have a non-empty SKU"))
 				}
 			}
 		}
@@ -136,27 +128,24 @@ func (o Order) ValidatePromisedDate() error {
 	// Validar que EndDate no sea anterior a StartDate cuando ambas están definidas
 	if (o.PromisedDate.DateRange.StartDate != time.Time{}) && (o.PromisedDate.DateRange.EndDate != time.Time{}) {
 		if o.PromisedDate.DateRange.EndDate.Before(o.PromisedDate.DateRange.StartDate) {
-			return errorx.Decorate(
-				ErrInvalidDateFormat.New("invalid endDate"),
-				"promised delivery endDate cannot be before startDate",
-			)
+			return apperrors.MarkAsAlertable(errors.Wrap(ErrInvalidDateFormat, "invalid endDate: promised delivery endDate cannot be before startDate"))
 		}
 	}
 
 	// Validar formato de horas
 	if o.PromisedDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.StartTime) {
-		return errorx.Decorate(
-			ErrInvalidTimeFormat.New("invalid startTime"),
+		return apperrors.MarkAsAlertable(errors.Wrapf(
+			ErrInvalidTimeFormat,
 			"promised delivery startTime: %s, expected format hh:mm",
 			o.PromisedDate.TimeRange.StartTime,
-		)
+		))
 	}
 	if o.PromisedDate.TimeRange.EndTime != "" && !timeRegex.MatchString(o.PromisedDate.TimeRange.EndTime) {
-		return errorx.Decorate(
-			ErrInvalidTimeFormat.New("invalid endTime"),
+		return apperrors.MarkAsAlertable(errors.Wrapf(
+			ErrInvalidTimeFormat,
 			"promised delivery endTime: %s, expected format hh:mm",
 			o.PromisedDate.TimeRange.EndTime,
-		)
+		))
 	}
 
 	return nil
@@ -173,18 +162,18 @@ func (o Order) ValidateCollectAvailabilityDate() error {
 	// Validar el rango horario
 	timeRegex := regexp.MustCompile(`^(?:[01]\d|2[0-3]):[0-5]\d$`)
 	if o.CollectAvailabilityDate.TimeRange.StartTime != "" && !timeRegex.MatchString(o.CollectAvailabilityDate.TimeRange.StartTime) {
-		return errorx.Decorate(
-			ErrInvalidTimeFormat.New("invalid startTime"),
+		return apperrors.MarkAsAlertable(errors.Wrapf(
+			ErrInvalidTimeFormat,
 			"collect startTime: %s, expected format hh:mm",
 			o.CollectAvailabilityDate.TimeRange.StartTime,
-		)
+		))
 	}
 	if o.CollectAvailabilityDate.TimeRange.EndTime != "" && !timeRegex.MatchString(o.CollectAvailabilityDate.TimeRange.EndTime) {
-		return errorx.Decorate(
-			ErrInvalidTimeFormat.New("invalid endTime"),
+		return apperrors.MarkAsAlertable(errors.Wrapf(
+			ErrInvalidTimeFormat,
 			"collect endTime: %s, expected format hh:mm",
 			o.CollectAvailabilityDate.TimeRange.EndTime,
-		)
+		))
 	}
 
 	return nil

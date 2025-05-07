@@ -2,10 +2,12 @@ package tidbrepository
 
 import (
 	"context"
-	"errors"
+
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
+
+	"github.com/cockroachdb/errors"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
@@ -35,10 +37,9 @@ func NewFindOrganizationByEmail(conn database.ConnectionFactory) FindOrganizatio
 
 		// Manejar casos de error
 		if err != nil {
-			// Si no se encuentra, retornar un error específico
+
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return domain.Organization{}, ErrOrganizationNotFound.
-					New("organization with email not found: %v", err)
+				return domain.Organization{}, errors.Wrap(ErrOrganizationNotFound, "organization with email not found")
 			}
 
 			// Retornar cualquier otro error

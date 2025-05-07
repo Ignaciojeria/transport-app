@@ -1,10 +1,8 @@
 package tidbrepository
 
-import "github.com/joomcode/errorx"
+import "github.com/cockroachdb/errors"
 
-// Namespace y clases de error específicos para organizaciones
 var (
-	organizationErrorNamespace = errorx.NewNamespace("organization")
-	ErrOrganizationNotFound    = organizationErrorNamespace.NewType("not_found")
-	ErrOrganizationDatabase    = organizationErrorNamespace.NewType("database_error")
+	ErrOrganizationNotFound = errors.New("organization not found")
+	ErrOrganizationDatabase = errors.New("organization database error")
 )
