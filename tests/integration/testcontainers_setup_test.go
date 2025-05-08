@@ -9,15 +9,13 @@ import (
 	"os"
 	"testing"
 	"time"
-	"transport-app/app/adapter/out/tidbrepository"
-	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/database"
+	"transport-app/app/shared/infrastructure/gcppubsub"
 
+	"cloud.google.com/go/pubsub"
 	pubsubtc "github.com/testcontainers/testcontainers-go/modules/gcloud/pubsub"
 
-	"github.com/biter777/countries"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -65,9 +63,10 @@ var organization1 domain.Organization
 var organization2 domain.Organization
 var pubsubContainer *pubsubtc.Container
 
-var noTablesContainerConnection database.ConnectionFactory
-var noTablesMigrationContainer *tcpostgres.PostgresContainer
+const TRANSPORT_APP_TOPIC = "transport-app-events"
+const ORDER_SUBMITTED_SUBSCRIPTION = "transport-app-events-order-submitted"
 
+var noTablesContainerConnection database.ConnectionFactory
 var _ = Describe("TidbRepository", func() {
 	It("dummy test", func() {
 		Expect(true).To(BeTrue())
@@ -79,7 +78,7 @@ var _ = BeforeSuite(func() {
 	dbUser := "user"
 	dbPassword := "password"
 
-	postgresContainer, err := tcpostgres.Run(ctx,
+	container, err := tcpostgres.Run(ctx,
 		"postgres:16-alpine",
 		tcpostgres.WithDatabase(dbName),
 		tcpostgres.WithUsername(dbUser),
@@ -90,12 +89,10 @@ var _ = BeforeSuite(func() {
 				WithStartupTimeout(5*time.Second)),
 	)
 	Expect(err).ToNot(HaveOccurred())
-	container = postgresContainer
 
 	// Obtener host y puerto del contenedor
 	host, err := container.Host(ctx)
 	Expect(err).ToNot(HaveOccurred())
-
 	pubsubContainer, err = pubsubtc.Run(
 		ctx,
 		"gcr.io/google.com/cloudsdktool/cloud-sdk:367.0.0-emulators",
@@ -112,23 +109,12 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 	os.Setenv("GOOGLE_PROJECT_ID", "test-project")
 	os.Setenv("PUBSUB_EMULATOR_HOST", fmt.Sprintf("%s:%s", pubsubHost, pubsubPort.Port()))
+	os.Setenv("ORDER_SUBMITTED_SUBSCRIPTION", ORDER_SUBMITTED_SUBSCRIPTION)
+	os.Setenv("TRANSPORT_APP_TOPIC", TRANSPORT_APP_TOPIC)
 
 	port, err := container.MappedPort(ctx, "5432")
 	Expect(err).ToNot(HaveOccurred())
 
-	connection, err = database.NewConnectionFactory(
-		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
-		database.NewPostgreSQLConnectionFactory(configuration.DBConfiguration{
-			DB_HOSTNAME:       host,
-			DB_PORT:           port.Port(), // devuelve string
-			DB_SSL_MODE:       "disable",   // SSL deshabilitado para test local
-			DB_NAME:           dbName,
-			DB_USERNAME:       dbUser,
-			DB_PASSWORD:       dbPassword,
-			DB_RUN_MIGRATIONS: "true",
-		}),
-		nil,
-	)
 	os.Setenv("version", "testing")
 	os.Setenv("DB_STRATEGY", "postgresql")
 	os.Setenv("DB_SSL_MODE", "disable")
@@ -138,91 +124,6 @@ var _ = BeforeSuite(func() {
 	os.Setenv("DB_USERNAME", dbUser)
 	os.Setenv("DB_PASSWORD", dbPassword)
 	os.Setenv("DB_RUN_MIGRATIONS", "true")
-	Expect(err).ToNot(HaveOccurred())
-
-	Expect(err).ToNot(HaveOccurred())
-	err = table.NewRunMigrations(connection, configuration.DBConfiguration{
-		DB_RUN_MIGRATIONS: "true",
-	})()
-	Expect(err).ToNot(HaveOccurred())
-
-	// Create test account first
-	err = tidbrepository.NewUpsertAccount(connection)(ctx, domain.Operator{
-		Contact: domain.Contact{
-			PrimaryEmail: "ignaciovl.j@gmail.com",
-		},
-	})
-	Expect(err).ToNot(HaveOccurred())
-
-	// Setup context with country information
-
-	// Create first organization using the new function signature
-	saveOrganization := tidbrepository.NewSaveOrganization(connection)
-
-	// Create organization entity with required fields
-	orgToSave1 := domain.Organization{
-		Country: countries.CL,
-		Name:    "Organization 1",
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: "ignaciovl.j@gmail.com",
-			},
-		},
-	}
-
-	// Save the first organization
-	organization1, err = saveOrganization(ctx, orgToSave1)
-	Expect(err).ToNot(HaveOccurred())
-
-	// Create second organization
-	orgToSave2 := domain.Organization{
-		Country: countries.CL,
-		Name:    "Organization 2",
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: "ignaciovl.j@gmail.com",
-			},
-		},
-	}
-
-	// Save the second organization
-	organization2, err = saveOrganization(ctx, orgToSave2)
-	Expect(err).ToNot(HaveOccurred())
-
-	// No tables container setup (remains unchanged)
-	noTablesContainer, err := tcpostgres.Run(ctx,
-		"postgres:16-alpine",
-		tcpostgres.WithDatabase(dbName),
-		tcpostgres.WithUsername(dbUser),
-		tcpostgres.WithPassword(dbPassword),
-		testcontainers.WithWaitStrategy(
-			wait.ForLog("database system is ready to accept connections").
-				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
-	)
-
-	noTablesMigrationContainer = noTablesContainer
-
-	noTablesHost, err := noTablesMigrationContainer.Host(ctx)
-	Expect(err).ToNot(HaveOccurred())
-
-	noTablesPort, err := noTablesMigrationContainer.MappedPort(ctx, "5432")
-	Expect(err).ToNot(HaveOccurred())
-
-	noTablesContainerConnection, err = database.NewConnectionFactory(
-		configuration.DBConfiguration{DB_STRATEGY: "postgresql"},
-		database.NewPostgreSQLConnectionFactory(configuration.DBConfiguration{
-			DB_HOSTNAME:       noTablesHost,
-			DB_PORT:           noTablesPort.Port(),
-			DB_SSL_MODE:       "disable",
-			DB_NAME:           dbName,
-			DB_USERNAME:       dbUser,
-			DB_PASSWORD:       dbPassword,
-			DB_RUN_MIGRATIONS: "false", // importante: no ejecutar migraciones
-		}),
-		nil,
-	)
-	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
 		if err := ioc.LoadDependencies(); err != nil {
@@ -237,7 +138,7 @@ var _ = BeforeSuite(func() {
 			if err == nil && resp.StatusCode == http.StatusOK {
 				return
 			}
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 		}
 		Fail("application did not start in time")
 	}
@@ -248,17 +149,12 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	ctx := context.Background()
-
 	if container != nil {
 		_ = container.Terminate(ctx)
-	}
-	if noTablesMigrationContainer != nil {
-		_ = noTablesMigrationContainer.Terminate(ctx)
 	}
 	if pubsubContainer != nil {
 		_ = pubsubContainer.Terminate(ctx)
 	}
-
 	os.Exit(0)
 })
 
@@ -274,4 +170,46 @@ func loadRequest(data []byte) (EmbeddedRequest, error) {
 		return EmbeddedRequest{}, fmt.Errorf("error unmarshaling request: %w", err)
 	}
 	return req, nil
+}
+
+func init() {
+	ioc.Registry(SetupPubsubTestResources, gcppubsub.NewClient)
+}
+func SetupPubsubTestResources(client *pubsub.Client) error {
+	ctx := context.Background()
+
+	// Crear el tópico si no existe
+	topic := client.Topic(TRANSPORT_APP_TOPIC)
+	topicExists, err := topic.Exists(ctx)
+	if err != nil {
+		return err
+	}
+	if !topicExists {
+		if _, err := client.CreateTopic(ctx, TRANSPORT_APP_TOPIC); err != nil {
+			return err
+		}
+		log.Printf("✅ Topic %q created\n", TRANSPORT_APP_TOPIC)
+	} else {
+		log.Printf("ℹ️ Topic %q already exists\n", TRANSPORT_APP_TOPIC)
+	}
+
+	// Crear la suscripción si no existe
+	sub := client.Subscription(ORDER_SUBMITTED_SUBSCRIPTION)
+	subExists, err := sub.Exists(ctx)
+	if err != nil {
+		return err
+	}
+	if !subExists {
+		_, err := client.CreateSubscription(ctx, ORDER_SUBMITTED_SUBSCRIPTION, pubsub.SubscriptionConfig{
+			Topic: topic,
+		})
+		if err != nil {
+			return err
+		}
+		log.Printf("✅ Subscription %q created\n", ORDER_SUBMITTED_SUBSCRIPTION)
+	} else {
+		log.Printf("ℹ️ Subscription %q already exists\n", ORDER_SUBMITTED_SUBSCRIPTION)
+	}
+
+	return nil
 }

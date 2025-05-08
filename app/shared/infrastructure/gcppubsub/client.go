@@ -1,9 +1,9 @@
 package gcppubsub
 
 import (
-	"transport-app/app/shared/configuration"
 	"context"
 	"errors"
+	"transport-app/app/shared/configuration"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"

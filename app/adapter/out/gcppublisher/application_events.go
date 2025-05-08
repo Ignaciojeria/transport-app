@@ -24,7 +24,7 @@ func init() {
 func NewApplicationEvents(
 	c *pubsub.Client,
 	conf configuration.Conf) ApplicationEvents {
-	topicName := conf.OUTBOX_TOPIC_NAME
+	topicName := conf.TRANSPORT_APP_TOPIC
 	topic := c.Topic(topicName)
 	return func(ctx context.Context, outbox domain.Outbox) error {
 		msg := &pubsub.Message{

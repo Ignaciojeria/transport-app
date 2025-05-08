@@ -24,6 +24,6 @@ func NewRegister(register firebaseauth.Register, upsertAccount tidbrepository.Up
 		if err != nil {
 			return err
 		}
-		return register(ctx, input)
+		return nil
 	}
 }
