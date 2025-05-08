@@ -1,6 +1,9 @@
 package table
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
 	"time"
 	"transport-app/app/domain"
 
@@ -60,22 +63,39 @@ type Order struct {
 
 	SequenceNumber *int `gorm:"default:null"`
 
-	ExtraFields map[string]string `gorm:"type:json"`
+	ExtraFields JSONMap `gorm:"type:json"`
 
 	JSONPlannedData JSONPlannedData `gorm:"type:json"`
 
 	Packages []Package `gorm:"-"`
 
-	AddressLine2                      string        `gorm:"default:null"`
-	CollectAvailabilityDate           *time.Time    `gorm:"type:date;default:null"`
-	CollectAvailabilityTimeRangeStart string        `gorm:"default:null"`
-	CollectAvailabilityTimeRangeEnd   string        `gorm:"default:null"`
-	PromisedDateRangeStart            *time.Time    `gorm:"type:date;default:null"`
-	PromisedDateRangeEnd              *time.Time    `gorm:"type:date;default:null"`
-	PromisedTimeRangeStart            string        `gorm:"default:null"`
-	PromisedTimeRangeEnd              string        `gorm:"default:null"`
-	ServiceCategory                   string        `gorm:"default:null"`
-	TransportRequirements             JSONReference `gorm:"type:json"`
+	AddressLine2                      string     `gorm:"default:null"`
+	CollectAvailabilityDate           *time.Time `gorm:"type:date;default:null"`
+	CollectAvailabilityTimeRangeStart string     `gorm:"default:null"`
+	CollectAvailabilityTimeRangeEnd   string     `gorm:"default:null"`
+	PromisedDateRangeStart            *time.Time `gorm:"type:date;default:null"`
+	PromisedDateRangeEnd              *time.Time `gorm:"type:date;default:null"`
+	PromisedTimeRangeStart            string     `gorm:"default:null"`
+	PromisedTimeRangeEnd              string     `gorm:"default:null"`
+	ServiceCategory                   string     `gorm:"default:null"`
+}
+
+type JSONMap map[string]string
+
+func (m JSONMap) Value() (driver.Value, error) {
+	return json.Marshal(m)
+}
+
+func (m *JSONMap) Scan(value interface{}) error {
+	if value == nil {
+		*m = JSONMap{}
+		return nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return fmt.Errorf("expected []byte for JSONMap, got %T", value)
+	}
+	return json.Unmarshal(bytes, m)
 }
 
 func (o Order) Map() domain.Order {
@@ -117,9 +137,6 @@ func (o Order) Map() domain.Order {
 			EndTime:   o.PromisedTimeRangeEnd,
 		},
 	}
-
-	// Mapear requisitos de transporte
-	order.TransportRequirements = o.TransportRequirements.Map()
 
 	// Mapear items
 

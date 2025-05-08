@@ -85,8 +85,7 @@ var _ = Describe("Order UpdateIfChanged", func() {
 					},
 				},
 			},
-			References:            []Reference{{Type: "X", Value: "1"}},
-			TransportRequirements: []Reference{{Type: "TEMP", Value: "COND"}},
+			References: []Reference{{Type: "X", Value: "1"}},
 		}
 
 		_, changed := Order{}.UpdateIfChanged(updated)

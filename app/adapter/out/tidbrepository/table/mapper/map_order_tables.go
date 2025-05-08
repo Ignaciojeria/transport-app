@@ -27,7 +27,6 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID(ctx).String(),
 		ExtraFields:               order.ExtraFields,
 
-		//OrderReferences:      mapReferencesToTable(order.References),
 		DeliveryInstructions: order.DeliveryInstructions,
 
 		CollectAvailabilityDate:           safePtrTime(order.CollectAvailabilityDate.Date),
@@ -38,8 +37,6 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		PromisedDateRangeEnd:              safePtrTime(order.PromisedDate.DateRange.EndDate),
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
-		TransportRequirements:             mapTransportRequirementsToTable(order.TransportRequirements),
-		//Packages:                          MapPackagesToTable(ctx, order.Packages),
 	}
 	return tbl
 }
@@ -138,18 +135,6 @@ func MapPackageToTable(ctx context.Context, pkg domain.Package, referenceId stri
 		},
 		JSONItems: mapItemsToTable(pkg.Items),
 	}
-}
-
-func mapTransportRequirementsToTable(requirements []domain.Reference) table.JSONReference {
-	// Convertir los requisitos a JSONReference
-	var jsonReference table.JSONReference
-	for _, req := range requirements {
-		jsonReference = append(jsonReference, table.Reference{
-			Type:  req.Type,
-			Value: req.Value,
-		})
-	}
-	return jsonReference
 }
 
 func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders {

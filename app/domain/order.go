@@ -25,7 +25,11 @@ type Order struct {
 	PromisedDate            PromisedDate
 	UnassignedReason        string
 	DeliveryInstructions    string
-	TransportRequirements   []Reference
+
+	GroupBy struct {
+		Type  string
+		Value string
+	}
 }
 
 func (o Order) DocID(ctx context.Context) DocumentID {
@@ -47,11 +51,6 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 
 	if len(newOrder.Packages) > 0 {
 		o.Packages = newOrder.Packages
-		changed = true
-	}
-
-	if len(newOrder.TransportRequirements) > 0 {
-		o.TransportRequirements = newOrder.TransportRequirements
 		changed = true
 	}
 

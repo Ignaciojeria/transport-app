@@ -42,7 +42,9 @@ func newOrderSubmitted(
 		m.Ack()
 		return http.StatusOK, nil
 	}
+
 	go sm.WithMessageProcessor(messageProcessor).
 		Start(subscriptionRef)
+
 	return messageProcessor
 }

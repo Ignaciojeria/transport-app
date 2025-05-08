@@ -27,9 +27,10 @@ func MapPackagesToDomain(packages []struct {
 			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
 		Skills []struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
-		}
+			Type        string `json:"type"`
+			Value       string `json:"value"`
+			Description string `json:"description"`
+		} `json:"skills"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
@@ -41,6 +42,10 @@ func MapPackagesToDomain(packages []struct {
 		} `json:"weight"`
 	} `json:"items"`
 	Lpn    string `json:"lpn"`
+	Labels []struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"labels"`
 	Weight struct {
 		Unit  string  `json:"unit"`
 		Value float64 `json:"value"`
@@ -94,8 +99,9 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
 		Skills []struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
+			Type        string `json:"type"`
+			Value       string `json:"value"`
+			Description string `json:"description"`
 		} `json:"skills"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber"`
@@ -137,8 +143,9 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
 			Skills []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
+				Type        string `json:"type"`
+				Value       string `json:"value"`
+				Description string `json:"description"`
 			} `json:"skills"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber"`
@@ -182,8 +189,9 @@ func MapPackagesFromDomain(packages []domain.Package) []struct {
 					UnitValue float64 `json:"unitValue"`
 				} `json:"insurance"`
 				Skills []struct {
-					Type  string `json:"type"`
-					Value string `json:"value"`
+					Type        string `json:"type"`
+					Value       string `json:"value"`
+					Description string `json:"description"`
 				} `json:"skills"`
 				Quantity struct {
 					QuantityNumber int    `json:"quantityNumber"`

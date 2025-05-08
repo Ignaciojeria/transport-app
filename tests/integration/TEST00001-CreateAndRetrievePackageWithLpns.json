@@ -17,13 +17,21 @@
             "addressInfo": {
                 "addressLine1": "string24",
                 "addressLine2": "string24",
-                "additionalContactMethods": [
-                    {
-                        "type": "phone2",
-                        "value": "+123456"
-                    }
-                ],
                 "contact": {
+                    "additionalContactMethods": [
+                        {
+                            "type": "secondary_phone",
+                            "value": "+56999999999"
+                        },
+                        {
+                            "type": "whatsapp",
+                            "value": "+56911111111"
+                        },
+                        {
+                            "type": "telegram",
+                            "value": "@usuario_telegram"
+                        }
+                    ],
                     "documents": [
                         {
                             "type": "string243",
@@ -108,7 +116,23 @@
                             "currency": "CLP",
                             "unitValue": 100
                         },
-                        "logisticCondition": "string24",
+                        "skills": [
+                            {
+                                "type": "temperature_range",
+                                "value": "2-8°C",
+                                "description": "Maintain this temperature range during transport"
+                            },
+                            {
+                                "type": "handling_material",
+                                "value": "fragil",
+                                "description": "Requires careful handling due to fragile content"
+                            },
+                            {
+                                "type": "legal_requirement",
+                                "value": "requires_age_verification",
+                                "description": "Transporter must verify the recipient's ID due to alcohol content"
+                            }
+                        ],
                         "quantity": {
                             "quantityNumber": 1,
                             "quantityUnit": "C/U"
@@ -119,7 +143,17 @@
                         }
                     }
                 ],
-                "lpn": "string246",
+                "labels": [
+                    {
+                        "type": "soc",
+                        "value": "1400000123456"
+                    },
+                    {
+                        "type": "lastDo",
+                        "value": "1200000123456"
+                    }
+                ],
+                "lpn": "label:1400000123456",
                 "weight": {
                     "unit": "string24",
                     "value": 10
@@ -149,13 +183,7 @@
         ],
         "extraFields": {
             "destinationPoliticalAreaId": "uuid"
-        },
-        "transportRequirements": [
-            {
-                "type": "string24",
-                "value": "string24"
-            }
-        ]
+        }
     }
 }
 

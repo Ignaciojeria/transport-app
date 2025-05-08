@@ -13,7 +13,7 @@ func MapNodeInfoToDomain(nodeInfo struct {
 	AddressLine1 string `json:"addressLine1"`
 	AddressLine2 string `json:"addressLine2"`
 	Contact      struct {
-		AdditionalContactMethods struct {
+		AdditionalContactMethods []struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"additionalContactMethods"`

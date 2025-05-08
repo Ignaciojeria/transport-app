@@ -108,8 +108,9 @@ func safeTime(t *time.Time) time.Time {
 type Items struct {
 	Sku    string `gorm:"not null" json:"sku"`
 	Skills []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
+		Type        string `json:"type"`
+		Value       string `json:"value"`
+		Description string `json:"description"`
 	} `gorm:"default:null" json:"skills"`
 	QuantityNumber int            `gorm:"not null" json:"quantity_number"`
 	QuantityUnit   string         `gorm:"not null" json:"quantity_unit"`

@@ -15,9 +15,10 @@ func MapItemsToDomain(items []struct {
 		UnitValue float64 `json:"unitValue"`
 	} `json:"insurance"`
 	Skills []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	}
+		Type        string `json:"type"`
+		Value       string `json:"value"`
+		Description string `json:"description"`
+	} `json:"skills"`
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber"`
 		QuantityUnit   string `json:"quantityUnit"`
@@ -70,8 +71,9 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		UnitValue float64 `json:"unitValue"`
 	} `json:"insurance"`
 	Skills []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
+		Type        string `json:"type"`
+		Value       string `json:"value"`
+		Description string `json:"description"`
 	} `json:"skills"`
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber"`
@@ -96,8 +98,9 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
 		Skills []struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
+			Type        string `json:"type"`
+			Value       string `json:"value"`
+			Description string `json:"description"`
 		} `json:"skills"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber"`
@@ -124,8 +127,9 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
 			Skills []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
+				Type        string `json:"type"`
+				Value       string `json:"value"`
+				Description string `json:"description"`
 			} `json:"skills"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber"`

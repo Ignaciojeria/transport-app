@@ -31,6 +31,10 @@ func newGoogleGeocoding(
 			return point, nil
 		}
 
+		if c == nil {
+			return ai.Location, nil
+		}
+
 		// 2. Geocodificar si no está en la BD
 		fullAddress := buildFullAddress(ctx, ai)
 		req := &maps.GeocodingRequest{

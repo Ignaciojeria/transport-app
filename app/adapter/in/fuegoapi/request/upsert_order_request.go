@@ -7,8 +7,12 @@ import (
 )
 
 type UpsertOrderRequest struct {
-	ReferenceID             string            `json:"referenceID" validate:"required"`
-	ExtraFields             map[string]string `json:"extraFields"`
+	ReferenceID string            `json:"referenceID" validate:"required"`
+	ExtraFields map[string]string `json:"extraFields"`
+	GroupBy     struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"groupBy"`
 	CollectAvailabilityDate struct {
 		Date      string `json:"date"`
 		TimeRange struct {
@@ -21,7 +25,7 @@ type UpsertOrderRequest struct {
 			AddressLine1 string `json:"addressLine1"`
 			AddressLine2 string `json:"addressLine2"`
 			Contact      struct {
-				AdditionalContactMethods struct {
+				AdditionalContactMethods []struct {
 					Type  string `json:"type"`
 					Value string `json:"value"`
 				} `json:"additionalContactMethods"`
@@ -57,7 +61,7 @@ type UpsertOrderRequest struct {
 			AddressLine1 string `json:"addressLine1"`
 			AddressLine2 string `json:"addressLine2"`
 			Contact      struct {
-				AdditionalContactMethods struct {
+				AdditionalContactMethods []struct {
 					Type  string `json:"type"`
 					Value string `json:"value"`
 				} `json:"additionalContactMethods"`
@@ -108,9 +112,10 @@ type UpsertOrderRequest struct {
 				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
 			Skills []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			}
+				Type        string `json:"type"`
+				Value       string `json:"value"`
+				Description string `json:"description"`
+			} `json:"skills"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
@@ -122,6 +127,10 @@ type UpsertOrderRequest struct {
 			} `json:"weight"`
 		} `json:"items"`
 		Lpn    string `json:"lpn"`
+		Labels []struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"labels"`
 		Weight struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
@@ -142,10 +151,6 @@ type UpsertOrderRequest struct {
 		Type  string `json:"type"`
 		Value string `json:"value"`
 	} `json:"references"`
-	TransportRequirements []struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	} `json:"transportRequirements"`
 }
 
 // Map convierte el request a un objeto de dominio Order
@@ -160,7 +165,6 @@ func (req UpsertOrderRequest) Map(ctx context.Context) domain.Order {
 		CollectAvailabilityDate: mapper.MapCollectAvailabilityDateToDomain(req.CollectAvailabilityDate),
 		PromisedDate:            mapper.MapPromisedDateToDomain(req.PromisedDate),
 		DeliveryInstructions:    req.Destination.DeliveryInstructions,
-		TransportRequirements:   mapper.MapReferencesToDomain(req.TransportRequirements),
 		ExtraFields:             req.ExtraFields,
 	}
 	order.Headers.SetFromContext(ctx)
