@@ -37,13 +37,21 @@ jobs:
 
       - name: Run Ginkgo tests with Testcontainers
         run: |
-          go install github.com/onsi/ginkgo/v2/ginkgo@latest
-          ginkgo -r \
+             go install github.com/onsi/ginkgo/v2/ginkgo@latest
+             ginkgo -r ./tests/unit \
+             --trace \
+             --fail-on-pending \
+             --randomize-all \
+             --cover \
+             --coverpkg=./app/... \
+             --coverprofile=coverage.out
+
+      - name: Run integration tests
+        run: |
+          ginkgo -r ./tests/integration \
             --trace \
             --fail-on-pending \
-            --randomize-all \
-            --cover \
-            --coverprofile=coverage.out
+            --randomize-all
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
