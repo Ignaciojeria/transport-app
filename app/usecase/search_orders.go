@@ -8,7 +8,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type SearchOrders func(ctx context.Context, input domain.OrderSearchFilters) ([]domain.Order, error)
+type SearchOrders func(ctx context.Context, input domain.OrderFilterInput) (domain.OrderSearchResult, error)
 
 func init() {
 	ioc.Registry(
@@ -17,7 +17,7 @@ func init() {
 }
 
 func NewSearchOrders(search tidbrepository.SearchOrders) SearchOrders {
-	return func(ctx context.Context, input domain.OrderSearchFilters) ([]domain.Order, error) {
+	return func(ctx context.Context, input domain.OrderFilterInput) (domain.OrderSearchResult, error) {
 		return search(ctx, input)
 	}
 }

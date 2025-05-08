@@ -23,6 +23,7 @@ require (
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.37.0
+	github.com/testcontainers/testcontainers-go/modules/gcloud v0.37.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.36.0
 	github.com/valkey-io/valkey-go v1.0.57
 	github.com/vektah/gqlparser/v2 v2.5.25
@@ -155,7 +156,6 @@ require (
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
-	github.com/testcontainers/testcontainers-go/modules/gcloud v0.37.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect

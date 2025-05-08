@@ -2,15 +2,185 @@
 
 package model
 
+type AddressInfo struct {
+	AddressLine1 string   `json:"addressLine1"`
+	AddressLine2 string   `json:"addressLine2"`
+	Contact      *Contact `json:"contact"`
+	District     string   `json:"district"`
+	Latitude     float64  `json:"latitude"`
+	Longitude    float64  `json:"longitude"`
+	Province     string   `json:"province"`
+	State        string   `json:"state"`
+	TimeZone     string   `json:"timeZone"`
+	ZipCode      string   `json:"zipCode"`
+}
+
+type CollectAvailabilityDate struct {
+	Date      string     `json:"date"`
+	TimeRange *TimeRange `json:"timeRange"`
+}
+
+type Contact struct {
+	AdditionalContactMethods []*ContactMethod `json:"additionalContactMethods,omitempty"`
+	Documents                []*Document      `json:"documents,omitempty"`
+	Email                    string           `json:"email"`
+	FullName                 string           `json:"fullName"`
+	NationalID               string           `json:"nationalID"`
+	Phone                    string           `json:"phone"`
+}
+
+type ContactMethod struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type DateRange struct {
+	StartDate string `json:"startDate"`
+	EndDate   string `json:"endDate"`
+}
+
+type Dimension struct {
+	Length int    `json:"length"`
+	Height int    `json:"height"`
+	Width  int    `json:"width"`
+	Unit   string `json:"unit"`
+}
+
+type Document struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type ExtraFields struct {
+	DestinationPoliticalAreaID string `json:"destinationPoliticalAreaId"`
+}
+
+type Insurance struct {
+	Currency  string `json:"currency"`
+	UnitValue int    `json:"unitValue"`
+}
+
+type Item struct {
+	Sku         string     `json:"sku"`
+	Description string     `json:"description"`
+	Dimensions  *Dimension `json:"dimensions"`
+	Insurance   *Insurance `json:"insurance"`
+	Skills      []*Skill   `json:"skills,omitempty"`
+	Quantity    *Quantity  `json:"quantity"`
+	Weight      *Weight    `json:"weight"`
+}
+
+type Label struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type Location struct {
+	AddressInfo          *AddressInfo `json:"addressInfo"`
+	DeliveryInstructions *string      `json:"deliveryInstructions,omitempty"`
+	NodeInfo             *NodeInfo    `json:"nodeInfo"`
+}
+
 type Node struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
 	Done bool   `json:"done"`
 }
 
-type Order struct {
+type NodeInfo struct {
 	ReferenceID string `json:"referenceId"`
+	Name        string `json:"name"`
+}
+
+type Order struct {
+	ReferenceID             string                   `json:"referenceID"`
+	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate"`
+	Destination             *Location                `json:"destination"`
+	Origin                  *Location                `json:"origin"`
+	OrderType               *OrderType               `json:"orderType"`
+	Packages                []*Package               `json:"packages"`
+	PromisedDate            *PromisedDate            `json:"promisedDate"`
+	References              []*Reference             `json:"references,omitempty"`
+	ExtraFields             *ExtraFields             `json:"extraFields"`
+}
+
+type OrderConnection struct {
+	Edges    []*OrderEdge `json:"edges"`
+	PageInfo *PageInfo    `json:"pageInfo"`
+}
+
+type OrderEdge struct {
+	Cursor string `json:"cursor"`
+	Node   *Order `json:"node"`
+}
+
+type OrderFilterInput struct {
+	ReferenceIds   []string `json:"referenceIds,omitempty"`
+	ReferenceType  *string  `json:"referenceType,omitempty"`
+	ReferenceValue *string  `json:"referenceValue,omitempty"`
+	Lpns           []string `json:"lpns,omitempty"`
+	GroupBy        []string `json:"groupBy,omitempty"`
+	LabelType      *string  `json:"labelType,omitempty"`
+	LabelValue     *string  `json:"labelValue,omitempty"`
+	Commerces      []string `json:"commerces,omitempty"`
+	Consumers      []string `json:"consumers,omitempty"`
+}
+
+type OrderPagination struct {
+	First *int    `json:"first,omitempty"`
+	After *string `json:"after,omitempty"`
+}
+
+type OrderType struct {
+	Type        string `json:"type"`
+	Description string `json:"description"`
+}
+
+type Package struct {
+	Dimensions *Dimension `json:"dimensions"`
+	Insurance  *Insurance `json:"insurance"`
+	Items      []*Item    `json:"items"`
+	Labels     []*Label   `json:"labels,omitempty"`
+	Lpn        string     `json:"lpn"`
+	Weight     *Weight    `json:"weight"`
+}
+
+type PageInfo struct {
+	HasNextPage bool   `json:"hasNextPage"`
+	EndCursor   string `json:"endCursor"`
+}
+
+type PromisedDate struct {
+	DateRange       *DateRange `json:"dateRange"`
+	ServiceCategory string     `json:"serviceCategory"`
+	TimeRange       *TimeRange `json:"timeRange"`
+}
+
+type Quantity struct {
+	QuantityNumber int    `json:"quantityNumber"`
+	QuantityUnit   string `json:"quantityUnit"`
 }
 
 type Query struct {
+}
+
+type Reference struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type Skill struct {
+	Type        string `json:"type"`
+	Value       string `json:"value"`
+	Description string `json:"description"`
+}
+
+type TimeRange struct {
+	StartTime string `json:"startTime"`
+	EndTime   string `json:"endTime"`
+}
+
+type Weight struct {
+	Unit  string `json:"unit"`
+	Value int    `json:"value"`
 }

@@ -7,23 +7,31 @@ package graph
 import (
 	"context"
 	"fmt"
-	"transport-app/app/adapter/in/graphql/graph/mapper"
+
+	//	"transport-app/app/adapter/in/graphql/graph/mapper"
 	"transport-app/app/adapter/in/graphql/graph/model"
-	"transport-app/app/domain"
 )
 
 // Orders is the resolver for the orders field.
-func (r *queryResolver) Orders(ctx context.Context, referenceIds, lpns []string) ([]*model.Order, error) {
-	fmt.Println("works")
-	domainOrders, err := r.SearchOrders(ctx, domain.OrderSearchFilters{})
+func (r *queryResolver) Orders(ctx context.Context, filter *model.OrderFilterInput, pagination *model.OrderPagination) (*model.OrderConnection, error) {
+	fmt.Println("executing Orders resolver with filter:", filter)
+
+	// Map GraphQL input to domain filters
+	/*domainFilters := mapper.MapOrderFilterInputToDomain(filter)
+
+	// Ejecutar búsqueda con filtros
+	domainOrders, err := r.SearchOrders(ctx, domainFilters)
 	if err != nil {
 		return nil, err
 	}
+
+	// Mapear resultados de dominio a modelo GraphQL
 	var gqlOrders []*model.Order
 	for _, o := range domainOrders {
 		gqlOrders = append(gqlOrders, mapper.MapOrder(o))
 	}
-	return gqlOrders, nil
+	return gqlOrders, nil*/
+	return nil, nil
 }
 
 // Query returns QueryResolver implementation.

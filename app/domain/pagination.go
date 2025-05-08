@@ -1,6 +1,6 @@
 package domain
 
 type Pagination struct {
-	Page int
-	Size int
+	Limit  int
+	Offset int
 }

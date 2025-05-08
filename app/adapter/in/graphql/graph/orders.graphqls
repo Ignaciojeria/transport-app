@@ -1,8 +1,179 @@
-type Order {
+type ContactMethod {
+  type: String!
+  value: String!
+}
+
+type Document {
+  type: String!
+  value: String!
+}
+
+type Contact {
+  additionalContactMethods: [ContactMethod!]
+  documents: [Document!]
+  email: String!
+  fullName: String!
+  nationalID: String!
+  phone: String!
+}
+
+type AddressInfo {
+  addressLine1: String!
+  addressLine2: String!
+  contact: Contact!
+  district: String!
+  latitude: Float!
+  longitude: Float!
+  province: String!
+  state: String!
+  timeZone: String!
+  zipCode: String!
+}
+
+type NodeInfo {
   referenceId: String!
+  name: String!
+}
+
+type Location {
+  addressInfo: AddressInfo!
+  deliveryInstructions: String
+  nodeInfo: NodeInfo!
+}
+
+type TimeRange {
+  startTime: String!
+  endTime: String!
+}
+
+type CollectAvailabilityDate {
+  date: String!
+  timeRange: TimeRange!
+}
+
+type Dimension {
+  length: Int!
+  height: Int!
+  width: Int!
+  unit: String!
+}
+
+type Insurance {
+  currency: String!
+  unitValue: Int!
+}
+
+type Skill {
+  type: String!
+  value: String!
+  description: String!
+}
+
+type Quantity {
+  quantityNumber: Int!
+  quantityUnit: String!
+}
+
+type Weight {
+  unit: String!
+  value: Int!
+}
+
+type Item {
+  sku: String!
+  description: String!
+  dimensions: Dimension!
+  insurance: Insurance!
+  skills: [Skill!]
+  quantity: Quantity!
+  weight: Weight!
+}
+
+type Label {
+  type: String!
+  value: String!
+}
+
+type Package {
+  dimensions: Dimension!
+  insurance: Insurance!
+  items: [Item!]!
+  labels: [Label!]
+  lpn: String!
+  weight: Weight!
+}
+
+type DateRange {
+  startDate: String!
+  endDate: String!
+}
+
+type PromisedDate {
+  dateRange: DateRange!
+  serviceCategory: String!
+  timeRange: TimeRange!
+}
+
+type Reference {
+  type: String!
+  value: String!
+}
+
+type ExtraFields {
+  destinationPoliticalAreaId: String!
+}
+
+type OrderType {
+  type: String!
+  description: String!
+}
+
+type Order {
+  referenceID: String!
+  collectAvailabilityDate: CollectAvailabilityDate!
+  destination: Location!
+  origin: Location!
+  orderType: OrderType!
+  packages: [Package!]!
+  promisedDate: PromisedDate!
+  references: [Reference!]
+  extraFields: ExtraFields!
+}
+
+
+input OrderFilterInput {
+  referenceIds: [String!]
+  referenceType: String
+  referenceValue: String
+  lpns: [String!]
+  groupBy: [String!]
+  labelType: String
+  labelValue: String
+  commerces: [String!]
+  consumers: [String!]
+}
+
+
+input OrderPagination {
+  first: Int
+  after: String
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  endCursor: String!
+}
+
+type OrderConnection {
+  edges: [OrderEdge!]!
+  pageInfo: PageInfo!
+}
+
+type OrderEdge {
+  cursor: String!
+  node: Order!
 }
 
 type Query {
-  orders(lpns: [String!], referenceIds: [String!]): [Order!]!
+  orders(filter: OrderFilterInput, pagination: OrderPagination): OrderConnection!
 }
-
