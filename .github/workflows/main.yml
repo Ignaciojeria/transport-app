@@ -35,7 +35,7 @@ jobs:
         with:
           go-version: '>=1.21'
 
-      - name: Run Ginkgo tests with Testcontainers
+      - name: Run Ginkgo unit tests with coverage
         run: |
           go install github.com/onsi/ginkgo/v2/ginkgo@latest
           ginkgo \
@@ -45,7 +45,7 @@ jobs:
             --cover \
             --coverpkg=./app/... \
             --coverprofile=coverage.out \
-            ./tests/unit
+            ./app/...
 
       - name: Run integration tests
         run: |
