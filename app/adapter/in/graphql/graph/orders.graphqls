@@ -18,7 +18,6 @@ type Contact {
 }
 
 type AddressInfo {
-  addressLine1: String
   addressLine2: String
   contact: Contact
   district: String
