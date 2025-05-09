@@ -1,7 +1,7 @@
 package domain
 
 type OrderSearchResult struct {
-	Orders      []Order
+	Plan        Plan
 	HasNextPage bool
 	EndCursor   *string // opcional si quieres soportar cursor-based
 }

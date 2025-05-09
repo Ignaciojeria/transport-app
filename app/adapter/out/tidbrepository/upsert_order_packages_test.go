@@ -53,34 +53,6 @@ var _ = Describe("UpsertOrderPackages", func() {
 		Expect(count).To(Equal(int64(1)))
 	})
 
-	It("should explode package without LPN into multiple packages", func() {
-		order := domain.Order{
-			ReferenceID: "ORD-NOLPN-001",
-			Headers:     domain.Headers{Commerce: "c1", Consumer: "c2"},
-			Packages: []domain.Package{
-				{
-					Items: []domain.Item{
-						{Sku: "ITEM-1"},
-						{Sku: "ITEM-2"},
-						{Sku: "ITEM-3"},
-					},
-				},
-			},
-		}
-
-		uop := NewUpsertOrderPackages(connection)
-		err := uop(ctx, order)
-		Expect(err).ToNot(HaveOccurred())
-
-		var count int64
-		err = connection.DB.WithContext(ctx).
-			Table("order_packages").
-			Where("order_doc = ?", order.DocID(ctx)).
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(3)))
-	})
-
 	It("should replace old packages with new ones", func() {
 		order := domain.Order{
 			ReferenceID: "ORD-REPLACE-001",

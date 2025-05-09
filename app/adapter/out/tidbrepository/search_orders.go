@@ -4,6 +4,7 @@ import (
 	"context"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
+	"transport-app/app/shared/projection/orders"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -11,15 +12,16 @@ import (
 type SearchOrders func(context.Context, domain.OrderFilterInput) (domain.OrderSearchResult, error)
 
 func init() {
-	ioc.Registry(NewSearchOrders, database.NewConnectionFactory)
+	ioc.Registry(
+		NewSearchOrders,
+		database.NewConnectionFactory,
+		orders.NewProjection)
 }
-func NewSearchOrders(conn database.ConnectionFactory) SearchOrders {
+func NewSearchOrders(conn database.ConnectionFactory, projection orders.Projection) SearchOrders {
 	return func(ctx context.Context, osf domain.OrderFilterInput) (domain.OrderSearchResult, error) {
 		return domain.OrderSearchResult{
-			Orders: []domain.Order{
-				{
-					ReferenceID: "hello world",
-				},
+			Plan: domain.Plan{
+				Routes: []domain.Route{},
 			},
 			HasNextPage: false,
 			EndCursor:   new(string),

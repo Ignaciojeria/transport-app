@@ -371,4 +371,65 @@ var _ = Describe("Order DocID", func() {
 		Expect(order.Validate()).To(Succeed())
 	})
 
+	var _ = Describe("Packages Indexing", func() {
+		It("should assign incremental indices to packages without LPN based on SKU occurrence", func() {
+			packages := Packages{
+				{Lpn: "LPN-1", Items: []Item{{Sku: "SKU-1"}}}, // LPN, no indexing
+				{Lpn: "", Items: []Item{{Sku: "SKU-1"}}},      // First occurrence of SKU-1
+				{Lpn: "", Items: []Item{{Sku: "SKU-2"}}},      // First occurrence of SKU-2
+				{Lpn: "", Items: []Item{{Sku: "SKU-1"}}},      // Second occurrence of SKU-1
+				{Lpn: "", Items: []Item{{Sku: "SKU-2"}}},      // Second occurrence of SKU-2
+				{Lpn: "", Items: []Item{{Sku: "SKU-3"}}},      // First occurrence of SKU-3
+			}
+
+			packages.AssignIndexesIfNoLPN()
+
+			expectations := []int{0, 1, 1, 2, 2, 1} // LPN package has index 0, others are counted by SKU
+
+			for i, pkg := range packages {
+				Expect(pkg.Index).To(Equal(expectations[i]),
+					"package %d with SKU %s should have index %d", i, pkg.Items[0].Sku, expectations[i])
+			}
+		})
+	})
+
+	var _ = Describe("Packages Index Assignment", func() {
+		It("should assign incremental indices to unnamed packages based on sorted SKU groupings", func() {
+			packages := Packages{
+				{
+					Items: []Item{{Sku: "B"}, {Sku: "A"}},
+				},
+				{
+					Items: []Item{{Sku: "A"}, {Sku: "B"}}, // mismo set que el anterior (A,B)
+				},
+				{
+					Items: []Item{{Sku: "C"}, {Sku: "D"}}, // nuevo set (C,D)
+				},
+				{
+					Items: []Item{{Sku: "C"}, {Sku: "D"}}, // igual al anterior
+				},
+				{
+					Items: []Item{{Sku: "D"}, {Sku: "C"}}, // también igual al anterior
+				},
+				{
+					Items: []Item{{Sku: "D"}, {Sku: "B"}}, // también igual al anterior
+				},
+			}
+
+			packages.AssignIndexesIfNoLPN()
+
+			// Primer grupo: A,B
+			Expect(packages[0].Index).To(Equal(1))
+			Expect(packages[1].Index).To(Equal(2))
+
+			// Segundo grupo: C,D
+			Expect(packages[2].Index).To(Equal(1))
+			Expect(packages[3].Index).To(Equal(2))
+			Expect(packages[4].Index).To(Equal(3))
+
+			//Tercero D,B
+			Expect(packages[5].Index).To(Equal(1))
+		})
+	})
+
 })

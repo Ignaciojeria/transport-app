@@ -1,33 +1,42 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"sort"
+)
 
 type Package struct {
 	Lpn        string
 	Dimensions Dimensions
 	Weight     Weight
 	Insurance  Insurance
+	Index      int
+	SkuIndex   string
 	Items      []Item
 }
 
 func (p Package) DocID(ctx context.Context, otherReference string) DocumentID {
-	// Si el LPN existe, usarlo para generar el hash
 	if p.Lpn != "" {
 		return HashByTenant(ctx, p.Lpn)
 	}
 
-	// Si no hay LPN, concatenar las referencias externas con los SKUs de los items
 	var allInputs []string
 
-	// Primero agregamos las referencias externas
+	// Agregar referencia externa
 	allInputs = append(allInputs, otherReference)
 
-	// Luego agregamos los SKUs de los items
-	for _, item := range p.Items {
-		allInputs = append(allInputs, item.Sku)
-	}
+	// Agregar índice del paquete (por posición)
+	allInputs = append(allInputs, fmt.Sprintf("index:%d", p.Index))
 
-	// Generamos el hash con todos los inputs concatenados
+	// Agregar SKUs ordenados
+	skus := make([]string, 0, len(p.Items))
+	for _, item := range p.Items {
+		skus = append(skus, item.Sku)
+	}
+	sort.Strings(skus)
+	allInputs = append(allInputs, skus...)
+
 	return HashByTenant(ctx, allInputs...)
 }
 
@@ -75,6 +84,7 @@ func (p Package) UpdateIfChanged(newPackage Package) (Package, bool) {
 	return p, changed
 }
 
+/*
 func (p *Package) ExplodeIfNoLpn() []Package {
 	// Si el paquete tiene LPN, se considera agrupado y no se descompone
 	if p.Lpn != "" {
@@ -92,3 +102,4 @@ func (p *Package) ExplodeIfNoLpn() []Package {
 	}
 	return exploded
 }
+*/

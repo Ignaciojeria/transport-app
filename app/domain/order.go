@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"regexp"
+	"sort"
+	"strings"
 	"time"
 	"transport-app/app/shared/apperrors"
 
@@ -20,7 +22,7 @@ type Order struct {
 	References              []Reference
 	Origin                  NodeInfo
 	Destination             NodeInfo
-	Packages                []Package
+	Packages                Packages
 	CollectAvailabilityDate CollectAvailabilityDate
 	PromisedDate            PromisedDate
 	UnassignedReason        string
@@ -29,6 +31,32 @@ type Order struct {
 	GroupBy struct {
 		Type  string
 		Value string
+	}
+}
+
+type Packages []Package
+
+func (pkgs *Packages) AssignIndexesIfNoLPN() {
+	groupCounter := make(map[string]int)
+
+	for i := range *pkgs {
+		pkg := &(*pkgs)[i]
+
+		if pkg.Lpn != "" {
+			continue
+		}
+
+		skus := make([]string, 0, len(pkg.Items))
+		for _, item := range pkg.Items {
+			skus = append(skus, item.Sku)
+		}
+
+		sort.Strings(skus)
+		key := strings.Join(skus, ",")
+
+		groupCounter[key]++
+		pkg.Index = groupCounter[key]
+		pkg.SkuIndex = key
 	}
 }
 

@@ -9,12 +9,10 @@ import (
 func MapOrderPackages(ctx context.Context, order domain.Order) []table.OrderPackage {
 	var orderPackages []table.OrderPackage
 	for _, p := range order.Packages {
-		for _, exploded := range p.ExplodeIfNoLpn() {
-			orderPackages = append(orderPackages, table.OrderPackage{
-				OrderDoc:   order.DocID(ctx).String(),
-				PackageDoc: exploded.DocID(ctx, order.ReferenceID.String()).String(),
-			})
-		}
+		orderPackages = append(orderPackages, table.OrderPackage{
+			OrderDoc:   order.DocID(ctx).String(),
+			PackageDoc: p.DocID(ctx, order.ReferenceID.String()).String(),
+		})
 	}
 	return orderPackages
 }

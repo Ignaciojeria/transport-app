@@ -1,6 +1,10 @@
 package orders
 
-import "reflect"
+import (
+	"reflect"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+)
 
 // Field representa un campo específico con métodos para verificación
 type Field struct {
@@ -11,6 +15,14 @@ type Field struct {
 func (f Field) Has(requestedFields map[string]struct{}) bool {
 	_, exists := requestedFields[f.path]
 	return exists
+}
+
+func init() {
+	ioc.Registry(NewProjection)
+}
+
+func NewProjection() Projection {
+	return Projection{}
 }
 
 // Projection representa un conjunto de campos solicitados por el cliente en la query GraphQL.

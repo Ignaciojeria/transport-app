@@ -22,7 +22,7 @@ func NewUpsertPackages(conn database.ConnectionFactory) UpsertPackages {
 		// 1. Expandimos paquetes sin LPN en paquetes individuales
 		var normalized []domain.Package
 		for _, pkg := range pcks {
-			normalized = append(normalized, pkg.ExplodeIfNoLpn()...)
+			normalized = append(normalized, pkg)
 		}
 
 		if len(pcks) == 0 {

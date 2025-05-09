@@ -117,236 +117,66 @@ Cuando se publica un evento (como `orderSubmitted`), los atributos del contexto 
 | `addressInfo.longitude`    | Longitud                          | `-99.1332`                         |
 ---
 
-# 📦 Sistema de Gestión de Paquetes en Órdenes de Transporte
+### 📦 Sistema de Gestión de Paquetes en Órdenes de Transporte
 
-## Estructura de Paquetes
+#### Estructura de Paquetes
 
-La API de órdenes de transporte permite definir paquetes de dos maneras diferentes:
+La API de órdenes de transporte permite definir paquetes de dos maneras:
 
-1. **Paquetes con LPN (License Plate Number)**: Utilizados cuando existe una identificación única para la unidad física de entrega.
-2. **Paquetes sin LPN**: Utilizados cuando los items deben ser tratados como entidades individuales o cuando no se dispone de una identificación de embalaje.
-
-### Ejemplos de Estructuras
-
-#### Paquete con LPN Especificado
-
-```json
-{
-    "dimensions": {"length": 10, "height": 10, "unit": "cm", "width": 10},
-    "insurance": {"currency": "USD", "unitValue": 10},
-    "items": [
-        {
-            "sku": "ITEM-001",
-            "description": "Producto A",
-            "dimensions": {"length": 1, "height": 1, "unit": "cm", "width": 1},
-            "insurance": {"currency": "USD", "unitValue": 100},
-            "logisticCondition": "normal",
-            "quantity": {"quantityNumber": 1, "quantityUnit": "unit"},
-            "weight": {"unit": "kg", "value": 0.5}
-        }
-    ],
-    "lpn": "PKG-12345",
-    "weight": {"unit": "kg", "value": 1}
-}
-```
-
-#### Paquete sin LPN
-
-```json
-{
-    "items": [
-        {
-            "sku": "ITEM-001",
-            "description": "Producto A",
-            "dimensions": {"length": 1, "height": 1, "unit": "cm", "width": 1},
-            "insurance": {"currency": "USD", "unitValue": 100},
-            "logisticCondition": "normal",
-            "quantity": {"quantityNumber": 1, "quantityUnit": "unit"},
-            "weight": {"unit": "kg", "value": 0.5}
-        }
-    ]
-}
-```
-
-## Comportamiento del Sistema
-
-### Manejo de Paquetes con LPN
-
-Cuando un paquete incluye un valor LPN, este valor se utiliza como identificador principal para el paquete. El sistema:
-
-- Utiliza el LPN para generar un identificador único (DocID) para el paquete
-- Permite buscar, actualizar y seguir el paquete específicamente por su LPN
-- Considera el paquete como una unidad física única que contiene todos los items listados
-
-### Manejo de Paquetes sin LPN
-
-Cuando un paquete se envía sin LPN, el sistema:
-
-1. **Generación de identificador**: Genera un identificador único basado en:
-   - La referencia de la orden (`referenceID`)
-   - Los SKUs de los items contenidos en el paquete
-
-2. **Tratamiento lógico**: Considera todos los items como parte de la misma orden, donde:
-   - La orden completa es la unidad principal de entrega
-   - Las agrupaciones de items sin LPN representan conjuntos lógicos sin asumir empaquetado físico específico
-
-3. **Trazabilidad**: Mantiene la trazabilidad a través del identificador generado, asegurando que:
-   - Actualizaciones posteriores afecten al mismo conjunto de items
-   - Se puedan realizar seguimientos coherentes aunque no exista un LPN explícito
-
-4. **Flexibilidad**: Permite adaptarse a diferentes flujos logísticos sin imponer restricciones en el empaquetado físico.
-
-## Consideraciones para el Uso
-
-### Cuándo Usar Paquetes con LPN
-
-- Cuando sus sistemas logísticos asignan identificadores únicos a los paquetes físicos
-- Cuando necesita mantener consistencia con sistemas externos que utilizan LPNs
-- Para seguimiento de alto nivel de unidades de envío específicas
-
-### Cuándo Usar Paquetes sin LPN
-
-- Cuando trabaja con proveedores que no utilizan sistemas de codificación de paquetes
-- Cuando los items se transportan individualmente sin empaquetado conjunto
-- Cuando solo necesita identificar los productos a entregar sin preocuparse por su agrupación física
-
-## Ejemplos de Escenarios
-
-### Escenario 1: Múltiples Productos en un Paquete
-
-Un pedido contiene tres productos diferentes que se embalan juntos:
-
-```json
-{
-    "packages": [
-        {
-            "lpn": "BOX-12345",
-            "items": [
-                {"sku": "PROD-A", "quantity": {"quantityNumber": 2, "quantityUnit": "unit"}},
-                {"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}},
-                {"sku": "PROD-C", "quantity": {"quantityNumber": 3, "quantityUnit": "unit"}}
-            ]
-        }
-    ]
-}
-```
-
-### Escenario 2: Productos Individuales sin Embalaje Común
-
-Un pedido contiene dos productos que se entregan de forma independiente:
-
-```json
-{
-    "packages": [
-        {
-            "items": [
-                {"sku": "PROD-X", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        },
-        {
-            "items": [
-                {"sku": "PROD-Y", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        }
-    ]
-}
-```
-
-## 🎯 Ejemplo de Equivalencia entre Agrupaciones de Items sin LPN
-
-En el sistema, la ausencia de LPN implica que **no existe una unidad de embalaje físico identificable**. Esto permite representar ítems como agrupaciones lógicas, independientemente de cómo estén organizados en el cuerpo de la solicitud.
-
-A continuación se muestran dos formas distintas de estructurar los mismos ítems en una orden, que **son tratadas de forma equivalente** por el sistema.
+* **Paquetes con LPN (License Plate Number)**: identifican físicamente una unidad empaquetada.
+* **Paquetes sin LPN**: representan agrupaciones lógicas de ítems, tratadas como unidades entregables individuales.
 
 ---
 
-#### 📦 Escenario A: Agrupación múltiple sin LPN
+#### 🧠 Generación de Identificador Único (DocID)
+
+* Si el **paquete tiene LPN**, se utiliza dicho valor como clave para generar el `DocID`.
+* Si el **paquete no tiene LPN**, el `DocID` es generado a partir de:
+
+  * La referencia de la orden (`referenceID`),
+  * El listado de SKUs ordenados de sus ítems, y
+  * Un índice (`Index`) para distinguir agrupaciones repetidas de los mismos SKUs.
+
+Este enfoque garantiza que cada paquete sin LPN tenga un identificador único, incluso cuando el mismo conjunto de ítems aparece más de una vez.
+
+---
+
+#### 📦 Semántica de Separación de Paquetes
+
+* **Separar ítems en distintos paquetes (sin LPN)** indica que **cada paquete representa una unidad entregable individual**.
+* Si varios ítems van juntos como una única unidad de entrega, deben estar **dentro de un mismo paquete**.
+
+---
+
+#### Ejemplos
+
+**Paquete con LPN:**
 
 ```json
 {
-    "packages": [
-        {
-            "items": [
-                {"sku": "PROD-A", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}},
-                {"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        },
-        {
-            "items": [
-                {"sku": "PROD-C", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        }
-    ]
+  "lpn": "BOX-12345",
+  "items": [
+    {"sku": "PROD-A", "quantity": {"quantityNumber": 2, "quantityUnit": "unit"}},
+    {"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
+  ]
 }
 ```
 
-#### 📦 Escenario B: Paquetes individuales sin LPN
+**Paquetes sin LPN – Ítems separados como unidades entregables:**
 
 ```json
 {
-    "packages": [
-        {
-            "items": [
-                {"sku": "PROD-A", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        },
-        {
-            "items": [
-                {"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        },
-        {
-            "items": [
-                {"sku": "PROD-C", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        }
-    ]
+  "packages": [
+    {"items": [{"sku": "PROD-A", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}]},
+    {"items": [{"sku": "PROD-B", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}]}
+  ]
 }
 ```
 
-### ✅ Resultado en el sistema
+---
 
-- Ambos escenarios representan los mismos ítems con las mismas cantidades.
-- Ambos omiten el LPN, por lo que no existe una referencia a un paquete físico específico.
-- Ambos son interpretados como una serie de ítems asociados directamente a la orden, no como unidades físicas independientes.
-- El sistema genera identificadores únicos por agrupación, pero todos están ligados al mismo orderReferenceId.
+#### ✅ Resultado del Sistema
 
-### 🧠 Conclusión
-
-- Aunque la estructura visual difiere, el tratamiento lógico y funcional dentro del sistema es el mismo.
-- Lo relevante no es cómo se organizan los items en el payload, sino la ausencia de LPN, que indica que estas agrupaciones no representan una caja o contenedor físico formal.
-- Esto otorga al sistema una gran flexibilidad operativa, permitiendo representar tanto productos individuales como agrupaciones lógicas sin imponer restricciones rígidas de empaquetado.
-
-
-### Escenario 3: Mezcla de Paquetes con y sin LPN
-
-Un pedido incluye tanto productos empaquetados como individuales:
-
-```json
-{
-    "packages": [
-        {
-            "lpn": "BOX-A",
-            "items": [
-                {"sku": "PROD-1", "quantity": {"quantityNumber": 5, "quantityUnit": "unit"}},
-                {"sku": "PROD-2", "quantity": {"quantityNumber": 2, "quantityUnit": "unit"}}
-            ]
-        },
-        {
-            "items": [
-                {"sku": "PROD-3", "quantity": {"quantityNumber": 1, "quantityUnit": "unit"}}
-            ]
-        }
-    ]
-}
-```
-
-## Nota Técnica
-
-El sistema automáticamente genera identificadores de documento (DocID) para los paquetes utilizando una función hash que garantiza la consistencia y unicidad de los identificadores. Para paquetes sin LPN, este identificador se basa en la combinación de la referencia de orden y los SKUs de los items, lo que asegura que:
-
-1. El mismo conjunto de items en la misma orden siempre genere el mismo identificador
-2. Diferentes conjuntos de items o diferentes órdenes generen identificadores distintos
-3. El sistema pueda rastrear y actualizar correctamente los paquetes incluso sin un LPN explícito
-
-Este enfoque proporciona flexibilidad para trabajar con diversos proveedores y escenarios logísticos, manteniendo la integridad y trazabilidad del sistema.
+* El sistema genera un `DocID` para cada paquete (con o sin LPN).
+* Cuando no hay LPN, el identificador se basa en los SKUs, la referencia de orden y un índice incremental si existen duplicados.
+* Cada paquete sin LPN se considera una **unidad de entrega rastreable**.

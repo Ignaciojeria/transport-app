@@ -29,18 +29,16 @@ var _ = Describe("Package", func() {
 			Expect(package1.DocID(ctx1, "REF001")).ToNot(Equal(package1.DocID(ctx2, "REF001")))
 		})
 
-		It("should generate ID based on reference and items when Lpn is empty", func() {
-			// Paquete sin LPN pero con items
+		It("should generate ID based on reference, index and sorted items when Lpn is empty", func() {
 			pkg := Package{
-				Lpn: "",
+				Lpn:   "",
+				Index: 1,
 				Items: []Item{
-					{Sku: "SKU001"},
 					{Sku: "SKU002"},
+					{Sku: "SKU001"},
 				},
 			}
-
-			// Verificar que usa la referencia y los SKUs
-			expectedInputs := []string{"REF001", "SKU001", "SKU002"}
+			expectedInputs := []string{"REF001", "index:1", "SKU001", "SKU002"} // ordenados
 			Expect(pkg.DocID(ctx1, "REF001")).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 		})
 
@@ -109,11 +107,13 @@ var _ = Describe("Package", func() {
 			pkg := Package{
 				Lpn:   "",
 				Items: []Item{},
+				Index: 1,
 			}
 
-			// Solo usa la referencia externa
-			Expect(pkg.DocID(ctx1, "REF001")).To(Equal(HashByTenant(ctx1, "REF001")))
+			expected := HashByTenant(ctx1, "REF001", "index:1")
+			Expect(pkg.DocID(ctx1, "REF001")).To(Equal(expected))
 		})
+
 	})
 
 	Describe("SearchPackageByLpn", func() {
@@ -458,44 +458,44 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should correctly handle packages transitioning from no LPN to having LPN", func() {
-			// Crear un paquete sin LPN
 			originalPackage := Package{
-				Lpn: "",
+				Lpn:   "",
+				Index: 1,
 				Items: []Item{
 					{Sku: "SKU001"},
 					{Sku: "SKU002"},
 				},
 			}
 
-			// Obtener su DocID basado en referencia+SKUs
-			expectedInputs := []string{"REF001", "SKU001", "SKU002"}
+			expectedInputs := []string{"REF001", "index:1", "SKU001", "SKU002"}
 			originalDocID := originalPackage.DocID(ctx1, "REF001")
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 
-			// Actualizar añadiendo un LPN
 			updatedPackage, changed := originalPackage.UpdateIfChanged(Package{
 				Lpn: "NEW-LPN",
 			})
 			Expect(changed).To(BeTrue())
 			Expect(updatedPackage.Lpn).To(Equal("NEW-LPN"))
 
-			// El nuevo DocID debería basarse solo en el LPN
 			updatedDocID := updatedPackage.DocID(ctx1, "REF001")
 			Expect(updatedDocID).ToNot(Equal(originalDocID))
 			Expect(updatedDocID).To(Equal(HashByTenant(ctx1, "NEW-LPN")))
 		})
+
 	})
 
-	It("should generate different IDs if item SKUs are in different order", func() {
+	It("should generate same ID regardless of item SKU order", func() {
 		pkg1 := Package{
-			Lpn: "",
+			Lpn:   "",
+			Index: 1,
 			Items: []Item{
 				{Sku: "SKU001"},
 				{Sku: "SKU002"},
 			},
 		}
 		pkg2 := Package{
-			Lpn: "",
+			Lpn:   "",
+			Index: 1,
 			Items: []Item{
 				{Sku: "SKU002"},
 				{Sku: "SKU001"}, // orden diferente
@@ -505,7 +505,7 @@ var _ = Describe("Package", func() {
 		id1 := pkg1.DocID(ctx1, "REF001")
 		id2 := pkg2.DocID(ctx1, "REF001")
 
-		Expect(id1).ToNot(Equal(id2), "DocID debe depender del orden de los SKUs")
+		Expect(id1).To(Equal(id2), "DocID debe ser igual si los SKUs son los mismos aunque estén en diferente orden")
 	})
 
 })
