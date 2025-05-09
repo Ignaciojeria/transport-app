@@ -3,43 +3,95 @@ package graph
 import (
 	"flag"
 	"strings"
-	"testing"
 	"transport-app/app/shared/projection/orders"
 
 	_ "embed"
 
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
+//go:embed orders.graphqls
+var ordersSchema string
+
 var verbose = flag.Bool("verbose", false, "enable verbose output")
 
-func TestAllProjectionConstantsExistInOrdersSchema(t *testing.T) {
-	schema := loadSchema(t)
+var _ = Describe("GraphQL Schema", func() {
+	var schema *ast.Schema
+	var projectionPaths []string
+	var schemaFields map[string]struct{}
 
-	// Obtener todas las rutas de proyección
-	projectionPaths := orders.GetAllProjectionPaths()
+	BeforeEach(func() {
+		var err error
 
-	// Construir un mapa para verificar la existencia de campos en el esquema
-	schemaFields := buildSchemaFieldsMap(schema)
+		// Cargar el esquema GraphQL
+		schema, err = gqlparser.LoadSchema(&ast.Source{
+			Name:  "orders.graphqls",
+			Input: ordersSchema,
+		})
+		Expect(err).NotTo(HaveOccurred(), "failed to parse schema")
 
-	// Normalizar las rutas de proyección y verificar que existan en el esquema
-	for _, path := range projectionPaths {
-		// Normalizar la ruta (por ejemplo, eliminar el prefijo "edges.node.")
-		normalizedPath := normalizeProjectionPath(path)
+		// Obtener todas las rutas de proyección
+		projectionPaths = orders.GetAllProjectionPaths()
 
-		// Verificar si el campo existe en el esquema
-		if _, exists := schemaFields[normalizedPath]; !exists {
-			t.Errorf("Projection path '%s' (normalized as '%s') does not exist in GraphQL schema",
-				path, normalizedPath)
-		}
-	}
+		// Construir un mapa para verificar la existencia de campos en el esquema
+		schemaFields = buildSchemaFieldsMap(schema)
+	})
 
-	// Opcional: Verificar que todos los campos del esquema tengan una proyección correspondiente
-	if *verbose {
-		checkSchemaFieldsHaveProjections(t, schemaFields, projectionPaths)
-	}
-}
+	Describe("Projections Validation", func() {
+		It("should ensure all projections exist in the GraphQL schema", func() {
+			// Verificar que cada proyección exista en el esquema
+			for _, path := range projectionPaths {
+				// Normalizar la ruta para comparación
+				normalizedPath := normalizeProjectionPath(path)
+
+				// Verificar si el campo existe en el esquema
+				_, exists := schemaFields[normalizedPath]
+
+				// Si verbose está habilitado, mostrar más información
+				if *verbose {
+					if exists {
+						GinkgoWriter.Printf("✓ Projection '%s' exists in schema\n", path)
+					} else {
+						GinkgoWriter.Printf("✗ Projection '%s' (normalized as '%s') does not exist in schema\n",
+							path, normalizedPath)
+					}
+				}
+
+				Expect(exists).To(BeTrue(),
+					"Projection path '%s' (normalized as '%s') does not exist in GraphQL schema",
+					path, normalizedPath)
+			}
+		})
+
+		// Esta prueba es opcional y solo imprime información, no falla si faltan proyecciones
+		It("should report schema fields without projections (informational only)", func() {
+			if !*verbose {
+				Skip("Skipping verbose schema field check. Run with -verbose flag to see details.")
+			}
+
+			// Crear un mapa de rutas de proyección normalizadas para búsqueda rápida
+			normalizedProjections := make(map[string]string)
+			for _, path := range projectionPaths {
+				normalizedProjections[normalizeProjectionPath(path)] = path
+			}
+
+			// Verificar cada campo del esquema
+			missingCount := 0
+			for schemaField := range schemaFields {
+				if _, exists := normalizedProjections[schemaField]; !exists {
+					GinkgoWriter.Printf("Schema field '%s' does not have a corresponding projection\n", schemaField)
+					missingCount++
+				}
+			}
+
+			GinkgoWriter.Printf("Found %d schema fields without corresponding projections\n", missingCount)
+			// No hay expectativa aquí, ya que es solo informativo
+		})
+	})
+})
 
 // normalizeProjectionPath normaliza una ruta de proyección para compararla con el esquema
 func normalizeProjectionPath(path string) string {
@@ -133,37 +185,4 @@ func unwrapType(t *ast.Type) string {
 // isObjectType verifica si un tipo es un objeto o una interfaz
 func isObjectType(typeDef *ast.Definition) bool {
 	return typeDef.Kind == ast.Object || typeDef.Kind == ast.Interface
-}
-
-// checkSchemaFieldsHaveProjections verifica que todos los campos del esquema tengan una proyección
-func checkSchemaFieldsHaveProjections(t *testing.T, schemaFields map[string]struct{}, projectionPaths []string) {
-	// Crear un mapa de rutas de proyección normalizadas para búsqueda rápida
-	normalizedProjections := make(map[string]string)
-	for _, path := range projectionPaths {
-		normalizedProjections[normalizeProjectionPath(path)] = path
-	}
-
-	// Verificar cada campo del esquema
-	for schemaField := range schemaFields {
-		if _, exists := normalizedProjections[schemaField]; !exists {
-			t.Logf("GraphQL schema field '%s' does not have a corresponding projection", schemaField)
-		}
-	}
-}
-
-//go:embed orders.graphqls
-var ordersSchema string
-
-func loadSchema(t *testing.T) *ast.Schema {
-	t.Helper()
-
-	schema, err := gqlparser.LoadSchema(&ast.Source{
-		Name:  "orders.graphqls",
-		Input: ordersSchema,
-	})
-	if err != nil {
-		t.Fatalf("failed to parse schema: %v", err)
-	}
-
-	return schema
 }

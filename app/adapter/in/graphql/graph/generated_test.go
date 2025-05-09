@@ -2,67 +2,85 @@ package graph
 
 import (
 	"os"
-	"strings"
-	"testing"
 	"time"
+
+	_ "embed"
+
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func TestGQLGenWasExecuted(t *testing.T) {
-	// 1. Verificar que existen los archivos generados
-	// Usar rutas relativas desde la ubicación de este test
-	requiredFiles := []string{
-		"generated.go",
-		"model/models_gen.go",
-	}
+var _ = Describe("GraphQL Code Generation", func() {
+	var requiredFiles []string
+	var schemaFile string
+	var schemaModTime time.Time
 
-	for _, file := range requiredFiles {
-		if _, err := os.Stat(file); os.IsNotExist(err) {
-			t.Errorf("Generated file %s does not exist. Run 'go generate ./...' or 'gqlgen generate'", file)
-		}
-	}
-
-	// 2. Verificar que los archivos generados sean más recientes que el schema
-	schemaFile := "orders.graphqls"
-	schemaInfo, err := os.Stat(schemaFile)
-	if err != nil {
-		t.Fatalf("Cannot stat schema file: %v", err)
-	}
-	schemaModTime := schemaInfo.ModTime()
-
-	// Verificar cada archivo generado (sólo si se encontró el archivo)
-	for _, file := range requiredFiles {
-		fileInfo, err := os.Stat(file)
-		if err != nil {
-			// Ya reportamos el error arriba, no lo duplicamos aquí
-			continue
+	BeforeEach(func() {
+		// Lista de archivos generados que deben existir
+		requiredFiles = []string{
+			"generated.go",
+			"model/models_gen.go",
 		}
 
-		// Si el archivo generado es más antiguo que el schema, puede que no se haya regenerado
-		if fileInfo.ModTime().Before(schemaModTime) {
-			t.Errorf("Generated file %s is older than schema (%s vs %s). Run 'go generate ./...' or 'gqlgen generate'",
-				file, fileInfo.ModTime().Format(time.RFC3339), schemaModTime.Format(time.RFC3339))
-		}
-	}
+		// Archivo de esquema GraphQL
+		schemaFile = "orders.graphqls"
+	})
 
-	// 3. Verificar consistencia entre schema y model generado (sólo si existe el archivo)
-	modelFile := "model/models_gen.go"
-	modelContent, err := os.ReadFile(modelFile)
-	if err != nil {
-		t.Logf("Cannot read model file: %v", err)
-		return
-	}
+	Describe("Code Generation Validation", func() {
+		It("should have all required generated files", func() {
+			// Verificar que existen los archivos generados
+			for _, file := range requiredFiles {
+				_, err := os.Stat(file)
+				Expect(err).NotTo(HaveOccurred(),
+					"Generated file %s does not exist. Run 'go generate ./...' or 'gqlgen generate'", file)
+			}
+		})
 
-	// Verificar que existen ciertos tipos críticos en el modelo generado
-	criticalTypes := []string{
-		"type Order struct",
-		"type OrderConnection struct",
-		// Agrega otros tipos importantes aquí
-	}
+		It("should have generated files more recent than schema", func() {
+			// Obtener la información del archivo de esquema
+			schemaInfo, err := os.Stat(schemaFile)
+			Expect(err).NotTo(HaveOccurred(),
+				"Cannot stat schema file: %s", schemaFile)
 
-	modelContentStr := string(modelContent)
-	for _, typeName := range criticalTypes {
-		if !strings.Contains(modelContentStr, typeName) {
-			t.Errorf("Critical type '%s' not found in generated model file. Run 'gqlgen generate'", typeName)
-		}
-	}
-}
+			schemaModTime = schemaInfo.ModTime()
+
+			// Verificar que los archivos generados son más recientes que el esquema
+			for _, file := range requiredFiles {
+				fileInfo, err := os.Stat(file)
+				if err != nil {
+					// Si el archivo no existe, la prueba anterior ya lo detectará
+					continue
+				}
+
+				// Comprobar que el archivo generado es más reciente que el esquema
+				Expect(fileInfo.ModTime()).NotTo(BeTemporally("<", schemaModTime),
+					"Generated file %s is older than schema (%s vs %s). Run 'go generate ./...' or 'gqlgen generate'",
+					file, fileInfo.ModTime().Format(time.RFC3339), schemaModTime.Format(time.RFC3339))
+			}
+		})
+
+		It("should have critical types in the generated model file", func() {
+			// Leer el archivo de modelo generado
+			modelFile := "model/models_gen.go"
+			modelContent, err := os.ReadFile(modelFile)
+			if err != nil {
+				Skip("Cannot read model file: " + err.Error())
+				return
+			}
+
+			// Lista de tipos críticos que deben existir en el modelo generado
+			criticalTypes := []string{
+				"type Order struct",
+				"type OrderConnection struct",
+				// Agrega otros tipos importantes aquí
+			}
+
+			// Verificar que los tipos críticos existen en el archivo
+			modelContentStr := string(modelContent)
+			for _, typeName := range criticalTypes {
+				Expect(modelContentStr).To(ContainSubstring(typeName),
+					"Critical type '%s' not found in generated model file. Run 'gqlgen generate'", typeName)
+			}
+		})
+	})
+})

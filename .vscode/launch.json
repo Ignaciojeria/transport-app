@@ -30,6 +30,14 @@
         "mode": "test",
         "program": "${workspaceFolder}/tests/integration",
         "args": ["-test.v", "-ginkgo.v"]
+      },
+      {
+        "name": "Debug Ginkgo - GraphQL",
+        "type": "go",
+        "request": "launch",
+        "mode": "test",
+        "program": "${workspaceFolder}/app/adapter/in/graphql/graph",
+        "args": ["-test.v", "-ginkgo.v"]
       }
     ]
   }
