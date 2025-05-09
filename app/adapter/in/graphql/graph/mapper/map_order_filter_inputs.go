@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"transport-app/app/adapter/in/graphql/graph/model"
+	"transport-app/app/adapter/in/graphql/graph/normalization"
 	"transport-app/app/domain"
 )
 
@@ -13,6 +14,7 @@ func MapOrderFilterWithPagination(
 	if filter == nil {
 		filter = &model.OrderFilterInput{}
 	}
+
 	return domain.OrderFilterInput{
 		Pagination:           pagination,
 		ReferenceIds:         filter.ReferenceIds,
@@ -25,6 +27,6 @@ func MapOrderFilterWithPagination(
 		Commerces:            filter.Commerces,
 		Consumers:            filter.Consumers,
 		OriginNodeReferences: filter.OriginNodeReferences,
-		RequestedFields:      requestedFields,
+		RequestedFields:      normalization.NormalizeGraphQLFields(requestedFields),
 	}
 }

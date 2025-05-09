@@ -149,9 +149,8 @@ type ComplexityRoot struct {
 	}
 
 	OrderConnection struct {
-		Edges      func(childComplexity int) int
-		PageInfo   func(childComplexity int) int
-		TotalCount func(childComplexity int) int
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
 	}
 
 	OrderEdge struct {
@@ -652,13 +651,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.OrderConnection.PageInfo(childComplexity), true
-
-	case "OrderConnection.totalCount":
-		if e.complexity.OrderConnection.TotalCount == nil {
-			break
-		}
-
-		return e.complexity.OrderConnection.TotalCount(childComplexity), true
 
 	case "OrderEdge.cursor":
 		if e.complexity.OrderEdge.Cursor == nil {
@@ -3856,47 +3848,6 @@ func (ec *executionContext) fieldContext_OrderConnection_pageInfo(_ context.Cont
 	return fc, nil
 }
 
-func (ec *executionContext) _OrderConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.OrderConnection) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_OrderConnection_totalCount(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TotalCount, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_OrderConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "OrderConnection",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _OrderEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.OrderEdge) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_OrderEdge_cursor(ctx, field)
 	if err != nil {
@@ -4810,8 +4761,6 @@ func (ec *executionContext) fieldContext_Query_orders(ctx context.Context, field
 				return ec.fieldContext_OrderConnection_edges(ctx, field)
 			case "pageInfo":
 				return ec.fieldContext_OrderConnection_pageInfo(ctx, field)
-			case "totalCount":
-				return ec.fieldContext_OrderConnection_totalCount(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type OrderConnection", field.Name)
 		},
@@ -8036,8 +7985,6 @@ func (ec *executionContext) _OrderConnection(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "totalCount":
-			out.Values[i] = ec._OrderConnection_totalCount(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

@@ -12,5 +12,5 @@ type OrderFilterInput struct {
 	LabelValue           *string
 	Commerces            []string
 	Consumers            []string
-	RequestedFields      []string
+	RequestedFields      map[string]struct{}
 }

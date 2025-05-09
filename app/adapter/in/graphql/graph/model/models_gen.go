@@ -105,9 +105,8 @@ type Order struct {
 }
 
 type OrderConnection struct {
-	Edges      []*OrderEdge `json:"edges"`
-	PageInfo   *PageInfo    `json:"pageInfo"`
-	TotalCount *int         `json:"totalCount,omitempty"`
+	Edges    []*OrderEdge `json:"edges"`
+	PageInfo *PageInfo    `json:"pageInfo"`
 }
 
 type OrderEdge struct {
