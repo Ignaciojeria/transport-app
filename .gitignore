@@ -5,3 +5,5 @@ key.json
 coverage.html
 coverage.out
 mexico
+gqlgen_test.yml
+.bak

@@ -1,6 +1,7 @@
 package graph
 
 import (
+	_ "embed"
 	"flag"
 	"strings"
 	"transport-app/app/shared/projection/orders"
@@ -8,6 +9,7 @@ import (
 	_ "embed"
 
 	. "github.com/onsi/ginkgo/v2"
+
 	. "github.com/onsi/gomega"
 	"github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
