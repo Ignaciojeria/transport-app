@@ -6,32 +6,127 @@ package graph
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	//	"transport-app/app/adapter/in/graphql/graph/mapper"
+
+	"transport-app/app/adapter/in/graphql/graph/mapper"
 	"transport-app/app/adapter/in/graphql/graph/model"
+	"transport-app/app/domain"
 )
 
 // Orders is the resolver for the orders field.
-func (r *queryResolver) Orders(ctx context.Context, filter *model.OrderFilterInput, pagination *model.OrderPagination) (*model.OrderConnection, error) {
+// Orders es el resolver para el campo orders.
+func (r *queryResolver) Orders(
+	ctx context.Context,
+	filter *model.OrderFilterInput,
+	first *int,
+	after *string,
+	last *int,
+	before *string,
+) (*model.OrderConnection, error) {
 	fmt.Println("executing Orders resolver with filter:", filter)
+	requestedFields := CollectSelectedPaths(ctx)
+	fmt.Println("Requested fields:", requestedFields)
 
-	// Map GraphQL input to domain filters
-	/*domainFilters := mapper.MapOrderFilterInputToDomain(filter)
-
-	// Ejecutar búsqueda con filtros
-	domainOrders, err := r.SearchOrders(ctx, domainFilters)
-	if err != nil {
-		return nil, err
+	// Definir límites
+	limit := 10 // valor por defecto
+	if first != nil {
+		limit = *first
+		if limit > 100 {
+			limit = 100 // límite máximo
+		}
 	}
 
-	// Mapear resultados de dominio a modelo GraphQL
-	var gqlOrders []*model.Order
-	for _, o := range domainOrders {
-		gqlOrders = append(gqlOrders, mapper.MapOrder(o))
+	// Procesar cursor si existe
+	var afterID string
+	if after != nil {
+		decoded, err := base64.StdEncoding.DecodeString(*after)
+		if err != nil {
+			return nil, err
+		}
+		afterID = string(decoded)
 	}
-	return gqlOrders, nil*/
-	return nil, nil
+
+	// En una implementación real, obtendrías datos de tu repositorio
+	// ordersData, err := r.OrderRepository.GetOrders(filter, afterID, limit+1)
+
+	// Por ahora, simulamos datos para demostración
+	// Aquí simulamos obtener limit+1 registros para verificar hasNextPage
+	ordersData := []*model.Order{
+		{
+			ReferenceID: "REF123",
+			Packages: []*model.Package{
+				{
+					Lpn: stringPtr("label:1234567890"),
+				},
+			},
+		},
+	}
+
+	// Verificar si hay más páginas
+	hasNextPage := len(ordersData) > limit
+	if hasNextPage {
+		ordersData = ordersData[:limit] // quitar el elemento extra
+	}
+
+	// Construir edges
+	edges := make([]*model.OrderEdge, len(ordersData))
+	for i, order := range ordersData {
+		// En una aplicación real, usarías un ID único como orderID
+		orderID := strconv.Itoa(i + 1)
+		if afterID != "" {
+			// Si hay un cursor, incrementar el índice basado en él
+			afterIDInt, _ := strconv.Atoi(afterID)
+			orderID = strconv.Itoa(afterIDInt + i + 1)
+		}
+
+		cursor := base64.StdEncoding.EncodeToString([]byte(orderID))
+		edges[i] = &model.OrderEdge{
+			Cursor: cursor,
+			Node:   order,
+		}
+	}
+
+	// Construir pageInfo con todos los campos requeridos
+	var startCursor, endCursor string
+	if len(edges) > 0 {
+		startCursor = edges[0].Cursor
+		endCursor = edges[len(edges)-1].Cursor
+	}
+
+	// Determinar hasPreviousPage
+	// En una implementación real, esto dependería de tu lógica de paginación
+	hasPreviousPage := false
+	if after != nil {
+		hasPreviousPage = true // Si hay un cursor 'after', entonces hay páginas previas
+	}
+
+	pageInfo := &model.PageInfo{
+		HasNextPage:     hasNextPage,
+		HasPreviousPage: hasPreviousPage,
+		StartCursor:     &startCursor, // Ahora usamos la variable
+		EndCursor:       endCursor,
+	}
+
+	r.SearchOrders(ctx, mapper.MapOrderFilterWithPagination(filter, domain.Pagination{
+		First:  first,
+		Last:   last,
+		After:  after,
+		Before: before,
+	}, requestedFields))
+
+	return &model.OrderConnection{
+		Edges:    edges,
+		PageInfo: pageInfo,
+	}, nil
+}
+
+// Helper para crear punteros a string
+func stringPtr(s string) *string {
+	return &s
 }
 
 // Query returns QueryResolver implementation.

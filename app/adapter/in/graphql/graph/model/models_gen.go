@@ -3,82 +3,82 @@
 package model
 
 type AddressInfo struct {
-	AddressLine1 string   `json:"addressLine1"`
-	AddressLine2 string   `json:"addressLine2"`
-	Contact      *Contact `json:"contact"`
-	District     string   `json:"district"`
-	Latitude     float64  `json:"latitude"`
-	Longitude    float64  `json:"longitude"`
-	Province     string   `json:"province"`
-	State        string   `json:"state"`
-	TimeZone     string   `json:"timeZone"`
-	ZipCode      string   `json:"zipCode"`
+	AddressLine1 *string  `json:"addressLine1,omitempty"`
+	AddressLine2 *string  `json:"addressLine2,omitempty"`
+	Contact      *Contact `json:"contact,omitempty"`
+	District     *string  `json:"district,omitempty"`
+	Latitude     *float64 `json:"latitude,omitempty"`
+	Longitude    *float64 `json:"longitude,omitempty"`
+	Province     *string  `json:"province,omitempty"`
+	State        *string  `json:"state,omitempty"`
+	TimeZone     *string  `json:"timeZone,omitempty"`
+	ZipCode      *string  `json:"zipCode,omitempty"`
 }
 
 type CollectAvailabilityDate struct {
-	Date      string     `json:"date"`
-	TimeRange *TimeRange `json:"timeRange"`
+	Date      *string    `json:"date,omitempty"`
+	TimeRange *TimeRange `json:"timeRange,omitempty"`
 }
 
 type Contact struct {
 	AdditionalContactMethods []*ContactMethod `json:"additionalContactMethods,omitempty"`
 	Documents                []*Document      `json:"documents,omitempty"`
-	Email                    string           `json:"email"`
-	FullName                 string           `json:"fullName"`
-	NationalID               string           `json:"nationalID"`
-	Phone                    string           `json:"phone"`
+	Email                    *string          `json:"email,omitempty"`
+	FullName                 *string          `json:"fullName,omitempty"`
+	NationalID               *string          `json:"nationalID,omitempty"`
+	Phone                    *string          `json:"phone,omitempty"`
 }
 
 type ContactMethod struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  *string `json:"type,omitempty"`
+	Value *string `json:"value,omitempty"`
 }
 
 type DateRange struct {
-	StartDate string `json:"startDate"`
-	EndDate   string `json:"endDate"`
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate   *string `json:"endDate,omitempty"`
 }
 
 type Dimension struct {
-	Length int    `json:"length"`
-	Height int    `json:"height"`
-	Width  int    `json:"width"`
-	Unit   string `json:"unit"`
+	Length *int    `json:"length,omitempty"`
+	Height *int    `json:"height,omitempty"`
+	Width  *int    `json:"width,omitempty"`
+	Unit   *string `json:"unit,omitempty"`
 }
 
 type Document struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  *string `json:"type,omitempty"`
+	Value *string `json:"value,omitempty"`
 }
 
 type ExtraFields struct {
-	DestinationPoliticalAreaID string `json:"destinationPoliticalAreaId"`
+	DestinationPoliticalAreaID *string `json:"destinationPoliticalAreaId,omitempty"`
 }
 
 type Insurance struct {
-	Currency  string `json:"currency"`
-	UnitValue int    `json:"unitValue"`
+	Currency  *string `json:"currency,omitempty"`
+	UnitValue *int    `json:"unitValue,omitempty"`
 }
 
 type Item struct {
-	Sku         string     `json:"sku"`
-	Description string     `json:"description"`
-	Dimensions  *Dimension `json:"dimensions"`
-	Insurance   *Insurance `json:"insurance"`
+	Sku         *string    `json:"sku,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	Dimensions  *Dimension `json:"dimensions,omitempty"`
+	Insurance   *Insurance `json:"insurance,omitempty"`
 	Skills      []*Skill   `json:"skills,omitempty"`
-	Quantity    *Quantity  `json:"quantity"`
-	Weight      *Weight    `json:"weight"`
+	Quantity    *Quantity  `json:"quantity,omitempty"`
+	Weight      *Weight    `json:"weight,omitempty"`
 }
 
 type Label struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  *string `json:"type,omitempty"`
+	Value *string `json:"value,omitempty"`
 }
 
 type Location struct {
-	AddressInfo          *AddressInfo `json:"addressInfo"`
+	AddressInfo          *AddressInfo `json:"addressInfo,omitempty"`
 	DeliveryInstructions *string      `json:"deliveryInstructions,omitempty"`
-	NodeInfo             *NodeInfo    `json:"nodeInfo"`
+	NodeInfo             *NodeInfo    `json:"nodeInfo,omitempty"`
 }
 
 type Node struct {
@@ -88,25 +88,26 @@ type Node struct {
 }
 
 type NodeInfo struct {
-	ReferenceID string `json:"referenceId"`
-	Name        string `json:"name"`
+	ReferenceID *string `json:"referenceId,omitempty"`
+	Name        *string `json:"name,omitempty"`
 }
 
 type Order struct {
 	ReferenceID             string                   `json:"referenceID"`
-	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate"`
-	Destination             *Location                `json:"destination"`
-	Origin                  *Location                `json:"origin"`
-	OrderType               *OrderType               `json:"orderType"`
-	Packages                []*Package               `json:"packages"`
-	PromisedDate            *PromisedDate            `json:"promisedDate"`
+	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate,omitempty"`
+	Destination             *Location                `json:"destination,omitempty"`
+	Origin                  *Location                `json:"origin,omitempty"`
+	OrderType               *OrderType               `json:"orderType,omitempty"`
+	Packages                []*Package               `json:"packages,omitempty"`
+	PromisedDate            *PromisedDate            `json:"promisedDate,omitempty"`
 	References              []*Reference             `json:"references,omitempty"`
-	ExtraFields             *ExtraFields             `json:"extraFields"`
+	ExtraFields             *ExtraFields             `json:"extraFields,omitempty"`
 }
 
 type OrderConnection struct {
-	Edges    []*OrderEdge `json:"edges"`
-	PageInfo *PageInfo    `json:"pageInfo"`
+	Edges      []*OrderEdge `json:"edges"`
+	PageInfo   *PageInfo    `json:"pageInfo"`
+	TotalCount *int         `json:"totalCount,omitempty"`
 }
 
 type OrderEdge struct {
@@ -115,72 +116,70 @@ type OrderEdge struct {
 }
 
 type OrderFilterInput struct {
-	ReferenceIds   []string `json:"referenceIds,omitempty"`
-	ReferenceType  *string  `json:"referenceType,omitempty"`
-	ReferenceValue *string  `json:"referenceValue,omitempty"`
-	Lpns           []string `json:"lpns,omitempty"`
-	GroupBy        []string `json:"groupBy,omitempty"`
-	LabelType      *string  `json:"labelType,omitempty"`
-	LabelValue     *string  `json:"labelValue,omitempty"`
-	Commerces      []string `json:"commerces,omitempty"`
-	Consumers      []string `json:"consumers,omitempty"`
-}
-
-type OrderPagination struct {
-	First *int    `json:"first,omitempty"`
-	After *string `json:"after,omitempty"`
+	ReferenceIds         []string `json:"referenceIds,omitempty"`
+	ReferenceType        *string  `json:"referenceType,omitempty"`
+	ReferenceValue       *string  `json:"referenceValue,omitempty"`
+	Lpns                 []string `json:"lpns,omitempty"`
+	OriginNodeReferences []string `json:"originNodeReferences,omitempty"`
+	GroupBy              []string `json:"groupBy,omitempty"`
+	LabelType            *string  `json:"labelType,omitempty"`
+	LabelValue           *string  `json:"labelValue,omitempty"`
+	Commerces            []string `json:"commerces,omitempty"`
+	Consumers            []string `json:"consumers,omitempty"`
 }
 
 type OrderType struct {
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Type        *string `json:"type,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 type Package struct {
-	Dimensions *Dimension `json:"dimensions"`
-	Insurance  *Insurance `json:"insurance"`
-	Items      []*Item    `json:"items"`
+	Dimensions *Dimension `json:"dimensions,omitempty"`
+	Insurance  *Insurance `json:"insurance,omitempty"`
+	Items      []*Item    `json:"items,omitempty"`
 	Labels     []*Label   `json:"labels,omitempty"`
-	Lpn        string     `json:"lpn"`
-	Weight     *Weight    `json:"weight"`
+	Lpn        *string    `json:"lpn,omitempty"`
+	Weight     *Weight    `json:"weight,omitempty"`
 }
 
 type PageInfo struct {
-	HasNextPage bool   `json:"hasNextPage"`
-	EndCursor   string `json:"endCursor"`
+	HasNextPage     bool    `json:"hasNextPage"`
+	HasPreviousPage bool    `json:"hasPreviousPage"`
+	StartCursor     *string `json:"startCursor,omitempty"`
+	EndCursor       string  `json:"endCursor"`
 }
 
 type PromisedDate struct {
-	DateRange       *DateRange `json:"dateRange"`
-	ServiceCategory string     `json:"serviceCategory"`
-	TimeRange       *TimeRange `json:"timeRange"`
+	DateRange       *DateRange `json:"dateRange,omitempty"`
+	ServiceCategory *string    `json:"serviceCategory,omitempty"`
+	TimeRange       *TimeRange `json:"timeRange,omitempty"`
 }
 
 type Quantity struct {
-	QuantityNumber int    `json:"quantityNumber"`
-	QuantityUnit   string `json:"quantityUnit"`
+	QuantityNumber *int    `json:"quantityNumber,omitempty"`
+	QuantityUnit   *string `json:"quantityUnit,omitempty"`
 }
 
 type Query struct {
 }
 
 type Reference struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
+	Type  *string `json:"type,omitempty"`
+	Value *string `json:"value,omitempty"`
 }
 
 type Skill struct {
-	Type        string `json:"type"`
-	Value       string `json:"value"`
-	Description string `json:"description"`
+	Type        *string `json:"type,omitempty"`
+	Value       *string `json:"value,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 type TimeRange struct {
-	StartTime string `json:"startTime"`
-	EndTime   string `json:"endTime"`
+	StartTime *string `json:"startTime,omitempty"`
+	EndTime   *string `json:"endTime,omitempty"`
 }
 
 type Weight struct {
-	Unit  string `json:"unit"`
-	Value int    `json:"value"`
+	Unit  *string `json:"unit,omitempty"`
+	Value *int    `json:"value,omitempty"`
 }

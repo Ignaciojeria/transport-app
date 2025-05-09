@@ -1,151 +1,151 @@
 type ContactMethod {
-  type: String!
-  value: String!
+  type: String
+  value: String
 }
 
 type Document {
-  type: String!
-  value: String!
+  type: String
+  value: String
 }
 
 type Contact {
-  additionalContactMethods: [ContactMethod!]
-  documents: [Document!]
-  email: String!
-  fullName: String!
-  nationalID: String!
-  phone: String!
+  additionalContactMethods: [ContactMethod]
+  documents: [Document]
+  email: String
+  fullName: String
+  nationalID: String
+  phone: String
 }
 
 type AddressInfo {
-  addressLine1: String!
-  addressLine2: String!
-  contact: Contact!
-  district: String!
-  latitude: Float!
-  longitude: Float!
-  province: String!
-  state: String!
-  timeZone: String!
-  zipCode: String!
+  addressLine1: String
+  addressLine2: String
+  contact: Contact
+  district: String
+  latitude: Float
+  longitude: Float
+  province: String
+  state: String
+  timeZone: String
+  zipCode: String
 }
 
 type NodeInfo {
-  referenceId: String!
-  name: String!
+  referenceId: String
+  name: String
 }
 
 type Location {
-  addressInfo: AddressInfo!
+  addressInfo: AddressInfo
   deliveryInstructions: String
-  nodeInfo: NodeInfo!
+  nodeInfo: NodeInfo
 }
 
 type TimeRange {
-  startTime: String!
-  endTime: String!
+  startTime: String
+  endTime: String
 }
 
 type CollectAvailabilityDate {
-  date: String!
-  timeRange: TimeRange!
+  date: String
+  timeRange: TimeRange
 }
 
 type Dimension {
-  length: Int!
-  height: Int!
-  width: Int!
-  unit: String!
+  length: Int
+  height: Int
+  width: Int
+  unit: String
 }
 
 type Insurance {
-  currency: String!
-  unitValue: Int!
+  currency: String
+  unitValue: Int
 }
 
 type Skill {
-  type: String!
-  value: String!
-  description: String!
+  type: String
+  value: String
+  description: String
 }
 
 type Quantity {
-  quantityNumber: Int!
-  quantityUnit: String!
+  quantityNumber: Int
+  quantityUnit: String
 }
 
 type Weight {
-  unit: String!
-  value: Int!
+  unit: String
+  value: Int
 }
 
 type Item {
-  sku: String!
-  description: String!
-  dimensions: Dimension!
-  insurance: Insurance!
-  skills: [Skill!]
-  quantity: Quantity!
-  weight: Weight!
+  sku: String
+  description: String
+  dimensions: Dimension
+  insurance: Insurance
+  skills: [Skill]
+  quantity: Quantity
+  weight: Weight
 }
 
 type Label {
-  type: String!
-  value: String!
+  type: String
+  value: String
 }
 
 type Package {
-  dimensions: Dimension!
-  insurance: Insurance!
-  items: [Item!]!
-  labels: [Label!]
-  lpn: String!
-  weight: Weight!
+  dimensions: Dimension
+  insurance: Insurance
+  items: [Item]
+  labels: [Label]
+  lpn: String
+  weight: Weight
 }
 
 type DateRange {
-  startDate: String!
-  endDate: String!
+  startDate: String
+  endDate: String
 }
 
 type PromisedDate {
-  dateRange: DateRange!
-  serviceCategory: String!
-  timeRange: TimeRange!
+  dateRange: DateRange
+  serviceCategory: String
+  timeRange: TimeRange
 }
 
 type Reference {
-  type: String!
-  value: String!
+  type: String
+  value: String
 }
 
 type ExtraFields {
-  destinationPoliticalAreaId: String!
+  destinationPoliticalAreaId: String
 }
 
 type OrderType {
-  type: String!
-  description: String!
+  type: String
+  description: String
 }
 
 type Order {
   referenceID: String!
-  collectAvailabilityDate: CollectAvailabilityDate!
-  destination: Location!
-  origin: Location!
-  orderType: OrderType!
-  packages: [Package!]!
-  promisedDate: PromisedDate!
-  references: [Reference!]
-  extraFields: ExtraFields!
+  collectAvailabilityDate: CollectAvailabilityDate
+  destination: Location
+  origin: Location
+  orderType: OrderType
+  packages: [Package]
+  promisedDate: PromisedDate
+  references: [Reference]
+  extraFields: ExtraFields
 }
-
 
 input OrderFilterInput {
   referenceIds: [String!]
   referenceType: String
   referenceValue: String
   lpns: [String!]
+  originNodeReferences: [String!]
   groupBy: [String!]
   labelType: String
   labelValue: String
@@ -153,20 +153,18 @@ input OrderFilterInput {
   consumers: [String!]
 }
 
-
-input OrderPagination {
-  first: Int
-  after: String
-}
-
 type PageInfo {
   hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
   endCursor: String!
 }
+
 
 type OrderConnection {
   edges: [OrderEdge!]!
   pageInfo: PageInfo!
+  totalCount: Int
 }
 
 type OrderEdge {
@@ -175,5 +173,11 @@ type OrderEdge {
 }
 
 type Query {
-  orders(filter: OrderFilterInput, pagination: OrderPagination): OrderConnection!
+  orders(
+    filter: OrderFilterInput, 
+    first: Int, 
+    after: String, 
+    last: Int, 
+    before: String
+  ): OrderConnection!
 }
