@@ -67,7 +67,7 @@ type Order struct {
 
 	JSONPlannedData JSONPlannedData `gorm:"type:json"`
 
-	Packages []Package `gorm:"-"`
+	DeliveryUnits []DeliveryUnit `gorm:"-"`
 
 	AddressLine2                      string     `gorm:"default:null"`
 	CollectAvailabilityDate           *time.Time `gorm:"type:date;default:null"`

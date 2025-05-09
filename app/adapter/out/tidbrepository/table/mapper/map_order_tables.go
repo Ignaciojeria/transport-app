@@ -77,10 +77,10 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 	return mapped
 }
 
-func MapPackagesToTable(ctx context.Context, packages []domain.Package) []table.Package {
-	mapped := make([]table.Package, len(packages))
+func MapPackagesToTable(ctx context.Context, packages []domain.Package) []table.DeliveryUnit {
+	mapped := make([]table.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
-		mapped[i] = table.Package{
+		mapped[i] = table.DeliveryUnit{
 			OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 			Lpn:            pkg.Lpn,
 			JSONDimensions: table.JSONDimensions{
@@ -114,8 +114,8 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 	return mapped
 }
 
-func MapPackageToTable(ctx context.Context, pkg domain.Package, referenceId string) table.Package {
-	return table.Package{
+func MapPackageToTable(ctx context.Context, pkg domain.Package, referenceId string) table.DeliveryUnit {
+	return table.DeliveryUnit{
 		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
 		DocumentID:     pkg.DocID(ctx, referenceId).String(),
 		Lpn:            pkg.Lpn,

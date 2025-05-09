@@ -10,13 +10,13 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertPackages func(context.Context, []domain.Package, string) error
+type UpsertDeliveryUnits func(context.Context, []domain.Package, string) error
 
 func init() {
-	ioc.Registry(NewUpsertPackages, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertDeliveryUnits, database.NewConnectionFactory)
 }
 
-func NewUpsertPackages(conn database.ConnectionFactory) UpsertPackages {
+func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits {
 	return func(ctx context.Context, pcks []domain.Package, orderReference string) error {
 
 		// 1. Expandimos paquetes sin LPN en paquetes individuales
@@ -39,9 +39,9 @@ func NewUpsertPackages(conn database.ConnectionFactory) UpsertPackages {
 		}
 
 		// 3. Traemos todos los paquetes existentes con un IN
-		var existingDBPackages []table.Package
+		var existingDBPackages []table.DeliveryUnit
 		err := conn.DB.WithContext(ctx).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id IN ?", docIDs).
 			Find(&existingDBPackages).Error
 		if err != nil {
@@ -49,13 +49,13 @@ func NewUpsertPackages(conn database.ConnectionFactory) UpsertPackages {
 		}
 
 		// 4. Creamos un map de paquetes existentes por documentID
-		existingMap := make(map[string]table.Package)
+		existingMap := make(map[string]table.DeliveryUnit)
 		for _, pkg := range existingDBPackages {
 			existingMap[pkg.DocumentID] = pkg
 		}
 
 		// 5. Preparamos los paquetes a upsertear
-		var DBpackagesToUpsert []table.Package
+		var DBpackagesToUpsert []table.DeliveryUnit
 		for _, docID := range docIDs {
 			domainPkg := docIDToPackage[docID]
 			if existingPkg, found := existingMap[docID]; found {

@@ -20,11 +20,11 @@ func init() {
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
 		tidbrepository.NewUpsertNodeInfo,
-		tidbrepository.NewUpsertPackages,
+		tidbrepository.NewUpsertDeliveryUnits,
 		tidbrepository.NewUpsertOrderType,
 		tidbrepository.NewUpsertOrder,
 		tidbrepository.NewUpsertOrderReferences,
-		tidbrepository.NewUpsertOrderPackages,
+		tidbrepository.NewUpsertOrderDeliveryUnits,
 		geocoding.NewGeocodingStrategy,
 	)
 }
@@ -35,11 +35,11 @@ func NewCreateOrder(
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
-	upsertPackages tidbrepository.UpsertPackages,
+	upsertDeliveryUnits tidbrepository.UpsertDeliveryUnits,
 	upsertOrderType tidbrepository.UpsertOrderType,
 	upsertOrder tidbrepository.UpsertOrder,
 	upsertOrderReferences tidbrepository.UpsertOrderReferences,
-	upsertOrderPackages tidbrepository.UpsertOrderPackages,
+	upsertOrderDeliveryUnits tidbrepository.UpsertOrderDeliveryUnits,
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
@@ -100,7 +100,7 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-			return upsertPackages(group2Ctx, inOrder.Packages,
+			return upsertDeliveryUnits(group2Ctx, inOrder.Packages,
 				inOrder.
 					ReferenceID.
 					String())
@@ -111,7 +111,7 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-			return upsertOrderPackages(group2Ctx, inOrder)
+			return upsertOrderDeliveryUnits(group2Ctx, inOrder)
 		})
 
 		group.Go(func() error {

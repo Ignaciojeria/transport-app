@@ -22,7 +22,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 		bag, _ := baggage.New(orgIDMember, countryMember)
 		ctx = baggage.ContextWithBaggage(context.Background(), bag)
 
-		err := connection.DB.Exec("DELETE FROM order_packages").Error
+		err := connection.DB.Exec("DELETE FROM order_delivery_units").Error
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -40,13 +40,13 @@ var _ = Describe("UpsertOrderPackages", func() {
 			},
 		}
 
-		uop := NewUpsertOrderPackages(connection)
+		uop := NewUpsertOrderDeliveryUnits(connection)
 		err := uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		var count int64
 		err = connection.DB.WithContext(ctx).
-			Table("order_packages").
+			Table("order_delivery_units").
 			Where("order_doc = ?", order.DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -62,7 +62,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			},
 		}
 
-		uop := NewUpsertOrderPackages(connection)
+		uop := NewUpsertOrderDeliveryUnits(connection)
 		err := uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -75,7 +75,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 
 		var count int64
 		err = connection.DB.WithContext(ctx).
-			Table("order_packages").
+			Table("order_delivery_units").
 			Where("order_doc = ?", order.DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -89,7 +89,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			Packages:    []domain.Package{},
 		}
 
-		uop := NewUpsertOrderPackages(connection)
+		uop := NewUpsertOrderDeliveryUnits(connection)
 		err := uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -102,10 +102,10 @@ var _ = Describe("UpsertOrderPackages", func() {
 			},
 		}
 
-		uop := NewUpsertOrderPackages(noTablesContainerConnection)
+		uop := NewUpsertOrderDeliveryUnits(noTablesContainerConnection)
 		err := uop(ctx, order)
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("order_packages"))
+		Expect(err.Error()).To(ContainSubstring("order_delivery_units"))
 	})
 
 	It("should insert placeholder package with a valid docID when no packages are provided", func() {
@@ -115,19 +115,19 @@ var _ = Describe("UpsertOrderPackages", func() {
 			Packages:    []domain.Package{}, // no paquetes
 		}
 
-		uop := NewUpsertOrderPackages(connection)
+		uop := NewUpsertOrderDeliveryUnits(connection)
 		err := uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		var results []table.OrderPackage
+		var results []table.OrderDeliveryUnit
 		err = connection.DB.WithContext(ctx).
-			Table("order_packages").
+			Table("order_delivery_units").
 			Where("order_doc = ?", order.DocID(ctx)).
 			Find(&results).Error
 		Expect(err).ToNot(HaveOccurred())
 
 		Expect(results).To(HaveLen(1))
-		Expect(results[0].PackageDoc).ToNot(BeEmpty()) // docID generado desde pkg vacío + refID
+		Expect(results[0].DeliveryUnitDoc).ToNot(BeEmpty()) // docID generado desde pkg vacío + refID
 	})
 
 })

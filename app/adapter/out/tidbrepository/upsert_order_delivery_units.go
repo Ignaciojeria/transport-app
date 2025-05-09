@@ -11,19 +11,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertOrderPackages func(context.Context, domain.Order) error
+type UpsertOrderDeliveryUnits func(context.Context, domain.Order) error
 
 func init() {
 	ioc.Registry(
-		NewUpsertOrderPackages,
+		NewUpsertOrderDeliveryUnits,
 		database.NewConnectionFactory)
 }
-func NewUpsertOrderPackages(conn database.ConnectionFactory) UpsertOrderPackages {
+func NewUpsertOrderDeliveryUnits(conn database.ConnectionFactory) UpsertOrderDeliveryUnits {
 	return func(ctx context.Context, order domain.Order) error {
-		orderPackages := mapper.MapOrderPackages(ctx, order)
+		orderPackages := mapper.MapOrderDeliveryUnits(ctx, order)
 		return conn.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Where("order_doc = ?", order.DocID(ctx)).
-				Delete(&table.OrderPackage{}).Error; err != nil {
+				Delete(&table.OrderDeliveryUnit{}).Error; err != nil {
 				return err
 			}
 			if len(orderPackages) > 0 {
@@ -34,9 +34,9 @@ func NewUpsertOrderPackages(conn database.ConnectionFactory) UpsertOrderPackages
 
 			if len(orderPackages) == 0 {
 				pkg := domain.Package{}
-				if err := tx.Save(&table.OrderPackage{
-					OrderDoc:   order.DocID(ctx).String(),
-					PackageDoc: pkg.DocID(ctx, order.ReferenceID.String()).String()}).Error; err != nil {
+				if err := tx.Save(&table.OrderDeliveryUnit{
+					OrderDoc:        order.DocID(ctx).String(),
+					DeliveryUnitDoc: pkg.DocID(ctx, order.ReferenceID.String()).String()}).Error; err != nil {
 					return err
 				}
 			}

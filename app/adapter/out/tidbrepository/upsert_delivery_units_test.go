@@ -34,12 +34,12 @@ var _ = Describe("UpsertPackages", func() {
 		ctx2 = createOrgContext(organization2)
 
 		// Limpia la tabla antes de cada test
-		err := connection.DB.Exec("DELETE FROM packages").Error
+		err := connection.DB.Exec("DELETE FROM delivery_units").Error
 		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should handle empty package slice", func() {
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{}, "")
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -94,22 +94,22 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar los paquetes
 		packages := []domain.Package{package1, package2}
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, packages, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se insertaron correctamente
-		var dbPackages []table.Package
+		var dbPackages []table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Find(&dbPackages).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPackages).To(HaveLen(2))
 
 		// Verificar el primer paquete
-		var dbPackage1 table.Package
+		var dbPackage1 table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("lpn = ?", "PKG001").
 			First(&dbPackage1).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -182,14 +182,14 @@ var _ = Describe("UpsertPackages", func() {
 		initialDocID := initialPackage.DocID(ctx1, "")
 
 		// Insertar el paquete inicial
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{initialPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Obtener el registro creado y su timestamp
-		var initialDBPackage table.Package
+		var initialDBPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id = ?", string(initialDocID)).
 			First(&initialDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -241,9 +241,9 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
-		var updatedDBPackage table.Package
+		var updatedDBPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id = ?", string(initialDocID)).
 			First(&updatedDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -294,7 +294,7 @@ var _ = Describe("UpsertPackages", func() {
 		existingDocID := existingPackage.DocID(ctx1, "")
 
 		// Insertar el paquete inicial
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{existingPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -332,15 +332,15 @@ var _ = Describe("UpsertPackages", func() {
 		// Verificar que hay dos paquetes en la base de datos
 		var count int64
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
 
 		// Verificar el paquete existente se actualizó
-		var updatedDBPackage table.Package
+		var updatedDBPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id = ?", string(existingDocID)).
 			First(&updatedDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -349,9 +349,9 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(updatedDimensions.Unit).To(Equal("mm"))
 
 		// Verificar el nuevo paquete se insertó
-		var newDBPackage table.Package
+		var newDBPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("lpn = ?", "PKG-NEW").
 			First(&newDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -382,7 +382,7 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Insertar paquete para org1
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{package1}, "")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -391,9 +391,9 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que hay dos paquetes en la base de datos
-		var packages []table.Package
+		var packages []table.DeliveryUnit
 		err = connection.DB.WithContext(context.Background()).
-			Table("packages").
+			Table("delivery_units").
 			Where("lpn = ?", "PKG-MULTIORG").
 			Find(&packages).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -417,11 +417,11 @@ var _ = Describe("UpsertPackages", func() {
 			Lpn: "PKG-ERROR",
 		}
 
-		upsert := NewUpsertPackages(noTablesContainerConnection)
+		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
 		err := upsert(ctx1, []domain.Package{package1}, "")
 
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("packages"))
+		Expect(err.Error()).To(ContainSubstring("delivery_units"))
 	})
 
 	It("should fail when saving packages if the table does not exist", func() {
@@ -437,11 +437,11 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Usar conexión sin tablas
-		upsert := NewUpsertPackages(noTablesContainerConnection)
+		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
 		err := upsert(ctx1, []domain.Package{pkg}, "")
 
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("packages"))
+		Expect(err.Error()).To(ContainSubstring("delivery_units"))
 	})
 
 	It("should correctly handle packages without LPN", func() {
@@ -462,7 +462,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar el paquete
 		orderRef := "ORDER-REF-001"
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{package1}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -470,9 +470,9 @@ var _ = Describe("UpsertPackages", func() {
 		expectedDocID := package1.DocID(ctx1, orderRef)
 
 		// Verificar que se insertó correctamente
-		var dbPackage table.Package
+		var dbPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id = ?", string(expectedDocID)).
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -504,7 +504,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar el paquete
 		orderRef := "ORDER-REF-002"
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{initialPackage}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -535,9 +535,9 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
-		var dbPackage table.Package
+		var dbPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id = ?", string(initialDocID)).
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -579,7 +579,7 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Insertar el paquete
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{initialPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -598,9 +598,9 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que solo se actualizó el campo de peso
-		var dbPackage table.Package
+		var dbPackage table.DeliveryUnit
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("lpn = ?", "PARTIAL-UPDATE-PKG").
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -635,7 +635,7 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar con una referencia de orden
 		orderRef1 := "ORDER-REF-A"
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{package1}, orderRef1)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -656,7 +656,7 @@ var _ = Describe("UpsertPackages", func() {
 		// Verificar que ambos paquetes existen en la BD
 		var count int64
 		err = connection.DB.WithContext(ctx1).
-			Table("packages").
+			Table("delivery_units").
 			Where("document_id IN ?", []string{string(docID1), string(docID2)}).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
@@ -688,7 +688,7 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		orderRef := "ORDER-EXPLODE"
-		upsert := NewUpsertPackages(connection)
+		upsert := NewUpsertDeliveryUnits(connection)
 		err := upsert(ctx1, []domain.Package{original}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 

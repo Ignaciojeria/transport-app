@@ -253,7 +253,7 @@ func (j JSONReference) Value() (driver.Value, error) {
 	return json.Marshal(j)
 }
 
-type Package struct {
+type DeliveryUnit struct {
 	gorm.Model
 	ID             int64          `gorm:"primaryKey"`
 	OrganizationID int64          `gorm:"not null;"`
@@ -266,7 +266,7 @@ type Package struct {
 	JSONItems      JSONItems      `gorm:"type:json"`
 }
 
-func (p Package) Map() domain.Package {
+func (p DeliveryUnit) Map() domain.Package {
 	return domain.Package{
 		Lpn:        p.Lpn,
 		Dimensions: p.JSONDimensions.Map(),
@@ -285,12 +285,12 @@ func (j JSONItems) Map() []domain.Item {
 	return items
 }
 
-type OrderPackage struct {
-	ID              int64  `gorm:"primaryKey"`
-	PackageStatusID *int64 `gorm:"default null;index"`
-	PackageStatus   Status `gorm:"foreignKey:PackageStatusID"`
-	OrderDoc        string `gorm:"type:char(64);"`
-	PackageDoc      string `gorm:"type:char(64);"`
+type OrderDeliveryUnit struct {
+	ID                   int64  `gorm:"primaryKey"`
+	DeliveryUnitStatusID *int64 `gorm:"default null;index"`
+	DeliveryUnitStatus   Status `gorm:"foreignKey:DeliveryUnitStatusID"`
+	OrderDoc             string `gorm:"type:char(64);"`
+	DeliveryUnitDoc      string `gorm:"type:char(64);"`
 }
 
 type OrderReferences struct {
