@@ -70,6 +70,7 @@ type DeliveryRecipient struct {
 
 type DeliveryUnitsReport struct {
 	ReferenceID             string                   `json:"referenceID"`
+	GroupBy                 *GroupBy                 `json:"groupBy,omitempty"`
 	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate,omitempty"`
 	Destination             *Location                `json:"destination,omitempty"`
 	Origin                  *Location                `json:"origin,omitempty"`
@@ -119,6 +120,11 @@ type Driver struct {
 	NationalID *string `json:"nationalID,omitempty"`
 	Name       *string `json:"name,omitempty"`
 	Email      *string `json:"email,omitempty"`
+}
+
+type GroupBy struct {
+	Type  *string `json:"type,omitempty"`
+	Value *string `json:"value,omitempty"`
 }
 
 type Insurance struct {

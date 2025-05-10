@@ -213,6 +213,10 @@ func (r *queryResolver) DeliveryUnitsReports(
 				RouteID:       ptrString("ROUTE-001"),
 				RoutePosition: ptrInt(1),
 			},
+			GroupBy: &model.GroupBy{
+				Type:  ptrString("parentOrder"),
+				Value: ptrString("23401234123"),
+			},
 			Delivery: &model.Delivery{
 				Status:    ptrString("planned,in_route,on_its_way,delivered,undelivered"),
 				HandledAt: ptrString("2025-05-10T02:22:07Z"),

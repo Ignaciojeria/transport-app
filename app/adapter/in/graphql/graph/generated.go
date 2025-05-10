@@ -119,6 +119,7 @@ type ComplexityRoot struct {
 		Destination             func(childComplexity int) int
 		Driver                  func(childComplexity int) int
 		ExtraFields             func(childComplexity int) int
+		GroupBy                 func(childComplexity int) int
 		OrderType               func(childComplexity int) int
 		Origin                  func(childComplexity int) int
 		Package                 func(childComplexity int) int
@@ -155,6 +156,11 @@ type ComplexityRoot struct {
 		Email      func(childComplexity int) int
 		Name       func(childComplexity int) int
 		NationalID func(childComplexity int) int
+	}
+
+	GroupBy struct {
+		Type  func(childComplexity int) int
+		Value func(childComplexity int) int
 	}
 
 	Insurance struct {
@@ -578,6 +584,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryUnitsReport.ExtraFields(childComplexity), true
 
+	case "DeliveryUnitsReport.groupBy":
+		if e.complexity.DeliveryUnitsReport.GroupBy == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.GroupBy(childComplexity), true
+
 	case "DeliveryUnitsReport.orderType":
 		if e.complexity.DeliveryUnitsReport.OrderType == nil {
 			break
@@ -724,6 +737,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Driver.NationalID(childComplexity), true
+
+	case "GroupBy.type":
+		if e.complexity.GroupBy.Type == nil {
+			break
+		}
+
+		return e.complexity.GroupBy.Type(childComplexity), true
+
+	case "GroupBy.value":
+		if e.complexity.GroupBy.Value == nil {
+			break
+		}
+
+		return e.complexity.GroupBy.Value(childComplexity), true
 
 	case "Insurance.currency":
 		if e.complexity.Insurance.Currency == nil {
@@ -3023,6 +3050,53 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_referenceID(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnitsReport_groupBy(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_groupBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.GroupBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.GroupBy)
+	fc.Result = res
+	return ec.marshalOGroupBy2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐGroupBy(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_groupBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_GroupBy_type(ctx, field)
+			case "value":
+				return ec.fieldContext_GroupBy_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type GroupBy", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReport_collectAvailabilityDate(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReport_collectAvailabilityDate(ctx, field)
 	if err != nil {
@@ -3846,6 +3920,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 			switch field.Name {
 			case "referenceID":
 				return ec.fieldContext_DeliveryUnitsReport_referenceID(ctx, field)
+			case "groupBy":
+				return ec.fieldContext_DeliveryUnitsReport_groupBy(ctx, field)
 			case "collectAvailabilityDate":
 				return ec.fieldContext_DeliveryUnitsReport_collectAvailabilityDate(ctx, field)
 			case "destination":
@@ -4238,6 +4314,88 @@ func (ec *executionContext) _Driver_email(ctx context.Context, field graphql.Col
 func (ec *executionContext) fieldContext_Driver_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Driver",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GroupBy_type(ctx context.Context, field graphql.CollectedField, obj *model.GroupBy) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GroupBy_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GroupBy_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GroupBy",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _GroupBy_value(ctx context.Context, field graphql.CollectedField, obj *model.GroupBy) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_GroupBy_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_GroupBy_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "GroupBy",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
@@ -8987,6 +9145,8 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "groupBy":
+			out.Values[i] = ec._DeliveryUnitsReport_groupBy(ctx, field, obj)
 		case "collectAvailabilityDate":
 			out.Values[i] = ec._DeliveryUnitsReport_collectAvailabilityDate(ctx, field, obj)
 		case "destination":
@@ -9224,6 +9384,44 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Driver_name(ctx, field, obj)
 		case "email":
 			out.Values[i] = ec._Driver_email(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var groupByImplementors = []string{"GroupBy"}
+
+func (ec *executionContext) _GroupBy(ctx context.Context, sel ast.SelectionSet, obj *model.GroupBy) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, groupByImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("GroupBy")
+		case "type":
+			out.Values[i] = ec._GroupBy_type(ctx, field, obj)
+		case "value":
+			out.Values[i] = ec._GroupBy_value(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10987,6 +11185,13 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) marshalOGroupBy2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐGroupBy(ctx context.Context, sel ast.SelectionSet, v *model.GroupBy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._GroupBy(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOInsurance2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐInsurance(ctx context.Context, sel ast.SelectionSet, v *model.Insurance) graphql.Marshaler {

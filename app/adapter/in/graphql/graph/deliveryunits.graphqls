@@ -3,6 +3,12 @@ type ContactMethod {
   value: String
 }
 
+type GroupBy {
+  type: String
+  value: String
+}
+
+
 type Document {
   type: String
   value: String
@@ -168,6 +174,7 @@ type DeliveryRecipient {
   nationalID: String
 }
 
+
 type Delivery {
   status: String
   recipient: DeliveryRecipient
@@ -179,6 +186,7 @@ type Delivery {
 # 🚛 DeliveryUnitsReport final completísimo
 type DeliveryUnitsReport {
   referenceID: String!
+  groupBy: GroupBy
   collectAvailabilityDate: CollectAvailabilityDate
   destination: Location
   origin: Location
