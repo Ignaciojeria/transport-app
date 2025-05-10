@@ -4,7 +4,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type OrdersHistory struct {
+type DeliveryUnitsHistory struct {
 	gorm.Model
 	ID                   int64 `gorm:"primaryKey"`
 	Channel              string
