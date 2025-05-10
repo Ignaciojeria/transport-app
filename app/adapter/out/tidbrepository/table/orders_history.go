@@ -6,7 +6,8 @@ import (
 
 type OrdersHistory struct {
 	gorm.Model
-	ID                   int64              `gorm:"primaryKey"`
+	ID                   int64 `gorm:"primaryKey"`
+	Channel              string
 	OrderDoc             string             `gorm:"type:char(64);index"`
 	OrderStatusID        int64              `gorm:"not null;index"`
 	OrderStatus          Status             `gorm:"foreignKey:OrderStatusID"`
