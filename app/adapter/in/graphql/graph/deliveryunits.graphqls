@@ -185,6 +185,9 @@ type Delivery {
 
 # 🚛 DeliveryUnitsReport final completísimo
 type DeliveryUnitsReport {
+  commerce: String
+  consumer: String
+  channel:  String
   referenceID: String!
   groupBy: GroupBy
   collectAvailabilityDate: CollectAvailabilityDate

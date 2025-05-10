@@ -114,7 +114,10 @@ type ComplexityRoot struct {
 
 	DeliveryUnitsReport struct {
 		Carrier                 func(childComplexity int) int
+		Channel                 func(childComplexity int) int
 		CollectAvailabilityDate func(childComplexity int) int
+		Commerce                func(childComplexity int) int
+		Consumer                func(childComplexity int) int
 		Delivery                func(childComplexity int) int
 		Destination             func(childComplexity int) int
 		Driver                  func(childComplexity int) int
@@ -549,12 +552,33 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryUnitsReport.Carrier(childComplexity), true
 
+	case "DeliveryUnitsReport.channel":
+		if e.complexity.DeliveryUnitsReport.Channel == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.Channel(childComplexity), true
+
 	case "DeliveryUnitsReport.collectAvailabilityDate":
 		if e.complexity.DeliveryUnitsReport.CollectAvailabilityDate == nil {
 			break
 		}
 
 		return e.complexity.DeliveryUnitsReport.CollectAvailabilityDate(childComplexity), true
+
+	case "DeliveryUnitsReport.commerce":
+		if e.complexity.DeliveryUnitsReport.Commerce == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.Commerce(childComplexity), true
+
+	case "DeliveryUnitsReport.consumer":
+		if e.complexity.DeliveryUnitsReport.Consumer == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.Consumer(childComplexity), true
 
 	case "DeliveryUnitsReport.delivery":
 		if e.complexity.DeliveryUnitsReport.Delivery == nil {
@@ -3006,6 +3030,129 @@ func (ec *executionContext) fieldContext_DeliveryRecipient_nationalID(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnitsReport_commerce(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_commerce(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Commerce, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_commerce(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnitsReport_consumer(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_consumer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Consumer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_consumer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnitsReport_channel(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_channel(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Channel, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_channel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReport_referenceID(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReport_referenceID(ctx, field)
 	if err != nil {
@@ -3918,6 +4065,12 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "commerce":
+				return ec.fieldContext_DeliveryUnitsReport_commerce(ctx, field)
+			case "consumer":
+				return ec.fieldContext_DeliveryUnitsReport_consumer(ctx, field)
+			case "channel":
+				return ec.fieldContext_DeliveryUnitsReport_channel(ctx, field)
 			case "referenceID":
 				return ec.fieldContext_DeliveryUnitsReport_referenceID(ctx, field)
 			case "groupBy":
@@ -9140,6 +9293,12 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DeliveryUnitsReport")
+		case "commerce":
+			out.Values[i] = ec._DeliveryUnitsReport_commerce(ctx, field, obj)
+		case "consumer":
+			out.Values[i] = ec._DeliveryUnitsReport_consumer(ctx, field, obj)
+		case "channel":
+			out.Values[i] = ec._DeliveryUnitsReport_channel(ctx, field, obj)
 		case "referenceID":
 			out.Values[i] = ec._DeliveryUnitsReport_referenceID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

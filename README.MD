@@ -13,11 +13,14 @@ Esta aplicación utiliza OpenTelemetry Baggage para propagar contexto entre comp
 
 El consumidor debe enviar los siguientes headers:
 
-| Header         | Ejemplo            | Descripción                               |
-| -------------- | ------------------ | ----------------------------------------- |
-| `organization` | `2-CL`             | ID del tenant + país (`tenantId-country`) |
-| `consumer`     | `CONSUMER_EXAMPLE` | Identificador del consumidor del API      |
-| `commerce`     | `COMMERCE_EXAMPLE` | Identificador del comercio                |
+El consumidor debe enviar los siguientes headers:
+
+| Header         | Ejemplo            | Descripción                                                                            |
+| -------------- | ------------------ | -------------------------------------------------------------------------------------- |
+| `organization` | `2-CL`             | ID del tenant + país (`tenantId-country`). Siempre se utiliza para operar el recurso.  |
+| `consumer`     | `CONSUMER_EXAMPLE` | Identificador técnico de quien inicializó la creación del recurso vía API. (origen)             |
+| `commerce`     | `COMMERCE_EXAMPLE` | Identificador del comercio o tienda que genera la necesidad inicial de operar el recurso.       |
+| `channel`      | `WEB` / `APP`      | Canal de operación previo a creación del recurso (planificado : Web, Entregado: App Mobile, etc.). Puede cambiar. |
 
 Estos headers son procesados por un middleware que los desglosa e inyecta como baggage en el contexto de OpenTelemetry.
 
@@ -25,14 +28,15 @@ Estos headers son procesados por un middleware que los desglosa e inyecta como b
 
 Estas claves se propagan en el `context.Context`:
 
-| Clave Baggage       | Ejemplo            | Fuente                     |
-| ------------------- | ------------------ | -------------------------- |
-| `tenant.id`         | `2`                | Derivado de `organization` |
-| `tenant.country`    | `CL`               | Derivado de `organization` |
-| `business.consumer` | `CONSUMER_EXAMPLE` | Header `consumer`          |
-| `business.commerce` | `COMMERCE_EXAMPLE` | Header `commerce`          |
-| `event.type`        | `orderSubmitted`   | Inyectado por código       |
-| `entity.type`       | `order`            | Inyectado por código       |
+| Clave Baggage       | Ejemplo                  | Fuente                     |
+| ------------------- | ------------------------ | -------------------------- |
+| `tenant.id`         | `2`                      | Derivado de `organization` |
+| `tenant.country`    | `CL`                     | Derivado de `organization` |
+| `business.consumer` | `CONSUMER_EXAMPLE`       | Header `consumer`          |
+| `business.commerce` | `COMMERCE_EXAMPLE`       | Header `commerce`          |
+| `business.channel`  | `WEB/MOBILE/INTEGRATION` | Header `channel`           |
+| `event.type`        | `orderSubmitted`         | Inyectado por código       |
+| `entity.type`       | `order`                  | Inyectado por código       |
 
 ### 📦 Pub/Sub Message Attributes
 

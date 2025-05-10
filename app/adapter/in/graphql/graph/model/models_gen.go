@@ -69,6 +69,9 @@ type DeliveryRecipient struct {
 }
 
 type DeliveryUnitsReport struct {
+	Commerce                *string                  `json:"commerce,omitempty"`
+	Consumer                *string                  `json:"consumer,omitempty"`
+	Channel                 *string                  `json:"channel,omitempty"`
 	ReferenceID             string                   `json:"referenceID"`
 	GroupBy                 *GroupBy                 `json:"groupBy,omitempty"`
 	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate,omitempty"`

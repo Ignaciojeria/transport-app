@@ -14,8 +14,9 @@ const (
 	BaggageTenantID      = "tenant.id"
 	BaggageTenantCountry = "tenant.country"
 	BaggageAccountEmail  = "account.email"
-	BaggageConsumer      = "business.consumer"
-	BaggageCommerce      = "business.commerce"
+	BaggageConsumer      = "consumer"
+	BaggageCommerce      = "commerce"
+	BaggageChannel       = "channel"
 )
 
 const (

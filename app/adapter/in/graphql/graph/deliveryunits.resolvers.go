@@ -56,6 +56,9 @@ func (r *queryResolver) DeliveryUnitsReports(
 	ordersData := []*model.DeliveryUnitsReport{
 		{
 			ReferenceID: "REF123",
+			Commerce:    ptrString("examplecommerce"),
+			Consumer:    ptrString("examplecommerce"),
+			Channel:     ptrString("examplechannel"),
 			CollectAvailabilityDate: &model.CollectAvailabilityDate{
 				Date: ptrString("2025-05-01"),
 				TimeRange: &model.TimeRange{
