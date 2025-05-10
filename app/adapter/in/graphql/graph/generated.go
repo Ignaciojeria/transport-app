@@ -89,11 +89,12 @@ type ComplexityRoot struct {
 	}
 
 	Delivery struct {
-		Failure   func(childComplexity int) int
-		HandledAt func(childComplexity int) int
-		Location  func(childComplexity int) int
-		Recipient func(childComplexity int) int
-		Status    func(childComplexity int) int
+		EvidencePhotos func(childComplexity int) int
+		Failure        func(childComplexity int) int
+		HandledAt      func(childComplexity int) int
+		Location       func(childComplexity int) int
+		Recipient      func(childComplexity int) int
+		Status         func(childComplexity int) int
 	}
 
 	DeliveryFailure struct {
@@ -159,6 +160,12 @@ type ComplexityRoot struct {
 		Email      func(childComplexity int) int
 		Name       func(childComplexity int) int
 		NationalID func(childComplexity int) int
+	}
+
+	EvidencePhoto struct {
+		TakenAt func(childComplexity int) int
+		Type    func(childComplexity int) int
+		URL     func(childComplexity int) int
 	}
 
 	GroupBy struct {
@@ -230,9 +237,8 @@ type ComplexityRoot struct {
 	}
 
 	Quantity struct {
-		QuantityDelivered func(childComplexity int) int
-		QuantityNumber    func(childComplexity int) int
-		QuantityUnit      func(childComplexity int) int
+		QuantityNumber func(childComplexity int) int
+		QuantityUnit   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -245,6 +251,7 @@ type ComplexityRoot struct {
 	}
 
 	Route struct {
+		LpnContainer  func(childComplexity int) int
 		RouteID       func(childComplexity int) int
 		RoutePosition func(childComplexity int) int
 	}
@@ -460,6 +467,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DateRange.StartDate(childComplexity), true
+
+	case "Delivery.evidencePhotos":
+		if e.complexity.Delivery.EvidencePhotos == nil {
+			break
+		}
+
+		return e.complexity.Delivery.EvidencePhotos(childComplexity), true
 
 	case "Delivery.failure":
 		if e.complexity.Delivery.Failure == nil {
@@ -762,6 +776,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Driver.NationalID(childComplexity), true
 
+	case "EvidencePhoto.takenAt":
+		if e.complexity.EvidencePhoto.TakenAt == nil {
+			break
+		}
+
+		return e.complexity.EvidencePhoto.TakenAt(childComplexity), true
+
+	case "EvidencePhoto.type":
+		if e.complexity.EvidencePhoto.Type == nil {
+			break
+		}
+
+		return e.complexity.EvidencePhoto.Type(childComplexity), true
+
+	case "EvidencePhoto.url":
+		if e.complexity.EvidencePhoto.URL == nil {
+			break
+		}
+
+		return e.complexity.EvidencePhoto.URL(childComplexity), true
+
 	case "GroupBy.type":
 		if e.complexity.GroupBy.Type == nil {
 			break
@@ -1007,13 +1042,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PromisedDate.TimeRange(childComplexity), true
 
-	case "Quantity.quantityDelivered":
-		if e.complexity.Quantity.QuantityDelivered == nil {
-			break
-		}
-
-		return e.complexity.Quantity.QuantityDelivered(childComplexity), true
-
 	case "Quantity.quantityNumber":
 		if e.complexity.Quantity.QuantityNumber == nil {
 			break
@@ -1053,6 +1081,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Reference.Value(childComplexity), true
+
+	case "Route.lpnContainer":
+		if e.complexity.Route.LpnContainer == nil {
+			break
+		}
+
+		return e.complexity.Route.LpnContainer(childComplexity), true
 
 	case "Route.routeID":
 		if e.complexity.Route.RouteID == nil {
@@ -2743,6 +2778,55 @@ func (ec *executionContext) fieldContext_Delivery_location(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Delivery_evidencePhotos(ctx context.Context, field graphql.CollectedField, obj *model.Delivery) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Delivery_evidencePhotos(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EvidencePhotos, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.EvidencePhoto)
+	fc.Result = res
+	return ec.marshalOEvidencePhoto2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐEvidencePhoto(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Delivery_evidencePhotos(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Delivery",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "takenAt":
+				return ec.fieldContext_EvidencePhoto_takenAt(ctx, field)
+			case "type":
+				return ec.fieldContext_EvidencePhoto_type(ctx, field)
+			case "url":
+				return ec.fieldContext_EvidencePhoto_url(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EvidencePhoto", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryFailure_detail(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryFailure) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryFailure_detail(ctx, field)
 	if err != nil {
@@ -3816,6 +3900,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_route(_ context.Con
 			switch field.Name {
 			case "routeID":
 				return ec.fieldContext_Route_routeID(ctx, field)
+			case "lpnContainer":
+				return ec.fieldContext_Route_lpnContainer(ctx, field)
 			case "routePosition":
 				return ec.fieldContext_Route_routePosition(ctx, field)
 			}
@@ -3871,6 +3957,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_delivery(_ context.
 				return ec.fieldContext_Delivery_failure(ctx, field)
 			case "location":
 				return ec.fieldContext_Delivery_location(ctx, field)
+			case "evidencePhotos":
+				return ec.fieldContext_Delivery_evidencePhotos(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Delivery", field.Name)
 		},
@@ -4477,6 +4565,129 @@ func (ec *executionContext) fieldContext_Driver_email(_ context.Context, field g
 	return fc, nil
 }
 
+func (ec *executionContext) _EvidencePhoto_takenAt(ctx context.Context, field graphql.CollectedField, obj *model.EvidencePhoto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EvidencePhoto_takenAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TakenAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EvidencePhoto_takenAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EvidencePhoto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EvidencePhoto_type(ctx context.Context, field graphql.CollectedField, obj *model.EvidencePhoto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EvidencePhoto_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EvidencePhoto_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EvidencePhoto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EvidencePhoto_url(ctx context.Context, field graphql.CollectedField, obj *model.EvidencePhoto) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EvidencePhoto_url(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.URL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EvidencePhoto_url(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EvidencePhoto",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _GroupBy_type(ctx context.Context, field graphql.CollectedField, obj *model.GroupBy) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_GroupBy_type(ctx, field)
 	if err != nil {
@@ -4908,8 +5119,6 @@ func (ec *executionContext) fieldContext_Item_quantity(_ context.Context, field 
 			switch field.Name {
 			case "quantityNumber":
 				return ec.fieldContext_Quantity_quantityNumber(ctx, field)
-			case "quantityDelivered":
-				return ec.fieldContext_Quantity_quantityDelivered(ctx, field)
 			case "quantityUnit":
 				return ec.fieldContext_Quantity_quantityUnit(ctx, field)
 			}
@@ -6090,47 +6299,6 @@ func (ec *executionContext) fieldContext_Quantity_quantityNumber(_ context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Quantity_quantityDelivered(ctx context.Context, field graphql.CollectedField, obj *model.Quantity) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Quantity_quantityDelivered(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.QuantityDelivered, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*int)
-	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Quantity_quantityDelivered(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Quantity",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Quantity_quantityUnit(ctx context.Context, field graphql.CollectedField, obj *model.Quantity) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Quantity_quantityUnit(ctx, field)
 	if err != nil {
@@ -6475,6 +6643,47 @@ func (ec *executionContext) _Route_routeID(ctx context.Context, field graphql.Co
 }
 
 func (ec *executionContext) fieldContext_Route_routeID(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Route",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Route_lpnContainer(ctx context.Context, field graphql.CollectedField, obj *model.Route) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Route_lpnContainer(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LpnContainer, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Route_lpnContainer(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Route",
 		Field:      field,
@@ -9143,6 +9352,8 @@ func (ec *executionContext) _Delivery(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Delivery_failure(ctx, field, obj)
 		case "location":
 			out.Values[i] = ec._Delivery_location(ctx, field, obj)
+		case "evidencePhotos":
+			out.Values[i] = ec._Delivery_evidencePhotos(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9543,6 +9754,46 @@ func (ec *executionContext) _Driver(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Driver_name(ctx, field, obj)
 		case "email":
 			out.Values[i] = ec._Driver_email(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var evidencePhotoImplementors = []string{"EvidencePhoto"}
+
+func (ec *executionContext) _EvidencePhoto(ctx context.Context, sel ast.SelectionSet, obj *model.EvidencePhoto) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, evidencePhotoImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EvidencePhoto")
+		case "takenAt":
+			out.Values[i] = ec._EvidencePhoto_takenAt(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._EvidencePhoto_type(ctx, field, obj)
+		case "url":
+			out.Values[i] = ec._EvidencePhoto_url(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10038,8 +10289,6 @@ func (ec *executionContext) _Quantity(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = graphql.MarshalString("Quantity")
 		case "quantityNumber":
 			out.Values[i] = ec._Quantity_quantityNumber(ctx, field, obj)
-		case "quantityDelivered":
-			out.Values[i] = ec._Quantity_quantityDelivered(ctx, field, obj)
 		case "quantityUnit":
 			out.Values[i] = ec._Quantity_quantityUnit(ctx, field, obj)
 		default:
@@ -10188,6 +10437,8 @@ func (ec *executionContext) _Route(ctx context.Context, sel ast.SelectionSet, ob
 			out.Values[i] = graphql.MarshalString("Route")
 		case "routeID":
 			out.Values[i] = ec._Route_routeID(ctx, field, obj)
+		case "lpnContainer":
+			out.Values[i] = ec._Route_lpnContainer(ctx, field, obj)
 		case "routePosition":
 			out.Values[i] = ec._Route_routePosition(ctx, field, obj)
 		default:
@@ -11328,6 +11579,54 @@ func (ec *executionContext) marshalODriver2ᚖtransportᚑappᚋappᚋadapterᚋ
 		return graphql.Null
 	}
 	return ec._Driver(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOEvidencePhoto2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐEvidencePhoto(ctx context.Context, sel ast.SelectionSet, v []*model.EvidencePhoto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalOEvidencePhoto2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐEvidencePhoto(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	return ret
+}
+
+func (ec *executionContext) marshalOEvidencePhoto2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐEvidencePhoto(ctx context.Context, sel ast.SelectionSet, v *model.EvidencePhoto) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._EvidencePhoto(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFloat2ᚖfloat64(ctx context.Context, v any) (*float64, error) {

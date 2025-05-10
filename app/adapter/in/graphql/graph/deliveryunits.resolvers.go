@@ -56,9 +56,9 @@ func (r *queryResolver) DeliveryUnitsReports(
 	ordersData := []*model.DeliveryUnitsReport{
 		{
 			ReferenceID: "REF123",
-			Commerce:    ptrString("examplecommerce"),
-			Consumer:    ptrString("examplecommerce"),
-			Channel:     ptrString("examplechannel"),
+			Commerce:    ptrString("kiosclub"),
+			Consumer:    ptrString("apikios"),
+			Channel:     ptrString("shipconfirm,dispatch,web,mobile"),
 			CollectAvailabilityDate: &model.CollectAvailabilityDate{
 				Date: ptrString("2025-05-01"),
 				TimeRange: &model.TimeRange{
@@ -128,8 +128,8 @@ func (r *queryResolver) DeliveryUnitsReports(
 				},
 			},
 			OrderType: &model.OrderType{
-				Type:        ptrString("express"),
-				Description: ptrString("Entrega express en 24 horas"),
+				Type:        ptrString("devolución,entrega,retiro_en_tienda,...."),
+				Description: ptrString("Order retiro a cliente,Orden de entrega a cliente"),
 			},
 			Package: &model.Package{
 				Lpn: ptrString("PKG123"),
@@ -169,9 +169,8 @@ func (r *queryResolver) DeliveryUnitsReports(
 							},
 						},
 						Quantity: &model.Quantity{
-							QuantityNumber:    ptrInt(1),
-							QuantityDelivered: ptrInt(1), // 👉 Nuevo campo entregado
-							QuantityUnit:      ptrString("unit"),
+							QuantityNumber: ptrInt(1),
+							QuantityUnit:   ptrString("unit"),
 						},
 						Weight: &model.Weight{
 							Unit:  ptrString("kg"),
@@ -198,7 +197,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 				{Type: ptrString("internal"), Value: ptrString("INT-0001")},
 			},
 			ExtraFields: []*model.KeyValuePair{
-				{Key: "hello", Value: "world"},
+				{Key: "destinationPoliticalAreaID", Value: "893f5624-a01f-4f78-94f3-2d6f67abb6f6"},
 			},
 			Carrier: &model.Carrier{
 				NationalID: ptrString("76234829-1"),
@@ -214,6 +213,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 			},
 			Route: &model.Route{
 				RouteID:       ptrString("ROUTE-001"),
+				LpnContainer:  ptrString("000000009999214553"),
 				RoutePosition: ptrInt(1),
 			},
 			GroupBy: &model.GroupBy{
@@ -221,6 +221,13 @@ func (r *queryResolver) DeliveryUnitsReports(
 				Value: ptrString("23401234123"),
 			},
 			Delivery: &model.Delivery{
+				EvidencePhotos: []*model.EvidencePhoto{
+					&model.EvidencePhoto{
+						TakenAt: ptrString("2025-05-10T02:22:07Z"),
+						Type:    ptrString("HOUSE_NUMBER"),
+						URL:     ptrString("ignaciojeria.github.io"),
+					},
+				},
 				Status:    ptrString("planned,in_route,on_its_way,delivered,undelivered"),
 				HandledAt: ptrString("2025-05-10T02:22:07Z"),
 				Failure: &model.DeliveryFailure{

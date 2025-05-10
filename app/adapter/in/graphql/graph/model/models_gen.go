@@ -45,11 +45,12 @@ type DateRange struct {
 }
 
 type Delivery struct {
-	Status    *string            `json:"status,omitempty"`
-	Recipient *DeliveryRecipient `json:"recipient,omitempty"`
-	HandledAt *string            `json:"handledAt,omitempty"`
-	Failure   *DeliveryFailure   `json:"failure,omitempty"`
-	Location  *DeliveryLocation  `json:"location,omitempty"`
+	Status         *string            `json:"status,omitempty"`
+	Recipient      *DeliveryRecipient `json:"recipient,omitempty"`
+	HandledAt      *string            `json:"handledAt,omitempty"`
+	Failure        *DeliveryFailure   `json:"failure,omitempty"`
+	Location       *DeliveryLocation  `json:"location,omitempty"`
+	EvidencePhotos []*EvidencePhoto   `json:"evidencePhotos,omitempty"`
 }
 
 type DeliveryFailure struct {
@@ -125,6 +126,12 @@ type Driver struct {
 	Email      *string `json:"email,omitempty"`
 }
 
+type EvidencePhoto struct {
+	TakenAt *string `json:"takenAt,omitempty"`
+	Type    *string `json:"type,omitempty"`
+	URL     *string `json:"url,omitempty"`
+}
+
 type GroupBy struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
@@ -194,9 +201,8 @@ type PromisedDate struct {
 }
 
 type Quantity struct {
-	QuantityNumber    *int    `json:"quantityNumber,omitempty"`
-	QuantityDelivered *int    `json:"quantityDelivered,omitempty"`
-	QuantityUnit      *string `json:"quantityUnit,omitempty"`
+	QuantityNumber *int    `json:"quantityNumber,omitempty"`
+	QuantityUnit   *string `json:"quantityUnit,omitempty"`
 }
 
 type Query struct {
@@ -209,6 +215,7 @@ type Reference struct {
 
 type Route struct {
 	RouteID       *string `json:"routeID,omitempty"`
+	LpnContainer  *string `json:"lpnContainer,omitempty"`
 	RoutePosition *int    `json:"routePosition,omitempty"`
 }
 
