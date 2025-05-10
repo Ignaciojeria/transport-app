@@ -32,9 +32,9 @@ Estas claves se propagan en el `context.Context`:
 | ------------------- | ------------------------ | -------------------------- |
 | `tenant.id`         | `2`                      | Derivado de `organization` |
 | `tenant.country`    | `CL`                     | Derivado de `organization` |
-| `business.consumer` | `CONSUMER_EXAMPLE`       | Header `consumer`          |
-| `business.commerce` | `COMMERCE_EXAMPLE`       | Header `commerce`          |
-| `business.channel`  | `WEB/MOBILE/INTEGRATION` | Header `channel`           |
+| `consumer`          | `CONSUMER_EXAMPLE`       | Header `consumer`          |
+| `commerce`          | `COMMERCE_EXAMPLE`       | Header `commerce`          |
+| `channel`           | `WEB/MOBILE/INTEGRATION` | Header `channel`           |
 | `event.type`        | `orderSubmitted`         | Inyectado por código       |
 | `entity.type`       | `order`                  | Inyectado por código       |
 
