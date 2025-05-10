@@ -1,5 +1,6 @@
 package mapper
 
+/*
 import (
 	"transport-app/app/adapter/in/graphql/graph/model"
 	"transport-app/app/adapter/in/graphql/graph/normalization"
@@ -30,3 +31,4 @@ func MapOrderFilterWithPagination(
 		RequestedFields:      normalization.NormalizeGraphQLFields(requestedFields),
 	}
 }
+*/

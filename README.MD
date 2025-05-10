@@ -163,3 +163,218 @@ Dividir los ítems en distintos paquetes sin LPN indica que cada paquete será u
 * Separar ítems en distintos paquetes sin LPN implica que serán tratados como entregas independientes.
 
 Esto otorga gran flexibilidad al sistema para representar diversos escenarios logísticos.
+
+
+# 📦 Consulta GraphQL para Delivery Units (Relay Style)
+
+Este sistema expone una API GraphQL basada en la especificación **Relay** para gestionar consultas de unidades entregables (Delivery Units).
+
+## 🚀 Query: Obtener Delivery Units
+
+```graphql
+query GetDeliveryUnitsReports(
+  $filter: DeliveryUnitsReportFilterInput, 
+  $first: Int, 
+  $after: String
+) {
+  deliveryUnitsReports(
+    filter: $filter,
+    first: $first,
+    after: $after
+  ) {
+    edges {
+      cursor
+      node {
+        referenceID
+        collectAvailabilityDate {
+          date
+          timeRange {
+            startTime
+            endTime
+          }
+        }
+        destination {
+          addressInfo {
+            addressLine1
+            addressLine2
+            contact {
+              additionalContactMethods {
+                type
+                value
+              }
+              documents {
+                type
+                value
+              }
+              email
+              fullName
+              nationalID
+              phone
+            }
+            district
+            latitude
+            longitude
+            province
+            state
+            timeZone
+            zipCode
+          }
+          deliveryInstructions
+          nodeInfo {
+            referenceId
+            name
+          }
+        }
+        origin {
+          addressInfo {
+            addressLine1
+            addressLine2
+            contact {
+              additionalContactMethods {
+                type
+                value
+              }
+              documents {
+                type
+                value
+              }
+              email
+              fullName
+              nationalID
+              phone
+            }
+            district
+            latitude
+            longitude
+            province
+            state
+            timeZone
+            zipCode
+          }
+          deliveryInstructions
+          nodeInfo {
+            referenceId
+            name
+          }
+        }
+        orderType {
+          type
+          description
+        }
+        package {
+          dimensions {
+            length
+            height
+            width
+            unit
+          }
+          insurance {
+            currency
+            unitValue
+          }
+          items {
+            sku
+            description
+            dimensions {
+              length
+              height
+              width
+              unit
+            }
+            insurance {
+              currency
+              unitValue
+            }
+            skills {
+              type
+              value
+              description
+            }
+            quantity {
+              quantityNumber
+              quantityDelivered
+              quantityUnit
+            }
+            weight {
+              unit
+              value
+            }
+          }
+          labels {
+            type
+            value
+          }
+          lpn
+          weight {
+            unit
+            value
+          }
+        }
+        promisedDate {
+          dateRange {
+            startDate
+            endDate
+          }
+          serviceCategory
+          timeRange {
+            startTime
+            endTime
+          }
+        }
+        references {
+          type
+          value
+        }
+        extraFields {
+          key
+          value
+        }
+        carrier {
+          nationalID
+          name
+        }
+        vehicle {
+          plate
+        }
+        driver {
+          nationalID
+          name
+          email
+        }
+        route {
+          routeID
+          routePosition
+        }
+        delivery {
+          status
+          handledAt
+          failure {
+            detail
+            reason
+            referenceID
+          }
+          location {
+            latitude
+            longitude
+          }
+          recipient {
+            fullName
+            nationalID
+          }
+        }
+      }
+    }
+    pageInfo {
+      hasNextPage
+      endCursor
+    }
+  }
+}
+```
+
+## 📖 Consideraciones importantes
+
+* **Relay Style:** La API utiliza el patrón Relay para manejar paginación (`edges`, `cursor`, `pageInfo`).
+* **PageInfo:** Permite saber si hay más resultados (`hasNextPage`) y avanzar (`endCursor`).
+
+Con esta estructura puedes construir reportes logísticos detallados, dashboards de entregas, o integraciones hacia otros sistemas de monitoreo.

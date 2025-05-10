@@ -15,8 +15,8 @@ import (
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
-//go:embed orders.graphqls
-var ordersSchema string
+//go:embed deliveryunits.graphqls
+var deliveryunitsSchema string
 
 var verbose = flag.Bool("verbose", false, "enable verbose output")
 
@@ -30,8 +30,8 @@ var _ = Describe("GraphQL Schema", func() {
 
 		// Cargar el esquema GraphQL
 		schema, err = gqlparser.LoadSchema(&ast.Source{
-			Name:  "orders.graphqls",
-			Input: ordersSchema,
+			Name:  "deliveryunits.graphqls",
+			Input: deliveryunitsSchema,
 		})
 		Expect(err).NotTo(HaveOccurred(), "failed to parse schema")
 

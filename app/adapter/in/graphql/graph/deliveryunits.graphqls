@@ -69,8 +69,10 @@ type Skill {
   description: String
 }
 
+# Quantity mejorado
 type Quantity {
   quantityNumber: Int
+  quantityDelivered: Int
   quantityUnit: String
 }
 
@@ -119,8 +121,9 @@ type Reference {
   value: String
 }
 
-type ExtraFields {
-  destinationPoliticalAreaId: String
+type KeyValuePair {
+  key: String!
+  value: String!
 }
 
 type OrderType {
@@ -128,31 +131,79 @@ type OrderType {
   description: String
 }
 
-type Order {
+type Carrier {
+  nationalID: String
+  name: String
+}
+
+type Vehicle {
+  plate: String
+}
+
+type Driver {
+  nationalID: String
+  name: String
+  email: String
+}
+
+type Route {
+  routeID: String
+  routePosition: Int
+}
+
+# Nuevas estructuras para delivery 🚚
+type DeliveryFailure {
+  detail: String
+  reason: String
+  referenceID: String
+}
+
+type DeliveryLocation {
+  latitude: Float
+  longitude: Float
+}
+
+type DeliveryRecipient {
+  fullName: String
+  nationalID: String
+}
+
+type Delivery {
+  status: String
+  recipient: DeliveryRecipient
+  handledAt: String
+  failure: DeliveryFailure
+  location: DeliveryLocation
+}
+
+# 🚛 DeliveryUnitsReport final completísimo
+type DeliveryUnitsReport {
   referenceID: String!
   collectAvailabilityDate: CollectAvailabilityDate
   destination: Location
   origin: Location
   orderType: OrderType
-  packages: [Package]
+  package: Package
   promisedDate: PromisedDate
   references: [Reference]
-  extraFields: ExtraFields
+  extraFields: [KeyValuePair!]!
+  carrier: Carrier
+  vehicle: Vehicle
+  driver: Driver
+  route: Route
+  delivery: Delivery
 }
 
-input OrderFilterInput {
-  referenceIds: [String!]
-  referenceType: String
-  referenceValue: String
-  lpns: [String!]
-  originNodeReferences: [String!]
-  groupBy: [String!]
-  labelType: String
-  labelValue: String
-  commerces: [String!]
-  consumers: [String!]
+# 🔎 Filtro
+input DeliveryUnitsReportFilterInput {
+  referenceIds: [String]
+  lpns: [String]
+  originNodeReferences: [String]
+  commerces: [String]
+  consumers: [String]
 }
 
+# 🔄 PageInfo y conexión Relay
 type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
@@ -160,23 +211,22 @@ type PageInfo {
   endCursor: String!
 }
 
-
-type OrderConnection {
-  edges: [OrderEdge!]!
+type DeliveryUnitsReportConnection {
+  edges: [DeliveryUnitsReportEdge!]!
   pageInfo: PageInfo!
 }
 
-type OrderEdge {
+type DeliveryUnitsReportEdge {
   cursor: String!
-  node: Order!
+  node: DeliveryUnitsReport!
 }
 
 type Query {
-  orders(
-    filter: OrderFilterInput, 
+  deliveryUnitsReports(
+    filter: DeliveryUnitsReportFilterInput, 
     first: Int, 
     after: String, 
     last: Int, 
     before: String
-  ): OrderConnection!
+  ): DeliveryUnitsReportConnection!
 }

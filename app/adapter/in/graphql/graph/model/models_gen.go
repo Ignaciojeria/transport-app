@@ -15,6 +15,11 @@ type AddressInfo struct {
 	ZipCode      *string  `json:"zipCode,omitempty"`
 }
 
+type Carrier struct {
+	NationalID *string `json:"nationalID,omitempty"`
+	Name       *string `json:"name,omitempty"`
+}
+
 type CollectAvailabilityDate struct {
 	Date      *string    `json:"date,omitempty"`
 	TimeRange *TimeRange `json:"timeRange,omitempty"`
@@ -39,6 +44,65 @@ type DateRange struct {
 	EndDate   *string `json:"endDate,omitempty"`
 }
 
+type Delivery struct {
+	Status    *string            `json:"status,omitempty"`
+	Recipient *DeliveryRecipient `json:"recipient,omitempty"`
+	HandledAt *string            `json:"handledAt,omitempty"`
+	Failure   *DeliveryFailure   `json:"failure,omitempty"`
+	Location  *DeliveryLocation  `json:"location,omitempty"`
+}
+
+type DeliveryFailure struct {
+	Detail      *string `json:"detail,omitempty"`
+	Reason      *string `json:"reason,omitempty"`
+	ReferenceID *string `json:"referenceID,omitempty"`
+}
+
+type DeliveryLocation struct {
+	Latitude  *float64 `json:"latitude,omitempty"`
+	Longitude *float64 `json:"longitude,omitempty"`
+}
+
+type DeliveryRecipient struct {
+	FullName   *string `json:"fullName,omitempty"`
+	NationalID *string `json:"nationalID,omitempty"`
+}
+
+type DeliveryUnitsReport struct {
+	ReferenceID             string                   `json:"referenceID"`
+	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate,omitempty"`
+	Destination             *Location                `json:"destination,omitempty"`
+	Origin                  *Location                `json:"origin,omitempty"`
+	OrderType               *OrderType               `json:"orderType,omitempty"`
+	Package                 *Package                 `json:"package,omitempty"`
+	PromisedDate            *PromisedDate            `json:"promisedDate,omitempty"`
+	References              []*Reference             `json:"references,omitempty"`
+	ExtraFields             []*KeyValuePair          `json:"extraFields"`
+	Carrier                 *Carrier                 `json:"carrier,omitempty"`
+	Vehicle                 *Vehicle                 `json:"vehicle,omitempty"`
+	Driver                  *Driver                  `json:"driver,omitempty"`
+	Route                   *Route                   `json:"route,omitempty"`
+	Delivery                *Delivery                `json:"delivery,omitempty"`
+}
+
+type DeliveryUnitsReportConnection struct {
+	Edges    []*DeliveryUnitsReportEdge `json:"edges"`
+	PageInfo *PageInfo                  `json:"pageInfo"`
+}
+
+type DeliveryUnitsReportEdge struct {
+	Cursor string               `json:"cursor"`
+	Node   *DeliveryUnitsReport `json:"node"`
+}
+
+type DeliveryUnitsReportFilterInput struct {
+	ReferenceIds         []*string `json:"referenceIds,omitempty"`
+	Lpns                 []*string `json:"lpns,omitempty"`
+	OriginNodeReferences []*string `json:"originNodeReferences,omitempty"`
+	Commerces            []*string `json:"commerces,omitempty"`
+	Consumers            []*string `json:"consumers,omitempty"`
+}
+
 type Dimension struct {
 	Length *int    `json:"length,omitempty"`
 	Height *int    `json:"height,omitempty"`
@@ -51,8 +115,10 @@ type Document struct {
 	Value *string `json:"value,omitempty"`
 }
 
-type ExtraFields struct {
-	DestinationPoliticalAreaID *string `json:"destinationPoliticalAreaId,omitempty"`
+type Driver struct {
+	NationalID *string `json:"nationalID,omitempty"`
+	Name       *string `json:"name,omitempty"`
+	Email      *string `json:"email,omitempty"`
 }
 
 type Insurance struct {
@@ -70,6 +136,11 @@ type Item struct {
 	Weight      *Weight    `json:"weight,omitempty"`
 }
 
+type KeyValuePair struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 type Label struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
@@ -81,50 +152,9 @@ type Location struct {
 	NodeInfo             *NodeInfo    `json:"nodeInfo,omitempty"`
 }
 
-type Node struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-}
-
 type NodeInfo struct {
 	ReferenceID *string `json:"referenceId,omitempty"`
 	Name        *string `json:"name,omitempty"`
-}
-
-type Order struct {
-	ReferenceID             string                   `json:"referenceID"`
-	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate,omitempty"`
-	Destination             *Location                `json:"destination,omitempty"`
-	Origin                  *Location                `json:"origin,omitempty"`
-	OrderType               *OrderType               `json:"orderType,omitempty"`
-	Packages                []*Package               `json:"packages,omitempty"`
-	PromisedDate            *PromisedDate            `json:"promisedDate,omitempty"`
-	References              []*Reference             `json:"references,omitempty"`
-	ExtraFields             *ExtraFields             `json:"extraFields,omitempty"`
-}
-
-type OrderConnection struct {
-	Edges    []*OrderEdge `json:"edges"`
-	PageInfo *PageInfo    `json:"pageInfo"`
-}
-
-type OrderEdge struct {
-	Cursor string `json:"cursor"`
-	Node   *Order `json:"node"`
-}
-
-type OrderFilterInput struct {
-	ReferenceIds         []string `json:"referenceIds,omitempty"`
-	ReferenceType        *string  `json:"referenceType,omitempty"`
-	ReferenceValue       *string  `json:"referenceValue,omitempty"`
-	Lpns                 []string `json:"lpns,omitempty"`
-	OriginNodeReferences []string `json:"originNodeReferences,omitempty"`
-	GroupBy              []string `json:"groupBy,omitempty"`
-	LabelType            *string  `json:"labelType,omitempty"`
-	LabelValue           *string  `json:"labelValue,omitempty"`
-	Commerces            []string `json:"commerces,omitempty"`
-	Consumers            []string `json:"consumers,omitempty"`
 }
 
 type OrderType struct {
@@ -155,8 +185,9 @@ type PromisedDate struct {
 }
 
 type Quantity struct {
-	QuantityNumber *int    `json:"quantityNumber,omitempty"`
-	QuantityUnit   *string `json:"quantityUnit,omitempty"`
+	QuantityNumber    *int    `json:"quantityNumber,omitempty"`
+	QuantityDelivered *int    `json:"quantityDelivered,omitempty"`
+	QuantityUnit      *string `json:"quantityUnit,omitempty"`
 }
 
 type Query struct {
@@ -165,6 +196,11 @@ type Query struct {
 type Reference struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
+}
+
+type Route struct {
+	RouteID       *string `json:"routeID,omitempty"`
+	RoutePosition *int    `json:"routePosition,omitempty"`
 }
 
 type Skill struct {
@@ -176,6 +212,10 @@ type Skill struct {
 type TimeRange struct {
 	StartTime *string `json:"startTime,omitempty"`
 	EndTime   *string `json:"endTime,omitempty"`
+}
+
+type Vehicle struct {
+	Plate *string `json:"plate,omitempty"`
 }
 
 type Weight struct {
