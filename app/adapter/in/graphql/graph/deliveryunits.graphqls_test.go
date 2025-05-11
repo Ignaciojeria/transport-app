@@ -107,7 +107,7 @@ func buildSchemaFieldsMap(schema *ast.Schema) map[string]struct{} {
 	fields := make(map[string]struct{})
 
 	// Verificar si el esquema contiene una consulta OrderConnection
-	connectionType := schema.Types["OrderConnection"]
+	connectionType := schema.Types["DeliveryUnitsReport"]
 	if connectionType != nil {
 		// Si existe, buscar el tipo Order como parte de OrderConnection
 		// Normalmente, OrderConnection tendría un campo "edges" con OrderEdge que a su vez tiene "node" de tipo Order
@@ -131,14 +131,14 @@ func buildSchemaFieldsMap(schema *ast.Schema) map[string]struct{} {
 	}
 
 	// También buscar directamente el tipo Order (para casos donde no se usa el patrón de conexión)
-	orderType := schema.Types["Order"]
+	orderType := schema.Types["DeliveryUnitsReport"]
 	if orderType != nil {
 		collectFields(fields, "", orderType, schema)
 	}
 
 	// También buscar tipos relacionados que podrían ser parte de las proyecciones
 	for typeName, typeDef := range schema.Types {
-		if strings.HasPrefix(typeName, "Order") && typeName != "Order" && typeName != "OrderConnection" {
+		if strings.HasPrefix(typeName, "DeliveryUnitsReport") && typeName != "DeliveryUnitsReport" && typeName != "DeliveryUnitsReportConnection" {
 			if isObjectType(typeDef) {
 				// Aquí no usamos prefijo porque estos son tipos independientes
 				collectFields(fields, "", typeDef, schema)
