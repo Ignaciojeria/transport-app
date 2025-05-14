@@ -12,13 +12,13 @@ var _ = Describe("OrderStatus", func() {
 		It("should generate different document IDs for different status values", func() {
 			now := time.Now()
 
-			orderStatus1 := OrderStatus{
+			orderStatus1 := Status{
 				ID:        1,
 				Status:    "pending",
 				CreatedAt: now,
 			}
 
-			orderStatus2 := OrderStatus{
+			orderStatus2 := Status{
 				ID:        2,
 				Status:    "in_progress",
 				CreatedAt: now,
@@ -31,7 +31,7 @@ var _ = Describe("OrderStatus", func() {
 			// Aquí verificamos que se use el mismo ID para el mismo status en diferentes pruebas
 			// lo que implica que es independiente de la organización
 
-			orderStatus := OrderStatus{
+			orderStatus := Status{
 				ID:        1,
 				Status:    "delivered",
 				CreatedAt: time.Now(),

@@ -350,6 +350,10 @@
         {
             "kind": "post-controller",
             "name": "create-non-delivery-reason"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-delivery-units-history"
         }
     ]
 }

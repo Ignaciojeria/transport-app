@@ -17,11 +17,11 @@ import (
 
 var _ = Describe("UpsertOrder", func() {
 	var (
-		ctx         context.Context
-		orderStatus domain.OrderStatus
-		orderType   domain.OrderType
-		originNode  domain.NodeInfo
-		destNode    domain.NodeInfo
+		ctx        context.Context
+		Status     domain.Status
+		orderType  domain.OrderType
+		originNode domain.NodeInfo
+		destNode   domain.NodeInfo
 
 		originAddress domain.AddressInfo
 		destAddress   domain.AddressInfo
@@ -41,7 +41,7 @@ var _ = Describe("UpsertOrder", func() {
 		ctx = createOrgContext(organization1)
 
 		// Datos básicos para los tests
-		orderStatus = domain.OrderStatus{
+		Status = domain.Status{
 			Status: "pending",
 		}
 
@@ -74,16 +74,16 @@ var _ = Describe("UpsertOrder", func() {
 			AddressInfo: destAddress,
 		}
 
-		// Preparamos únicamente OrderStatus para los tests ya que es requerido
+		// Preparamos únicamente Status para los tests ya que es requerido
 		err := connection.DB.WithContext(ctx).
 			Table("statuses").
-			Where("status = ?", orderStatus.Status).
+			Where("status = ?", Status.Status).
 			FirstOrCreate(&table.Status{
-				Status: orderStatus.Status,
+				Status: Status.Status,
 			}).Error
 		Expect(err).ToNot(HaveOccurred())
 
-		// Y también inicializamos el OrderStatus "in_progress" que usaremos más adelante
+		// Y también inicializamos el Status "in_progress" que usaremos más adelante
 		err = connection.DB.WithContext(ctx).
 			Table("statuses").
 			Where("status = ?", "in_progress").
@@ -100,7 +100,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID:          "ORDER-001",
-			OrderStatus:          orderStatus,
+			Status:               Status,
 			OrderType:            orderType,
 			Origin:               originNode,
 			Destination:          destNode,
@@ -144,7 +144,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID:          "ORDER-002",
-			OrderStatus:          orderStatus,
+			Status:               Status,
 			OrderType:            orderType,
 			Origin:               originNode,
 			Destination:          destNode,
@@ -182,7 +182,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-003",
-			OrderStatus: orderStatus,
+			Status:      Status,
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -233,7 +233,7 @@ var _ = Describe("UpsertOrder", func() {
 
 	It("should update order status if changed", func() {
 		// Nuevo estado para actualizar
-		newStatus := domain.OrderStatus{
+		newStatus := domain.Status{
 			Status: "in_progress",
 		}
 
@@ -243,7 +243,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-004",
-			OrderStatus: orderStatus, // status pendiente
+			Status:      Status, // status pendiente
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -255,7 +255,7 @@ var _ = Describe("UpsertOrder", func() {
 
 		// Actualizar el estado de la orden
 		modifiedOrder := order
-		modifiedOrder.OrderStatus = newStatus
+		modifiedOrder.Status = newStatus
 
 		err = upsert(ctx, modifiedOrder)
 		Expect(err).ToNot(HaveOccurred())
@@ -266,7 +266,6 @@ var _ = Describe("UpsertOrder", func() {
 			Where("document_id = ?", order.DocID(ctx)).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbOrder.OrderStatusDoc).To(Equal(newStatus.DocID().String()))
 	})
 
 	It("should update packages if changed", func() {
@@ -276,7 +275,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-005",
-			OrderStatus: orderStatus,
+			Status:      Status,
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -350,7 +349,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-ERROR",
-			OrderStatus: orderStatus,
+			Status:      Status,
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -371,7 +370,7 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-DOC-TEST",
-			OrderStatus: domain.OrderStatus{
+			Status: domain.Status{
 				Status: "pending",
 			},
 			OrderType: domain.OrderType{
@@ -394,7 +393,7 @@ var _ = Describe("UpsertOrder", func() {
 
 		// Crear una nueva versión con todos los campos modificados
 		modifiedOrder := order
-		modifiedOrder.OrderStatus = domain.OrderStatus{
+		modifiedOrder.Status = domain.Status{
 			Status: "in_progress",
 		}
 		modifiedOrder.OrderType = domain.OrderType{
@@ -431,8 +430,6 @@ var _ = Describe("UpsertOrder", func() {
 			First(&updatedOrder).Error
 		Expect(err).ToNot(HaveOccurred())
 
-		// Validaciones de DocIDs actualizados
-		Expect(updatedOrder.OrderStatusDoc).To(Equal(modifiedOrder.OrderStatus.DocID().String()))
 		Expect(updatedOrder.OrderTypeDoc).To(Equal(modifiedOrder.OrderType.DocID(ctx).String()))
 		Expect(updatedOrder.OrderHeadersDoc).To(Equal(modifiedOrder.Headers.DocID(ctx).String()))
 
@@ -453,7 +450,7 @@ func createMinimalOrder(ctx context.Context) domain.Order {
 			Consumer: "Cliente",
 		},
 		ReferenceID: "ORDER-FAIL-TEST",
-		OrderStatus: domain.OrderStatus{Status: "pending"},
+		Status:      domain.Status{Status: "pending"},
 		OrderType:   domain.OrderType{Type: "retail"},
 	}
 }

@@ -89,6 +89,7 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 		orderReq.Header.Set("organization", orgRespData.OrganizationKey)
 		orderReq.Header.Set("commerce", "TEST_COMMERCE")
 		orderReq.Header.Set("consumer", "TEST_CONSUMER")
+		orderReq.Header.Set("channel", "TEST_CHANNEL")
 		orderReq.Header.Set("Content-Type", "application/json")
 
 		orderResp, err := http.DefaultClient.Do(orderReq)

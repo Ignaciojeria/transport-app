@@ -9,6 +9,7 @@ type DeliveryUnitsHistory struct {
 	ID                   int64 `gorm:"primaryKey"`
 	Channel              string
 	OrderDoc             string             `gorm:"type:char(64);index"`
+	DeliveryUnitDoc      string             `gorm:"type:char(64);index"`
 	OrderStatusID        int64              `gorm:"not null;index"`
 	OrderStatus          Status             `gorm:"foreignKey:OrderStatusID"`
 	RouteDoc             string             `gorm:"type:char(64);index"`
@@ -19,6 +20,4 @@ type DeliveryUnitsHistory struct {
 	EvidencePhotos       JSONEvidencePhotos `gorm:"type:json;default:'{}'"`
 	RecipientFullName    string             `gorm:"default:''"`
 	RecipientNationalID  string             `gorm:"default:''"`
-	ExpectedQuantity     int
-	DeliveredQuantity    int
 }

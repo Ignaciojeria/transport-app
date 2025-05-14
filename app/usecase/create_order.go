@@ -16,7 +16,6 @@ func init() {
 	ioc.Registry(
 		NewCreateOrder,
 		tidbrepository.NewUpsertOrderHeaders,
-		tidbrepository.NewLoadOrderStatuses,
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
 		tidbrepository.NewUpsertNodeInfo,
@@ -31,7 +30,6 @@ func init() {
 
 func NewCreateOrder(
 	upsertOrderHeaders tidbrepository.UpsertOrderHeaders,
-	loadOrderStatuses tidbrepository.LoadOrderStatuses,
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
@@ -43,7 +41,6 @@ func NewCreateOrder(
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
-		inOrder.OrderStatus = loadOrderStatuses().Available()
 
 		normalizationGroup, group1Ctx := errgroup.WithContext(ctx)
 

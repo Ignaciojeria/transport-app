@@ -17,7 +17,7 @@ type Order struct {
 	AddressLine2            string
 	ReferenceID             ReferenceID
 	SequenceNumber          *int
-	OrderStatus             OrderStatus
+	Status                  Status
 	OrderType               OrderType
 	References              []Reference
 	Origin                  NodeInfo
@@ -27,8 +27,7 @@ type Order struct {
 	PromisedDate            PromisedDate
 	UnassignedReason        string
 	DeliveryInstructions    string
-
-	GroupBy struct {
+	GroupBy                 struct {
 		Type  string
 		Value string
 	}

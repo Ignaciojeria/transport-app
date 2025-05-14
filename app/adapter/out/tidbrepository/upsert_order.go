@@ -44,7 +44,6 @@ func NewUpsertOrder(conn database.ConnectionFactory) UpsertOrder {
 		DBOrderToUpdate.OrderHeadersDoc = order.OrderHeadersDoc
 		DBOrderToUpdate.OriginNodeInfoDoc = order.OriginNodeInfoDoc
 		DBOrderToUpdate.DestinationNodeInfoDoc = order.DestinationNodeInfoDoc
-		DBOrderToUpdate.OrderStatusDoc = order.OrderStatusDoc
 		DBOrderToUpdate.OrderTypeDoc = order.OrderTypeDoc
 		DBOrderToUpdate.OriginContactDoc = order.OriginContactDoc
 		DBOrderToUpdate.DestinationContactDoc = order.DestinationContactDoc
@@ -58,20 +57,12 @@ func NewUpsertOrder(conn database.ConnectionFactory) UpsertOrder {
 			DBOrderToUpdate.OrderHeadersDoc = o.Headers.DocID(ctx).String()
 		}
 
-		if o.OrderStatus.DocID().ShouldUpdate(order.OrderStatusDoc) {
-			DBOrderToUpdate.OrderStatusDoc = o.OrderStatus.DocID().String()
-		}
-
 		if o.Origin.DocID(ctx).ShouldUpdate(order.OriginNodeInfoDoc) {
 			DBOrderToUpdate.OriginNodeInfoDoc = o.Origin.DocID(ctx).String()
 		}
 
 		if o.Destination.DocID(ctx).ShouldUpdate(order.DestinationNodeInfoDoc) {
 			DBOrderToUpdate.DestinationNodeInfoDoc = o.Destination.DocID(ctx).String()
-		}
-
-		if o.OrderStatus.DocID().ShouldUpdate(order.OrderStatusDoc) {
-			DBOrderToUpdate.OrderStatusDoc = o.OrderStatus.DocID().String()
 		}
 
 		if o.OrderType.DocID(ctx).ShouldUpdate(order.OrderTypeDoc) {

@@ -13,15 +13,15 @@ import (
 
 func init() {
 	ioc.Registry(
-		NewLoadOrderStatuses,
+		NewLoadStatuses,
 		database.NewConnectionFactory)
 }
 
-type LoadOrderStatuses func() orderStatuses
+type LoadStatuses func() Statuses
 
-func NewLoadOrderStatuses(conn database.ConnectionFactory) LoadOrderStatuses {
+func NewLoadStatuses(conn database.ConnectionFactory) LoadStatuses {
 	var once sync.Once
-	statuses := make(orderStatuses)
+	statuses := make(Statuses)
 	var records = []table.Status{
 		{ID: 1, Status: domain.StatusAvailable},
 		{ID: 2, Status: domain.StatusScanned},
@@ -32,12 +32,12 @@ func NewLoadOrderStatuses(conn database.ConnectionFactory) LoadOrderStatuses {
 		{ID: 7, Status: domain.StatusFinished},
 	}
 	for _, record := range records {
-		statuses[record.Status] = domain.OrderStatus{
+		statuses[record.Status] = domain.Status{
 			ID:     record.ID,
 			Status: record.Status,
 		}
 	}
-	return func() orderStatuses {
+	return func() Statuses {
 		once.Do(func() {
 			if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
 				log.Fatalf("failed to upsert order statuses: %s", err)
@@ -47,32 +47,32 @@ func NewLoadOrderStatuses(conn database.ConnectionFactory) LoadOrderStatuses {
 	}
 }
 
-type orderStatuses map[string]domain.OrderStatus
+type Statuses map[string]domain.Status
 
-func (m orderStatuses) Available() domain.OrderStatus {
+func (m Statuses) Available() domain.Status {
 	return m[domain.StatusAvailable]
 }
 
-func (m orderStatuses) Scanned() domain.OrderStatus {
+func (m Statuses) Scanned() domain.Status {
 	return m[domain.StatusScanned]
 }
 
-func (m orderStatuses) Picked() domain.OrderStatus {
+func (m Statuses) Picked() domain.Status {
 	return m[domain.StatusPicked]
 }
 
-func (m orderStatuses) Planned() domain.OrderStatus {
+func (m Statuses) Planned() domain.Status {
 	return m[domain.StatusPlanned]
 }
 
-func (m orderStatuses) InTransit() domain.OrderStatus {
+func (m Statuses) InTransit() domain.Status {
 	return m[domain.StatusInTransit]
 }
 
-func (m orderStatuses) Cancelled() domain.OrderStatus {
+func (m Statuses) Cancelled() domain.Status {
 	return m[domain.StatusCancelled]
 }
 
-func (m orderStatuses) Finished() domain.OrderStatus {
+func (m Statuses) Finished() domain.Status {
 	return m[domain.StatusFinished]
 }

@@ -10,11 +10,11 @@ import (
 func init() {
 	ioc.Registry(applicationLoader,
 		table.NewRunMigrations,
-		tidbrepository.NewLoadOrderStatuses)
+		tidbrepository.NewLoadStatuses)
 }
 func applicationLoader(
 	runMigrations table.RunMigrations,
-	LoadOrderStatuses tidbrepository.LoadOrderStatuses) error {
+	LoadOrderStatuses tidbrepository.LoadStatuses) error {
 	if err := runMigrations(); err != nil {
 		return err
 	}

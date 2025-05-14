@@ -7,13 +7,15 @@ import (
 )
 
 type Package struct {
-	Lpn        string
-	Dimensions Dimensions
-	Weight     Weight
-	Insurance  Insurance
-	Index      int
-	SkuIndex   string
-	Items      []Item
+	Lpn             string
+	Dimensions      Dimensions
+	Weight          Weight
+	Insurance       Insurance
+	Index           int
+	SkuIndex        string
+	Status          Status
+	ConfirmDelivery ConfirmDelivery
+	Items           []Item
 }
 
 func (p Package) DocID(ctx context.Context, otherReference string) DocumentID {

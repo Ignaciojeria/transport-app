@@ -15,7 +15,6 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		ReferenceID:            string(order.ReferenceID),
 		DocumentID:             order.DocID(ctx).String(),
 		OrderHeadersDoc:        order.Headers.DocID(ctx).String(),
-		OrderStatusDoc:         order.OrderStatus.DocID().String(),
 		OrderTypeDoc:           order.OrderType.DocID(ctx).String(),
 		OriginNodeInfoDoc:      order.Origin.DocID(ctx).String(),
 		DestinationNodeInfoDoc: order.Destination.DocID(ctx).String(),

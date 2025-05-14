@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"context"
 	"time"
 )
 
@@ -15,12 +14,12 @@ const (
 	StatusFinished  = "finished"
 )
 
-type OrderStatus struct {
+type Status struct {
 	ID        int64
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-func (oe OrderStatus) DocID() DocumentID {
-	return HashByTenant(context.Background(), oe.Status)
+func (oe Status) DocID() DocumentID {
+	return HashInputs(oe.Status)
 }

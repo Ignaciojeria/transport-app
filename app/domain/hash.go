@@ -34,3 +34,9 @@ func HashByCountry(ctx context.Context, inputs ...string) DocumentID {
 	hash := sha256.Sum256([]byte(joined))
 	return DocumentID(hex.EncodeToString(hash[:])) // NO truncado
 }
+
+func HashInputs(inputs ...string) DocumentID {
+	joined := strings.Join(inputs, "|")
+	hash := sha256.Sum256([]byte(joined))
+	return DocumentID(hex.EncodeToString(hash[:]))
+}

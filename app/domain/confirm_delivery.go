@@ -2,13 +2,9 @@ package domain
 
 import "time"
 
-type OrderHistory struct {
+type ConfirmDelivery struct {
 	RequestBody       []byte
-	Order             Order
-	Route             Route
-	OrderStatus       OrderStatus
 	HandledAt         time.Time
-	Vehicle           Vehicle
 	Recipient         Recipient
 	EvidencePhotos    []EvidencePhotos
 	Latitude          float64

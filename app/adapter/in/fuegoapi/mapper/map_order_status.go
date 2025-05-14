@@ -5,7 +5,7 @@ import (
 	"transport-app/app/domain"
 )
 
-func MapOrderStatusFromDomain(status domain.OrderStatus) struct {
+func MapOrderStatusFromDomain(status domain.Status) struct {
 	ID        int64
 	Status    string `json:"status"`
 	CreatedAt string `json:"createdAt"`
@@ -25,13 +25,13 @@ func MapOrderStatusToDomain(status struct {
 	ID        int64
 	Status    string `json:"status"`
 	CreatedAt string `json:"createdAt"`
-}) domain.OrderStatus {
+}) domain.Status {
 	createdAt, err := time.Parse("2006-01-02T15:04:05Z07:00", status.CreatedAt)
 	if err != nil {
 		createdAt = time.Time{} // zero value como default en caso de error
 	}
 
-	return domain.OrderStatus{
+	return domain.Status{
 		ID:        status.ID,
 		Status:    status.Status,
 		CreatedAt: createdAt,
