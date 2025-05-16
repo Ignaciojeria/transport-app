@@ -51,8 +51,6 @@ func NewRunMigrations(
 			&Carrier{},
 			&Vehicle{},
 			&Driver{},
-			//&CheckoutRejection{},
-			//&CheckoutHistory{},
 			&State{},
 			&District{},
 			&Province{},
