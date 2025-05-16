@@ -17,7 +17,7 @@ El consumidor debe enviar los siguientes headers:
 
 | Header         | Ejemplo            | Descripción                                                                            |
 | -------------- | ------------------ | -------------------------------------------------------------------------------------- |
-| `organization` | `2-CL`             | ID del tenant + país (`tenantId-country`). Siempre se utiliza para operar el recurso.  |
+| `tenant`       | `53f0cea9-ee4c-4c0f-adc8-dabc850e4d7b-CL`             | ID del tenant + país (`tenantId-country`). Siempre se utiliza para operar el recurso.  |
 | `consumer`     | `CONSUMER_EXAMPLE` | Identificador técnico de quien inicializó la creación del recurso vía API. (origen)             |
 | `commerce`     | `COMMERCE_EXAMPLE` | Identificador del comercio o tienda que genera la necesidad inicial de operar el recurso.       |
 | `channel`      | `WEB` / `APP`      | Canal de operación previo a creación del recurso (planificado : Web, Entregado: App Mobile, etc.). Puede cambiar. |
@@ -30,8 +30,8 @@ Estas claves se propagan en el `context.Context`:
 
 | Clave Baggage       | Ejemplo                  | Fuente                     |
 | ------------------- | ------------------------ | -------------------------- |
-| `tenant.id`         | `2`                      | Derivado de `organization` |
-| `tenant.country`    | `CL`                     | Derivado de `organization` |
+| `tenant.id`         | `2`                      | Derivado de `tenant` |
+| `tenant.country`    | `CL`                     | Derivado de `tenant` |
 | `consumer`          | `CONSUMER_EXAMPLE`       | Header `consumer`          |
 | `commerce`          | `COMMERCE_EXAMPLE`       | Header `commerce`          |
 | `channel`           | `WEB/MOBILE/INTEGRATION` | Header `channel`           |
