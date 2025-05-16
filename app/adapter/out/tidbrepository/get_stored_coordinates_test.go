@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"strconv"
 
 	"transport-app/app/domain"
 	"transport-app/app/shared/sharedcontext"
@@ -15,9 +14,9 @@ import (
 
 var _ = Describe("GetStoredCoordinates", func() {
 
-	createOrgContext := func(org domain.Organization) context.Context {
+	createOrgContext := func(org domain.Tenant) context.Context {
 		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(org.ID, 10))
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
 		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
 		bag, _ := baggage.New(orgIDMember, countryMember)
 		return baggage.ContextWithBaggage(ctx, bag)

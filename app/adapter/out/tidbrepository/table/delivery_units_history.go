@@ -10,8 +10,7 @@ type DeliveryUnitsHistory struct {
 	Channel              string
 	OrderDoc             string             `gorm:"type:char(64);index"`
 	DeliveryUnitDoc      string             `gorm:"type:char(64);index"`
-	OrderStatusID        int64              `gorm:"not null;index"`
-	OrderStatus          Status             `gorm:"foreignKey:OrderStatusID"`
+	OrderStatusDoc       string             `gorm:"type:char(64);index"`
 	RouteDoc             string             `gorm:"type:char(64);index"`
 	VehicleDoc           string             `gorm:"type:char(64);index"`
 	CarrierDoc           string             `gorm:"type:char(64);index"`

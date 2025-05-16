@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
@@ -28,9 +27,9 @@ var _ = Describe("UpsertOrder", func() {
 	)
 
 	// Helper function to create context with organization
-	createOrgContext := func(org domain.Organization) context.Context {
+	createOrgContext := func(org domain.Tenant) context.Context {
 		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(org.ID, 10))
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
 		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
 		bag, _ := baggage.New(orgIDMember, countryMember)
 		return baggage.ContextWithBaggage(ctx, bag)
@@ -134,7 +133,7 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbOrder.ReferenceID).To(Equal(string(order.ReferenceID)))
 		Expect(dbOrder.DeliveryInstructions).To(Equal(order.DeliveryInstructions))
-		Expect(dbOrder.OrganizationID).To(Equal(organization1.ID))
+		Expect(dbOrder.TenantID).To(Equal(organization1.ID))
 	})
 
 	It("should update an existing order if delivery instructions changed", func() {

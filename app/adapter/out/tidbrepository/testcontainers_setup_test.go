@@ -10,6 +10,7 @@ import (
 	"transport-app/app/shared/infrastructure/database"
 
 	"github.com/biter777/countries"
+	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -25,8 +26,8 @@ func TestContainersSetup(t *testing.T) {
 
 var container *tcpostgres.PostgresContainer
 var connection database.ConnectionFactory
-var organization1 domain.Organization
-var organization2 domain.Organization
+var organization1 domain.Tenant
+var organization2 domain.Tenant
 
 var noTablesContainerConnection database.ConnectionFactory
 var noTablesMigrationContainer *tcpostgres.PostgresContainer
@@ -92,10 +93,11 @@ var _ = BeforeSuite(func() {
 	// Setup context with country information
 
 	// Create first organization using the new function signature
-	saveOrganization := NewSaveOrganization(connection)
+	saveOrganization := NewSaveTenant(connection)
 
 	// Create organization entity with required fields
-	orgToSave1 := domain.Organization{
+	orgToSave1 := domain.Tenant{
+		ID:      uuid.New(),
 		Country: countries.CL,
 		Name:    "Organization 1",
 		Operator: domain.Operator{
@@ -110,7 +112,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	// Create second organization
-	orgToSave2 := domain.Organization{
+	orgToSave2 := domain.Tenant{
+		ID:      uuid.New(),
 		Country: countries.CL,
 		Name:    "Organization 2",
 		Operator: domain.Operator{

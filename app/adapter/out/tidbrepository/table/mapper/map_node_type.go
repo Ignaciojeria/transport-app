@@ -9,8 +9,8 @@ import (
 
 func MapNodeType(ctx context.Context, nt domain.NodeType) table.NodeType {
 	return table.NodeType{
-		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-		Value:          nt.Value,
-		DocumentID:     string(nt.DocID(ctx)),
+		TenantID:   sharedcontext.TenantIDFromContext(ctx),
+		Value:      nt.Value,
+		DocumentID: string(nt.DocID(ctx)),
 	}
 }

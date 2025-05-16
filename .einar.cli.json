@@ -354,6 +354,14 @@
         {
             "kind": "usecase",
             "name": "create-delivery-units-history"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "organization-submitted"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "registration-submitted"
         }
     ]
 }

@@ -16,55 +16,59 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/google/uuid"
 )
 
 func init() {
 	ioc.Registry(
-		register,
+		createTenant,
 		httpserver.New,
 		gcppublisher.NewApplicationEvents,
 		observability.NewObservability,
-		usecase.NewRegister)
+		usecase.NewCreateTenant)
 }
-func register(
+func createTenant(
 	s httpserver.Server,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability,
-	register usecase.Register) {
-	fuego.Post(s.Manager, "/register",
-		func(c fuego.ContextWithBody[request.RegisterRequest]) (response.RegisterResponse, error) {
-			spanCtx, span := obs.Tracer.Start(c.Context(), "register")
+	createOrg usecase.CreateTenant) {
+	fuego.Post(s.Manager, "/tenants",
+		func(c fuego.ContextWithBody[request.CreateTenantRequest]) (response.CreateTenantResponse, error) {
+			spanCtx, span := obs.Tracer.Start(c.Context(), "createTenant")
 			defer span.End()
-			req, err := c.Body()
+			requestBody, err := c.Body()
 			if err != nil {
-				return response.RegisterResponse{}, err
+				return response.CreateTenantResponse{}, err
 			}
-
-			eventPayload, _ := json.Marshal(req)
-
+			requestBody.ID = uuid.NewString()
+			eventPayload, _ := json.Marshal(requestBody)
 			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
 				sharedcontext.EventContext{
-					EntityType: "registration",
-					EventType:  "registrationSubmitted",
+					EntityType: "tenant",
+					EventType:  "tenantSubmitted",
 				})
 
 			if err := publish(eventCtx, domain.Outbox{
 				Payload: eventPayload,
 			}); err != nil {
-				return response.RegisterResponse{}, fuego.HTTPError{
-					Title:  "registration error",
+				return response.CreateTenantResponse{}, fuego.HTTPError{
+					Title:  "error creating tenant",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
 			obs.Logger.InfoContext(spanCtx,
-				"REGISTRATION_SUBMISSION_SUCCEEDED",
-				slog.Any("payload", eventPayload))
+				"TENANT_SUBMISSION_SUCCEEDED",
+				slog.Any("payload", requestBody))
 
-			return response.RegisterResponse{
-				Message: "user submitted successfully",
+			return response.CreateTenantResponse{
+				ID:      requestBody.ID,
+				Country: requestBody.Country,
+				Tenant:  requestBody.ID + "-" + requestBody.Country,
+				Message: "Tenant submitted successfully",
 			}, nil
 		},
-		option.Tags(tagRegistration),
-		option.Summary("register"))
+		option.Summary("create tenant"),
+		option.Tags(tagTenants),
+	)
 }

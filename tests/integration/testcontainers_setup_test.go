@@ -59,12 +59,14 @@ func TestContainersSetup(t *testing.T) {
 
 var container *tcpostgres.PostgresContainer
 var connection database.ConnectionFactory
-var organization1 domain.Organization
-var organization2 domain.Organization
+var organization1 domain.Tenant
+var organization2 domain.Tenant
 var pubsubContainer *pubsubtc.Container
 
 const TRANSPORT_APP_TOPIC = "transport-app-events"
 const ORDER_SUBMITTED_SUBSCRIPTION = "transport-app-events-order-submitted"
+const TENANT_SUBMITTED_SUBSCRIPTION = "transport-app-events-tenant-submitted"
+const REGISTRATION_SUBMITTED_SUBSCRIPTION = "transport-app-events-registration-submitted"
 
 var noTablesContainerConnection database.ConnectionFactory
 var _ = Describe("TidbRepository", func() {
@@ -110,6 +112,9 @@ var _ = BeforeSuite(func() {
 	os.Setenv("GOOGLE_PROJECT_ID", "test-project")
 	os.Setenv("PUBSUB_EMULATOR_HOST", fmt.Sprintf("%s:%s", pubsubHost, pubsubPort.Port()))
 	os.Setenv("ORDER_SUBMITTED_SUBSCRIPTION", ORDER_SUBMITTED_SUBSCRIPTION)
+	os.Setenv("TENANT_SUBMITTED_SUBSCRIPTION", TENANT_SUBMITTED_SUBSCRIPTION)
+	os.Setenv("REGISTRATION_SUBMITTED_SUBSCRIPTION", REGISTRATION_SUBMITTED_SUBSCRIPTION)
+
 	os.Setenv("TRANSPORT_APP_TOPIC", TRANSPORT_APP_TOPIC)
 
 	port, err := container.MappedPort(ctx, "5432")
@@ -180,35 +185,29 @@ func SetupPubsubTestResources(client *pubsub.Client) error {
 
 	// Crear el tópico si no existe
 	topic := client.Topic(TRANSPORT_APP_TOPIC)
-	topicExists, err := topic.Exists(ctx)
-	if err != nil {
+	if _, err := client.CreateTopic(ctx, TRANSPORT_APP_TOPIC); err != nil {
 		return err
-	}
-	if !topicExists {
-		if _, err := client.CreateTopic(ctx, TRANSPORT_APP_TOPIC); err != nil {
-			return err
-		}
-		log.Printf("✅ Topic %q created\n", TRANSPORT_APP_TOPIC)
-	} else {
-		log.Printf("ℹ️ Topic %q already exists\n", TRANSPORT_APP_TOPIC)
 	}
 
-	// Crear la suscripción si no existe
-	sub := client.Subscription(ORDER_SUBMITTED_SUBSCRIPTION)
-	subExists, err := sub.Exists(ctx)
+	_, err := client.CreateSubscription(ctx, ORDER_SUBMITTED_SUBSCRIPTION, pubsub.SubscriptionConfig{
+		Topic: topic,
+	})
 	if err != nil {
 		return err
 	}
-	if !subExists {
-		_, err := client.CreateSubscription(ctx, ORDER_SUBMITTED_SUBSCRIPTION, pubsub.SubscriptionConfig{
-			Topic: topic,
-		})
-		if err != nil {
-			return err
-		}
-		log.Printf("✅ Subscription %q created\n", ORDER_SUBMITTED_SUBSCRIPTION)
-	} else {
-		log.Printf("ℹ️ Subscription %q already exists\n", ORDER_SUBMITTED_SUBSCRIPTION)
+
+	_, err = client.CreateSubscription(ctx, TENANT_SUBMITTED_SUBSCRIPTION, pubsub.SubscriptionConfig{
+		Topic: topic,
+	})
+	if err != nil {
+		return err
+	}
+
+	_, err = client.CreateSubscription(ctx, REGISTRATION_SUBMITTED_SUBSCRIPTION, pubsub.SubscriptionConfig{
+		Topic: topic,
+	})
+	if err != nil {
+		return err
 	}
 
 	return nil

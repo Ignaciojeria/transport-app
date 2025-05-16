@@ -9,9 +9,9 @@ import (
 
 func MapOrderType(ctx context.Context, ot domain.OrderType) table.OrderType {
 	return table.OrderType{
-		Type:           ot.Type,
-		Description:    ot.Description,
-		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-		DocumentID:     string(ot.DocID(ctx)),
+		Type:        ot.Type,
+		Description: ot.Description,
+		TenantID:    sharedcontext.TenantIDFromContext(ctx),
+		DocumentID:  string(ot.DocID(ctx)),
 	}
 }

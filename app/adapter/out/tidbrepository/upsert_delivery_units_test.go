@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
@@ -20,9 +19,9 @@ var _ = Describe("UpsertPackages", func() {
 	)
 
 	// Helper function to create context with organization
-	createOrgContext := func(org domain.Organization) context.Context {
+	createOrgContext := func(org domain.Tenant) context.Context {
 		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(org.ID, 10))
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
 		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
 		bag, _ := baggage.New(orgIDMember, countryMember)
 		return baggage.ContextWithBaggage(ctx, bag)
@@ -114,7 +113,7 @@ var _ = Describe("UpsertPackages", func() {
 			First(&dbPackage1).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPackage1.Lpn).To(Equal("PKG001"))
-		Expect(dbPackage1.OrganizationID).To(Equal(organization1.ID))
+		Expect(dbPackage1.TenantID).To(Equal(organization1.ID))
 
 		// Verificar las dimensiones (que están en JSON)
 		dimensions := dbPackage1.JSONDimensions.Map()
@@ -400,13 +399,13 @@ var _ = Describe("UpsertPackages", func() {
 		Expect(packages).To(HaveLen(2))
 
 		// Verificar que tienen diferentes organizaciones
-		orgs := map[int64]bool{}
+		orgs := map[string]bool{}
 		for _, pkg := range packages {
-			orgs[pkg.OrganizationID] = true
+			orgs[pkg.TenantID.String()] = true
 		}
 		Expect(orgs).To(HaveLen(2))
-		Expect(orgs[organization1.ID]).To(BeTrue())
-		Expect(orgs[organization2.ID]).To(BeTrue())
+		Expect(orgs[organization1.ID.String()]).To(BeTrue())
+		Expect(orgs[organization2.ID.String()]).To(BeTrue())
 
 		// Verify they have different document IDs
 		Expect(package1.DocID(ctx1, "")).ToNot(Equal(package2.DocID(ctx2, "")))

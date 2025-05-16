@@ -9,9 +9,9 @@ import (
 
 func MapOrderHeaders(ctx context.Context, c domain.Headers) table.OrderHeaders {
 	return table.OrderHeaders{
-		Commerce:       c.Commerce,
-		Consumer:       c.Consumer,
-		DocumentID:     string(c.DocID(ctx)),
-		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
+		Commerce:   c.Commerce,
+		Consumer:   c.Consumer,
+		DocumentID: string(c.DocID(ctx)),
+		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 	}
 }

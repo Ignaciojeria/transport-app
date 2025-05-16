@@ -15,6 +15,7 @@ require (
 	github.com/go-slog/otelslog v0.3.0
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/google/generative-ai-go v0.19.0
+	github.com/google/uuid v1.6.0
 	github.com/hellofresh/health-go/v5 v5.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/onsi/ginkgo/v2 v2.23.4
@@ -114,7 +115,6 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/pprof v0.0.0-20250403155104-27863c87afa6 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect

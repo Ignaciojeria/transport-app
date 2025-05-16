@@ -23,7 +23,7 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 		}
 
 		type OrganizationResponse struct {
-			OrganizationKey string `json:"organizationKey"`
+			OrganizationKey string `json:"tenant"`
 			Message         string `json:"message"`
 		}
 
@@ -48,6 +48,8 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 		accountResp, err := http.DefaultClient.Do(accountReq)
 		Expect(err).To(BeNil())
 		Expect(accountResp.StatusCode).To(Equal(http.StatusOK))
+		// Si necesitas esperar procesamiento asíncrono, hazlo después
+		time.Sleep(1 * time.Second)
 
 		// ---------- Crear organización ----------
 		By("Creating organization")
@@ -63,7 +65,7 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 		orgBody, err := json.Marshal(createOrganizationRequest.Body)
 		Expect(err).To(BeNil())
 
-		orgReq, err := http.NewRequest("POST", "http://localhost:8080/organizations", bytes.NewReader(orgBody))
+		orgReq, err := http.NewRequest("POST", "http://localhost:8080/tenants", bytes.NewReader(orgBody))
 		Expect(err).To(BeNil())
 		orgReq.Header.Set("Content-Type", "application/json")
 
@@ -79,6 +81,8 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 		err = json.Unmarshal(respBody, &orgRespData)
 		Expect(err).To(BeNil())
 		Expect(orgRespData.OrganizationKey).ToNot(BeEmpty())
+		// Si necesitas esperar procesamiento asíncrono, hazlo después
+		time.Sleep(1 * time.Second)
 
 		// ---------- Crear orden ----------
 		By("Creating order with hardcoded headers")
@@ -86,7 +90,7 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 		Expect(err).To(BeNil())
 
 		// Headers seteados manualmente
-		orderReq.Header.Set("organization", orgRespData.OrganizationKey)
+		orderReq.Header.Set("tenant", orgRespData.OrganizationKey)
 		orderReq.Header.Set("commerce", "TEST_COMMERCE")
 		orderReq.Header.Set("consumer", "TEST_CONSUMER")
 		orderReq.Header.Set("channel", "TEST_CHANNEL")
@@ -94,9 +98,6 @@ var _ = Describe("TEST00001 - Create Account, Organization and Order", func() {
 
 		orderResp, err := http.DefaultClient.Do(orderReq)
 		Expect(err).To(BeNil())
-
-		// Si necesitas esperar procesamiento asíncrono, hazlo después
-		time.Sleep(1 * time.Second)
 
 		Expect(orderResp.StatusCode).To(Equal(http.StatusOK))
 

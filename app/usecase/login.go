@@ -14,12 +14,12 @@ type Login func(ctx context.Context, userCreds domain.UserCredentials) (domain.P
 func init() {
 	ioc.Registry(
 		NewLogin,
-		tidbrepository.NewFindOrganizationByEmail,
+		tidbrepository.NewFindTenantByEmail,
 		firebaseauth.NewLogin)
 }
 
 func NewLogin(
-	findOrganizationByEmail tidbrepository.FindOrganizationByEmail,
+	findOrganizationByEmail tidbrepository.FindTenantByEmail,
 	login firebaseauth.Login,
 ) Login {
 	return func(ctx context.Context, userCreds domain.UserCredentials) (domain.ProviderToken, error) {

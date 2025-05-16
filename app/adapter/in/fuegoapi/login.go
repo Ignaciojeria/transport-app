@@ -1,5 +1,6 @@
 package fuegoapi
 
+/*
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/domain"
@@ -34,3 +35,4 @@ func login(
 		option.Tags(tagAuthentication),
 		option.Summary("login"))
 }
+*/

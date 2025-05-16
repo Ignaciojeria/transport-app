@@ -7,6 +7,7 @@ import (
 	"time"
 	"transport-app/app/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -15,8 +16,8 @@ type Plan struct {
 	ID                   int64            `gorm:"primaryKey;autoIncrement"`
 	StartNodeReferenceID string           `gorm:"default:null"`
 	JSONStartLocation    JSONPlanLocation `gorm:"type:json;default:null"`
-	OrganizationID       int64            `gorm:"not null"`
-	Organization         Organization     `gorm:"foreignKey:OrganizationID"`
+	TenantID             uuid.UUID        `gorm:"not null"`
+	Tenant               Tenant           `gorm:"foreignKey:TenantID"`
 	ReferenceID          string           `gorm:"type:varchar(255);not null"`
 	PlannedDate          time.Time        `gorm:"type:date;not null"`
 	PlanTypeID           int64            `gorm:"not null"`
@@ -57,10 +58,10 @@ func (p Plan) Map() domain.Plan {
 
 type PlanType struct {
 	gorm.Model
-	ID             int64        `gorm:"type:bigint;primaryKey;autoIncrement"`
-	OrganizationID int64        `gorm:"type:bigint;not null;index;uniqueIndex:idx_plan_type_org_name"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID;references:ID"`
-	Name           string       `gorm:"type:varchar(100);not null;uniqueIndex:idx_plan_type_org_name"`
+	ID       int64     `gorm:"type:bigint;primaryKey;autoIncrement"`
+	TenantID uuid.UUID `gorm:"type:bigint;not null;index;uniqueIndex:idx_plan_type_org_name"`
+	Tenant   Tenant    `gorm:"foreignKey:TenantID;references:ID"`
+	Name     string    `gorm:"type:varchar(100);not null;uniqueIndex:idx_plan_type_org_name"`
 }
 
 func (pt PlanType) Map() domain.PlanType {
@@ -71,11 +72,11 @@ func (pt PlanType) Map() domain.PlanType {
 
 type PlanningStatus struct {
 	gorm.Model
-	ID             int64        `gorm:"type:bigint;primaryKey;autoIncrement"`
-	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
-	OrganizationID int64        `gorm:"type:bigint;not null;index;"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID;references:ID"`
-	Name           string       `gorm:"type:varchar(100);not null;"`
+	ID         int64     `gorm:"type:bigint;primaryKey;autoIncrement"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
+	TenantID   uuid.UUID `gorm:"type:bigint;not null;index;"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID;references:ID"`
+	Name       string    `gorm:"type:varchar(100);not null;"`
 }
 
 func (ps PlanningStatus) Map() domain.PlanningStatus {
@@ -88,8 +89,8 @@ type Route struct {
 	gorm.Model
 	ID                 int64            `gorm:"primaryKey;autoIncrement"`
 	ReferenceID        string           `gorm:"type:varchar(255);not null"`
-	OrganizationID     int64            `gorm:"default:null"`
-	Organization       Organization     `gorm:"foreignKey:OrganizationID"`
+	TenantID           int64            `gorm:"default:null"`
+	Tenant             Tenant           `gorm:"foreignKey:TenantID"`
 	EndNodeReferenceID string           `gorm:"default:null"`
 	JSONEndLocation    JSONPlanLocation `gorm:"type:json;default:null"`
 	PlanID             int64            `gorm:"default:null"`

@@ -2,9 +2,9 @@ package sharedcontext
 
 import (
 	"context"
-	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/baggage"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -66,15 +66,15 @@ func CopyBaggageToAttributesCamelCase(ctx context.Context, attrs map[string]stri
 	}
 }
 
-func TenantIDFromContext(ctx context.Context) int64 {
+func TenantIDFromContext(ctx context.Context) uuid.UUID {
 	bag := baggage.FromContext(ctx)
 	raw := bag.Member(BaggageTenantID).Value()
 	if raw == "" {
-		return 0
+		return uuid.Nil
 	}
-	id, err := strconv.ParseInt(raw, 10, 64)
+	id, err := uuid.Parse(raw)
 	if err != nil {
-		return 0
+		return uuid.Nil
 	}
 	return id
 }

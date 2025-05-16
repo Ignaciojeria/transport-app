@@ -9,6 +9,7 @@ import (
 	"transport-app/app/domain"
 
 	"github.com/biter777/countries"
+	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 	"gorm.io/gorm"
 )
@@ -153,15 +154,15 @@ func (j JSONItems) Value() (driver.Value, error) {
 
 type Contact struct {
 	gorm.Model
-	ID             int64         `gorm:"primaryKey"`
-	DocumentID     string        `gorm:"type:char(64);uniqueIndex"`
-	OrganizationID int64         `gorm:"not null;"`
-	Organization   Organization  `gorm:"foreignKey:OrganizationID"`
-	FullName       string        `gorm:"type:varchar(191);"`
-	Email          string        `gorm:"type:varchar(191);"`
-	Phone          string        `gorm:"type:varchar(191);"`
-	NationalID     string        `gorm:"type:varchar(191);"`
-	Documents      JSONReference `gorm:"type:json"`
+	ID         int64         `gorm:"primaryKey"`
+	DocumentID string        `gorm:"type:char(64);uniqueIndex"`
+	TenantID   uuid.UUID     `gorm:"not null;"`
+	Tenant     Tenant        `gorm:"foreignKey:TenantID"`
+	FullName   string        `gorm:"type:varchar(191);"`
+	Email      string        `gorm:"type:varchar(191);"`
+	Phone      string        `gorm:"type:varchar(191);"`
+	NationalID string        `gorm:"type:varchar(191);"`
+	Documents  JSONReference `gorm:"type:json"`
 }
 
 func (c Contact) Map() domain.Contact {
@@ -256,8 +257,8 @@ func (j JSONReference) Value() (driver.Value, error) {
 type DeliveryUnit struct {
 	gorm.Model
 	ID             int64          `gorm:"primaryKey"`
-	OrganizationID int64          `gorm:"not null;"`
-	Organization   Organization   `gorm:"foreignKey:OrganizationID"`
+	TenantID       uuid.UUID      `gorm:"not null;"`
+	Tenant         Tenant         `gorm:"foreignKey:TenantID"`
 	DocumentID     string         `gorm:"type:char(64);uniqueIndex"`
 	Lpn            string         `gorm:"type:varchar(191);not null;"`
 	JSONDimensions JSONDimensions `gorm:"type:json"`
@@ -304,12 +305,12 @@ type OrderReferences struct {
 
 type NodeInfo struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
-	ReferenceID    string       `gorm:"type:varchar(191);not null;"`
-	OrganizationID int64        `gorm:"not null;"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Name           string       `gorm:"type:varchar(191);"`
+	ID          int64     `gorm:"primaryKey"`
+	DocumentID  string    `gorm:"type:char(64);uniqueIndex"`
+	ReferenceID string    `gorm:"type:varchar(191);not null;"`
+	TenantID    uuid.UUID `gorm:"not null;"`
+	Tenant      Tenant    `gorm:"foreignKey:TenantID"`
+	Name        string    `gorm:"type:varchar(191);"`
 
 	// Store document hashes without enforcing constraints
 	NodeTypeDoc string   `gorm:"type:char(64)"`
@@ -337,18 +338,18 @@ func (n NodeInfo) Map() domain.NodeInfo {
 
 type AddressInfo struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"not null;"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
-	State          string       `gorm:"default:null"`
-	Province       string       `gorm:"default:null"`
-	District       string       `gorm:"default:null"`
-	AddressLine1   string       `gorm:"not null"`
-	Latitude       float64      `gorm:"default:null"`
-	Longitude      float64      `gorm:"default:null"`
-	ZipCode        string       `gorm:"default:null"`
-	TimeZone       string       `gorm:"default:null"`
+	ID           int64     `gorm:"primaryKey"`
+	TenantID     uuid.UUID `gorm:"not null;"`
+	Tenant       Tenant    `gorm:"foreignKey:TenantID"`
+	DocumentID   string    `gorm:"type:char(64);uniqueIndex"`
+	State        string    `gorm:"default:null"`
+	Province     string    `gorm:"default:null"`
+	District     string    `gorm:"default:null"`
+	AddressLine1 string    `gorm:"not null"`
+	Latitude     float64   `gorm:"default:null"`
+	Longitude    float64   `gorm:"default:null"`
+	ZipCode      string    `gorm:"default:null"`
+	TimeZone     string    `gorm:"default:null"`
 }
 
 type State struct {
@@ -480,12 +481,12 @@ func (j JSONWeight) Value() (driver.Value, error) {
 
 type OrderType struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
-	Type           string       `gorm:"type:varchar(191);not null;"`
-	OrganizationID int64        `gorm:"not null;"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Description    string       `gorm:"type:text"`
+	ID          int64     `gorm:"primaryKey"`
+	DocumentID  string    `gorm:"type:char(64);uniqueIndex"`
+	Type        string    `gorm:"type:varchar(191);not null;"`
+	TenantID    uuid.UUID `gorm:"not null;"`
+	Tenant      Tenant    `gorm:"foreignKey:TenantID"`
+	Description string    `gorm:"type:text"`
 }
 
 func (o OrderType) Map() domain.OrderType {
@@ -501,15 +502,15 @@ type Status struct {
 	Status string `gorm:"not null"`
 }
 
-type Organization struct {
+type Tenant struct {
 	gorm.Model
-	ID      int64  `gorm:"primaryKey"`
-	Name    string `gorm:"type:varchar(255);not null;"`
-	Country string `gorm:"type:varchar(255);not null;"`
+	ID      uuid.UUID `gorm:"type:char(36);primaryKey"`
+	Name    string    `gorm:"type:varchar(255);not null;"`
+	Country string    `gorm:"type:varchar(255);not null;"`
 }
 
-func (o Organization) Map() domain.Organization {
-	return domain.Organization{
+func (o Tenant) Map() domain.Tenant {
+	return domain.Tenant{
 		ID:      o.ID,
 		Name:    o.Name,
 		Country: countries.ByName(o.Country),
@@ -523,14 +524,15 @@ type Account struct {
 	IsActive bool   `gorm:"default:null"`
 }
 
-type AccountOrganization struct {
-	AccountID      int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"primaryKey"`
-	Role           string       `gorm:"type:varchar(50);default:null"` // Opcional: para definir el rol de la cuenta en la organización
-	Account        Account      `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID;constraint:OnDelete:CASCADE"`
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+type AccountTenant struct {
+	AccountID int64     `gorm:"primaryKey"`
+	TenantID  uuid.UUID `gorm:"primaryKey"`
+	Tenant    Tenant    `gorm:"foreignKey:TenantID;constraint:OnDelete:CASCADE"`
+	Role      string    `gorm:"type:varchar(50);default:null"` // Opcional: para definir el rol de la cuenta en la organización
+	Account   Account   `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (a Account) MapOperator() domain.Operator {
@@ -564,11 +566,11 @@ func (j JSONB) Value() (driver.Value, error) {
 // Modelo de Empresa de Transporte
 type Carrier struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	OrganizationID int64        `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Name           string       `gorm:"not null"`
-	NationalID     string       `gorm:"type:varchar(20);default:null;uniqueIndex:idx_carrier_national_org"`
+	ID         int64     `gorm:"primaryKey"`
+	TenantID   uuid.UUID `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
+	Name       string    `gorm:"not null"`
+	NationalID string    `gorm:"type:varchar(20);default:null;uniqueIndex:idx_carrier_national_org"`
 }
 
 func (c Carrier) Map() domain.Carrier {
@@ -581,11 +583,11 @@ func (c Carrier) Map() domain.Carrier {
 // Modelo de Vehículo
 type Vehicle struct {
 	gorm.Model
-	ID                int64        `gorm:"primaryKey"`
-	OrganizationID    int64        `gorm:"not null;index;uniqueIndex:idx_vehicle_ref_org;uniqueIndex:idx_vehicle_plate_org"`
-	Organization      Organization `gorm:"foreignKey:OrganizationID"`
-	ReferenceID       string       `gorm:"type:varchar(50);uniqueIndex:idx_vehicle_ref_org"`
-	Plate             string       `gorm:"type:varchar(20);uniqueIndex:idx_vehicle_plate_org"`
+	ID                int64  `gorm:"primaryKey"`
+	TenantID          string `gorm:"not null;index;uniqueIndex:idx_vehicle_ref_org;uniqueIndex:idx_vehicle_plate_org"`
+	Tenant            Tenant `gorm:"foreignKey:TenantID"`
+	ReferenceID       string `gorm:"type:varchar(50);uniqueIndex:idx_vehicle_ref_org"`
+	Plate             string `gorm:"type:varchar(20);uniqueIndex:idx_vehicle_plate_org"`
 	IsActive          bool
 	CertificateDate   string
 	VehicleCategoryID *int64          `gorm:"default null;index"`
@@ -616,10 +618,10 @@ func (v Vehicle) Map() domain.Vehicle {
 
 type VehicleCategory struct {
 	gorm.Model
-	ID                  int64        `gorm:"primaryKey"`
-	OrganizationID      int64        `gorm:"not null;uniqueIndex:idx_org_country_type"`
-	Organization        Organization `gorm:"foreignKey:OrganizationID"`
-	Type                string       `gorm:"type:varchar(191);not null;uniqueIndex:idx_org_country_type"`
+	ID                  int64     `gorm:"primaryKey"`
+	TenantID            uuid.UUID `gorm:"not null;uniqueIndex:idx_org_country_type"`
+	Tenant              Tenant    `gorm:"foreignKey:TenantID"`
+	Type                string    `gorm:"type:varchar(191);not null;uniqueIndex:idx_org_country_type"`
 	MaxPackagesQuantity int
 }
 
@@ -632,59 +634,46 @@ func (vc VehicleCategory) Map() domain.VehicleCategory {
 
 type OrderHeaders struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
-	Commerce       string       `gorm:"not null"`
-	Consumer       string       `gorm:"not null"`
-	OrganizationID int64        `gorm:"not null;index;"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	ID         int64     `gorm:"primaryKey"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
+	Commerce   string    `gorm:"not null"`
+	Consumer   string    `gorm:"not null"`
+	TenantID   uuid.UUID `gorm:"not null;index;"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
 }
 
 func (m OrderHeaders) Map() domain.Headers {
 	return domain.Headers{
-		/*
-			Organization: domain.Organization{
-				ID:      m.OrganizationID,
-				Country: countries.ByName(m.Organization.Country),
-			},*/
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
 }
 
 type VehicleHeaders struct {
-	ID             int64        `gorm:"primaryKey"`
-	Commerce       string       `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
-	Consumer       string       `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
-	OrganizationID int64        `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	ID       int64     `gorm:"primaryKey"`
+	Commerce string    `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	Consumer string    `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	TenantID uuid.UUID `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
+	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
 }
 
 func (m VehicleHeaders) Map() domain.Headers {
 	return domain.Headers{
-		/*
-			Organization: domain.Organization{
-				ID: m.OrganizationID,
-			},*/
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
 }
 
 type NodeHeaders struct {
-	ID             int64        `gorm:"primaryKey"`
-	Commerce       string       `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
-	Consumer       string       `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
-	OrganizationID int64        `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	ID       int64     `gorm:"primaryKey"`
+	Commerce string    `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	Consumer string    `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
+	TenantID uuid.UUID `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
+	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
 }
 
 func (m NodeHeaders) Map() domain.Headers {
 	return domain.Headers{
-		/*
-			Organization: domain.Organization{
-				ID: m.OrganizationID,
-			},*/
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
 	}
@@ -692,11 +681,11 @@ func (m NodeHeaders) Map() domain.Headers {
 
 type NodeType struct {
 	gorm.Model
-	ID             int64        `gorm:"primaryKey"`
-	DocumentID     string       `gorm:"type:char(64);uniqueIndex"`
-	OrganizationID int64        `gorm:"not null;"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
-	Value          string       `gorm:"type:varchar(191);"`
+	ID         int64     `gorm:"primaryKey"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
+	TenantID   uuid.UUID `gorm:"not null;"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
+	Value      string    `gorm:"type:varchar(191);"`
 }
 
 func (n NodeType) Map() domain.NodeType {

@@ -7,11 +7,13 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/sharedcontext"
+
+	"github.com/google/uuid"
 )
 
 func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 	tbl := table.Order{
-		OrganizationID:         sharedcontext.TenantIDFromContext(ctx),
+		TenantID:               sharedcontext.TenantIDFromContext(ctx),
 		ReferenceID:            string(order.ReferenceID),
 		DocumentID:             order.DocID(ctx).String(),
 		OrderHeadersDoc:        order.Headers.DocID(ctx).String(),
@@ -80,8 +82,8 @@ func MapPackagesToTable(ctx context.Context, packages []domain.Package) []table.
 	mapped := make([]table.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = table.DeliveryUnit{
-			OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-			Lpn:            pkg.Lpn,
+			TenantID: sharedcontext.TenantIDFromContext(ctx),
+			Lpn:      pkg.Lpn,
 			JSONDimensions: table.JSONDimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,
@@ -115,9 +117,9 @@ func mapDomainItemsToTable(items []domain.ItemReference) table.JSONItemReference
 
 func MapPackageToTable(ctx context.Context, pkg domain.Package, referenceId string) table.DeliveryUnit {
 	return table.DeliveryUnit{
-		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-		DocumentID:     pkg.DocID(ctx, referenceId).String(),
-		Lpn:            pkg.Lpn,
+		TenantID:   sharedcontext.TenantIDFromContext(ctx),
+		DocumentID: pkg.DocID(ctx, referenceId).String(),
+		Lpn:        pkg.Lpn,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
 			Width:  pkg.Dimensions.Width,
@@ -136,20 +138,19 @@ func MapPackageToTable(ctx context.Context, pkg domain.Package, referenceId stri
 	}
 }
 
-func mapHeadersToTable(c domain.Headers, orgCountryID int64) table.OrderHeaders {
+func mapHeadersToTable(c domain.Headers, orgID uuid.UUID) table.OrderHeaders {
 	return table.OrderHeaders{
 		Commerce: c.Commerce,
 		Consumer: c.Consumer,
-		Organization: table.Organization{
-			ID: orgCountryID,
+		Tenant: table.Tenant{
+			ID: orgID,
 		},
 	}
 }
 
-func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
+func mapOrderTypeToTable(t domain.OrderType, orgID uuid.UUID) table.OrderType {
 	return table.OrderType{
-		OrganizationID: orgCountry,
-
+		TenantID:    orgID,
 		Type:        t.Type,
 		Description: t.Description,
 	}
@@ -157,15 +158,15 @@ func mapOrderTypeToTable(t domain.OrderType, orgCountry int64) table.OrderType {
 
 func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
-		OrganizationID: sharedcontext.TenantIDFromContext(ctx),
-		State:          address.State.String(),
-		District:       address.District.String(),
-		AddressLine1:   address.AddressLine1,
-		DocumentID:     string(address.DocID(ctx)),
-		Latitude:       address.Location[1],
-		Longitude:      address.Location[0],
-		ZipCode:        address.ZipCode,
-		Province:       address.Province.String(),
-		TimeZone:       address.TimeZone,
+		TenantID:     sharedcontext.TenantIDFromContext(ctx),
+		State:        address.State.String(),
+		District:     address.District.String(),
+		AddressLine1: address.AddressLine1,
+		DocumentID:   string(address.DocID(ctx)),
+		Latitude:     address.Location[1],
+		Longitude:    address.Location[0],
+		ZipCode:      address.ZipCode,
+		Province:     address.Province.String(),
+		TimeZone:     address.TimeZone,
 	}
 }

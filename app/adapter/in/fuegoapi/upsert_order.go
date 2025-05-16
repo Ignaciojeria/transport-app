@@ -72,7 +72,7 @@ func upsertOrder(
 				Status:  "pending",
 			}, err
 		}, option.Summary("upsert order"),
-		option.Header("organization", "api organization key", param.Required()),
+		option.Header("tenant", "api tenant", param.Required()),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
 		option.Header("channel", "api channel key", param.Required()),

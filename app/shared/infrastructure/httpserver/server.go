@@ -22,6 +22,7 @@ import (
 	"github.com/biter777/countries"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/google/uuid"
 	"github.com/hellofresh/health-go/v5"
 	"github.com/vektah/gqlparser/v2/ast"
 	"go.opentelemetry.io/otel/baggage"
@@ -111,42 +112,48 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 
 func injectBaggageMiddleware(next http.Handler) http.Handler {
 	skipPaths := map[string]struct{}{
-		"/":              {},
-		"/login":         {},
-		"/register":      {},
-		"/health":        {},
-		"/organizations": {},
+		"/":         {},
+		"/login":    {},
+		"/register": {},
+		"/health":   {},
+		"/tenants":  {},
 	}
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if _, skip := skipPaths[r.URL.Path]; skip {
+		if _, skip := skipPaths[r.URL.Path]; skip || strings.HasPrefix(r.URL.Path, "/swagger/") {
 			next.ServeHTTP(w, r)
 			return
 		}
-		if strings.HasPrefix(r.URL.Path, "/swagger/") {
-			next.ServeHTTP(w, r)
-			return
-		}
-		orgHeader := r.Header.Get("organization")
+
+		orgHeader := r.Header.Get("tenant")
 		if orgHeader == "" {
-			http.Error(w, "missing organization header", http.StatusBadRequest)
+			http.Error(w, "missing tenant header", http.StatusBadRequest)
 			return
 		}
 
-		parts := strings.SplitN(orgHeader, "-", 2)
-		if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-			http.Error(w, "invalid organization format, expected tenant-country (e.g., 1-CL)", http.StatusBadRequest)
+		// Cortamos por el último guion para separar UUID del país
+		lastDash := strings.LastIndex(orgHeader, "-")
+		if lastDash == -1 || lastDash == len(orgHeader)-1 {
+			http.Error(w, "invalid tenant format, expected uuid-country (e.g., a946ac90-...-CL)", http.StatusBadRequest)
 			return
 		}
 
-		tenantID := parts[0]
-		c := countries.ByName(strings.ToUpper(parts[1]))
+		tenantID := orgHeader[:lastDash]
+		countryCode := strings.ToUpper(orgHeader[lastDash+1:])
+
+		if _, err := uuid.Parse(tenantID); err != nil {
+			http.Error(w, "invalid tenant UUID", http.StatusBadRequest)
+			return
+		}
+
+		c := countries.ByName(countryCode)
 		if c == countries.Unknown {
 			http.Error(w, "invalid country code", http.StatusBadRequest)
 			return
 		}
 		country := c.Alpha2()
 
-		members := make([]baggage.Member, 0, 3)
+		members := make([]baggage.Member, 0, 4)
 
 		mTenant, _ := baggage.NewMember(sharedcontext.BaggageTenantID, tenantID)
 		mCountry, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, country)

@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"strconv"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
@@ -17,7 +16,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 	var ctx context.Context
 
 	BeforeEach(func() {
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, strconv.FormatInt(organization1.ID, 10))
+		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, organization1.ID.String())
 		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, organization1.Country.String())
 		bag, _ := baggage.New(orgIDMember, countryMember)
 		ctx = baggage.ContextWithBaggage(context.Background(), bag)

@@ -14,43 +14,43 @@ import (
 
 func init() {
 	ioc.Registry(
-		NewSaveOrganization,
+		NewSaveTenant,
 		database.NewConnectionFactory,
 	)
 }
 
-type SaveOrganization func(
+type SaveTenant func(
 	context.Context,
-	domain.Organization,
-) (domain.Organization, error)
+	domain.Tenant,
+) (domain.Tenant, error)
 
-func NewSaveOrganization(conn database.ConnectionFactory) SaveOrganization {
-	return func(ctx context.Context, o domain.Organization) (domain.Organization, error) {
+func NewSaveTenant(conn database.ConnectionFactory) SaveTenant {
+	return func(ctx context.Context, o domain.Tenant) (domain.Tenant, error) {
 		// Mapear la entidad del dominio a la tabla
-		tableOrg := mapper.MapOrganizationToTable(ctx, o.Name)
-
+		tableOrg := mapper.MapTenantTable(ctx, o.Name)
+		tableOrg.ID = o.ID
 		var account table.Account
 		err := conn.Where("email = ?", o.Operator.Contact.PrimaryEmail).Find(&account).Error
 		if err != nil {
-			return domain.Organization{}, err
+			return domain.Tenant{}, err
 		}
-		var accountOrg table.AccountOrganization
+		var accountOrg table.AccountTenant
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := conn.DB.Create(&tableOrg).Error; err != nil {
-				return errors.Wrap(ErrOrganizationDatabase, "failed to create organization")
+				return errors.Wrap(ErrTenantDatabase, "failed to create organization")
 			}
 			accountOrg.AccountID = account.ID
-			accountOrg.OrganizationID = tableOrg.ID
+			accountOrg.TenantID = tableOrg.ID
 			if err := conn.DB.Create(&accountOrg).Error; err != nil {
-				return errors.Wrap(ErrOrganizationDatabase, "failed to link account to organization")
+				return errors.Wrap(ErrTenantDatabase, "failed to link account to organization")
 			}
 			return nil
 		})
 		if err != nil {
-			return domain.Organization{}, err
+			return domain.Tenant{}, err
 		}
 		// Mapear de vuelta a la entidad de dominio
-		savedOrg := domain.Organization{
+		savedOrg := domain.Tenant{
 			ID:      tableOrg.ID,
 			Country: o.Country,
 			Name:    o.Name,

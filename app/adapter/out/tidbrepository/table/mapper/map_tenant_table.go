@@ -6,8 +6,8 @@ import (
 	"transport-app/app/shared/sharedcontext"
 )
 
-func MapOrganizationToTable(ctx context.Context, orgName string) table.Organization {
-	return table.Organization{
+func MapTenantTable(ctx context.Context, orgName string) table.Tenant {
+	return table.Tenant{
 		Name:    orgName,
 		Country: sharedcontext.TenantCountryFromContext(ctx),
 	}

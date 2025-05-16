@@ -15,20 +15,20 @@ import (
 
 func init() {
 	ioc.Registry(
-		NewFindOrganizationByEmail,
+		NewFindTenantByEmail,
 		database.NewConnectionFactory,
 	)
 }
 
-type FindOrganizationByEmail func(
+type FindTenantByEmail func(
 	ctx context.Context,
 	email string,
-) (domain.Organization, error)
+) (domain.Tenant, error)
 
-func NewFindOrganizationByEmail(conn database.ConnectionFactory) FindOrganizationByEmail {
-	return func(ctx context.Context, email string) (domain.Organization, error) {
+func NewFindTenantByEmail(conn database.ConnectionFactory) FindTenantByEmail {
+	return func(ctx context.Context, email string) (domain.Tenant, error) {
 		// Crear una variable para almacenar la organización desde la tabla
-		var tableOrg table.Organization
+		var tableOrg table.Tenant
 
 		// Intentar buscar la organización por email
 		err := conn.DB.WithContext(ctx).
@@ -39,11 +39,11 @@ func NewFindOrganizationByEmail(conn database.ConnectionFactory) FindOrganizatio
 		if err != nil {
 
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return domain.Organization{}, errors.Wrap(ErrOrganizationNotFound, "organization with email not found")
+				return domain.Tenant{}, errors.Wrap(ErrTenantNotFound, "tenant with email not found")
 			}
 
 			// Retornar cualquier otro error
-			return domain.Organization{}, err
+			return domain.Tenant{}, err
 		}
 
 		return tableOrg.Map(), nil

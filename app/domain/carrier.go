@@ -5,6 +5,7 @@ import "context"
 type Carrier struct {
 	Name       string
 	NationalID string
+	Driver     Driver
 }
 
 func (c Carrier) DocID(ctx context.Context) DocumentID {

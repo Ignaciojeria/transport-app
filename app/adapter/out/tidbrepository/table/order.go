@@ -7,6 +7,7 @@ import (
 	"time"
 	"transport-app/app/domain"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -18,8 +19,8 @@ type Order struct {
 
 	ReferenceID string `gorm:"not null"`
 
-	OrganizationID int64        `gorm:"not null"`
-	Organization   Organization `gorm:"foreignKey:OrganizationID"`
+	TenantID uuid.UUID `gorm:"not null"`
+	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
 
 	OrderHeadersDoc string       `gorm:"type:char(64);index"`
 	OrderHeaders    OrderHeaders `gorm:"-"`
@@ -104,7 +105,7 @@ func (o Order) Map() domain.Order {
 		ReferenceID:  domain.ReferenceID(o.ReferenceID),
 		/*
 			Headers: domain.Headers{
-				Organization: domain.Organization{
+				Organization: domain.Tenant{
 					ID:      o.OrganizationID,
 					Country: countries.ByName(o.Organization.Country),
 				},
