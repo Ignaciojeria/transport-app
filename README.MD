@@ -20,7 +20,7 @@ El consumidor debe enviar los siguientes headers:
 | `tenant`       | `53f0cea9-ee4c-4c0f-adc8-dabc850e4d7b-CL`             | ID del tenant + país (`tenantId-country`). Siempre se utiliza para operar el recurso.  |
 | `consumer`     | `CONSUMER_EXAMPLE` | Identificador técnico de quien inicializó la creación del recurso vía API. (origen)             |
 | `commerce`     | `COMMERCE_EXAMPLE` | Identificador del comercio o tienda que genera la necesidad inicial de operar el recurso.       |
-| `channel`      | `WEB` / `APP`      | Canal de operación previo a creación del recurso (planificado : Web, Entregado: App Mobile, etc.). Puede cambiar. |
+| `channel`      | `WEB` / `APP` / `YOUR_API_SERVICE`      | Canal de operación previo a creación del recurso (planificado : Web, Entregado: App Mobile, etc.). Puede cambiar. |
 
 Estos headers son procesados por un middleware que los desglosa e inyecta como baggage en el contexto de OpenTelemetry.
 
