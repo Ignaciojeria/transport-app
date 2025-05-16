@@ -17,6 +17,7 @@ import (
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
+	"go.opentelemetry.io/otel/baggage"
 )
 
 func init() {
@@ -25,28 +26,43 @@ func init() {
 		httpserver.New,
 		gcppublisher.NewApplicationEvents,
 		observability.NewObservability,
-		usecase.NewCreateTenant)
+		usecase.NewCreateTenant,
+	)
 }
 func createTenant(
 	s httpserver.Server,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability,
-	createOrg usecase.CreateTenant) {
+	createOrg usecase.CreateTenant,
+) {
 	fuego.Post(s.Manager, "/tenants",
 		func(c fuego.ContextWithBody[request.CreateTenantRequest]) (response.CreateTenantResponse, error) {
-			spanCtx, span := obs.Tracer.Start(c.Context(), "createTenant")
-			defer span.End()
 			requestBody, err := c.Body()
 			if err != nil {
 				return response.CreateTenantResponse{}, err
 			}
+
+			// Asignar nuevo UUID como tenant ID
 			requestBody.ID = uuid.NewString()
-			eventPayload, _ := json.Marshal(requestBody)
+
+			// Crear baggage manualmente con tenant y country antes de iniciar la traza
+			mTenant, _ := baggage.NewMember(sharedcontext.BaggageTenantID, requestBody.ID)
+			mCountry, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, requestBody.Country)
+			bag, _ := baggage.New(mTenant, mCountry)
+			baggageCtx := baggage.ContextWithBaggage(c.Context(), bag)
+
+			// Iniciar traza con el contexto que ya tiene el baggage
+			spanCtx, span := obs.Tracer.Start(baggageCtx, "createTenant")
+			defer span.End()
+
+			// Enriquecer el contexto con metadata de evento
 			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
 				sharedcontext.EventContext{
 					EntityType: "tenant",
 					EventType:  "tenantSubmitted",
 				})
+
+			eventPayload, _ := json.Marshal(requestBody)
 
 			if err := publish(eventCtx, domain.Outbox{
 				Payload: eventPayload,
@@ -57,6 +73,7 @@ func createTenant(
 					Status: http.StatusInternalServerError,
 				}
 			}
+
 			obs.Logger.InfoContext(spanCtx,
 				"TENANT_SUBMISSION_SUCCEEDED",
 				slog.Any("payload", requestBody))

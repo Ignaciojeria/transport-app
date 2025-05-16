@@ -63,8 +63,6 @@ type Order struct {
 
 	ExtraFields JSONMap `gorm:"type:json"`
 
-	JSONPlannedData JSONPlannedData `gorm:"type:json"`
-
 	DeliveryUnits []DeliveryUnit `gorm:"-"`
 
 	AddressLine2                      string     `gorm:"default:null"`
@@ -97,22 +95,9 @@ func (m *JSONMap) Scan(value interface{}) error {
 }
 
 func (o Order) Map() domain.Order {
-	// Mapear la orden base
-
 	order := domain.Order{
-		//	ID:          o.ID,
 		AddressLine2: o.AddressLine2,
 		ReferenceID:  domain.ReferenceID(o.ReferenceID),
-		/*
-			Headers: domain.Headers{
-				Organization: domain.Tenant{
-					ID:      o.OrganizationID,
-					Country: countries.ByName(o.Organization.Country),
-				},
-			},
-		*/
-		//	Plan:                 domain.Plan{},
-		//DeliveryInstructions: o.DeliveryInstructions,
 	}
 
 	// Mapear las fechas de disponibilidad de recolección
@@ -136,7 +121,12 @@ func (o Order) Map() domain.Order {
 		},
 	}
 
-	// Mapear items
-
 	return order
+}
+
+func safeTime(t *time.Time) time.Time {
+	if t == nil {
+		return time.Time{} // Retorna un time.Time vacío en lugar de nil
+	}
+	return *t
 }

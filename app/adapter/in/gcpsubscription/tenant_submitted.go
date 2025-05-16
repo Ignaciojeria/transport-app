@@ -11,6 +11,8 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 func init() {
@@ -34,12 +36,13 @@ func newTenantSubmitted(
 			m.Ack()
 			return http.StatusAccepted, nil
 		}
+		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(m.Attributes))
 		var input request.CreateTenantRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		_, err := createTenant(ctx, input.Map())
+		err := createTenant(ctx, input.Map())
 		if err != nil {
 			m.Nack()
 			return http.StatusAccepted, err

@@ -57,7 +57,7 @@ func TestContainersSetup(t *testing.T) {
 	RunSpecs(t, "Tidb Repository Suite")
 }
 
-var container *tcpostgres.PostgresContainer
+var pgContainer *tcpostgres.PostgresContainer
 var connection database.ConnectionFactory
 var organization1 domain.Tenant
 var organization2 domain.Tenant
@@ -79,8 +79,8 @@ var _ = BeforeSuite(func() {
 	dbName := "users"
 	dbUser := "user"
 	dbPassword := "password"
-
-	container, err := tcpostgres.Run(ctx,
+	var err error
+	pgContainer, err = tcpostgres.Run(ctx,
 		"postgres:16-alpine",
 		tcpostgres.WithDatabase(dbName),
 		tcpostgres.WithUsername(dbUser),
@@ -90,11 +90,13 @@ var _ = BeforeSuite(func() {
 				WithOccurrence(2).
 				WithStartupTimeout(5*time.Second)),
 	)
+
 	Expect(err).ToNot(HaveOccurred())
 
 	// Obtener host y puerto del contenedor
-	host, err := container.Host(ctx)
+	host, err := pgContainer.Host(ctx)
 	Expect(err).ToNot(HaveOccurred())
+
 	pubsubContainer, err = pubsubtc.Run(
 		ctx,
 		"gcr.io/google.com/cloudsdktool/cloud-sdk:367.0.0-emulators",
@@ -117,7 +119,7 @@ var _ = BeforeSuite(func() {
 
 	os.Setenv("TRANSPORT_APP_TOPIC", TRANSPORT_APP_TOPIC)
 
-	port, err := container.MappedPort(ctx, "5432")
+	port, err := pgContainer.MappedPort(ctx, "5432")
 	Expect(err).ToNot(HaveOccurred())
 
 	os.Setenv("version", "testing")
@@ -154,8 +156,8 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	ctx := context.Background()
-	if container != nil {
-		_ = container.Terminate(ctx)
+	if pgContainer != nil {
+		_ = pgContainer.Terminate(ctx)
 	}
 	if pubsubContainer != nil {
 		_ = pubsubContainer.Terminate(ctx)
