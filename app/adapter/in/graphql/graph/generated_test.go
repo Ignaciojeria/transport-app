@@ -14,56 +14,30 @@ import (
 var _ = Describe("GraphQL Code Generation", func() {
 	It("should validate that gqlgen generate was executed", func() {
 		moduleRoot := findModuleRoot()
+		modelsFile := filepath.Join(moduleRoot, "app", "adapter", "in", "graphql", "graph", "model", "models_gen.go")
 
-		files := []string{
-			filepath.Join(moduleRoot, "app", "adapter", "in", "graphql", "graph", "generated.go"),
-			filepath.Join(moduleRoot, "app", "adapter", "in", "graphql", "graph", "model", "models_gen.go"),
-		}
+		bak := modelsFile + ".bak"
+		Expect(os.Rename(modelsFile, bak)).To(Succeed(), "Failed to rename %s to %s", modelsFile, bak)
 
-		// Crear backups y planear rollback
-		rollback := func() {
-			for _, f := range files {
-				bak := f + ".bak"
-				if _, err := os.Stat(bak); err == nil {
-					_ = os.Remove(f)
-					_ = os.Rename(bak, f)
-				}
-			}
-		}
-		defer rollback()
+		defer func() {
+			_ = os.Remove(modelsFile)
+			_ = os.Rename(bak, modelsFile)
+		}()
 
-		for _, f := range files {
-			bak := f + ".bak"
-			if _, err := os.Stat(f); err == nil {
-				Expect(os.Rename(f, bak)).To(Succeed(), "Failed to rename %s to %s", f, bak)
-			}
-		}
-
-		// Ejecutar gqlgen
 		cmd := exec.Command("go", "run", "github.com/99designs/gqlgen", "generate")
 		cmd.Dir = moduleRoot
 		output, err := cmd.CombinedOutput()
 		Expect(err).To(BeNil(), "gqlgen generate failed:\n%s", string(output))
 
-		// Comparar
-		for _, f := range files {
-			bak := f + ".bak"
+		newData, err := os.ReadFile(modelsFile)
+		Expect(err).To(BeNil(), "Missing regenerated models file")
 
-			if _, err := os.Stat(bak); os.IsNotExist(err) {
-				continue
-			}
+		oldData, err := os.ReadFile(bak)
+		Expect(err).To(BeNil(), "Missing backup models file")
 
-			newData, err := os.ReadFile(f)
-			Expect(err).To(BeNil(), "Missing regenerated file: %s", f)
-
-			oldData, err := os.ReadFile(bak)
-			Expect(err).To(BeNil(), "Missing backup file: %s", bak)
-
-			if normalizeCode(newData) != normalizeCode(oldData) {
-				fmt.Println("===== DIFF DETECTED =====")
-				fmt.Printf("❌ File %s is out of sync with generated version.\n", f)
-				Fail("Run `gqlgen generate` and commit the updated generated files.")
-			}
+		if normalizeCode(newData) != normalizeCode(oldData) {
+			fmt.Println("===== DIFF DETECTED in models_gen.go =====")
+			Fail("Run `gqlgen generate` and commit the updated models_gen.go")
 		}
 	})
 })

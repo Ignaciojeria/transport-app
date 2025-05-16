@@ -198,3 +198,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/clickhouse v0.6.1 // indirect
 )
+
+replace github.com/ugorji/go => github.com/ugorji/go v1.2.12
+
+replace github.com/ugorji/go/codec => github.com/ugorji/go/codec v1.2.12
