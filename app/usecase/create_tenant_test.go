@@ -80,7 +80,8 @@ func avoidJoin(table string) bool {
 		"delivery_units",
 		"order_types",
 		"order_references",
-		"order_delivery_units":
+		"order_delivery_units",
+		"vehicle_categories":
 		return false // se permiten
 	default:
 		return true // evitar join
@@ -106,6 +107,7 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertOrderReferences(connection),
 		tidbrepository.NewUpsertOrderDeliveryUnits(connection),
 		tidbrepository.NewSaveTenant(connection),
+		tidbrepository.NewUpsertVehicleCategory(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{
