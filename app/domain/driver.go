@@ -25,6 +25,12 @@ func (d Driver) UpdateIfChanged(in Driver) (Driver, bool) {
 		d.NationalID = in.NationalID
 		changed = true
 	}
+
+	if in.Email != "" && in.Email != d.Email {
+		d.Email = in.Email
+		changed = true
+	}
+
 	return d, changed
 }
 

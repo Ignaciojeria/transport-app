@@ -9,7 +9,7 @@ import (
 
 type Carrier struct {
 	gorm.Model
-	ID         int64     `gorm:"primaryKey"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
 	TenantID   uuid.UUID `gorm:"uniqueIndex:idx_carrier_ref_org;uniqueIndex:idx_carrier_national_org"`
 	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
 	Name       string    `gorm:"not null"`

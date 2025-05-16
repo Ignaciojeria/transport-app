@@ -1,6 +1,7 @@
 package table
 
 import (
+	"log"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/database"
 
@@ -21,13 +22,14 @@ func NewRunMigrations(
 	conf configuration.DBConfiguration) RunMigrations {
 	return func() error {
 		if conf.DB_RUN_MIGRATIONS != "true" {
+			log.Println("Migrations disabled, skipping...")
 			return nil
 		}
+		log.Println("Starting migrations...")
 		// Lista de tablas que tienen un campo ID como clave primaria
 		tables := []interface{}{
 			&PlanType{},
 			&PlanningStatus{},
-			&PlanType{},
 			&Route{},
 			&OrderHeaders{},
 			&VehicleHeaders{},
@@ -48,6 +50,7 @@ func NewRunMigrations(
 			&Contact{},
 			&Carrier{},
 			&Vehicle{},
+			&Driver{},
 			//&CheckoutRejection{},
 			//&CheckoutHistory{},
 			&State{},
@@ -57,17 +60,21 @@ func NewRunMigrations(
 		}
 
 		// Opcional: Eliminar tablas si existen
-
+		log.Println("Dropping existing tables...")
 		for _, table := range tables {
 			if err := conn.Migrator().DropTable(table); err != nil {
+				log.Printf("Error dropping table: %v", err)
 				return err
 			}
 		}
 
 		// Crear las tablas nuevamente
+		log.Println("Creating tables...")
 		if err := conn.AutoMigrate(tables...); err != nil {
+			log.Printf("Error creating tables: %v", err)
 			return err
 		}
+		log.Println("Migrations completed successfully")
 		return nil
 	}
 }
