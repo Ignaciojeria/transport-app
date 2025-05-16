@@ -15,6 +15,7 @@ require (
 	github.com/go-slog/otelslog v0.3.0
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/google/generative-ai-go v0.20.1
+	github.com/google/uuid v1.6.0
 	github.com/hellofresh/health-go/v5 v5.5.3
 	github.com/joho/godotenv v1.5.1
 	github.com/onsi/ginkgo/v2 v2.23.4
