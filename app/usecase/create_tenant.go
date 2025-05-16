@@ -28,6 +28,7 @@ func init() {
 		tidbrepository.NewUpsertCarrier,
 		tidbrepository.NewUpsertDriver,
 		tidbrepository.NewUpsertVehicle,
+		tidbrepository.NewUpsertVehicleHeaders,
 	)
 }
 
@@ -46,6 +47,7 @@ func NewCreateTenant(
 	upsertCarrier tidbrepository.UpsertCarrier,
 	upsertDriver tidbrepository.UpsertDriver,
 	upsertVehicle tidbrepository.UpsertVehicle,
+	upsertVehicleHeaders tidbrepository.UpsertVehicleHeaders,
 ) CreateTenant {
 	return func(ctx context.Context, org domain.Tenant) error {
 		_, err := saveTenant(ctx, org)
@@ -100,6 +102,10 @@ func NewCreateTenant(
 
 		group.Go(func() error {
 			return upsertVehicle(groupCtx, domain.Vehicle{})
+		})
+
+		group.Go(func() error {
+			return upsertVehicleHeaders(groupCtx, domain.Headers{})
 		})
 
 		return group.Wait()

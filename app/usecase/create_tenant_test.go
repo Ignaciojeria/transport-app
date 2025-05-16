@@ -84,7 +84,8 @@ func avoidJoin(table string) bool {
 		"vehicle_categories",
 		"carriers",
 		"drivers",
-		"vehicles":
+		"vehicles",
+		"vehicle_headers":
 		return false // se permiten
 	default:
 		return true // evitar join
@@ -114,6 +115,7 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertCarrier(connection),
 		tidbrepository.NewUpsertDriver(connection),
 		tidbrepository.NewUpsertVehicle(connection),
+		tidbrepository.NewUpsertVehicleHeaders(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{

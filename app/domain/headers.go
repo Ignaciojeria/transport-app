@@ -23,3 +23,19 @@ func (h *Headers) SetFromContext(ctx context.Context) {
 	consumer := bag.Member(sharedcontext.BaggageConsumer).Value()
 	h.Consumer = consumer
 }
+
+func (h Headers) UpdateIfChanged(in Headers) (Headers, bool) {
+	changed := false
+
+	if in.Commerce != "" && in.Commerce != h.Commerce {
+		h.Commerce = in.Commerce
+		changed = true
+	}
+
+	if in.Consumer != "" && in.Consumer != h.Consumer {
+		h.Consumer = in.Consumer
+		changed = true
+	}
+
+	return h, changed
+}

@@ -4,14 +4,17 @@ import (
 	"transport-app/app/domain"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type VehicleHeaders struct {
-	ID       int64     `gorm:"primaryKey"`
-	Commerce string    `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
-	Consumer string    `gorm:"uniqueIndex:idx_commerce_consumer_org_country,length:50"`
-	TenantID uuid.UUID `gorm:"not null;index;uniqueIndex:idx_commerce_consumer_org_country"`
-	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
+	gorm.Model
+	ID         int64     `gorm:"primaryKey"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
+	Commerce   string    `gorm:"not null"`
+	Consumer   string    `gorm:"not null"`
+	TenantID   uuid.UUID `gorm:"not null;index;"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
 }
 
 func (m VehicleHeaders) Map() domain.Headers {
