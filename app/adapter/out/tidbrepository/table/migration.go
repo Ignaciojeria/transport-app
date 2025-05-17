@@ -53,6 +53,7 @@ func NewRunMigrations(
 			&District{},
 			&Province{},
 			&NonDeliveryReason{},
+			&Plan{},
 		}
 
 		// Opcional: Eliminar tablas si existen
