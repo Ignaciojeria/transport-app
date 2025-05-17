@@ -17,9 +17,10 @@ var _ = Describe("Headers", func() {
 			headers := Headers{
 				Commerce: "store-1",
 				Consumer: "customer-1",
+				Channel:  "channel-1",
 			}
 
-			Expect(headers.DocID(ctx)).To(Equal(HashByTenant(ctx, "store-1", "customer-1")))
+			Expect(headers.DocID(ctx)).To(Equal(HashByTenant(ctx, "store-1", "customer-1", "channel-1")))
 		})
 
 		It("should generate different IDs for different contexts", func() {
@@ -29,6 +30,7 @@ var _ = Describe("Headers", func() {
 			headers := Headers{
 				Commerce: "store-1",
 				Consumer: "customer-1",
+				Channel:  "channel-1",
 			}
 
 			Expect(headers.DocID(ctx1)).ToNot(Equal(headers.DocID(ctx2)))
@@ -40,10 +42,12 @@ var _ = Describe("Headers", func() {
 			headers1 := Headers{
 				Commerce: "store-1",
 				Consumer: "customer-1",
+				Channel:  "channel-1",
 			}
 			headers2 := Headers{
 				Commerce: "store-2",
 				Consumer: "customer-1",
+				Channel:  "channel-1",
 			}
 
 			Expect(headers1.DocID(ctx)).ToNot(Equal(headers2.DocID(ctx)))
@@ -55,10 +59,12 @@ var _ = Describe("Headers", func() {
 			headers1 := Headers{
 				Commerce: "store-1",
 				Consumer: "customer-1",
+				Channel:  "channel-1",
 			}
 			headers2 := Headers{
 				Commerce: "store-1",
 				Consumer: "customer-2",
+				Channel:  "channel-1",
 			}
 
 			Expect(headers1.DocID(ctx)).ToNot(Equal(headers2.DocID(ctx)))
@@ -70,6 +76,7 @@ var _ = Describe("Headers", func() {
 			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
 				sharedcontext.BaggageCommerce, "store-99",
 				sharedcontext.BaggageConsumer, "customer-99",
+				sharedcontext.BaggageChannel, "channel-99",
 			))
 
 			headers := &Headers{}
@@ -77,6 +84,7 @@ var _ = Describe("Headers", func() {
 
 			Expect(headers.Commerce).To(Equal("store-99"))
 			Expect(headers.Consumer).To(Equal("customer-99"))
+			Expect(headers.Channel).To(Equal("channel-99"))
 		})
 
 		It("should not panic if baggage keys are missing", func() {
@@ -90,6 +98,7 @@ var _ = Describe("Headers", func() {
 			// Esperamos campos vacíos
 			Expect(headers.Commerce).To(BeEmpty())
 			Expect(headers.Consumer).To(BeEmpty())
+			Expect(headers.Channel).To(BeEmpty())
 		})
 	})
 
