@@ -47,8 +47,7 @@
         },
         "deliveryInstructions": "entregar en mi house",
         "nodeInfo": {
-            "referenceId": "string244XD",
-            "name": "Ignacio Node 2214"
+            "referenceId": "string244XD"
         }
     },
     "orderType": {
@@ -80,8 +79,7 @@
             "zipCode": "string24"
         },
         "nodeInfo": {
-            "referenceId": "string24",
-            "name": "NAXONODE"
+            "referenceId": "string24"
         }
     },
     "packages": [

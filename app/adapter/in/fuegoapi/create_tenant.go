@@ -7,6 +7,7 @@ import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/gcppublisher"
+	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
@@ -27,19 +28,40 @@ func init() {
 		gcppublisher.NewApplicationEvents,
 		observability.NewObservability,
 		usecase.NewCreateTenant,
+		tidbrepository.NewFindAccountByEmail,
 	)
 }
+
 func createTenant(
 	s httpserver.Server,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability,
 	createOrg usecase.CreateTenant,
+	findAccount tidbrepository.FindAccountByEmail,
 ) {
 	fuego.Post(s.Manager, "/tenants",
 		func(c fuego.ContextWithBody[request.CreateTenantRequest]) (response.CreateTenantResponse, error) {
 			requestBody, err := c.Body()
 			if err != nil {
 				return response.CreateTenantResponse{}, err
+			}
+
+			// Verificar si el email existe
+			operator, err := findAccount(c.Context(), requestBody.Email)
+			if err != nil {
+				return response.CreateTenantResponse{}, fuego.HTTPError{
+					Title:  "error finding account",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
+			}
+
+			if operator.Contact.PrimaryEmail == "" {
+				return response.CreateTenantResponse{}, fuego.HTTPError{
+					Title:  "email not registered",
+					Detail: "the email is not registered in the system",
+					Status: http.StatusBadRequest,
+				}
 			}
 
 			// Asignar nuevo UUID como tenant ID

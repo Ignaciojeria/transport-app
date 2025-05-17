@@ -11,7 +11,7 @@ func MapOrderReferences(
 	ctx context.Context, order domain.Order) []table.OrderReferences {
 	mapped := make([]table.OrderReferences, len(order.References))
 	for i, ref := range order.References {
-		docId := ref.DocID(ctx, order.DocID(ctx).String()).String()
+		docId := ref.DocID(ctx, order.ReferenceID.String()).String()
 		fmt.Println("docId", docId)
 		mapped[i] = table.OrderReferences{
 			DocumentID: docId,
@@ -22,7 +22,7 @@ func MapOrderReferences(
 	}
 	if len(mapped) == 0 {
 		mapped = append(mapped, table.OrderReferences{
-			DocumentID: domain.Reference{}.DocID(ctx, order.DocID(ctx).String()).String(),
+			DocumentID: domain.Reference{}.DocID(ctx, order.ReferenceID.String()).String(),
 			OrderDoc:   order.DocID(ctx).String(),
 			Type:       "", // o algo como "EMPTY"
 			Value:      "",
