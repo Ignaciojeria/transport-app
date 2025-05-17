@@ -159,14 +159,14 @@ func mapOrderTypeToTable(t domain.OrderType, orgID uuid.UUID) table.OrderType {
 func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
 		TenantID:     sharedcontext.TenantIDFromContext(ctx),
-		State:        address.State.String(),
-		District:     address.District.String(),
+		StateDoc:     address.State.DocID(ctx).String(),
+		ProvinceDoc:  address.Province.DocID(ctx).String(),
+		DistrictDoc:  address.District.DocID(ctx).String(),
 		AddressLine1: address.AddressLine1,
 		DocumentID:   string(address.DocID(ctx)),
 		Latitude:     address.Location[1],
 		Longitude:    address.Location[0],
 		ZipCode:      address.ZipCode,
-		Province:     address.Province.String(),
 		TimeZone:     address.TimeZone,
 	}
 }

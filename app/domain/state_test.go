@@ -21,16 +21,17 @@ var _ = Describe("State", func() {
 	})
 
 	Describe("DocID", func() {
-		It("should generate a deterministic DocID based on country and state", func() {
+		It("should generate a deterministic DocID based on tenant and state", func() {
 			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org1",
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
 
 			s := State("Región Metropolitana de Santiago")
 			docID := s.DocID(ctx)
 
-			joined := strings.Join([]string{"CL", "state", "Región Metropolitana de Santiago"}, "|")
-
+			orgKey := "org1-CL"
+			joined := strings.Join([]string{orgKey, "Región Metropolitana de Santiago"}, "|")
 			sum := sha256.Sum256([]byte(joined))
 			expected := hex.EncodeToString(sum[:])
 
@@ -39,6 +40,7 @@ var _ = Describe("State", func() {
 
 		It("should return different DocIDs for different states", func() {
 			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org1",
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
 
@@ -48,17 +50,19 @@ var _ = Describe("State", func() {
 			Expect(s1.DocID(ctx)).ToNot(Equal(s2.DocID(ctx)))
 		})
 
-		It("should return different DocIDs for same state with different countries", func() {
-			ctxCL := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+		It("should return different DocIDs for same state with different tenants", func() {
+			ctx1 := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org1",
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
-			ctxAR := baggage.ContextWithBaggage(context.Background(), mustBaggage(
-				sharedcontext.BaggageTenantCountry, "AR",
+			ctx2 := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org2",
+				sharedcontext.BaggageTenantCountry, "CL",
 			))
 
 			s := State("Región Metropolitana de Santiago")
 
-			Expect(s.DocID(ctxCL)).ToNot(Equal(s.DocID(ctxAR)))
+			Expect(s.DocID(ctx1)).ToNot(Equal(s.DocID(ctx2)))
 		})
 	})
 

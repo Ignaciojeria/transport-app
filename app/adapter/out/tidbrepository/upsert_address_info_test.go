@@ -28,28 +28,46 @@ var _ = Describe("UpsertAddressInfo", func() {
 		// Create context with organization1
 		ctx := createOrgContext(organization1)
 
+		// Crear y guardar State, Province y District primero
+		state := domain.State("Metropolitana")
+		province := domain.Province("Santiago")
+		district := domain.District("Providencia")
+
+		upsertState := NewUpsertState(connection)
+		err := upsertState(ctx, state)
+		Expect(err).ToNot(HaveOccurred())
+
+		upsertProvince := NewUpsertProvince(connection)
+		err = upsertProvince(ctx, province)
+		Expect(err).ToNot(HaveOccurred())
+
+		upsertDistrict := NewUpsertDistrict(connection)
+		err = upsertDistrict(ctx, district)
+		Expect(err).ToNot(HaveOccurred())
+
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Av Providencia 1234",
-			District:     "Providencia",
-			Province:     "Santiago",
-			State:        "Metropolitana",
+			State:        state,
+			Province:     province,
+			District:     district,
 			ZipCode:      "7500000",
 			Location:     orb.Point{-70.6506, -33.4372}, // [lon, lat]
 		}
 
 		upsert := NewUpsertAddressInfo(connection)
-		err := upsert(ctx, addressInfo)
+		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbAddressInfo table.AddressInfo
 		err = connection.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", addressInfo.DocID(ctx)).
+			Where("document_id = ?", addressInfo.DocID(ctx).String()).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Av Providencia 1234"))
-		Expect(dbAddressInfo.District).To(Equal("Providencia"))
-		Expect(dbAddressInfo.State).To(Equal("Metropolitana"))
+		Expect(dbAddressInfo.StateDoc).To(Equal(state.DocID(ctx).String()))
+		Expect(dbAddressInfo.ProvinceDoc).To(Equal(province.DocID(ctx).String()))
+		Expect(dbAddressInfo.DistrictDoc).To(Equal(district.DocID(ctx).String()))
 	})
 
 	It("should update addressInfo if fields are different", func() {

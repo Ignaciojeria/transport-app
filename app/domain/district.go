@@ -8,7 +8,7 @@ import (
 type District string
 
 func (s District) DocID(ctx context.Context) DocumentID {
-	return HashByCountry(ctx, "district", s.String())
+	return HashByTenant(ctx, s.String())
 }
 
 func (s District) String() string {
@@ -23,10 +23,9 @@ func (s District) Equals(other District) bool {
 	return s.String() == other.String()
 }
 
-func (s *District) UpdateIfChanged(new District) bool {
+func (s District) UpdateIfChanged(new District) (District, bool) {
 	if !s.Equals(new) && !new.IsEmpty() {
-		*s = new
-		return true
+		return new, true
 	}
-	return false
+	return s, false
 }

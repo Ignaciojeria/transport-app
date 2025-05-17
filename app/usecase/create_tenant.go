@@ -31,6 +31,10 @@ func init() {
 		tidbrepository.NewUpsertVehicleHeaders,
 		tidbrepository.NewUpsertPlan,
 		tidbrepository.NewUpsertPlanHeaders,
+		tidbrepository.NewUpsertRoute,
+		tidbrepository.NewUpsertState,
+		tidbrepository.NewUpsertProvince,
+		tidbrepository.NewUpsertDistrict,
 	)
 }
 
@@ -52,6 +56,10 @@ func NewCreateTenant(
 	upsertVehicleHeaders tidbrepository.UpsertVehicleHeaders,
 	upsertPlan tidbrepository.UpsertPlan,
 	upsertPlanHeaders tidbrepository.UpsertPlanHeaders,
+	upsertRoute tidbrepository.UpsertRoute,
+	upsertState tidbrepository.UpsertState,
+	upsertProvince tidbrepository.UpsertProvince,
+	upsertDistrict tidbrepository.UpsertDistrict,
 ) CreateTenant {
 	return func(ctx context.Context, org domain.Tenant) error {
 		_, err := saveTenant(ctx, org)
@@ -118,6 +126,21 @@ func NewCreateTenant(
 
 		group.Go(func() error {
 			return upsertPlanHeaders(groupCtx, domain.Headers{})
+		})
+		group.Go(func() error {
+			return upsertRoute(groupCtx, domain.Route{}, "")
+		})
+
+		group.Go(func() error {
+			return upsertState(groupCtx, domain.State(""))
+		})
+
+		group.Go(func() error {
+			return upsertProvince(groupCtx, domain.Province(""))
+		})
+
+		group.Go(func() error {
+			return upsertDistrict(groupCtx, domain.District(""))
 		})
 
 		return group.Wait()

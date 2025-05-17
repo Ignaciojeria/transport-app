@@ -7,10 +7,10 @@ import (
 	"transport-app/app/shared/sharedcontext"
 )
 
-func MapDistrictTable(ctx context.Context, d domain.District) table.District {
-	return table.District{
-		Name:       d.String(),
-		DocumentID: d.DocID(ctx).String(),
+func MapStateTable(ctx context.Context, s domain.State) table.State {
+	return table.State{
+		Name:       s.String(),
+		DocumentID: s.DocID(ctx).String(),
 		TenantID:   sharedcontext.TenantIDFromContext(ctx).String(),
 	}
 }

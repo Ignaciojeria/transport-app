@@ -8,7 +8,7 @@ import (
 type State string
 
 func (s State) DocID(ctx context.Context) DocumentID {
-	return HashByCountry(ctx, "state", s.String())
+	return HashByTenant(ctx, s.String())
 }
 
 func (s State) String() string {
@@ -23,10 +23,9 @@ func (s State) Equals(other State) bool {
 	return s.String() == other.String()
 }
 
-func (s *State) UpdateIfChanged(new State) bool {
+func (s State) UpdateIfChanged(new State) (State, bool) {
 	if !s.Equals(new) && !new.IsEmpty() {
-		*s = new
-		return true
+		return new, true
 	}
-	return false
+	return s, false
 }

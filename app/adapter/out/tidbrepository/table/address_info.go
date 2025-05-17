@@ -14,9 +14,12 @@ type AddressInfo struct {
 	TenantID     uuid.UUID `gorm:"not null;"`
 	Tenant       Tenant    `gorm:"foreignKey:TenantID"`
 	DocumentID   string    `gorm:"type:char(64);uniqueIndex"`
-	State        string    `gorm:"default:null"`
-	Province     string    `gorm:"default:null"`
-	District     string    `gorm:"default:null"`
+	StateDoc     string    `gorm:"type:char(64);default:null"`
+	State        State     `gorm:"-"`
+	ProvinceDoc  string    `gorm:"type:char(64);default:null"`
+	Province     Province  `gorm:"-"`
+	DistrictDoc  string    `gorm:"type:char(64);default:null"`
+	District     District  `gorm:"-"`
 	AddressLine1 string    `gorm:"not null"`
 	Latitude     float64   `gorm:"default:null"`
 	Longitude    float64   `gorm:"default:null"`
@@ -26,15 +29,12 @@ type AddressInfo struct {
 
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
-		State:    domain.State(a.State),
-		Province: domain.Province(a.Province),
-		//	Locality:     a.Locality,
-		District:     domain.District(a.District),
+		State:        domain.State(a.State.Name),
+		Province:     domain.Province(a.Province.Name),
+		District:     domain.District(a.District.Name),
 		AddressLine1: a.AddressLine1,
-		//	AddressLine2: a.AddressLine2,
-		//	AddressLine3: a.AddressLine3,
-		Location: orb.Point{a.Longitude, a.Latitude},
-		ZipCode:  a.ZipCode,
-		TimeZone: a.TimeZone,
+		Location:     orb.Point{a.Longitude, a.Latitude},
+		ZipCode:      a.ZipCode,
+		TimeZone:     a.TimeZone,
 	}
 }

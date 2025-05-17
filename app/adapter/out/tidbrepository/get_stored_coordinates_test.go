@@ -25,15 +25,34 @@ var _ = Describe("GetStoredCoordinates", func() {
 	It("should return coordinates if address exists", func() {
 		ctx := createOrgContext(organization1)
 
+		// Crear y guardar State, Province y District primero
+		state := domain.State("Ñuñoa")
+		province := domain.Province("Santiago")
+		district := domain.District("Ñuñoa")
+
+		upsertState := NewUpsertState(connection)
+		err := upsertState(ctx, state)
+		Expect(err).ToNot(HaveOccurred())
+
+		upsertProvince := NewUpsertProvince(connection)
+		err = upsertProvince(ctx, province)
+		Expect(err).ToNot(HaveOccurred())
+
+		upsertDistrict := NewUpsertDistrict(connection)
+		err = upsertDistrict(ctx, district)
+		Expect(err).ToNot(HaveOccurred())
+
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Coords Existentes",
-			District:     "Ñuñoa",
+			State:        state,
+			Province:     province,
+			District:     district,
 			Location:     orb.Point{-70.6001, -33.4500},
 		}
 
-		// Guardar la dirección primero
+		// Guardar la dirección
 		upsert := NewUpsertAddressInfo(connection)
-		err := upsert(ctx, addressInfo)
+		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
 		getCoords := NewGetStoredCoordinates(connection)
@@ -41,7 +60,6 @@ var _ = Describe("GetStoredCoordinates", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(point.Lon()).To(BeNumerically("~", -70.6001, 0.0001))
 		Expect(point.Lat()).To(BeNumerically("~", -33.4500, 0.0001))
-
 	})
 
 	It("should return empty point if address does not exist", func() {

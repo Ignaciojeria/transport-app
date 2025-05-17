@@ -69,6 +69,13 @@ var _ = Describe("Tenant", func() {
 			sql, args, err := ds.ToSQL()
 			Expect(err).ToNot(HaveOccurred())
 
+			// Print query in a format easy to copy-paste into TiDB
+			fmt.Printf("\n=== COPY-PASTE THIS QUERY INTO TiDB ===\n")
+			fmt.Printf("%s;\n", sql)
+			fmt.Printf("=== WITH THESE ARGS ===\n")
+			fmt.Printf("%v\n", args)
+			fmt.Printf("=====================================\n\n")
+
 			var count int64
 			err = connection.Raw(sql, args...).Scan(&count).Error
 			Expect(err).ToNot(HaveOccurred())
@@ -95,7 +102,11 @@ func avoidJoin(table string) bool {
 		"drivers",
 		"vehicle_headers",
 		"plans",
-		"plan_headers":
+		"plan_headers",
+		"states",
+		"provinces",
+		"districts",
+		"routes":
 		return false // se permiten
 	default:
 		return true // evitar join
@@ -128,6 +139,10 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertVehicleHeaders(connection),
 		tidbrepository.NewUpsertPlan(connection),
 		tidbrepository.NewUpsertPlanHeaders(connection),
+		tidbrepository.NewUpsertRoute(connection),
+		tidbrepository.NewUpsertState(connection),
+		tidbrepository.NewUpsertProvince(connection),
+		tidbrepository.NewUpsertDistrict(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{

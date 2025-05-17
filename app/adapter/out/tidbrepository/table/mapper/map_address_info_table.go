@@ -9,8 +9,9 @@ import (
 
 func MapAddressInfoTable(ctx context.Context, e domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
-		State:        e.State.String(),
-		District:     e.District.String(),
+		StateDoc:     e.State.DocID(ctx).String(),
+		ProvinceDoc:  e.Province.DocID(ctx).String(),
+		DistrictDoc:  e.District.DocID(ctx).String(),
 		AddressLine1: e.AddressLine1,
 		DocumentID:   string(e.DocID(ctx)),
 		Latitude:     e.Location[1],
@@ -18,6 +19,5 @@ func MapAddressInfoTable(ctx context.Context, e domain.AddressInfo) table.Addres
 		ZipCode:      e.ZipCode,
 		TimeZone:     e.TimeZone,
 		TenantID:     sharedcontext.TenantIDFromContext(ctx),
-		Province:     e.Province.String(),
 	}
 }

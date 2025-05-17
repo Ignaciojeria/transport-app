@@ -21,16 +21,17 @@ var _ = Describe("District", func() {
 	})
 
 	Describe("DocID", func() {
-		It("should generate a deterministic DocID based on country and district", func() {
+		It("should generate a deterministic DocID based on tenant and district", func() {
 			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org1",
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
 
-			d := District("Ñuñoa")
+			d := District("Providencia")
 			docID := d.DocID(ctx)
 
-			// Expected hash: HashByCountry(context.Background(), "CL", "Ñuñoa")
-			joined := strings.Join([]string{"CL", "district", "Ñuñoa"}, "|")
+			orgKey := "org1-CL"
+			joined := strings.Join([]string{orgKey, "Providencia"}, "|")
 			sum := sha256.Sum256([]byte(joined))
 			expected := hex.EncodeToString(sum[:])
 
@@ -39,6 +40,7 @@ var _ = Describe("District", func() {
 
 		It("should return different DocIDs for different districts", func() {
 			ctx := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org1",
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
 
@@ -48,16 +50,19 @@ var _ = Describe("District", func() {
 			Expect(d1.DocID(ctx)).ToNot(Equal(d2.DocID(ctx)))
 		})
 
-		It("should return different DocIDs for same district but different countries", func() {
-			ctxCL := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+		It("should return different DocIDs for same district with different tenants", func() {
+			ctx1 := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org1",
 				sharedcontext.BaggageTenantCountry, "CL",
 			))
-			ctxAR := baggage.ContextWithBaggage(context.Background(), mustBaggage(
-				sharedcontext.BaggageTenantCountry, "AR",
+			ctx2 := baggage.ContextWithBaggage(context.Background(), mustBaggage(
+				sharedcontext.BaggageTenantID, "org2",
+				sharedcontext.BaggageTenantCountry, "CL",
 			))
 
 			d := District("Providencia")
-			Expect(d.DocID(ctxCL)).ToNot(Equal(d.DocID(ctxAR)))
+
+			Expect(d.DocID(ctx1)).ToNot(Equal(d.DocID(ctx2)))
 		})
 	})
 })
@@ -73,7 +78,7 @@ var _ = Describe("District", func() {
 		})
 
 		It("should return false when district has content", func() {
-			Expect(District("Providencia").IsEmpty()).To(BeFalse())
+			Expect(District("Ñuñoa").IsEmpty()).To(BeFalse())
 		})
 	})
 
@@ -83,7 +88,7 @@ var _ = Describe("District", func() {
 		})
 
 		It("should return false when districts differ", func() {
-			Expect(District("Providencia").Equals(District("Las Condes"))).To(BeFalse())
+			Expect(District("Ñuñoa").Equals(District("Las Condes"))).To(BeFalse())
 		})
 
 		It("should return false when one is empty", func() {
