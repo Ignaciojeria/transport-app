@@ -8,11 +8,15 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
 
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
 )
 
 type UpsertState func(ctx context.Context, state domain.State) error
 
+func init() {
+	ioc.Registry(NewUpsertState, database.NewConnectionFactory)
+}
 func NewUpsertState(db database.ConnectionFactory) UpsertState {
 	return func(ctx context.Context, state domain.State) error {
 		var existing table.State

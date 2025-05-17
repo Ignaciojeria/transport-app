@@ -8,10 +8,15 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
 
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"gorm.io/gorm"
 )
 
 type UpsertProvince func(ctx context.Context, province domain.Province) error
+
+func init() {
+	ioc.Registry(NewUpsertProvince, database.NewConnectionFactory)
+}
 
 func NewUpsertProvince(db database.ConnectionFactory) UpsertProvince {
 	return func(ctx context.Context, province domain.Province) error {
