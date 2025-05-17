@@ -14,5 +14,6 @@ func MapPlanToTable(ctx context.Context, p domain.Plan) table.Plan {
 		OriginNodeInfoDoc: string(p.Origin.DocID(ctx)),
 		TenantID:          sharedcontext.TenantIDFromContext(ctx),
 		PlannedDate:       p.PlannedDate,
+		PlanHeadersDoc:    p.Headers.DocID(ctx).String(),
 	}
 }

@@ -6,13 +6,12 @@ import (
 )
 
 type Plan struct {
+	Headers
 	ReferenceID      string
 	Origin           NodeInfo
 	PlannedDate      time.Time
 	UnassignedOrders []Order
 	Routes           []Route
-	PlanningStatus   PlanningStatus
-	PlanType         PlanType
 }
 
 func (p Plan) DocID(ctx context.Context) DocumentID {
