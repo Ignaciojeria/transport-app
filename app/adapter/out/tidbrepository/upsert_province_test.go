@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"testing"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
@@ -12,11 +11,6 @@ import (
 	. "github.com/onsi/gomega"
 	"go.opentelemetry.io/otel/baggage"
 )
-
-func TestUpsertProvince(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "UpsertProvince Suite")
-}
 
 var _ = Describe("UpsertProvince", func() {
 	var (
