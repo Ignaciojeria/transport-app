@@ -1,0 +1,24 @@
+package table
+
+import (
+	"transport-app/app/domain"
+
+	"github.com/google/uuid"
+)
+
+type NodeInfoHeaders struct {
+	ID       int64     `gorm:"primaryKey"`
+	Commerce string    `gorm:"default:null"`
+	Consumer string    `gorm:"default:null"`
+	Channel  string    `gorm:"default:null"`
+	TenantID uuid.UUID `gorm:"not null;index;"`
+	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
+}
+
+func (m NodeInfoHeaders) Map() domain.Headers {
+	return domain.Headers{
+		Consumer: m.Consumer,
+		Commerce: m.Commerce,
+		Channel:  m.Channel,
+	}
+}

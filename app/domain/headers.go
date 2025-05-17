@@ -10,10 +10,11 @@ import (
 type Headers struct {
 	Consumer string `json:"consumer"`
 	Commerce string `json:"commerce"`
+	Channel  string `json:"channel"`
 }
 
 func (h Headers) DocID(ctx context.Context) DocumentID {
-	return HashByTenant(ctx, h.Commerce, h.Consumer)
+	return HashByTenant(ctx, h.Commerce, h.Consumer, h.Channel)
 }
 
 func (h *Headers) SetFromContext(ctx context.Context) {
@@ -22,6 +23,8 @@ func (h *Headers) SetFromContext(ctx context.Context) {
 	h.Commerce = commerce
 	consumer := bag.Member(sharedcontext.BaggageConsumer).Value()
 	h.Consumer = consumer
+	channel := bag.Member(sharedcontext.BaggageChannel).Value()
+	h.Channel = channel
 }
 
 func (h Headers) UpdateIfChanged(in Headers) (Headers, bool) {
@@ -37,5 +40,14 @@ func (h Headers) UpdateIfChanged(in Headers) (Headers, bool) {
 		changed = true
 	}
 
+	if in.Channel != "" && in.Channel != h.Channel {
+		h.Channel = in.Channel
+		changed = true
+	}
+
 	return h, changed
+}
+
+func (h Headers) IsEmpty() bool {
+	return h.Commerce == "" && h.Consumer == "" && h.Channel == ""
 }

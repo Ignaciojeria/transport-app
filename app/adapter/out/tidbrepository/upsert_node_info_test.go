@@ -414,6 +414,82 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("node_infos"))
 	})
+
+	It("should handle headers according to the three scenarios", func() {
+		// Scenario 1: Create new node with empty headers
+		node := domain.NodeInfo{
+			Name:        "Node With Headers",
+			ReferenceID: "REF-HEADERS",
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1,
+			Headers:     domain.Headers{}, // Empty headers
+		}
+
+		upsert := NewUpsertNodeInfo(connection)
+		err := upsert(ctx1, node)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify headers were persisted as empty
+		var dbNode table.NodeInfo
+		err = connection.DB.WithContext(ctx1).
+			Table("node_infos").
+			Where("document_id = ?", node.DocID(ctx1)).
+			First(&dbNode).Error
+		Expect(err).ToNot(HaveOccurred())
+		emptyHeaders := domain.Headers{}.DocID(ctx1).String()
+		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(emptyHeaders))
+
+		// Scenario 2: Update existing node with empty headers
+		updatedNode := node
+		updatedNode.Headers = domain.Headers{} // Still empty headers
+
+		err = upsert(ctx1, updatedNode)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify headers were not updated (still empty)
+		err = connection.DB.WithContext(ctx1).
+			Table("node_infos").
+			Where("document_id = ?", node.DocID(ctx1)).
+			First(&dbNode).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(emptyHeaders))
+
+		// Scenario 3: Update existing node with non-empty headers
+		updatedNode.Headers = domain.Headers{
+			Commerce: "commerce1",
+			Consumer: "consumer1",
+			Channel:  "channel1",
+		}
+
+		err = upsert(ctx1, updatedNode)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify headers were updated
+		err = connection.DB.WithContext(ctx1).
+			Table("node_infos").
+			Where("document_id = ?", node.DocID(ctx1)).
+			First(&dbNode).Error
+		Expect(err).ToNot(HaveOccurred())
+		newHeaders := updatedNode.Headers.DocID(ctx1).String()
+		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(newHeaders))
+
+		// Scenario 4: Update existing node with empty headers
+		updatedNodeFinal := node
+		updatedNodeFinal.Headers = domain.Headers{} // Still empty headers
+
+		err = upsert(ctx1, updatedNodeFinal)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify headers are empty
+		err = connection.DB.WithContext(ctx1).
+			Table("node_infos").
+			Where("document_id = ?", node.DocID(ctx1)).
+			First(&dbNode).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(emptyHeaders))
+
+	})
+
 })
 
 // Helper function to find a reference by its type

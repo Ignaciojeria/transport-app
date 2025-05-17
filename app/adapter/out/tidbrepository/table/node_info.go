@@ -26,6 +26,9 @@ type NodeInfo struct {
 	AddressInfoDoc string      `gorm:"type:char(64)"`
 	AddressInfo    AddressInfo `gorm:"-"` // Ignore relationship for DB operations
 
+	NodeInfoHeadersDoc string          `gorm:"type:char(64)"`
+	NodeInfoHeaders    NodeInfoHeaders `gorm:"-"` // Ignore relationship for DB operations
+
 	AddressLine2   string
 	NodeReferences JSONReference `gorm:"type:json"`
 }
@@ -36,6 +39,7 @@ func (n NodeInfo) Map() domain.NodeInfo {
 		Name:         n.Name,
 		References:   n.NodeReferences.Map(),
 		AddressLine2: n.AddressLine2,
+		Headers:      n.NodeInfoHeaders.Map(),
 	}
 	return nodeInfo
 }

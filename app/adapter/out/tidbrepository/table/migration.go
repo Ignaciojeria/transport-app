@@ -28,13 +28,11 @@ func NewRunMigrations(
 		log.Println("Starting migrations...")
 		// Lista de tablas que tienen un campo ID como clave primaria
 		tables := []interface{}{
-			&PlanType{},
-			&PlanningStatus{},
-			&Route{},
+			//&Route{},
 			&OrderHeaders{},
 			&VehicleHeaders{},
 			&VehicleCategory{},
-			&NodeHeaders{},
+			&NodeInfoHeaders{},
 			&NodeType{},
 			&Order{},
 			&AddressInfo{},

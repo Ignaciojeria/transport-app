@@ -11,8 +11,9 @@ type VehicleHeaders struct {
 	gorm.Model
 	ID         int64     `gorm:"primaryKey"`
 	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
-	Commerce   string    `gorm:"not null"`
-	Consumer   string    `gorm:"not null"`
+	Commerce   string    `gorm:"default:null"`
+	Consumer   string    `gorm:"default:null"`
+	Channel    string    `gorm:"default:null"`
 	TenantID   uuid.UUID `gorm:"not null;index;"`
 	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
 }

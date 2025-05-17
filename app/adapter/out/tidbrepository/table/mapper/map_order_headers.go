@@ -11,6 +11,7 @@ func MapOrderHeaders(ctx context.Context, c domain.Headers) table.OrderHeaders {
 	return table.OrderHeaders{
 		Commerce:   c.Commerce,
 		Consumer:   c.Consumer,
+		Channel:    c.Channel,
 		DocumentID: string(c.DocID(ctx)),
 		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 	}

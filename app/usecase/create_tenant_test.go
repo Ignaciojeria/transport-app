@@ -16,10 +16,18 @@ import (
 var _ = Describe("Tenant", func() {
 	Describe("Default inner join readiness", func() {
 		It("should allow inner join across all tenant-related tables", func() {
-			tenantID := uuid.New()
-			ctx := buildCtx(tenantID.String(), "CL")
+			// Create first tenant
+			tenantID1 := uuid.New()
+			ctx1 := buildCtx(tenantID1.String(), "CL")
 
-			err := testCreateTenant(ctx, tenantID)
+			err := testCreateTenant(ctx1, tenantID1)
+			Expect(err).ToNot(HaveOccurred())
+
+			// Create second tenant with its own context
+			tenantID2 := uuid.New()
+			ctx2 := buildCtx(tenantID2.String(), "CL")
+
+			err = testCreateTenant(ctx2, tenantID2)
 			Expect(err).ToNot(HaveOccurred())
 
 			// 1. Obtener las tablas que tienen columna tenant_id
@@ -55,7 +63,7 @@ var _ = Describe("Tenant", func() {
 
 			// 3. WHERE por tenant + SELECT COUNT(*)
 			ds = ds.Where(goqu.Ex{
-				fmt.Sprintf("%s.tenant_id", baseAlias): tenantID.String(),
+				fmt.Sprintf("%s.tenant_id", baseAlias): tenantID2.String(),
 			}).Select(goqu.COUNT("*"))
 
 			sql, args, err := ds.ToSQL()
@@ -74,6 +82,7 @@ func avoidJoin(table string) bool {
 	switch table {
 	case
 		"order_headers",
+		"vehicles",
 		"contacts",
 		"address_infos",
 		"node_infos",
@@ -84,7 +93,6 @@ func avoidJoin(table string) bool {
 		"vehicle_categories",
 		"carriers",
 		"drivers",
-		"vehicles",
 		"vehicle_headers":
 		return false // se permiten
 	default:

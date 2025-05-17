@@ -49,7 +49,6 @@ type UpsertOrderRequest struct {
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
 			ReferenceID string `json:"referenceID"`
-			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"destination"`
 	OrderType struct {
@@ -85,7 +84,6 @@ type UpsertOrderRequest struct {
 		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`
-			Name        string `json:"name"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
 	Packages []struct {

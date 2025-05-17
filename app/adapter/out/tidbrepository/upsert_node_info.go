@@ -64,6 +64,16 @@ func NewUpsertNodeInfo(conn database.ConnectionFactory) UpsertNodeInfo {
 			changed = true
 		}
 
+		// Manejo de headers según los tres escenarios
+		if !ni.Headers.IsEmpty() {
+			// Si las cabeceras nuevas no están vacías, actualizamos
+			updated.Headers = ni.Headers
+			changed = true
+		} else {
+			// Si las cabeceras nuevas están vacías, mantenemos las existentes
+			updated.Headers = existingMapped.Headers
+		}
+
 		if !changed {
 			return nil
 		}
@@ -73,7 +83,9 @@ func NewUpsertNodeInfo(conn database.ConnectionFactory) UpsertNodeInfo {
 		updateData.CreatedAt = existing.CreatedAt
 
 		// Use the same Omit pattern for consistency
-		return conn.
-			Save(&updateData).Error
+		return conn.DB.WithContext(ctx).
+			Table("node_infos").
+			Where("document_id = ?", docID).
+			Updates(updateData).Error
 	}
 }

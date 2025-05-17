@@ -26,14 +26,37 @@ type SaveTenant func(
 
 func NewSaveTenant(conn database.ConnectionFactory) SaveTenant {
 	return func(ctx context.Context, o domain.Tenant) (domain.Tenant, error) {
-		// Mapear la entidad del dominio a la tabla
+		// Buscar si ya existe
+		var existing table.Tenant
+		err := conn.DB.WithContext(ctx).
+			Table("tenants").
+			Where("id = ?", o.ID).
+			First(&existing).Error
+
+		// Si ya existe, retornar sin crear nuevamente
+		if err == nil {
+			return domain.Tenant{
+				ID:      existing.ID,
+				Name:    existing.Name,
+				Country: o.Country, // Country puede no estar en la tabla, si es así ajusta
+			}, nil
+		}
+
+		// Solo retornar si error distinto de "not found"
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return domain.Tenant{}, err
+		}
+
+		// Mapear y crear nuevo tenant
 		tableOrg := mapper.MapTenantTable(ctx, o.Name)
 		tableOrg.ID = o.ID
+
 		var account table.Account
-		err := conn.Where("email = ?", o.Operator.Contact.PrimaryEmail).Find(&account).Error
+		err = conn.Where("email = ?", o.Operator.Contact.PrimaryEmail).Find(&account).Error
 		if err != nil {
 			return domain.Tenant{}, err
 		}
+
 		var accountOrg table.AccountTenant
 		err = conn.Transaction(func(tx *gorm.DB) error {
 			if err := conn.DB.Create(&tableOrg).Error; err != nil {
@@ -49,12 +72,11 @@ func NewSaveTenant(conn database.ConnectionFactory) SaveTenant {
 		if err != nil {
 			return domain.Tenant{}, err
 		}
-		// Mapear de vuelta a la entidad de dominio
-		savedOrg := domain.Tenant{
+
+		return domain.Tenant{
 			ID:      tableOrg.ID,
+			Name:    tableOrg.Name,
 			Country: o.Country,
-			Name:    o.Name,
-		}
-		return savedOrg, nil
+		}, nil
 	}
 }

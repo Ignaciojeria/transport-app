@@ -18,7 +18,6 @@ func init() {
 		tidbrepository.NewUpsertOrderHeaders,
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
-		tidbrepository.NewUpsertNodeInfo,
 		tidbrepository.NewUpsertDeliveryUnits,
 		tidbrepository.NewUpsertOrderType,
 		tidbrepository.NewUpsertOrder,
@@ -32,7 +31,6 @@ func NewCreateOrder(
 	upsertOrderHeaders tidbrepository.UpsertOrderHeaders,
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
-	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 	upsertDeliveryUnits tidbrepository.UpsertDeliveryUnits,
 	upsertOrderType tidbrepository.UpsertOrderType,
 	upsertOrder tidbrepository.UpsertOrder,
@@ -41,7 +39,6 @@ func NewCreateOrder(
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
-
 		normalizationGroup, group1Ctx := errgroup.WithContext(ctx)
 
 		normalizationGroup.Go(func() error {
@@ -82,14 +79,6 @@ func NewCreateOrder(
 
 		group.Go(func() error {
 			return upsertAddressInfo(group2Ctx, inOrder.Destination.AddressInfo)
-		})
-
-		group.Go(func() error {
-			return upsertNodeInfo(group2Ctx, inOrder.Origin)
-		})
-
-		group.Go(func() error {
-			return upsertNodeInfo(group2Ctx, inOrder.Destination)
 		})
 
 		group.Go(func() error {
