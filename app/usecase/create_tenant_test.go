@@ -82,7 +82,6 @@ func avoidJoin(table string) bool {
 	switch table {
 	case
 		"order_headers",
-		"vehicles",
 		"contacts",
 		"address_infos",
 		"node_infos",
@@ -91,6 +90,7 @@ func avoidJoin(table string) bool {
 		"order_references",
 		"order_delivery_units",
 		"vehicle_categories",
+		"vehicles",
 		"carriers",
 		"drivers",
 		"vehicle_headers",

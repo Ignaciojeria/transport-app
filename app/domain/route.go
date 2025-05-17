@@ -4,9 +4,9 @@ import "context"
 
 type Route struct {
 	ReferenceID string
+	Origin      NodeInfo
 	Destination NodeInfo
 	Vehicle     Vehicle
-	Operator    Operator
 	Orders      []Order
 }
 

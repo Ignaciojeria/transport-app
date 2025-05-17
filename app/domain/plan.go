@@ -7,11 +7,12 @@ import (
 
 type Plan struct {
 	Headers
-	ReferenceID      string
-	Origin           NodeInfo
-	PlannedDate      time.Time
-	UnassignedOrders []Order
-	Routes           []Route
+	ReferenceID        string
+	UnassignedOrigins  []NodeInfo
+	UnassignedVehicles []Vehicle
+	UnassignedOrders   []Order
+	PlannedDate        time.Time
+	Routes             []Route
 }
 
 func (p Plan) DocID(ctx context.Context) DocumentID {

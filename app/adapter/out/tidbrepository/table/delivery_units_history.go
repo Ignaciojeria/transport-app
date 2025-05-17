@@ -11,6 +11,7 @@ type DeliveryUnitsHistory struct {
 	OrderDoc             string             `gorm:"type:char(64);index"`
 	DeliveryUnitDoc      string             `gorm:"type:char(64);index"`
 	OrderStatusDoc       string             `gorm:"type:char(64);index"`
+	PlanDoc              string             `gorm:"type:char(64);index"`
 	RouteDoc             string             `gorm:"type:char(64);index"`
 	VehicleDoc           string             `gorm:"type:char(64);index"`
 	CarrierDoc           string             `gorm:"type:char(64);index"`
