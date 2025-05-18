@@ -4,15 +4,18 @@ import (
 	"transport-app/app/domain"
 
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 )
 
 type NodeInfoHeaders struct {
-	ID       int64     `gorm:"primaryKey"`
-	Commerce string    `gorm:"default:null"`
-	Consumer string    `gorm:"default:null"`
-	Channel  string    `gorm:"default:null"`
-	TenantID uuid.UUID `gorm:"not null;index;"`
-	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
+	gorm.Model
+	ID         int64     `gorm:"primaryKey"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
+	Commerce   string    `gorm:"default:null"`
+	Consumer   string    `gorm:"default:null"`
+	Channel    string    `gorm:"default:null"`
+	TenantID   uuid.UUID `gorm:"not null;index;"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
 }
 
 func (m NodeInfoHeaders) Map() domain.Headers {

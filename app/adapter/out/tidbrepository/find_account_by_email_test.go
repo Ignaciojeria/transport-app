@@ -10,36 +10,39 @@ import (
 )
 
 var _ = Describe("FindAccountByEmail", func() {
-	BeforeEach(func() {
-		// Clean the accounts table before each test
-		err := connection.DB.Exec("DELETE FROM accounts").Error
-		Expect(err).ToNot(HaveOccurred())
-	})
 
 	It("should return empty operator when account not found", func() {
 		ctx := context.Background()
 		findAccount := NewFindAccountByEmail(connection)
 
-		operator, err := findAccount(ctx, "nonexistent@example.com")
+		account, err := findAccount(ctx, "nonexistent@example.com")
 		Expect(err).ToNot(HaveOccurred())
-		Expect(operator).To(Equal(domain.Operator{}))
+		Expect(account).To(Equal(domain.Account{}))
 	})
 
 	It("should return operator when account exists", func() {
 		ctx := context.Background()
 
 		// Create test account
-		account := table.Account{
-			Email:    "test@example.com",
-			IsActive: true,
+		account := domain.Account{
+			Email: "test@example.com",
 		}
-		err := connection.DB.Create(&account).Error
+		err := NewUpsertAccount(connection)(ctx, account)
 		Expect(err).ToNot(HaveOccurred())
 
 		findAccount := NewFindAccountByEmail(connection)
-		operator, err := findAccount(ctx, "test@example.com")
+		accountDomain, err := findAccount(ctx, "test@example.com")
 		Expect(err).ToNot(HaveOccurred())
-		Expect(operator.Contact.PrimaryEmail).To(Equal("test@example.com"))
+		Expect(accountDomain.Email).To(Equal("test@example.com"))
+
+		// Verify using document_id
+		var dbAccount table.Account
+		err = connection.DB.WithContext(ctx).
+			Table("accounts").
+			Where("document_id = ?", accountDomain.DocID()).
+			First(&dbAccount).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbAccount.Email).To(Equal("test@example.com"))
 	})
 
 	It("should fail if database has no accounts table", func() {

@@ -5,6 +5,10 @@ type UserCredentials struct {
 	Password string
 }
 
+func (u UserCredentials) DocID() DocumentID {
+	return HashInputs(u.Email)
+}
+
 type ProviderToken struct {
 	TokenType    string
 	TokenValue   string

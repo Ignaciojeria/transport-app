@@ -2,56 +2,67 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertNodeType", func() {
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	var (
+		conn database.ConnectionFactory
+	)
+
+	BeforeEach(func() {
+		conn = connection
+	})
 
 	It("should insert node type if not exists", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		nodeType := domain.NodeType{
 			Value: "pickup",
 		}
 
-		upsert := NewUpsertNodeType(connection)
-		err := upsert(ctx, nodeType)
+		upsert := NewUpsertNodeType(conn)
+		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbNodeType table.NodeType
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("node_types").
 			Where("document_id = ?", nodeType.DocID(ctx)).
 			First(&dbNodeType).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeType.Value).To(Equal("pickup"))
+		Expect(dbNodeType.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should update node type if fields are different", func() {
-		ctx := createOrgContext(organization1)
+	It("should create new record when value changes", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.NodeType{
 			Value: "original",
 		}
 
-		upsert := NewUpsertNodeType(connection)
-		err := upsert(ctx, original)
+		upsert := NewUpsertNodeType(conn)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
+
+		// Get the original record
+		var originalRecord table.NodeType
+		err = conn.DB.WithContext(ctx).
+			Table("node_types").
+			Where("document_id = ?", original.DocID(ctx)).
+			First(&originalRecord).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(originalRecord.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		modified := domain.NodeType{
 			Value: "updated",
@@ -61,108 +72,133 @@ var _ = Describe("UpsertNodeType", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbNodeType table.NodeType
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("node_types").
 			Where("document_id = ?", modified.DocID(ctx)).
 			First(&dbNodeType).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeType.Value).To(Equal("updated"))
+		Expect(dbNodeType.TenantID.String()).To(Equal(tenant.ID.String()))
+		Expect(dbNodeType.ID).ToNot(Equal(originalRecord.ID)) // Should be a new record
 	})
 
-	It("should not update if no fields changed", func() {
-		ctx := createOrgContext(organization1)
+	It("should not create new record if no fields changed", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		nodeType := domain.NodeType{
 			Value: "no-change",
 		}
 
-		upsert := NewUpsertNodeType(connection)
-		err := upsert(ctx, nodeType)
+		upsert := NewUpsertNodeType(conn)
+		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Capture original record to verify timestamp doesn't change
 		var originalRecord table.NodeType
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("node_types").
 			Where("document_id = ?", nodeType.DocID(ctx)).
 			First(&originalRecord).Error
 		Expect(err).ToNot(HaveOccurred())
+		Expect(originalRecord.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		// Ejecutar nuevamente sin cambios
 		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbNodeType table.NodeType
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("node_types").
 			Where("document_id = ?", nodeType.DocID(ctx)).
 			First(&dbNodeType).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeType.Value).To(Equal("no-change"))
+		Expect(dbNodeType.TenantID.String()).To(Equal(tenant.ID.String()))
 		Expect(dbNodeType.UpdatedAt).To(Equal(originalRecord.UpdatedAt)) // Verify timestamp didn't change
 	})
 
-	It("should allow same node type for different organizations", func() {
-		ctx1 := createOrgContext(organization1)
-		ctx2 := createOrgContext(organization2)
+	It("should allow same node type for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-		node1 := domain.NodeType{
-			Value: "shared-type",
+		nodeType1 := domain.NodeType{
+			Value: "multi-org",
+		}
+		nodeType2 := domain.NodeType{
+			Value: "multi-org",
 		}
 
-		node2 := domain.NodeType{
-			Value: "shared-type",
-		}
+		upsert := NewUpsertNodeType(conn)
 
-		upsert := NewUpsertNodeType(connection)
-
-		err := upsert(ctx1, node1)
+		err = upsert(ctx1, nodeType1)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = upsert(ctx2, node2)
+		err = upsert(ctx2, nodeType2)
 		Expect(err).ToNot(HaveOccurred())
 
-		var count int64
-		err = connection.DB.WithContext(context.Background()).
-			Table("node_types").
-			Where("value = ?", node1.Value).
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(2)))
+		// Get the DocIDs
+		docID1 := nodeType1.DocID(ctx1)
+		docID2 := nodeType2.DocID(ctx2)
 
 		// Verify they have different document IDs
-		Expect(node1.DocID(ctx1)).ToNot(Equal(node2.DocID(ctx2)))
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each node type belongs to its respective tenant using DocID
+		var dbNodeType1, dbNodeType2 table.NodeType
+		err = conn.DB.WithContext(ctx1).
+			Table("node_types").
+			Where("document_id = ?", docID1).
+			First(&dbNodeType1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeType1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("node_types").
+			Where("document_id = ?", docID2).
+			First(&dbNodeType2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeType2.TenantID.String()).To(Equal(tenant2.ID.String()))
 	})
 
 	It("should generate predictable DocID with empty value", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		nodeType := domain.NodeType{
 			Value: "",
 		}
 
-		upsert := NewUpsertNodeType(connection)
-		err := upsert(ctx, nodeType)
+		upsert := NewUpsertNodeType(conn)
+		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbNodeType table.NodeType
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("node_types").
 			Where("document_id = ?", nodeType.DocID(ctx)).
 			First(&dbNodeType).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeType.Value).To(BeEmpty())
+		Expect(dbNodeType.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should fail if database has no node_types table", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		nodeType := domain.NodeType{
 			Value: "error-case",
 		}
 
 		upsert := NewUpsertNodeType(noTablesContainerConnection)
-		err := upsert(ctx, nodeType)
+		err = upsert(ctx, nodeType)
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("node_types"))

@@ -5,31 +5,26 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
-
-func buildCtx(tenantID, country string) context.Context {
-	ctx := context.Background()
-	tID, _ := baggage.NewMember(sharedcontext.BaggageTenantID, tenantID)
-	cntry, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, country)
-	bag, _ := baggage.New(tID, cntry)
-	return baggage.ContextWithBaggage(ctx, bag)
-}
 
 var _ = Describe("UpsertRoute", func() {
 	var (
 		ctx       context.Context
+		tenant    domain.Tenant
 		conn      database.ConnectionFactory
 		upsert    UpsertRoute
 		testRoute domain.Route
 	)
 
 	BeforeEach(func() {
-		ctx = buildCtx(organization1.ID.String(), organization1.Country.String())
+		var err error
+		// Create a new tenant for testing
+		tenant, ctx, err = CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+
 		conn = connection
 		upsert = NewUpsertRoute(conn)
 
@@ -51,13 +46,6 @@ var _ = Describe("UpsertRoute", func() {
 				{ReferenceID: "order-001"},
 			},
 		}
-
-		// Clean up database before each test
-		conn.DB.Exec("DELETE FROM routes")
-	})
-
-	AfterEach(func() {
-		conn.DB.Exec("DELETE FROM routes")
 	})
 
 	It("should insert a new route when it doesn't exist", func() {
@@ -69,7 +57,7 @@ var _ = Describe("UpsertRoute", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(savedRoute.ReferenceID).To(Equal(testRoute.ReferenceID))
 		Expect(savedRoute.DocumentID).To(Equal(testRoute.DocID(ctx).String()))
-		Expect(savedRoute.TenantID).To(Equal(organization1.ID))
+		Expect(savedRoute.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update an existing route when it exists", func() {
@@ -92,7 +80,7 @@ var _ = Describe("UpsertRoute", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(savedRoute.ReferenceID).To(Equal(updatedRoute.ReferenceID))
 		Expect(savedRoute.DocumentID).To(Equal(updatedRoute.DocID(ctx).String()))
-		Expect(savedRoute.TenantID).To(Equal(organization1.ID))
+		Expect(savedRoute.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should maintain the same ID when updating an existing route", func() {
@@ -116,7 +104,7 @@ var _ = Describe("UpsertRoute", func() {
 		err = conn.DB.Where("document_id = ?", updatedRoute.DocID(ctx)).First(&updatedRouteRecord).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(updatedRouteRecord.ID).To(Equal(firstID))
-		Expect(updatedRouteRecord.TenantID).To(Equal(organization1.ID))
+		Expect(updatedRouteRecord.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should handle different routes with different DocIDs", func() {
@@ -140,8 +128,8 @@ var _ = Describe("UpsertRoute", func() {
 		err = conn.DB.Find(&routes).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(routes).To(HaveLen(2))
-		Expect(routes[0].TenantID).To(Equal(organization1.ID))
-		Expect(routes[1].TenantID).To(Equal(organization1.ID))
+		Expect(routes[0].TenantID.String()).To(Equal(tenant.ID.String()))
+		Expect(routes[1].TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should handle database errors gracefully", func() {
@@ -165,7 +153,8 @@ var _ = Describe("UpsertRoute", func() {
 		}
 
 		// Create a context with an invalid tenant ID to force a foreign key error
-		invalidCtx := buildCtx("invalid-tenant-id", "CL")
+		invalidCtx := context.Background()
+		invalidCtx = context.WithValue(invalidCtx, "tenant_id", "invalid-tenant-id")
 		err := upsert(invalidCtx, invalidRoute, "plan-doc-001")
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("violates foreign key constraint"))

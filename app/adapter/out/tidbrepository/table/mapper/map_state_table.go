@@ -11,6 +11,6 @@ func MapStateTable(ctx context.Context, s domain.State) table.State {
 	return table.State{
 		Name:       s.String(),
 		DocumentID: s.DocID(ctx).String(),
-		TenantID:   sharedcontext.TenantIDFromContext(ctx).String(),
+		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 	}
 }

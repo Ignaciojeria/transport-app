@@ -11,14 +11,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type FindAccountByEmail func(context.Context, string) (domain.Operator, error)
+type FindAccountByEmail func(context.Context, string) (domain.Account, error)
 
 func init() {
 	ioc.Registry(NewFindAccountByEmail, database.NewConnectionFactory)
 }
 
 func NewFindAccountByEmail(conn database.ConnectionFactory) FindAccountByEmail {
-	return func(ctx context.Context, email string) (domain.Operator, error) {
+	return func(ctx context.Context, email string) (domain.Account, error) {
 		var accountTbl table.Account
 		err := conn.DB.WithContext(ctx).
 			Table("accounts").
@@ -26,15 +26,13 @@ func NewFindAccountByEmail(conn database.ConnectionFactory) FindAccountByEmail {
 			First(&accountTbl).Error
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return domain.Operator{}, nil
+				return domain.Account{}, nil
 			}
-			return domain.Operator{}, err
+			return domain.Account{}, err
 		}
 
-		return domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: accountTbl.Email,
-			},
+		return domain.Account{
+			Email: accountTbl.Email,
 		}, nil
 	}
 }

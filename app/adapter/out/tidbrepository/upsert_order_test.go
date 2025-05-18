@@ -6,90 +6,64 @@ import (
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/paulmach/orb"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertOrder", func() {
 	var (
-		ctx        context.Context
-		Status     domain.Status
-		orderType  domain.OrderType
-		originNode domain.NodeInfo
-		destNode   domain.NodeInfo
-
+		ctx           context.Context
+		tenant        domain.Tenant
+		Status        domain.Status
+		orderType     domain.OrderType
+		originNode    domain.NodeInfo
+		destNode      domain.NodeInfo
 		originAddress domain.AddressInfo
 		destAddress   domain.AddressInfo
+		loadStatuses  LoadStatuses
+		statuses      Statuses
 	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
-
 	BeforeEach(func() {
-		// Create context with organization1
-		ctx = createOrgContext(organization1)
+		var err error
+		// Create a new tenant for testing
+		tenant, ctx, err = CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
 
-		// Datos básicos para los tests
-		Status = domain.Status{
-			Status: "pending",
-		}
+		// Initialize LoadStatuses
+		loadStatuses = NewLoadStatuses(connection)
+		loadStatuses()
 
+		// Setup test data
+		Status = statuses.Available() // Usamos un estado predefinido
 		orderType = domain.OrderType{
 			Type:        "retail",
-			Description: "Entrega estándar",
+			Description: "Test Order Type",
 		}
 
 		originAddress = domain.AddressInfo{
-			State:        "Región Metropolitana",
-			AddressLine1: "Av. Providencia 1234",
-			Location:     orb.Point{-70.6199, -33.4342},
+			AddressLine1: "Origin Address",
+			Location:     orb.Point{-70.6001, -33.4500},
 		}
 
 		destAddress = domain.AddressInfo{
-			State:        "Región Metropolitana",
-			AddressLine1: "Av. Las Condes 5678",
-			Location:     orb.Point{-70.5714, -33.4012},
+			AddressLine1: "Destination Address",
+			Location:     orb.Point{-70.6002, -33.4501},
 		}
 
 		originNode = domain.NodeInfo{
-			ReferenceID: "node-origin-001",
-			Name:        "Centro de Distribución Central",
+			ReferenceID: "origin-001",
+			Name:        "Origin Node",
 			AddressInfo: originAddress,
 		}
 
 		destNode = domain.NodeInfo{
-			ReferenceID: "node-dest-001",
-			Name:        "Punto de Entrega",
+			ReferenceID: "dest-001",
+			Name:        "Destination Node",
 			AddressInfo: destAddress,
 		}
-
-		// Preparamos únicamente Status para los tests ya que es requerido
-		err := connection.DB.WithContext(ctx).
-			Table("statuses").
-			Where("status = ?", Status.Status).
-			FirstOrCreate(&table.Status{
-				Status: Status.Status,
-			}).Error
-		Expect(err).ToNot(HaveOccurred())
-
-		// Y también inicializamos el Status "in_progress" que usaremos más adelante
-		err = connection.DB.WithContext(ctx).
-			Table("statuses").
-			Where("status = ?", "in_progress").
-			FirstOrCreate(&table.Status{
-				Status: "in_progress",
-			}).Error
-		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should insert a new order if it doesn't exist", func() {
@@ -133,7 +107,7 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbOrder.ReferenceID).To(Equal(string(order.ReferenceID)))
 		Expect(dbOrder.DeliveryInstructions).To(Equal(order.DeliveryInstructions))
-		Expect(dbOrder.TenantID).To(Equal(organization1.ID))
+		Expect(dbOrder.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update an existing order if delivery instructions changed", func() {
@@ -230,41 +204,59 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(dbOrder.PromisedTimeRangeEnd).To(Equal("18:00"))
 	})
 
-	It("should update order status if changed", func() {
-		// Nuevo estado para actualizar
-		newStatus := domain.Status{
-			Status: "in_progress",
-		}
+	It("should update order status", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
 
 		order := domain.Order{
-			Headers: domain.Headers{
-				Commerce: "Tienda Online",
-				Consumer: "Distribución Nacional",
-			},
-			ReferenceID: "ORDER-004",
-			Status:      Status, // status pendiente
-			OrderType:   orderType,
-			Origin:      originNode,
-			Destination: destNode,
+			Status: statuses.Available(), // Usamos un estado predefinido
 		}
 
 		upsert := NewUpsertOrder(connection)
-		err := upsert(ctx, order)
+		err = upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Actualizar el estado de la orden
-		modifiedOrder := order
-		modifiedOrder.Status = newStatus
+		// Get the DocID
+		docID := order.DocID(ctx)
 
-		err = upsert(ctx, modifiedOrder)
-		Expect(err).ToNot(HaveOccurred())
-
+		// Verify initial status
 		var dbOrder table.Order
 		err = connection.DB.WithContext(ctx).
 			Table("orders").
-			Where("document_id = ?", order.DocID(ctx)).
+			Where("document_id = ?", docID).
 			First(&dbOrder).Error
 		Expect(err).ToNot(HaveOccurred())
+
+		// Get the status from the statuses table using DocID
+		var dbStatus table.Status
+		err = connection.DB.WithContext(ctx).
+			Table("statuses").
+			Where("document_id = ?", dbOrder.StatusDoc).
+			First(&dbStatus).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbStatus.Status).To(Equal(domain.StatusAvailable))
+
+		// Update status
+		order.Status = statuses.InTransit() // Usamos otro estado predefinido
+		err = upsert(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify updated status
+		err = connection.DB.WithContext(ctx).
+			Table("orders").
+			Where("document_id = ?", docID).
+			First(&dbOrder).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the updated status from the statuses table using DocID
+		err = connection.DB.WithContext(ctx).
+			Table("statuses").
+			Where("document_id = ?", order.Status.DocID()).
+			First(&dbStatus).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbStatus.Status).To(Equal(domain.StatusInTransit))
+		Expect(dbOrder.TenantID).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update packages if changed", func() {

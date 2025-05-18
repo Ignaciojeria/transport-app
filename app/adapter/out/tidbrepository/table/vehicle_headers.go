@@ -22,5 +22,6 @@ func (m VehicleHeaders) Map() domain.Headers {
 	return domain.Headers{
 		Consumer: m.Consumer,
 		Commerce: m.Commerce,
+		Channel:  m.Channel,
 	}
 }

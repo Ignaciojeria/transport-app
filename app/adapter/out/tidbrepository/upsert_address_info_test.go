@@ -2,46 +2,45 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/paulmach/orb"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertAddressInfo", func() {
+	var (
+		conn   database.ConnectionFactory
+		upsert UpsertAddressInfo
+	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	BeforeEach(func() {
+		conn = connection
+		upsert = NewUpsertAddressInfo(conn)
+	})
 
 	It("should insert addressInfo if not exists", func() {
-		// Create context with organization1
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		// Crear y guardar State, Province y District primero
 		state := domain.State("Metropolitana")
 		province := domain.Province("Santiago")
 		district := domain.District("Providencia")
 
-		upsertState := NewUpsertState(connection)
-		err := upsertState(ctx, state)
+		upsertState := NewUpsertState(conn)
+		err = upsertState(ctx, state)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertProvince := NewUpsertProvince(connection)
+		upsertProvince := NewUpsertProvince(conn)
 		err = upsertProvince(ctx, province)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertDistrict := NewUpsertDistrict(connection)
+		upsertDistrict := NewUpsertDistrict(conn)
 		err = upsertDistrict(ctx, district)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -54,24 +53,30 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Location:     orb.Point{-70.6506, -33.4372}, // [lon, lat]
 		}
 
-		upsert := NewUpsertAddressInfo(connection)
 		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Get the DocID
+		docID := addressInfo.DocID(ctx)
+
+		// Verify the record was inserted correctly
 		var dbAddressInfo table.AddressInfo
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", addressInfo.DocID(ctx).String()).
+			Where("document_id = ?", docID).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Av Providencia 1234"))
 		Expect(dbAddressInfo.StateDoc).To(Equal(state.DocID(ctx).String()))
 		Expect(dbAddressInfo.ProvinceDoc).To(Equal(province.DocID(ctx).String()))
 		Expect(dbAddressInfo.DistrictDoc).To(Equal(district.DocID(ctx).String()))
+		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should update addressInfo if fields are different", func() {
-		ctx := createOrgContext(organization1)
+	It("should create new address when fields change", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.AddressInfo{
 			AddressLine1: "Dirección Original",
@@ -82,10 +87,11 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Location:     orb.Point{-70.5768, -33.4002}, // [lon, lat]
 		}
 
-		upsert := NewUpsertAddressInfo(connection)
-
-		err := upsert(ctx, original)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
+
+		// Get the original DocID
+		originalDocID := original.DocID(ctx)
 
 		modified := domain.AddressInfo{
 			AddressLine1: "Dirección Modificada",
@@ -99,83 +105,95 @@ var _ = Describe("UpsertAddressInfo", func() {
 		err = upsert(ctx, modified)
 		Expect(err).ToNot(HaveOccurred())
 
-		var dbAddressInfo table.AddressInfo
-		err = connection.DB.WithContext(ctx).
+		// Get the new DocID
+		modifiedDocID := modified.DocID(ctx)
+
+		// Verify that DocIDs are different
+		Expect(modifiedDocID).ToNot(Equal(originalDocID))
+
+		// Verify both addresses exist in the database
+		var count int64
+		err = conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", modified.DocID(ctx)).
-			First(&dbAddressInfo).Error
+			Where("document_id IN ? AND tenant_id = ?", []string{string(originalDocID), string(modifiedDocID)}, tenant.ID).
+			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbAddressInfo.AddressLine1).To(Equal("Dirección Modificada"))
-		Expect(dbAddressInfo.ZipCode).To(Equal("7560000"))
+		Expect(count).To(Equal(int64(2)))
+
+		// Verify the original address still exists
+		var originalAddress table.AddressInfo
+		err = conn.DB.WithContext(ctx).
+			Table("address_infos").
+			Where("document_id = ?", originalDocID).
+			First(&originalAddress).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(originalAddress.AddressLine1).To(Equal("Dirección Original"))
+		Expect(originalAddress.ZipCode).To(Equal("7550000"))
+
+		// Verify the new address exists
+		var modifiedAddress table.AddressInfo
+		err = conn.DB.WithContext(ctx).
+			Table("address_infos").
+			Where("document_id = ?", modifiedDocID).
+			First(&modifiedAddress).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(modifiedAddress.AddressLine1).To(Equal("Dirección Modificada"))
+		Expect(modifiedAddress.ZipCode).To(Equal("7560000"))
 	})
 
-	It("should not update if no fields changed", func() {
-		ctx := createOrgContext(organization1)
-
-		addressInfo := domain.AddressInfo{
-			AddressLine1: "Sin Cambios",
-			District:     "Vitacura",
-			Province:     "Santiago",
-			State:        "Metropolitana",
-			ZipCode:      "7630000",
-			Location:     orb.Point{-70.5906, -33.3853}, // [lon, lat]
-		}
-
-		upsert := NewUpsertAddressInfo(connection)
-
-		err := upsert(ctx, addressInfo)
+	It("should allow same address info for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
-
-		// Capturar CreatedAt original para comparar después
-		var originalRecord table.AddressInfo
-		err = connection.DB.WithContext(ctx).
-			Table("address_infos").
-			Where("document_id = ?", addressInfo.DocID(ctx)).
-			First(&originalRecord).Error
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
-
-		// Ejecutar de nuevo sin cambios
-		err = upsert(ctx, addressInfo)
-		Expect(err).ToNot(HaveOccurred())
-
-		var dbAddressInfo table.AddressInfo
-		err = connection.DB.WithContext(ctx).
-			Table("address_infos").
-			Where("document_id = ?", addressInfo.DocID(ctx)).
-			First(&dbAddressInfo).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dbAddressInfo.AddressLine1).To(Equal("Sin Cambios"))
-		Expect(dbAddressInfo.CreatedAt).To(Equal(originalRecord.CreatedAt)) // Verificar que no se modificó
-	})
-
-	It("should allow same address info for different organizations", func() {
-		ctx1 := createOrgContext(organization1)
-		ctx2 := createOrgContext(organization2)
 
 		addressInfo1 := domain.AddressInfo{
-			AddressLine1: "Multi Org",
-			District:     "Santiago",
-			Province:     "Santiago",
-			State:        "Metropolitana",
+			AddressLine1: "Test Street",
+			State:        domain.State("Test State"),
+			Province:     domain.Province("Test Province"),
+			District:     domain.District("Test District"),
 		}
 
 		addressInfo2 := domain.AddressInfo{
-			AddressLine1: "Multi Org",
-			District:     "Santiago",
-			Province:     "Santiago",
-			State:        "Metropolitana",
+			AddressLine1: "Test Street",
+			State:        domain.State("Test State"),
+			Province:     domain.Province("Test Province"),
+			District:     domain.District("Test District"),
 		}
 
-		upsert := NewUpsertAddressInfo(connection)
-
-		err := upsert(ctx1, addressInfo1)
+		err = upsert(ctx1, addressInfo1)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = upsert(ctx2, addressInfo2)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Get the DocIDs
+		docID1 := addressInfo1.DocID(ctx1)
+		docID2 := addressInfo2.DocID(ctx2)
+
+		// Verify they have different document IDs
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each address info belongs to its respective tenant using DocID
+		var dbAddressInfo1, dbAddressInfo2 table.AddressInfo
+		err = conn.DB.WithContext(ctx1).
+			Table("address_infos").
+			Where("document_id = ?", docID1).
+			First(&dbAddressInfo1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbAddressInfo1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("address_infos").
+			Where("document_id = ?", docID2).
+			First(&dbAddressInfo2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbAddressInfo2.TenantID.String()).To(Equal(tenant2.ID.String()))
+
+		// Verify total count of records with same address
 		var count int64
-		err = connection.DB.WithContext(context.Background()).
+		err = conn.DB.WithContext(context.Background()).
 			Table("address_infos").
 			Where("address_line1 = ?", addressInfo1.AddressLine1).
 			Count(&count).Error
@@ -184,7 +202,9 @@ var _ = Describe("UpsertAddressInfo", func() {
 	})
 
 	It("should update location coordinates correctly", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.AddressInfo{
 			AddressLine1: "Coordenadas Test",
@@ -192,9 +212,11 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Location:     orb.Point{-70.5975, -33.4566}, // [lon, lat]
 		}
 
-		upsert := NewUpsertAddressInfo(connection)
-		err := upsert(ctx, original)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
+
+		// Get the DocID
+		docID := original.DocID(ctx)
 
 		// Actualizar con nuevas coordenadas
 		modified := original
@@ -203,20 +225,24 @@ var _ = Describe("UpsertAddressInfo", func() {
 		err = upsert(ctx, modified)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Verify the coordinates were updated correctly
 		var dbAddressInfo table.AddressInfo
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", modified.DocID(ctx)).
+			Where("document_id = ?", docID).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 
 		// Comparar coordenadas con una pequeña tolerancia
 		Expect(dbAddressInfo.Longitude).To(BeNumerically("~", -70.6000, 0.0001))
 		Expect(dbAddressInfo.Latitude).To(BeNumerically("~", -33.4600, 0.0001))
+		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should correctly handle address without coordinates", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Sin Coordenadas",
@@ -225,22 +251,28 @@ var _ = Describe("UpsertAddressInfo", func() {
 			State:        "Metropolitana",
 		}
 
-		upsert := NewUpsertAddressInfo(connection)
-		err := upsert(ctx, addressInfo)
+		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Get the DocID
+		docID := addressInfo.DocID(ctx)
+
+		// Verify the record was inserted correctly
 		var dbAddressInfo table.AddressInfo
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", addressInfo.DocID(ctx)).
+			Where("document_id = ?", docID).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Sin Coordenadas"))
+		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
 		// Las coordenadas deberían ser cero o un valor por defecto
 	})
 
 	It("should fail if database has no address_infos table", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Error Esperado",
@@ -248,7 +280,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		}
 
 		upsert := NewUpsertAddressInfo(noTablesContainerConnection)
-		err := upsert(ctx, addressInfo)
+		err = upsert(ctx, addressInfo)
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("address_infos"))

@@ -5,102 +5,151 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertProvince", func() {
 	var (
-		ctx          context.Context
-		conn         database.ConnectionFactory
-		upsert       UpsertProvince
-		testProvince domain.Province
+		conn   database.ConnectionFactory
+		upsert UpsertProvince
 	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
-
 	BeforeEach(func() {
-		ctx = createOrgContext(organization1)
 		conn = connection
 		upsert = NewUpsertProvince(conn)
-		testProvince = domain.Province("Test Province")
 	})
 
-	AfterEach(func() {
-		conn.WithContext(ctx).Exec("DELETE FROM provinces")
+	It("should insert province if not exists", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		province := domain.Province("Santiago")
+
+		err = upsert(ctx, province)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbProvince table.Province
+		err = conn.DB.WithContext(ctx).
+			Table("provinces").
+			Where("document_id = ?", province.DocID(ctx)).
+			First(&dbProvince).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince.Name).To(Equal("Santiago"))
+		Expect(dbProvince.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	Describe("UpsertProvince", func() {
-		It("should insert a new province", func() {
-			err := upsert(ctx, testProvince)
-			Expect(err).To(BeNil())
+	It("should update province if fields are different", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			var savedProvince table.Province
-			err = conn.WithContext(ctx).
-				Table("provinces").
-				Where("document_id = ?", testProvince.DocID(ctx).String()).
-				First(&savedProvince).Error
-			Expect(err).To(BeNil())
-			Expect(savedProvince.Name).To(Equal(testProvince.String()))
-		})
+		original := domain.Province("Nombre Original")
 
-		It("should create a new record when province name changes", func() {
-			// First insert
-			err := upsert(ctx, testProvince)
-			Expect(err).To(BeNil())
+		err = upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
 
-			var firstProvince table.Province
-			err = conn.WithContext(ctx).
-				Table("provinces").
-				Where("document_id = ?", testProvince.DocID(ctx).String()).
-				First(&firstProvince).Error
-			Expect(err).To(BeNil())
-			firstID := firstProvince.ID
+		modified := domain.Province("Nombre Modificado")
 
-			// Insert with different name
-			updatedProvince := domain.Province("Updated Province")
-			err = upsert(ctx, updatedProvince)
-			Expect(err).To(BeNil())
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
 
-			var secondProvince table.Province
-			err = conn.WithContext(ctx).
-				Table("provinces").
-				Where("document_id = ?", updatedProvince.DocID(ctx).String()).
-				First(&secondProvince).Error
-			Expect(err).To(BeNil())
-			Expect(secondProvince.ID).ToNot(Equal(firstID)) // Should be a new record
-		})
+		var dbProvince table.Province
+		err = conn.DB.WithContext(ctx).
+			Table("provinces").
+			Where("document_id = ?", modified.DocID(ctx)).
+			First(&dbProvince).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince.Name).To(Equal("Nombre Modificado"))
+		Expect(dbProvince.TenantID.String()).To(Equal(tenant.ID.String()))
+	})
 
-		It("should handle multiple provinces with different DocIDs", func() {
-			province1 := domain.Province("Province 1")
-			province2 := domain.Province("Province 2")
+	It("should not update if no fields changed", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			err := upsert(ctx, province1)
-			Expect(err).To(BeNil())
-			err = upsert(ctx, province2)
-			Expect(err).To(BeNil())
+		province := domain.Province("Sin Cambios")
 
-			var count int64
-			conn.WithContext(ctx).Table("provinces").Count(&count)
-			Expect(count).To(Equal(int64(2)))
-		})
+		err = upsert(ctx, province)
+		Expect(err).ToNot(HaveOccurred())
 
-		It("should handle database errors gracefully", func() {
-			// Create an invalid province with a very long name to trigger a database error
-			invalidProvince := domain.Province("This is a very long province name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database tableThis is a very long province name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database table")
+		// Get initial timestamp
+		var initialProvince table.Province
+		err = conn.DB.WithContext(ctx).
+			Table("provinces").
+			Where("document_id = ?", province.DocID(ctx)).
+			First(&initialProvince).Error
+		Expect(err).ToNot(HaveOccurred())
+		initialUpdatedAt := initialProvince.UpdatedAt
 
-			err := upsert(ctx, invalidProvince)
-			Expect(err).NotTo(BeNil())
-		})
+		// Try to update with same values
+		err = upsert(ctx, province)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbProvince table.Province
+		err = conn.DB.WithContext(ctx).
+			Table("provinces").
+			Where("document_id = ?", province.DocID(ctx)).
+			First(&dbProvince).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince.UpdatedAt).To(Equal(initialUpdatedAt))
+		Expect(dbProvince.TenantID.String()).To(Equal(tenant.ID.String()))
+	})
+
+	It("should allow same province for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		province1 := domain.Province("Multi Org Province")
+		province2 := domain.Province("Multi Org Province")
+
+		err = upsert(ctx1, province1)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = upsert(ctx2, province2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the DocIDs
+		docID1 := province1.DocID(ctx1)
+		docID2 := province2.DocID(ctx2)
+
+		// Verify they have different document IDs
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each province belongs to its respective tenant using DocID
+		var dbProvince1, dbProvince2 table.Province
+		err = conn.DB.WithContext(ctx1).
+			Table("provinces").
+			Where("document_id = ?", docID1).
+			First(&dbProvince1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("provinces").
+			Where("document_id = ?", docID2).
+			First(&dbProvince2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince2.TenantID.String()).To(Equal(tenant2.ID.String()))
+	})
+
+	It("should fail if database has no provinces table", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		province := domain.Province("Error Case")
+
+		upsert := NewUpsertProvince(noTablesContainerConnection)
+		err = upsert(ctx, province)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("provinces"))
 	})
 })

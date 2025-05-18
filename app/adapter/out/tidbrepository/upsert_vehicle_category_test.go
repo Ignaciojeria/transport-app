@@ -2,64 +2,61 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertVehicleCategory", func() {
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	var (
+		conn database.ConnectionFactory
+	)
 
 	BeforeEach(func() {
-		// Clean the table before each test
-		err := connection.DB.Exec("DELETE FROM vehicle_categories").Error
-		Expect(err).ToNot(HaveOccurred())
+		conn = connection
 	})
 
 	It("should insert vehicle category if not exists", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		vehicleCategory := domain.VehicleCategory{
 			Type:                "VAN",
 			MaxPackagesQuantity: 100,
 		}
 
-		upsert := NewUpsertVehicleCategory(connection)
-		err := upsert(ctx, vehicleCategory)
+		upsert := NewUpsertVehicleCategory(conn)
+		err = upsert(ctx, vehicleCategory)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Verify using document_id
 		var dbVehicleCategory table.VehicleCategory
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("vehicle_categories").
-			Where("document_id = ?", vehicleCategory.DocID(ctx)).
+			Where("document_id = ? AND tenant_id = ?", vehicleCategory.DocID(ctx), tenant.ID).
 			First(&dbVehicleCategory).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbVehicleCategory.Type).To(Equal("VAN"))
 		Expect(dbVehicleCategory.MaxPackagesQuantity).To(Equal(100))
+		Expect(dbVehicleCategory.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update vehicle category if fields are different", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.VehicleCategory{
 			Type:                "TRUCK",
 			MaxPackagesQuantity: 50,
 		}
 
-		upsert := NewUpsertVehicleCategory(connection)
-		err := upsert(ctx, original)
+		upsert := NewUpsertVehicleCategory(conn)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
 		modified := domain.VehicleCategory{
@@ -70,39 +67,45 @@ var _ = Describe("UpsertVehicleCategory", func() {
 		err = upsert(ctx, modified)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Verify using document_id
 		var dbVehicleCategory table.VehicleCategory
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("vehicle_categories").
-			Where("document_id = ?", modified.DocID(ctx)).
+			Where("document_id = ? AND tenant_id = ?", modified.DocID(ctx), tenant.ID).
 			First(&dbVehicleCategory).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbVehicleCategory.Type).To(Equal("TRUCK"))
 		Expect(dbVehicleCategory.MaxPackagesQuantity).To(Equal(75))
+		Expect(dbVehicleCategory.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should not update vehicle category if fields are the same", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.VehicleCategory{
 			Type:                "VAN",
 			MaxPackagesQuantity: 100,
 		}
 
-		upsert := NewUpsertVehicleCategory(connection)
-		err := upsert(ctx, original)
+		upsert := NewUpsertVehicleCategory(conn)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Try to update with same values
 		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Verify using document_id
 		var dbVehicleCategory table.VehicleCategory
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("vehicle_categories").
-			Where("document_id = ?", original.DocID(ctx)).
+			Where("document_id = ? AND tenant_id = ?", original.DocID(ctx), tenant.ID).
 			First(&dbVehicleCategory).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbVehicleCategory.Type).To(Equal("VAN"))
 		Expect(dbVehicleCategory.MaxPackagesQuantity).To(Equal(100))
+		Expect(dbVehicleCategory.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 })
