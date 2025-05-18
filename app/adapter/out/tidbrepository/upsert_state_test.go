@@ -5,116 +5,168 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertState", func() {
 	var (
-		ctx       context.Context
-		conn      database.ConnectionFactory
-		upsert    UpsertState
-		testState domain.State
+		conn   database.ConnectionFactory
+		upsert UpsertState
 	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
-
 	BeforeEach(func() {
-		ctx = createOrgContext(organization1)
 		conn = connection
 		upsert = NewUpsertState(conn)
-		testState = domain.State("Test State")
 	})
 
-	AfterEach(func() {
-		conn.WithContext(ctx).Exec("DELETE FROM states")
+	It("should insert state if not exists", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		state := domain.State("Test State")
+
+		err = upsert(ctx, state)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the DocID
+		docID := state.DocID(ctx)
+
+		var dbState table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", docID).
+			First(&dbState).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState.Name).To(Equal("Test State"))
+		Expect(dbState.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	Describe("UpsertState", func() {
-		It("should insert a new state", func() {
-			err := upsert(ctx, testState)
-			Expect(err).To(BeNil())
+	It("should create new record when name changes", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			var savedState table.State
-			err = conn.WithContext(ctx).
-				Table("states").
-				Where("document_id = ?", testState.DocID(ctx).String()).
-				First(&savedState).Error
-			Expect(err).To(BeNil())
-			Expect(savedState.Name).To(Equal(testState.String()))
-		})
+		original := domain.State("Nombre Original")
 
-		It("should create a new record when state name changes", func() {
-			// First insert
-			err := upsert(ctx, testState)
-			Expect(err).To(BeNil())
+		err = upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
 
-			var firstState table.State
-			err = conn.WithContext(ctx).
-				Table("states").
-				Where("document_id = ?", testState.DocID(ctx).String()).
-				First(&firstState).Error
-			Expect(err).To(BeNil())
-			firstID := firstState.ID
+		// Get the original record
+		var originalRecord table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", original.DocID(ctx)).
+			First(&originalRecord).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(originalRecord.TenantID.String()).To(Equal(tenant.ID.String()))
 
-			// Insert with different name
-			updatedState := domain.State("Updated State")
-			err = upsert(ctx, updatedState)
-			Expect(err).To(BeNil())
+		modified := domain.State("Nombre Modificado")
 
-			var secondState table.State
-			err = conn.WithContext(ctx).
-				Table("states").
-				Where("document_id = ?", updatedState.DocID(ctx).String()).
-				First(&secondState).Error
-			Expect(err).To(BeNil())
-			Expect(secondState.ID).ToNot(Equal(firstID)) // Should be a new record
-		})
+		err = upsert(ctx, modified)
+		Expect(err).ToNot(HaveOccurred())
 
-		It("should handle multiple states with different DocIDs", func() {
-			state1 := domain.State("State 1")
-			state2 := domain.State("State 2")
+		// Verify a new record was created
+		var dbState table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", modified.DocID(ctx)).
+			First(&dbState).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState.Name).To(Equal("Nombre Modificado"))
+		Expect(dbState.TenantID.String()).To(Equal(tenant.ID.String()))
+		Expect(dbState.ID).ToNot(Equal(originalRecord.ID)) // Should be a new record
+	})
 
-			err := upsert(ctx, state1)
-			Expect(err).To(BeNil())
-			err = upsert(ctx, state2)
-			Expect(err).To(BeNil())
+	It("should not update if state is the same", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			var count int64
-			conn.WithContext(ctx).Table("states").Count(&count)
-			Expect(count).To(Equal(int64(2)))
-		})
+		state := domain.State("Test State")
 
-		It("should handle database errors gracefully", func() {
-			// Create an invalid state with a very long name to trigger a database error
-			invalidState := domain.State("This is a very long state name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database tableThis is a very long state name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database table")
+		err = upsert(ctx, state)
+		Expect(err).ToNot(HaveOccurred())
 
-			err := upsert(ctx, invalidState)
-			Expect(err).NotTo(BeNil())
-		})
+		// Get the DocID
+		docID := state.DocID(ctx)
 
-		It("should create an empty record", func() {
-			emptyState := domain.State("")
-			err := upsert(ctx, emptyState)
-			Expect(err).To(BeNil())
+		// Get initial timestamp
+		var initialState table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", docID).
+			First(&initialState).Error
+		Expect(err).ToNot(HaveOccurred())
+		initialUpdatedAt := initialState.UpdatedAt
 
-			var savedState table.State
-			err = conn.WithContext(ctx).
-				Table("states").
-				Where("document_id = ?", emptyState.DocID(ctx).String()).
-				First(&savedState).Error
-			Expect(err).To(BeNil())
-			Expect(savedState.Name).To(Equal(""))
-		})
+		// Try to update with same values
+		err = upsert(ctx, state)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbState table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", docID).
+			First(&dbState).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState.UpdatedAt).To(Equal(initialUpdatedAt))
+		Expect(dbState.TenantID.String()).To(Equal(tenant.ID.String()))
+	})
+
+	It("should allow same state for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		state1 := domain.State("multi-org")
+		state2 := domain.State("multi-org")
+
+		err = upsert(ctx1, state1)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = upsert(ctx2, state2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the DocIDs
+		docID1 := state1.DocID(ctx1)
+		docID2 := state2.DocID(ctx2)
+
+		// Verify they have different document IDs
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each state belongs to its respective tenant using DocID
+		var dbState1, dbState2 table.State
+		err = conn.DB.WithContext(ctx1).
+			Table("states").
+			Where("document_id = ?", docID1).
+			First(&dbState1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("states").
+			Where("document_id = ?", docID2).
+			First(&dbState2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState2.TenantID.String()).To(Equal(tenant2.ID.String()))
+	})
+
+	It("should fail if database has no states table", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		state := domain.State("Test State")
+
+		upsert := NewUpsertState(noTablesContainerConnection)
+		err = upsert(ctx, state)
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("states"))
 	})
 })

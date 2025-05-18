@@ -5,9 +5,10 @@ import (
 	"transport-app/app/domain"
 )
 
-func MapAccountTable(e domain.Operator) table.Account {
+func MapAccountTable(e domain.Account) table.Account {
 	return table.Account{
-		Email:    e.Contact.PrimaryEmail,
-		IsActive: true,
+		Email:      e.Email,
+		DocumentID: e.DocID().String(),
+		IsActive:   true,
 	}
 }

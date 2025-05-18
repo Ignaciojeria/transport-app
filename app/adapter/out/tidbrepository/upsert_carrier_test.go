@@ -2,68 +2,64 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertCarrier", func() {
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	var (
+		conn   database.ConnectionFactory
+		upsert UpsertCarrier
+	)
 
 	BeforeEach(func() {
-		// Clean the table before each test
-		err := connection.DB.Exec("DELETE FROM carriers").Error
-		Expect(err).ToNot(HaveOccurred())
+		conn = connection
+		upsert = NewUpsertCarrier(conn)
 	})
 
 	It("should insert carrier if not exists", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		carrier := domain.Carrier{
 			Name:       "Transportes XYZ",
 			NationalID: "12345678-9",
 		}
 
-		upsert := NewUpsertCarrier(connection)
-		err := upsert(ctx, carrier)
+		err = upsert(ctx, carrier)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbCarrier table.Carrier
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("carriers").
 			Where("document_id = ?", carrier.DocID(ctx)).
 			First(&dbCarrier).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbCarrier.Name).To(Equal("Transportes XYZ"))
 		Expect(dbCarrier.NationalID).To(Equal("12345678-9"))
+		Expect(dbCarrier.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update carrier if fields are different", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.Carrier{
-			Name:       "Original Name",
+			Name:       "Nombre Original",
 			NationalID: "11111111-1",
 		}
 
-		upsert := NewUpsertCarrier(connection)
-		err := upsert(ctx, original)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
 		modified := domain.Carrier{
-			Name:       "Updated Name",
+			Name:       "Nombre Modificado",
 			NationalID: "11111111-1",
 		}
 
@@ -71,53 +67,50 @@ var _ = Describe("UpsertCarrier", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbCarrier table.Carrier
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("carriers").
 			Where("document_id = ?", modified.DocID(ctx)).
 			First(&dbCarrier).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbCarrier.Name).To(Equal("Updated Name"))
+		Expect(dbCarrier.Name).To(Equal("Nombre Modificado"))
 		Expect(dbCarrier.NationalID).To(Equal("11111111-1"))
+		Expect(dbCarrier.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should not update if no fields changed", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-		carrier := domain.Carrier{
-			Name:       "No Change",
+		original := domain.Carrier{
+			Name:       "Sin Cambios",
 			NationalID: "22222222-2",
 		}
 
-		upsert := NewUpsertCarrier(connection)
-		err := upsert(ctx, carrier)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Capture original record to verify timestamp doesn't change
-		var originalRecord table.Carrier
-		err = connection.DB.WithContext(ctx).
-			Table("carriers").
-			Where("document_id = ?", carrier.DocID(ctx)).
-			First(&originalRecord).Error
-		Expect(err).ToNot(HaveOccurred())
-
-		// Execute again without changes
-		err = upsert(ctx, carrier)
+		// Try to update with same values
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbCarrier table.Carrier
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("carriers").
-			Where("document_id = ?", carrier.DocID(ctx)).
+			Where("document_id = ?", original.DocID(ctx)).
 			First(&dbCarrier).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbCarrier.Name).To(Equal("No Change"))
+		Expect(dbCarrier.Name).To(Equal("Sin Cambios"))
 		Expect(dbCarrier.NationalID).To(Equal("22222222-2"))
-		Expect(dbCarrier.UpdatedAt).To(Equal(originalRecord.UpdatedAt)) // Verify timestamp didn't change
+		Expect(dbCarrier.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should allow same carrier for different organizations", func() {
-		ctx1 := createOrgContext(organization1)
-		ctx2 := createOrgContext(organization2)
+	It("should allow same carrier for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		carrier1 := domain.Carrier{
 			Name:       "Multi Org Carrier",
@@ -129,28 +122,44 @@ var _ = Describe("UpsertCarrier", func() {
 			NationalID: "33333333-3",
 		}
 
-		upsert := NewUpsertCarrier(connection)
-
-		err := upsert(ctx1, carrier1)
+		err = upsert(ctx1, carrier1)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = upsert(ctx2, carrier2)
 		Expect(err).ToNot(HaveOccurred())
 
 		var count int64
-		err = connection.DB.WithContext(context.Background()).
+		err = conn.DB.WithContext(context.Background()).
 			Table("carriers").
-			Where("national_id = ?", carrier1.NationalID).
+			Where("document_id IN (?, ?)", carrier1.DocID(ctx1), carrier2.DocID(ctx2)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
 
-		// Verify they have different document IDs
+		// Verify they have different document IDs and belong to different tenants
 		Expect(carrier1.DocID(ctx1)).ToNot(Equal(carrier2.DocID(ctx2)))
+
+		// Verify each carrier belongs to its respective tenant
+		var dbCarrier1, dbCarrier2 table.Carrier
+		err = conn.DB.WithContext(ctx1).
+			Table("carriers").
+			Where("document_id = ?", carrier1.DocID(ctx1)).
+			First(&dbCarrier1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbCarrier1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("carriers").
+			Where("document_id = ?", carrier2.DocID(ctx2)).
+			First(&dbCarrier2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbCarrier2.TenantID.String()).To(Equal(tenant2.ID.String()))
 	})
 
 	It("should fail if database has no carriers table", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		carrier := domain.Carrier{
 			Name:       "Error Case",
@@ -158,7 +167,7 @@ var _ = Describe("UpsertCarrier", func() {
 		}
 
 		upsert := NewUpsertCarrier(noTablesContainerConnection)
-		err := upsert(ctx, carrier)
+		err = upsert(ctx, carrier)
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("carriers"))

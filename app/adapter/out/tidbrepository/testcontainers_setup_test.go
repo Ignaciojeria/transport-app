@@ -5,12 +5,9 @@ import (
 	"testing"
 	"time"
 	"transport-app/app/adapter/out/tidbrepository/table"
-	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/database"
 
-	"github.com/biter777/countries"
-	"github.com/google/uuid"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -26,17 +23,10 @@ func TestContainersSetup(t *testing.T) {
 
 var container *tcpostgres.PostgresContainer
 var connection database.ConnectionFactory
-var organization1 domain.Tenant
-var organization2 domain.Tenant
 
 var noTablesContainerConnection database.ConnectionFactory
 var noTablesMigrationContainer *tcpostgres.PostgresContainer
 
-var _ = Describe("TidbRepository", func() {
-	It("dummy test", func() {
-		Expect(true).To(BeTrue())
-	})
-})
 var _ = BeforeSuite(func() {
 	ctx := context.Background()
 	dbName := "users"
@@ -82,51 +72,6 @@ var _ = BeforeSuite(func() {
 	})()
 	Expect(err).ToNot(HaveOccurred())
 
-	// Create test account first
-	err = NewUpsertAccount(connection)(ctx, domain.Operator{
-		Contact: domain.Contact{
-			PrimaryEmail: "ignaciovl.j@gmail.com",
-		},
-	})
-	Expect(err).ToNot(HaveOccurred())
-
-	// Setup context with country information
-
-	// Create first organization using the new function signature
-	saveOrganization := NewSaveTenant(connection)
-
-	// Create organization entity with required fields
-	orgToSave1 := domain.Tenant{
-		ID:      uuid.New(),
-		Country: countries.CL,
-		Name:    "Organization 1",
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: "ignaciovl.j@gmail.com",
-			},
-		},
-	}
-
-	// Save the first organization
-	organization1, err = saveOrganization(ctx, orgToSave1)
-	Expect(err).ToNot(HaveOccurred())
-
-	// Create second organization
-	orgToSave2 := domain.Tenant{
-		ID:      uuid.New(),
-		Country: countries.CL,
-		Name:    "Organization 2",
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: "ignaciovl.j@gmail.com",
-			},
-		},
-	}
-
-	// Save the second organization
-	organization2, err = saveOrganization(ctx, orgToSave2)
-	Expect(err).ToNot(HaveOccurred())
-
 	// No tables container setup (remains unchanged)
 	noTablesContainer, err := tcpostgres.Run(ctx,
 		"postgres:16-alpine",
@@ -156,7 +101,7 @@ var _ = BeforeSuite(func() {
 			DB_NAME:           dbName,
 			DB_USERNAME:       dbUser,
 			DB_PASSWORD:       dbPassword,
-			DB_RUN_MIGRATIONS: "false", // importante: no ejecutar migraciones
+			DB_RUN_MIGRATIONS: "false",
 		}),
 		nil,
 	)

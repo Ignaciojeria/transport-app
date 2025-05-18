@@ -2,179 +2,197 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertDriver", func() {
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	var (
+		conn   database.ConnectionFactory
+		upsert UpsertDriver
+	)
 
 	BeforeEach(func() {
-		// Clean the table before each test
-		err := connection.DB.Exec("DELETE FROM drivers").Error
-		Expect(err).ToNot(HaveOccurred())
+		conn = connection
+		upsert = NewUpsertDriver(conn)
 	})
 
 	It("should insert driver if not exists", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		driver := domain.Driver{
 			Name:       "Juan Pérez",
 			NationalID: "12345678-9",
-			Email:      "juan@example.com",
 		}
 
-		upsert := NewUpsertDriver(connection)
-		err := upsert(ctx, driver)
+		err = upsert(ctx, driver)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Get the DocID
+		docID := driver.DocID(ctx)
+
+		// Verify the record was inserted correctly
 		var dbDriver table.Driver
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("drivers").
-			Where("document_id = ?", driver.DocID(ctx)).
+			Where("document_id = ?", docID).
 			First(&dbDriver).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbDriver.Name).To(Equal("Juan Pérez"))
 		Expect(dbDriver.NationalID).To(Equal("12345678-9"))
-		Expect(dbDriver.Email).To(Equal("juan@example.com"))
+		Expect(dbDriver.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update driver if fields are different", func() {
-		ctx := createOrgContext(organization1)
-
-		original := domain.Driver{
-			Name:       "Original Name",
-			NationalID: "11111111-1",
-			Email:      "original@example.com",
-		}
-
-		upsert := NewUpsertDriver(connection)
-		err := upsert(ctx, original)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Capture the original document ID
-		originalDocID := original.DocID(ctx)
-
-		modified := domain.Driver{
-			Name:       "Updated Name",
-			NationalID: "11111111-1", // Same NationalID to ensure same DocumentID
-			Email:      "updated@example.com",
+		original := domain.Driver{
+			Name:       "Nombre Original",
+			NationalID: "11111111-1",
 		}
 
-		// Verify the DocumentID is the same
-		Expect(modified.DocID(ctx)).To(Equal(originalDocID))
+		err = upsert(ctx, original)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the DocID
+		docID := original.DocID(ctx)
+
+		modified := domain.Driver{
+			Name:       "Nombre Modificado",
+			NationalID: "11111111-1", // Mismo NationalID
+		}
 
 		err = upsert(ctx, modified)
 		Expect(err).ToNot(HaveOccurred())
 
+		// Verify the record was updated correctly
 		var dbDriver table.Driver
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("drivers").
-			Where("document_id = ?", originalDocID).
+			Where("document_id = ?", docID).
 			First(&dbDriver).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbDriver.Name).To(Equal("Updated Name"))
+		Expect(dbDriver.Name).To(Equal("Nombre Modificado"))
 		Expect(dbDriver.NationalID).To(Equal("11111111-1"))
-		Expect(dbDriver.Email).To(Equal("updated@example.com"))
+		Expect(dbDriver.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should not update if no fields changed", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		driver := domain.Driver{
-			Name:       "No Change",
+			Name:       "Sin Cambios",
 			NationalID: "22222222-2",
-			Email:      "nochange@example.com",
 		}
 
-		upsert := NewUpsertDriver(connection)
-		err := upsert(ctx, driver)
-		Expect(err).ToNot(HaveOccurred())
-
-		// Capture original record to verify timestamp doesn't change
-		var originalRecord table.Driver
-		err = connection.DB.WithContext(ctx).
-			Table("drivers").
-			Where("document_id = ?", driver.DocID(ctx)).
-			First(&originalRecord).Error
-		Expect(err).ToNot(HaveOccurred())
-
-		// Execute again without changes
 		err = upsert(ctx, driver)
 		Expect(err).ToNot(HaveOccurred())
 
-		var dbDriver table.Driver
-		err = connection.DB.WithContext(ctx).
+		// Get the DocID
+		docID := driver.DocID(ctx)
+
+		// Capturar CreatedAt original para comparar después
+		var originalRecord table.Driver
+		err = conn.DB.WithContext(ctx).
 			Table("drivers").
-			Where("document_id = ?", driver.DocID(ctx)).
+			Where("document_id = ?", docID).
+			First(&originalRecord).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Ejecutar de nuevo sin cambios
+		err = upsert(ctx, driver)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verify the record was not updated
+		var dbDriver table.Driver
+		err = conn.DB.WithContext(ctx).
+			Table("drivers").
+			Where("document_id = ?", docID).
 			First(&dbDriver).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbDriver.Name).To(Equal("No Change"))
-		Expect(dbDriver.NationalID).To(Equal("22222222-2"))
-		Expect(dbDriver.Email).To(Equal("nochange@example.com"))
-		Expect(dbDriver.UpdatedAt).To(Equal(originalRecord.UpdatedAt)) // Verify timestamp didn't change
+		Expect(dbDriver.Name).To(Equal("Sin Cambios"))
+		Expect(dbDriver.CreatedAt).To(Equal(originalRecord.CreatedAt)) // Verificar que no se modificó
+		Expect(dbDriver.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should allow same driver for different organizations", func() {
-		ctx1 := createOrgContext(organization1)
-		ctx2 := createOrgContext(organization2)
+	It("should allow same driver for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		driver1 := domain.Driver{
 			Name:       "Multi Org Driver",
 			NationalID: "33333333-3",
-			Email:      "multi@example.com",
 		}
 
 		driver2 := domain.Driver{
 			Name:       "Multi Org Driver",
 			NationalID: "33333333-3",
-			Email:      "multi@example.com",
 		}
 
-		upsert := NewUpsertDriver(connection)
-
-		err := upsert(ctx1, driver1)
+		err = upsert(ctx1, driver1)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = upsert(ctx2, driver2)
 		Expect(err).ToNot(HaveOccurred())
 
-		var count int64
-		err = connection.DB.WithContext(context.Background()).
+		// Get the DocIDs
+		docID1 := driver1.DocID(ctx1)
+		docID2 := driver2.DocID(ctx2)
+
+		// Verify they have different document IDs
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each driver belongs to its respective tenant using DocID
+		var dbDriver1, dbDriver2 table.Driver
+		err = conn.DB.WithContext(ctx1).
 			Table("drivers").
-			Where("national_id = ?", driver1.NationalID).
+			Where("document_id = ?", docID1).
+			First(&dbDriver1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbDriver1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("drivers").
+			Where("document_id = ?", docID2).
+			First(&dbDriver2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbDriver2.TenantID.String()).To(Equal(tenant2.ID.String()))
+
+		// Verify total count of records with same name and national ID
+		var count int64
+		err = conn.DB.WithContext(context.Background()).
+			Table("drivers").
+			Where("document_id IN (?, ?)", docID1, docID2).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
-
-		// Verify they have different document IDs
-		Expect(driver1.DocID(ctx1)).ToNot(Equal(driver2.DocID(ctx2)))
 	})
 
 	It("should fail if database has no drivers table", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		driver := domain.Driver{
-			Name:       "Error Case",
+			Name:       "Error Esperado",
 			NationalID: "44444444-4",
-			Email:      "error@example.com",
 		}
 
 		upsert := NewUpsertDriver(noTablesContainerConnection)
-		err := upsert(ctx, driver)
+		err = upsert(ctx, driver)
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("drivers"))

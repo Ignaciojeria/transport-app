@@ -7,12 +7,12 @@ import (
 	"transport-app/app/shared/sharedcontext"
 )
 
-func MapVehicleHeaders(ctx context.Context, h domain.Headers) table.VehicleHeaders {
-	return table.VehicleHeaders{
-		DocumentID: string(h.DocID(ctx)),
-		TenantID:   sharedcontext.TenantIDFromContext(ctx),
+func MapNodeInfoHeaders(ctx context.Context, h domain.Headers) table.NodeInfoHeaders {
+	return table.NodeInfoHeaders{
 		Commerce:   h.Commerce,
 		Consumer:   h.Consumer,
 		Channel:    h.Channel,
+		DocumentID: h.DocID(ctx).String(),
+		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 	}
 }

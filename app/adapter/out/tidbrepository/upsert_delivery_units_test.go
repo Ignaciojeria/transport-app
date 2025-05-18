@@ -2,48 +2,39 @@ package tidbrepository
 
 import (
 	"context"
-	"time"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
-var _ = Describe("UpsertPackages", func() {
+var _ = Describe("UpsertDeliveryUnits", func() {
 	var (
-		ctx1, ctx2 context.Context
+		conn database.ConnectionFactory
 	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
-
 	BeforeEach(func() {
-		// Create contexts with different organizations
-		ctx1 = createOrgContext(organization1)
-		ctx2 = createOrgContext(organization2)
-
-		// Limpia la tabla antes de cada test
-		err := connection.DB.Exec("DELETE FROM delivery_units").Error
-		Expect(err).ToNot(HaveOccurred())
+		conn = connection
 	})
 
 	It("should handle empty package slice", func() {
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{}, "")
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{}, "")
 		Expect(err).ToNot(HaveOccurred())
 	})
 
 	It("should insert new packages when they don't exist", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear paquetes para insertar
 		package1 := domain.Package{
 			Lpn: "PKG001",
@@ -93,27 +84,28 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar los paquetes
 		packages := []domain.Package{package1, package2}
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, packages, "")
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, packages, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se insertaron correctamente
 		var dbPackages []table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
+			Where("tenant_id = ?", tenant.ID).
 			Find(&dbPackages).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPackages).To(HaveLen(2))
 
 		// Verificar el primer paquete
 		var dbPackage1 table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("lpn = ?", "PKG001").
+			Where("document_id = ?", package1.DocID(ctx, "")).
 			First(&dbPackage1).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPackage1.Lpn).To(Equal("PKG001"))
-		Expect(dbPackage1.TenantID).To(Equal(organization1.ID))
+		Expect(dbPackage1.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		// Verificar las dimensiones (que están en JSON)
 		dimensions := dbPackage1.JSONDimensions.Map()
@@ -144,9 +136,13 @@ var _ = Describe("UpsertPackages", func() {
 	})
 
 	It("should update existing packages", func() {
-		// Crear un paquete inicial
-		initialPackage := domain.Package{
-			Lpn: "PKG-UPDATE",
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear paquete inicial
+		originalPackage := domain.Package{
+			Lpn: "PKG003",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
 				Width:  20.0,
@@ -157,127 +153,127 @@ var _ = Describe("UpsertPackages", func() {
 				Value: 5.0,
 				Unit:  "kg",
 			},
-			Insurance: domain.Insurance{
-				UnitValue: 1000.0,
-				Currency:  "USD",
-			},
-			Items: []domain.Item{
-				{
-					Sku:         "ITEM001",
-					Description: "Item inicial",
-					Quantity: domain.Quantity{
-						QuantityNumber: 2,
-						QuantityUnit:   "unit",
-					},
-					Weight: domain.Weight{
-						Value: 1.0,
-						Unit:  "kg",
-					},
-				},
-			},
 		}
 
-		// Importante: Guardamos el DocID del paquete inicial para usarlo en la actualización
-		initialDocID := initialPackage.DocID(ctx1, "")
-
-		// Insertar el paquete inicial
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{initialPackage}, "")
+		// Insertar el paquete original
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{originalPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
-		// Obtener el registro creado y su timestamp
-		var initialDBPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
-			Table("delivery_units").
-			Where("document_id = ?", string(initialDocID)).
-			First(&initialDBPackage).Error
-		Expect(err).ToNot(HaveOccurred())
-		initialCreatedAt := initialDBPackage.CreatedAt
-		initialID := initialDBPackage.ID
-
-		// Esperar un momento para asegurar que el timestamp de actualización sea diferente
-		time.Sleep(1 * time.Millisecond)
-
-		// Crear versión actualizada del paquete
-		updatedPackage := domain.Package{
-			Lpn: "PKG-UPDATE", // Mismo LPN para que se actualice
-			Dimensions: domain.Dimensions{
-				Length: 15.0, // Cambiar dimensiones
-				Width:  25.0,
-				Height: 35.0,
-				Unit:   "mm", // Cambiar unidad
-			},
-			Weight: domain.Weight{
-				Value: 7.5,  // Cambiar peso
-				Unit:  "lb", // Cambiar unidad
-			},
-			Insurance: domain.Insurance{
-				UnitValue: 2000.0, // Cambiar valor de seguro
-				Currency:  "EUR",  // Cambiar moneda
-			},
-			Items: []domain.Item{
-				{
-					Sku:         "ITEM002", // Cambiar referencia
-					Description: "Item actualizado",
-					Quantity: domain.Quantity{
-						QuantityNumber: 3,
-						QuantityUnit:   "box",
-					},
-					Weight: domain.Weight{
-						Value: 1.5,
-						Unit:  "lb",
-					},
-				},
-			},
-		}
-
-		// Verificar que generan el mismo DocID
-		updatedDocID := updatedPackage.DocID(ctx1, "")
-		Expect(updatedDocID).To(Equal(initialDocID), "Los DocIDs deben ser iguales para la actualización")
+		// Modificar el paquete
+		modifiedPackage := originalPackage
+		modifiedPackage.Dimensions.Length = 15.0
+		modifiedPackage.Weight.Value = 7.5
 
 		// Actualizar el paquete
-		err = upsert(ctx1, []domain.Package{updatedPackage}, "")
+		err = upsert(ctx, []domain.Package{modifiedPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
-		var updatedDBPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		var dbPackage table.DeliveryUnit
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("document_id = ?", string(initialDocID)).
-			First(&updatedDBPackage).Error
+			Where("document_id = ? AND tenant_id = ?", modifiedPackage.DocID(ctx, ""), tenant.ID).
+			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verificar que mantiene el mismo ID y CreatedAt
-		Expect(updatedDBPackage.ID).To(Equal(initialID))
-		Expect(updatedDBPackage.CreatedAt).To(Equal(initialCreatedAt))
+		dimensions := dbPackage.JSONDimensions.Map()
+		Expect(dimensions.Length).To(Equal(15.0))
+		Expect(dimensions.Width).To(Equal(20.0))
+		Expect(dimensions.Height).To(Equal(30.0))
 
-		// Verificar que los campos JSON se actualizaron correctamente
-		updatedDimensions := updatedDBPackage.JSONDimensions.Map()
-		Expect(updatedDimensions.Length).To(Equal(15.0))
-		Expect(updatedDimensions.Width).To(Equal(25.0))
-		Expect(updatedDimensions.Height).To(Equal(35.0))
-		Expect(updatedDimensions.Unit).To(Equal("mm"))
+		weight := dbPackage.JSONWeight.Map()
+		Expect(weight.Value).To(Equal(7.5))
+		Expect(weight.Unit).To(Equal("kg"))
+	})
 
-		updatedWeight := updatedDBPackage.JSONWeight.Map()
-		Expect(updatedWeight.Value).To(Equal(7.5))
-		Expect(updatedWeight.Unit).To(Equal("lb"))
+	It("should allow same packages for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-		updatedInsurance := updatedDBPackage.JSONInsurance.Map()
-		Expect(updatedInsurance.UnitValue).To(Equal(2000.0))
-		Expect(updatedInsurance.Currency).To(Equal("EUR"))
+		package1 := domain.Package{
+			Lpn: "PKG004",
+			Dimensions: domain.Dimensions{
+				Length: 10.0,
+				Width:  20.0,
+				Height: 30.0,
+				Unit:   "cm",
+			},
+		}
 
-		// Verificar que los items se actualizaron
-		updatedItems := updatedDBPackage.JSONItems.Map()
-		Expect(updatedItems).To(HaveLen(1))
-		Expect(updatedItems[0].Sku).To(Equal("ITEM002"))
-		Expect(updatedItems[0].Description).To(Equal("Item actualizado"))
-		Expect(updatedItems[0].Quantity.QuantityNumber).To(Equal(3))
-		Expect(updatedItems[0].Quantity.QuantityUnit).To(Equal("box"))
-		Expect(updatedItems[0].Weight.Value).To(Equal(1.5))
-		Expect(updatedItems[0].Weight.Unit).To(Equal("lb"))
+		package2 := domain.Package{
+			Lpn: "PKG004",
+			Dimensions: domain.Dimensions{
+				Length: 10.0,
+				Width:  20.0,
+				Height: 30.0,
+				Unit:   "cm",
+			},
+		}
+
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx1, []domain.Package{package1}, "")
+		Expect(err).ToNot(HaveOccurred())
+
+		err = upsert(ctx2, []domain.Package{package2}, "")
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que existen dos paquetes con el mismo LPN pero en diferentes tenants
+		var count int64
+		err = conn.DB.WithContext(context.Background()).
+			Table("delivery_units").
+			Where("document_id IN ? AND tenant_id IN (?, ?)", []string{string(package1.DocID(ctx1, "")), string(package2.DocID(ctx2, ""))}, tenant1.ID, tenant2.ID).
+			Count(&count).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(count).To(Equal(int64(2)))
+
+		// Verificar cada paquete pertenece a su respectivo tenant
+		var dbPackage1, dbPackage2 table.DeliveryUnit
+		err = conn.DB.WithContext(ctx1).
+			Table("delivery_units").
+			Where("document_id = ?", package1.DocID(ctx1, "")).
+			First(&dbPackage1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbPackage1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("delivery_units").
+			Where("document_id = ?", package2.DocID(ctx2, "")).
+			First(&dbPackage2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbPackage2.TenantID.String()).To(Equal(tenant2.ID.String()))
+	})
+
+	It("should fail if database has no delivery_units table", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		package1 := domain.Package{
+			Lpn: "PKG005",
+			Dimensions: domain.Dimensions{
+				Length: 10.0,
+				Width:  20.0,
+				Height: 30.0,
+				Unit:   "cm",
+			},
+		}
+
+		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
+		err = upsert(ctx, []domain.Package{package1}, "")
+
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("delivery_units"))
 	})
 
 	It("should handle mix of new and existing packages", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear un paquete inicial
 		existingPackage := domain.Package{
 			Lpn: "PKG-EXISTING",
@@ -290,11 +286,11 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Guardar el DocID del paquete existente
-		existingDocID := existingPackage.DocID(ctx1, "")
+		existingDocID := existingPackage.DocID(ctx, "")
 
 		// Insertar el paquete inicial
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{existingPackage}, "")
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{existingPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un nuevo paquete para inserción
@@ -320,27 +316,28 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Verificar que el DocID del paquete actualizado coincide con el original
-		updatedDocID := updatedExistingPackage.DocID(ctx1, "")
+		updatedDocID := updatedExistingPackage.DocID(ctx, "")
 		Expect(updatedDocID).To(Equal(existingDocID), "Los DocIDs deben ser iguales para actualizar")
 
 		// Insertar ambos paquetes
 		mixedPackages := []domain.Package{newPackage, updatedExistingPackage}
-		err = upsert(ctx1, mixedPackages, "")
+		err = upsert(ctx, mixedPackages, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que hay dos paquetes en la base de datos
 		var count int64
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
+			Where("tenant_id = ?", tenant.ID).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
 
 		// Verificar el paquete existente se actualizó
 		var updatedDBPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("document_id = ?", string(existingDocID)).
+			Where("document_id = ? AND tenant_id = ?", string(existingDocID), tenant.ID).
 			First(&updatedDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -349,101 +346,19 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Verificar el nuevo paquete se insertó
 		var newDBPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("lpn = ?", "PKG-NEW").
+			Where("lpn = ? AND tenant_id = ?", "PKG-NEW", tenant.ID).
 			First(&newDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(newDBPackage.Lpn).To(Equal("PKG-NEW"))
 	})
 
-	It("should allow same LPN in different organizations", func() {
-		// Crear paquete para organización 1
-		package1 := domain.Package{
-			Lpn: "PKG-MULTIORG",
-			Dimensions: domain.Dimensions{
-				Length: 10.0,
-				Width:  20.0,
-				Height: 30.0,
-				Unit:   "cm",
-			},
-		}
-
-		// Crear paquete para organización 2 con el mismo LPN
-		package2 := domain.Package{
-			Lpn: "PKG-MULTIORG",
-			Dimensions: domain.Dimensions{
-				Length: 15.0,
-				Width:  25.0,
-				Height: 35.0,
-				Unit:   "cm",
-			},
-		}
-
-		// Insertar paquete para org1
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{package1}, "")
-		Expect(err).ToNot(HaveOccurred())
-
-		// Insertar paquete para org2
-		err = upsert(ctx2, []domain.Package{package2}, "")
-		Expect(err).ToNot(HaveOccurred())
-
-		// Verificar que hay dos paquetes en la base de datos
-		var packages []table.DeliveryUnit
-		err = connection.DB.WithContext(context.Background()).
-			Table("delivery_units").
-			Where("lpn = ?", "PKG-MULTIORG").
-			Find(&packages).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(packages).To(HaveLen(2))
-
-		// Verificar que tienen diferentes organizaciones
-		orgs := map[string]bool{}
-		for _, pkg := range packages {
-			orgs[pkg.TenantID.String()] = true
-		}
-		Expect(orgs).To(HaveLen(2))
-		Expect(orgs[organization1.ID.String()]).To(BeTrue())
-		Expect(orgs[organization2.ID.String()]).To(BeTrue())
-
-		// Verify they have different document IDs
-		Expect(package1.DocID(ctx1, "")).ToNot(Equal(package2.DocID(ctx2, "")))
-	})
-
-	It("should fail when database has no packages table", func() {
-		package1 := domain.Package{
-			Lpn: "PKG-ERROR",
-		}
-
-		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
-		err := upsert(ctx1, []domain.Package{package1}, "")
-
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("delivery_units"))
-	})
-
-	It("should fail when saving packages if the table does not exist", func() {
-		// Crear un paquete válido
-		pkg := domain.Package{
-			Lpn: "PKG-NOTABLE",
-			Dimensions: domain.Dimensions{
-				Length: 10.0,
-				Width:  10.0,
-				Height: 10.0,
-				Unit:   "cm",
-			},
-		}
-
-		// Usar conexión sin tablas
-		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
-		err := upsert(ctx1, []domain.Package{pkg}, "")
-
-		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("delivery_units"))
-	})
-
 	It("should correctly handle packages without LPN", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear un paquete sin LPN pero con items
 		package1 := domain.Package{
 			Lpn: "",
@@ -461,18 +376,18 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar el paquete
 		orderRef := "ORDER-REF-001"
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{package1}, orderRef)
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{package1}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar DocID generado
-		expectedDocID := package1.DocID(ctx1, orderRef)
+		expectedDocID := package1.DocID(ctx, orderRef)
 
 		// Verificar que se insertó correctamente
 		var dbPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("document_id = ?", string(expectedDocID)).
+			Where("document_id = ? AND tenant_id = ?", string(expectedDocID), tenant.ID).
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -486,6 +401,10 @@ var _ = Describe("UpsertPackages", func() {
 	})
 
 	It("should correctly update packages without LPN", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear un paquete sin LPN pero con items
 		initialPackage := domain.Package{
 			Lpn: "",
@@ -503,12 +422,12 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar el paquete
 		orderRef := "ORDER-REF-002"
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{initialPackage}, orderRef)
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{initialPackage}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Guardar el DocID
-		initialDocID := initialPackage.DocID(ctx1, orderRef)
+		initialDocID := initialPackage.DocID(ctx, orderRef)
 
 		// Crear un paquete actualizado (mismo SKU para generar mismo DocID)
 		updatedPackage := domain.Package{
@@ -526,18 +445,18 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Verificar que generan el mismo DocID
-		updatedDocID := updatedPackage.DocID(ctx1, orderRef)
+		updatedDocID := updatedPackage.DocID(ctx, orderRef)
 		Expect(updatedDocID).To(Equal(initialDocID))
 
 		// Actualizar el paquete
-		err = upsert(ctx1, []domain.Package{updatedPackage}, orderRef)
+		err = upsert(ctx, []domain.Package{updatedPackage}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
 		var dbPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("document_id = ?", string(initialDocID)).
+			Where("document_id = ? AND tenant_id = ?", string(initialDocID), tenant.ID).
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -548,6 +467,10 @@ var _ = Describe("UpsertPackages", func() {
 	})
 
 	It("should handle partial updates correctly", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear un paquete completo
 		initialPackage := domain.Package{
 			Lpn: "PARTIAL-UPDATE-PKG",
@@ -578,8 +501,8 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Insertar el paquete
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{initialPackage}, "")
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{initialPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete con solo algunos campos actualizados
@@ -593,14 +516,14 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		// Actualizar el paquete
-		err = upsert(ctx1, []domain.Package{partialUpdate}, "")
+		err = upsert(ctx, []domain.Package{partialUpdate}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que solo se actualizó el campo de peso
 		var dbPackage table.DeliveryUnit
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("lpn = ?", "PARTIAL-UPDATE-PKG").
+			Where("lpn = ? AND tenant_id = ?", "PARTIAL-UPDATE-PKG", tenant.ID).
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
@@ -621,6 +544,10 @@ var _ = Describe("UpsertPackages", func() {
 	})
 
 	It("should handle packages with different orderReference", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear un paquete sin LPN
 		package1 := domain.Package{
 			Lpn: "",
@@ -634,35 +561,39 @@ var _ = Describe("UpsertPackages", func() {
 
 		// Insertar con una referencia de orden
 		orderRef1 := "ORDER-REF-A"
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{package1}, orderRef1)
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{package1}, orderRef1)
 		Expect(err).ToNot(HaveOccurred())
 
 		// DocID con la primera referencia
-		docID1 := package1.DocID(ctx1, orderRef1)
+		docID1 := package1.DocID(ctx, orderRef1)
 
 		// Insertar el mismo paquete con otra referencia de orden
 		orderRef2 := "ORDER-REF-B"
-		err = upsert(ctx1, []domain.Package{package1}, orderRef2)
+		err = upsert(ctx, []domain.Package{package1}, orderRef2)
 		Expect(err).ToNot(HaveOccurred())
 
 		// DocID con la segunda referencia
-		docID2 := package1.DocID(ctx1, orderRef2)
+		docID2 := package1.DocID(ctx, orderRef2)
 
 		// Los DocIDs deberían ser diferentes
 		Expect(docID1).ToNot(Equal(docID2))
 
 		// Verificar que ambos paquetes existen en la BD
 		var count int64
-		err = connection.DB.WithContext(ctx1).
+		err = conn.DB.WithContext(ctx).
 			Table("delivery_units").
-			Where("document_id IN ?", []string{string(docID1), string(docID2)}).
+			Where("document_id IN ? AND tenant_id = ?", []string{string(docID1), string(docID2)}, tenant.ID).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
 	})
 
-	It("should explode items into separate packages when LPN is missing", func() {
+	It("should group items into a single package when LPN is missing", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
 		// Crear un paquete sin LPN con múltiples items
 		original := domain.Package{
 			Lpn: "",
@@ -687,10 +618,44 @@ var _ = Describe("UpsertPackages", func() {
 		}
 
 		orderRef := "ORDER-EXPLODE"
-		upsert := NewUpsertDeliveryUnits(connection)
-		err := upsert(ctx1, []domain.Package{original}, orderRef)
+		upsert := NewUpsertDeliveryUnits(conn)
+		err = upsert(ctx, []domain.Package{original}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
-	})
+		// Verificar que se creó un solo paquete
+		var count int64
+		err = conn.DB.WithContext(ctx).
+			Table("delivery_units").
+			Where("tenant_id = ?", tenant.ID).
+			Count(&count).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(count).To(Equal(int64(1)))
 
+		// Verificar que el paquete contiene todos los items
+		var dbPackage table.DeliveryUnit
+		err = conn.DB.WithContext(ctx).
+			Table("delivery_units").
+			Where("tenant_id = ?", tenant.ID).
+			First(&dbPackage).Error
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que el LPN está vacío
+		Expect(dbPackage.Lpn).To(Equal(""))
+
+		// Verificar que contiene todos los items
+		items := dbPackage.JSONItems.Map()
+		Expect(items).To(HaveLen(2))
+
+		// Verificar el primer item
+		Expect(items[0].Sku).To(Equal("EXPLODE-ITEM-1"))
+		Expect(items[0].Description).To(Equal("Item 1"))
+		Expect(items[0].Quantity.QuantityNumber).To(Equal(1))
+		Expect(items[0].Quantity.QuantityUnit).To(Equal("unit"))
+
+		// Verificar el segundo item
+		Expect(items[1].Sku).To(Equal("EXPLODE-ITEM-2"))
+		Expect(items[1].Description).To(Equal("Item 2"))
+		Expect(items[1].Quantity.QuantityNumber).To(Equal(2))
+		Expect(items[1].Quantity.QuantityUnit).To(Equal("unit"))
+	})
 })

@@ -12,17 +12,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertAccount func(context.Context, domain.Operator) error
+type UpsertAccount func(context.Context, domain.Account) error
 
 func init() {
 	ioc.Registry(NewUpsertAccount, database.NewConnectionFactory)
 }
 func NewUpsertAccount(conn database.ConnectionFactory) UpsertAccount {
-	return func(ctx context.Context, a domain.Operator) error {
+	return func(ctx context.Context, a domain.Account) error {
 		var accountTbl table.Account
 		err := conn.DB.WithContext(ctx).
 			Table("accounts").
-			Where("email = ?", a.Contact.PrimaryEmail).
+			Where("email = ?", a.Email).
 			First(&accountTbl).Error
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			return err

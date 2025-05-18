@@ -47,7 +47,7 @@ func createTenant(
 			}
 
 			// Verificar si el email existe
-			operator, err := findAccount(c.Context(), requestBody.Email)
+			account, err := findAccount(c.Context(), requestBody.Email)
 			if err != nil {
 				return response.CreateTenantResponse{}, fuego.HTTPError{
 					Title:  "error finding account",
@@ -56,7 +56,7 @@ func createTenant(
 				}
 			}
 
-			if operator.Contact.PrimaryEmail == "" {
+			if account.Email == "" {
 				return response.CreateTenantResponse{}, fuego.HTTPError{
 					Title:  "email not registered",
 					Detail: "the email is not registered in the system",

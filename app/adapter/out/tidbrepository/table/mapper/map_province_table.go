@@ -11,6 +11,6 @@ func MapProvinceTable(ctx context.Context, p domain.Province) table.Province {
 	return table.Province{
 		Name:       p.String(),
 		DocumentID: p.DocID(ctx).String(),
-		TenantID:   sharedcontext.TenantIDFromContext(ctx).String(),
+		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 	}
 }

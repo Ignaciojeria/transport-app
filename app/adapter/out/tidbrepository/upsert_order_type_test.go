@@ -2,140 +2,189 @@ package tidbrepository
 
 import (
 	"context"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertOrderType", func() {
-	var ctx context.Context
-
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	var (
+		upsert UpsertOrderType
+	)
 
 	BeforeEach(func() {
-		// Create context with organization1
-		ctx = createOrgContext(organization1)
-
-		// Limpia la tabla antes de cada test
-		err := connection.DB.Exec("DELETE FROM order_types").Error
-		Expect(err).ToNot(HaveOccurred())
+		upsert = NewUpsertOrderType(connection)
 	})
 
-	It("should insert order type if it does not exist", func() {
-		ot := domain.OrderType{
-			Type:        "retail",
-			Description: "Entrega a cliente final",
+	It("should insert order type if not exists", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+
+		orderType := domain.OrderType{
+			Type:        "TEST",
+			Description: "Test Order Type",
 		}
 
-		upsert := NewUpsertOrderType(connection)
-		err := upsert(ctx, ot)
+		err = upsert(ctx, orderType)
 		Expect(err).ToNot(HaveOccurred())
 
-		var result table.OrderType
+		// Get the DocID
+		docID := orderType.DocID(ctx)
+
+		var dbOrderType table.OrderType
 		err = connection.DB.WithContext(ctx).
 			Table("order_types").
-			Where("document_id = ?", ot.DocID(ctx)).
-			First(&result).Error
+			Where("document_id = ?", docID).
+			First(&dbOrderType).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(result.Type).To(Equal("retail"))
-		Expect(result.Description).To(Equal("Entrega a cliente final"))
+		Expect(dbOrderType.Type).To(Equal("TEST"))
+		Expect(dbOrderType.Description).To(Equal("Test Order Type"))
+		Expect(dbOrderType.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should not create if document is present", func() {
-		ot := domain.OrderType{
-			Type:        "express",
-			Description: "Entrega en 1 hora",
+	It("should update existing record when description changes", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+
+		original := domain.OrderType{
+			Type:        "TEST",
+			Description: "Test Order Type",
 		}
 
-		upsert := NewUpsertOrderType(connection)
-		err := upsert(ctx, ot)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Get initial record to compare timestamps later
-		var initialRecord table.OrderType
+		// Get the original record
+		var originalRecord table.OrderType
 		err = connection.DB.WithContext(ctx).
 			Table("order_types").
-			Where("document_id = ?", ot.DocID(ctx)).
-			First(&initialRecord).Error
+			Where("document_id = ?", original.DocID(ctx)).
+			First(&originalRecord).Error
 		Expect(err).ToNot(HaveOccurred())
-		initialTimestamp := initialRecord.CreatedAt
+		Expect(originalRecord.TenantID.String()).To(Equal(tenant.ID.String()))
 
-		// Ejecutamos con los mismos datos
-		err = upsert(ctx, ot)
+		modified := domain.OrderType{
+			Type:        "TEST",
+			Description: "Updated Test Order Type",
+		}
+
+		err = upsert(ctx, modified)
 		Expect(err).ToNot(HaveOccurred())
 
-		var count int64
+		// Verify a new record was created
+		var dbOrderType table.OrderType
 		err = connection.DB.WithContext(ctx).
 			Table("order_types").
-			Where("document_id = ?", ot.DocID(ctx)).
-			Count(&count).Error
+			Where("document_id = ?", modified.DocID(ctx)).
+			First(&dbOrderType).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(1))) // sigue habiendo solo uno
-
-		// Verify timestamp hasn't changed
-		var finalRecord table.OrderType
-		err = connection.DB.WithContext(ctx).
-			Table("order_types").
-			Where("document_id = ?", ot.DocID(ctx)).
-			First(&finalRecord).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(finalRecord.CreatedAt).To(Equal(initialTimestamp))
+		Expect(dbOrderType.Type).To(Equal("TEST"))
+		Expect(dbOrderType.Description).To(Equal("Updated Test Order Type"))
+		Expect(dbOrderType.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should allow same type for different organizations", func() {
-		ctx1 := createOrgContext(organization1)
-		ctx2 := createOrgContext(organization2)
+	It("should not update if order type is the same", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
 
-		ot1 := domain.OrderType{
+		orderType := domain.OrderType{
+			Type:        "TEST",
+			Description: "Test Order Type",
+		}
+
+		err = upsert(ctx, orderType)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Get the DocID
+		docID := orderType.DocID(ctx)
+
+		// Get initial timestamp
+		var initialOrderType table.OrderType
+		err = connection.DB.WithContext(ctx).
+			Table("order_types").
+			Where("document_id = ?", docID).
+			First(&initialOrderType).Error
+		Expect(err).ToNot(HaveOccurred())
+		initialUpdatedAt := initialOrderType.UpdatedAt
+
+		// Try to update with same values
+		err = upsert(ctx, orderType)
+		Expect(err).ToNot(HaveOccurred())
+
+		var dbOrderType table.OrderType
+		err = connection.DB.WithContext(ctx).
+			Table("order_types").
+			Where("document_id = ?", docID).
+			First(&dbOrderType).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbOrderType.UpdatedAt).To(Equal(initialUpdatedAt))
+		Expect(dbOrderType.TenantID.String()).To(Equal(tenant.ID.String()))
+	})
+
+	It("should allow same order type for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+
+		orderType1 := domain.OrderType{
+			Type:        "multi-org",
+			Description: "Testing multiple organizations",
+		}
+		orderType2 := domain.OrderType{
 			Type:        "multi-org",
 			Description: "Testing multiple organizations",
 		}
 
-		ot2 := domain.OrderType{
-			Type:        "multi-org",
-			Description: "Testing multiple organizations",
-		}
-
-		upsert := NewUpsertOrderType(connection)
-
-		err := upsert(ctx1, ot1)
+		err = upsert(ctx1, orderType1)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = upsert(ctx2, ot2)
+		err = upsert(ctx2, orderType2)
 		Expect(err).ToNot(HaveOccurred())
 
-		var count int64
-		err = connection.DB.WithContext(context.Background()).
-			Table("order_types").
-			Where("type = ?", "multi-org").
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(2))) // One per organization
+		// Get the DocIDs
+		docID1 := orderType1.DocID(ctx1)
+		docID2 := orderType2.DocID(ctx2)
 
 		// Verify they have different document IDs
-		Expect(ot1.DocID(ctx1)).ToNot(Equal(ot2.DocID(ctx2)))
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each order type belongs to its respective tenant using DocID
+		var dbOrderType1, dbOrderType2 table.OrderType
+		err = connection.DB.WithContext(ctx1).
+			Table("order_types").
+			Where("document_id = ?", docID1).
+			First(&dbOrderType1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbOrderType1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = connection.DB.WithContext(ctx2).
+			Table("order_types").
+			Where("document_id = ?", docID2).
+			First(&dbOrderType2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbOrderType2.TenantID.String()).To(Equal(tenant2.ID.String()))
 	})
 
-	It("should fail if table does not exist", func() {
-		ot := domain.OrderType{
-			Type:        "ghost",
-			Description: "Fallará",
+	It("should fail if database has no order_types table", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+
+		orderType := domain.OrderType{
+			Type:        "TEST",
+			Description: "Test Order Type",
 		}
 
 		upsert := NewUpsertOrderType(noTablesContainerConnection)
-		err := upsert(ctx, ot)
+		err = upsert(ctx, orderType)
+
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("order_types"))
 	})

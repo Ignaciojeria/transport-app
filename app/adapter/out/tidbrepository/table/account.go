@@ -8,11 +8,14 @@ import (
 
 type Account struct {
 	gorm.Model
-	ID       int64  `gorm:"primaryKey"`
-	Email    string `gorm:"type:varchar(255);not null;unique"`
-	IsActive bool   `gorm:"default:null"`
+	ID         int64  `gorm:"primaryKey"`
+	Email      string `gorm:"type:varchar(255);not null;unique"`
+	DocumentID string `gorm:"type:char(64);uniqueIndex"`
+	IsActive   bool   `gorm:"default:null"`
 }
 
-func (a Account) MapOperator() domain.Operator {
-	return domain.Operator{}
+func (a Account) MapAccount() domain.Account {
+	return domain.Account{
+		Email: a.Email,
+	}
 }

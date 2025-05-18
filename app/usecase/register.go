@@ -16,10 +16,8 @@ func init() {
 }
 func NewRegister(register firebaseauth.Register, upsertAccount tidbrepository.UpsertAccount) Register {
 	return func(ctx context.Context, input domain.UserCredentials) error {
-		err := upsertAccount(ctx, domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: input.Email,
-			},
+		err := upsertAccount(ctx, domain.Account{
+			Email: input.Email,
 		})
 		if err != nil {
 			return err

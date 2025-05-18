@@ -2,138 +2,136 @@ package tidbrepository
 
 import (
 	"context"
-	"fmt"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertDistrict", func() {
 	var (
-		ctx          context.Context
-		conn         database.ConnectionFactory
-		upsert       UpsertDistrict
-		testDistrict domain.District
+		conn database.ConnectionFactory
 	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
-
 	BeforeEach(func() {
-		ctx = createOrgContext(organization1)
 		conn = connection
-		upsert = NewUpsertDistrict(conn)
-		testDistrict = domain.District("Test District")
 	})
 
-	AfterEach(func() {
-		conn.WithContext(ctx).Exec("DELETE FROM districts")
+	It("should insert a new district", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		upsert := NewUpsertDistrict(conn)
+		testDistrict := domain.District("Test District")
+
+		err = upsert(ctx, testDistrict)
+		Expect(err).To(BeNil())
+
+		var savedDistrict table.District
+		err = conn.WithContext(ctx).
+			Table("districts").
+			Where("document_id = ?", testDistrict.DocID(ctx).String()).
+			First(&savedDistrict).Error
+		Expect(err).To(BeNil())
+		Expect(savedDistrict.Name).To(Equal(testDistrict.String()))
+		Expect(savedDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	Describe("UpsertDistrict", func() {
-		It("should insert a new district", func() {
-			err := upsert(ctx, testDistrict)
-			Expect(err).To(BeNil())
+	It("should create a new record when district name changes", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			var savedDistrict table.District
-			err = conn.WithContext(ctx).
-				Table("districts").
-				Where("document_id = ?", testDistrict.DocID(ctx).String()).
-				First(&savedDistrict).Error
-			Expect(err).To(BeNil())
-			Expect(savedDistrict.Name).To(Equal(testDistrict.String()))
-		})
+		upsert := NewUpsertDistrict(conn)
+		testDistrict := domain.District("Test District")
 
-		It("should create a new record when district name changes", func() {
-			// First insert
-			err := upsert(ctx, testDistrict)
-			Expect(err).To(BeNil())
+		// First insert
+		err = upsert(ctx, testDistrict)
+		Expect(err).To(BeNil())
 
-			var firstDistrict table.District
-			err = conn.WithContext(ctx).
-				Table("districts").
-				Where("document_id = ?", testDistrict.DocID(ctx).String()).
-				First(&firstDistrict).Error
-			Expect(err).To(BeNil())
-			firstID := firstDistrict.ID
+		var firstDistrict table.District
+		err = conn.WithContext(ctx).
+			Table("districts").
+			Where("document_id = ?", testDistrict.DocID(ctx).String()).
+			First(&firstDistrict).Error
+		Expect(err).To(BeNil())
+		firstID := firstDistrict.ID
+		Expect(firstDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
 
-			// Insert with different name
-			updatedDistrict := domain.District("Updated District")
-			err = upsert(ctx, updatedDistrict)
-			Expect(err).To(BeNil())
+		// Insert with different name
+		updatedDistrict := domain.District("Updated District")
+		err = upsert(ctx, updatedDistrict)
+		Expect(err).To(BeNil())
 
-			var secondDistrict table.District
-			err = conn.WithContext(ctx).
-				Table("districts").
-				Where("document_id = ?", updatedDistrict.DocID(ctx).String()).
-				First(&secondDistrict).Error
-			Expect(err).To(BeNil())
-			Expect(secondDistrict.ID).ToNot(Equal(firstID)) // Should be a new record
-		})
+		var secondDistrict table.District
+		err = conn.WithContext(ctx).
+			Table("districts").
+			Where("document_id = ?", updatedDistrict.DocID(ctx).String()).
+			First(&secondDistrict).Error
+		Expect(err).To(BeNil())
+		Expect(secondDistrict.ID).ToNot(Equal(firstID)) // Should be a new record
+		Expect(secondDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
+	})
 
-		It("should handle multiple districts with different DocIDs", func() {
-			district1 := domain.District("District 1")
-			district2 := domain.District("District 2")
+	It("should handle multiple districts with different DocIDs", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			err := upsert(ctx, district1)
-			Expect(err).To(BeNil())
-			err = upsert(ctx, district2)
-			Expect(err).To(BeNil())
+		upsert := NewUpsertDistrict(conn)
+		district1 := domain.District("District 1")
+		district2 := domain.District("District 2")
 
-			var count int64
-			conn.WithContext(ctx).Table("districts").Count(&count)
-			Expect(count).To(Equal(int64(2)))
-		})
+		err = upsert(ctx, district1)
+		Expect(err).To(BeNil())
+		err = upsert(ctx, district2)
+		Expect(err).To(BeNil())
 
-		It("should handle database errors gracefully", func() {
-			// Create an invalid district with a very long name to trigger a database error
-			invalidDistrict := domain.District("This is a very long district name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database tableThis is a very long district name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database table")
+		var count int64
+		err = conn.WithContext(ctx).
+			Table("districts").
+			Where("tenant_id = ?", tenant.ID).
+			Count(&count).Error
+		Expect(err).To(BeNil())
+		Expect(count).To(Equal(int64(2)))
+	})
 
-			err := upsert(ctx, invalidDistrict)
-			Expect(err).NotTo(BeNil())
-		})
+	It("should handle database errors gracefully", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-		It("should insert and retrieve an empty record", func() {
-			// Insert empty district
-			emptyDistrict := domain.District("")
-			err := upsert(ctx, emptyDistrict)
-			Expect(err).To(BeNil())
+		upsert := NewUpsertDistrict(conn)
+		// Create an invalid district with a very long name to trigger a database error
+		invalidDistrict := domain.District("This is a very long district name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database tableThis is a very long district name that exceeds the maximum length allowed by the database schema and should cause an error when trying to insert it into the database table")
 
-			// Get the DocID for debugging
-			docID := emptyDistrict.DocID(ctx).String()
-			tenantID := sharedcontext.TenantIDFromContext(ctx).String()
-			fmt.Printf("\n=== EMPTY DISTRICT INSERTED ===\n")
-			fmt.Printf("DocID: %s\n", docID)
-			fmt.Printf("TenantID: %s\n", tenantID)
+		err = upsert(ctx, invalidDistrict)
+		Expect(err).NotTo(BeNil())
+	})
 
-			// Try to retrieve the empty record
-			var savedDistrict table.District
-			err = conn.WithContext(ctx).
-				Table("districts").
-				Where("document_id = ?", docID).
-				First(&savedDistrict).Error
-			Expect(err).To(BeNil())
-			Expect(savedDistrict.Name).To(Equal(""))
-			Expect(savedDistrict.DocumentID).To(Equal(docID))
-			Expect(savedDistrict.TenantID).To(Equal(tenantID))
+	It("should insert and retrieve an empty record", func() {
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
-			// Print the saved record for debugging
-			fmt.Printf("\n=== RETRIEVED DISTRICT ===\n")
-			fmt.Printf("Name: %s\n", savedDistrict.Name)
-			fmt.Printf("DocID: %s\n", savedDistrict.DocumentID)
-			fmt.Printf("TenantID: %s\n", savedDistrict.TenantID)
-			fmt.Printf("========================\n\n")
-		})
+		upsert := NewUpsertDistrict(conn)
+		// Insert empty district
+		emptyDistrict := domain.District("")
+		err = upsert(ctx, emptyDistrict)
+		Expect(err).To(BeNil())
+
+		// Try to retrieve the empty record
+		var savedDistrict table.District
+		err = conn.WithContext(ctx).
+			Table("districts").
+			Where("document_id = ?", emptyDistrict.DocID(ctx).String()).
+			First(&savedDistrict).Error
+		Expect(err).To(BeNil())
+		Expect(savedDistrict.Name).To(Equal(""))
+		Expect(savedDistrict.DocumentID).To(Equal(emptyDistrict.DocID(ctx).String()))
+		Expect(savedDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 })

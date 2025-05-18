@@ -7,84 +7,51 @@ import (
 
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertNodeInfo", func() {
 	var (
 		ctx1, ctx2                 context.Context
+		tenant1                    domain.Tenant
 		nodeType1, nodeType2       domain.NodeType
 		contact1, contact2         domain.Contact
 		addressInfo1, addressInfo2 domain.AddressInfo
 	)
 
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
-
 	BeforeEach(func() {
-		// Create contexts with different organizations
-		ctx1 = createOrgContext(organization1)
-		ctx2 = createOrgContext(organization2)
+		var err error
+		// Create two tenants for testing
+		tenant1, ctx1, err = CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
 
-		// Create node types
-		nodeType1 = domain.NodeType{
-			Value: "warehouse",
-		}
+		_, ctx2, err = CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
 
-		nodeType2 = domain.NodeType{
-			Value: "distribution-center",
-		}
+		// Setup test data
+		nodeType1 = domain.NodeType{Value: "type1"}
+		nodeType2 = domain.NodeType{Value: "type2"}
 
-		// Create contacts
 		contact1 = domain.Contact{
-			FullName:     "John Smith",
-			PrimaryEmail: "john@example.com",
-			PrimaryPhone: "123456789",
-			Documents: []domain.Document{
-				{Type: "ID", Value: "123456789"},
-			},
-			AdditionalContactMethods: []domain.ContactMethod{
-				{Type: "whatsapp", Value: "+56987654321"},
-			},
+			FullName:     "Contact 1",
+			PrimaryEmail: "contact1@test.com",
 		}
-
 		contact2 = domain.Contact{
-			FullName:     "Jane Doe",
-			PrimaryEmail: "jane@example.com",
-			PrimaryPhone: "987654321",
+			FullName:     "Contact 2",
+			PrimaryEmail: "contact2@test.com",
 		}
 
-		// Create address info with contacts embedded
 		addressInfo1 = domain.AddressInfo{
+			AddressLine1: "Address 1",
 			Contact:      contact1,
-			State:        "State1",
-			Province:     "Province1",
-			District:     "District1",
-			AddressLine1: "123 Main St",
-			Location:     orb.Point{-70.123, -33.456}, // longitude, latitude
-			ZipCode:      "12345",
-			TimeZone:     "America/Santiago",
+			Location:     orb.Point{-70.6001, -33.4500},
 		}
-
 		addressInfo2 = domain.AddressInfo{
+			AddressLine1: "Address 2",
 			Contact:      contact2,
-			State:        "State2",
-			Province:     "Province2",
-			District:     "District2",
-			AddressLine1: "456 Second Ave",
-			Location:     orb.Point{-71.234, -34.567},
-			ZipCode:      "54321",
-			TimeZone:     "America/Santiago",
+			Location:     orb.Point{-70.6002, -33.4501},
 		}
 	})
 
@@ -114,6 +81,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Floor 3"))
+		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 
 		// Verify that the JSON references were saved correctly
 		references := dbNodeInfo.NodeReferences.Map()
@@ -155,6 +123,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.Name).To(Equal("Modified Name"))
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Modified Floor"))
+		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
 	It("should not update if no fields changed", func() {
@@ -192,43 +161,53 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&finalNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(finalNodeInfo.UpdatedAt).To(Equal(initialUpdatedAt))
+		Expect(finalNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
-	It("should allow same node info for different organizations", func() {
+	It("should allow same node info for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), connection)
+		Expect(err).ToNot(HaveOccurred())
+
 		nodeInfo1 := domain.NodeInfo{
-			Name:        "Multi Org Node",
-			ReferenceID: "REF-ORG-1",
-			NodeType:    nodeType1,
-			AddressInfo: addressInfo1, // Contact is inside addressInfo
+			Name: "Multi Org Node",
 		}
 
-		// Same node info structure for organization2
 		nodeInfo2 := domain.NodeInfo{
-			Name:        "Multi Org Node",
-			ReferenceID: "REF-ORG-2",
-			NodeType:    nodeType1,
-			AddressInfo: addressInfo1, // Contact is inside addressInfo
+			Name: "Multi Org Node",
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
-
-		err := upsert(ctx1, nodeInfo1)
+		err = upsert(ctx1, nodeInfo1)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = upsert(ctx2, nodeInfo2)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verify we have two distinct records
-		var count int64
-		err = connection.DB.WithContext(context.Background()).
-			Table("node_infos").
-			Where("name = ?", nodeInfo1.Name).
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(2)))
+		// Get the DocIDs
+		docID1 := nodeInfo1.DocID(ctx1)
+		docID2 := nodeInfo2.DocID(ctx2)
 
 		// Verify they have different document IDs
-		Expect(nodeInfo1.DocID(ctx1)).ToNot(Equal(nodeInfo2.DocID(ctx2)))
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each node info belongs to its respective tenant using DocID
+		var dbNodeInfo1, dbNodeInfo2 table.NodeInfo
+		err = connection.DB.WithContext(ctx1).
+			Table("node_infos").
+			Where("document_id = ?", docID1).
+			First(&dbNodeInfo1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = connection.DB.WithContext(ctx2).
+			Table("node_infos").
+			Where("document_id = ?", docID2).
+			First(&dbNodeInfo2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbNodeInfo2.TenantID.String()).To(Equal(tenant2.ID.String()))
 	})
 
 	It("should update when related node type changes", func() {
@@ -260,6 +239,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType2.DocID(ctx1).String()))
+		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
 	It("should update when related address info with different contact changes", func() {
@@ -291,6 +271,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo2.DocID(ctx1).String()))
+		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
 	It("should update addressLine2 and addressLine3 when they change", func() {
@@ -324,6 +305,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.AddressLine2).To(Equal("Updated Line 2"))
+		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
 	It("should update references when they change", func() {
@@ -438,6 +420,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		emptyHeaders := domain.Headers{}.DocID(ctx1).String()
 		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(emptyHeaders))
+		Expect(dbNode.TenantID.String()).To(Equal(tenant1.ID.String()))
 
 		// Scenario 2: Update existing node with empty headers
 		updatedNode := node
@@ -453,6 +436,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNode).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(emptyHeaders))
+		Expect(dbNode.TenantID.String()).To(Equal(tenant1.ID.String()))
 
 		// Scenario 3: Update existing node with non-empty headers
 		updatedNode.Headers = domain.Headers{
@@ -472,6 +456,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		newHeaders := updatedNode.Headers.DocID(ctx1).String()
 		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(newHeaders))
+		Expect(dbNode.TenantID.String()).To(Equal(tenant1.ID.String()))
 
 		// Scenario 4: Update existing node with empty headers
 		updatedNodeFinal := node
@@ -487,7 +472,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNode).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNode.NodeInfoHeadersDoc).To(Equal(emptyHeaders))
-
+		Expect(dbNode.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
 })

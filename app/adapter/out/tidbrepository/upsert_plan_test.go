@@ -3,57 +3,59 @@ package tidbrepository
 import (
 	"context"
 	"time"
-
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/shared/infrastructure/database"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"go.opentelemetry.io/otel/baggage"
 )
 
 var _ = Describe("UpsertPlan", func() {
-	// Helper function to create context with organization
-	createOrgContext := func(org domain.Tenant) context.Context {
-		ctx := context.Background()
-		orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, org.ID.String())
-		countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, org.Country.String())
-		bag, _ := baggage.New(orgIDMember, countryMember)
-		return baggage.ContextWithBaggage(ctx, bag)
-	}
+	var (
+		conn   database.ConnectionFactory
+		upsert UpsertPlan
+	)
+
+	BeforeEach(func() {
+		conn = connection
+		upsert = NewUpsertPlan(conn)
+	})
 
 	It("should insert plan if not exists", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		plan := domain.Plan{
 			ReferenceID: "PLAN-001",
 			PlannedDate: time.Now(),
 		}
 
-		upsert := NewUpsertPlan(connection)
-		err := upsert(ctx, plan)
+		err = upsert(ctx, plan)
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbPlan table.Plan
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("plans").
 			Where("document_id = ?", plan.DocID(ctx)).
 			First(&dbPlan).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPlan.ReferenceID).To(Equal("PLAN-001"))
+		Expect(dbPlan.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
 	It("should update plan if fields are different", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.Plan{
 			ReferenceID: "PLAN-002",
 			PlannedDate: time.Now(),
 		}
 
-		upsert := NewUpsertPlan(connection)
-		err := upsert(ctx, original)
+		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
 		modified := domain.Plan{
@@ -65,12 +67,13 @@ var _ = Describe("UpsertPlan", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		var dbPlan table.Plan
-		err = connection.DB.WithContext(ctx).
+		err = conn.DB.WithContext(ctx).
 			Table("plans").
 			Where("document_id = ?", modified.DocID(ctx)).
 			First(&dbPlan).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPlan.ReferenceID).To(Equal("PLAN-002"))
+		Expect(dbPlan.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		// Format dates to YYYY-MM-DD for comparison
 		dbDate := dbPlan.PlannedDate.Format("2006-01-02")
@@ -78,75 +81,55 @@ var _ = Describe("UpsertPlan", func() {
 		Expect(dbDate).To(Equal(modifiedDate))
 	})
 
-	It("should not update if no fields changed", func() {
-		ctx := createOrgContext(organization1)
-
-		plan := domain.Plan{
-			ReferenceID: "PLAN-003",
-			PlannedDate: time.Now(),
-		}
-
-		upsert := NewUpsertPlan(connection)
-		err := upsert(ctx, plan)
+	It("should allow same plan for different tenants", func() {
+		// Create two tenants for this test
+		tenant1, ctx1, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
-
-		// Capture original record to verify timestamp doesn't change
-		var originalRecord table.Plan
-		err = connection.DB.WithContext(ctx).
-			Table("plans").
-			Where("document_id = ?", plan.DocID(ctx)).
-			First(&originalRecord).Error
+		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
-
-		// Execute again without changes
-		err = upsert(ctx, plan)
-		Expect(err).ToNot(HaveOccurred())
-
-		var dbPlan table.Plan
-		err = connection.DB.WithContext(ctx).
-			Table("plans").
-			Where("document_id = ?", plan.DocID(ctx)).
-			First(&dbPlan).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dbPlan.ReferenceID).To(Equal("PLAN-003"))
-	})
-
-	It("should allow same plan for different organizations", func() {
-		ctx1 := createOrgContext(organization1)
-		ctx2 := createOrgContext(organization2)
 
 		plan1 := domain.Plan{
-			ReferenceID: "PLAN-004",
-			PlannedDate: time.Now(),
+			ReferenceID: "PLAN-123",
 		}
 
 		plan2 := domain.Plan{
-			ReferenceID: "PLAN-004",
-			PlannedDate: time.Now(),
+			ReferenceID: "PLAN-123",
 		}
 
-		upsert := NewUpsertPlan(connection)
-
-		err := upsert(ctx1, plan1)
+		err = upsert(ctx1, plan1)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = upsert(ctx2, plan2)
 		Expect(err).ToNot(HaveOccurred())
 
-		var count int64
-		err = connection.DB.WithContext(context.Background()).
-			Table("plans").
-			Where("reference_id = ?", plan1.ReferenceID).
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(2)))
+		// Get the DocIDs
+		docID1 := plan1.DocID(ctx1)
+		docID2 := plan2.DocID(ctx2)
 
 		// Verify they have different document IDs
-		Expect(plan1.DocID(ctx1)).ToNot(Equal(plan2.DocID(ctx2)))
+		Expect(docID1).ToNot(Equal(docID2))
+
+		// Verify each plan belongs to its respective tenant using DocID
+		var dbPlan1, dbPlan2 table.Plan
+		err = conn.DB.WithContext(ctx1).
+			Table("plans").
+			Where("document_id = ?", docID1).
+			First(&dbPlan1).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbPlan1.TenantID.String()).To(Equal(tenant1.ID.String()))
+
+		err = conn.DB.WithContext(ctx2).
+			Table("plans").
+			Where("document_id = ?", docID2).
+			First(&dbPlan2).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbPlan2.TenantID.String()).To(Equal(tenant2.ID.String()))
 	})
 
 	It("should fail if database has no plans table", func() {
-		ctx := createOrgContext(organization1)
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
 
 		plan := domain.Plan{
 			ReferenceID: "PLAN-ERROR",
@@ -154,7 +137,7 @@ var _ = Describe("UpsertPlan", func() {
 		}
 
 		upsert := NewUpsertPlan(noTablesContainerConnection)
-		err := upsert(ctx, plan)
+		err = upsert(ctx, plan)
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("plans"))

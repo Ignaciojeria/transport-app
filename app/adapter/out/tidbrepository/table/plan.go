@@ -12,12 +12,12 @@ type Plan struct {
 	gorm.Model
 	ReferenceID    string      `gorm:"type:varchar(255);not null"`
 	DocumentID     string      `gorm:"type:char(64);uniqueIndex"`
-	Name           string      `gorm:"default:null"`
+	Name           string      `gorm:"not null"`
 	PlanHeadersDoc string      `gorm:"type:char(64);not null"`
 	PlanHeaders    PlanHeaders `gorm:"-"`
 	TenantID       uuid.UUID   `gorm:"not null"`
 	Tenant         Tenant      `gorm:"foreignKey:TenantID"`
-	PlannedDate    time.Time   `gorm:"type:date;not null"`
+	PlannedDate    time.Time   `gorm:"default:null"`
 }
 
 func (p Plan) Map() domain.Plan {
