@@ -45,7 +45,7 @@ var _ = Describe("UpsertOrderType", func() {
 		Expect(dbOrderType.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should create new record when description changes", func() {
+	It("should update existing record when description changes", func() {
 		// Create a new tenant for this test
 		tenant, ctx, err := CreateTestTenant(context.Background(), connection)
 		Expect(err).ToNot(HaveOccurred())
@@ -85,7 +85,6 @@ var _ = Describe("UpsertOrderType", func() {
 		Expect(dbOrderType.Type).To(Equal("TEST"))
 		Expect(dbOrderType.Description).To(Equal("Updated Test Order Type"))
 		Expect(dbOrderType.TenantID.String()).To(Equal(tenant.ID.String()))
-		Expect(dbOrderType.ID).ToNot(Equal(originalRecord.ID)) // Should be a new record
 	})
 
 	It("should not update if order type is the same", func() {

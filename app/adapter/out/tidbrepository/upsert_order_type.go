@@ -18,6 +18,7 @@ type UpsertOrderType func(context.Context, domain.OrderType) error
 func init() {
 	ioc.Registry(NewUpsertOrderType, database.NewConnectionFactory)
 }
+
 func NewUpsertOrderType(conn database.ConnectionFactory) UpsertOrderType {
 	return func(ctx context.Context, ot domain.OrderType) error {
 		var existing table.OrderType
@@ -31,16 +32,26 @@ func NewUpsertOrderType(conn database.ConnectionFactory) UpsertOrderType {
 			return err
 		}
 
-		if err == nil {
-			// Ya existe, no hacer nada
-			return nil
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe → insert
+			newRecord := mapper.MapOrderType(ctx, ot)
+			return conn.DB.WithContext(ctx).
+				Omit("Organization").
+				Create(&newRecord).Error
 		}
 
-		// No existe - crear nuevo registro
-		newRecord := mapper.MapOrderType(ctx, ot) // Usando el mapper correcto
+		// Ya existe → update solo si cambió algo
+		updated, changed := existing.Map().UpdateIfChanged(ot)
+		if !changed {
+			return nil // No hay cambios, no hacemos nada
+		}
+
+		updateData := mapper.MapOrderType(ctx, updated)
+		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+		updateData.CreatedAt = existing.CreatedAt
 
 		return conn.DB.WithContext(ctx).
 			Omit("Organization").
-			Create(&newRecord).Error
+			Save(&updateData).Error
 	}
 }

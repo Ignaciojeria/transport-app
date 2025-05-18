@@ -1,6 +1,7 @@
 package tidbrepository
 
 import (
+	"context"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
@@ -19,27 +20,33 @@ type LoadStatuses func() error
 func NewLoadStatuses(conn database.ConnectionFactory) LoadStatuses {
 	return func() error {
 		available := domain.Status{
+			ID:     1,
 			Status: domain.StatusAvailable,
 		}
 		scanned := domain.Status{
+			ID:     2,
 			Status: domain.StatusScanned,
 		}
 		picked := domain.Status{
+			ID:     3,
 			Status: domain.StatusPicked,
 		}
 		planned := domain.Status{
+			ID:     4,
 			Status: domain.StatusPlanned,
 		}
 		inTransit := domain.Status{
+			ID:     5,
 			Status: domain.StatusInTransit,
 		}
 		cancelled := domain.Status{
+			ID:     6,
 			Status: domain.StatusCancelled,
 		}
 		finished := domain.Status{
+			ID:     7,
 			Status: domain.StatusFinished,
 		}
-
 		var records = []table.Status{
 			{ID: 1, Status: available.Status, DocumentID: available.DocID().String()},
 			{ID: 2, Status: scanned.Status, DocumentID: scanned.DocID().String()},
@@ -49,37 +56,9 @@ func NewLoadStatuses(conn database.ConnectionFactory) LoadStatuses {
 			{ID: 6, Status: cancelled.Status, DocumentID: cancelled.DocID().String()},
 			{ID: 7, Status: finished.Status, DocumentID: finished.DocID().String()},
 		}
-
-		return conn.DB.Table("statuses").Create(&records).Error
+		if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
+			return err
+		}
+		return nil
 	}
-}
-
-type Statuses map[string]domain.Status
-
-func (m Statuses) Available() domain.Status {
-	return m[domain.StatusAvailable]
-}
-
-func (m Statuses) Scanned() domain.Status {
-	return m[domain.StatusScanned]
-}
-
-func (m Statuses) Picked() domain.Status {
-	return m[domain.StatusPicked]
-}
-
-func (m Statuses) Planned() domain.Status {
-	return m[domain.StatusPlanned]
-}
-
-func (m Statuses) InTransit() domain.Status {
-	return m[domain.StatusInTransit]
-}
-
-func (m Statuses) Cancelled() domain.Status {
-	return m[domain.StatusCancelled]
-}
-
-func (m Statuses) Finished() domain.Status {
-	return m[domain.StatusFinished]
 }
