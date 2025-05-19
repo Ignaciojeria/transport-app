@@ -106,6 +106,7 @@ func avoidJoin(table string) bool {
 		"states",
 		"provinces",
 		"districts",
+		"",
 		"routes":
 		return false // se permiten
 	default:
