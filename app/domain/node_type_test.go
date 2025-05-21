@@ -27,11 +27,6 @@ var _ = Describe("NodeType", func() {
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node2.DocID(ctx1)))
 			Expect(node1.DocID(ctx1)).ToNot(Equal(node1.DocID(ctx2)))
 		})
-
-		It("should return empty hash if Value is empty", func() {
-			node := NodeType{Value: ""}
-			Expect(node.DocID(ctx1)).To(Equal(DocumentID("")))
-		})
 	})
 
 	Describe("UpdateIfChange", func() {

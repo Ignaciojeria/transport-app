@@ -38,13 +38,17 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			District  string  `json:"district"`
-			Latitude  float64 `json:"latitude"`
-			Longitude float64 `json:"longitude"`
-			Province  string  `json:"province"`
-			State     string  `json:"state"`
-			TimeZone  string  `json:"timeZone"`
-			ZipCode   string  `json:"zipCode"`
+			District    string `json:"district"`
+			Coordinates struct {
+				Latitude             float64 `json:"latitude"`
+				Longitude            float64 `json:"longitude"`
+				Source               string  `json:"source"`
+				RequiresManualReview bool    `json:"requiresManualReview"`
+			} `json:"coordinates"`
+			Province string `json:"province"`
+			State    string `json:"state"`
+			TimeZone string `json:"timeZone"`
+			ZipCode  string `json:"zipCode"`
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
@@ -74,13 +78,17 @@ type UpsertOrderRequest struct {
 				FullName string `json:"fullName"`
 			} `json:"contact"`
 
-			District  string  `json:"district"`
-			Latitude  float64 `json:"latitude"`
-			Longitude float64 `json:"longitude"`
-			Province  string  `json:"province"`
-			State     string  `json:"state"`
-			TimeZone  string  `json:"timeZone"`
-			ZipCode   string  `json:"zipCode"`
+			District    string `json:"district"`
+			Coordinates struct {
+				Latitude             float64 `json:"latitude"`
+				Longitude            float64 `json:"longitude"`
+				Source               string  `json:"source"`
+				RequiresManualReview bool    `json:"requiresManualReview"`
+			} `json:"coordinates"`
+			Province string `json:"province"`
+			State    string `json:"state"`
+			TimeZone string `json:"timeZone"`
+			ZipCode  string `json:"zipCode"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`

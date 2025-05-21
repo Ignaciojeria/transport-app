@@ -111,7 +111,7 @@ func avoidJoin(table string) bool {
 		"provinces",
 		"districts",
 		"node_info_headers",
-		"node_types",
+		//"node_types",
 		//"non_delivery_reasons",
 		"routes":
 		return false // se permiten
