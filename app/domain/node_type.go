@@ -9,9 +9,6 @@ type NodeType struct {
 // DocID genera un identificador único para NodeType basado en Organization y Value.
 // Si Value está vacío, se usa un string vacío como clave.
 func (nt NodeType) DocID(ctx context.Context) DocumentID {
-	if nt.Value == "" {
-		return ""
-	}
 	return DocumentID(HashByTenant(ctx, nt.Value))
 }
 

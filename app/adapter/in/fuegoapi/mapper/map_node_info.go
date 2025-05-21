@@ -26,13 +26,17 @@ func MapNodeInfoToDomain(nodeInfo struct {
 		FullName string `json:"fullName"`
 	} `json:"contact"`
 
-	District  string  `json:"district"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Province  string  `json:"province"`
-	State     string  `json:"state"`
-	TimeZone  string  `json:"timeZone"`
-	ZipCode   string  `json:"zipCode"`
+	District    string `json:"district"`
+	Coordinates struct {
+		Latitude             float64 `json:"latitude"`
+		Longitude            float64 `json:"longitude"`
+		Source               string  `json:"source"`
+		RequiresManualReview bool    `json:"requiresManualReview"`
+	} `json:"coordinates"`
+	Province string `json:"province"`
+	State    string `json:"state"`
+	TimeZone string `json:"timeZone"`
+	ZipCode  string `json:"zipCode"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
@@ -51,11 +55,13 @@ func MapNodeInfoToDomain(nodeInfo struct {
 			//AddressLine2: addressInfo.AddressLine2,
 			//AddressLine3: addressInfo.AddressLine3,
 			Location: orb.Point{
-				addressInfo.Longitude, // orb.Point espera [lon, lat]
-				addressInfo.Latitude,
+				addressInfo.Coordinates.Longitude, // orb.Point espera [lon, lat]
+				addressInfo.Coordinates.Latitude,
 			},
-			ZipCode:  addressInfo.ZipCode,
-			TimeZone: addressInfo.TimeZone,
+			RequiresManualReview: addressInfo.Coordinates.RequiresManualReview,
+			CoordinateSource:     addressInfo.Coordinates.Source,
+			ZipCode:              addressInfo.ZipCode,
+			TimeZone:             addressInfo.TimeZone,
 		},
 	}
 }
@@ -136,6 +142,5 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	responseAddressInfo.Contact.Phone = nodeInfo.AddressInfo.Contact.PrimaryPhone
 	responseAddressInfo.Contact.NationalID = nodeInfo.AddressInfo.Contact.NationalID
 	responseAddressInfo.Contact.Documents = MapDocumentsFromDomain(nodeInfo.AddressInfo.Contact.Documents)
-
 	return responseNodeInfo, responseAddressInfo
 }

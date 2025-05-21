@@ -33,7 +33,7 @@ func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// No existe → insert
 			newAddressInfo := mapper.MapAddressInfoTable(ctx, ai)
-			return conn.Omit("Organization").Create(&newAddressInfo).Error
+			return conn.Omit("Tenant").Create(&newAddressInfo).Error
 		}
 
 		// Ya existe → update solo si cambió algo
@@ -46,6 +46,6 @@ func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 		updateData.CreatedAt = existing.CreatedAt
 
-		return conn.Omit("Organization").Save(&updateData).Error
+		return conn.Omit("Tenant").Save(&updateData).Error
 	}
 }

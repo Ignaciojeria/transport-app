@@ -37,6 +37,12 @@ func NewUpsertNodeType(conn database.ConnectionFactory) UpsertNodeType {
 			return nil
 		}
 		newRecord := mapper.MapNodeType(ctx, nt)
-		return conn.Omit("Organization").Create(&newRecord).Error
+
+		err = conn.Omit("Tenant").Create(&newRecord).Error
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 }

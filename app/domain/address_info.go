@@ -7,16 +7,20 @@ import (
 	"github.com/paulmach/orb"
 )
 
+type CoordinateSource string
+
 type AddressInfo struct {
-	Contact           Contact
-	State             State
-	Province          Province
-	District          District
-	AddressLine1      string
-	Location          orb.Point
-	CorrectedDistance float64
-	ZipCode           string
-	TimeZone          string
+	Contact              Contact
+	State                State
+	Province             Province
+	District             District
+	AddressLine1         string
+	Location             orb.Point
+	RequiresManualReview bool
+	CoordinateSource     string
+	CorrectedDistance    float64
+	ZipCode              string
+	TimeZone             string
 }
 
 func (a AddressInfo) DocID(ctx context.Context) DocumentID {
