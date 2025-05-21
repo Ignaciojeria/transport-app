@@ -35,6 +35,8 @@ func init() {
 		tidbrepository.NewUpsertState,
 		tidbrepository.NewUpsertProvince,
 		tidbrepository.NewUpsertDistrict,
+		tidbrepository.NewUpsertNodeInfoHeaders,
+		tidbrepository.NewUpsertNodeType,
 	)
 }
 
@@ -60,6 +62,8 @@ func NewCreateTenant(
 	upsertState tidbrepository.UpsertState,
 	upsertProvince tidbrepository.UpsertProvince,
 	upsertDistrict tidbrepository.UpsertDistrict,
+	upsertNodeInfoHeaders tidbrepository.UpsertNodeInfoHeaders,
+	upsertNodeType tidbrepository.UpsertNodeType,
 ) CreateTenant {
 	return func(ctx context.Context, org domain.Tenant) error {
 		_, err := saveTenant(ctx, org)
@@ -141,6 +145,14 @@ func NewCreateTenant(
 
 		group.Go(func() error {
 			return upsertDistrict(groupCtx, domain.District(""))
+		})
+
+		group.Go(func() error {
+			return upsertNodeInfoHeaders(groupCtx, domain.Headers{})
+		})
+
+		group.Go(func() error {
+			return upsertNodeType(groupCtx, domain.NodeType{})
 		})
 
 		return group.Wait()

@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"strings"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 
@@ -42,7 +43,7 @@ var _ = Describe("Tenant", func() {
 
 			// 2. Preparar JOIN dinámico usando goqu
 			baseTable := "order_headers"
-			baseAlias := uuid.NewString()[0:8]
+			baseAlias := "a" + uuid.NewString()[0:7]
 			ds := goqu.From(goqu.T(baseTable).As(baseAlias))
 
 			for _, table := range tableNames {
@@ -54,7 +55,7 @@ var _ = Describe("Tenant", func() {
 					continue
 				}
 
-				alias := uuid.NewString()[0:8]
+				alias := "a" + uuid.NewString()[0:7]
 				ds = ds.Join(goqu.T(table).As(alias),
 					goqu.On(goqu.Ex{
 						fmt.Sprintf("%s.tenant_id", alias): goqu.I(fmt.Sprintf("%s.tenant_id", baseAlias)),
@@ -69,9 +70,12 @@ var _ = Describe("Tenant", func() {
 			sql, args, err := ds.ToSQL()
 			Expect(err).ToNot(HaveOccurred())
 
+			// Eliminar todas las comillas dobles de la query
+			sql = strings.ReplaceAll(sql, `"`, "")
+
 			// Print query in a format easy to copy-paste into TiDB
 			fmt.Printf("\n=== COPY-PASTE THIS QUERY INTO TiDB ===\n")
-			fmt.Printf("%s;\n", sql)
+			fmt.Printf("%s\n", sql)
 			fmt.Printf("=== WITH THESE ARGS ===\n")
 			fmt.Printf("%v\n", args)
 			fmt.Printf("=====================================\n\n")
@@ -106,7 +110,9 @@ func avoidJoin(table string) bool {
 		"states",
 		"provinces",
 		"districts",
-		"",
+		"node_info_headers",
+		"node_types",
+		//"non_delivery_reasons",
 		"routes":
 		return false // se permiten
 	default:
@@ -144,6 +150,8 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertState(connection),
 		tidbrepository.NewUpsertProvince(connection),
 		tidbrepository.NewUpsertDistrict(connection),
+		tidbrepository.NewUpsertNodeInfoHeaders(connection),
+		tidbrepository.NewUpsertNodeType(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{

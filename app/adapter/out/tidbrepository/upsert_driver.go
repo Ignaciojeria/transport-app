@@ -35,7 +35,7 @@ func NewUpsertDriver(conn database.ConnectionFactory) UpsertDriver {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// No existe → insert
 			newDriver := mapper.MapDriver(ctx, d)
-			return conn.Omit("Organization").Create(&newDriver).Error
+			return conn.Omit("Tenant").Create(&newDriver).Error
 		}
 
 		// Ya existe → update solo si cambió algo
@@ -48,6 +48,6 @@ func NewUpsertDriver(conn database.ConnectionFactory) UpsertDriver {
 		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 		updateData.CreatedAt = existing.CreatedAt
 
-		return conn.Omit("Organization").Save(&updateData).Error
+		return conn.Omit("Tenant").Save(&updateData).Error
 	}
 }
