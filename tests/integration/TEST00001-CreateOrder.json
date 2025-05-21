@@ -38,8 +38,12 @@
                 "phone": "string242"
             },
             "district": "string24",
-            "latitude": 100,
-            "longitude": 100,
+            "coordinates": {
+                "latitude": 1.1,
+                "longitude": 1.1,
+                "requiresManualReview": true,
+                "source": "string"
+            },
             "province": "string24",
             "state": "string24",
             "timeZone": "string24",
@@ -71,8 +75,12 @@
                 "phone": "string24"
             },
             "district": "string24",
-            "latitude": 10.123,
-            "longitude": 10.1234,
+            "coordinates": {
+                "latitude": 1.1,
+                "longitude": 1.1,
+                "requiresManualReview": true,
+                "source": "string"
+            },
             "province": "string24",
             "state": "string24",
             "timeZone": "string24",

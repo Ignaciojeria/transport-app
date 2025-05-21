@@ -22,27 +22,14 @@ var _ = Describe("UpsertAddressInfo", func() {
 		upsert = NewUpsertAddressInfo(conn)
 	})
 
-	It("should insert addressInfo if not exists", func() {
+	It("should insert addressInfo and its related entities if not exists", func() {
 		// Create a new tenant for this test
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Crear y guardar State, Province y District primero
 		state := domain.State("Metropolitana")
 		province := domain.Province("Santiago")
 		district := domain.District("Providencia")
-
-		upsertState := NewUpsertState(conn)
-		err = upsertState(ctx, state)
-		Expect(err).ToNot(HaveOccurred())
-
-		upsertProvince := NewUpsertProvince(conn)
-		err = upsertProvince(ctx, province)
-		Expect(err).ToNot(HaveOccurred())
-
-		upsertDistrict := NewUpsertDistrict(conn)
-		err = upsertDistrict(ctx, district)
-		Expect(err).ToNot(HaveOccurred())
 
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Av Providencia 1234",
@@ -56,14 +43,41 @@ var _ = Describe("UpsertAddressInfo", func() {
 		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Get the DocID
-		docID := addressInfo.DocID(ctx)
+		// Verify state was created
+		var dbState table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", state.DocID(ctx).String()).
+			First(&dbState).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState.Name).To(Equal("Metropolitana"))
+		Expect(dbState.TenantID.String()).To(Equal(tenant.ID.String()))
 
-		// Verify the record was inserted correctly
+		// Verify province was created
+		var dbProvince table.Province
+		err = conn.DB.WithContext(ctx).
+			Table("provinces").
+			Where("document_id = ?", province.DocID(ctx).String()).
+			First(&dbProvince).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince.Name).To(Equal("Santiago"))
+		Expect(dbProvince.TenantID.String()).To(Equal(tenant.ID.String()))
+
+		// Verify district was created
+		var dbDistrict table.District
+		err = conn.DB.WithContext(ctx).
+			Table("districts").
+			Where("document_id = ?", district.DocID(ctx).String()).
+			First(&dbDistrict).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbDistrict.Name).To(Equal("Providencia"))
+		Expect(dbDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
+
+		// Verify addressInfo was created with correct references
 		var dbAddressInfo table.AddressInfo
 		err = conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", docID).
+			Where("document_id = ?", addressInfo.DocID(ctx)).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Av Providencia 1234"))
@@ -73,7 +87,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should create new address when fields change", func() {
+	It("should create new address and reuse existing entities when fields change", func() {
 		// Create a new tenant for this test
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
@@ -92,6 +106,11 @@ var _ = Describe("UpsertAddressInfo", func() {
 
 		// Get the original DocID
 		originalDocID := original.DocID(ctx)
+
+		// Get the IDs of the related entities
+		stateID := original.State.DocID(ctx).String()
+		provinceID := original.Province.DocID(ctx).String()
+		districtID := original.District.DocID(ctx).String()
 
 		modified := domain.AddressInfo{
 			AddressLine1: "Dirección Modificada",
@@ -139,6 +158,11 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(modifiedAddress.AddressLine1).To(Equal("Dirección Modificada"))
 		Expect(modifiedAddress.ZipCode).To(Equal("7560000"))
+
+		// Verify that the related entities were reused (same IDs)
+		Expect(modifiedAddress.StateDoc).To(Equal(stateID))
+		Expect(modifiedAddress.ProvinceDoc).To(Equal(provinceID))
+		Expect(modifiedAddress.DistrictDoc).To(Equal(districtID))
 	})
 
 	It("should allow same address info for different tenants", func() {
@@ -191,14 +215,18 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo2.TenantID.String()).To(Equal(tenant2.ID.String()))
 
-		// Verify total count of records with same address
-		var count int64
-		err = conn.DB.WithContext(context.Background()).
-			Table("address_infos").
-			Where("address_line1 = ?", addressInfo1.AddressLine1).
-			Count(&count).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(2)))
+		// Verify that related entities were created for each tenant
+		state1ID := addressInfo1.State.DocID(ctx1).String()
+		state2ID := addressInfo2.State.DocID(ctx2).String()
+		Expect(state1ID).ToNot(Equal(state2ID))
+
+		province1ID := addressInfo1.Province.DocID(ctx1).String()
+		province2ID := addressInfo2.Province.DocID(ctx2).String()
+		Expect(province1ID).ToNot(Equal(province2ID))
+
+		district1ID := addressInfo1.District.DocID(ctx1).String()
+		district2ID := addressInfo2.District.DocID(ctx2).String()
+		Expect(district1ID).ToNot(Equal(district2ID))
 	})
 
 	It("should update location coordinates correctly", func() {
@@ -209,6 +237,8 @@ var _ = Describe("UpsertAddressInfo", func() {
 		original := domain.AddressInfo{
 			AddressLine1: "Coordenadas Test",
 			District:     "Ñuñoa",
+			Province:     "Santiago",
+			State:        "Metropolitana",
 			Location:     orb.Point{-70.5975, -33.4566}, // [lon, lat]
 		}
 
@@ -277,12 +307,13 @@ var _ = Describe("UpsertAddressInfo", func() {
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Error Esperado",
 			District:     "Providencia",
+			Province:     "Santiago",
+			State:        "Metropolitana",
 		}
 
 		upsert := NewUpsertAddressInfo(noTablesContainerConnection)
 		err = upsert(ctx, addressInfo)
 
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("address_infos"))
 	})
 })

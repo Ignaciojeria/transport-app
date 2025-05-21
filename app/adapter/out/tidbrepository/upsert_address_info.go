@@ -20,32 +20,112 @@ func init() {
 
 func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 	return func(ctx context.Context, ai domain.AddressInfo) error {
-		var existing table.AddressInfo
-		err := conn.DB.WithContext(ctx).
-			Table("address_infos").
-			Where("document_id = ?", ai.DocID(ctx)).
-			First(&existing).Error
+		return conn.DB.Transaction(func(tx *gorm.DB) error {
+			// Upsert State
+			if err := upsertState(ctx, tx, ai.State); err != nil {
+				return err
+			}
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			// Upsert Province
+			if err := upsertProvince(ctx, tx, ai.Province); err != nil {
+				return err
+			}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newAddressInfo := mapper.MapAddressInfoTable(ctx, ai)
-			return conn.Omit("Tenant").Create(&newAddressInfo).Error
-		}
+			// Upsert District
+			if err := upsertDistrict(ctx, tx, ai.District); err != nil {
+				return err
+			}
 
-		// Ya existe → update solo si cambió algo
-		updated, changed := existing.Map().UpdateIfChanged(ai)
-		if !changed {
-			return nil // No hay cambios, no hacemos nada
-		}
+			var existing table.AddressInfo
+			err := tx.WithContext(ctx).
+				Table("address_infos").
+				Where("document_id = ?", ai.DocID(ctx)).
+				First(&existing).Error
 
-		updateData := mapper.MapAddressInfoTable(ctx, updated)
-		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-		updateData.CreatedAt = existing.CreatedAt
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		return conn.Omit("Tenant").Save(&updateData).Error
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newAddressInfo := mapper.MapAddressInfoTable(ctx, ai)
+				return tx.Omit("Tenant").Create(&newAddressInfo).Error
+			}
+
+			// Ya existe → update solo si cambió algo
+			updated, changed := existing.Map().UpdateIfChanged(ai)
+			if !changed {
+				return nil // No hay cambios, no hacemos nada
+			}
+
+			updateData := mapper.MapAddressInfoTable(ctx, updated)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			return tx.Omit("Tenant").Save(&updateData).Error
+		})
 	}
+}
+
+func upsertState(ctx context.Context, tx *gorm.DB, state domain.State) error {
+	var existing table.State
+	err := tx.WithContext(ctx).
+		Table("states").
+		Where("document_id = ?", state.DocID(ctx).String()).
+		First(&existing).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	// Si ya existe, no hacemos nada porque el nombre es el mismo
+	if err == nil {
+		return nil
+	}
+
+	// No existe → insert
+	newState := mapper.MapStateTable(ctx, state)
+	return tx.Create(&newState).Error
+}
+
+func upsertProvince(ctx context.Context, tx *gorm.DB, province domain.Province) error {
+	var existing table.Province
+	err := tx.WithContext(ctx).
+		Table("provinces").
+		Where("document_id = ?", province.DocID(ctx).String()).
+		First(&existing).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	// Si ya existe, no hacemos nada porque el nombre es el mismo
+	if err == nil {
+		return nil
+	}
+
+	// No existe → insert
+	newProvince := mapper.MapProvinceTable(ctx, province)
+	return tx.Create(&newProvince).Error
+}
+
+func upsertDistrict(ctx context.Context, tx *gorm.DB, district domain.District) error {
+	var existing table.District
+	err := tx.WithContext(ctx).
+		Table("districts").
+		Where("document_id = ?", district.DocID(ctx).String()).
+		First(&existing).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return err
+	}
+
+	// Si ya existe, no hacemos nada porque el nombre es el mismo
+	if err == nil {
+		return nil
+	}
+
+	// No existe → insert
+	newDistrict := mapper.MapDistrictTable(ctx, district)
+	return tx.Create(&newDistrict).Error
 }

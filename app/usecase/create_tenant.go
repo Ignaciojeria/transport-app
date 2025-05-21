@@ -32,11 +32,9 @@ func init() {
 		tidbrepository.NewUpsertPlan,
 		tidbrepository.NewUpsertPlanHeaders,
 		tidbrepository.NewUpsertRoute,
-		tidbrepository.NewUpsertState,
-		tidbrepository.NewUpsertProvince,
-		tidbrepository.NewUpsertDistrict,
 		tidbrepository.NewUpsertNodeInfoHeaders,
 		tidbrepository.NewUpsertNodeType,
+		tidbrepository.NewUpsertNonDeliveryReason,
 	)
 }
 
@@ -59,11 +57,9 @@ func NewCreateTenant(
 	upsertPlan tidbrepository.UpsertPlan,
 	upsertPlanHeaders tidbrepository.UpsertPlanHeaders,
 	upsertRoute tidbrepository.UpsertRoute,
-	upsertState tidbrepository.UpsertState,
-	upsertProvince tidbrepository.UpsertProvince,
-	upsertDistrict tidbrepository.UpsertDistrict,
 	upsertNodeInfoHeaders tidbrepository.UpsertNodeInfoHeaders,
 	upsertNodeType tidbrepository.UpsertNodeType,
+	upsertNonDeliveryReason tidbrepository.UpsertNonDeliveryReason,
 ) CreateTenant {
 	return func(ctx context.Context, org domain.Tenant) error {
 		_, err := saveTenant(ctx, org)
@@ -134,25 +130,20 @@ func NewCreateTenant(
 		group.Go(func() error {
 			return upsertRoute(groupCtx, domain.Route{}, "")
 		})
-
-		group.Go(func() error {
-			return upsertState(groupCtx, domain.State(""))
-		})
-
-		group.Go(func() error {
-			return upsertProvince(groupCtx, domain.Province(""))
-		})
-
-		group.Go(func() error {
-			return upsertDistrict(groupCtx, domain.District(""))
-		})
-
 		group.Go(func() error {
 			return upsertNodeInfoHeaders(groupCtx, domain.Headers{})
 		})
 
 		group.Go(func() error {
 			return upsertNodeType(groupCtx, domain.NodeType{})
+		})
+
+		group.Go(func() error {
+			return upsertNonDeliveryReason(groupCtx, domain.NonDeliveryReason{})
+		})
+
+		group.Go(func() error {
+			return upsertOrder(groupCtx, domain.Order{})
 		})
 
 		return group.Wait()

@@ -111,8 +111,9 @@ func avoidJoin(table string) bool {
 		"provinces",
 		"districts",
 		"node_info_headers",
-		//"node_types",
-		//"non_delivery_reasons",
+		"node_types",
+		"non_delivery_reasons",
+		"orders",
 		"routes":
 		return false // se permiten
 	default:
@@ -147,11 +148,9 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertPlan(connection),
 		tidbrepository.NewUpsertPlanHeaders(connection),
 		tidbrepository.NewUpsertRoute(connection),
-		tidbrepository.NewUpsertState(connection),
-		tidbrepository.NewUpsertProvince(connection),
-		tidbrepository.NewUpsertDistrict(connection),
 		tidbrepository.NewUpsertNodeInfoHeaders(connection),
 		tidbrepository.NewUpsertNodeType(connection),
+		tidbrepository.NewUpsertNonDeliveryReason(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{

@@ -26,22 +26,9 @@ var _ = Describe("GetStoredCoordinates", func() {
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Crear y guardar State, Province y District primero
 		state := domain.State("Ñuñoa")
 		province := domain.Province("Santiago")
 		district := domain.District("Ñuñoa")
-
-		upsertState := NewUpsertState(conn)
-		err = upsertState(ctx, state)
-		Expect(err).ToNot(HaveOccurred())
-
-		upsertProvince := NewUpsertProvince(conn)
-		err = upsertProvince(ctx, province)
-		Expect(err).ToNot(HaveOccurred())
-
-		upsertDistrict := NewUpsertDistrict(conn)
-		err = upsertDistrict(ctx, district)
-		Expect(err).ToNot(HaveOccurred())
 
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Coords Existentes",
@@ -51,7 +38,7 @@ var _ = Describe("GetStoredCoordinates", func() {
 			Location:     orb.Point{-70.6001, -33.4500},
 		}
 
-		// Guardar la dirección
+		// Guardar la dirección (esto también guardará state, province y district)
 		upsert := NewUpsertAddressInfo(conn)
 		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
@@ -64,6 +51,31 @@ var _ = Describe("GetStoredCoordinates", func() {
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
+
+		// Verificar que las entidades relacionadas se crearon correctamente
+		var dbState table.State
+		err = conn.DB.WithContext(ctx).
+			Table("states").
+			Where("document_id = ?", state.DocID(ctx).String()).
+			First(&dbState).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbState.TenantID.String()).To(Equal(tenant.ID.String()))
+
+		var dbProvince table.Province
+		err = conn.DB.WithContext(ctx).
+			Table("provinces").
+			Where("document_id = ?", province.DocID(ctx).String()).
+			First(&dbProvince).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbProvince.TenantID.String()).To(Equal(tenant.ID.String()))
+
+		var dbDistrict table.District
+		err = conn.DB.WithContext(ctx).
+			Table("districts").
+			Where("document_id = ?", district.DocID(ctx).String()).
+			First(&dbDistrict).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(dbDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		getCoords := NewGetStoredCoordinates(conn)
 		point, err := getCoords(ctx, addressInfo)
@@ -80,6 +92,8 @@ var _ = Describe("GetStoredCoordinates", func() {
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "No Existe",
 			District:     "Peñalolén",
+			Province:     "Santiago",
+			State:        "Metropolitana",
 		}
 
 		getCoords := NewGetStoredCoordinates(conn)
@@ -96,6 +110,8 @@ var _ = Describe("GetStoredCoordinates", func() {
 		addressInfo := domain.AddressInfo{
 			AddressLine1: "Error Forzado",
 			District:     "Independencia",
+			Province:     "Santiago",
+			State:        "Metropolitana",
 		}
 
 		getCoords := NewGetStoredCoordinates(noTablesContainerConnection)

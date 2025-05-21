@@ -40,7 +40,8 @@ func NewCreateOrder(
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
 		normalizationGroup, group1Ctx := errgroup.WithContext(ctx)
-
+		inOrder.Origin.AddressInfo.ToLowerAndRemovePunctuation()
+		inOrder.Destination.AddressInfo.ToLowerAndRemovePunctuation()
 		normalizationGroup.Go(func() error {
 			return inOrder.Origin.AddressInfo.NormalizeAndGeocode(
 				group1Ctx,
