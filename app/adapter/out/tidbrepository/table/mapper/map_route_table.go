@@ -12,6 +12,7 @@ func MapRouteTable(ctx context.Context, r domain.Route, planDoc string) table.Ro
 		ReferenceID:       r.ReferenceID,
 		DocumentID:        string(r.DocID(ctx)),
 		TenantID:          sharedcontext.TenantIDFromContext(ctx),
+		EndNodeInfoDoc:    string(r.Destination.DocID(ctx)),
 		OriginNodeInfoDoc: string(r.Origin.DocID(ctx)),
 		VehicleDoc:        string(r.Vehicle.DocID(ctx)),
 		DriverDoc:         string(r.Vehicle.Carrier.Driver.DocID(ctx)),

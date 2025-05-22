@@ -90,7 +90,7 @@
             "referenceId": "string24"
         }
     },
-    "packages": [
+    "deliveryUnits": [
         {
             "dimensions": {
                 "length": 10,

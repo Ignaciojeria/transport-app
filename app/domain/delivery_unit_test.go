@@ -17,10 +17,10 @@ var _ = Describe("Package", func() {
 
 	Describe("DocID", func() {
 		It("should generate unique ID based on context and Lpn when Lpn is present", func() {
-			package1 := Package{
+			package1 := DeliveryUnit{
 				Lpn: "PKG001",
 			}
-			package2 := Package{
+			package2 := DeliveryUnit{
 				Lpn: "PKG002",
 			}
 
@@ -30,7 +30,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should generate ID based on reference, index and sorted items when Lpn is empty", func() {
-			pkg := Package{
+			pkg := DeliveryUnit{
 				Lpn:   "",
 				Index: 1,
 				Items: []Item{
@@ -43,7 +43,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should generate different IDs for packages with same items but different references", func() {
-			pkg := Package{
+			pkg := DeliveryUnit{
 				Lpn: "",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -58,7 +58,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should generate different IDs for packages with same reference but different items", func() {
-			pkg1 := Package{
+			pkg1 := DeliveryUnit{
 				Lpn: "",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -66,7 +66,7 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			pkg2 := Package{
+			pkg2 := DeliveryUnit{
 				Lpn: "",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -81,7 +81,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should generate consistent IDs for same reference and items", func() {
-			pkg1 := Package{
+			pkg1 := DeliveryUnit{
 				Lpn: "",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -89,7 +89,7 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			pkg2 := Package{
+			pkg2 := DeliveryUnit{
 				Lpn: "",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -104,7 +104,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should handle the case with no LPN and no items", func() {
-			pkg := Package{
+			pkg := DeliveryUnit{
 				Lpn:   "",
 				Items: []Item{},
 				Index: 1,
@@ -117,10 +117,10 @@ var _ = Describe("Package", func() {
 	})
 
 	Describe("SearchPackageByLpn", func() {
-		var packages []Package
+		var packages []DeliveryUnit
 
 		BeforeEach(func() {
-			packages = []Package{
+			packages = []DeliveryUnit{
 				{Lpn: "PKG001"},
 				{Lpn: "PKG002"},
 				{Lpn: "PKG003"},
@@ -134,25 +134,25 @@ var _ = Describe("Package", func() {
 
 		It("should return empty package when lpn doesn't exist", func() {
 			result := SearchPackageByLpn(packages, "NONEXISTENT")
-			Expect(result).To(Equal(Package{}))
+			Expect(result).To(Equal(DeliveryUnit{}))
 		})
 
 		It("should return first matching package when multiple matches exist", func() {
 			// Agregar un duplicado con el mismo Lpn
-			duplicatePackages := append(packages, Package{Lpn: "PKG001"})
+			duplicatePackages := append(packages, DeliveryUnit{Lpn: "PKG001"})
 
 			result := SearchPackageByLpn(duplicatePackages, "PKG001")
 			Expect(result.Lpn).To(Equal("PKG001"))
 		})
 
 		It("should handle empty package slice", func() {
-			result := SearchPackageByLpn([]Package{}, "PKG001")
-			Expect(result).To(Equal(Package{}))
+			result := SearchPackageByLpn([]DeliveryUnit{}, "PKG001")
+			Expect(result).To(Equal(DeliveryUnit{}))
 		})
 
 		It("should handle case-sensitive lpn comparison", func() {
 			// Agregar paquete con LPN en minúsculas
-			packagesWithCase := append(packages, Package{Lpn: "pkg001"})
+			packagesWithCase := append(packages, DeliveryUnit{Lpn: "pkg001"})
 
 			// Debería devolver el original (PKG001) y no el nuevo (pkg001)
 			result := SearchPackageByLpn(packagesWithCase, "PKG001")
@@ -165,10 +165,10 @@ var _ = Describe("Package", func() {
 	})
 
 	Describe("UpdateIfChanged", func() {
-		var basePackage Package
+		var basePackage DeliveryUnit
 
 		BeforeEach(func() {
-			basePackage = Package{
+			basePackage = DeliveryUnit{
 				Lpn: "PKG-TEST",
 				Dimensions: Dimensions{
 					Length: 10.0,
@@ -208,7 +208,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Lpn", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Lpn: "PKG-UPDATED",
 			}
 
@@ -224,7 +224,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Dimensions", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Dimensions: Dimensions{
 					Length: 15.0,
 					Width:  25.0,
@@ -245,7 +245,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Weight", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Weight: Weight{
 					Value: 7.5,
 					Unit:  "lb",
@@ -264,7 +264,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Insurance", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Insurance: Insurance{
 					UnitValue: 2000.0,
 					Currency:  "EUR",
@@ -283,7 +283,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Items", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Items: []Item{
 					{
 						Sku:         "ITEM003",
@@ -318,7 +318,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should not update fields when new values are empty", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Lpn: "",
 				// Todos los demás campos están vacíos o con sus valores por defecto
 			}
@@ -331,7 +331,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update multiple fields at once", func() {
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Lpn: "PKG-MULTI-UPDATE",
 				Weight: Weight{
 					Value: 8.0,
@@ -366,7 +366,7 @@ var _ = Describe("Package", func() {
 			Expect(basePackage.Items).ToNot(BeEmpty())
 
 			// Intentar actualizar con un array vacío
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Items: []Item{},
 			}
 
@@ -383,7 +383,7 @@ var _ = Describe("Package", func() {
 			Expect(len(basePackage.Items)).To(Equal(2))
 
 			// Actualizar con un solo item
-			newPackage := Package{
+			newPackage := DeliveryUnit{
 				Items: []Item{
 					{
 						Sku:         "NEW-SINGLE-ITEM",
@@ -405,7 +405,7 @@ var _ = Describe("Package", func() {
 	Describe("Integration scenarios", func() {
 		It("should correctly handle packages with LPN changes", func() {
 			// Crear un paquete con LPN
-			originalPackage := Package{
+			originalPackage := DeliveryUnit{
 				Lpn: "ORIGINAL-LPN",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -417,7 +417,7 @@ var _ = Describe("Package", func() {
 			originalDocID := originalPackage.DocID(ctx1, "REF001")
 
 			// Actualizar el LPN
-			updatedPackage, changed := originalPackage.UpdateIfChanged(Package{
+			updatedPackage, changed := originalPackage.UpdateIfChanged(DeliveryUnit{
 				Lpn: "NEW-LPN",
 			})
 			Expect(changed).To(BeTrue())
@@ -431,7 +431,7 @@ var _ = Describe("Package", func() {
 
 		It("should correctly handle packages transitioning from LPN to no LPN", func() {
 			// Crear un paquete con LPN
-			originalPackage := Package{
+			originalPackage := DeliveryUnit{
 				Lpn: "HAS-LPN",
 				Items: []Item{
 					{Sku: "SKU001"},
@@ -444,7 +444,7 @@ var _ = Describe("Package", func() {
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, "HAS-LPN")))
 
 			// Actualizar estableciendo LPN en vacío
-			updatedPackage, changed := originalPackage.UpdateIfChanged(Package{
+			updatedPackage, changed := originalPackage.UpdateIfChanged(DeliveryUnit{
 				Lpn: "",
 			})
 
@@ -458,7 +458,7 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should correctly handle packages transitioning from no LPN to having LPN", func() {
-			originalPackage := Package{
+			originalPackage := DeliveryUnit{
 				Lpn:   "",
 				Index: 1,
 				Items: []Item{
@@ -471,7 +471,7 @@ var _ = Describe("Package", func() {
 			originalDocID := originalPackage.DocID(ctx1, "REF001")
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 
-			updatedPackage, changed := originalPackage.UpdateIfChanged(Package{
+			updatedPackage, changed := originalPackage.UpdateIfChanged(DeliveryUnit{
 				Lpn: "NEW-LPN",
 			})
 			Expect(changed).To(BeTrue())
@@ -485,7 +485,7 @@ var _ = Describe("Package", func() {
 	})
 
 	It("should generate same ID regardless of item SKU order", func() {
-		pkg1 := Package{
+		pkg1 := DeliveryUnit{
 			Lpn:   "",
 			Index: 1,
 			Items: []Item{
@@ -493,7 +493,7 @@ var _ = Describe("Package", func() {
 				{Sku: "SKU002"},
 			},
 		}
-		pkg2 := Package{
+		pkg2 := DeliveryUnit{
 			Lpn:   "",
 			Index: 1,
 			Items: []Item{

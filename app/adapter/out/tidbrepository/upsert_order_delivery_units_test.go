@@ -27,7 +27,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 		order := domain.Order{
 			ReferenceID: "ORD-LPN-001",
 			Headers:     domain.Headers{Commerce: "c1", Consumer: "c2"},
-			Packages: []domain.Package{
+			DeliveryUnits: []domain.DeliveryUnit{
 				{
 					Lpn: "PKG-001",
 					Items: []domain.Item{
@@ -58,7 +58,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 		order := domain.Order{
 			ReferenceID: "ORD-REPLACE-001",
 			Headers:     domain.Headers{Commerce: "c1", Consumer: "c2"},
-			Packages: []domain.Package{
+			DeliveryUnits: []domain.DeliveryUnit{
 				{Lpn: "PKG-OLD", Items: []domain.Item{{Sku: "OLD"}}},
 			},
 		}
@@ -68,7 +68,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		updated := order
-		updated.Packages = []domain.Package{
+		updated.DeliveryUnits = []domain.DeliveryUnit{
 			{Lpn: "PKG-NEW", Items: []domain.Item{{Sku: "NEW"}}},
 		}
 		err = uop(ctx, updated)
@@ -89,9 +89,9 @@ var _ = Describe("UpsertOrderPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		order := domain.Order{
-			ReferenceID: "ORD-EMPTY",
-			Headers:     domain.Headers{Commerce: "x", Consumer: "y"},
-			Packages:    []domain.Package{},
+			ReferenceID:   "ORD-EMPTY",
+			Headers:       domain.Headers{Commerce: "x", Consumer: "y"},
+			DeliveryUnits: []domain.DeliveryUnit{},
 		}
 
 		uop := NewUpsertOrderDeliveryUnits(conn)
@@ -106,7 +106,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 
 		order := domain.Order{
 			ReferenceID: "ORD-FAIL",
-			Packages: []domain.Package{
+			DeliveryUnits: []domain.DeliveryUnit{
 				{Lpn: "PKG-ERR", Items: []domain.Item{{Sku: "E"}}},
 			},
 		}
@@ -123,9 +123,9 @@ var _ = Describe("UpsertOrderPackages", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		order := domain.Order{
-			ReferenceID: "ORD-PLACEHOLDER-001",
-			Headers:     domain.Headers{Commerce: "a", Consumer: "b"},
-			Packages:    []domain.Package{}, // no paquetes
+			ReferenceID:   "ORD-PLACEHOLDER-001",
+			Headers:       domain.Headers{Commerce: "a", Consumer: "b"},
+			DeliveryUnits: []domain.DeliveryUnit{}, // no paquetes
 		}
 
 		uop := NewUpsertOrderDeliveryUnits(conn)

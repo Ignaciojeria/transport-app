@@ -131,7 +131,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 				Type:        ptrString("devolución,entrega,retiro_en_tienda,...."),
 				Description: ptrString("Order retiro a cliente,Orden de entrega a cliente"),
 			},
-			Package: &model.Package{
+			DeliveryUnit: &model.DeliveryUnit{
 				Lpn: ptrString("PKG123"),
 				Weight: &model.Weight{
 					Unit:  ptrString("kg"),

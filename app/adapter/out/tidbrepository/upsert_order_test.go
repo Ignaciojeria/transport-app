@@ -78,7 +78,7 @@ var _ = Describe("UpsertOrder", func() {
 			Origin:               originNode,
 			Destination:          destNode,
 			DeliveryInstructions: "Dejar con el conserje",
-			Packages: []domain.Package{
+			DeliveryUnits: []domain.DeliveryUnit{
 				{
 					Lpn: "PKG-001",
 					Items: []domain.Item{
@@ -250,7 +250,7 @@ var _ = Describe("UpsertOrder", func() {
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
-			Packages: []domain.Package{
+			DeliveryUnits: []domain.DeliveryUnit{
 				{
 					Lpn: "PKG-001",
 					Items: []domain.Item{
@@ -273,7 +273,7 @@ var _ = Describe("UpsertOrder", func() {
 
 		// Añadir un nuevo paquete
 		modifiedOrder := order
-		modifiedOrder.Packages = []domain.Package{
+		modifiedOrder.DeliveryUnits = []domain.DeliveryUnit{
 			{
 				Lpn: "PKG-001",
 				Items: []domain.Item{

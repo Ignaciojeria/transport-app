@@ -20,8 +20,8 @@ type DeliveryUnit struct {
 	JSONItems      JSONItems      `gorm:"type:json"`
 }
 
-func (p DeliveryUnit) Map() domain.Package {
-	return domain.Package{
+func (p DeliveryUnit) Map() domain.DeliveryUnit {
+	return domain.DeliveryUnit{
 		Lpn:        p.Lpn,
 		Dimensions: p.JSONDimensions.Map(),
 		Weight:     p.JSONWeight.Map(),

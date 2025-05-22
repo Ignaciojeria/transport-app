@@ -87,7 +87,7 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
-			return upsertDeliveryUnits(group2Ctx, inOrder.Packages,
+			return upsertDeliveryUnits(group2Ctx, inOrder.DeliveryUnits,
 				inOrder.
 					ReferenceID.
 					String())

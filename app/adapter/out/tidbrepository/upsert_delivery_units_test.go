@@ -26,7 +26,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{}, "")
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -36,7 +36,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear paquetes para insertar
-		package1 := domain.Package{
+		package1 := domain.DeliveryUnit{
 			Lpn: "PKG001",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -68,7 +68,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			},
 		}
 
-		package2 := domain.Package{
+		package2 := domain.DeliveryUnit{
 			Lpn: "PKG002",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
@@ -83,7 +83,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		// Insertar los paquetes
-		packages := []domain.Package{package1, package2}
+		packages := []domain.DeliveryUnit{package1, package2}
 		upsert := NewUpsertDeliveryUnits(conn)
 		err = upsert(ctx, packages, "")
 		Expect(err).ToNot(HaveOccurred())
@@ -141,7 +141,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear paquete inicial
-		originalPackage := domain.Package{
+		originalPackage := domain.DeliveryUnit{
 			Lpn: "PKG003",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -157,7 +157,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar el paquete original
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{originalPackage}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{originalPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Modificar el paquete
@@ -166,7 +166,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		modifiedPackage.Weight.Value = 7.5
 
 		// Actualizar el paquete
-		err = upsert(ctx, []domain.Package{modifiedPackage}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{modifiedPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
@@ -194,7 +194,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		package1 := domain.Package{
+		package1 := domain.DeliveryUnit{
 			Lpn: "PKG004",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -204,7 +204,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			},
 		}
 
-		package2 := domain.Package{
+		package2 := domain.DeliveryUnit{
 			Lpn: "PKG004",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -215,10 +215,10 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx1, []domain.Package{package1}, "")
+		err = upsert(ctx1, []domain.DeliveryUnit{package1}, "")
 		Expect(err).ToNot(HaveOccurred())
 
-		err = upsert(ctx2, []domain.Package{package2}, "")
+		err = upsert(ctx2, []domain.DeliveryUnit{package2}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que existen dos paquetes con el mismo LPN pero en diferentes tenants
@@ -252,7 +252,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		package1 := domain.Package{
+		package1 := domain.DeliveryUnit{
 			Lpn: "PKG005",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -263,7 +263,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
-		err = upsert(ctx, []domain.Package{package1}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{package1}, "")
 
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("delivery_units"))
@@ -275,7 +275,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete inicial
-		existingPackage := domain.Package{
+		existingPackage := domain.DeliveryUnit{
 			Lpn: "PKG-EXISTING",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -290,11 +290,11 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar el paquete inicial
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{existingPackage}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{existingPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un nuevo paquete para inserción
-		newPackage := domain.Package{
+		newPackage := domain.DeliveryUnit{
 			Lpn: "PKG-NEW",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
@@ -305,7 +305,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		// Crear versión actualizada del paquete existente
-		updatedExistingPackage := domain.Package{
+		updatedExistingPackage := domain.DeliveryUnit{
 			Lpn: "PKG-EXISTING",
 			Dimensions: domain.Dimensions{
 				Length: 15.0,
@@ -320,7 +320,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(updatedDocID).To(Equal(existingDocID), "Los DocIDs deben ser iguales para actualizar")
 
 		// Insertar ambos paquetes
-		mixedPackages := []domain.Package{newPackage, updatedExistingPackage}
+		mixedPackages := []domain.DeliveryUnit{newPackage, updatedExistingPackage}
 		err = upsert(ctx, mixedPackages, "")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -360,7 +360,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete sin LPN pero con items
-		package1 := domain.Package{
+		package1 := domain.DeliveryUnit{
 			Lpn: "",
 			Items: []domain.Item{
 				{
@@ -377,7 +377,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Insertar el paquete
 		orderRef := "ORDER-REF-001"
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{package1}, orderRef)
+		err = upsert(ctx, []domain.DeliveryUnit{package1}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar DocID generado
@@ -406,7 +406,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete sin LPN pero con items
-		initialPackage := domain.Package{
+		initialPackage := domain.DeliveryUnit{
 			Lpn: "",
 			Items: []domain.Item{
 				{
@@ -423,14 +423,14 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Insertar el paquete
 		orderRef := "ORDER-REF-002"
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{initialPackage}, orderRef)
+		err = upsert(ctx, []domain.DeliveryUnit{initialPackage}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Guardar el DocID
 		initialDocID := initialPackage.DocID(ctx, orderRef)
 
 		// Crear un paquete actualizado (mismo SKU para generar mismo DocID)
-		updatedPackage := domain.Package{
+		updatedPackage := domain.DeliveryUnit{
 			Lpn: "",
 			Items: []domain.Item{
 				{
@@ -449,7 +449,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(updatedDocID).To(Equal(initialDocID))
 
 		// Actualizar el paquete
-		err = upsert(ctx, []domain.Package{updatedPackage}, orderRef)
+		err = upsert(ctx, []domain.DeliveryUnit{updatedPackage}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se actualizó correctamente
@@ -472,7 +472,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete completo
-		initialPackage := domain.Package{
+		initialPackage := domain.DeliveryUnit{
 			Lpn: "PARTIAL-UPDATE-PKG",
 			Dimensions: domain.Dimensions{
 				Length: 10.0,
@@ -502,11 +502,11 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar el paquete
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{initialPackage}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{initialPackage}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete con solo algunos campos actualizados
-		partialUpdate := domain.Package{
+		partialUpdate := domain.DeliveryUnit{
 			Lpn: "PARTIAL-UPDATE-PKG", // Mismo LPN
 			Weight: domain.Weight{ // Solo actualizar peso
 				Value: 10.0,
@@ -516,7 +516,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		// Actualizar el paquete
-		err = upsert(ctx, []domain.Package{partialUpdate}, "")
+		err = upsert(ctx, []domain.DeliveryUnit{partialUpdate}, "")
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que solo se actualizó el campo de peso
@@ -549,7 +549,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete sin LPN
-		package1 := domain.Package{
+		package1 := domain.DeliveryUnit{
 			Lpn: "",
 			Items: []domain.Item{
 				{
@@ -562,7 +562,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Insertar con una referencia de orden
 		orderRef1 := "ORDER-REF-A"
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{package1}, orderRef1)
+		err = upsert(ctx, []domain.DeliveryUnit{package1}, orderRef1)
 		Expect(err).ToNot(HaveOccurred())
 
 		// DocID con la primera referencia
@@ -570,7 +570,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar el mismo paquete con otra referencia de orden
 		orderRef2 := "ORDER-REF-B"
-		err = upsert(ctx, []domain.Package{package1}, orderRef2)
+		err = upsert(ctx, []domain.DeliveryUnit{package1}, orderRef2)
 		Expect(err).ToNot(HaveOccurred())
 
 		// DocID con la segunda referencia
@@ -595,7 +595,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete sin LPN con múltiples items
-		original := domain.Package{
+		original := domain.DeliveryUnit{
 			Lpn: "",
 			Items: []domain.Item{
 				{
@@ -619,7 +619,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		orderRef := "ORDER-EXPLODE"
 		upsert := NewUpsertDeliveryUnits(conn)
-		err = upsert(ctx, []domain.Package{original}, orderRef)
+		err = upsert(ctx, []domain.DeliveryUnit{original}, orderRef)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que se creó un solo paquete

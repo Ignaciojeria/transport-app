@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-type Package struct {
+type DeliveryUnit struct {
 	Lpn             string
 	Dimensions      Dimensions
 	Weight          Weight
@@ -18,7 +18,7 @@ type Package struct {
 	Items           []Item
 }
 
-func (p Package) DocID(ctx context.Context, otherReference string) DocumentID {
+func (p DeliveryUnit) DocID(ctx context.Context, otherReference string) DocumentID {
 	if p.Lpn != "" {
 		return HashByTenant(ctx, p.Lpn)
 	}
@@ -42,15 +42,15 @@ func (p Package) DocID(ctx context.Context, otherReference string) DocumentID {
 	return HashByTenant(ctx, allInputs...)
 }
 
-func SearchPackageByLpn(pcks []Package, lpn string) Package {
+func SearchPackageByLpn(pcks []DeliveryUnit, lpn string) DeliveryUnit {
 	for _, pck := range pcks {
 		if pck.Lpn == lpn {
 			return pck
 		}
 	}
-	return Package{}
+	return DeliveryUnit{}
 }
-func (p Package) UpdateIfChanged(newPackage Package) (Package, bool) {
+func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bool) {
 	changed := false
 
 	// Actualizar Lpn

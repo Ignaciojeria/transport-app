@@ -77,7 +77,7 @@ var _ = Describe("Order UpdateIfChanged", func() {
 
 	It("should return true when Packages, References or TransportRequirements are replaced", func() {
 		updated := Order{
-			Packages: []Package{
+			DeliveryUnits: []DeliveryUnit{
 				{
 					Lpn: "PKG001",
 					Items: []Item{
@@ -94,7 +94,7 @@ var _ = Describe("Order UpdateIfChanged", func() {
 
 	It("should return false when attempting to update with empty slices or zero values", func() {
 		original := Order{
-			Packages: []Package{
+			DeliveryUnits: []DeliveryUnit{
 				{
 					Lpn: "PKG001",
 					Items: []Item{
@@ -134,7 +134,7 @@ var _ = Describe("Order Validate", func() {
 					EndTime:   "12:00",
 				},
 			},
-			Packages: []Package{
+			DeliveryUnits: []DeliveryUnit{
 				{
 					Lpn: "PKG001",
 					Items: []Item{
@@ -329,7 +329,7 @@ var _ = Describe("Order DocID", func() {
 
 	It("should fail if a package without LPN has no items", func() {
 		order := Order{
-			Packages: []Package{
+			DeliveryUnits: []DeliveryUnit{
 				{Lpn: "", Items: nil}, // ❌ sin ítems
 			},
 		}
@@ -341,7 +341,7 @@ var _ = Describe("Order DocID", func() {
 
 	It("should fail if a package without LPN has an item with empty SKU", func() {
 		order := Order{
-			Packages: []Package{
+			DeliveryUnits: []DeliveryUnit{
 				{
 					Lpn: "",
 					Items: []Item{
@@ -358,7 +358,7 @@ var _ = Describe("Order DocID", func() {
 
 	It("should succeed if a package without LPN has item with valid SKU", func() {
 		order := Order{
-			Packages: []Package{
+			DeliveryUnits: []DeliveryUnit{
 				{
 					Lpn: "",
 					Items: []Item{
@@ -373,7 +373,7 @@ var _ = Describe("Order DocID", func() {
 
 	var _ = Describe("Packages Indexing", func() {
 		It("should assign incremental indices to packages without LPN based on SKU occurrence", func() {
-			packages := Packages{
+			packages := DeliveryUnits{
 				{Lpn: "LPN-1", Items: []Item{{Sku: "SKU-1"}}}, // LPN, no indexing
 				{Lpn: "", Items: []Item{{Sku: "SKU-1"}}},      // First occurrence of SKU-1
 				{Lpn: "", Items: []Item{{Sku: "SKU-2"}}},      // First occurrence of SKU-2
@@ -395,7 +395,7 @@ var _ = Describe("Order DocID", func() {
 
 	var _ = Describe("Packages Index Assignment", func() {
 		It("should assign incremental indices to unnamed packages based on sorted SKU groupings", func() {
-			packages := Packages{
+			packages := DeliveryUnits{
 				{
 					Items: []Item{{Sku: "B"}, {Sku: "A"}},
 				},

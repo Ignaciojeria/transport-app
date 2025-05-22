@@ -10,28 +10,28 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertDeliveryUnits func(context.Context, []domain.Package, string) error
+type UpsertDeliveryUnits func(context.Context, []domain.DeliveryUnit, string) error
 
 func init() {
 	ioc.Registry(NewUpsertDeliveryUnits, database.NewConnectionFactory)
 }
 
 func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits {
-	return func(ctx context.Context, pcks []domain.Package, orderReference string) error {
+	return func(ctx context.Context, pcks []domain.DeliveryUnit, orderReference string) error {
 
 		// 1. Expandimos paquetes sin LPN en paquetes individuales
-		var normalized []domain.Package
+		var normalized []domain.DeliveryUnit
 		for _, pkg := range pcks {
 			normalized = append(normalized, pkg)
 		}
 
 		if len(pcks) == 0 {
-			normalized = append(normalized, domain.Package{})
+			normalized = append(normalized, domain.DeliveryUnit{})
 		}
 
 		// 2. Construimos una lista de DocumentIDs
 		docIDs := make([]string, 0, len(normalized))
-		docIDToPackage := make(map[string]domain.Package, len(normalized))
+		docIDToPackage := make(map[string]domain.DeliveryUnit, len(normalized))
 		for _, p := range normalized {
 			docID := string(p.DocID(ctx, orderReference))
 			docIDs = append(docIDs, docID)

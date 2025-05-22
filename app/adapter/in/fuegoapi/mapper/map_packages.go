@@ -50,10 +50,10 @@ func MapPackagesToDomain(packages []struct {
 		Unit  string  `json:"unit"`
 		Value float64 `json:"value"`
 	} `json:"weight"`
-}) []domain.Package {
-	mapped := make([]domain.Package, len(packages))
+}) []domain.DeliveryUnit {
+	mapped := make([]domain.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
-		mapped[i] = domain.Package{
+		mapped[i] = domain.DeliveryUnit{
 			Lpn: pkg.Lpn,
 			Dimensions: domain.Dimensions{
 				Height: pkg.Dimensions.Height,
@@ -75,7 +75,7 @@ func MapPackagesToDomain(packages []struct {
 	return mapped
 }
 
-func MapPackagesFromDomain(packages []domain.Package) []struct {
+func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
 	Dimensions struct {
 		Length float64 `json:"length"`
 		Height float64 `json:"height"`

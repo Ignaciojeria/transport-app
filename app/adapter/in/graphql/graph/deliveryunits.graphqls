@@ -101,7 +101,7 @@ type Label {
   value: String
 }
 
-type Package {
+type DeliveryUnit {
   dimensions: Dimension
   insurance: Insurance
   items: [Item]
@@ -200,7 +200,7 @@ type DeliveryUnitsReport {
   destination: Location
   origin: Location
   orderType: OrderType
-  package: Package
+  deliveryUnit: DeliveryUnit
   promisedDate: PromisedDate
   references: [Reference]
   extraFields: [KeyValuePair!]!

@@ -69,6 +69,15 @@ type DeliveryRecipient struct {
 	NationalID *string `json:"nationalID,omitempty"`
 }
 
+type DeliveryUnit struct {
+	Dimensions *Dimension `json:"dimensions,omitempty"`
+	Insurance  *Insurance `json:"insurance,omitempty"`
+	Items      []*Item    `json:"items,omitempty"`
+	Labels     []*Label   `json:"labels,omitempty"`
+	Lpn        *string    `json:"lpn,omitempty"`
+	Weight     *Weight    `json:"weight,omitempty"`
+}
+
 type DeliveryUnitsReport struct {
 	Commerce                *string                  `json:"commerce,omitempty"`
 	Consumer                *string                  `json:"consumer,omitempty"`
@@ -79,7 +88,7 @@ type DeliveryUnitsReport struct {
 	Destination             *Location                `json:"destination,omitempty"`
 	Origin                  *Location                `json:"origin,omitempty"`
 	OrderType               *OrderType               `json:"orderType,omitempty"`
-	Package                 *Package                 `json:"package,omitempty"`
+	DeliveryUnit            *DeliveryUnit            `json:"deliveryUnit,omitempty"`
 	PromisedDate            *PromisedDate            `json:"promisedDate,omitempty"`
 	References              []*Reference             `json:"references,omitempty"`
 	ExtraFields             []*KeyValuePair          `json:"extraFields"`
@@ -176,15 +185,6 @@ type NodeInfo struct {
 type OrderType struct {
 	Type        *string `json:"type,omitempty"`
 	Description *string `json:"description,omitempty"`
-}
-
-type Package struct {
-	Dimensions *Dimension `json:"dimensions,omitempty"`
-	Insurance  *Insurance `json:"insurance,omitempty"`
-	Items      []*Item    `json:"items,omitempty"`
-	Labels     []*Label   `json:"labels,omitempty"`
-	Lpn        *string    `json:"lpn,omitempty"`
-	Weight     *Weight    `json:"weight,omitempty"`
 }
 
 type PageInfo struct {

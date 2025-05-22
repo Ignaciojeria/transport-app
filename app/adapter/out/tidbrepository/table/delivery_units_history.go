@@ -6,8 +6,9 @@ import (
 
 type DeliveryUnitsHistory struct {
 	gorm.Model
-	ID                   int64 `gorm:"primaryKey"`
-	Channel              string
+	ID                   int64              `gorm:"primaryKey"`
+	DocumentID           string             `gorm:"type:char(64);uniqueIndex"`
+	Channel              string             `gorm:"default:''"`
 	OrderDoc             string             `gorm:"type:char(64);index"`
 	DeliveryUnitDoc      string             `gorm:"type:char(64);index"`
 	OrderStatusDoc       string             `gorm:"type:char(64);index"`

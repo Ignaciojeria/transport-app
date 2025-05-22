@@ -22,7 +22,7 @@ type Order struct {
 	References              []Reference
 	Origin                  NodeInfo
 	Destination             NodeInfo
-	Packages                Packages
+	DeliveryUnits           DeliveryUnits
 	CollectAvailabilityDate CollectAvailabilityDate
 	PromisedDate            PromisedDate
 	UnassignedReason        string
@@ -33,9 +33,9 @@ type Order struct {
 	}
 }
 
-type Packages []Package
+type DeliveryUnits []DeliveryUnit
 
-func (pkgs *Packages) AssignIndexesIfNoLPN() {
+func (pkgs *DeliveryUnits) AssignIndexesIfNoLPN() {
 	groupCounter := make(map[string]int)
 
 	for i := range *pkgs {
@@ -76,8 +76,8 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 		changed = true
 	}
 
-	if len(newOrder.Packages) > 0 {
-		o.Packages = newOrder.Packages
+	if len(newOrder.DeliveryUnits) > 0 {
+		o.DeliveryUnits = newOrder.DeliveryUnits
 		changed = true
 	}
 
@@ -130,7 +130,7 @@ func (o Order) Validate() error {
 	}
 
 	// Nueva validación sobre los paquetes
-	for _, pkg := range o.Packages {
+	for _, pkg := range o.DeliveryUnits {
 		if pkg.Lpn == "" {
 			if len(pkg.Items) == 0 {
 				return apperrors.MarkAsAlertable(

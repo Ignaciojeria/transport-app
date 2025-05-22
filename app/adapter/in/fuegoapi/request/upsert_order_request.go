@@ -94,7 +94,7 @@ type UpsertOrderRequest struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"nodeInfo"`
 	} `json:"origin"`
-	Packages []struct {
+	DeliveryUnits []struct {
 		Dimensions struct {
 			Length float64 `json:"length"`
 			Height float64 `json:"height"`
@@ -141,7 +141,7 @@ type UpsertOrderRequest struct {
 			Unit  string  `json:"unit"`
 			Value float64 `json:"value"`
 		} `json:"weight"`
-	} `json:"packages"`
+	} `json:"deliveryUnits"`
 	PromisedDate struct {
 		DateRange struct {
 			EndDate   string `json:"endDate"`
@@ -167,7 +167,7 @@ func (req UpsertOrderRequest) Map(ctx context.Context) domain.Order {
 		References:              mapper.MapReferencesToDomain(req.References),
 		Origin:                  mapper.MapNodeInfoToDomain(req.Origin.NodeInfo, req.Origin.AddressInfo),
 		Destination:             mapper.MapNodeInfoToDomain(req.Destination.NodeInfo, req.Destination.AddressInfo),
-		Packages:                mapper.MapPackagesToDomain(req.Packages),
+		DeliveryUnits:           mapper.MapPackagesToDomain(req.DeliveryUnits),
 		CollectAvailabilityDate: mapper.MapCollectAvailabilityDateToDomain(req.CollectAvailabilityDate),
 		PromisedDate:            mapper.MapPromisedDateToDomain(req.PromisedDate),
 		DeliveryInstructions:    req.Destination.DeliveryInstructions,

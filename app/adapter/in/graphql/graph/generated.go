@@ -113,6 +113,15 @@ type ComplexityRoot struct {
 		NationalID func(childComplexity int) int
 	}
 
+	DeliveryUnit struct {
+		Dimensions func(childComplexity int) int
+		Insurance  func(childComplexity int) int
+		Items      func(childComplexity int) int
+		Labels     func(childComplexity int) int
+		Lpn        func(childComplexity int) int
+		Weight     func(childComplexity int) int
+	}
+
 	DeliveryUnitsReport struct {
 		Carrier                 func(childComplexity int) int
 		Channel                 func(childComplexity int) int
@@ -120,13 +129,13 @@ type ComplexityRoot struct {
 		Commerce                func(childComplexity int) int
 		Consumer                func(childComplexity int) int
 		Delivery                func(childComplexity int) int
+		DeliveryUnit            func(childComplexity int) int
 		Destination             func(childComplexity int) int
 		Driver                  func(childComplexity int) int
 		ExtraFields             func(childComplexity int) int
 		GroupBy                 func(childComplexity int) int
 		OrderType               func(childComplexity int) int
 		Origin                  func(childComplexity int) int
-		Package                 func(childComplexity int) int
 		PromisedDate            func(childComplexity int) int
 		ReferenceID             func(childComplexity int) int
 		References              func(childComplexity int) int
@@ -212,15 +221,6 @@ type ComplexityRoot struct {
 	OrderType struct {
 		Description func(childComplexity int) int
 		Type        func(childComplexity int) int
-	}
-
-	Package struct {
-		Dimensions func(childComplexity int) int
-		Insurance  func(childComplexity int) int
-		Items      func(childComplexity int) int
-		Labels     func(childComplexity int) int
-		Lpn        func(childComplexity int) int
-		Weight     func(childComplexity int) int
 	}
 
 	PageInfo struct {
@@ -559,6 +559,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryRecipient.NationalID(childComplexity), true
 
+	case "DeliveryUnit.dimensions":
+		if e.complexity.DeliveryUnit.Dimensions == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Dimensions(childComplexity), true
+
+	case "DeliveryUnit.insurance":
+		if e.complexity.DeliveryUnit.Insurance == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Insurance(childComplexity), true
+
+	case "DeliveryUnit.items":
+		if e.complexity.DeliveryUnit.Items == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Items(childComplexity), true
+
+	case "DeliveryUnit.labels":
+		if e.complexity.DeliveryUnit.Labels == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Labels(childComplexity), true
+
+	case "DeliveryUnit.lpn":
+		if e.complexity.DeliveryUnit.Lpn == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Lpn(childComplexity), true
+
+	case "DeliveryUnit.weight":
+		if e.complexity.DeliveryUnit.Weight == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Weight(childComplexity), true
+
 	case "DeliveryUnitsReport.carrier":
 		if e.complexity.DeliveryUnitsReport.Carrier == nil {
 			break
@@ -601,6 +643,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryUnitsReport.Delivery(childComplexity), true
 
+	case "DeliveryUnitsReport.deliveryUnit":
+		if e.complexity.DeliveryUnitsReport.DeliveryUnit == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.DeliveryUnit(childComplexity), true
+
 	case "DeliveryUnitsReport.destination":
 		if e.complexity.DeliveryUnitsReport.Destination == nil {
 			break
@@ -642,13 +691,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DeliveryUnitsReport.Origin(childComplexity), true
-
-	case "DeliveryUnitsReport.package":
-		if e.complexity.DeliveryUnitsReport.Package == nil {
-			break
-		}
-
-		return e.complexity.DeliveryUnitsReport.Package(childComplexity), true
 
 	case "DeliveryUnitsReport.promisedDate":
 		if e.complexity.DeliveryUnitsReport.PromisedDate == nil {
@@ -950,48 +992,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.OrderType.Type(childComplexity), true
-
-	case "Package.dimensions":
-		if e.complexity.Package.Dimensions == nil {
-			break
-		}
-
-		return e.complexity.Package.Dimensions(childComplexity), true
-
-	case "Package.insurance":
-		if e.complexity.Package.Insurance == nil {
-			break
-		}
-
-		return e.complexity.Package.Insurance(childComplexity), true
-
-	case "Package.items":
-		if e.complexity.Package.Items == nil {
-			break
-		}
-
-		return e.complexity.Package.Items(childComplexity), true
-
-	case "Package.labels":
-		if e.complexity.Package.Labels == nil {
-			break
-		}
-
-		return e.complexity.Package.Labels(childComplexity), true
-
-	case "Package.lpn":
-		if e.complexity.Package.Lpn == nil {
-			break
-		}
-
-		return e.complexity.Package.Lpn(childComplexity), true
-
-	case "Package.weight":
-		if e.complexity.Package.Weight == nil {
-			break
-		}
-
-		return e.complexity.Package.Weight(childComplexity), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -3114,6 +3114,296 @@ func (ec *executionContext) fieldContext_DeliveryRecipient_nationalID(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnit_dimensions(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_dimensions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Dimensions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Dimension)
+	fc.Result = res
+	return ec.marshalODimension2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDimension(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_dimensions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "length":
+				return ec.fieldContext_Dimension_length(ctx, field)
+			case "height":
+				return ec.fieldContext_Dimension_height(ctx, field)
+			case "width":
+				return ec.fieldContext_Dimension_width(ctx, field)
+			case "unit":
+				return ec.fieldContext_Dimension_unit(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Dimension", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnit_insurance(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_insurance(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Insurance, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Insurance)
+	fc.Result = res
+	return ec.marshalOInsurance2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐInsurance(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_insurance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "currency":
+				return ec.fieldContext_Insurance_currency(ctx, field)
+			case "unitValue":
+				return ec.fieldContext_Insurance_unitValue(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Insurance", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnit_items(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_items(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Items, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Item)
+	fc.Result = res
+	return ec.marshalOItem2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐItem(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "sku":
+				return ec.fieldContext_Item_sku(ctx, field)
+			case "description":
+				return ec.fieldContext_Item_description(ctx, field)
+			case "dimensions":
+				return ec.fieldContext_Item_dimensions(ctx, field)
+			case "insurance":
+				return ec.fieldContext_Item_insurance(ctx, field)
+			case "skills":
+				return ec.fieldContext_Item_skills(ctx, field)
+			case "quantity":
+				return ec.fieldContext_Item_quantity(ctx, field)
+			case "weight":
+				return ec.fieldContext_Item_weight(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Item", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnit_labels(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_labels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Labels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Label)
+	fc.Result = res
+	return ec.marshalOLabel2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabel(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_labels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_Label_type(ctx, field)
+			case "value":
+				return ec.fieldContext_Label_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Label", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnit_lpn(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_lpn(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Lpn, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_lpn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DeliveryUnit_weight(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_weight(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Weight, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Weight)
+	fc.Result = res
+	return ec.marshalOWeight2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐWeight(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "unit":
+				return ec.fieldContext_Weight_unit(ctx, field)
+			case "value":
+				return ec.fieldContext_Weight_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Weight", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReport_commerce(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReport_commerce(ctx, field)
 	if err != nil {
@@ -3520,8 +3810,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_orderType(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _DeliveryUnitsReport_package(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeliveryUnitsReport_package(ctx, field)
+func (ec *executionContext) _DeliveryUnitsReport_deliveryUnit(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_deliveryUnit(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3534,7 +3824,7 @@ func (ec *executionContext) _DeliveryUnitsReport_package(ctx context.Context, fi
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Package, nil
+		return obj.DeliveryUnit, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3543,12 +3833,12 @@ func (ec *executionContext) _DeliveryUnitsReport_package(ctx context.Context, fi
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*model.Package)
+	res := resTmp.(*model.DeliveryUnit)
 	fc.Result = res
-	return ec.marshalOPackage2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPackage(ctx, field.Selections, res)
+	return ec.marshalODeliveryUnit2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDeliveryUnit(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_DeliveryUnitsReport_package(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_deliveryUnit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeliveryUnitsReport",
 		Field:      field,
@@ -3557,19 +3847,19 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_package(_ context.C
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "dimensions":
-				return ec.fieldContext_Package_dimensions(ctx, field)
+				return ec.fieldContext_DeliveryUnit_dimensions(ctx, field)
 			case "insurance":
-				return ec.fieldContext_Package_insurance(ctx, field)
+				return ec.fieldContext_DeliveryUnit_insurance(ctx, field)
 			case "items":
-				return ec.fieldContext_Package_items(ctx, field)
+				return ec.fieldContext_DeliveryUnit_items(ctx, field)
 			case "labels":
-				return ec.fieldContext_Package_labels(ctx, field)
+				return ec.fieldContext_DeliveryUnit_labels(ctx, field)
 			case "lpn":
-				return ec.fieldContext_Package_lpn(ctx, field)
+				return ec.fieldContext_DeliveryUnit_lpn(ctx, field)
 			case "weight":
-				return ec.fieldContext_Package_weight(ctx, field)
+				return ec.fieldContext_DeliveryUnit_weight(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Package", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type DeliveryUnit", field.Name)
 		},
 	}
 	return fc, nil
@@ -4171,8 +4461,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 				return ec.fieldContext_DeliveryUnitsReport_origin(ctx, field)
 			case "orderType":
 				return ec.fieldContext_DeliveryUnitsReport_orderType(ctx, field)
-			case "package":
-				return ec.fieldContext_DeliveryUnitsReport_package(ctx, field)
+			case "deliveryUnit":
+				return ec.fieldContext_DeliveryUnitsReport_deliveryUnit(ctx, field)
 			case "promisedDate":
 				return ec.fieldContext_DeliveryUnitsReport_promisedDate(ctx, field)
 			case "references":
@@ -5655,296 +5945,6 @@ func (ec *executionContext) fieldContext_OrderType_description(_ context.Context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Package_dimensions(ctx context.Context, field graphql.CollectedField, obj *model.Package) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Package_dimensions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Dimensions, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Dimension)
-	fc.Result = res
-	return ec.marshalODimension2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDimension(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Package_dimensions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Package",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "length":
-				return ec.fieldContext_Dimension_length(ctx, field)
-			case "height":
-				return ec.fieldContext_Dimension_height(ctx, field)
-			case "width":
-				return ec.fieldContext_Dimension_width(ctx, field)
-			case "unit":
-				return ec.fieldContext_Dimension_unit(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Dimension", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Package_insurance(ctx context.Context, field graphql.CollectedField, obj *model.Package) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Package_insurance(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Insurance, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Insurance)
-	fc.Result = res
-	return ec.marshalOInsurance2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐInsurance(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Package_insurance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Package",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "currency":
-				return ec.fieldContext_Insurance_currency(ctx, field)
-			case "unitValue":
-				return ec.fieldContext_Insurance_unitValue(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Insurance", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Package_items(ctx context.Context, field graphql.CollectedField, obj *model.Package) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Package_items(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Items, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Item)
-	fc.Result = res
-	return ec.marshalOItem2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐItem(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Package_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Package",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "sku":
-				return ec.fieldContext_Item_sku(ctx, field)
-			case "description":
-				return ec.fieldContext_Item_description(ctx, field)
-			case "dimensions":
-				return ec.fieldContext_Item_dimensions(ctx, field)
-			case "insurance":
-				return ec.fieldContext_Item_insurance(ctx, field)
-			case "skills":
-				return ec.fieldContext_Item_skills(ctx, field)
-			case "quantity":
-				return ec.fieldContext_Item_quantity(ctx, field)
-			case "weight":
-				return ec.fieldContext_Item_weight(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Item", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Package_labels(ctx context.Context, field graphql.CollectedField, obj *model.Package) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Package_labels(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Labels, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.([]*model.Label)
-	fc.Result = res
-	return ec.marshalOLabel2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabel(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Package_labels(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Package",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "type":
-				return ec.fieldContext_Label_type(ctx, field)
-			case "value":
-				return ec.fieldContext_Label_value(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Label", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Package_lpn(ctx context.Context, field graphql.CollectedField, obj *model.Package) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Package_lpn(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Lpn, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Package_lpn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Package",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Package_weight(ctx context.Context, field graphql.CollectedField, obj *model.Package) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Package_weight(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Weight, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Weight)
-	fc.Result = res
-	return ec.marshalOWeight2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐWeight(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Package_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Package",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "unit":
-				return ec.fieldContext_Weight_unit(ctx, field)
-			case "value":
-				return ec.fieldContext_Weight_value(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Weight", field.Name)
 		},
 	}
 	return fc, nil
@@ -9493,6 +9493,52 @@ func (ec *executionContext) _DeliveryRecipient(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var deliveryUnitImplementors = []string{"DeliveryUnit"}
+
+func (ec *executionContext) _DeliveryUnit(ctx context.Context, sel ast.SelectionSet, obj *model.DeliveryUnit) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deliveryUnitImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeliveryUnit")
+		case "dimensions":
+			out.Values[i] = ec._DeliveryUnit_dimensions(ctx, field, obj)
+		case "insurance":
+			out.Values[i] = ec._DeliveryUnit_insurance(ctx, field, obj)
+		case "items":
+			out.Values[i] = ec._DeliveryUnit_items(ctx, field, obj)
+		case "labels":
+			out.Values[i] = ec._DeliveryUnit_labels(ctx, field, obj)
+		case "lpn":
+			out.Values[i] = ec._DeliveryUnit_lpn(ctx, field, obj)
+		case "weight":
+			out.Values[i] = ec._DeliveryUnit_weight(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var deliveryUnitsReportImplementors = []string{"DeliveryUnitsReport"}
 
 func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.SelectionSet, obj *model.DeliveryUnitsReport) graphql.Marshaler {
@@ -9525,8 +9571,8 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._DeliveryUnitsReport_origin(ctx, field, obj)
 		case "orderType":
 			out.Values[i] = ec._DeliveryUnitsReport_orderType(ctx, field, obj)
-		case "package":
-			out.Values[i] = ec._DeliveryUnitsReport_package(ctx, field, obj)
+		case "deliveryUnit":
+			out.Values[i] = ec._DeliveryUnitsReport_deliveryUnit(ctx, field, obj)
 		case "promisedDate":
 			out.Values[i] = ec._DeliveryUnitsReport_promisedDate(ctx, field, obj)
 		case "references":
@@ -10116,52 +10162,6 @@ func (ec *executionContext) _OrderType(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = ec._OrderType_type(ctx, field, obj)
 		case "description":
 			out.Values[i] = ec._OrderType_description(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var packageImplementors = []string{"Package"}
-
-func (ec *executionContext) _Package(ctx context.Context, sel ast.SelectionSet, obj *model.Package) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, packageImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Package")
-		case "dimensions":
-			out.Values[i] = ec._Package_dimensions(ctx, field, obj)
-		case "insurance":
-			out.Values[i] = ec._Package_insurance(ctx, field, obj)
-		case "items":
-			out.Values[i] = ec._Package_items(ctx, field, obj)
-		case "labels":
-			out.Values[i] = ec._Package_labels(ctx, field, obj)
-		case "lpn":
-			out.Values[i] = ec._Package_lpn(ctx, field, obj)
-		case "weight":
-			out.Values[i] = ec._Package_weight(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11511,6 +11511,13 @@ func (ec *executionContext) marshalODeliveryRecipient2ᚖtransportᚑappᚋapp�
 	return ec._DeliveryRecipient(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalODeliveryUnit2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDeliveryUnit(ctx context.Context, sel ast.SelectionSet, v *model.DeliveryUnit) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._DeliveryUnit(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalODeliveryUnitsReportFilterInput2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDeliveryUnitsReportFilterInput(ctx context.Context, v any) (*model.DeliveryUnitsReportFilterInput, error) {
 	if v == nil {
 		return nil, nil
@@ -11790,13 +11797,6 @@ func (ec *executionContext) marshalOOrderType2ᚖtransportᚑappᚋappᚋadapter
 		return graphql.Null
 	}
 	return ec._OrderType(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOPackage2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPackage(ctx context.Context, sel ast.SelectionSet, v *model.Package) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Package(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPromisedDate2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDate(ctx context.Context, sel ast.SelectionSet, v *model.PromisedDate) graphql.Marshaler {
