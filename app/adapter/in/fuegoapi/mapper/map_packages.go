@@ -4,7 +4,8 @@ import "transport-app/app/domain"
 
 // MapPackagesToDomain convierte estructuras anónimas de paquetes a domain.Package
 func MapPackagesToDomain(packages []struct {
-	Dimensions struct {
+	SizeCategory string `json:"sizeCategory"`
+	Dimensions   struct {
 		Length float64 `json:"length"`
 		Height float64 `json:"height"`
 		Unit   string  `json:"unit"`
@@ -54,7 +55,8 @@ func MapPackagesToDomain(packages []struct {
 	mapped := make([]domain.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = domain.DeliveryUnit{
-			Lpn: pkg.Lpn,
+			SizeCategory: pkg.SizeCategory,
+			Lpn:          pkg.Lpn,
 			Dimensions: domain.Dimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,

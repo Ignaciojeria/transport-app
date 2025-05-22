@@ -7,6 +7,7 @@ import (
 )
 
 type DeliveryUnit struct {
+	SizeCategory    string
 	Lpn             string
 	Dimensions      Dimensions
 	Weight          Weight

@@ -9,6 +9,7 @@ import (
 
 type DeliveryUnit struct {
 	gorm.Model
+	SizeCategory   string         `gorm:"type:varchar(191);not null;"`
 	ID             int64          `gorm:"primaryKey"`
 	TenantID       uuid.UUID      `gorm:"not null;"`
 	Tenant         Tenant         `gorm:"foreignKey:TenantID"`
@@ -22,10 +23,11 @@ type DeliveryUnit struct {
 
 func (p DeliveryUnit) Map() domain.DeliveryUnit {
 	return domain.DeliveryUnit{
-		Lpn:        p.Lpn,
-		Dimensions: p.JSONDimensions.Map(),
-		Weight:     p.JSONWeight.Map(),
-		Insurance:  p.JSONInsurance.Map(),
-		Items:      p.JSONItems.Map(),
+		Lpn:          p.Lpn,
+		SizeCategory: p.SizeCategory,
+		Dimensions:   p.JSONDimensions.Map(),
+		Weight:       p.JSONWeight.Map(),
+		Insurance:    p.JSONInsurance.Map(),
+		Items:        p.JSONItems.Map(),
 	}
 }

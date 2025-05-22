@@ -95,7 +95,8 @@ type UpsertOrderRequest struct {
 		} `json:"nodeInfo"`
 	} `json:"origin"`
 	DeliveryUnits []struct {
-		Dimensions struct {
+		SizeCategory string `json:"sizeCategory"`
+		Dimensions   struct {
 			Length float64 `json:"length"`
 			Height float64 `json:"height"`
 			Unit   string  `json:"unit"`

@@ -13,14 +13,14 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 		for _, order := range route.Orders {
 			for _, pkg := range order.DeliveryUnits {
 				deliveryUnitsHistory = append(deliveryUnitsHistory, table.DeliveryUnitsHistory{
-					OrderDoc:             string(order.DocID(ctx)),
-					DeliveryUnitDoc:      string(pkg.DocID(ctx, string(order.ReferenceID))),
-					RouteDoc:             string(route.DocID(ctx)),
-					VehicleDoc:           string(route.Vehicle.DocID(ctx)),
-					CarrierDoc:           string(route.Vehicle.Carrier.DocID(ctx)),
-					DriverDoc:            string(route.Vehicle.Carrier.Driver.DocID(ctx)),
-					OrderStatusDoc:       pkg.Status.DocID().String(),
-					NonDeliveryReasonDoc: string(pkg.ConfirmDelivery.NonDeliveryReason.DocID(ctx)),
+					OrderDoc:              string(order.DocID(ctx)),
+					DeliveryUnitDoc:       string(pkg.DocID(ctx, string(order.ReferenceID))),
+					RouteDoc:              string(route.DocID(ctx)),
+					VehicleDoc:            string(route.Vehicle.DocID(ctx)),
+					CarrierDoc:            string(route.Vehicle.Carrier.DocID(ctx)),
+					DriverDoc:             string(route.Vehicle.Carrier.Driver.DocID(ctx)),
+					DeliveryUnitStatusDoc: pkg.Status.DocID().String(),
+					NonDeliveryReasonDoc:  string(pkg.ConfirmDelivery.NonDeliveryReason.DocID(ctx)),
 				})
 			}
 
