@@ -288,162 +288,162 @@ func (p Projection) OrderTypeDescription() Field {
 }
 
 // Métodos para campos de Package
-func (p Projection) Package() Field {
-	return Field{path: "package"}
+func (p Projection) DeliveryUnit() Field {
+	return Field{path: "deliveryUnit"}
 }
 
-func (p Projection) PackageLPN() Field {
-	return Field{path: "package.lpn"}
+func (p Projection) DeliveryUnitLPN() Field {
+	return Field{path: "deliveryUnit.lpn"}
 }
 
 // Métodos para campos de Weight en Package
-func (p Projection) PackageWeight() Field {
-	return Field{path: "package.weight"}
+func (p Projection) DeliveryUnitWeight() Field {
+	return Field{path: "deliveryUnit.weight"}
 }
 
-func (p Projection) PackageWeightUnit() Field {
-	return Field{path: "package.weight.unit"}
+func (p Projection) DeliveryUnitWeightUnit() Field {
+	return Field{path: "deliveryUnit.weight.unit"}
 }
 
-func (p Projection) PackageWeightValue() Field {
-	return Field{path: "package.weight.value"}
+func (p Projection) DeliveryUnitWeightValue() Field {
+	return Field{path: "deliveryUnit.weight.value"}
 }
 
 // Métodos para campos de Dimensions en Package
-func (p Projection) PackageDimensions() Field {
-	return Field{path: "package.dimensions"}
+func (p Projection) DeliveryUnitDimensions() Field {
+	return Field{path: "deliveryUnit.dimensions"}
 }
 
-func (p Projection) PackageDimensionsLength() Field {
-	return Field{path: "package.dimensions.length"}
+func (p Projection) DeliveryUnitDimensionsLength() Field {
+	return Field{path: "deliveryUnit.dimensions.length"}
 }
 
-func (p Projection) PackageDimensionsHeight() Field {
-	return Field{path: "package.dimensions.height"}
+func (p Projection) DeliveryUnitDimensionsHeight() Field {
+	return Field{path: "deliveryUnit.dimensions.height"}
 }
 
-func (p Projection) PackageDimensionsWidth() Field {
-	return Field{path: "package.dimensions.width"}
+func (p Projection) DeliveryUnitDimensionsWidth() Field {
+	return Field{path: "deliveryUnit.dimensions.width"}
 }
 
-func (p Projection) PackageDimensionsUnit() Field {
-	return Field{path: "package.dimensions.unit"}
+func (p Projection) DeliveryUnitDimensionsUnit() Field {
+	return Field{path: "deliveryUnit.dimensions.unit"}
 }
 
 // Métodos para campos de Insurance en Package
-func (p Projection) PackageInsurance() Field {
-	return Field{path: "package.insurance"}
+func (p Projection) DeliveryUnitInsurance() Field {
+	return Field{path: "deliveryUnit.insurance"}
 }
 
-func (p Projection) PackageInsuranceCurrency() Field {
-	return Field{path: "package.insurance.currency"}
+func (p Projection) DeliveryUnitInsuranceCurrency() Field {
+	return Field{path: "deliveryUnit.insurance.currency"}
 }
 
-func (p Projection) PackageInsuranceUnitValue() Field {
-	return Field{path: "package.insurance.unitValue"}
+func (p Projection) DeliveryUnitInsuranceUnitValue() Field {
+	return Field{path: "deliveryUnit.insurance.unitValue"}
 }
 
 // Métodos para campos de Label en Package
-func (p Projection) PackageLabels() Field {
-	return Field{path: "package.labels"}
+func (p Projection) DeliveryUnitLabels() Field {
+	return Field{path: "deliveryUnit.labels"}
 }
 
-func (p Projection) PackageLabelsType() Field {
-	return Field{path: "package.labels.type"}
+func (p Projection) DeliveryUnitLabelsType() Field {
+	return Field{path: "deliveryUnit.labels.type"}
 }
 
-func (p Projection) PackageLabelsValue() Field {
-	return Field{path: "package.labels.value"}
+func (p Projection) DeliveryUnitLabelsValue() Field {
+	return Field{path: "deliveryUnit.labels.value"}
 }
 
 // Métodos para campos de Item en Package
-func (p Projection) PackageItems() Field {
-	return Field{path: "package.items"}
+func (p Projection) DeliveryUnitItems() Field {
+	return Field{path: "deliveryUnit.items"}
 }
 
-func (p Projection) PackageItemsSKU() Field {
-	return Field{path: "package.items.sku"}
+func (p Projection) DeliveryUnitItemsSKU() Field {
+	return Field{path: "deliveryUnit.items.sku"}
 }
 
-func (p Projection) PackageItemsDescription() Field {
-	return Field{path: "package.items.description"}
+func (p Projection) DeliveryUnitItemsDescription() Field {
+	return Field{path: "deliveryUnit.items.description"}
 }
 
 // Métodos para campos de Dimensions en Item
-func (p Projection) PackageItemsDimensions() Field {
-	return Field{path: "package.items.dimensions"}
+func (p Projection) DeliveryUnitItemsDimensions() Field {
+	return Field{path: "deliveryUnit.items.dimensions"}
 }
 
-func (p Projection) PackageItemsDimensionsLength() Field {
-	return Field{path: "package.items.dimensions.length"}
+func (p Projection) DeliveryUnitItemsDimensionsLength() Field {
+	return Field{path: "deliveryUnit.items.dimensions.length"}
 }
 
-func (p Projection) PackageItemsDimensionsHeight() Field {
-	return Field{path: "package.items.dimensions.height"}
+func (p Projection) DeliveryUnitItemsDimensionsHeight() Field {
+	return Field{path: "deliveryUnit.items.dimensions.height"}
 }
 
-func (p Projection) PackageItemsDimensionsWidth() Field {
-	return Field{path: "package.items.dimensions.width"}
+func (p Projection) DeliveryUnitItemsDimensionsWidth() Field {
+	return Field{path: "deliveryUnit.items.dimensions.width"}
 }
 
-func (p Projection) PackageItemsDimensionsUnit() Field {
-	return Field{path: "package.items.dimensions.unit"}
+func (p Projection) DeliveryUnitItemsDimensionsUnit() Field {
+	return Field{path: "deliveryUnit.items.dimensions.unit"}
 }
 
 // Métodos para campos de Insurance en Item
-func (p Projection) PackageItemsInsurance() Field {
-	return Field{path: "package.items.insurance"}
+func (p Projection) DeliveryUnitItemsInsurance() Field {
+	return Field{path: "deliveryUnit.items.insurance"}
 }
 
-func (p Projection) PackageItemsInsuranceCurrency() Field {
-	return Field{path: "package.items.insurance.currency"}
+func (p Projection) DeliveryUnitItemsInsuranceCurrency() Field {
+	return Field{path: "deliveryUnit.items.insurance.currency"}
 }
 
-func (p Projection) PackageItemsInsuranceUnitValue() Field {
-	return Field{path: "package.items.insurance.unitValue"}
+func (p Projection) DeliveryUnitItemsInsuranceUnitValue() Field {
+	return Field{path: "deliveryUnit.items.insurance.unitValue"}
 }
 
 // Métodos para campos de Skill en Item
-func (p Projection) PackageItemsSkills() Field {
-	return Field{path: "package.items.skills"}
+func (p Projection) DeliveryUnitItemsSkills() Field {
+	return Field{path: "deliveryUnit.items.skills"}
 }
 
-func (p Projection) PackageItemsSkillsType() Field {
-	return Field{path: "package.items.skills.type"}
+func (p Projection) DeliveryUnitItemsSkillsType() Field {
+	return Field{path: "deliveryUnit.items.skills.type"}
 }
 
-func (p Projection) PackageItemsSkillsValue() Field {
-	return Field{path: "package.items.skills.value"}
+func (p Projection) DeliveryUnitItemsSkillsValue() Field {
+	return Field{path: "deliveryUnit.items.skills.value"}
 }
 
-func (p Projection) PackageItemsSkillsDescription() Field {
-	return Field{path: "package.items.skills.description"}
+func (p Projection) DeliveryUnitItemsSkillsDescription() Field {
+	return Field{path: "deliveryUnit.items.skills.description"}
 }
 
 // Métodos para campos de Quantity en Item
-func (p Projection) PackageItemsQuantity() Field {
-	return Field{path: "package.items.quantity"}
+func (p Projection) DeliveryUnitItemsQuantity() Field {
+	return Field{path: "deliveryUnit.items.quantity"}
 }
 
-func (p Projection) PackageItemsQuantityNumber() Field {
-	return Field{path: "package.items.quantity.quantityNumber"}
+func (p Projection) DeliveryUnitItemsQuantityNumber() Field {
+	return Field{path: "deliveryUnit.items.quantity.quantityNumber"}
 }
 
-func (p Projection) PackageItemsQuantityUnit() Field {
-	return Field{path: "package.items.quantity.quantityUnit"}
+func (p Projection) DeliveryUnitItemsQuantityUnit() Field {
+	return Field{path: "deliveryUnit.items.quantity.quantityUnit"}
 }
 
 // Métodos para campos de Weight en Item
-func (p Projection) PackageItemsWeight() Field {
-	return Field{path: "package.items.weight"}
+func (p Projection) DeliveryUnitItemsWeight() Field {
+	return Field{path: "deliveryUnit.items.weight"}
 }
 
-func (p Projection) PackageItemsWeightUnit() Field {
-	return Field{path: "package.items.weight.unit"}
+func (p Projection) DeliveryUnitItemsWeightUnit() Field {
+	return Field{path: "deliveryUnit.items.weight.unit"}
 }
 
-func (p Projection) PackageItemsWeightValue() Field {
-	return Field{path: "package.items.weight.value"}
+func (p Projection) DeliveryUnitItemsWeightValue() Field {
+	return Field{path: "deliveryUnit.items.weight.value"}
 }
 
 // Métodos para campos de PromisedDate
