@@ -84,3 +84,9 @@ func TenantCountryFromContext(ctx context.Context) string {
 	raw := bag.Member(BaggageTenantCountry).Value()
 	return strings.ToUpper(raw)
 }
+
+// ChannelFromContext obtiene el channel desde el contexto
+func ChannelFromContext(ctx context.Context) string {
+	bag := baggage.FromContext(ctx)
+	return bag.Member(BaggageChannel).Value()
+}
