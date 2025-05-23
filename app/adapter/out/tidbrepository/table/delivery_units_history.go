@@ -20,10 +20,10 @@ type DeliveryUnitsHistory struct {
 	CarrierDoc               string             `gorm:"type:char(64);index"`
 	DriverDoc                string             `gorm:"type:char(64);index"`
 	NonDeliveryReasonDoc     string             `gorm:"type:char(64);index"`
-	EvidencePhotos           JSONEvidencePhotos `gorm:"type:json;default:'{}'"`
+	EvidencePhotos           JSONEvidencePhotos `gorm:"type:json;"`
 	RecipientFullName        string             `gorm:"default:''"`
 	RecipientNationalID      string             `gorm:"default:''"`
-	ConfirmDeliveryHandledAt time.Time          `gorm:"default:''"`
+	ConfirmDeliveryHandledAt time.Time          `gorm:"default:null"`
 	ConfirmDeliveryLatitude  float64            `gorm:"default:0"`
 	ConfirmDeliveryLongitude float64            `gorm:"default:0"`
 }

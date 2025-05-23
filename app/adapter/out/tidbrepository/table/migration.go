@@ -56,6 +56,7 @@ func NewRunMigrations(
 			&Plan{},
 			&PlanHeaders{},
 			&Route{},
+			&DeliveryUnitsHistory{},
 		}
 
 		// Opcional: Eliminar tablas si existen

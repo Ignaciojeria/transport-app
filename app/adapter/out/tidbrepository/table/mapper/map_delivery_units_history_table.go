@@ -53,5 +53,5 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 		}
 	}
 
-	return nil
+	return deliveryUnitsHistory
 }

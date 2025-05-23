@@ -32,7 +32,7 @@ func newTenantSubmitted(
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
 		// Filtro defensivo para evitar procesamiento incorrecto
-		if m.Attributes["eventType"] != "tenantSubmitted" || m.Attributes["entityType"] != "tenant" {
+		if m.Attributes["eventType"] != "tenantSubmitted" {
 			m.Ack()
 			return http.StatusAccepted, nil
 		}

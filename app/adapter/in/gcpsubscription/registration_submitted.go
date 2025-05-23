@@ -33,7 +33,7 @@ func newRegistrationSubmitted(
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
 		// Filtro defensivo para evitar procesamiento incorrecto
-		if m.Attributes["eventType"] != "registrationSubmitted" || m.Attributes["entityType"] != "registration" {
+		if m.Attributes["eventType"] != "registrationSubmitted" {
 			m.Ack()
 			return http.StatusAccepted, nil
 		}

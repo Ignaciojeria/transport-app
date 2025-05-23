@@ -33,7 +33,7 @@ func newOrderSubmitted(
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 1
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
 		// Filtro defensivo para evitar procesamiento incorrecto
-		if m.Attributes["eventType"] != "orderSubmitted" || m.Attributes["entityType"] != "order" {
+		if m.Attributes["eventType"] != "orderSubmitted" {
 			m.Ack()
 			return http.StatusAccepted, nil
 		}
