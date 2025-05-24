@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"transport-app/app/usecase"
+	"transport-app/app/adapter/out/tidbrepository"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -13,16 +13,16 @@ import (
 func init() {
 	ioc.Registry(
 		NewResolver,
-		usecase.NewSearchOrders)
+		tidbrepository.NewFindDeliveryUnitsProjectionResult)
 }
 
 type Resolver struct {
-	usecase.SearchOrders
+	findDeliveryUnitsProjectionResult tidbrepository.FindDeliveryUnitsProjectionResult
 }
 
 func NewResolver(
-	searchOrders usecase.SearchOrders) *Resolver {
+	findDeliveryUnitsProjectionResult tidbrepository.FindDeliveryUnitsProjectionResult) *Resolver {
 	return &Resolver{
-		SearchOrders: searchOrders,
+		findDeliveryUnitsProjectionResult: findDeliveryUnitsProjectionResult,
 	}
 }
