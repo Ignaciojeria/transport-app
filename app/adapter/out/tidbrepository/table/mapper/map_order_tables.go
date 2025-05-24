@@ -21,7 +21,6 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		OriginNodeInfoDoc:      order.Origin.DocID(ctx).String(),
 		DestinationNodeInfoDoc: order.Destination.DocID(ctx).String(),
 		ServiceCategory:        order.PromisedDate.ServiceCategory,
-		StatusDoc:              order.Status.DocID().String(),
 		// Si están disponibles, también mapear los contactos y direcciones
 		OriginContactDoc:          order.Origin.AddressInfo.Contact.DocID(ctx).String(),
 		DestinationContactDoc:     order.Destination.AddressInfo.Contact.DocID(ctx).String(),
@@ -135,7 +134,8 @@ func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit, referenceId
 			UnitValue: pkg.Insurance.UnitValue,
 			Currency:  pkg.Insurance.Currency,
 		},
-		JSONItems: mapItemsToTable(pkg.Items),
+		JSONItems:       mapItemsToTable(pkg.Items),
+		SizeCategoryDoc: pkg.SizeCategory.DocumentID(ctx).String(),
 	}
 }
 

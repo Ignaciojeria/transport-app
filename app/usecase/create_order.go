@@ -24,6 +24,7 @@ func init() {
 		tidbrepository.NewUpsertOrderReferences,
 		tidbrepository.NewUpsertOrderDeliveryUnits,
 		tidbrepository.NewUpsertDeliveryUnitsHistory,
+		tidbrepository.NewUpsertSizeCategory,
 		geocoding.NewGeocodingStrategy,
 	)
 }
@@ -38,6 +39,7 @@ func NewCreateOrder(
 	upsertOrderReferences tidbrepository.UpsertOrderReferences,
 	upsertOrderDeliveryUnits tidbrepository.UpsertOrderDeliveryUnits,
 	upsertDeliveryUnitsHistory tidbrepository.UpsertDeliveryUnitsHistory,
+	upsertSizeCategory tidbrepository.UpsertSizeCategory,
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
@@ -117,6 +119,14 @@ func NewCreateOrder(
 			}
 			return upsertDeliveryUnitsHistory(group2Ctx, plan)
 		})
+
+		// Upsert size categories for each delivery unit
+		for _, deliveryUnit := range inOrder.DeliveryUnits {
+			du := deliveryUnit // Create a new variable to avoid closure issues
+			group.Go(func() error {
+				return upsertSizeCategory(group2Ctx, du.SizeCategory)
+			})
+		}
 
 		return group.Wait()
 	}

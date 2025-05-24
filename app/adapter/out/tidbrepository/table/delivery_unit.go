@@ -9,25 +9,25 @@ import (
 
 type DeliveryUnit struct {
 	gorm.Model
-	SizeCategory   string         `gorm:"type:varchar(191);not null;"`
-	ID             int64          `gorm:"primaryKey"`
-	TenantID       uuid.UUID      `gorm:"not null;"`
-	Tenant         Tenant         `gorm:"foreignKey:TenantID"`
-	DocumentID     string         `gorm:"type:char(64);uniqueIndex"`
-	Lpn            string         `gorm:"type:varchar(191);not null;"`
-	JSONDimensions JSONDimensions `gorm:"type:json"`
-	JSONWeight     JSONWeight     `gorm:"type:json"`
-	JSONInsurance  JSONInsurance  `gorm:"type:json"`
-	JSONItems      JSONItems      `gorm:"type:json"`
+	SizeCategoryDoc string         `gorm:"type:char(64);not null;"`
+	SizeCategory    SizeCategory   `gorm:"-"`
+	ID              int64          `gorm:"primaryKey"`
+	TenantID        uuid.UUID      `gorm:"not null;"`
+	Tenant          Tenant         `gorm:"foreignKey:TenantID"`
+	DocumentID      string         `gorm:"type:char(64);uniqueIndex"`
+	Lpn             string         `gorm:"type:varchar(191);not null;"`
+	JSONDimensions  JSONDimensions `gorm:"type:json"`
+	JSONWeight      JSONWeight     `gorm:"type:json"`
+	JSONInsurance   JSONInsurance  `gorm:"type:json"`
+	JSONItems       JSONItems      `gorm:"type:json"`
 }
 
 func (p DeliveryUnit) Map() domain.DeliveryUnit {
 	return domain.DeliveryUnit{
-		Lpn:          p.Lpn,
-		SizeCategory: p.SizeCategory,
-		Dimensions:   p.JSONDimensions.Map(),
-		Weight:       p.JSONWeight.Map(),
-		Insurance:    p.JSONInsurance.Map(),
-		Items:        p.JSONItems.Map(),
+		Lpn:        p.Lpn,
+		Dimensions: p.JSONDimensions.Map(),
+		Weight:     p.JSONWeight.Map(),
+		Insurance:  p.JSONInsurance.Map(),
+		Items:      p.JSONItems.Map(),
 	}
 }

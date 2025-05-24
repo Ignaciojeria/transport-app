@@ -16,14 +16,12 @@ var _ = Describe("UpsertOrder", func() {
 	var (
 		ctx           context.Context
 		tenant        domain.Tenant
-		Status        domain.Status
 		orderType     domain.OrderType
 		originNode    domain.NodeInfo
 		destNode      domain.NodeInfo
 		originAddress domain.AddressInfo
 		destAddress   domain.AddressInfo
 		loadStatuses  LoadStatuses
-	//	statuses      Statuses
 	)
 
 	BeforeEach(func() {
@@ -37,7 +35,6 @@ var _ = Describe("UpsertOrder", func() {
 		err = loadStatuses()
 
 		// Setup test data
-		Status = domain.Status{Status: domain.StatusAvailable} // Usamos un estado predefinido
 		orderType = domain.OrderType{
 			Type:        "retail",
 			Description: "Test Order Type",
@@ -73,7 +70,6 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID:          "ORDER-001",
-			Status:               Status,
 			OrderType:            orderType,
 			Origin:               originNode,
 			Destination:          destNode,
@@ -117,7 +113,6 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID:          "ORDER-002",
-			Status:               Status,
 			OrderType:            orderType,
 			Origin:               originNode,
 			Destination:          destNode,
@@ -155,7 +150,6 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-003",
-			Status:      Status,
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -203,41 +197,6 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(dbOrder.PromisedTimeRangeStart).To(Equal("14:00"))
 		Expect(dbOrder.PromisedTimeRangeEnd).To(Equal("18:00"))
 	})
-	It("should update order status", func() {
-		_, ctx, err := CreateTestTenant(context.Background(), connection)
-		Expect(err).ToNot(HaveOccurred())
-
-		order := domain.Order{
-			Status: domain.Status{Status: domain.StatusAvailable},
-		}
-
-		upsert := NewUpsertOrder(connection)
-		err = upsert(ctx, order)
-		Expect(err).ToNot(HaveOccurred())
-
-		// Verifica estado inicial
-		var dbStatus table.Status
-		err = connection.
-			Table("statuses").
-			Where("document_id = ?", order.Status.DocID()).
-			First(&dbStatus).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dbStatus.Status).To(Equal(domain.StatusAvailable))
-
-		// Actualiza el estado
-		order.Status.Status = domain.StatusInTransit
-		err = upsert(ctx, order)
-		Expect(err).ToNot(HaveOccurred())
-
-		// Verifica nuevo estado
-		var newStatus table.Status
-		err = connection.
-			Table("statuses").
-			Where("document_id = ?", order.Status.DocID()).
-			First(&newStatus).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(newStatus.Status).To(Equal(domain.StatusInTransit))
-	})
 
 	It("should update packages if changed", func() {
 		order := domain.Order{
@@ -246,7 +205,6 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-005",
-			Status:      Status,
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -320,7 +278,6 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-ERROR",
-			Status:      Status,
 			OrderType:   orderType,
 			Origin:      originNode,
 			Destination: destNode,
@@ -333,7 +290,6 @@ var _ = Describe("UpsertOrder", func() {
 		Expect(err.Error()).To(ContainSubstring("orders"))
 	})
 
-	// Este test se puede añadir al conjunto de tests de UpsertOrder
 	It("should update document references when related entities change", func() {
 		order := domain.Order{
 			Headers: domain.Headers{
@@ -341,9 +297,6 @@ var _ = Describe("UpsertOrder", func() {
 				Consumer: "Distribución Nacional",
 			},
 			ReferenceID: "ORDER-DOC-TEST",
-			Status: domain.Status{
-				Status: "pending",
-			},
 			OrderType: domain.OrderType{
 				Type: "retail",
 			},
@@ -364,9 +317,6 @@ var _ = Describe("UpsertOrder", func() {
 
 		// Crear una nueva versión con todos los campos modificados
 		modifiedOrder := order
-		modifiedOrder.Status = domain.Status{
-			Status: "in_progress",
-		}
 		modifiedOrder.OrderType = domain.OrderType{
 			Type: "express",
 		}
@@ -421,7 +371,6 @@ func createMinimalOrder(ctx context.Context) domain.Order {
 			Consumer: "Cliente",
 		},
 		ReferenceID: "ORDER-FAIL-TEST",
-		Status:      domain.Status{Status: "pending"},
 		OrderType:   domain.OrderType{Type: "retail"},
 	}
 }

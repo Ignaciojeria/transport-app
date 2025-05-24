@@ -17,7 +17,6 @@ type Order struct {
 	AddressLine2            string
 	ReferenceID             ReferenceID
 	SequenceNumber          *int
-	Status                  Status
 	OrderType               OrderType
 	References              []Reference
 	Origin                  NodeInfo

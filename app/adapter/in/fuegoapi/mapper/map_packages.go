@@ -55,8 +55,9 @@ func MapPackagesToDomain(packages []struct {
 	mapped := make([]domain.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = domain.DeliveryUnit{
-			SizeCategory: pkg.SizeCategory,
+			SizeCategory: domain.SizeCategory{Code: pkg.SizeCategory},
 			Lpn:          pkg.Lpn,
+			Status:       domain.Status{Status: domain.StatusAvailable},
 			Dimensions: domain.Dimensions{
 				Height: pkg.Dimensions.Height,
 				Width:  pkg.Dimensions.Width,

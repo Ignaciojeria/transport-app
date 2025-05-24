@@ -22,9 +22,6 @@ type Order struct {
 	TenantID uuid.UUID `gorm:"not null"`
 	Tenant   Tenant    `gorm:"foreignKey:TenantID"`
 
-	StatusDoc string `gorm:"type:char(64);index"`
-	Status    Status `gorm:"-"`
-
 	OrderHeadersDoc string       `gorm:"type:char(64);index"`
 	OrderHeaders    OrderHeaders `gorm:"-"`
 

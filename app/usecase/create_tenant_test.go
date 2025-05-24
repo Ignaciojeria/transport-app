@@ -113,6 +113,7 @@ func avoidJoin(table string) bool {
 		"node_info_headers",
 		"node_types",
 		"non_delivery_reasons",
+		"size_categories",
 		"orders",
 		"routes":
 		return false // se permiten
@@ -151,6 +152,8 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertNodeInfoHeaders(connection),
 		tidbrepository.NewUpsertNodeType(connection),
 		tidbrepository.NewUpsertNonDeliveryReason(connection),
+		tidbrepository.NewLoadStatuses(connection),
+		tidbrepository.NewUpsertSizeCategory(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{
