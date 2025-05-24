@@ -1,6 +1,6 @@
 package domain
 
-type OrderFilterInput struct {
+type DeliveryUnitsFilter struct {
 	Pagination           Pagination
 	ReferenceIds         []string
 	OriginNodeReferences []string
