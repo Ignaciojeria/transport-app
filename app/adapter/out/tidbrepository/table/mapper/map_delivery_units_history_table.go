@@ -17,6 +17,7 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 			for _, pkg := range order.DeliveryUnits {
 				deliveryUnitsHistory = append(deliveryUnitsHistory, table.DeliveryUnitsHistory{
 					OrderDoc:                 string(order.DocID(ctx)),
+					TenantID:                 sharedcontext.TenantIDFromContext(ctx),
 					DeliveryUnitDoc:          string(pkg.DocID(ctx, string(order.ReferenceID))),
 					RouteDoc:                 string(route.DocID(ctx)),
 					Channel:                  sharedcontext.ChannelFromContext(ctx),

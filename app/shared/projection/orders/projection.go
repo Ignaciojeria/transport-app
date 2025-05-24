@@ -17,6 +17,20 @@ func (f Field) Has(requestedFields map[string]struct{}) bool {
 	return exists
 }
 
+func (f Field) HasAnyPrefix(requestedFields map[string]struct{}) bool {
+	for field := range requestedFields {
+		if field == f.path || hasPrefix(field, f.path) {
+			return true
+		}
+	}
+	return false
+}
+
+func hasPrefix(field, prefix string) bool {
+	// ejemplo: prefix = "origin", field = "origin.addressInfo.contact.email"
+	return len(field) > len(prefix) && field[:len(prefix)] == prefix && field[len(prefix)] == '.'
+}
+
 func init() {
 	ioc.Registry(NewProjection)
 }
@@ -665,3 +679,9 @@ func GetAllProjectionPaths() []string {
 func (f Field) String() string {
 	return f.path
 }
+
+/*
+func (p Projection) HasOrigin(requestedFields map[string]struct{}) bool {
+	return p.Origin().HasAnyPrefix(requestedFields)
+}
+*/
