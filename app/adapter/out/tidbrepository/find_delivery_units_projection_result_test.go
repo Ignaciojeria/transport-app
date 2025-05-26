@@ -4,6 +4,7 @@ import (
 	"context"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
+	"transport-app/app/shared/projection/deliveryunits"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -23,7 +24,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(conn)
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
 		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
@@ -34,26 +37,37 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
 		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
-						{
-							DeliveryUnits: []domain.DeliveryUnit{
-								{},
-							},
-						},
+						order,
 					},
 				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertOrder(conn)(ctx, domain.Order{})
-		Expect(err).ToNot(HaveOccurred())
+		projection := deliveryunits.NewProjection()
 
-		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(conn)
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+				projection.Channel().String():     "",
+			},
+		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
 		Expect(results[0].ID).To(Equal(int64(1)))
@@ -64,7 +78,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(noTablesContainerConnection)
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			noTablesContainerConnection,
+			deliveryunits.NewProjection())
 		_, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("delivery_units_histories"))

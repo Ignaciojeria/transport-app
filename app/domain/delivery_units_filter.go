@@ -12,5 +12,5 @@ type DeliveryUnitsFilter struct {
 	LabelValue           *string
 	Commerces            []string
 	Consumers            []string
-	RequestedFields      map[string]struct{}
+	RequestedFields      map[string]any
 }

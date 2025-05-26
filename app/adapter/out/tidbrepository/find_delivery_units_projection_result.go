@@ -5,6 +5,7 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
+	"transport-app/app/shared/projection/deliveryunits"
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -18,30 +19,26 @@ type FindDeliveryUnitsProjectionResult func(
 func init() {
 	ioc.Registry(
 		NewFindDeliveryUnitsProjectionResult,
-		database.NewConnectionFactory)
+		database.NewConnectionFactory,
+		deliveryunits.NewProjection,
+	)
 }
 
 func NewFindDeliveryUnitsProjectionResult(
-	conn database.ConnectionFactory) FindDeliveryUnitsProjectionResult {
+	conn database.ConnectionFactory,
+	projection deliveryunits.Projection) FindDeliveryUnitsProjectionResult {
 	const (
-		duh = "duh"
-		o   = "o"
+		duh  = "duh"  // delivery_units_histories
+		o    = "o"    // orders
+		dadi = "dadi" // destination_address_infos
 	)
-	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
 
+	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
 		var results []projectionresult.DeliveryUnitsProjectionResult
 
-		deliveryUnitHistoryIndex := []interface{}{
-			goqu.I(duh + ".id").As("id"),
-		}
-
-		ordersSelectProjection := []interface{}{
-			goqu.I(o + ".reference_id").As("order_reference_id"),
-		}
-
+		// Dataset base
 		ds := goqu.From(goqu.T("delivery_units_histories").As(duh)).
-			Select(deliveryUnitHistoryIndex...).
-			SelectAppend(ordersSelectProjection...).
+			Select(goqu.I(duh+".id").As("id")).
 			InnerJoin(
 				goqu.T("orders").As(o),
 				goqu.On(goqu.I(o+".document_id").Eq(goqu.I(duh+".order_doc"))),
@@ -49,6 +46,39 @@ func NewFindDeliveryUnitsProjectionResult(
 			Where(goqu.Ex{
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
 			})
+
+		// Campos de delivery_units_histories
+		if projection.Channel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".channel").As("channel"))
+		}
+		// Campos de orders
+		if projection.ReferenceID().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".reference_id").As("order_reference_id"))
+		}
+
+		if projection.CollectAvailabilityDate().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date").As("order_collect_availability_date"))
+		}
+		if projection.CollectAvailabilityDateDate().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_date").As("order_collect_availability_date_date"))
+		}
+		if projection.CollectAvailabilityDateTimeRange().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_time_range").As("order_collect_availability_date_time_range"))
+		}
+		if projection.CollectAvailabilityDateStartTime().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_start_time").As("order_collect_availability_date_start_time"))
+		}
+		if projection.CollectAvailabilityDateEndTime().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_end_time").As("order_collect_availability_date_end_time"))
+		}
+
+		// Join address_infos si se requiere algún campo de addressInfo
+		if projection.DestinationAddressInfo().HasAnyPrefix(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("address_infos").As(dadi),
+				goqu.On(goqu.I(dadi+".document_id").Eq(goqu.I(o+".destination_address_info_doc"))),
+			)
+		}
 
 		sql, args, err := ds.Prepared(true).ToSQL()
 		if err != nil {

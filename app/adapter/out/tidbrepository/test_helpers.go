@@ -31,7 +31,8 @@ func CreateTestTenant(ctx context.Context, conn database.ConnectionFactory) (dom
 	// Create context with tenant information
 	orgIDMember, _ := baggage.NewMember(sharedcontext.BaggageTenantID, tenantID.String())
 	countryMember, _ := baggage.NewMember(sharedcontext.BaggageTenantCountry, tenant.Country.String())
-	bag, _ := baggage.New(orgIDMember, countryMember)
+	channelMember, _ := baggage.NewMember(sharedcontext.BaggageChannel, "test")
+	bag, _ := baggage.New(orgIDMember, countryMember, channelMember)
 	tenantCtx := baggage.ContextWithBaggage(ctx, bag)
 
 	// Create account first

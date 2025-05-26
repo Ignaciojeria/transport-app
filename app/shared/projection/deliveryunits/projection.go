@@ -1,4 +1,4 @@
-package orders
+package deliveryunits
 
 import (
 	"reflect"
@@ -12,12 +12,12 @@ type Field struct {
 }
 
 // Has verifica si este campo está en el mapa de campos solicitados
-func (f Field) Has(requestedFields map[string]struct{}) bool {
+func (f Field) Has(requestedFields map[string]any) bool {
 	_, exists := requestedFields[f.path]
 	return exists
 }
 
-func (f Field) HasAnyPrefix(requestedFields map[string]struct{}) bool {
+func (f Field) HasAnyPrefix(requestedFields map[string]any) bool {
 	for field := range requestedFields {
 		if field == f.path || hasPrefix(field, f.path) {
 			return true

@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"flag"
 	"strings"
-	"transport-app/app/shared/projection/orders"
+	"transport-app/app/shared/projection/deliveryunits"
 
 	_ "embed"
 
@@ -36,7 +36,7 @@ var _ = Describe("GraphQL Schema", func() {
 		Expect(err).NotTo(HaveOccurred(), "failed to parse schema")
 
 		// Obtener todas las rutas de proyección
-		projectionPaths = orders.GetAllProjectionPaths()
+		projectionPaths = deliveryunits.GetAllProjectionPaths()
 
 		// Construir un mapa para verificar la existencia de campos en el esquema
 		schemaFields = buildSchemaFieldsMap(schema)
