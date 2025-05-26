@@ -51,6 +51,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		if projection.Channel().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(duh + ".channel").As("channel"))
 		}
+
 		// Campos de orders
 		if projection.ReferenceID().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".reference_id").As("order_reference_id"))
@@ -66,7 +67,6 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_time_range_end").As("order_collect_availability_date_end_time"))
 		}
 
-		// Campos de PromisedDate
 		if projection.PromisedDateDateRangeStartDate().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".promised_date_range_start").As("order_promised_date_start_date"))
 		}
@@ -84,7 +84,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		// Join address_infos si se requiere algún campo de addressInfo
-		if projection.DestinationAddressInfo().HasAnyPrefix(filters.RequestedFields) {
+		if projection.DestinationAddressInfo().Has(filters.RequestedFields) {
 			ds = ds.InnerJoin(
 				goqu.T("address_infos").As(dadi),
 				goqu.On(goqu.I(dadi+".document_id").Eq(goqu.I(o+".destination_address_info_doc"))),
