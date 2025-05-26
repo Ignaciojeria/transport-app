@@ -135,8 +135,13 @@ func NewFindDeliveryUnitsProjectionResult(
 		if projection.DestinationTimeZone().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(dadi + ".time_zone").As("destination_time_zone"))
 		}
+
 		if projection.DestinationZipCode().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(dadi + ".zip_code").As("destination_zip_code"))
+		}
+
+		if projection.DestinationRequiresManualReview().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".requires_manual_review").As("destination_requires_manual_review"))
 		}
 
 		// Campos de contacto del destino

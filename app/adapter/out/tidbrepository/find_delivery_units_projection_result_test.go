@@ -226,12 +226,13 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
-				projection.DestinationAddressInfo().String():       "",
-				projection.DestinationContact().String():           "",
-				projection.DestinationContactEmail().String():      "",
-				projection.DestinationContactFullName().String():   "",
-				projection.DestinationContactNationalID().String(): "",
-				projection.DestinationContactPhone().String():      "",
+				projection.DestinationAddressInfo().String():          "",
+				projection.DestinationContact().String():              "",
+				projection.DestinationContactEmail().String():         "",
+				projection.DestinationContactFullName().String():      "",
+				projection.DestinationContactNationalID().String():    "",
+				projection.DestinationContactPhone().String():         "",
+				projection.DestinationRequiresManualReview().String(): "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -242,6 +243,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationContactFullName).To(Equal("John Doe"))
 		Expect(results[0].DestinationContactNationalID).To(Equal("12345678-9"))
 		Expect(results[0].DestinationContactPhone).To(Equal("+56912345678"))
+		Expect(results[0].DestinationRequiresManualReview).To(Equal(true))
 	})
 
 	It("should fail if database has no delivery_units_histories table", func() {
