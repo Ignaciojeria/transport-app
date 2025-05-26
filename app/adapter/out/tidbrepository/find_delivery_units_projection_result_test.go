@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/paulmach/orb"
 )
 
 var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
@@ -39,10 +40,15 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		destination := domain.AddressInfo{
-			State:        "CA",
-			Province:     "CA",
-			District:     "CA",
-			AddressLine1: "123 Main St",
+			State:                "CA",
+			Province:             "CA",
+			District:             "CA",
+			AddressLine1:         "123 Main St",
+			Location:             orb.Point{1, 1},
+			TimeZone:             "America/Santiago",
+			RequiresManualReview: true,
+			CoordinateSource:     "geocoding",
+			ZipCode:              "12345",
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
@@ -105,7 +111,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.PromisedDateDateRangeEndDate().String():     "",
 				projection.PromisedDateTimeRangeStartTime().String():   "",
 				projection.PromisedDateTimeRangeEndTime().String():     "",
+				projection.DestinationAddressInfo().String():           "",
 				projection.PromisedDateServiceCategory().String():      "",
+				projection.DestinationAddressLine1().String():          "",
+				projection.DestinationDistrict().String():              "",
+				projection.DestinationLatitude().String():              "",
+				projection.DestinationLongitude().String():             "",
+				projection.DestinationProvince().String():              "",
+				projection.DestinationState().String():                 "",
+				projection.DestinationTimeZone().String():              "",
+				projection.DestinationZipCode().String():               "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -120,6 +135,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"))
 		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"))
 		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"))
+
+		// Validaciones de Destination Address
+		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"))
+		Expect(results[0].DestinationDistrict).To(Equal("CA"))
+		Expect(results[0].DestinationLatitude).To(Equal(1.0))
+		Expect(results[0].DestinationLongitude).To(Equal(1.0))
+		Expect(results[0].DestinationProvince).To(Equal("CA"))
+		Expect(results[0].DestinationState).To(Equal("CA"))
+		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"))
+		Expect(results[0].DestinationZipCode).To(Equal("12345"))
 	})
 
 	It("should fail if database has no delivery_units_histories table", func() {

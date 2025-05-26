@@ -31,6 +31,9 @@ func NewFindDeliveryUnitsProjectionResult(
 		duh  = "duh"  // delivery_units_histories
 		o    = "o"    // orders
 		dadi = "dadi" // destination_address_infos
+		dd   = "dd"   // destination_districts
+		dp   = "dp"   // destination_provinces
+		dst  = "dst"  // destination_states
 	)
 
 	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
@@ -89,6 +92,52 @@ func NewFindDeliveryUnitsProjectionResult(
 				goqu.T("address_infos").As(dadi),
 				goqu.On(goqu.I(dadi+".document_id").Eq(goqu.I(o+".destination_address_info_doc"))),
 			)
+
+			// Campos de address_infos
+			if projection.DestinationAddressLine1().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.I(dadi + ".address_line1").As("destination_address_line1"))
+			}
+
+			// Join con districts
+			if projection.DestinationDistrict().Has(filters.RequestedFields) {
+				ds = ds.LeftJoin(
+					goqu.T("districts").As(dd),
+					goqu.On(goqu.I(dd+".document_id").Eq(goqu.I(dadi+".district_doc"))),
+				)
+				ds = ds.SelectAppend(goqu.I(dd + ".name").As("destination_district"))
+			}
+
+			// Join con provinces
+			if projection.DestinationProvince().Has(filters.RequestedFields) {
+				ds = ds.LeftJoin(
+					goqu.T("provinces").As(dp),
+					goqu.On(goqu.I(dp+".document_id").Eq(goqu.I(dadi+".province_doc"))),
+				)
+				ds = ds.SelectAppend(goqu.I(dp + ".name").As("destination_province"))
+			}
+
+			// Join con states
+			if projection.DestinationState().Has(filters.RequestedFields) {
+				ds = ds.LeftJoin(
+					goqu.T("states").As(dst),
+					goqu.On(goqu.I(dst+".document_id").Eq(goqu.I(dadi+".state_doc"))),
+				)
+				ds = ds.SelectAppend(goqu.I(dst + ".name").As("destination_state"))
+			}
+
+			if projection.DestinationLatitude().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.I(dadi + ".latitude").As("destination_latitude"))
+			}
+			if projection.DestinationLongitude().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.I(dadi + ".longitude").As("destination_longitude"))
+			}
+
+			if projection.DestinationTimeZone().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.I(dadi + ".time_zone").As("destination_time_zone"))
+			}
+			if projection.DestinationZipCode().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.I(dadi + ".zip_code").As("destination_zip_code"))
+			}
 		}
 
 		sql, args, err := ds.Prepared(true).ToSQL()

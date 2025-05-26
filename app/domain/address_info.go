@@ -18,7 +18,6 @@ type AddressInfo struct {
 	Location             orb.Point
 	RequiresManualReview bool
 	CoordinateSource     string
-	CorrectedDistance    float64
 	ZipCode              string
 	TimeZone             string
 }

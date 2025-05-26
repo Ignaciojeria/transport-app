@@ -48,7 +48,7 @@ func (res OptimizationResponse) Map(route domain.Route) domain.Route {
 			seq := wp.WaypointIndex
 			route.Orders[idx].SequenceNumber = &seq
 			//route.Orders[idx].Destination.AddressInfo.CorrectedLocation = correctedPoint
-			route.Orders[idx].Destination.AddressInfo.CorrectedDistance = wp.Distance
+			//route.Orders[idx].Destination.AddressInfo.CorrectedDistance = wp.Distance
 		}
 	}
 
