@@ -3,6 +3,8 @@ package projectionresult
 type DeliveryUnitsProjectionResult struct {
 	ID                                    int64  `json:"id"`
 	Channel                               string `json:"channel"`
+	Consumer                              string `json:"order_consumer"`
+	Commerce                              string `json:"order_commerce"`
 	OrderReferenceID                      string `json:"order_reference_id"`
 	OrderCollectAvailabilityDate          string `json:"order_collect_availability_date"`
 	OrderCollectAvailabilityDateStartTime string `json:"order_collect_availability_date_start_time"`

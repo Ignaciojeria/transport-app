@@ -35,6 +35,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		dp   = "dp"   // destination_provinces
 		dst  = "dst"  // destination_states
 		du   = "du"   // delivery_units
+		oh   = "oh"   // order_headers
 	)
 
 	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
@@ -110,6 +111,21 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 		if projection.PromisedDateServiceCategory().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".service_category").As("order_promised_date_service_category"))
+		}
+
+		if projection.Commerce().Has(filters.RequestedFields) || projection.Consumer().Has(filters.RequestedFields) {
+			ds = ds.LeftJoin(
+				goqu.T("order_headers").As(oh),
+				goqu.On(goqu.I(oh+".document_id").Eq(goqu.I(o+".order_headers_doc"))),
+			)
+		}
+
+		if projection.Commerce().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oh + ".commerce").As("commerce"))
+		}
+
+		if projection.Consumer().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oh + ".consumer").As("consumer"))
 		}
 
 		// Join address_infos si se requiere algún campo de addressInfo

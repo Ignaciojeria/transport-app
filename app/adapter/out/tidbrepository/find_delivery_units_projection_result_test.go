@@ -285,11 +285,18 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		order := domain.Order{
 			ReferenceID: "123",
+			Headers: domain.Headers{
+				Commerce: "Test Commerce",
+				Consumer: "Test Consumer",
+			},
 			DeliveryUnits: []domain.DeliveryUnit{
 				deliveryUnit,
 			},
 		}
 		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertOrderHeaders(conn)(ctx, order.Headers)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
@@ -316,6 +323,8 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DeliveryUnitWeight().String():     "",
 				projection.DeliveryUnitInsurance().String():  "",
 				projection.DeliveryUnitItems().String():      "",
+				projection.Commerce().String():               "",
+				projection.Consumer().String():               "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -336,6 +345,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].JSONItems).To(ContainSubstring(`"quantity_number":2`))
 		Expect(results[0].JSONItems).To(ContainSubstring(`"quantity_unit":"pcs"`))
 
+		// Validaciones de Commerce y Consumer
+		Expect(results[0].Commerce).To(Equal("Test Commerce"))
+		Expect(results[0].Consumer).To(Equal("Test Consumer"))
 	})
 
 	It("should fail if database has no delivery_units_histories table", func() {
