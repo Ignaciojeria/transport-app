@@ -2,6 +2,7 @@ package tidbrepository
 
 import (
 	"context"
+	"time"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/projection/deliveryunits"
@@ -37,10 +38,41 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		destination := domain.AddressInfo{
+			State:        "CA",
+			Province:     "CA",
+			District:     "CA",
+			AddressLine1: "123 Main St",
+		}
+		err = NewUpsertAddressInfo(conn)(ctx, destination)
+		Expect(err).ToNot(HaveOccurred())
+
+		fixedDate := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
 		order := domain.Order{
 			ReferenceID: "123",
+			Destination: domain.NodeInfo{
+				AddressInfo: destination,
+			},
 			DeliveryUnits: []domain.DeliveryUnit{
 				{},
+			},
+			CollectAvailabilityDate: domain.CollectAvailabilityDate{
+				Date: fixedDate,
+				TimeRange: domain.TimeRange{
+					StartTime: "09:00",
+					EndTime:   "18:00",
+				},
+			},
+			PromisedDate: domain.PromisedDate{
+				DateRange: domain.DateRange{
+					StartDate: fixedDate,
+					EndDate:   fixedDate.Add(24 * time.Hour),
+				},
+				TimeRange: domain.TimeRange{
+					StartTime: "10:00",
+					EndTime:   "17:00",
+				},
+				ServiceCategory: "STANDARD",
 			},
 		}
 		err = NewUpsertOrder(conn)(ctx, order)
@@ -64,13 +96,30 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
-				projection.ReferenceID().String(): "",
-				projection.Channel().String():     "",
+				projection.ReferenceID().String():                      "",
+				projection.Channel().String():                          "",
+				projection.CollectAvailabilityDate().String():          "",
+				projection.CollectAvailabilityDateStartTime().String(): "",
+				projection.CollectAvailabilityDateEndTime().String():   "",
+				projection.PromisedDateDateRangeStartDate().String():   "",
+				projection.PromisedDateDateRangeEndDate().String():     "",
+				projection.PromisedDateTimeRangeStartTime().String():   "",
+				projection.PromisedDateTimeRangeEndTime().String():     "",
+				projection.PromisedDateServiceCategory().String():      "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
 		Expect(results[0].ID).To(Equal(int64(1)))
+		Expect(results[0].OrderReferenceID).To(Equal("123"))
+		Expect(results[0].OrderCollectAvailabilityDate).To(Equal("2025-05-26T00:00:00Z"))
+		Expect(results[0].OrderCollectAvailabilityDateStartTime).To(Equal("09:00"))
+		Expect(results[0].OrderCollectAvailabilityDateEndTime).To(Equal("18:00"))
+		Expect(results[0].OrderPromisedDateStartDate).To(Equal("2025-05-26T00:00:00Z"))
+		Expect(results[0].OrderPromisedDateEndDate).To(Equal("2025-05-27T00:00:00Z"))
+		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"))
+		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"))
+		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"))
 	})
 
 	It("should fail if database has no delivery_units_histories table", func() {

@@ -59,17 +59,28 @@ func NewFindDeliveryUnitsProjectionResult(
 		if projection.CollectAvailabilityDate().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date").As("order_collect_availability_date"))
 		}
-		if projection.CollectAvailabilityDateDate().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_date").As("order_collect_availability_date_date"))
-		}
-		if projection.CollectAvailabilityDateTimeRange().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_time_range").As("order_collect_availability_date_time_range"))
-		}
 		if projection.CollectAvailabilityDateStartTime().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_start_time").As("order_collect_availability_date_start_time"))
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_time_range_start").As("order_collect_availability_date_start_time"))
 		}
 		if projection.CollectAvailabilityDateEndTime().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date_end_time").As("order_collect_availability_date_end_time"))
+			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_time_range_end").As("order_collect_availability_date_end_time"))
+		}
+
+		// Campos de PromisedDate
+		if projection.PromisedDateDateRangeStartDate().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".promised_date_range_start").As("order_promised_date_start_date"))
+		}
+		if projection.PromisedDateDateRangeEndDate().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".promised_date_range_end").As("order_promised_date_end_date"))
+		}
+		if projection.PromisedDateTimeRangeStartTime().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".promised_time_range_start").As("order_promised_date_start_time"))
+		}
+		if projection.PromisedDateTimeRangeEndTime().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".promised_time_range_end").As("order_promised_date_end_time"))
+		}
+		if projection.PromisedDateServiceCategory().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".service_category").As("order_promised_date_service_category"))
 		}
 
 		// Join address_infos si se requiere algún campo de addressInfo
