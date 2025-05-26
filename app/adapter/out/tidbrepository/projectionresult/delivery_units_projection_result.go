@@ -28,4 +28,5 @@ type DeliveryUnitsProjectionResult struct {
 	DestinationContactFullName   string `json:"destination_contact_full_name"`
 	DestinationContactNationalID string `json:"destination_contact_national_id"`
 	DestinationContactPhone      string `json:"destination_contact_phone"`
+	DestinationContactDocuments  string `json:"destination_contact_documents"`
 }

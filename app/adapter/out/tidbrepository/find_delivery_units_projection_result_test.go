@@ -147,6 +147,103 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationZipCode).To(Equal("12345"))
 	})
 
+	It("should return delivery units with destination contact information", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear contacto
+		contact := domain.Contact{
+			FullName:     "John Doe",
+			PrimaryEmail: "test@example.com",
+			PrimaryPhone: "+56912345678",
+			NationalID:   "12345678-9",
+		}
+		err = NewUpsertContact(conn)(ctx, contact)
+		Expect(err).ToNot(HaveOccurred())
+
+		destination := domain.AddressInfo{
+			State:                "CA",
+			Province:             "CA",
+			District:             "CA",
+			AddressLine1:         "123 Main St",
+			Location:             orb.Point{1, 1},
+			TimeZone:             "America/Santiago",
+			RequiresManualReview: true,
+			CoordinateSource:     "geocoding",
+			ZipCode:              "12345",
+			Contact:              contact,
+		}
+		err = NewUpsertAddressInfo(conn)(ctx, destination)
+		Expect(err).ToNot(HaveOccurred())
+
+		fixedDate := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
+		order := domain.Order{
+			ReferenceID: "123",
+			Destination: domain.NodeInfo{
+				AddressInfo: destination,
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+			CollectAvailabilityDate: domain.CollectAvailabilityDate{
+				Date: fixedDate,
+				TimeRange: domain.TimeRange{
+					StartTime: "09:00",
+					EndTime:   "18:00",
+				},
+			},
+			PromisedDate: domain.PromisedDate{
+				DateRange: domain.DateRange{
+					StartDate: fixedDate,
+					EndDate:   fixedDate.Add(24 * time.Hour),
+				},
+				TimeRange: domain.TimeRange{
+					StartTime: "10:00",
+					EndTime:   "17:00",
+				},
+				ServiceCategory: "STANDARD",
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.DestinationAddressInfo().String():       "",
+				projection.DestinationContact().String():           "",
+				projection.DestinationContactEmail().String():      "",
+				projection.DestinationContactFullName().String():   "",
+				projection.DestinationContactNationalID().String(): "",
+				projection.DestinationContactPhone().String():      "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validaciones de Destination Contact
+		Expect(results[0].DestinationContactEmail).To(Equal("test@example.com"))
+		Expect(results[0].DestinationContactFullName).To(Equal("John Doe"))
+		Expect(results[0].DestinationContactNationalID).To(Equal("12345678-9"))
+		Expect(results[0].DestinationContactPhone).To(Equal("+56912345678"))
+	})
+
 	It("should fail if database has no delivery_units_histories table", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
