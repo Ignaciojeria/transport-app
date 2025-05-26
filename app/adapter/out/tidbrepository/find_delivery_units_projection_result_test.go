@@ -246,6 +246,98 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationRequiresManualReview).To(Equal(true))
 	})
 
+	It("should return delivery units with package information", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery unit
+		deliveryUnit := domain.DeliveryUnit{
+			Lpn: "LPN123",
+			Dimensions: domain.Dimensions{
+				Length: 10,
+				Width:  20,
+				Height: 30,
+				Unit:   "cm",
+			},
+			Weight: domain.Weight{
+				Value: 5.5,
+				Unit:  "kg",
+			},
+			Insurance: domain.Insurance{
+				Currency:  "USD",
+				UnitValue: 100.0,
+			},
+			Items: []domain.Item{
+				{
+					Sku:         "SKU123",
+					Description: "Test Item",
+					Quantity: domain.Quantity{
+						QuantityNumber: 2,
+						QuantityUnit:   "pcs",
+					},
+				},
+			},
+		}
+
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit}, "123")
+		Expect(err).ToNot(HaveOccurred())
+
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				deliveryUnit,
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.DeliveryUnit().String():           "",
+				projection.DeliveryUnitLPN().String():        "",
+				projection.DeliveryUnitDimensions().String(): "",
+				projection.DeliveryUnitWeight().String():     "",
+				projection.DeliveryUnitInsurance().String():  "",
+				projection.DeliveryUnitItems().String():      "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validaciones de Delivery Unit
+		Expect(results[0].LPN).To(Equal("LPN123"))
+		Expect(results[0].JSONDimensions).To(ContainSubstring(`"length":10`))
+		Expect(results[0].JSONDimensions).To(ContainSubstring(`"width":20`))
+		Expect(results[0].JSONDimensions).To(ContainSubstring(`"height":30`))
+		Expect(results[0].JSONDimensions).To(ContainSubstring(`"unit":"cm"`))
+		Expect(results[0].JSONWeight).To(ContainSubstring(`"weight_value":5.5`))
+		Expect(results[0].JSONWeight).To(ContainSubstring(`"weight_unit":"kg"`))
+		Expect(results[0].JSONInsurance).To(ContainSubstring(`"currency":"USD"`))
+		Expect(results[0].JSONInsurance).To(ContainSubstring(`"unit_value":100`))
+		Expect(results[0].JSONItems).To(ContainSubstring(`"sku":"SKU123"`))
+		Expect(results[0].JSONItems).To(ContainSubstring(`"description":"Test Item"`))
+		Expect(results[0].JSONItems).To(ContainSubstring(`"quantity_number":2`))
+		Expect(results[0].JSONItems).To(ContainSubstring(`"quantity_unit":"pcs"`))
+
+	})
+
 	It("should fail if database has no delivery_units_histories table", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)

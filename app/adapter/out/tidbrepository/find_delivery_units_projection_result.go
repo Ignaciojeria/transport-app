@@ -34,6 +34,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		dd   = "dd"   // destination_districts
 		dp   = "dp"   // destination_provinces
 		dst  = "dst"  // destination_states
+		du   = "du"   // delivery_units
 	)
 
 	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
@@ -53,6 +54,31 @@ func NewFindDeliveryUnitsProjectionResult(
 		// Campos de delivery_units_histories
 		if projection.Channel().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(duh + ".channel").As("channel"))
+		}
+
+		// LPN and Package Information
+		if projection.DeliveryUnit().Has(filters.RequestedFields) {
+			ds = ds.LeftJoin(
+				goqu.T("delivery_units").As(du),
+				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
+			)
+		}
+
+		if projection.DeliveryUnitLPN().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".lpn").As("lpn"))
+		}
+
+		if projection.DeliveryUnitDimensions().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".json_dimensions").As("json_dimensions"))
+		}
+		if projection.DeliveryUnitWeight().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".json_weight").As("json_weight"))
+		}
+		if projection.DeliveryUnitInsurance().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".json_insurance").As("json_insurance"))
+		}
+		if projection.DeliveryUnitItems().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".json_items").As("json_items"))
 		}
 
 		// Campos de orders

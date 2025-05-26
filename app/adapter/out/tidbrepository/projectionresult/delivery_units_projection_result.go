@@ -13,6 +13,13 @@ type DeliveryUnitsProjectionResult struct {
 	OrderPromisedDateEndTime              string `json:"order_promised_date_end_time"`
 	OrderPromisedDateServiceCategory      string `json:"order_promised_date_service_category"`
 
+	// LPN and Package Information
+	LPN            string `json:"lpn"`
+	JSONDimensions string `json:"json_dimensions"`
+	JSONWeight     string `json:"json_weight"`
+	JSONInsurance  string `json:"json_insurance"`
+	JSONItems      string `json:"json_items"`
+
 	// Destination Address Information
 	DestinationAddressLine1         string  `json:"destination_address_line1"`
 	DestinationDistrict             string  `json:"destination_district"`
