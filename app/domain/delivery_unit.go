@@ -20,15 +20,12 @@ type DeliveryUnit struct {
 	Labels          []Reference `json:"labels"`
 }
 
-func (p DeliveryUnit) DocID(ctx context.Context, otherReference string) DocumentID {
+func (p DeliveryUnit) DocID(ctx context.Context) DocumentID {
 	if p.Lpn != "" {
 		return HashByTenant(ctx, p.Lpn)
 	}
 
 	var allInputs []string
-
-	// Agregar referencia externa
-	allInputs = append(allInputs, otherReference)
 
 	// Agregar índice del paquete (por posición)
 	allInputs = append(allInputs, fmt.Sprintf("index:%d", p.Index))

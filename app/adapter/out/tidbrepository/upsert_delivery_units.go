@@ -10,14 +10,14 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type UpsertDeliveryUnits func(context.Context, []domain.DeliveryUnit, string) error
+type UpsertDeliveryUnits func(context.Context, []domain.DeliveryUnit) error
 
 func init() {
 	ioc.Registry(NewUpsertDeliveryUnits, database.NewConnectionFactory)
 }
 
 func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits {
-	return func(ctx context.Context, pcks []domain.DeliveryUnit, orderReference string) error {
+	return func(ctx context.Context, pcks []domain.DeliveryUnit) error {
 
 		// 1. Expandimos paquetes sin LPN en paquetes individuales
 		var normalized []domain.DeliveryUnit
@@ -33,7 +33,7 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits
 		docIDs := make([]string, 0, len(normalized))
 		docIDToPackage := make(map[string]domain.DeliveryUnit, len(normalized))
 		for _, p := range normalized {
-			docID := string(p.DocID(ctx, orderReference))
+			docID := string(p.DocID(ctx))
 			docIDs = append(docIDs, docID)
 			docIDToPackage[docID] = p
 		}
@@ -61,7 +61,7 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits
 			domainPkg := docIDToPackage[docID]
 			if existingPkg, found := existingMap[docID]; found {
 				updatedDomainPkg, _ := existingPkg.Map().UpdateIfChanged(domainPkg)
-				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg, orderReference)
+				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg)
 
 				// Preservar campos importantes
 				updatedTablePkg.ID = existingPkg.ID
@@ -70,7 +70,7 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits
 
 				DBpackagesToUpsert = append(DBpackagesToUpsert, updatedTablePkg)
 			} else {
-				newTablePkg := mapper.MapPackageToTable(ctx, domainPkg, orderReference)
+				newTablePkg := mapper.MapPackageToTable(ctx, domainPkg)
 				DBpackagesToUpsert = append(DBpackagesToUpsert, newTablePkg)
 			}
 		}

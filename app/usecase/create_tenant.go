@@ -89,7 +89,7 @@ func NewCreateTenant(
 		})
 
 		group.Go(func() error {
-			return upsertDeliveryUnits(groupCtx, []domain.DeliveryUnit{}, "")
+			return upsertDeliveryUnits(groupCtx, []domain.DeliveryUnit{})
 		})
 
 		group.Go(func() error {

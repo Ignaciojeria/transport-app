@@ -49,7 +49,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var count int64
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(2)))
@@ -58,7 +58,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var labels []table.DeliveryUnitsLabels
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			Find(&labels).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(labels).To(HaveLen(2))
@@ -112,7 +112,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var labels []table.DeliveryUnitsLabels
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			Find(&labels).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(labels).To(HaveLen(2))
@@ -152,7 +152,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var count int64
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(1)))
@@ -161,7 +161,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var label table.DeliveryUnitsLabels
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			First(&label).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(label.Type).To(Equal(""))
@@ -207,7 +207,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var count int64
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(count).To(Equal(int64(1)))
@@ -216,7 +216,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 		var label table.DeliveryUnitsLabels
 		err = conn.DB.WithContext(ctx).
 			Table("delivery_units_labels").
-			Where("order_doc = ?", order.DocID(ctx)).
+			Where("delivery_unit_doc = ?", order.DeliveryUnits[0].DocID(ctx)).
 			First(&label).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(label.Type).To(Equal("TRACKING"))

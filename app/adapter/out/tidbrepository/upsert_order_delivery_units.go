@@ -36,7 +36,7 @@ func NewUpsertOrderDeliveryUnits(conn database.ConnectionFactory) UpsertOrderDel
 				pkg := domain.DeliveryUnit{}
 				if err := tx.Save(&table.OrderDeliveryUnit{
 					OrderDoc:        order.DocID(ctx).String(),
-					DeliveryUnitDoc: pkg.DocID(ctx, order.ReferenceID.String()).String()}).Error; err != nil {
+					DeliveryUnitDoc: pkg.DocID(ctx).String()}).Error; err != nil {
 					return err
 				}
 			}

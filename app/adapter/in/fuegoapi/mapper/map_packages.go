@@ -72,7 +72,8 @@ func MapPackagesToDomain(packages []struct {
 				Currency:  pkg.Insurance.Currency,
 				UnitValue: pkg.Insurance.UnitValue,
 			},
-			Items: MapItemsToDomain(pkg.Items),
+			Labels: MapLabelsToDomain(pkg.Labels),
+			Items:  MapItemsToDomain(pkg.Items),
 		}
 	}
 	return mapped
@@ -241,5 +242,19 @@ func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
 		}
 	}
 
+	return mapped
+}
+
+func MapLabelsToDomain(labels []struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}) []domain.Reference {
+	mapped := make([]domain.Reference, len(labels))
+	for i, label := range labels {
+		mapped[i] = domain.Reference{
+			Type:  label.Type,
+			Value: label.Value,
+		}
+	}
 	return mapped
 }

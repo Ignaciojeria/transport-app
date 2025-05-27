@@ -18,7 +18,7 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 				deliveryUnitsHistory = append(deliveryUnitsHistory, table.DeliveryUnitsHistory{
 					OrderDoc:                 string(order.DocID(ctx)),
 					TenantID:                 sharedcontext.TenantIDFromContext(ctx),
-					DeliveryUnitDoc:          string(pkg.DocID(ctx, string(order.ReferenceID))),
+					DeliveryUnitDoc:          string(pkg.DocID(ctx)),
 					RouteDoc:                 string(route.DocID(ctx)),
 					Channel:                  sharedcontext.ChannelFromContext(ctx),
 					VehicleDoc:               string(route.Vehicle.DocID(ctx)),
@@ -36,7 +36,7 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 					DocumentID: domain.HashByTenant(
 						ctx,
 						string(order.DocID(ctx)),
-						string(pkg.DocID(ctx, string(order.ReferenceID))),
+						string(pkg.DocID(ctx)),
 						string(route.DocID(ctx)),
 						string(p.DocID(ctx)),
 						string(pkg.Status.DocID()),

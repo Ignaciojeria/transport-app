@@ -316,7 +316,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 		}
 
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit}, "123")
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit})
 		Expect(err).ToNot(HaveOccurred())
 
 		order := domain.Order{

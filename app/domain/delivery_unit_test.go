@@ -24,9 +24,9 @@ var _ = Describe("Package", func() {
 				Lpn: "PKG002",
 			}
 
-			Expect(package1.DocID(ctx1, "REF001")).To(Equal(HashByTenant(ctx1, "PKG001")))
-			Expect(package1.DocID(ctx1, "REF001")).ToNot(Equal(package2.DocID(ctx1, "REF001")))
-			Expect(package1.DocID(ctx1, "REF001")).ToNot(Equal(package1.DocID(ctx2, "REF001")))
+			Expect(package1.DocID(ctx1)).To(Equal(HashByTenant(ctx1, "PKG001")))
+			Expect(package1.DocID(ctx1)).ToNot(Equal(package2.DocID(ctx1)))
+			Expect(package1.DocID(ctx1)).ToNot(Equal(package1.DocID(ctx2)))
 		})
 
 		It("should generate ID based on reference, index and sorted items when Lpn is empty", func() {
@@ -39,7 +39,7 @@ var _ = Describe("Package", func() {
 				},
 			}
 			expectedInputs := []string{"REF001", "index:1", "SKU001", "SKU002"} // ordenados
-			Expect(pkg.DocID(ctx1, "REF001")).To(Equal(HashByTenant(ctx1, expectedInputs...)))
+			Expect(pkg.DocID(ctx1)).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 		})
 
 		It("should generate different IDs for packages with same items but different references", func() {
@@ -51,8 +51,8 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			id1 := pkg.DocID(ctx1, "REF001")
-			id2 := pkg.DocID(ctx1, "REF002")
+			id1 := pkg.DocID(ctx1)
+			id2 := pkg.DocID(ctx1)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -74,8 +74,8 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			id1 := pkg1.DocID(ctx1, "REF001")
-			id2 := pkg2.DocID(ctx1, "REF001")
+			id1 := pkg1.DocID(ctx1)
+			id2 := pkg2.DocID(ctx1)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -97,8 +97,8 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			id1 := pkg1.DocID(ctx1, "REF001")
-			id2 := pkg2.DocID(ctx1, "REF001")
+			id1 := pkg1.DocID(ctx1)
+			id2 := pkg2.DocID(ctx1)
 
 			Expect(id1).To(Equal(id2))
 		})
@@ -110,8 +110,8 @@ var _ = Describe("Package", func() {
 				Index: 1,
 			}
 
-			expected := HashByTenant(ctx1, "REF001", "index:1")
-			Expect(pkg.DocID(ctx1, "REF001")).To(Equal(expected))
+			expected := HashByTenant(ctx1, "index:1")
+			Expect(pkg.DocID(ctx1)).To(Equal(expected))
 		})
 
 	})
@@ -414,7 +414,7 @@ var _ = Describe("Package", func() {
 			}
 
 			// Obtener su DocID usando el LPN original
-			originalDocID := originalPackage.DocID(ctx1, "REF001")
+			originalDocID := originalPackage.DocID(ctx1)
 
 			// Actualizar el LPN
 			updatedPackage, changed := originalPackage.UpdateIfChanged(DeliveryUnit{
@@ -424,7 +424,7 @@ var _ = Describe("Package", func() {
 			Expect(updatedPackage.Lpn).To(Equal("NEW-LPN"))
 
 			// Obtener el nuevo DocID - debería ser diferente porque usa el LPN nuevo
-			updatedDocID := updatedPackage.DocID(ctx1, "REF001")
+			updatedDocID := updatedPackage.DocID(ctx1)
 			Expect(updatedDocID).ToNot(Equal(originalDocID))
 			Expect(updatedDocID).To(Equal(HashByTenant(ctx1, "NEW-LPN")))
 		})
@@ -440,7 +440,7 @@ var _ = Describe("Package", func() {
 			}
 
 			// Obtener su DocID usando el LPN original
-			originalDocID := originalPackage.DocID(ctx1, "REF001")
+			originalDocID := originalPackage.DocID(ctx1)
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, "HAS-LPN")))
 
 			// Actualizar estableciendo LPN en vacío
@@ -453,7 +453,7 @@ var _ = Describe("Package", func() {
 			Expect(updatedPackage.Lpn).To(Equal("HAS-LPN"))
 
 			// El DocID debería seguir basándose en el LPN original
-			updatedDocID := updatedPackage.DocID(ctx1, "REF001")
+			updatedDocID := updatedPackage.DocID(ctx1)
 			Expect(updatedDocID).To(Equal(originalDocID))
 		})
 
@@ -468,7 +468,7 @@ var _ = Describe("Package", func() {
 			}
 
 			expectedInputs := []string{"REF001", "index:1", "SKU001", "SKU002"}
-			originalDocID := originalPackage.DocID(ctx1, "REF001")
+			originalDocID := originalPackage.DocID(ctx1)
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 
 			updatedPackage, changed := originalPackage.UpdateIfChanged(DeliveryUnit{
@@ -477,7 +477,7 @@ var _ = Describe("Package", func() {
 			Expect(changed).To(BeTrue())
 			Expect(updatedPackage.Lpn).To(Equal("NEW-LPN"))
 
-			updatedDocID := updatedPackage.DocID(ctx1, "REF001")
+			updatedDocID := updatedPackage.DocID(ctx1)
 			Expect(updatedDocID).ToNot(Equal(originalDocID))
 			Expect(updatedDocID).To(Equal(HashByTenant(ctx1, "NEW-LPN")))
 		})
@@ -502,8 +502,8 @@ var _ = Describe("Package", func() {
 			},
 		}
 
-		id1 := pkg1.DocID(ctx1, "REF001")
-		id2 := pkg2.DocID(ctx1, "REF001")
+		id1 := pkg1.DocID(ctx1)
+		id2 := pkg2.DocID(ctx1)
 
 		Expect(id1).To(Equal(id2), "DocID debe ser igual si los SKUs son los mismos aunque estén en diferente orden")
 	})

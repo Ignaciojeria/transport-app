@@ -6,5 +6,4 @@ type DeliveryUnitsLabels struct {
 	Type            string `gorm:"not null"`
 	Value           string `gorm:"not null"`
 	DeliveryUnitDoc string `gorm:"type:char(64)"`
-	OrderDoc        string `gorm:"type:char(64)"`
 }

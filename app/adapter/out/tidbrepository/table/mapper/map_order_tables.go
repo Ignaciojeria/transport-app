@@ -102,10 +102,10 @@ func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []t
 	return mapped
 }
 
-func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit, referenceId string) table.DeliveryUnit {
+func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.DeliveryUnit {
 	return table.DeliveryUnit{
 		TenantID:   sharedcontext.TenantIDFromContext(ctx),
-		DocumentID: pkg.DocID(ctx, referenceId).String(),
+		DocumentID: pkg.DocID(ctx).String(),
 		Lpn:        pkg.Lpn,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
