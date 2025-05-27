@@ -36,8 +36,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 	It("should return delivery units when they exist", func() {
 		// Create a new tenant for this test
-		_, ctx, err := CreateTestTenant(context.Background(), conn)
-		Expect(err).ToNot(HaveOccurred())
+		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred(), "Failed to create test tenant: %v", err)
+
+		// Verify tenant was created
+		var tenantCount int64
+		err = conn.DB.WithContext(ctx).
+			Table("tenants").
+			Where("id = ?", tenant.ID).
+			Count(&tenantCount).Error
+		Expect(err).ToNot(HaveOccurred(), "Failed to verify tenant: %v", err)
+		Expect(tenantCount).To(Equal(int64(1)), "Tenant was not created properly")
 
 		destination := domain.AddressInfo{
 			State:                "CA",
@@ -52,7 +61,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			ZipCode:              "12345",
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred(), "Failed to upsert address info: %v", err)
+
+		// Verify address was created
+		var addressCount int64
+		err = conn.DB.WithContext(ctx).
+			Table("address_infos").
+			Where("document_id = ?", destination.DocID(ctx)).
+			Count(&addressCount).Error
+		Expect(err).ToNot(HaveOccurred(), "Failed to verify address: %v", err)
+		Expect(addressCount).To(Equal(int64(1)), "Address was not created properly")
 
 		fixedDate := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
 		order := domain.Order{
@@ -84,18 +102,44 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 		}
 		err = NewUpsertOrder(conn)(ctx, order)
-		Expect(err).ToNot(HaveOccurred())
+		Expect(err).ToNot(HaveOccurred(), "Failed to upsert order: %v", err)
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
-			Routes: []domain.Route{
-				{
-					Orders: []domain.Order{
-						order,
+		// Verify order was created
+		var orderCount int64
+		err = conn.DB.WithContext(ctx).
+			Table("orders").
+			Where("document_id = ?", order.DocID(ctx)).
+			Count(&orderCount).Error
+		Expect(err).ToNot(HaveOccurred(), "Failed to verify order: %v", err)
+		Expect(orderCount).To(Equal(int64(1)), "Order was not created properly")
+
+		// Retry mechanism for delivery units history
+		var historyErr error
+		for i := 0; i < 3; i++ {
+			historyErr = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+				Routes: []domain.Route{
+					{
+						Orders: []domain.Order{
+							order,
+						},
 					},
 				},
-			},
-		})
-		Expect(err).ToNot(HaveOccurred())
+			})
+			if historyErr == nil {
+				break
+			}
+			time.Sleep(time.Second * time.Duration(i+1))
+		}
+		Expect(historyErr).ToNot(HaveOccurred(), "Failed to upsert delivery units history after retries: %v", historyErr)
+
+		// Verify delivery units history was created
+		var historyCount int64
+		err = conn.DB.WithContext(ctx).
+			Table("delivery_units_histories").
+			Where("order_doc = ?", order.DocID(ctx)).
+			Count(&historyCount).Error
+		Expect(err).ToNot(HaveOccurred(), "Failed to verify delivery units history: %v", err)
+		Expect(historyCount).To(Equal(int64(1)), "Delivery units history was not created properly")
 
 		projection := deliveryunits.NewProjection()
 
@@ -127,30 +171,30 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DeliveryInstructions().String():             "",
 			},
 		})
-		Expect(err).ToNot(HaveOccurred())
-		Expect(results).To(HaveLen(1))
-		Expect(results[0].ID).To(Equal(int64(1)))
-		Expect(results[0].OrderReferenceID).To(Equal("123"))
-		Expect(results[0].OrderCollectAvailabilityDate).To(Equal("2025-05-26T00:00:00Z"))
-		Expect(results[0].OrderCollectAvailabilityDateStartTime).To(Equal("09:00"))
-		Expect(results[0].OrderCollectAvailabilityDateEndTime).To(Equal("18:00"))
-		Expect(results[0].OrderPromisedDateStartDate).To(Equal("2025-05-26T00:00:00Z"))
-		Expect(results[0].OrderPromisedDateEndDate).To(Equal("2025-05-27T00:00:00Z"))
-		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"))
-		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"))
-		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"))
-		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"))
+		Expect(err).ToNot(HaveOccurred(), "Failed to find delivery units: %v", err)
+		Expect(results).To(HaveLen(1), "Expected 1 result, got %d", len(results))
+		Expect(results[0].ID).To(Equal(int64(1)), "Unexpected ID")
+		Expect(results[0].OrderReferenceID).To(Equal("123"), "Unexpected reference ID")
+		Expect(results[0].OrderCollectAvailabilityDate).To(Equal("2025-05-26T00:00:00Z"), "Unexpected collect availability date")
+		Expect(results[0].OrderCollectAvailabilityDateStartTime).To(Equal("09:00"), "Unexpected collect availability start time")
+		Expect(results[0].OrderCollectAvailabilityDateEndTime).To(Equal("18:00"), "Unexpected collect availability end time")
+		Expect(results[0].OrderPromisedDateStartDate).To(Equal("2025-05-26T00:00:00Z"), "Unexpected promised date start")
+		Expect(results[0].OrderPromisedDateEndDate).To(Equal("2025-05-27T00:00:00Z"), "Unexpected promised date end")
+		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"), "Unexpected promised time start")
+		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"), "Unexpected promised time end")
+		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"), "Unexpected service category")
+		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"), "Unexpected delivery instructions")
 
 		// Validaciones de Destination Address
-		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"))
-		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"))
-		Expect(results[0].DestinationDistrict).To(Equal("CA"))
-		Expect(results[0].DestinationLatitude).To(Equal(1.0))
-		Expect(results[0].DestinationLongitude).To(Equal(1.0))
-		Expect(results[0].DestinationProvince).To(Equal("CA"))
-		Expect(results[0].DestinationState).To(Equal("CA"))
-		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"))
-		Expect(results[0].DestinationZipCode).To(Equal("12345"))
+		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"), "Unexpected address line 1")
+		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"), "Unexpected address line 2")
+		Expect(results[0].DestinationDistrict).To(Equal("CA"), "Unexpected district")
+		Expect(results[0].DestinationLatitude).To(Equal(1.0), "Unexpected latitude")
+		Expect(results[0].DestinationLongitude).To(Equal(1.0), "Unexpected longitude")
+		Expect(results[0].DestinationProvince).To(Equal("CA"), "Unexpected province")
+		Expect(results[0].DestinationState).To(Equal("CA"), "Unexpected state")
+		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"), "Unexpected timezone")
+		Expect(results[0].DestinationZipCode).To(Equal("12345"), "Unexpected zip code")
 	})
 
 	It("should return delivery units with destination contact information", func() {
