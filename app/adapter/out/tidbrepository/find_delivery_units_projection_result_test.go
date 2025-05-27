@@ -70,7 +70,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Where("document_id = ?", destination.DocID(ctx)).
 			Count(&addressCount).Error
 		Expect(err).ToNot(HaveOccurred(), "Failed to verify address: %v", err)
-		Expect(addressCount).To(Equal(int64(1)), "Address was not created properly")
+		Expect(addressCount).To(Equal(int64(1)), "Address was not created properly.")
 
 		fixedDate := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
 		order := domain.Order{
