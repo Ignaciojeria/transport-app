@@ -47,8 +47,6 @@ var _ = Describe("NodeInfo", func() {
 					State:        "Metropolitana",
 					Location:     orb.Point{-70.6506, -33.4372},
 				},
-
-				AddressLine2: "Dpto 1402",
 				References: []Reference{
 					{Type: "CODE", Value: "REF001"},
 					{Type: "ALT_CODE", Value: "ALT001"},
@@ -112,17 +110,6 @@ var _ = Describe("NodeInfo", func() {
 
 			Expect(changed).To(BeFalse())
 			Expect(updated.References).To(Equal(baseNode.References))
-		})
-
-		It("should update AddressLine2 and AddressLine3", func() {
-			newNode := baseNode
-			newNode.AddressLine2 = "Nueva dirección 2"
-
-			updated, changed := baseNode.UpdateIfChanged(newNode)
-
-			Expect(changed).To(BeTrue())
-			Expect(updated.AddressLine2).To(Equal("Nueva dirección 2"))
-
 		})
 
 		It("should not update if no fields changed", func() {

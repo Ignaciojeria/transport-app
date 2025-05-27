@@ -57,11 +57,11 @@ var _ = Describe("UpsertNodeInfo", func() {
 
 	It("should insert node info if not exists", func() {
 		nodeInfo := domain.NodeInfo{
-			Name:         "Warehouse Alpha",
-			ReferenceID:  "WH-001", // Ensure we have a valid ReferenceID
-			NodeType:     nodeType1,
-			AddressInfo:  addressInfo1, // This now contains contact1
-			AddressLine2: "Floor 3",
+			Name:        "Warehouse Alpha",
+			ReferenceID: "WH-001", // Ensure we have a valid ReferenceID
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1, // This now contains contact1
+
 			References: []domain.Reference{
 				{Type: "ERP", Value: "WH001"},
 			},
@@ -80,7 +80,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(dbNodeInfo.Name).To(Equal("Warehouse Alpha"))
 		Expect(dbNodeInfo.NodeTypeDoc).To(Equal(nodeType1.DocID(ctx1).String()))
 		Expect(dbNodeInfo.AddressInfoDoc).To(Equal(addressInfo1.DocID(ctx1).String()))
-		Expect(dbNodeInfo.AddressLine2).To(Equal("Floor 3"))
+
 		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 
 		// Verify that the JSON references were saved correctly
@@ -92,11 +92,11 @@ var _ = Describe("UpsertNodeInfo", func() {
 
 	It("should update node info if fields are different", func() {
 		original := domain.NodeInfo{
-			Name:         "Original Name",
-			ReferenceID:  "REF-001",
-			NodeType:     nodeType1,
-			AddressInfo:  addressInfo1, // Contact is inside addressInfo
-			AddressLine2: "Original Floor",
+			Name:        "Original Name",
+			ReferenceID: "REF-001",
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
+
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -105,11 +105,11 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		modified := domain.NodeInfo{
-			Name:         "Modified Name",
-			ReferenceID:  "REF-001", // Keep same ReferenceID to ensure same DocID
-			NodeType:     nodeType1,
-			AddressInfo:  addressInfo1, // Contact is inside addressInfo
-			AddressLine2: "Modified Floor",
+			Name:        "Modified Name",
+			ReferenceID: "REF-001", // Keep same ReferenceID to ensure same DocID
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
+
 		}
 
 		err = upsert(ctx1, modified)
@@ -122,17 +122,17 @@ var _ = Describe("UpsertNodeInfo", func() {
 			First(&dbNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbNodeInfo.Name).To(Equal("Modified Name"))
-		Expect(dbNodeInfo.AddressLine2).To(Equal("Modified Floor"))
+
 		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 
 	It("should not update if no fields changed", func() {
 		nodeInfo := domain.NodeInfo{
-			Name:         "Unchanged Node",
-			ReferenceID:  "REF-002",
-			NodeType:     nodeType1,
-			AddressInfo:  addressInfo1, // Contact is inside addressInfo
-			AddressLine2: "Same Floor",
+			Name:        "Unchanged Node",
+			ReferenceID: "REF-002",
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
+
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -276,11 +276,10 @@ var _ = Describe("UpsertNodeInfo", func() {
 
 	It("should update addressLine2 and addressLine3 when they change", func() {
 		original := domain.NodeInfo{
-			Name:         "Node With Address Lines",
-			ReferenceID:  "REF-ADDRLINES",
-			NodeType:     nodeType1,
-			AddressInfo:  addressInfo1, // Contact is inside addressInfo
-			AddressLine2: "Original Line 2",
+			Name:        "Node With Address Lines",
+			ReferenceID: "REF-ADDRLINES",
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		upsert := NewUpsertNodeInfo(connection)
@@ -288,11 +287,10 @@ var _ = Describe("UpsertNodeInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		modified := domain.NodeInfo{
-			Name:         "Node With Address Lines",
-			ReferenceID:  "REF-ADDRLINES",
-			NodeType:     nodeType1,
-			AddressInfo:  addressInfo1, // Contact is inside addressInfo
-			AddressLine2: "Updated Line 2",
+			Name:        "Node With Address Lines",
+			ReferenceID: "REF-ADDRLINES",
+			NodeType:    nodeType1,
+			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
 		err = upsert(ctx1, modified)
@@ -304,7 +302,6 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Where("document_id = ?", original.DocID(ctx1)).
 			First(&dbNodeInfo).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbNodeInfo.AddressLine2).To(Equal("Updated Line 2"))
 		Expect(dbNodeInfo.TenantID.String()).To(Equal(tenant1.ID.String()))
 	})
 

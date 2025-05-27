@@ -6,13 +6,12 @@ import (
 )
 
 type NodeInfo struct {
-	ReferenceID  ReferenceID
-	Name         string
-	NodeType     NodeType
-	References   []Reference
-	AddressInfo  AddressInfo
-	AddressLine2 string
-	Headers      Headers
+	ReferenceID ReferenceID
+	Name        string
+	NodeType    NodeType
+	References  []Reference
+	AddressInfo AddressInfo
+	Headers     Headers
 }
 
 func (n NodeInfo) DocID(ctx context.Context) DocumentID {
@@ -88,12 +87,6 @@ func (n NodeInfo) UpdateIfChanged(newNode NodeInfo) (NodeInfo, bool) {
 			updated.References = updatedRefs
 			changed = true
 		}
-	}
-
-	// Actualizar campos AddressLine que se movieron de AddressInfo a NodeInfo
-	if newNode.AddressLine2 != "" && newNode.AddressLine2 != n.AddressLine2 {
-		updated.AddressLine2 = newNode.AddressLine2
-		changed = true
 	}
 
 	// Actualizar Headers si han cambiado

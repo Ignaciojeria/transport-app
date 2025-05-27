@@ -29,17 +29,15 @@ type NodeInfo struct {
 	NodeInfoHeadersDoc string          `gorm:"type:char(64)"`
 	NodeInfoHeaders    NodeInfoHeaders `gorm:"-"` // Ignore relationship for DB operations
 
-	AddressLine2   string
 	NodeReferences JSONReference `gorm:"type:json"`
 }
 
 func (n NodeInfo) Map() domain.NodeInfo {
 	nodeInfo := domain.NodeInfo{
-		ReferenceID:  domain.ReferenceID(n.ReferenceID),
-		Name:         n.Name,
-		References:   n.NodeReferences.Map(),
-		AddressLine2: n.AddressLine2,
-		Headers:      n.NodeInfoHeaders.Map(),
+		ReferenceID: domain.ReferenceID(n.ReferenceID),
+		Name:        n.Name,
+		References:  n.NodeReferences.Map(),
+		Headers:     n.NodeInfoHeaders.Map(),
 	}
 	return nodeInfo
 }
