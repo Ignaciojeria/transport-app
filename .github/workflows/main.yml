@@ -36,6 +36,7 @@ jobs:
           go-version: '>=1.21'
 
       - name: Run Ginkgo unit tests with coverage
+        shell: bash
         run: |
           go install github.com/onsi/ginkgo/v2/ginkgo@latest
           ginkgo \
@@ -47,7 +48,9 @@ jobs:
             --coverprofile=coverage.out \
             ./app/... | tee ginkgo-unit.log
           EXIT_CODE=${PIPESTATUS[0]}
+          echo "===================== GINKGO UNIT LOG ====================="
           cat ginkgo-unit.log
+          echo "=========================================================="
           exit $EXIT_CODE
 
       - name: Run integration tests
