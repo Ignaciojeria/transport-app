@@ -36,6 +36,17 @@ func (j JSONReference) MapDocuments() []domain.Document {
 	return mappedReferences
 }
 
+func (j JSONReference) MapAdditionalContactMethods() []domain.ContactMethod {
+	mappedReferences := make([]domain.ContactMethod, len(j))
+	for i, ref := range j {
+		mappedReferences[i] = domain.ContactMethod{
+			Type:  ref.Type,
+			Value: ref.Value,
+		}
+	}
+	return mappedReferences
+}
+
 // Scan implementa la interfaz sql.Scanner para convertir datos JSON desde la base de datos
 func (j *JSONReference) Scan(value interface{}) error {
 	bytes, ok := value.([]byte)

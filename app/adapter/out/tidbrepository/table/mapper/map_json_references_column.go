@@ -19,3 +19,18 @@ func mapDocuments(docs []domain.Document) table.JSONReference {
 
 	return mapped
 }
+
+func mapAdditionalContactMethods(docs []domain.ContactMethod) table.JSONReference {
+	// Crear un slice para mapear los documentos
+	mapped := make(table.JSONReference, len(docs))
+
+	// Iterar sobre los documentos y mapearlos
+	for i, d := range docs {
+		mapped[i] = table.Reference{
+			Type:  d.Type,
+			Value: d.Value,
+		}
+	}
+
+	return mapped
+}
