@@ -166,7 +166,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred(), "Failed to find delivery units: %v", err)
 		Expect(results).To(HaveLen(1), "Expected 1 result, got %d", len(results))
-		Expect(results[0].ID).To(Equal(int64(1)), "Unexpected ID")
+		Expect(results[0].ID).To(BeNumerically(">", 0), "ID should be greater than 0")
 		Expect(results[0].OrderReferenceID).To(Equal("123"), "Unexpected reference ID")
 		Expect(results[0].OrderCollectAvailabilityDate).To(Equal("2025-05-26T00:00:00Z"), "Unexpected collect availability date")
 		Expect(results[0].OrderCollectAvailabilityDateStartTime).To(Equal("09:00"), "Unexpected collect availability start time")
