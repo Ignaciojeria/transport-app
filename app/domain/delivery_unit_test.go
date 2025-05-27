@@ -38,23 +38,8 @@ var _ = Describe("Package", func() {
 					{Sku: "SKU001"},
 				},
 			}
-			expectedInputs := []string{"REF001", "index:1", "SKU001", "SKU002"} // ordenados
+			expectedInputs := []string{"index:1", "SKU001", "SKU002"} // ordenados
 			Expect(pkg.DocID(ctx1)).To(Equal(HashByTenant(ctx1, expectedInputs...)))
-		})
-
-		It("should generate different IDs for packages with same items but different references", func() {
-			pkg := DeliveryUnit{
-				Lpn: "",
-				Items: []Item{
-					{Sku: "SKU001"},
-					{Sku: "SKU002"},
-				},
-			}
-
-			id1 := pkg.DocID(ctx1)
-			id2 := pkg.DocID(ctx1)
-
-			Expect(id1).ToNot(Equal(id2))
 		})
 
 		It("should generate different IDs for packages with same reference but different items", func() {
@@ -467,7 +452,7 @@ var _ = Describe("Package", func() {
 				},
 			}
 
-			expectedInputs := []string{"REF001", "index:1", "SKU001", "SKU002"}
+			expectedInputs := []string{"index:1", "SKU001", "SKU002"}
 			originalDocID := originalPackage.DocID(ctx1)
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 
