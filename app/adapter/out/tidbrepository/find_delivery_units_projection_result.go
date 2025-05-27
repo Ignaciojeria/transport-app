@@ -113,6 +113,11 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(o + ".service_category").As("order_promised_date_service_category"))
 		}
 
+		// Campos de address_infos
+		if projection.DestinationAddressLine2().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".address_line2").As("destination_address_line2"))
+		}
+
 		if projection.Commerce().Has(filters.RequestedFields) || projection.Consumer().Has(filters.RequestedFields) {
 			ds = ds.LeftJoin(
 				goqu.T("order_headers").As(oh),

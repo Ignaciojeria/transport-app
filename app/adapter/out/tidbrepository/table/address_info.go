@@ -21,6 +21,7 @@ type AddressInfo struct {
 	DistrictDoc          string    `gorm:"type:char(64);default:null"`
 	District             District  `gorm:"-"`
 	AddressLine1         string    `gorm:"not null"`
+	AddressLine2         string    `gorm:"default:null"`
 	Latitude             float64   `gorm:"default:null"`
 	Longitude            float64   `gorm:"default:null"`
 	RequiresManualReview bool      `gorm:"default:false"`
@@ -37,6 +38,7 @@ func (a AddressInfo) Map() domain.AddressInfo {
 		RequiresManualReview: a.RequiresManualReview,
 		CoordinateSource:     a.CoordinateSource,
 		AddressLine1:         a.AddressLine1,
+		AddressLine2:         a.AddressLine2,
 		Location:             orb.Point{a.Longitude, a.Latitude},
 		ZipCode:              a.ZipCode,
 		TimeZone:             a.TimeZone,

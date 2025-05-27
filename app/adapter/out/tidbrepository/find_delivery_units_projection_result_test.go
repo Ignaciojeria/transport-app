@@ -44,6 +44,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Province:             "CA",
 			District:             "CA",
 			AddressLine1:         "123 Main St",
+			AddressLine2:         "Apt 1",
 			Location:             orb.Point{1, 1},
 			TimeZone:             "America/Santiago",
 			RequiresManualReview: true,
@@ -121,6 +122,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DestinationState().String():                 "",
 				projection.DestinationTimeZone().String():              "",
 				projection.DestinationZipCode().String():               "",
+				projection.DestinationAddressLine2().String():          "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -138,6 +140,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Validaciones de Destination Address
 		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"))
+		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"))
 		Expect(results[0].DestinationDistrict).To(Equal("CA"))
 		Expect(results[0].DestinationLatitude).To(Equal(1.0))
 		Expect(results[0].DestinationLongitude).To(Equal(1.0))

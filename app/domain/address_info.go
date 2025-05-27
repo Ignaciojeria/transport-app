@@ -15,6 +15,7 @@ type AddressInfo struct {
 	Province             Province
 	District             District
 	AddressLine1         string
+	AddressLine2         string
 	Location             orb.Point
 	RequiresManualReview bool
 	CoordinateSource     string
@@ -26,6 +27,7 @@ func (a AddressInfo) DocID(ctx context.Context) DocumentID {
 	return HashByTenant(
 		ctx,
 		a.AddressLine1,
+		a.AddressLine2,
 		a.District.String(),
 		a.Province.String(),
 		a.State.String())

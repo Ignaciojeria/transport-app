@@ -65,7 +65,6 @@ type Order struct {
 
 	DeliveryUnits []DeliveryUnit `gorm:"-"`
 
-	AddressLine2                      string     `gorm:"default:null"`
 	CollectAvailabilityDate           *time.Time `gorm:"type:date;default:null"`
 	CollectAvailabilityTimeRangeStart string     `gorm:"default:null"`
 	CollectAvailabilityTimeRangeEnd   string     `gorm:"default:null"`
@@ -96,8 +95,7 @@ func (m *JSONMap) Scan(value interface{}) error {
 
 func (o Order) Map() domain.Order {
 	order := domain.Order{
-		AddressLine2: o.AddressLine2,
-		ReferenceID:  domain.ReferenceID(o.ReferenceID),
+		ReferenceID: domain.ReferenceID(o.ReferenceID),
 	}
 
 	// Mapear las fechas de disponibilidad de recolección

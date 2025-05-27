@@ -24,6 +24,7 @@ type DeliveryUnitsProjectionResult struct {
 
 	// Destination Address Information
 	DestinationAddressLine1         string  `json:"destination_address_line1"`
+	DestinationAddressLine2         string  `json:"destination_address_line2"`
 	DestinationDistrict             string  `json:"destination_district"`
 	DestinationLatitude             float64 `json:"destination_latitude"`
 	DestinationLongitude            float64 `json:"destination_longitude"`
