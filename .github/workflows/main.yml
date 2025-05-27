@@ -41,6 +41,7 @@ jobs:
           go install github.com/onsi/ginkgo/v2/ginkgo@latest
           ginkgo \
             --trace \
+            --v \
             --fail-on-pending \
             --randomize-all \
             --cover \
