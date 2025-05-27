@@ -5,6 +5,7 @@ type DeliveryUnitsProjectionResult struct {
 	Channel                               string `json:"channel"`
 	Consumer                              string `json:"order_consumer"`
 	Commerce                              string `json:"order_commerce"`
+	OrderDeliveryInstructions             string `json:"order_delivery_instructions"`
 	OrderReferenceID                      string `json:"order_reference_id"`
 	OrderCollectAvailabilityDate          string `json:"order_collect_availability_date"`
 	OrderCollectAvailabilityDateStartTime string `json:"order_collect_availability_date_start_time"`

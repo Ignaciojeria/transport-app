@@ -112,7 +112,7 @@ func NewCreateOrder(
 		group.Go(func() error {
 			plan := domain.Plan{
 				Routes: []domain.Route{
-					domain.Route{
+					{
 						Orders: []domain.Order{inOrder},
 					},
 				},

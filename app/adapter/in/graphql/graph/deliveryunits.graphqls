@@ -26,6 +26,7 @@ type Contact {
 type AddressInfo {
   addressLine1: String
   addressLine2: String
+  requiresManualReview: Boolean
   contact: Contact
   district: String
   latitude: Float
@@ -43,7 +44,6 @@ type NodeInfo {
 
 type Location {
   addressInfo: AddressInfo
-  deliveryInstructions: String
   nodeInfo: NodeInfo
 }
 
@@ -194,6 +194,7 @@ type DeliveryUnitsReport {
   commerce: String
   consumer: String
   channel:  String
+  deliveryInstructions: String
   referenceID: String!
   groupBy: GroupBy
   collectAvailabilityDate: CollectAvailabilityDate

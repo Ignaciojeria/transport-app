@@ -73,10 +73,6 @@ func (p Projection) Destination() Field {
 	return Field{path: "destination"}
 }
 
-func (p Projection) DestinationDeliveryInstructions() Field {
-	return Field{path: "destination.deliveryInstructions"}
-}
-
 // Métodos para campos de NodeInfo en Destination
 func (p Projection) DestinationNodeInfo() Field {
 	return Field{path: "destination.nodeInfo"}
@@ -185,10 +181,6 @@ func (p Projection) DestinationDocumentsValue() Field {
 // Métodos para campos de Origin Location
 func (p Projection) Origin() Field {
 	return Field{path: "origin"}
-}
-
-func (p Projection) OriginDeliveryInstructions() Field {
-	return Field{path: "origin.deliveryInstructions"}
 }
 
 // Métodos para campos de NodeInfo en Origin
