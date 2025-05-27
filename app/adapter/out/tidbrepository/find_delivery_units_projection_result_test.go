@@ -56,7 +56,8 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		fixedDate := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
 		order := domain.Order{
-			ReferenceID: "123",
+			ReferenceID:          "123",
+			DeliveryInstructions: "Dejar en la puerta",
 			Destination: domain.NodeInfo{
 				AddressInfo: destination,
 			},
@@ -123,6 +124,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DestinationTimeZone().String():              "",
 				projection.DestinationZipCode().String():               "",
 				projection.DestinationAddressLine2().String():          "",
+				projection.DeliveryInstructions().String():             "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -137,6 +139,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"))
 		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"))
 		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"))
+		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"))
 
 		// Validaciones de Destination Address
 		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"))

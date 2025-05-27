@@ -90,11 +90,11 @@ func NewFindDeliveryUnitsProjectionResult(
 		if projection.CollectAvailabilityDate().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date").As("order_collect_availability_date"))
 		}
-		/*
-			if projection.DestinationDeliveryInstructions().Has(filters.RequestedFields) {
-				ds = ds.SelectAppend(goqu.I(o + ".delivery_instructions").As("order_delivery_instructions"))
-			}
-		*/
+
+		if projection.DeliveryInstructions().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".delivery_instructions").As("order_delivery_instructions"))
+		}
+
 		if projection.CollectAvailabilityDateStartTime().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_time_range_start").As("order_collect_availability_date_start_time"))
 		}

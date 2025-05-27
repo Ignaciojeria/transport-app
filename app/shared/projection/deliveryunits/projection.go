@@ -47,6 +47,10 @@ func (p Projection) ReferenceID() Field {
 	return Field{path: "referenceID"}
 }
 
+func (p Projection) DeliveryInstructions() Field {
+	return Field{path: "deliveryInstructions"}
+}
+
 // Métodos para campos de CollectAvailabilityDate
 func (p Projection) CollectAvailabilityDate() Field {
 	return Field{path: "collectAvailabilityDate"}
