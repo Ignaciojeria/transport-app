@@ -113,24 +113,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred(), "Failed to verify order: %v", err)
 		Expect(orderCount).To(Equal(int64(1)), "Order was not created properly")
 
-		// Retry mechanism for delivery units history
-		var historyErr error
-		for i := 0; i < 3; i++ {
-			historyErr = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
-				Routes: []domain.Route{
-					{
-						Orders: []domain.Order{
-							order,
-						},
+		// Create delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
 					},
 				},
-			})
-			if historyErr == nil {
-				break
-			}
-			time.Sleep(time.Second * time.Duration(i+1))
-		}
-		Expect(historyErr).ToNot(HaveOccurred(), "Failed to upsert delivery units history after retries: %v", historyErr)
+			},
+		})
+		Expect(err).ToNot(HaveOccurred(), "Failed to upsert delivery units history: %v", err)
 
 		// Verify delivery units history was created
 		var historyCount int64

@@ -42,15 +42,18 @@ jobs:
           ginkgo \
             --trace \
             --v \
+            --fail-fast \
             --fail-on-pending \
             --randomize-all \
             --cover \
             --coverpkg=./app/... \
             --coverprofile=coverage.out \
-            ./app/... | tee ginkgo-unit.log
-          EXIT_CODE=${PIPESTATUS[0]}
+            --no-color \
+            --json-report=report.json \
+            ./app/...
+          EXIT_CODE=$?
           echo "===================== GINKGO UNIT LOG ====================="
-          cat ginkgo-unit.log
+          cat report.json
           echo "=========================================================="
           exit $EXIT_CODE
 
