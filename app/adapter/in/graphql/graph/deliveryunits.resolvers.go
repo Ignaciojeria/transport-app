@@ -55,10 +55,11 @@ func (r *queryResolver) DeliveryUnitsReports(
 	// Aquí simulamos obtener limit+1 registros para verificar hasNextPage
 	ordersData := []*model.DeliveryUnitsReport{
 		{
-			ReferenceID: "REF123",
-			Commerce:    ptrString("kiosclub"),
-			Consumer:    ptrString("apikios"),
-			Channel:     ptrString("shipconfirm,dispatch,web,mobile"),
+			ReferenceID:          "REF123",
+			DeliveryInstructions: ptrString("Dejar en la puerta trasera"),
+			Commerce:             ptrString("kiosclub"),
+			Consumer:             ptrString("apikios"),
+			Channel:              ptrString("shipconfirm,dispatch,web,mobile"),
 			CollectAvailabilityDate: &model.CollectAvailabilityDate{
 				Date: ptrString("2025-05-01"),
 				TimeRange: &model.TimeRange{
@@ -91,7 +92,6 @@ func (r *queryResolver) DeliveryUnitsReports(
 					TimeZone:  ptrString("America/Santiago"),
 					ZipCode:   ptrString("12345"),
 				},
-				DeliveryInstructions: ptrString("Dejar en la puerta trasera"),
 				NodeInfo: &model.NodeInfo{
 					ReferenceID: ptrString("NODE-001"),
 					Name:        ptrString("Central Warehouse"),
@@ -121,7 +121,6 @@ func (r *queryResolver) DeliveryUnitsReports(
 					TimeZone:  ptrString("America/Santiago"),
 					ZipCode:   ptrString("54321"),
 				},
-				DeliveryInstructions: ptrString("Cargar en zona 2"),
 				NodeInfo: &model.NodeInfo{
 					ReferenceID: ptrString("NODE-002"),
 					Name:        ptrString("Secondary Warehouse"),

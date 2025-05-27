@@ -47,16 +47,17 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AddressInfo struct {
-		AddressLine1 func(childComplexity int) int
-		AddressLine2 func(childComplexity int) int
-		Contact      func(childComplexity int) int
-		District     func(childComplexity int) int
-		Latitude     func(childComplexity int) int
-		Longitude    func(childComplexity int) int
-		Province     func(childComplexity int) int
-		State        func(childComplexity int) int
-		TimeZone     func(childComplexity int) int
-		ZipCode      func(childComplexity int) int
+		AddressLine1         func(childComplexity int) int
+		AddressLine2         func(childComplexity int) int
+		Contact              func(childComplexity int) int
+		District             func(childComplexity int) int
+		Latitude             func(childComplexity int) int
+		Longitude            func(childComplexity int) int
+		Province             func(childComplexity int) int
+		RequiresManualReview func(childComplexity int) int
+		State                func(childComplexity int) int
+		TimeZone             func(childComplexity int) int
+		ZipCode              func(childComplexity int) int
 	}
 
 	Carrier struct {
@@ -129,6 +130,7 @@ type ComplexityRoot struct {
 		Commerce                func(childComplexity int) int
 		Consumer                func(childComplexity int) int
 		Delivery                func(childComplexity int) int
+		DeliveryInstructions    func(childComplexity int) int
 		DeliveryUnit            func(childComplexity int) int
 		Destination             func(childComplexity int) int
 		Driver                  func(childComplexity int) int
@@ -208,9 +210,8 @@ type ComplexityRoot struct {
 	}
 
 	Location struct {
-		AddressInfo          func(childComplexity int) int
-		DeliveryInstructions func(childComplexity int) int
-		NodeInfo             func(childComplexity int) int
+		AddressInfo func(childComplexity int) int
+		NodeInfo    func(childComplexity int) int
 	}
 
 	NodeInfo struct {
@@ -348,6 +349,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.AddressInfo.Province(childComplexity), true
+
+	case "AddressInfo.requiresManualReview":
+		if e.complexity.AddressInfo.RequiresManualReview == nil {
+			break
+		}
+
+		return e.complexity.AddressInfo.RequiresManualReview(childComplexity), true
 
 	case "AddressInfo.state":
 		if e.complexity.AddressInfo.State == nil {
@@ -642,6 +650,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DeliveryUnitsReport.Delivery(childComplexity), true
+
+	case "DeliveryUnitsReport.deliveryInstructions":
+		if e.complexity.DeliveryUnitsReport.DeliveryInstructions == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.DeliveryInstructions(childComplexity), true
 
 	case "DeliveryUnitsReport.deliveryUnit":
 		if e.complexity.DeliveryUnitsReport.DeliveryUnit == nil {
@@ -950,13 +965,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Location.AddressInfo(childComplexity), true
-
-	case "Location.deliveryInstructions":
-		if e.complexity.Location.DeliveryInstructions == nil {
-			break
-		}
-
-		return e.complexity.Location.DeliveryInstructions(childComplexity), true
 
 	case "Location.nodeInfo":
 		if e.complexity.Location.NodeInfo == nil {
@@ -1614,6 +1622,47 @@ func (ec *executionContext) fieldContext_AddressInfo_addressLine2(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AddressInfo_requiresManualReview(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AddressInfo_requiresManualReview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RequiresManualReview, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AddressInfo_requiresManualReview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AddressInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -3527,6 +3576,47 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_channel(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnitsReport_deliveryInstructions(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_deliveryInstructions(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DeliveryInstructions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_deliveryInstructions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReport_referenceID(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReport_referenceID(ctx, field)
 	if err != nil {
@@ -3703,8 +3793,6 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_destination(_ conte
 			switch field.Name {
 			case "addressInfo":
 				return ec.fieldContext_Location_addressInfo(ctx, field)
-			case "deliveryInstructions":
-				return ec.fieldContext_Location_deliveryInstructions(ctx, field)
 			case "nodeInfo":
 				return ec.fieldContext_Location_nodeInfo(ctx, field)
 			}
@@ -3752,8 +3840,6 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_origin(_ context.Co
 			switch field.Name {
 			case "addressInfo":
 				return ec.fieldContext_Location_addressInfo(ctx, field)
-			case "deliveryInstructions":
-				return ec.fieldContext_Location_deliveryInstructions(ctx, field)
 			case "nodeInfo":
 				return ec.fieldContext_Location_nodeInfo(ctx, field)
 			}
@@ -4449,6 +4535,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 				return ec.fieldContext_DeliveryUnitsReport_consumer(ctx, field)
 			case "channel":
 				return ec.fieldContext_DeliveryUnitsReport_channel(ctx, field)
+			case "deliveryInstructions":
+				return ec.fieldContext_DeliveryUnitsReport_deliveryInstructions(ctx, field)
 			case "referenceID":
 				return ec.fieldContext_DeliveryUnitsReport_referenceID(ctx, field)
 			case "groupBy":
@@ -5675,6 +5763,8 @@ func (ec *executionContext) fieldContext_Location_addressInfo(_ context.Context,
 				return ec.fieldContext_AddressInfo_addressLine1(ctx, field)
 			case "addressLine2":
 				return ec.fieldContext_AddressInfo_addressLine2(ctx, field)
+			case "requiresManualReview":
+				return ec.fieldContext_AddressInfo_requiresManualReview(ctx, field)
 			case "contact":
 				return ec.fieldContext_AddressInfo_contact(ctx, field)
 			case "district":
@@ -5693,47 +5783,6 @@ func (ec *executionContext) fieldContext_Location_addressInfo(_ context.Context,
 				return ec.fieldContext_AddressInfo_zipCode(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AddressInfo", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Location_deliveryInstructions(ctx context.Context, field graphql.CollectedField, obj *model.Location) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Location_deliveryInstructions(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.DeliveryInstructions, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Location_deliveryInstructions(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Location",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9094,6 +9143,8 @@ func (ec *executionContext) _AddressInfo(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._AddressInfo_addressLine1(ctx, field, obj)
 		case "addressLine2":
 			out.Values[i] = ec._AddressInfo_addressLine2(ctx, field, obj)
+		case "requiresManualReview":
+			out.Values[i] = ec._AddressInfo_requiresManualReview(ctx, field, obj)
 		case "contact":
 			out.Values[i] = ec._AddressInfo_contact(ctx, field, obj)
 		case "district":
@@ -9556,6 +9607,8 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._DeliveryUnitsReport_consumer(ctx, field, obj)
 		case "channel":
 			out.Values[i] = ec._DeliveryUnitsReport_channel(ctx, field, obj)
+		case "deliveryInstructions":
+			out.Values[i] = ec._DeliveryUnitsReport_deliveryInstructions(ctx, field, obj)
 		case "referenceID":
 			out.Values[i] = ec._DeliveryUnitsReport_referenceID(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10082,8 +10135,6 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = graphql.MarshalString("Location")
 		case "addressInfo":
 			out.Values[i] = ec._Location_addressInfo(ctx, field, obj)
-		case "deliveryInstructions":
-			out.Values[i] = ec._Location_deliveryInstructions(ctx, field, obj)
 		case "nodeInfo":
 			out.Values[i] = ec._Location_nodeInfo(ctx, field, obj)
 		default:

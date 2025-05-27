@@ -3,16 +3,17 @@
 package model
 
 type AddressInfo struct {
-	AddressLine1 *string  `json:"addressLine1,omitempty"`
-	AddressLine2 *string  `json:"addressLine2,omitempty"`
-	Contact      *Contact `json:"contact,omitempty"`
-	District     *string  `json:"district,omitempty"`
-	Latitude     *float64 `json:"latitude,omitempty"`
-	Longitude    *float64 `json:"longitude,omitempty"`
-	Province     *string  `json:"province,omitempty"`
-	State        *string  `json:"state,omitempty"`
-	TimeZone     *string  `json:"timeZone,omitempty"`
-	ZipCode      *string  `json:"zipCode,omitempty"`
+	AddressLine1         *string  `json:"addressLine1,omitempty"`
+	AddressLine2         *string  `json:"addressLine2,omitempty"`
+	RequiresManualReview *bool    `json:"requiresManualReview,omitempty"`
+	Contact              *Contact `json:"contact,omitempty"`
+	District             *string  `json:"district,omitempty"`
+	Latitude             *float64 `json:"latitude,omitempty"`
+	Longitude            *float64 `json:"longitude,omitempty"`
+	Province             *string  `json:"province,omitempty"`
+	State                *string  `json:"state,omitempty"`
+	TimeZone             *string  `json:"timeZone,omitempty"`
+	ZipCode              *string  `json:"zipCode,omitempty"`
 }
 
 type Carrier struct {
@@ -82,6 +83,7 @@ type DeliveryUnitsReport struct {
 	Commerce                *string                  `json:"commerce,omitempty"`
 	Consumer                *string                  `json:"consumer,omitempty"`
 	Channel                 *string                  `json:"channel,omitempty"`
+	DeliveryInstructions    *string                  `json:"deliveryInstructions,omitempty"`
 	ReferenceID             string                   `json:"referenceID"`
 	GroupBy                 *GroupBy                 `json:"groupBy,omitempty"`
 	CollectAvailabilityDate *CollectAvailabilityDate `json:"collectAvailabilityDate,omitempty"`
@@ -172,9 +174,8 @@ type Label struct {
 }
 
 type Location struct {
-	AddressInfo          *AddressInfo `json:"addressInfo,omitempty"`
-	DeliveryInstructions *string      `json:"deliveryInstructions,omitempty"`
-	NodeInfo             *NodeInfo    `json:"nodeInfo,omitempty"`
+	AddressInfo *AddressInfo `json:"addressInfo,omitempty"`
+	NodeInfo    *NodeInfo    `json:"nodeInfo,omitempty"`
 }
 
 type NodeInfo struct {
