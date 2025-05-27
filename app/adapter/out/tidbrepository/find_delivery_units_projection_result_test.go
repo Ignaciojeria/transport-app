@@ -159,18 +159,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.PromisedDateTimeRangeEndTime().String():     "",
 				projection.DestinationAddressInfo().String():           "",
 				projection.PromisedDateServiceCategory().String():      "",
-				/*
-					projection.DestinationAddressLine1().String():          "",
-					projection.DestinationDistrict().String():              "",
-					projection.DestinationLatitude().String():              "",
-					projection.DestinationLongitude().String():             "",
-					projection.DestinationProvince().String():              "",
-					projection.DestinationState().String():                 "",
-					projection.DestinationTimeZone().String():              "",
-					projection.DestinationZipCode().String():               "",
-					projection.DestinationAddressLine2().String():          "",
-					projection.DeliveryInstructions().String():             "",
-				*/
+				projection.DestinationAddressLine1().String():          "",
+				projection.DestinationDistrict().String():              "",
+				projection.DestinationLatitude().String():              "",
+				projection.DestinationLongitude().String():             "",
+				projection.DestinationProvince().String():              "",
+				projection.DestinationState().String():                 "",
+				projection.DestinationTimeZone().String():              "",
+				projection.DestinationZipCode().String():               "",
+				projection.DestinationAddressLine2().String():          "",
+				projection.DeliveryInstructions().String():             "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred(), "Failed to find delivery units: %v", err)
@@ -185,20 +183,20 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"), "Unexpected promised time start")
 		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"), "Unexpected promised time end")
 		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"), "Unexpected service category")
-		//		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"), "Unexpected delivery instructions")
+		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"), "Dejar en la puerta")
 
 		// Validaciones de Destination Address
-		/*
-			Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"), "Unexpected address line 1")
-			Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"), "Unexpected address line 2")
-			Expect(results[0].DestinationDistrict).To(Equal("CA"), "Unexpected district")
-			Expect(results[0].DestinationLatitude).To(Equal(1.0), "Unexpected latitude")
-			Expect(results[0].DestinationLongitude).To(Equal(1.0), "Unexpected longitude")
-			Expect(results[0].DestinationProvince).To(Equal("CA"), "Unexpected province")
-			Expect(results[0].DestinationState).To(Equal("CA"), "Unexpected state")
-			Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"), "Unexpected timezone")
-			Expect(results[0].DestinationZipCode).To(Equal("12345"), "Unexpected zip code")
-		*/
+
+		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"), "Unexpected address line 1")
+		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"), "Unexpected address line 2")
+		Expect(results[0].DestinationDistrict).To(Equal("CA"), "Unexpected district")
+		Expect(results[0].DestinationLatitude).To(Equal(1.0), "Unexpected latitude")
+		Expect(results[0].DestinationLongitude).To(Equal(1.0), "Unexpected longitude")
+		Expect(results[0].DestinationProvince).To(Equal("CA"), "Unexpected province")
+		Expect(results[0].DestinationState).To(Equal("CA"), "Unexpected state")
+		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"), "Unexpected timezone")
+		Expect(results[0].DestinationZipCode).To(Equal("12345"), "Unexpected zip code")
+
 	})
 
 	It("should return delivery units with destination contact information", func() {
