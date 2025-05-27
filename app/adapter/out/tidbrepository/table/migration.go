@@ -58,15 +58,7 @@ func NewRunMigrations(
 			&Route{},
 			&DeliveryUnitsHistory{},
 			&SizeCategory{},
-		}
-
-		// Opcional: Eliminar tablas si existen
-		log.Println("Dropping existing tables...")
-		for _, table := range tables {
-			if err := conn.Migrator().DropTable(table); err != nil {
-				log.Printf("Error dropping table: %v", err)
-				return err
-			}
+			&DeliveryUnitsLabels{},
 		}
 
 		// Crear las tablas nuevamente

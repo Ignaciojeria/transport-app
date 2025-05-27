@@ -17,6 +17,7 @@ type DeliveryUnit struct {
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
+	Labels          []Reference `json:"labels"`
 }
 
 func (p DeliveryUnit) DocID(ctx context.Context, otherReference string) DocumentID {
