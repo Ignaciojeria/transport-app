@@ -34,9 +34,10 @@ type DeliveryUnitsProjectionResult struct {
 	DestinationRequiresManualReview bool    `json:"destination_requires_manual_review"`
 
 	// Destination Contact Information
-	DestinationContactEmail      string `json:"destination_contact_email"`
-	DestinationContactFullName   string `json:"destination_contact_full_name"`
-	DestinationContactNationalID string `json:"destination_contact_national_id"`
-	DestinationContactPhone      string `json:"destination_contact_phone"`
-	DestinationContactDocuments  string `json:"destination_contact_documents"`
+	DestinationContactEmail             string `json:"destination_contact_email"`
+	DestinationContactFullName          string `json:"destination_contact_full_name"`
+	DestinationContactNationalID        string `json:"destination_contact_national_id"`
+	DestinationContactPhone             string `json:"destination_contact_phone"`
+	DestinationContactDocuments         string `json:"destination_contact_documents"`
+	DestinationAdditionalContactMethods string `json:"destination_additional_contact_methods"`
 }

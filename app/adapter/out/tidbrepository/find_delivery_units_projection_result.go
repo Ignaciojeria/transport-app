@@ -210,6 +210,14 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I("dc.phone").As("destination_contact_phone"))
 		}
 
+		if projection.DestinationAdditionalContactMethods().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("dc.additional_contact_methods").As("destination_additional_contact_methods"))
+		}
+
+		if projection.DestinationContactDocuments().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("dc.documents").As("destination_contact_documents"))
+		}
+
 		sql, args, err := ds.Prepared(true).ToSQL()
 		if err != nil {
 			return nil, err

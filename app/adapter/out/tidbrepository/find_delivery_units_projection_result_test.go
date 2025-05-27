@@ -158,6 +158,26 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			PrimaryEmail: "test@example.com",
 			PrimaryPhone: "+56912345678",
 			NationalID:   "12345678-9",
+			AdditionalContactMethods: []domain.ContactMethod{
+				{
+					Type:  "whatsapp",
+					Value: "+56987654321",
+				},
+				{
+					Type:  "telegram",
+					Value: "@johndoe",
+				},
+			},
+			Documents: []domain.Document{
+				{
+					Type:  "dni",
+					Value: "12345678-9",
+				},
+				{
+					Type:  "passport",
+					Value: "AB123456",
+				},
+			},
 		}
 		err = NewUpsertContact(conn)(ctx, contact)
 		Expect(err).ToNot(HaveOccurred())
@@ -226,13 +246,15 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
-				projection.DestinationAddressInfo().String():          "",
-				projection.DestinationContact().String():              "",
-				projection.DestinationContactEmail().String():         "",
-				projection.DestinationContactFullName().String():      "",
-				projection.DestinationContactNationalID().String():    "",
-				projection.DestinationContactPhone().String():         "",
-				projection.DestinationRequiresManualReview().String(): "",
+				projection.DestinationAddressInfo().String():              "",
+				projection.DestinationContact().String():                  "",
+				projection.DestinationContactEmail().String():             "",
+				projection.DestinationContactFullName().String():          "",
+				projection.DestinationContactNationalID().String():        "",
+				projection.DestinationContactPhone().String():             "",
+				projection.DestinationAdditionalContactMethods().String(): "",
+				projection.DestinationContactDocuments().String():         "",
+				projection.DestinationRequiresManualReview().String():     "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -243,6 +265,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationContactFullName).To(Equal("John Doe"))
 		Expect(results[0].DestinationContactNationalID).To(Equal("12345678-9"))
 		Expect(results[0].DestinationContactPhone).To(Equal("+56912345678"))
+		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"type":"whatsapp"`))
+		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"value":"+56987654321"`))
+		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"type":"telegram"`))
+		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"value":"@johndoe"`))
+		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"type":"dni"`))
+		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"value":"12345678-9"`))
+		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"type":"passport"`))
+		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"value":"AB123456"`))
 		Expect(results[0].DestinationRequiresManualReview).To(Equal(true))
 	})
 

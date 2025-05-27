@@ -157,7 +157,7 @@ func (p Projection) DestinationContactPhone() Field {
 }
 
 // Métodos para campos de ContactMethods en Destination
-func (p Projection) DestinationContactMethods() Field {
+func (p Projection) DestinationAdditionalContactMethods() Field {
 	return Field{path: "destination.addressInfo.contact.additionalContactMethods"}
 }
 
@@ -170,7 +170,7 @@ func (p Projection) DestinationContactMethodsValue() Field {
 }
 
 // Métodos para campos de Documents en Destination
-func (p Projection) DestinationDocuments() Field {
+func (p Projection) DestinationContactDocuments() Field {
 	return Field{path: "destination.addressInfo.contact.documents"}
 }
 

@@ -44,6 +44,7 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits
 			Table("delivery_units").
 			Where("document_id IN ?", docIDs).
 			Find(&existingDBPackages).Error
+
 		if err != nil {
 			return err
 		}
