@@ -46,9 +46,9 @@ jobs:
             --coverpkg=./app/... \
             --coverprofile=coverage.out \
             ./app/... | tee ginkgo-unit.log
-        EXIT_CODE=${PIPESTATUS[0]}
-        cat ginkgo-unit.log
-        exit $EXIT_CODE
+         EXIT_CODE=${PIPESTATUS[0]}
+         cat ginkgo-unit.log
+         exit $EXIT_CODE
 
       - name: Run integration tests
         run: |
