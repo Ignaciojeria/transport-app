@@ -6,20 +6,20 @@ import (
 	"fmt"
 )
 
-type OrderReference struct {
+type Reference struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
 }
 
-type OrderReferences []OrderReference
+type References []Reference
 
-func (r OrderReferences) Value() (driver.Value, error) {
+func (r References) Value() (driver.Value, error) {
 	return json.Marshal(r)
 }
 
-func (r *OrderReferences) Scan(value interface{}) error {
+func (r *References) Scan(value interface{}) error {
 	if value == nil {
-		*r = OrderReferences{}
+		*r = References{}
 		return nil
 	}
 
@@ -37,28 +37,29 @@ func (r *OrderReferences) Scan(value interface{}) error {
 }
 
 type DeliveryUnitsProjectionResult struct {
-	ID                                    int64           `json:"id"`
-	Channel                               string          `json:"channel"`
-	Consumer                              string          `json:"order_consumer"`
-	Commerce                              string          `json:"order_commerce"`
-	OrderDeliveryInstructions             string          `json:"order_delivery_instructions"`
-	OrderReferenceID                      string          `json:"order_reference_id"`
-	OrderReferences                       OrderReferences `json:"order_references" gorm:"column:order_references;type:jsonb"`
-	OrderCollectAvailabilityDate          string          `json:"order_collect_availability_date"`
-	OrderCollectAvailabilityDateStartTime string          `json:"order_collect_availability_date_start_time"`
-	OrderCollectAvailabilityDateEndTime   string          `json:"order_collect_availability_date_end_time"`
-	OrderPromisedDateStartDate            string          `json:"order_promised_date_start_date"`
-	OrderPromisedDateEndDate              string          `json:"order_promised_date_end_date"`
-	OrderPromisedDateStartTime            string          `json:"order_promised_date_start_time"`
-	OrderPromisedDateEndTime              string          `json:"order_promised_date_end_time"`
-	OrderPromisedDateServiceCategory      string          `json:"order_promised_date_service_category"`
+	ID                                    int64      `json:"id"`
+	Channel                               string     `json:"channel"`
+	Consumer                              string     `json:"order_consumer"`
+	Commerce                              string     `json:"order_commerce"`
+	OrderDeliveryInstructions             string     `json:"order_delivery_instructions"`
+	OrderReferenceID                      string     `json:"order_reference_id"`
+	OrderReferences                       References `json:"order_references" gorm:"column:order_references;type:jsonb"`
+	OrderCollectAvailabilityDate          string     `json:"order_collect_availability_date"`
+	OrderCollectAvailabilityDateStartTime string     `json:"order_collect_availability_date_start_time"`
+	OrderCollectAvailabilityDateEndTime   string     `json:"order_collect_availability_date_end_time"`
+	OrderPromisedDateStartDate            string     `json:"order_promised_date_start_date"`
+	OrderPromisedDateEndDate              string     `json:"order_promised_date_end_date"`
+	OrderPromisedDateStartTime            string     `json:"order_promised_date_start_time"`
+	OrderPromisedDateEndTime              string     `json:"order_promised_date_end_time"`
+	OrderPromisedDateServiceCategory      string     `json:"order_promised_date_service_category"`
 
 	// LPN and Package Information
-	LPN            string `json:"lpn"`
-	JSONDimensions string `json:"json_dimensions"`
-	JSONWeight     string `json:"json_weight"`
-	JSONInsurance  string `json:"json_insurance"`
-	JSONItems      string `json:"json_items"`
+	LPN                string     `json:"lpn"`
+	JSONDimensions     string     `json:"json_dimensions"`
+	JSONWeight         string     `json:"json_weight"`
+	JSONInsurance      string     `json:"json_insurance"`
+	JSONItems          string     `json:"json_items"`
+	DeliveryUnitLabels References `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 
 	// Destination Address Information
 	DestinationAddressLine1         string  `json:"destination_address_line1"`

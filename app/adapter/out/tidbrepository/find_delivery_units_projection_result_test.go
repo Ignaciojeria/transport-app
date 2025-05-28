@@ -508,9 +508,82 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Validar que las referencias se recuperaron correctamente
 		Expect(results[0].OrderReferences).To(HaveLen(3))
 		Expect(results[0].OrderReferences).To(ContainElements(
-			projectionresult.OrderReference{Type: "external", Value: "REF001"},
-			projectionresult.OrderReference{Type: "internal", Value: "REF002"},
-			projectionresult.OrderReference{Type: "tracking", Value: "REF003"},
+			projectionresult.Reference{Type: "external", Value: "REF001"},
+			projectionresult.Reference{Type: "internal", Value: "REF002"},
+			projectionresult.Reference{Type: "tracking", Value: "REF003"},
+		))
+	})
+
+	It("should return delivery units with labels", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery unit con etiquetas
+		deliveryUnit := domain.DeliveryUnit{
+			Lpn: "LPN123",
+			Labels: []domain.Reference{
+				{Type: "TYPE1", Value: "VALUE1"},
+				{Type: "TYPE2", Value: "VALUE2"},
+				{Type: "TYPE3", Value: "VALUE3"},
+			},
+		}
+
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				deliveryUnit,
+			},
+		}
+
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit})
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsLabels(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que las etiquetas se crearon correctamente
+		var createdLabels []domain.Reference
+		err = conn.DB.WithContext(ctx).
+			Table("delivery_units_labels").
+			Where("delivery_unit_doc = ?", deliveryUnit.DocID(ctx)).
+			Find(&createdLabels).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(createdLabels).To(HaveLen(3))
+
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.DeliveryUnitLabels().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validar que las etiquetas se recuperaron correctamente
+		Expect(results[0].DeliveryUnitLabels).To(HaveLen(3))
+		Expect(results[0].DeliveryUnitLabels).To(ContainElements(
+			projectionresult.Reference{Type: "TYPE1", Value: "VALUE1"},
+			projectionresult.Reference{Type: "TYPE2", Value: "VALUE2"},
+			projectionresult.Reference{Type: "TYPE3", Value: "VALUE3"},
 		))
 	})
 })

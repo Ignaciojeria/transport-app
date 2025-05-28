@@ -36,6 +36,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		dp   = "dp"   // destination_provinces
 		dst  = "dst"  // destination_states
 		du   = "du"   // delivery_units
+		dul  = "dul"  // delivery_unit_labels
 		oh   = "oh"   // order_headers
 	)
 
@@ -63,10 +64,25 @@ func NewFindDeliveryUnitsProjectionResult(
 				GroupBy(goqu.I(or+".order_doc")),
 			).
 				InnerJoin(
-					goqu.T("order_refs").As("or"),
-					goqu.On(goqu.I("or.order_doc").Eq(goqu.I(o+".document_id"))),
+					goqu.T("order_refs").As(or),
+					goqu.On(goqu.I(or+".order_doc").Eq(goqu.I(o+".document_id"))),
 				).
-				SelectAppend(goqu.Cast(goqu.I("or.references"), "jsonb").As("order_references"))
+				SelectAppend(goqu.Cast(goqu.I(or+".references"), "jsonb").As("order_references"))
+		}
+
+		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) {
+			ds = ds.With("delivery_unit_labels", goqu.From(goqu.T("delivery_units_labels").As(dul)).
+				Select(
+					goqu.I(dul+".delivery_unit_doc"),
+					goqu.L("jsonb_agg(jsonb_build_object('type', type::text, 'value', value::text))").As("delivery_unit_labels"),
+				).
+				GroupBy(goqu.I(dul+".delivery_unit_doc")),
+			).
+				InnerJoin(
+					goqu.T("delivery_unit_labels").As(dul),
+					goqu.On(goqu.I(dul+".delivery_unit_doc").Eq(goqu.I(duh+".delivery_unit_doc"))),
+				).
+				SelectAppend(goqu.Cast(goqu.I(dul+".delivery_unit_labels"), "jsonb").As("delivery_unit_labels"))
 		}
 
 		// Campos de delivery_units_histories
