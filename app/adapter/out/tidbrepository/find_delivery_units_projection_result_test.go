@@ -3,7 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"time"
-	"transport-app/app/adapter/out/tidbrepository/projectionresult"
+	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/projection/deliveryunits"
@@ -310,14 +310,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationContactFullName).To(Equal("John Doe"))
 		Expect(results[0].DestinationContactNationalID).To(Equal("12345678-9"))
 		Expect(results[0].DestinationContactPhone).To(Equal("+56912345678"))
-		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"type":"whatsapp"`))
-		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"value":"+56987654321"`))
-		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"type":"telegram"`))
-		Expect(results[0].DestinationAdditionalContactMethods).To(ContainSubstring(`"value":"@johndoe"`))
-		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"type":"dni"`))
-		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"value":"12345678-9"`))
-		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"type":"passport"`))
-		Expect(results[0].DestinationContactDocuments).To(ContainSubstring(`"value":"AB123456"`))
+		Expect(results[0].DestinationAdditionalContactMethods).To(Equal(table.JSONReference{
+			{Type: "whatsapp", Value: "+56987654321"},
+			{Type: "telegram", Value: "@johndoe"},
+		}))
+		Expect(results[0].DestinationContactDocuments).To(Equal(table.JSONReference{
+			{Type: "dni", Value: "12345678-9"},
+			{Type: "passport", Value: "AB123456"},
+		}))
 		Expect(results[0].DestinationRequiresManualReview).To(Equal(true))
 	})
 
@@ -406,19 +406,30 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results).To(HaveLen(1))
 
 		// Validaciones de Delivery Unit
-		Expect(results[0].LPN).To(Equal("LPN123"))
-		Expect(results[0].JSONDimensions).To(ContainSubstring(`"length":10`))
-		Expect(results[0].JSONDimensions).To(ContainSubstring(`"width":20`))
-		Expect(results[0].JSONDimensions).To(ContainSubstring(`"height":30`))
-		Expect(results[0].JSONDimensions).To(ContainSubstring(`"unit":"cm"`))
-		Expect(results[0].JSONWeight).To(ContainSubstring(`"weight_value":5.5`))
-		Expect(results[0].JSONWeight).To(ContainSubstring(`"weight_unit":"kg"`))
-		Expect(results[0].JSONInsurance).To(ContainSubstring(`"currency":"USD"`))
-		Expect(results[0].JSONInsurance).To(ContainSubstring(`"unit_value":100`))
-		Expect(results[0].JSONItems).To(ContainSubstring(`"sku":"SKU123"`))
-		Expect(results[0].JSONItems).To(ContainSubstring(`"description":"Test Item"`))
-		Expect(results[0].JSONItems).To(ContainSubstring(`"quantity_number":2`))
-		Expect(results[0].JSONItems).To(ContainSubstring(`"quantity_unit":"pcs"`))
+		Expect(results[0].LPN).To(Equal("LPN123"), "LPN incorrecto")
+		Expect(results[0].JSONDimensions).To(Equal(table.JSONDimensions{
+			Height: 30,
+			Width:  20,
+			Length: 10,
+			Unit:   "cm",
+		}), "Dimensiones incorrectas")
+		Expect(results[0].JSONWeight).To(Equal(table.JSONWeight{
+			WeightValue: 5.5,
+			WeightUnit:  "kg",
+		}), "Peso incorrecto")
+		Expect(results[0].JSONInsurance).To(Equal(table.JSONInsurance{
+			Currency:  "USD",
+			UnitValue: 100.0,
+		}), "Seguro incorrecto")
+
+		// Validaciones de Items
+		Expect(results[0].JSONItems).To(HaveLen(1), "Debería tener un item")
+		Expect(results[0].JSONItems[0]).To(Equal(table.Items{
+			Sku:            "SKU123",
+			Description:    "Test Item",
+			QuantityNumber: 2,
+			QuantityUnit:   "pcs",
+		}), "Item incorrecto")
 
 		// Validaciones de Commerce y Consumer
 		Expect(results[0].Commerce).To(Equal("Test Commerce"))
@@ -508,9 +519,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Validar que las referencias se recuperaron correctamente
 		Expect(results[0].OrderReferences).To(HaveLen(3))
 		Expect(results[0].OrderReferences).To(ContainElements(
-			projectionresult.Reference{Type: "external", Value: "REF001"},
-			projectionresult.Reference{Type: "internal", Value: "REF002"},
-			projectionresult.Reference{Type: "tracking", Value: "REF003"},
+			table.Reference{Type: "external", Value: "REF001"},
+			table.Reference{Type: "internal", Value: "REF002"},
+			table.Reference{Type: "tracking", Value: "REF003"},
 		))
 	})
 
@@ -581,9 +592,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Validar que las etiquetas se recuperaron correctamente
 		Expect(results[0].DeliveryUnitLabels).To(HaveLen(3))
 		Expect(results[0].DeliveryUnitLabels).To(ContainElements(
-			projectionresult.Reference{Type: "TYPE1", Value: "VALUE1"},
-			projectionresult.Reference{Type: "TYPE2", Value: "VALUE2"},
-			projectionresult.Reference{Type: "TYPE3", Value: "VALUE3"},
+			table.Reference{Type: "TYPE1", Value: "VALUE1"},
+			table.Reference{Type: "TYPE2", Value: "VALUE2"},
+			table.Reference{Type: "TYPE3", Value: "VALUE3"},
 		))
 	})
 })

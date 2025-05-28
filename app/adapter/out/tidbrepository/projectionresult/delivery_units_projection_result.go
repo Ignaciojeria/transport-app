@@ -1,65 +1,33 @@
 package projectionresult
 
 import (
-	"database/sql/driver"
-	"encoding/json"
-	"fmt"
+	"transport-app/app/adapter/out/tidbrepository/table"
 )
 
-type Reference struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-}
-
-type References []Reference
-
-func (r References) Value() (driver.Value, error) {
-	return json.Marshal(r)
-}
-
-func (r *References) Scan(value interface{}) error {
-	if value == nil {
-		*r = References{}
-		return nil
-	}
-
-	var bytes []byte
-	switch v := value.(type) {
-	case []byte:
-		bytes = v
-	case string:
-		bytes = []byte(v)
-	default:
-		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
-	}
-
-	return json.Unmarshal(bytes, r)
-}
-
 type DeliveryUnitsProjectionResult struct {
-	ID                                    int64      `json:"id"`
-	Channel                               string     `json:"channel"`
-	Consumer                              string     `json:"order_consumer"`
-	Commerce                              string     `json:"order_commerce"`
-	OrderDeliveryInstructions             string     `json:"order_delivery_instructions"`
-	OrderReferenceID                      string     `json:"order_reference_id"`
-	OrderReferences                       References `json:"order_references" gorm:"column:order_references;type:jsonb"`
-	OrderCollectAvailabilityDate          string     `json:"order_collect_availability_date"`
-	OrderCollectAvailabilityDateStartTime string     `json:"order_collect_availability_date_start_time"`
-	OrderCollectAvailabilityDateEndTime   string     `json:"order_collect_availability_date_end_time"`
-	OrderPromisedDateStartDate            string     `json:"order_promised_date_start_date"`
-	OrderPromisedDateEndDate              string     `json:"order_promised_date_end_date"`
-	OrderPromisedDateStartTime            string     `json:"order_promised_date_start_time"`
-	OrderPromisedDateEndTime              string     `json:"order_promised_date_end_time"`
-	OrderPromisedDateServiceCategory      string     `json:"order_promised_date_service_category"`
+	ID                                    int64               `json:"id"`
+	Channel                               string              `json:"channel"`
+	Consumer                              string              `json:"order_consumer"`
+	Commerce                              string              `json:"order_commerce"`
+	OrderDeliveryInstructions             string              `json:"order_delivery_instructions"`
+	OrderReferenceID                      string              `json:"order_reference_id"`
+	OrderReferences                       table.JSONReference `json:"order_references" gorm:"column:order_references;type:jsonb"`
+	OrderCollectAvailabilityDate          string              `json:"order_collect_availability_date"`
+	OrderCollectAvailabilityDateStartTime string              `json:"order_collect_availability_date_start_time"`
+	OrderCollectAvailabilityDateEndTime   string              `json:"order_collect_availability_date_end_time"`
+	OrderPromisedDateStartDate            string              `json:"order_promised_date_start_date"`
+	OrderPromisedDateEndDate              string              `json:"order_promised_date_end_date"`
+	OrderPromisedDateStartTime            string              `json:"order_promised_date_start_time"`
+	OrderPromisedDateEndTime              string              `json:"order_promised_date_end_time"`
+	OrderPromisedDateServiceCategory      string              `json:"order_promised_date_service_category"`
 
 	// LPN and Package Information
-	LPN                string     `json:"lpn"`
-	JSONDimensions     string     `json:"json_dimensions"`
-	JSONWeight         string     `json:"json_weight"`
-	JSONInsurance      string     `json:"json_insurance"`
-	JSONItems          string     `json:"json_items"`
-	DeliveryUnitLabels References `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
+	LPN                string               `json:"lpn"`
+	JSONDimensions     table.JSONDimensions `json:"json_dimensions"`
+	JSONWeight         table.JSONWeight     `json:"json_weight"`
+	JSONInsurance      table.JSONInsurance  `json:"json_insurance"`
+	JSONItems          table.JSONItems      `json:"json_items"`
+	DeliveryUnitLabels table.JSONReference  `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 
 	// Destination Address Information
 	DestinationAddressLine1         string  `json:"destination_address_line1"`
@@ -74,10 +42,10 @@ type DeliveryUnitsProjectionResult struct {
 	DestinationRequiresManualReview bool    `json:"destination_requires_manual_review"`
 
 	// Destination Contact Information
-	DestinationContactEmail             string `json:"destination_contact_email"`
-	DestinationContactFullName          string `json:"destination_contact_full_name"`
-	DestinationContactNationalID        string `json:"destination_contact_national_id"`
-	DestinationContactPhone             string `json:"destination_contact_phone"`
-	DestinationContactDocuments         string `json:"destination_contact_documents"`
-	DestinationAdditionalContactMethods string `json:"destination_additional_contact_methods"`
+	DestinationContactEmail             string              `json:"destination_contact_email"`
+	DestinationContactFullName          string              `json:"destination_contact_full_name"`
+	DestinationContactNationalID        string              `json:"destination_contact_national_id"`
+	DestinationContactPhone             string              `json:"destination_contact_phone"`
+	DestinationContactDocuments         table.JSONReference `json:"destination_contact_documents"`
+	DestinationAdditionalContactMethods table.JSONReference `json:"destination_additional_contact_methods"`
 }
