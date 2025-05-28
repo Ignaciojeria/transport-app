@@ -3,6 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"time"
+	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
 	"transport-app/app/shared/projection/deliveryunits"
@@ -176,10 +177,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].OrderPromisedDateStartTime).To(Equal("10:00"), "Unexpected promised time start")
 		Expect(results[0].OrderPromisedDateEndTime).To(Equal("17:00"), "Unexpected promised time end")
 		Expect(results[0].OrderPromisedDateServiceCategory).To(Equal("STANDARD"), "Unexpected service category")
-		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"), "Dejar en la puerta")
+		Expect(results[0].OrderDeliveryInstructions).To(Equal("Dejar en la puerta"), "Unexpected order delivery instructions")
 
 		// Validaciones de Destination Address
-
 		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"), "Unexpected address line 1")
 		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"), "Unexpected address line 2")
 		Expect(results[0].DestinationDistrict).To(Equal("CA"), "Unexpected district")
@@ -436,5 +436,81 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		_, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("delivery_units_histories"))
+	})
+
+	It("should return delivery units with order references", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order references
+		orderReferences := []domain.Reference{
+			{
+				Type:  "external",
+				Value: "REF001",
+			},
+			{
+				Type:  "internal",
+				Value: "REF002",
+			},
+			{
+				Type:  "tracking",
+				Value: "REF003",
+			},
+		}
+
+		order := domain.Order{
+			ReferenceID: "123",
+			References:  orderReferences,
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertOrderReferences(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Verificar que las referencias se crearon
+		var refCount int64
+		err = conn.DB.WithContext(ctx).
+			Table("order_references").
+			Where("order_doc = ?", order.DocID(ctx)).
+			Count(&refCount).Error
+		Expect(err).ToNot(HaveOccurred())
+		Expect(refCount).To(Equal(int64(3)), "Order references were not created properly")
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.References().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validar que las referencias se recuperaron correctamente
+		Expect(results[0].OrderReferences).To(HaveLen(3))
+		Expect(results[0].OrderReferences).To(ContainElements(
+			projectionresult.OrderReference{Type: "external", Value: "REF001"},
+			projectionresult.OrderReference{Type: "internal", Value: "REF002"},
+			projectionresult.OrderReference{Type: "tracking", Value: "REF003"},
+		))
 	})
 })

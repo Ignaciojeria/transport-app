@@ -1,20 +1,57 @@
 package projectionresult
 
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+)
+
+type OrderReference struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type OrderReferences []OrderReference
+
+func (r OrderReferences) Value() (driver.Value, error) {
+	return json.Marshal(r)
+}
+
+func (r *OrderReferences) Scan(value interface{}) error {
+	if value == nil {
+		*r = OrderReferences{}
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to unmarshal JSONB value: %v", value)
+	}
+
+	return json.Unmarshal(bytes, r)
+}
+
 type DeliveryUnitsProjectionResult struct {
-	ID                                    int64  `json:"id"`
-	Channel                               string `json:"channel"`
-	Consumer                              string `json:"order_consumer"`
-	Commerce                              string `json:"order_commerce"`
-	OrderDeliveryInstructions             string `json:"order_delivery_instructions"`
-	OrderReferenceID                      string `json:"order_reference_id"`
-	OrderCollectAvailabilityDate          string `json:"order_collect_availability_date"`
-	OrderCollectAvailabilityDateStartTime string `json:"order_collect_availability_date_start_time"`
-	OrderCollectAvailabilityDateEndTime   string `json:"order_collect_availability_date_end_time"`
-	OrderPromisedDateStartDate            string `json:"order_promised_date_start_date"`
-	OrderPromisedDateEndDate              string `json:"order_promised_date_end_date"`
-	OrderPromisedDateStartTime            string `json:"order_promised_date_start_time"`
-	OrderPromisedDateEndTime              string `json:"order_promised_date_end_time"`
-	OrderPromisedDateServiceCategory      string `json:"order_promised_date_service_category"`
+	ID                                    int64           `json:"id"`
+	Channel                               string          `json:"channel"`
+	Consumer                              string          `json:"order_consumer"`
+	Commerce                              string          `json:"order_commerce"`
+	OrderDeliveryInstructions             string          `json:"order_delivery_instructions"`
+	OrderReferenceID                      string          `json:"order_reference_id"`
+	OrderReferences                       OrderReferences `json:"order_references" gorm:"column:order_references;type:jsonb"`
+	OrderCollectAvailabilityDate          string          `json:"order_collect_availability_date"`
+	OrderCollectAvailabilityDateStartTime string          `json:"order_collect_availability_date_start_time"`
+	OrderCollectAvailabilityDateEndTime   string          `json:"order_collect_availability_date_end_time"`
+	OrderPromisedDateStartDate            string          `json:"order_promised_date_start_date"`
+	OrderPromisedDateEndDate              string          `json:"order_promised_date_end_date"`
+	OrderPromisedDateStartTime            string          `json:"order_promised_date_start_time"`
+	OrderPromisedDateEndTime              string          `json:"order_promised_date_end_time"`
+	OrderPromisedDateServiceCategory      string          `json:"order_promised_date_service_category"`
 
 	// LPN and Package Information
 	LPN            string `json:"lpn"`

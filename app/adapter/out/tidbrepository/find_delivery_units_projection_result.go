@@ -30,6 +30,7 @@ func NewFindDeliveryUnitsProjectionResult(
 	const (
 		duh  = "duh"  // delivery_units_histories
 		o    = "o"    // orders
+		or   = "or"   // order_references
 		dadi = "dadi" // destination_address_infos
 		dd   = "dd"   // destination_districts
 		dp   = "dp"   // destination_provinces
@@ -52,6 +53,22 @@ func NewFindDeliveryUnitsProjectionResult(
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
 			})
 
+		// Add order references using WITH clause
+		if projection.References().Has(filters.RequestedFields) {
+			ds = ds.With("order_refs", goqu.From(goqu.T("order_references").As(or)).
+				Select(
+					goqu.I(or+".order_doc"),
+					goqu.L("jsonb_agg(jsonb_build_object('type', type::text, 'value', value::text))").As("references"),
+				).
+				GroupBy(goqu.I(or+".order_doc")),
+			).
+				InnerJoin(
+					goqu.T("order_refs").As("or"),
+					goqu.On(goqu.I("or.order_doc").Eq(goqu.I(o+".document_id"))),
+				).
+				SelectAppend(goqu.Cast(goqu.I("or.references"), "jsonb").As("order_references"))
+		}
+
 		// Campos de delivery_units_histories
 		if projection.Channel().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(duh + ".channel").As("channel"))
@@ -59,7 +76,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// LPN and Package Information
 		if projection.DeliveryUnit().Has(filters.RequestedFields) {
-			ds = ds.LeftJoin(
+			ds = ds.InnerJoin(
 				goqu.T("delivery_units").As(du),
 				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
 			)
@@ -124,7 +141,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if projection.Commerce().Has(filters.RequestedFields) || projection.Consumer().Has(filters.RequestedFields) {
-			ds = ds.LeftJoin(
+			ds = ds.InnerJoin(
 				goqu.T("order_headers").As(oh),
 				goqu.On(goqu.I(oh+".document_id").Eq(goqu.I(o+".order_headers_doc"))),
 			)
@@ -153,7 +170,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Join con districts
 		if projection.DestinationDistrict().Has(filters.RequestedFields) {
-			ds = ds.LeftJoin(
+			ds = ds.InnerJoin(
 				goqu.T("districts").As(dd),
 				goqu.On(goqu.I(dd+".document_id").Eq(goqu.I(dadi+".district_doc"))),
 			)
@@ -162,7 +179,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Join con provinces
 		if projection.DestinationProvince().Has(filters.RequestedFields) {
-			ds = ds.LeftJoin(
+			ds = ds.InnerJoin(
 				goqu.T("provinces").As(dp),
 				goqu.On(goqu.I(dp+".document_id").Eq(goqu.I(dadi+".province_doc"))),
 			)
@@ -171,7 +188,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Join con states
 		if projection.DestinationState().Has(filters.RequestedFields) {
-			ds = ds.LeftJoin(
+			ds = ds.InnerJoin(
 				goqu.T("states").As(dst),
 				goqu.On(goqu.I(dst+".document_id").Eq(goqu.I(dadi+".state_doc"))),
 			)
@@ -198,7 +215,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Campos de contacto del destino
 		if projection.DestinationContact().Has(filters.RequestedFields) {
-			ds = ds.LeftJoin(
+			ds = ds.InnerJoin(
 				goqu.T("contacts").As("dc"),
 				goqu.On(goqu.I("dc.document_id").Eq(goqu.I(o+".destination_contact_doc"))),
 			)
