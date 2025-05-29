@@ -28,6 +28,9 @@ type Order struct {
 	OrderTypeDoc string    `gorm:"type:char(64);index"`
 	OrderType    OrderType `gorm:"-"`
 
+	GroupByType  string `gorm:"default:null"`
+	GroupByValue string `gorm:"default:null"`
+
 	RouteDoc string `gorm:"type:char(64);index"`
 	Route    Route  `gorm:"-"`
 

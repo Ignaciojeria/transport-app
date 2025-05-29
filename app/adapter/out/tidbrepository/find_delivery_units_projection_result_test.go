@@ -446,6 +446,58 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].Consumer).To(Equal("Test Consumer"))
 	})
 
+	It("should return delivery units with extra fields", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con extra fields
+		order := domain.Order{
+			ReferenceID: "123",
+			ExtraFields: map[string]string{
+				"priority": "high",
+				"notes":    "Handle with care",
+				"tags":     "fragile,express",
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ExtraFields().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validar que los extra fields se recuperaron correctamente
+		Expect(results[0].ExtraFields).To(Equal(table.JSONMap{
+			"priority": "high",
+			"notes":    "Handle with care",
+			"tags":     "fragile,express",
+		}))
+	})
+
 	It("should fail if database has no delivery_units_histories table", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
