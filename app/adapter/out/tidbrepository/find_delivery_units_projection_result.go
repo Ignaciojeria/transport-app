@@ -159,6 +159,22 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(o + ".service_category").As("order_promised_date_service_category"))
 		}
 
+		// Campos de orderType
+		if projection.OrderType().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("order_types").As("ot"),
+				goqu.On(goqu.I("ot.document_id").Eq(goqu.I(o+".order_type_doc"))),
+			)
+		}
+
+		if projection.OrderTypeType().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("ot.type").As("order_type"))
+		}
+
+		if projection.OrderTypeDescription().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("ot.description").As("order_type_description"))
+		}
+
 		// Campos de address_infos
 		if projection.DestinationAddressLine2().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(dadi + ".address_line2").As("destination_address_line2"))

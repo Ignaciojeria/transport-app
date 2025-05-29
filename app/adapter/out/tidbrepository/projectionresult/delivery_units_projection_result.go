@@ -23,6 +23,10 @@ type DeliveryUnitsProjectionResult struct {
 	OrderPromisedDateEndTime              string              `json:"order_promised_date_end_time"`
 	OrderPromisedDateServiceCategory      string              `json:"order_promised_date_service_category"`
 
+	// OrderType Information
+	OrderType            string `json:"order_type"`
+	OrderTypeDescription string `json:"order_type_description"`
+
 	// LPN and Package Information
 	LPN                string               `json:"lpn"`
 	JSONDimensions     table.JSONDimensions `json:"json_dimensions"`

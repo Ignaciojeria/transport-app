@@ -506,6 +506,61 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		}))
 	})
 
+	It("should return delivery units with order type", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order type
+		orderType := domain.OrderType{
+			Type:        "EXPRESS",
+			Description: "Entrega express",
+		}
+		err = NewUpsertOrderType(conn)(ctx, orderType)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con order type
+		order := domain.Order{
+			ReferenceID: "123",
+			OrderType:   orderType,
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.OrderType().String():            "",
+				projection.OrderTypeType().String():        "",
+				projection.OrderTypeDescription().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validar que el order type se recuperó correctamente
+		Expect(results[0].OrderType).To(Equal("EXPRESS"))
+		Expect(results[0].OrderTypeDescription).To(Equal("Entrega express"))
+	})
+
 	It("should fail if database has no delivery_units_histories table", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
