@@ -40,10 +40,14 @@ type UpsertOrderRequest struct {
 			} `json:"contact"`
 			District    string `json:"district"`
 			Coordinates struct {
-				Latitude             float64 `json:"latitude"`
-				Longitude            float64 `json:"longitude"`
-				Source               string  `json:"source"`
-				RequiresManualReview bool    `json:"requiresManualReview"`
+				Latitude   float64 `json:"latitude"`
+				Longitude  float64 `json:"longitude"`
+				Source     string  `json:"source"`
+				Confidence struct {
+					Level   float64 `json:"level"`
+					Message string  `json:"message"`
+					Reason  string  `json:"reason"`
+				} `json:"confidence"`
 			} `json:"coordinates"`
 			Province string `json:"province"`
 			State    string `json:"state"`
@@ -77,13 +81,16 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-
 			District    string `json:"district"`
 			Coordinates struct {
-				Latitude             float64 `json:"latitude"`
-				Longitude            float64 `json:"longitude"`
-				Source               string  `json:"source"`
-				RequiresManualReview bool    `json:"requiresManualReview"`
+				Latitude   float64 `json:"latitude"`
+				Longitude  float64 `json:"longitude"`
+				Source     string  `json:"source"`
+				Confidence struct {
+					Level   float64 `json:"level"`
+					Message string  `json:"message"`
+					Reason  string  `json:"reason"`
+				} `json:"confidence"`
 			} `json:"coordinates"`
 			Province string `json:"province"`
 			State    string `json:"state"`

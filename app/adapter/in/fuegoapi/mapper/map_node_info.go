@@ -28,10 +28,14 @@ func MapNodeInfoToDomain(nodeInfo struct {
 
 	District    string `json:"district"`
 	Coordinates struct {
-		Latitude             float64 `json:"latitude"`
-		Longitude            float64 `json:"longitude"`
-		Source               string  `json:"source"`
-		RequiresManualReview bool    `json:"requiresManualReview"`
+		Latitude   float64 `json:"latitude"`
+		Longitude  float64 `json:"longitude"`
+		Source     string  `json:"source"`
+		Confidence struct {
+			Level   float64 `json:"level"`
+			Message string  `json:"message"`
+			Reason  string  `json:"reason"`
+		} `json:"confidence"`
 	} `json:"coordinates"`
 	Province string `json:"province"`
 	State    string `json:"state"`
@@ -48,20 +52,14 @@ func MapNodeInfoToDomain(nodeInfo struct {
 				NationalID:   addressInfo.Contact.NationalID,
 				Documents:    MapDocumentsToDomain(addressInfo.Contact.Documents),
 			},
-			State:        domain.State(addressInfo.State),
-			Province:     domain.Province(addressInfo.Province),
-			District:     domain.District(addressInfo.District),
-			AddressLine1: addressInfo.AddressLine1,
-			//AddressLine2: addressInfo.AddressLine2,
-			//AddressLine3: addressInfo.AddressLine3,
-			Location: orb.Point{
-				addressInfo.Coordinates.Longitude, // orb.Point espera [lon, lat]
-				addressInfo.Coordinates.Latitude,
-			},
-			RequiresManualReview: addressInfo.Coordinates.RequiresManualReview,
-			CoordinateSource:     addressInfo.Coordinates.Source,
-			ZipCode:              addressInfo.ZipCode,
-			TimeZone:             addressInfo.TimeZone,
+			State:            domain.State(addressInfo.State),
+			Province:         domain.Province(addressInfo.Province),
+			District:         domain.District(addressInfo.District),
+			AddressLine1:     addressInfo.AddressLine1,
+			Location:         orb.Point{addressInfo.Coordinates.Longitude, addressInfo.Coordinates.Latitude},
+			CoordinateSource: addressInfo.Coordinates.Source,
+			ZipCode:          addressInfo.ZipCode,
+			TimeZone:         addressInfo.TimeZone,
 		},
 	}
 }
