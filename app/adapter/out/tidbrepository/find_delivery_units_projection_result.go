@@ -120,6 +120,14 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(o + ".reference_id").As("order_reference_id"))
 		}
 
+		if projection.GroupByType().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".group_by_type").As("order_group_by_type"))
+		}
+
+		if projection.GroupByValue().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".group_by_value").As("order_group_by_value"))
+		}
+
 		if projection.CollectAvailabilityDate().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_date").As("order_collect_availability_date"))
 		}
@@ -259,6 +267,10 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		if projection.DestinationContactDocuments().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I("dc.documents").As("destination_contact_documents"))
+		}
+
+		if projection.ExtraFields().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(o + ".extra_fields").As("extra_fields"))
 		}
 
 		sql, args, err := ds.Prepared(true).ToSQL()

@@ -22,14 +22,12 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		DestinationNodeInfoDoc: order.Destination.DocID(ctx).String(),
 		ServiceCategory:        order.PromisedDate.ServiceCategory,
 		// Si están disponibles, también mapear los contactos y direcciones
-		OriginContactDoc:          order.Origin.AddressInfo.Contact.DocID(ctx).String(),
-		DestinationContactDoc:     order.Destination.AddressInfo.Contact.DocID(ctx).String(),
-		OriginAddressInfoDoc:      order.Origin.AddressInfo.DocID(ctx).String(),
-		DestinationAddressInfoDoc: order.Destination.AddressInfo.DocID(ctx).String(),
-		ExtraFields:               order.ExtraFields,
-
-		DeliveryInstructions: order.DeliveryInstructions,
-
+		OriginContactDoc:                  order.Origin.AddressInfo.Contact.DocID(ctx).String(),
+		DestinationContactDoc:             order.Destination.AddressInfo.Contact.DocID(ctx).String(),
+		OriginAddressInfoDoc:              order.Origin.AddressInfo.DocID(ctx).String(),
+		DestinationAddressInfoDoc:         order.Destination.AddressInfo.DocID(ctx).String(),
+		ExtraFields:                       order.ExtraFields,
+		DeliveryInstructions:              order.DeliveryInstructions,
 		CollectAvailabilityDate:           safePtrTime(order.CollectAvailabilityDate.Date),
 		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
 		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
@@ -37,6 +35,8 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		PromisedDateRangeEnd:              safePtrTime(order.PromisedDate.DateRange.EndDate),
 		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
 		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
+		GroupByType:                       order.GroupBy.Type,
+		GroupByValue:                      order.GroupBy.Value,
 	}
 	return tbl
 }

@@ -9,6 +9,8 @@ type DeliveryUnitsProjectionResult struct {
 	Channel                               string              `json:"channel"`
 	Consumer                              string              `json:"order_consumer"`
 	Commerce                              string              `json:"order_commerce"`
+	OrderGroupByType                      string              `json:"order_group_by_type"`
+	OrderGroupByValue                     string              `json:"order_group_by_value"`
 	OrderDeliveryInstructions             string              `json:"order_delivery_instructions"`
 	OrderReferenceID                      string              `json:"order_reference_id"`
 	OrderReferences                       table.JSONReference `json:"order_references" gorm:"column:order_references;type:jsonb"`
@@ -48,4 +50,7 @@ type DeliveryUnitsProjectionResult struct {
 	DestinationContactPhone             string              `json:"destination_contact_phone"`
 	DestinationContactDocuments         table.JSONReference `json:"destination_contact_documents"`
 	DestinationAdditionalContactMethods table.JSONReference `json:"destination_additional_contact_methods"`
+
+	// Extra Fields and Group By
+	ExtraFields table.JSONMap `json:"extra_fields" gorm:"column:extra_fields;type:jsonb"`
 }
