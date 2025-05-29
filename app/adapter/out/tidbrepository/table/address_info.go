@@ -24,8 +24,10 @@ type AddressInfo struct {
 	AddressLine2         string    `gorm:"default:null"`
 	Latitude             float64   `gorm:"default:null"`
 	Longitude            float64   `gorm:"default:null"`
-	RequiresManualReview bool      `gorm:"default:false"`
 	CoordinateSource     string    `gorm:"default:null"`
+	CoordinateConfidence float64   `gorm:"default:null"`
+	CoordinateMessage    string    `gorm:"default:null"`
+	CoordinateReason     string    `gorm:"default:null"`
 	ZipCode              string    `gorm:"default:null"`
 	TimeZone             string    `gorm:"default:null"`
 }
@@ -41,9 +43,9 @@ func (a AddressInfo) Map() domain.AddressInfo {
 			Point:  orb.Point{a.Longitude, a.Latitude},
 			Source: a.CoordinateSource,
 			Confidence: domain.CoordinatesConfidence{
-				Level:   1.0,
-				Message: "High confidence from database",
-				Reason:  "Stored coordinates",
+				Level:   a.CoordinateConfidence,
+				Message: a.CoordinateMessage,
+				Reason:  a.CoordinateReason,
 			},
 		},
 		ZipCode:  a.ZipCode,

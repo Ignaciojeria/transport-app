@@ -148,27 +148,31 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
-				projection.ReferenceID().String():                      "",
-				projection.Channel().String():                          "",
-				projection.CollectAvailabilityDate().String():          "",
-				projection.CollectAvailabilityDateStartTime().String(): "",
-				projection.CollectAvailabilityDateEndTime().String():   "",
-				projection.PromisedDateDateRangeStartDate().String():   "",
-				projection.PromisedDateDateRangeEndDate().String():     "",
-				projection.PromisedDateTimeRangeStartTime().String():   "",
-				projection.PromisedDateTimeRangeEndTime().String():     "",
-				projection.DestinationAddressInfo().String():           "",
-				projection.PromisedDateServiceCategory().String():      "",
-				projection.DestinationAddressLine1().String():          "",
-				projection.DestinationDistrict().String():              "",
-				projection.DestinationLatitude().String():              "",
-				projection.DestinationLongitude().String():             "",
-				projection.DestinationProvince().String():              "",
-				projection.DestinationState().String():                 "",
-				projection.DestinationTimeZone().String():              "",
-				projection.DestinationZipCode().String():               "",
-				projection.DestinationAddressLine2().String():          "",
-				projection.DeliveryInstructions().String():             "",
+				projection.ReferenceID().String():                             "",
+				projection.Channel().String():                                 "",
+				projection.CollectAvailabilityDate().String():                 "",
+				projection.CollectAvailabilityDateStartTime().String():        "",
+				projection.CollectAvailabilityDateEndTime().String():          "",
+				projection.PromisedDateDateRangeStartDate().String():          "",
+				projection.PromisedDateDateRangeEndDate().String():            "",
+				projection.PromisedDateTimeRangeStartTime().String():          "",
+				projection.PromisedDateTimeRangeEndTime().String():            "",
+				projection.DestinationAddressInfo().String():                  "",
+				projection.PromisedDateServiceCategory().String():             "",
+				projection.DestinationAddressLine1().String():                 "",
+				projection.DestinationDistrict().String():                     "",
+				projection.DestinationCoordinatesLatitude().String():          "",
+				projection.DestinationCoordinatesLongitude().String():         "",
+				projection.DestinationCoordinatesSource().String():            "",
+				projection.DestinationCoordinatesConfidenceLevel().String():   "",
+				projection.DestinationCoordinatesConfidenceMessage().String(): "",
+				projection.DestinationCoordinatesConfidenceReason().String():  "",
+				projection.DestinationProvince().String():                     "",
+				projection.DestinationState().String():                        "",
+				projection.DestinationTimeZone().String():                     "",
+				projection.DestinationZipCode().String():                      "",
+				projection.DestinationAddressLine2().String():                 "",
+				projection.DeliveryInstructions().String():                    "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred(), "Failed to find delivery units: %v", err)
@@ -189,8 +193,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"), "Unexpected address line 1")
 		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"), "Unexpected address line 2")
 		Expect(results[0].DestinationDistrict).To(Equal("CA"), "Unexpected district")
-		Expect(results[0].DestinationLatitude).To(Equal(1.0), "Unexpected latitude")
-		Expect(results[0].DestinationLongitude).To(Equal(1.0), "Unexpected longitude")
+		Expect(results[0].DestinationCoordinatesLatitude).To(Equal(1.0), "Unexpected latitude")
+		Expect(results[0].DestinationCoordinatesLongitude).To(Equal(1.0), "Unexpected longitude")
+		Expect(results[0].DestinationCoordinatesSource).To(Equal("geocoding"), "Unexpected source")
+		Expect(results[0].DestinationCoordinatesConfidenceLevel).To(Equal(0.8), "Unexpected confidence level")
+		Expect(results[0].DestinationCoordinatesConfidenceMessage).To(Equal("Medium confidence"), "Unexpected confidence message")
+		Expect(results[0].DestinationCoordinatesConfidenceReason).To(Equal("Geocoding service"), "Unexpected confidence reason")
 		Expect(results[0].DestinationProvince).To(Equal("CA"), "Unexpected province")
 		Expect(results[0].DestinationState).To(Equal("CA"), "Unexpected state")
 		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"), "Unexpected timezone")

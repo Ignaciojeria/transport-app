@@ -219,22 +219,41 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(dst + ".name").As("destination_state"))
 		}
 
-		if projection.DestinationLatitude().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(dadi + ".latitude").As("destination_latitude"))
-		}
-		if projection.DestinationLongitude().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(dadi + ".longitude").As("destination_longitude"))
-		}
-		if projection.DestinationTimeZone().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(dadi + ".time_zone").As("destination_time_zone"))
-		}
-
 		if projection.DestinationZipCode().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(dadi + ".zip_code").As("destination_zip_code"))
 		}
 
 		if projection.DestinationRequiresManualReview().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(dadi + ".requires_manual_review").As("destination_requires_manual_review"))
+		}
+
+		// Campos de coordenadas
+		if projection.DestinationCoordinatesLatitude().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".latitude").As("destination_coordinates_latitude"))
+		}
+
+		if projection.DestinationCoordinatesLongitude().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".longitude").As("destination_coordinates_longitude"))
+		}
+
+		if projection.DestinationCoordinatesSource().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".coordinate_source").As("destination_coordinates_source"))
+		}
+
+		if projection.DestinationCoordinatesConfidenceLevel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".coordinate_confidence").As("destination_coordinates_confidence_level"))
+		}
+
+		if projection.DestinationCoordinatesConfidenceMessage().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".coordinate_message").As("destination_coordinates_confidence_message"))
+		}
+
+		if projection.DestinationCoordinatesConfidenceReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".coordinate_reason").As("destination_coordinates_confidence_reason"))
+		}
+
+		if projection.DestinationTimeZone().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".time_zone").As("destination_time_zone"))
 		}
 
 		// Campos de contacto del destino

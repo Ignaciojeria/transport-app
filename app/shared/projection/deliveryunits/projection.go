@@ -107,14 +107,6 @@ func (p Projection) DestinationDistrict() Field {
 	return Field{path: "destination.addressInfo.district"}
 }
 
-func (p Projection) DestinationLatitude() Field {
-	return Field{path: "destination.addressInfo.latitude"}
-}
-
-func (p Projection) DestinationLongitude() Field {
-	return Field{path: "destination.addressInfo.longitude"}
-}
-
 func (p Projection) DestinationProvince() Field {
 	return Field{path: "destination.addressInfo.province"}
 }
@@ -215,14 +207,6 @@ func (p Projection) OriginAddressLine2() Field {
 
 func (p Projection) OriginDistrict() Field {
 	return Field{path: "origin.addressInfo.district"}
-}
-
-func (p Projection) OriginLatitude() Field {
-	return Field{path: "origin.addressInfo.latitude"}
-}
-
-func (p Projection) OriginLongitude() Field {
-	return Field{path: "origin.addressInfo.longitude"}
 }
 
 func (p Projection) OriginProvince() Field {
@@ -635,6 +619,72 @@ func (p Projection) DeliveryEvidencePhotosType() Field {
 
 func (p Projection) DeliveryEvidencePhotosURL() Field {
 	return Field{path: "delivery.evidencePhotos.url"}
+}
+
+// Métodos para campos de Coordinates en Destination
+func (p Projection) DestinationCoordinates() Field {
+	return Field{path: "destination.addressInfo.coordinates"}
+}
+
+func (p Projection) DestinationCoordinatesLatitude() Field {
+	return Field{path: "destination.addressInfo.coordinates.latitude"}
+}
+
+func (p Projection) DestinationCoordinatesLongitude() Field {
+	return Field{path: "destination.addressInfo.coordinates.longitude"}
+}
+
+func (p Projection) DestinationCoordinatesSource() Field {
+	return Field{path: "destination.addressInfo.coordinates.source"}
+}
+
+func (p Projection) DestinationCoordinatesConfidence() Field {
+	return Field{path: "destination.addressInfo.coordinates.confidence"}
+}
+
+func (p Projection) DestinationCoordinatesConfidenceLevel() Field {
+	return Field{path: "destination.addressInfo.coordinates.confidence.level"}
+}
+
+func (p Projection) DestinationCoordinatesConfidenceMessage() Field {
+	return Field{path: "destination.addressInfo.coordinates.confidence.message"}
+}
+
+func (p Projection) DestinationCoordinatesConfidenceReason() Field {
+	return Field{path: "destination.addressInfo.coordinates.confidence.reason"}
+}
+
+// Métodos para campos de Coordinates en Origin
+func (p Projection) OriginCoordinates() Field {
+	return Field{path: "origin.addressInfo.coordinates"}
+}
+
+func (p Projection) OriginCoordinatesLatitude() Field {
+	return Field{path: "origin.addressInfo.coordinates.latitude"}
+}
+
+func (p Projection) OriginCoordinatesLongitude() Field {
+	return Field{path: "origin.addressInfo.coordinates.longitude"}
+}
+
+func (p Projection) OriginCoordinatesSource() Field {
+	return Field{path: "origin.addressInfo.coordinates.source"}
+}
+
+func (p Projection) OriginCoordinatesConfidence() Field {
+	return Field{path: "origin.addressInfo.coordinates.confidence"}
+}
+
+func (p Projection) OriginCoordinatesConfidenceLevel() Field {
+	return Field{path: "origin.addressInfo.coordinates.confidence.level"}
+}
+
+func (p Projection) OriginCoordinatesConfidenceMessage() Field {
+	return Field{path: "origin.addressInfo.coordinates.confidence.message"}
+}
+
+func (p Projection) OriginCoordinatesConfidenceReason() Field {
+	return Field{path: "origin.addressInfo.coordinates.confidence.reason"}
 }
 
 // GetAllProjections devuelve un mapa con todas las proyecciones disponibles
