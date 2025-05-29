@@ -3,17 +3,16 @@
 package model
 
 type AddressInfo struct {
-	AddressLine1         *string  `json:"addressLine1,omitempty"`
-	AddressLine2         *string  `json:"addressLine2,omitempty"`
-	RequiresManualReview *bool    `json:"requiresManualReview,omitempty"`
-	Contact              *Contact `json:"contact,omitempty"`
-	District             *string  `json:"district,omitempty"`
-	Latitude             *float64 `json:"latitude,omitempty"`
-	Longitude            *float64 `json:"longitude,omitempty"`
-	Province             *string  `json:"province,omitempty"`
-	State                *string  `json:"state,omitempty"`
-	TimeZone             *string  `json:"timeZone,omitempty"`
-	ZipCode              *string  `json:"zipCode,omitempty"`
+	AddressLine1         *string      `json:"addressLine1,omitempty"`
+	AddressLine2         *string      `json:"addressLine2,omitempty"`
+	RequiresManualReview *bool        `json:"requiresManualReview,omitempty"`
+	Contact              *Contact     `json:"contact,omitempty"`
+	District             *string      `json:"district,omitempty"`
+	Coordinates          *Coordinates `json:"coordinates,omitempty"`
+	Province             *string      `json:"province,omitempty"`
+	State                *string      `json:"state,omitempty"`
+	TimeZone             *string      `json:"timeZone,omitempty"`
+	ZipCode              *string      `json:"zipCode,omitempty"`
 }
 
 type Carrier struct {
@@ -24,6 +23,12 @@ type Carrier struct {
 type CollectAvailabilityDate struct {
 	Date      *string    `json:"date,omitempty"`
 	TimeRange *TimeRange `json:"timeRange,omitempty"`
+}
+
+type Confidence struct {
+	Level   *float64 `json:"level,omitempty"`
+	Message *string  `json:"message,omitempty"`
+	Reason  *string  `json:"reason,omitempty"`
 }
 
 type Contact struct {
@@ -38,6 +43,13 @@ type Contact struct {
 type ContactMethod struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
+}
+
+type Coordinates struct {
+	Latitude   *float64    `json:"latitude,omitempty"`
+	Longitude  *float64    `json:"longitude,omitempty"`
+	Source     *string     `json:"source,omitempty"`
+	Confidence *Confidence `json:"confidence,omitempty"`
 }
 
 type DateRange struct {

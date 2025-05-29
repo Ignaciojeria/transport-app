@@ -29,12 +29,24 @@ type AddressInfo {
   requiresManualReview: Boolean
   contact: Contact
   district: String
-  latitude: Float
-  longitude: Float
+  coordinates: Coordinates
   province: String
   state: String
   timeZone: String
   zipCode: String
+}
+
+type Coordinates {
+  latitude: Float
+  longitude: Float
+  source: String
+  confidence: Confidence
+}
+
+type Confidence {
+  level: Float
+  message: String
+  reason: String
 }
 
 type NodeInfo {

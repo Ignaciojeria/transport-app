@@ -50,9 +50,8 @@ type ComplexityRoot struct {
 		AddressLine1         func(childComplexity int) int
 		AddressLine2         func(childComplexity int) int
 		Contact              func(childComplexity int) int
+		Coordinates          func(childComplexity int) int
 		District             func(childComplexity int) int
-		Latitude             func(childComplexity int) int
-		Longitude            func(childComplexity int) int
 		Province             func(childComplexity int) int
 		RequiresManualReview func(childComplexity int) int
 		State                func(childComplexity int) int
@@ -70,6 +69,12 @@ type ComplexityRoot struct {
 		TimeRange func(childComplexity int) int
 	}
 
+	Confidence struct {
+		Level   func(childComplexity int) int
+		Message func(childComplexity int) int
+		Reason  func(childComplexity int) int
+	}
+
 	Contact struct {
 		AdditionalContactMethods func(childComplexity int) int
 		Documents                func(childComplexity int) int
@@ -82,6 +87,13 @@ type ComplexityRoot struct {
 	ContactMethod struct {
 		Type  func(childComplexity int) int
 		Value func(childComplexity int) int
+	}
+
+	Coordinates struct {
+		Confidence func(childComplexity int) int
+		Latitude   func(childComplexity int) int
+		Longitude  func(childComplexity int) int
+		Source     func(childComplexity int) int
 	}
 
 	DateRange struct {
@@ -322,26 +334,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.AddressInfo.Contact(childComplexity), true
 
+	case "AddressInfo.coordinates":
+		if e.complexity.AddressInfo.Coordinates == nil {
+			break
+		}
+
+		return e.complexity.AddressInfo.Coordinates(childComplexity), true
+
 	case "AddressInfo.district":
 		if e.complexity.AddressInfo.District == nil {
 			break
 		}
 
 		return e.complexity.AddressInfo.District(childComplexity), true
-
-	case "AddressInfo.latitude":
-		if e.complexity.AddressInfo.Latitude == nil {
-			break
-		}
-
-		return e.complexity.AddressInfo.Latitude(childComplexity), true
-
-	case "AddressInfo.longitude":
-		if e.complexity.AddressInfo.Longitude == nil {
-			break
-		}
-
-		return e.complexity.AddressInfo.Longitude(childComplexity), true
 
 	case "AddressInfo.province":
 		if e.complexity.AddressInfo.Province == nil {
@@ -406,6 +411,27 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.CollectAvailabilityDate.TimeRange(childComplexity), true
 
+	case "Confidence.level":
+		if e.complexity.Confidence.Level == nil {
+			break
+		}
+
+		return e.complexity.Confidence.Level(childComplexity), true
+
+	case "Confidence.message":
+		if e.complexity.Confidence.Message == nil {
+			break
+		}
+
+		return e.complexity.Confidence.Message(childComplexity), true
+
+	case "Confidence.reason":
+		if e.complexity.Confidence.Reason == nil {
+			break
+		}
+
+		return e.complexity.Confidence.Reason(childComplexity), true
+
 	case "Contact.additionalContactMethods":
 		if e.complexity.Contact.AdditionalContactMethods == nil {
 			break
@@ -461,6 +487,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.ContactMethod.Value(childComplexity), true
+
+	case "Coordinates.confidence":
+		if e.complexity.Coordinates.Confidence == nil {
+			break
+		}
+
+		return e.complexity.Coordinates.Confidence(childComplexity), true
+
+	case "Coordinates.latitude":
+		if e.complexity.Coordinates.Latitude == nil {
+			break
+		}
+
+		return e.complexity.Coordinates.Latitude(childComplexity), true
+
+	case "Coordinates.longitude":
+		if e.complexity.Coordinates.Longitude == nil {
+			break
+		}
+
+		return e.complexity.Coordinates.Longitude(childComplexity), true
+
+	case "Coordinates.source":
+		if e.complexity.Coordinates.Source == nil {
+			break
+		}
+
+		return e.complexity.Coordinates.Source(childComplexity), true
 
 	case "DateRange.endDate":
 		if e.complexity.DateRange.EndDate == nil {
@@ -1764,8 +1818,8 @@ func (ec *executionContext) fieldContext_AddressInfo_district(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _AddressInfo_latitude(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_latitude(ctx, field)
+func (ec *executionContext) _AddressInfo_coordinates(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AddressInfo_coordinates(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1778,7 +1832,7 @@ func (ec *executionContext) _AddressInfo_latitude(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Latitude, nil
+		return obj.Coordinates, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1787,60 +1841,29 @@ func (ec *executionContext) _AddressInfo_latitude(ctx context.Context, field gra
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*model.Coordinates)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOCoordinates2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐCoordinates(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_AddressInfo_latitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_AddressInfo_coordinates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "AddressInfo",
 		Field:      field,
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AddressInfo_longitude(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_longitude(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Longitude, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*float64)
-	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AddressInfo_longitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AddressInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			switch field.Name {
+			case "latitude":
+				return ec.fieldContext_Coordinates_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_Coordinates_longitude(ctx, field)
+			case "source":
+				return ec.fieldContext_Coordinates_source(ctx, field)
+			case "confidence":
+				return ec.fieldContext_Coordinates_confidence(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Coordinates", field.Name)
 		},
 	}
 	return fc, nil
@@ -2175,6 +2198,129 @@ func (ec *executionContext) fieldContext_CollectAvailabilityDate_timeRange(_ con
 				return ec.fieldContext_TimeRange_endTime(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type TimeRange", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Confidence_level(ctx context.Context, field graphql.CollectedField, obj *model.Confidence) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Confidence_level(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Level, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Confidence_level(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Confidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Confidence_message(ctx context.Context, field graphql.CollectedField, obj *model.Confidence) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Confidence_message(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Confidence_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Confidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Confidence_reason(ctx context.Context, field graphql.CollectedField, obj *model.Confidence) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Confidence_reason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reason, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Confidence_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Confidence",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2515,6 +2661,178 @@ func (ec *executionContext) fieldContext_ContactMethod_value(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Coordinates_latitude(ctx context.Context, field graphql.CollectedField, obj *model.Coordinates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Coordinates_latitude(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Latitude, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Coordinates_latitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Coordinates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Coordinates_longitude(ctx context.Context, field graphql.CollectedField, obj *model.Coordinates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Coordinates_longitude(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Longitude, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*float64)
+	fc.Result = res
+	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Coordinates_longitude(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Coordinates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Float does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Coordinates_source(ctx context.Context, field graphql.CollectedField, obj *model.Coordinates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Coordinates_source(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Source, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Coordinates_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Coordinates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Coordinates_confidence(ctx context.Context, field graphql.CollectedField, obj *model.Coordinates) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Coordinates_confidence(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Confidence, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Confidence)
+	fc.Result = res
+	return ec.marshalOConfidence2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐConfidence(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Coordinates_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Coordinates",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "level":
+				return ec.fieldContext_Confidence_level(ctx, field)
+			case "message":
+				return ec.fieldContext_Confidence_message(ctx, field)
+			case "reason":
+				return ec.fieldContext_Confidence_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Confidence", field.Name)
 		},
 	}
 	return fc, nil
@@ -5769,10 +6087,8 @@ func (ec *executionContext) fieldContext_Location_addressInfo(_ context.Context,
 				return ec.fieldContext_AddressInfo_contact(ctx, field)
 			case "district":
 				return ec.fieldContext_AddressInfo_district(ctx, field)
-			case "latitude":
-				return ec.fieldContext_AddressInfo_latitude(ctx, field)
-			case "longitude":
-				return ec.fieldContext_AddressInfo_longitude(ctx, field)
+			case "coordinates":
+				return ec.fieldContext_AddressInfo_coordinates(ctx, field)
 			case "province":
 				return ec.fieldContext_AddressInfo_province(ctx, field)
 			case "state":
@@ -9149,10 +9465,8 @@ func (ec *executionContext) _AddressInfo(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._AddressInfo_contact(ctx, field, obj)
 		case "district":
 			out.Values[i] = ec._AddressInfo_district(ctx, field, obj)
-		case "latitude":
-			out.Values[i] = ec._AddressInfo_latitude(ctx, field, obj)
-		case "longitude":
-			out.Values[i] = ec._AddressInfo_longitude(ctx, field, obj)
+		case "coordinates":
+			out.Values[i] = ec._AddressInfo_coordinates(ctx, field, obj)
 		case "province":
 			out.Values[i] = ec._AddressInfo_province(ctx, field, obj)
 		case "state":
@@ -9260,6 +9574,46 @@ func (ec *executionContext) _CollectAvailabilityDate(ctx context.Context, sel as
 	return out
 }
 
+var confidenceImplementors = []string{"Confidence"}
+
+func (ec *executionContext) _Confidence(ctx context.Context, sel ast.SelectionSet, obj *model.Confidence) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, confidenceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Confidence")
+		case "level":
+			out.Values[i] = ec._Confidence_level(ctx, field, obj)
+		case "message":
+			out.Values[i] = ec._Confidence_message(ctx, field, obj)
+		case "reason":
+			out.Values[i] = ec._Confidence_reason(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var contactImplementors = []string{"Contact"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
@@ -9321,6 +9675,48 @@ func (ec *executionContext) _ContactMethod(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._ContactMethod_type(ctx, field, obj)
 		case "value":
 			out.Values[i] = ec._ContactMethod_value(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var coordinatesImplementors = []string{"Coordinates"}
+
+func (ec *executionContext) _Coordinates(ctx context.Context, sel ast.SelectionSet, obj *model.Coordinates) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, coordinatesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Coordinates")
+		case "latitude":
+			out.Values[i] = ec._Coordinates_latitude(ctx, field, obj)
+		case "longitude":
+			out.Values[i] = ec._Coordinates_longitude(ctx, field, obj)
+		case "source":
+			out.Values[i] = ec._Coordinates_source(ctx, field, obj)
+		case "confidence":
+			out.Values[i] = ec._Coordinates_confidence(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11480,6 +11876,13 @@ func (ec *executionContext) marshalOCollectAvailabilityDate2ᚖtransportᚑapp�
 	return ec._CollectAvailabilityDate(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOConfidence2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐConfidence(ctx context.Context, sel ast.SelectionSet, v *model.Confidence) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Confidence(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOContact2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐContact(ctx context.Context, sel ast.SelectionSet, v *model.Contact) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -11533,6 +11936,13 @@ func (ec *executionContext) marshalOContactMethod2ᚖtransportᚑappᚋappᚋada
 		return graphql.Null
 	}
 	return ec._ContactMethod(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOCoordinates2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐCoordinates(ctx context.Context, sel ast.SelectionSet, v *model.Coordinates) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Coordinates(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalODateRange2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDateRange(ctx context.Context, sel ast.SelectionSet, v *model.DateRange) graphql.Marshaler {
