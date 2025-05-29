@@ -52,14 +52,21 @@ func MapNodeInfoToDomain(nodeInfo struct {
 				NationalID:   addressInfo.Contact.NationalID,
 				Documents:    MapDocumentsToDomain(addressInfo.Contact.Documents),
 			},
-			State:            domain.State(addressInfo.State),
-			Province:         domain.Province(addressInfo.Province),
-			District:         domain.District(addressInfo.District),
-			AddressLine1:     addressInfo.AddressLine1,
-			Location:         orb.Point{addressInfo.Coordinates.Longitude, addressInfo.Coordinates.Latitude},
-			CoordinateSource: addressInfo.Coordinates.Source,
-			ZipCode:          addressInfo.ZipCode,
-			TimeZone:         addressInfo.TimeZone,
+			State:        domain.State(addressInfo.State),
+			Province:     domain.Province(addressInfo.Province),
+			District:     domain.District(addressInfo.District),
+			AddressLine1: addressInfo.AddressLine1,
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{addressInfo.Coordinates.Longitude, addressInfo.Coordinates.Latitude},
+				Source: addressInfo.Coordinates.Source,
+				Confidence: domain.CoordinatesConfidence{
+					Level:   addressInfo.Coordinates.Confidence.Level,
+					Message: addressInfo.Coordinates.Confidence.Message,
+					Reason:  addressInfo.Coordinates.Confidence.Reason,
+				},
+			},
+			ZipCode:  addressInfo.ZipCode,
+			TimeZone: addressInfo.TimeZone,
 		},
 	}
 }
@@ -130,8 +137,8 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 		State:     nodeInfo.AddressInfo.State.String(),
 		ZipCode:   nodeInfo.AddressInfo.ZipCode,
 		TimeZone:  nodeInfo.AddressInfo.TimeZone,
-		Latitude:  nodeInfo.AddressInfo.Location[1], // Latitud
-		Longitude: nodeInfo.AddressInfo.Location[0], // Longitud
+		Latitude:  nodeInfo.AddressInfo.Coordinates.Point.Lat(), // Latitud
+		Longitude: nodeInfo.AddressInfo.Coordinates.Point.Lon(), // Longitud
 	}
 
 	// Mapear contacto

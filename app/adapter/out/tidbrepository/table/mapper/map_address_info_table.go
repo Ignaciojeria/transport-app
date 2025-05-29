@@ -9,18 +9,17 @@ import (
 
 func MapAddressInfoTable(ctx context.Context, e domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
-		StateDoc:             e.State.DocID(ctx).String(),
-		ProvinceDoc:          e.Province.DocID(ctx).String(),
-		DistrictDoc:          e.District.DocID(ctx).String(),
-		AddressLine1:         e.AddressLine1,
-		AddressLine2:         e.AddressLine2,
-		DocumentID:           string(e.DocID(ctx)),
-		Latitude:             e.Location[1],
-		Longitude:            e.Location[0],
-		ZipCode:              e.ZipCode,
-		TimeZone:             e.TimeZone,
-		TenantID:             sharedcontext.TenantIDFromContext(ctx),
-		RequiresManualReview: e.RequiresManualReview,
-		CoordinateSource:     e.CoordinateSource,
+		StateDoc:         e.State.DocID(ctx).String(),
+		ProvinceDoc:      e.Province.DocID(ctx).String(),
+		DistrictDoc:      e.District.DocID(ctx).String(),
+		AddressLine1:     e.AddressLine1,
+		AddressLine2:     e.AddressLine2,
+		DocumentID:       string(e.DocID(ctx)),
+		Latitude:         e.Coordinates.Point.Lat(),
+		Longitude:        e.Coordinates.Point.Lon(),
+		ZipCode:          e.ZipCode,
+		TimeZone:         e.TimeZone,
+		TenantID:         sharedcontext.TenantIDFromContext(ctx),
+		CoordinateSource: e.Coordinates.Source,
 	}
 }

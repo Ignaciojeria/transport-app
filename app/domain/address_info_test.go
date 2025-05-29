@@ -76,7 +76,15 @@ var _ = Describe("AddressInfo", func() {
 				District:     "Providencia",
 				ZipCode:      "7500000",
 				TimeZone:     "America/Santiago",
-				Location:     orb.Point{-33.4372, -70.6506},
+				Coordinates: Coordinates{
+					Point:  orb.Point{-33.4372, -70.6506},
+					Source: "geocoding",
+					Confidence: CoordinatesConfidence{
+						Level:   0.9,
+						Message: "High confidence",
+						Reason:  "Exact match",
+					},
+				},
 			}
 		})
 
@@ -87,12 +95,22 @@ var _ = Describe("AddressInfo", func() {
 			Expect(updated.AddressLine1).To(Equal("Av Las Condes 5678"))
 		})
 
-		It("should mark as changed when Location is updated", func() {
-			newLocation := orb.Point{-33.4400, -70.6600}
-			input := AddressInfo{Location: newLocation}
+		It("should mark as changed when Coordinates are updated", func() {
+			newPoint := orb.Point{-33.4400, -70.6600}
+			input := AddressInfo{
+				Coordinates: Coordinates{
+					Point:  newPoint,
+					Source: "geocoding",
+					Confidence: CoordinatesConfidence{
+						Level:   0.8,
+						Message: "Medium confidence",
+						Reason:  "Approximate match",
+					},
+				},
+			}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Location).To(Equal(newLocation))
+			Expect(updated.Coordinates.Point).To(Equal(newPoint))
 		})
 
 		It("should mark as changed when State is updated", func() {

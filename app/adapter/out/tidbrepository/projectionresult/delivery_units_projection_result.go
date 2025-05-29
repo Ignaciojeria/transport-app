@@ -30,16 +30,15 @@ type DeliveryUnitsProjectionResult struct {
 	DeliveryUnitLabels table.JSONReference  `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 
 	// Destination Address Information
-	DestinationAddressLine1         string  `json:"destination_address_line1"`
-	DestinationAddressLine2         string  `json:"destination_address_line2"`
-	DestinationDistrict             string  `json:"destination_district"`
-	DestinationLatitude             float64 `json:"destination_latitude"`
-	DestinationLongitude            float64 `json:"destination_longitude"`
-	DestinationProvince             string  `json:"destination_province"`
-	DestinationState                string  `json:"destination_state"`
-	DestinationTimeZone             string  `json:"destination_time_zone"`
-	DestinationZipCode              string  `json:"destination_zip_code"`
-	DestinationRequiresManualReview bool    `json:"destination_requires_manual_review"`
+	DestinationAddressLine1 string  `json:"destination_address_line1"`
+	DestinationAddressLine2 string  `json:"destination_address_line2"`
+	DestinationDistrict     string  `json:"destination_district"`
+	DestinationLatitude     float64 `json:"destination_latitude"`
+	DestinationLongitude    float64 `json:"destination_longitude"`
+	DestinationProvince     string  `json:"destination_province"`
+	DestinationState        string  `json:"destination_state"`
+	DestinationTimeZone     string  `json:"destination_time_zone"`
+	DestinationZipCode      string  `json:"destination_zip_code"`
 
 	// Destination Contact Information
 	DestinationContactEmail             string              `json:"destination_contact_email"`

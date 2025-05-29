@@ -35,7 +35,15 @@ var _ = Describe("GetStoredCoordinates", func() {
 			State:        state,
 			Province:     province,
 			District:     district,
-			Location:     orb.Point{-70.6001, -33.4500},
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6001, -33.4500},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		// Guardar la dirección (esto también guardará state, province y district)

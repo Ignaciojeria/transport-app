@@ -32,15 +32,21 @@ type AddressInfo struct {
 
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
-		State:                domain.State(a.State.Name),
-		Province:             domain.Province(a.Province.Name),
-		District:             domain.District(a.District.Name),
-		RequiresManualReview: a.RequiresManualReview,
-		CoordinateSource:     a.CoordinateSource,
-		AddressLine1:         a.AddressLine1,
-		AddressLine2:         a.AddressLine2,
-		Location:             orb.Point{a.Longitude, a.Latitude},
-		ZipCode:              a.ZipCode,
-		TimeZone:             a.TimeZone,
+		State:        domain.State(a.State.Name),
+		Province:     domain.Province(a.Province.Name),
+		District:     domain.District(a.District.Name),
+		AddressLine1: a.AddressLine1,
+		AddressLine2: a.AddressLine2,
+		Coordinates: domain.Coordinates{
+			Point:  orb.Point{a.Longitude, a.Latitude},
+			Source: a.CoordinateSource,
+			Confidence: domain.CoordinatesConfidence{
+				Level:   1.0,
+				Message: "High confidence from database",
+				Reason:  "Stored coordinates",
+			},
+		},
+		ZipCode:  a.ZipCode,
+		TimeZone: a.TimeZone,
 	}
 }

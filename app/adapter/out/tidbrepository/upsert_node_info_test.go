@@ -46,12 +46,28 @@ var _ = Describe("UpsertNodeInfo", func() {
 		addressInfo1 = domain.AddressInfo{
 			AddressLine1: "Address 1",
 			Contact:      contact1,
-			Location:     orb.Point{-70.6001, -33.4500},
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6001, -33.4500},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 		addressInfo2 = domain.AddressInfo{
 			AddressLine1: "Address 2",
 			Contact:      contact2,
-			Location:     orb.Point{-70.6002, -33.4501},
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6002, -33.4501},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 	})
 

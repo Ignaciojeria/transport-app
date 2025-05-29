@@ -20,8 +20,8 @@ func newRedisGeocodingCacheStrategy(c *redis.Client) GeocodingCacheStrategy {
 }
 
 func (r redisGeocodingCacheStrategy) Save(ctx context.Context, adi domain.AddressInfo) error {
-	lat := adi.Location.Lat()
-	lng := adi.Location.Lon()
+	lat := adi.Coordinates.Point.Lat()
+	lng := adi.Coordinates.Point.Lon()
 	concat := fmt.Sprintf("%.6f,%.6f", lat, lng)
 	return r.c.Set(ctx, adi.DocID(ctx).String(), concat, 0).Err()
 }

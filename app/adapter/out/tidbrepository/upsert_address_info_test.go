@@ -37,7 +37,15 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Province:     province,
 			District:     district,
 			ZipCode:      "7500000",
-			Location:     orb.Point{-70.6506, -33.4372}, // [lon, lat]
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6506, -33.4372}, // [lon, lat]
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		err = upsert(ctx, addressInfo)
@@ -98,7 +106,15 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Province:     "Santiago",
 			State:        "Metropolitana",
 			ZipCode:      "7550000",
-			Location:     orb.Point{-70.5768, -33.4002}, // [lon, lat]
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.5768, -33.4002},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		err = upsert(ctx, original)
@@ -118,7 +134,15 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Province:     "Santiago",
 			State:        "Metropolitana",
 			ZipCode:      "7560000", // Cambiado
-			Location:     orb.Point{-70.5768, -33.4002},
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.5800, -33.4100},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		err = upsert(ctx, modified)
@@ -177,6 +201,15 @@ var _ = Describe("UpsertAddressInfo", func() {
 			State:        domain.State("Test State"),
 			Province:     domain.Province("Test Province"),
 			District:     domain.District("Test District"),
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6506, -33.4372},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		addressInfo2 := domain.AddressInfo{
@@ -184,6 +217,15 @@ var _ = Describe("UpsertAddressInfo", func() {
 			State:        domain.State("Test State"),
 			Province:     domain.Province("Test Province"),
 			District:     domain.District("Test District"),
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6506, -33.4372},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		err = upsert(ctx1, addressInfo1)
@@ -235,37 +277,42 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.AddressInfo{
-			AddressLine1: "Coordenadas Test",
+			AddressLine1: "Dirección Original",
 			District:     "Ñuñoa",
 			Province:     "Santiago",
 			State:        "Metropolitana",
-			Location:     orb.Point{-70.5975, -33.4566}, // [lon, lat]
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.5975, -33.4566}, // [lon, lat]
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Get the DocID
-		docID := original.DocID(ctx)
-
 		// Actualizar con nuevas coordenadas
 		modified := original
-		modified.Location = orb.Point{-70.6000, -33.4600} // Nuevas coordenadas
+		modified.Coordinates.Point = orb.Point{-70.5800, -33.4100}
 
 		err = upsert(ctx, modified)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verify the coordinates were updated correctly
+		// Verificar que la dirección se actualizó correctamente
 		var dbAddressInfo table.AddressInfo
 		err = conn.DB.WithContext(ctx).
 			Table("address_infos").
-			Where("document_id = ?", docID).
+			Where("document_id = ?", original.DocID(ctx)).
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 
 		// Comparar coordenadas con una pequeña tolerancia
-		Expect(dbAddressInfo.Longitude).To(BeNumerically("~", -70.6000, 0.0001))
-		Expect(dbAddressInfo.Latitude).To(BeNumerically("~", -33.4600, 0.0001))
+		Expect(dbAddressInfo.Longitude).To(BeNumerically("~", -70.5800, 0.0001))
+		Expect(dbAddressInfo.Latitude).To(BeNumerically("~", -33.4100, 0.0001))
 		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 

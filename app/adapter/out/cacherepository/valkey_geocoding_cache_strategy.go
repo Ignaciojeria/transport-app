@@ -20,8 +20,8 @@ func newValkeyGeocodingCacheStrategy(c valkey.Client) GeocodingCacheStrategy {
 }
 
 func (v valkeyGeocodingCacheStrategy) Save(ctx context.Context, adi domain.AddressInfo) error {
-	lat := adi.Location.Lat()
-	lng := adi.Location.Lon()
+	lat := adi.Coordinates.Point.Lat()
+	lng := adi.Coordinates.Point.Lon()
 	concat := fmt.Sprintf("%.6f,%.6f", lat, lng)
 
 	cmd := v.c.B().Set().Key(adi.DocID(ctx).String()).Value(concat).Build()

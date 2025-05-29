@@ -86,9 +86,17 @@ func getResponse(resp *genai.GenerateContentResponse) (domain.AddressInfo, error
 		District: domain.District(data.District),
 		State:    domain.State(data.State),
 		Province: domain.Province(data.Province),
-		Location: orb.Point{
-			data.Longitude,
-			data.Latitude,
+		Coordinates: domain.Coordinates{
+			Point: orb.Point{
+				data.Longitude,
+				data.Latitude,
+			},
+			Source: "gemini",
+			Confidence: domain.CoordinatesConfidence{
+				Level:   1.0,
+				Message: "High confidence from Gemini",
+				Reason:  "Direct geocoding",
+			},
 		},
 	}, nil
 }

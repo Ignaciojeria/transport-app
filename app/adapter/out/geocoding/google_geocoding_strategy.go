@@ -32,7 +32,7 @@ func newGoogleGeocoding(
 		}
 
 		if c == nil {
-			return ai.Location, nil
+			return ai.Coordinates.Point, nil
 		}
 
 		// 2. Geocodificar si no está en la BD

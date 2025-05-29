@@ -36,9 +36,9 @@ func MapOptimizationRequest(conf configuration.Conf, plan domain.Plan) Optimizat
 	for _, route := range plan.Routes {
 
 		// Punto de inicio de la ruta.
-		startPoint := route.Origin.AddressInfo.Location
+		startPoint := route.Origin.AddressInfo.Coordinates.Point
 		// Punto de final de la ruta.
-		endPoint := route.Destination.AddressInfo.Location
+		endPoint := route.Destination.AddressInfo.Coordinates.Point
 
 		// Construir slice de coordenadas en orden:
 		// 1. Agregar el punto de inicio.
@@ -46,7 +46,7 @@ func MapOptimizationRequest(conf configuration.Conf, plan domain.Plan) Optimizat
 
 		// 2. Agregar las coordenadas de las órdenes, en el orden que aparecen.
 		for _, order := range route.Orders {
-			currentPoint := order.Destination.AddressInfo.Location
+			currentPoint := order.Destination.AddressInfo.Coordinates.Point
 
 			// Excluir si es igual al inicio o al destino.
 			if arePointsEqual(currentPoint, startPoint) || arePointsEqual(currentPoint, endPoint) {

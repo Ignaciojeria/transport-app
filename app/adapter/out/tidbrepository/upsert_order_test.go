@@ -42,12 +42,28 @@ var _ = Describe("UpsertOrder", func() {
 
 		originAddress = domain.AddressInfo{
 			AddressLine1: "Origin Address",
-			Location:     orb.Point{-70.6001, -33.4500},
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6001, -33.4500},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		destAddress = domain.AddressInfo{
 			AddressLine1: "Destination Address",
-			Location:     orb.Point{-70.6002, -33.4501},
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{-70.6002, -33.4501},
+				Source: "test",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   1.0,
+					Message: "Test confidence",
+					Reason:  "Test data",
+				},
+			},
 		}
 
 		originNode = domain.NodeInfo{
@@ -329,7 +345,15 @@ var _ = Describe("UpsertOrder", func() {
 			Name:        "Nuevo Nodo Origen",
 			AddressInfo: domain.AddressInfo{
 				AddressLine1: "Nueva dirección origen",
-				Location:     orb.Point{-70.5, -33.5},
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{-70.5, -33.5},
+					Source: "test",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   1.0,
+						Message: "Test confidence",
+						Reason:  "Test data",
+					},
+				},
 			},
 		}
 		modifiedOrder.Destination = domain.NodeInfo{
@@ -337,7 +361,15 @@ var _ = Describe("UpsertOrder", func() {
 			Name:        "Nuevo Nodo Destino",
 			AddressInfo: domain.AddressInfo{
 				AddressLine1: "Nueva dirección destino",
-				Location:     orb.Point{-70.1, -33.1},
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{-70.1, -33.1},
+					Source: "test",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   1.0,
+						Message: "Test confidence",
+						Reason:  "Test data",
+					},
+				},
 			},
 		}
 

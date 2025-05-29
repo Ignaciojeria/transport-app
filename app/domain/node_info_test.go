@@ -45,7 +45,15 @@ var _ = Describe("NodeInfo", func() {
 					District:     "Providencia",
 					Province:     "Santiago",
 					State:        "Metropolitana",
-					Location:     orb.Point{-70.6506, -33.4372},
+					Coordinates: Coordinates{
+						Point:  orb.Point{-70.6506, -33.4372},
+						Source: "geocoding",
+						Confidence: CoordinatesConfidence{
+							Level:   0.9,
+							Message: "High confidence",
+							Reason:  "Exact match",
+						},
+					},
 				},
 				References: []Reference{
 					{Type: "CODE", Value: "REF001"},

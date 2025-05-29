@@ -7,20 +7,28 @@ import (
 	"github.com/paulmach/orb"
 )
 
-type CoordinateSource string
+type CoordinatesConfidence struct {
+	Level   float64
+	Message string
+	Reason  string
+}
+
+type Coordinates struct {
+	Point      orb.Point
+	Source     string
+	Confidence CoordinatesConfidence
+}
 
 type AddressInfo struct {
-	Contact              Contact
-	State                State
-	Province             Province
-	District             District
-	AddressLine1         string
-	AddressLine2         string
-	Location             orb.Point
-	RequiresManualReview bool
-	CoordinateSource     string
-	ZipCode              string
-	TimeZone             string
+	Contact      Contact
+	State        State
+	Province     Province
+	District     District
+	AddressLine1 string
+	AddressLine2 string
+	Coordinates  Coordinates
+	ZipCode      string
+	TimeZone     string
 }
 
 func (a AddressInfo) DocID(ctx context.Context) DocumentID {
@@ -34,7 +42,7 @@ func (a AddressInfo) DocID(ctx context.Context) DocumentID {
 }
 
 func (a *AddressInfo) UpdatePoint(point orb.Point) {
-	a.Location = point
+	a.Coordinates.Point = point
 }
 
 func (a *AddressInfo) NormalizeAndGeocode(
@@ -66,12 +74,12 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		updated.AddressLine1 = newAddress.AddressLine1
 		changed = true
 	}
-	if newAddress.Location[1] != 0 && newAddress.Location[1] != a.Location[1] {
-		updated.Location[1] = newAddress.Location[1]
+	if newAddress.Coordinates.Point[1] != 0 && newAddress.Coordinates.Point[1] != a.Coordinates.Point[1] {
+		updated.Coordinates.Point[1] = newAddress.Coordinates.Point[1]
 		changed = true
 	}
-	if newAddress.Location[0] != 0 && newAddress.Location[0] != a.Location[0] {
-		updated.Location[0] = newAddress.Location[0]
+	if newAddress.Coordinates.Point[0] != 0 && newAddress.Coordinates.Point[0] != a.Coordinates.Point[0] {
+		updated.Coordinates.Point[0] = newAddress.Coordinates.Point[0]
 		changed = true
 	}
 

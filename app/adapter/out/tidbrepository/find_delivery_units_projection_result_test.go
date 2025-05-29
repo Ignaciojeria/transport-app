@@ -50,16 +50,22 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(tenantCount).To(Equal(int64(1)), "Tenant was not created properly")
 
 		destination := domain.AddressInfo{
-			State:                "CA",
-			Province:             "CA",
-			District:             "CA",
-			AddressLine1:         "123 Main St",
-			AddressLine2:         "Apt 1",
-			Location:             orb.Point{1, 1},
-			TimeZone:             "America/Santiago",
-			RequiresManualReview: true,
-			CoordinateSource:     "geocoding",
-			ZipCode:              "12345",
+			State:        "CA",
+			Province:     "CA",
+			District:     "CA",
+			AddressLine1: "123 Main St",
+			AddressLine2: "Apt 1",
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{1, 1},
+				Source: "geocoding",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   0.8,
+					Message: "Medium confidence",
+					Reason:  "Geocoding service",
+				},
+			},
+			TimeZone: "America/Santiago",
+			ZipCode:  "12345",
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred(), "Failed to upsert address info: %v", err)
@@ -228,16 +234,22 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		destination := domain.AddressInfo{
-			State:                "CA",
-			Province:             "CA",
-			District:             "CA",
-			AddressLine1:         "123 Main St",
-			Location:             orb.Point{1, 1},
-			TimeZone:             "America/Santiago",
-			RequiresManualReview: true,
-			CoordinateSource:     "geocoding",
-			ZipCode:              "12345",
-			Contact:              contact,
+			State:        "CA",
+			Province:     "CA",
+			District:     "CA",
+			AddressLine1: "123 Main St",
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{1, 1},
+				Source: "geocoding",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   0.8,
+					Message: "Medium confidence",
+					Reason:  "Geocoding service",
+				},
+			},
+			TimeZone: "America/Santiago",
+			ZipCode:  "12345",
+			Contact:  contact,
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
@@ -299,7 +311,6 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DestinationContactPhone().String():             "",
 				projection.DestinationAdditionalContactMethods().String(): "",
 				projection.DestinationContactDocuments().String():         "",
-				projection.DestinationRequiresManualReview().String():     "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -318,7 +329,6 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			{Type: "dni", Value: "12345678-9"},
 			{Type: "passport", Value: "AB123456"},
 		}))
-		Expect(results[0].DestinationRequiresManualReview).To(Equal(true))
 	})
 
 	It("should return delivery units with package information", func() {
