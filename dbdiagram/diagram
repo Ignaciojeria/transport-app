@@ -1,0 +1,333 @@
+// Account y Tenant
+Table Account {
+  id bigint [pk]
+  email varchar(255) [not null, unique]
+  document_id char(64) [unique]
+  is_active boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table Tenant {
+  id uuid [pk]
+  name varchar(255) [not null]
+  country varchar(255) [not null]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table AccountTenant {
+  account_id bigint [pk, ref: > Account.id]
+  tenant_id uuid [pk, ref: > Tenant.id]
+  role varchar(50)
+  created_at timestamp
+  updated_at timestamp
+}
+
+// Ordenes y sus relaciones
+Table Order {
+  id bigint [pk]
+  document_id char(64) [unique]
+  reference_id varchar [not null]
+  tenant_id uuid [ref: > Tenant.id]
+  order_headers_doc char(64) [ref: > OrderHeaders.document_id]
+  order_type_doc char(64) [ref: > OrderType.document_id]
+  group_by_type varchar
+  group_by_value varchar
+  route_doc char(64) [ref: > Route.document_id]
+  delivery_instructions text
+  origin_contact_doc char(64) [ref: > Contact.document_id]
+  destination_contact_doc char(64) [ref: > Contact.document_id]
+  origin_address_info_doc char(64) [ref: > AddressInfo.document_id]
+  destination_address_info_doc char(64) [ref: > AddressInfo.document_id]
+  origin_node_info_doc char(64) [ref: > NodeInfo.document_id]
+  destination_node_info_doc char(64) [ref: > NodeInfo.document_id]
+  sequence_number int
+  extra_fields json
+  collect_availability_date date
+  collect_availability_time_range_start varchar
+  collect_availability_time_range_end varchar
+  promised_date_range_start date
+  promised_date_range_end date
+  promised_time_range_start varchar
+  promised_time_range_end varchar
+  service_category varchar
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table OrderHeaders {
+  document_id char(64) [pk]
+  commerce varchar(255)
+  consumer varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table OrderType {
+  document_id char(64) [pk]
+  type varchar(255)
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table OrderReferences {
+  order_doc char(64) [ref: > Order.document_id]
+  type varchar(255)
+  value varchar(255)
+}
+
+// Nodos y sus relaciones
+Table NodeInfo {
+  id bigint [pk]
+  document_id char(64) [unique]
+  reference_id varchar(191) [not null]
+  tenant_id uuid [ref: > Tenant.id]
+  name varchar(191)
+  node_type_doc char(64) [ref: > NodeType.document_id]
+  contact_doc char(64) [ref: > Contact.document_id]
+  address_info_doc char(64) [ref: > AddressInfo.document_id]
+  node_info_headers_doc char(64) [ref: > NodeInfoHeaders.document_id]
+  node_references json
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table NodeInfoHeaders {
+  id bigint [pk]
+  document_id char(64) [unique]
+  commerce varchar(255)
+  consumer varchar(255)
+  channel varchar(255)
+  tenant_id uuid [ref: > Tenant.id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table NodeType {
+  document_id char(64) [pk]
+  type varchar(255)
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+// Contactos y Direcciones
+Table Contact {
+  document_id char(64) [pk]
+  full_name varchar(255)
+  primary_email varchar(255)
+  primary_phone varchar(255)
+  national_id varchar(255)
+  additional_contact_methods json
+  documents json
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table AddressInfo {
+  document_id char(64) [pk]
+  state_doc char(64) [ref: > State.document_id]
+  province_doc char(64) [ref: > Province.document_id]
+  district_doc char(64) [ref: > District.document_id]
+  address_line1 varchar(255)
+  address_line2 varchar(255)
+  coordinates json
+  time_zone varchar(255)
+  zip_code varchar(255)
+  contact_doc char(64) [ref: > Contact.document_id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+// Unidades de Entrega
+Table DeliveryUnit {
+  document_id char(64) [pk]
+  lpn varchar(255)
+  dimensions json [note: 'JSONDimensions: height, width, length, unit']
+  weight json [note: 'JSONWeight: weight_value, weight_unit']
+  insurance json [note: 'JSONInsurance: currency, unit_value']
+  items json [note: 'JSONItems: sku, description, quantity_number, quantity_unit']
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table OrderDeliveryUnit {
+  order_doc char(64) [ref: > Order.document_id]
+  delivery_unit_doc char(64) [ref: > DeliveryUnit.document_id]
+}
+
+Table DeliveryUnitsLabels {
+  delivery_unit_doc char(64) [ref: > DeliveryUnit.document_id]
+  type varchar(255)
+  value varchar(255)
+}
+
+Table DeliveryUnitsHistory {
+  id bigint [pk]
+  tenant_id uuid [ref: > Tenant.id]
+  document_id char(64) [unique]
+  channel varchar [default: '']
+  order_doc char(64) [ref: > Order.document_id]
+  delivery_unit_doc char(64) [ref: > DeliveryUnit.document_id]
+  delivery_unit_status_doc char(64) [ref: > Status.document_id]
+  plan_doc char(64) [ref: > Plan.document_id]
+  route_doc char(64) [ref: > Route.document_id]
+  vehicle_doc char(64) [ref: > Vehicle.document_id]
+  carrier_doc char(64) [ref: > Carrier.document_id]
+  driver_doc char(64) [ref: > Driver.document_id]
+  non_delivery_reason_doc char(64) [ref: > NonDeliveryReasons.document_id]
+  evidence_photos json [note: 'JSONEvidencePhotos: url, type, taken_at']
+  recipient_full_name varchar [default: '']
+  recipient_national_id varchar [default: '']
+  confirm_delivery_handled_at timestamp [null]
+  confirm_delivery_latitude float [default: 0]
+  confirm_delivery_longitude float [default: 0]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+// Rutas y Planes
+Table Route {
+  document_id char(64) [pk]
+  vehicle_doc char(64) [ref: > Vehicle.document_id]
+  driver_doc char(64) [ref: > Driver.document_id]
+  start_location json
+  end_location json
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table Plan {
+  document_id char(64) [pk]
+  plan_headers_doc char(64) [ref: > PlanHeaders.document_id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table PlanHeaders {
+  document_id char(64) [pk]
+  commerce varchar(255)
+  consumer varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+// Vehículos y Conductores
+Table Vehicle {
+  document_id char(64) [pk]
+  vehicle_category_doc char(64) [ref: > VehicleCategory.document_id]
+  vehicle_headers_doc char(64) [ref: > VehicleHeaders.document_id]
+  carrier_doc char(64) [ref: > Carrier.document_id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table VehicleCategory {
+  document_id char(64) [pk]
+  type varchar(255)
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table VehicleHeaders {
+  document_id char(64) [pk]
+  commerce varchar(255)
+  consumer varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table Driver {
+  document_id char(64) [pk]
+  name varchar(255)
+  phone varchar(255)
+  email varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table Carrier {
+  document_id char(64) [pk]
+  name varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+// Estados y Categorías
+Table State {
+  id bigint [pk]
+  name varchar(191) [not null]
+  document_id char(64) [unique]
+  tenant_id uuid [ref: > Tenant.id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table Status {
+  id bigint [pk]
+  document_id char(64) [unique]
+  status varchar [not null]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table Province {
+  document_id char(64) [pk]
+  name varchar(255)
+  state_doc char(64) [ref: > State.document_id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table District {
+  document_id char(64) [pk]
+  name varchar(255)
+  province_doc char(64) [ref: > Province.document_id]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table SizeCategory {
+  document_id char(64) [pk]
+  type varchar(255)
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table NonDeliveryReasons {
+  document_id char(64) [pk]
+  type varchar(255)
+  description varchar(255)
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}

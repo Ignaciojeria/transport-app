@@ -2,7 +2,9 @@ package httpserver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
@@ -112,17 +114,35 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 
 func injectBaggageMiddleware(next http.Handler) http.Handler {
 	skipPaths := map[string]struct{}{
-		"/":         {},
-		"/login":    {},
-		"/register": {},
-		"/health":   {},
-		"/tenants":  {},
+		"/":            {},
+		"/login":       {},
+		"/register":    {},
+		"/health":      {},
+		"/favicon.ico": {},
+		"/tenants":     {},
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if _, skip := skipPaths[r.URL.Path]; skip || strings.HasPrefix(r.URL.Path, "/swagger/") {
 			next.ServeHTTP(w, r)
 			return
+		}
+
+		if r.Method == http.MethodPost && r.URL.Path == "/query" {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err == nil {
+				var body struct {
+					OperationName string `json:"operationName"`
+				}
+				_ = json.Unmarshal(bodyBytes, &body)
+				if body.OperationName == "IntrospectionQuery" {
+					r.Body = io.NopCloser(strings.NewReader(string(bodyBytes))) // restaura el body original
+					next.ServeHTTP(w, r)
+					return
+				}
+				// restaura igualmente para el flujo normal
+				r.Body = io.NopCloser(strings.NewReader(string(bodyBytes)))
+			}
 		}
 
 		orgHeader := r.Header.Get("tenant")
