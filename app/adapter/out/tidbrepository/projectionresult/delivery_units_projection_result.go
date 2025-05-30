@@ -36,6 +36,31 @@ type DeliveryUnitsProjectionResult struct {
 	JSONItems          table.JSONItems      `json:"json_items"`
 	DeliveryUnitLabels table.JSONReference  `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 
+	// Origin Address Information
+	OriginAddressLine1 string `json:"origin_address_line1"`
+	OriginAddressLine2 string `json:"origin_address_line2"`
+	OriginDistrict     string `json:"origin_district"`
+	OriginProvince     string `json:"origin_province"`
+	OriginState        string `json:"origin_state"`
+	OriginTimeZone     string `json:"origin_time_zone"`
+	OriginZipCode      string `json:"origin_zip_code"`
+
+	// Origin Coordinates Information
+	OriginCoordinatesLatitude          float64 `json:"origin_coordinates_latitude"`
+	OriginCoordinatesLongitude         float64 `json:"origin_coordinates_longitude"`
+	OriginCoordinatesSource            string  `json:"origin_coordinates_source"`
+	OriginCoordinatesConfidenceLevel   float64 `json:"origin_coordinates_confidence_level"`
+	OriginCoordinatesConfidenceMessage string  `json:"origin_coordinates_confidence_message"`
+	OriginCoordinatesConfidenceReason  string  `json:"origin_coordinates_confidence_reason"`
+
+	// Origin Contact Information
+	OriginContactEmail             string              `json:"origin_contact_email"`
+	OriginContactFullName          string              `json:"origin_contact_full_name"`
+	OriginContactNationalID        string              `json:"origin_contact_national_id"`
+	OriginContactPhone             string              `json:"origin_contact_phone"`
+	OriginContactDocuments         table.JSONReference `json:"origin_contact_documents"`
+	OriginAdditionalContactMethods table.JSONReference `json:"origin_additional_contact_methods"`
+
 	// Destination Address Information
 	DestinationAddressLine1 string `json:"destination_address_line1"`
 	DestinationAddressLine2 string `json:"destination_address_line2"`

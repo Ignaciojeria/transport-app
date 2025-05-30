@@ -32,9 +32,13 @@ func NewFindDeliveryUnitsProjectionResult(
 		o    = "o"    // orders
 		or   = "or"   // order_references
 		dadi = "dadi" // destination_address_infos
+		oadi = "oadi" // origin_address_infos
 		dd   = "dd"   // destination_districts
 		dp   = "dp"   // destination_provinces
 		dst  = "dst"  // destination_states
+		od   = "od"   // origin_districts
+		op   = "op"   // origin_provinces
+		ost  = "ost"  // origin_states
 		du   = "du"   // delivery_units
 		dul  = "dul"  // delivery_unit_labels
 		oh   = "oh"   // order_headers
@@ -312,6 +316,115 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		if projection.DestinationContactDocuments().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I("dc.documents").As("destination_contact_documents"))
+		}
+
+		// Join address_infos para origen si se requiere algún campo de addressInfo
+		if projection.OriginAddressInfo().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("address_infos").As(oadi),
+				goqu.On(goqu.I(oadi+".document_id").Eq(goqu.I(o+".origin_address_info_doc"))),
+			)
+		}
+
+		// Campos de address_infos para origen
+		if projection.OriginAddressLine1().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".address_line1").As("origin_address_line1"))
+		}
+
+		if projection.OriginAddressLine2().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".address_line2").As("origin_address_line2"))
+		}
+
+		// Join con districts para origen
+		if projection.OriginDistrict().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("districts").As(od),
+				goqu.On(goqu.I(od+".document_id").Eq(goqu.I(oadi+".district_doc"))),
+			)
+			ds = ds.SelectAppend(goqu.I(od + ".name").As("origin_district"))
+		}
+
+		// Join con provinces para origen
+		if projection.OriginProvince().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("provinces").As(op),
+				goqu.On(goqu.I(op+".document_id").Eq(goqu.I(oadi+".province_doc"))),
+			)
+			ds = ds.SelectAppend(goqu.I(op + ".name").As("origin_province"))
+		}
+
+		// Join con states para origen
+		if projection.OriginState().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("states").As(ost),
+				goqu.On(goqu.I(ost+".document_id").Eq(goqu.I(oadi+".state_doc"))),
+			)
+			ds = ds.SelectAppend(goqu.I(ost + ".name").As("origin_state"))
+		}
+
+		if projection.OriginZipCode().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".zip_code").As("origin_zip_code"))
+		}
+
+		// Campos de coordenadas para origen
+		if projection.OriginCoordinatesLatitude().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".latitude").As("origin_coordinates_latitude"))
+		}
+
+		if projection.OriginCoordinatesLongitude().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".longitude").As("origin_coordinates_longitude"))
+		}
+
+		if projection.OriginCoordinatesSource().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".coordinate_source").As("origin_coordinates_source"))
+		}
+
+		if projection.OriginCoordinatesConfidenceLevel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".coordinate_confidence").As("origin_coordinates_confidence_level"))
+		}
+
+		if projection.OriginCoordinatesConfidenceMessage().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".coordinate_message").As("origin_coordinates_confidence_message"))
+		}
+
+		if projection.OriginCoordinatesConfidenceReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".coordinate_reason").As("origin_coordinates_confidence_reason"))
+		}
+
+		if projection.OriginTimeZone().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".time_zone").As("origin_time_zone"))
+		}
+
+		// Campos de contacto del origen
+		if projection.OriginContact().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("contacts").As("oc"),
+				goqu.On(goqu.I("oc.document_id").Eq(goqu.I(o+".origin_contact_doc"))),
+			)
+		}
+
+		if projection.OriginContactEmail().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("oc.email").As("origin_contact_email"))
+		}
+
+		if projection.OriginContactFullName().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("oc.full_name").As("origin_contact_full_name"))
+		}
+
+		if projection.OriginContactNationalID().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("oc.national_id").As("origin_contact_national_id"))
+		}
+
+		if projection.OriginContactPhone().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("oc.phone").As("origin_contact_phone"))
+		}
+
+		if projection.OriginContactMethods().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("oc.additional_contact_methods").As("origin_additional_contact_methods"))
+		}
+
+		if projection.OriginDocuments().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("oc.documents").As("origin_contact_documents"))
 		}
 
 		if projection.ExtraFields().Has(filters.RequestedFields) {

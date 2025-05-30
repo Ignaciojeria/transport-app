@@ -773,4 +773,151 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			table.Reference{Type: "TYPE3", Value: "VALUE3"},
 		))
 	})
+
+	It("should return delivery units with origin information", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear contacto de origen
+		originContact := domain.Contact{
+			FullName:     "Jane Smith",
+			PrimaryEmail: "origin@example.com",
+			PrimaryPhone: "+56987654321",
+			NationalID:   "87654321-9",
+			AdditionalContactMethods: []domain.ContactMethod{
+				{
+					Type:  "whatsapp",
+					Value: "+56912345678",
+				},
+				{
+					Type:  "telegram",
+					Value: "@janesmith",
+				},
+			},
+			Documents: []domain.Document{
+				{
+					Type:  "dni",
+					Value: "87654321-9",
+				},
+				{
+					Type:  "passport",
+					Value: "CD876543",
+				},
+			},
+		}
+		err = NewUpsertContact(conn)(ctx, originContact)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear dirección de origen
+		origin := domain.AddressInfo{
+			State:        "NY",
+			Province:     "NY",
+			District:     "Manhattan",
+			AddressLine1: "456 Park Ave",
+			AddressLine2: "Suite 100",
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{2, 2},
+				Source: "geocoding",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   0.9,
+					Message: "High confidence",
+					Reason:  "Geocoding service",
+				},
+			},
+			TimeZone: "America/New_York",
+			ZipCode:  "10022",
+			Contact:  originContact,
+		}
+		err = NewUpsertAddressInfo(conn)(ctx, origin)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con información de origen
+		order := domain.Order{
+			ReferenceID: "123",
+			Origin: domain.NodeInfo{
+				AddressInfo: origin,
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.OriginAddressInfo().String():                  "",
+				projection.OriginAddressLine1().String():                 "",
+				projection.OriginAddressLine2().String():                 "",
+				projection.OriginDistrict().String():                     "",
+				projection.OriginProvince().String():                     "",
+				projection.OriginState().String():                        "",
+				projection.OriginZipCode().String():                      "",
+				projection.OriginCoordinatesLatitude().String():          "",
+				projection.OriginCoordinatesLongitude().String():         "",
+				projection.OriginCoordinatesSource().String():            "",
+				projection.OriginCoordinatesConfidenceLevel().String():   "",
+				projection.OriginCoordinatesConfidenceMessage().String(): "",
+				projection.OriginCoordinatesConfidenceReason().String():  "",
+				projection.OriginTimeZone().String():                     "",
+				projection.OriginContact().String():                      "",
+				projection.OriginContactEmail().String():                 "",
+				projection.OriginContactFullName().String():              "",
+				projection.OriginContactNationalID().String():            "",
+				projection.OriginContactPhone().String():                 "",
+				projection.OriginContactMethods().String():               "",
+				projection.OriginDocuments().String():                    "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validaciones de Origin Address
+		Expect(results[0].OriginAddressLine1).To(Equal("456 Park Ave"))
+		Expect(results[0].OriginAddressLine2).To(Equal("Suite 100"))
+		Expect(results[0].OriginDistrict).To(Equal("Manhattan"))
+		Expect(results[0].OriginProvince).To(Equal("NY"))
+		Expect(results[0].OriginState).To(Equal("NY"))
+		Expect(results[0].OriginZipCode).To(Equal("10022"))
+		Expect(results[0].OriginTimeZone).To(Equal("America/New_York"))
+
+		// Validaciones de Origin Coordinates
+		Expect(results[0].OriginCoordinatesLatitude).To(Equal(2.0))
+		Expect(results[0].OriginCoordinatesLongitude).To(Equal(2.0))
+		Expect(results[0].OriginCoordinatesSource).To(Equal("geocoding"))
+		Expect(results[0].OriginCoordinatesConfidenceLevel).To(Equal(0.9))
+		Expect(results[0].OriginCoordinatesConfidenceMessage).To(Equal("High confidence"))
+		Expect(results[0].OriginCoordinatesConfidenceReason).To(Equal("Geocoding service"))
+
+		// Validaciones de Origin Contact
+		Expect(results[0].OriginContactEmail).To(Equal("origin@example.com"))
+		Expect(results[0].OriginContactFullName).To(Equal("Jane Smith"))
+		Expect(results[0].OriginContactNationalID).To(Equal("87654321-9"))
+		Expect(results[0].OriginContactPhone).To(Equal("+56987654321"))
+		Expect(results[0].OriginAdditionalContactMethods).To(Equal(table.JSONReference{
+			{Type: "whatsapp", Value: "+56912345678"},
+			{Type: "telegram", Value: "@janesmith"},
+		}))
+		Expect(results[0].OriginContactDocuments).To(Equal(table.JSONReference{
+			{Type: "dni", Value: "87654321-9"},
+			{Type: "passport", Value: "CD876543"},
+		}))
+	})
 })
