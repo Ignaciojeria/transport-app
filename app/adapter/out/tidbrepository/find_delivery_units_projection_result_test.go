@@ -561,6 +561,57 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].OrderTypeDescription).To(Equal("Entrega express"))
 	})
 
+	It("should return delivery units with status", func() {
+		// Create a new tenant for this test
+		err := NewLoadStatuses(conn)()
+		Expect(err).ToNot(HaveOccurred())
+
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{
+					Status: domain.Status{
+						Status: domain.StatusPlanned,
+					},
+				},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units history con status
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.Status().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+
+		// Validar que el status se recuperó correctamente
+		Expect(results[0].Status).To(Equal(domain.StatusPlanned))
+	})
+
 	It("should fail if database has no delivery_units_histories table", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)

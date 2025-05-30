@@ -539,6 +539,10 @@ func (p Projection) Channel() Field {
 	return Field{path: "channel"}
 }
 
+func (p Projection) Status() Field {
+	return Field{path: "status"}
+}
+
 func (p Projection) GroupBy() Field {
 	return Field{path: "groupBy"}
 }
@@ -554,10 +558,6 @@ func (p Projection) GroupByValue() Field {
 // Métodos para campos de Delivery
 func (p Projection) Delivery() Field {
 	return Field{path: "delivery"}
-}
-
-func (p Projection) DeliveryStatus() Field {
-	return Field{path: "delivery.status"}
 }
 
 func (p Projection) DeliveryRecipient() Field {

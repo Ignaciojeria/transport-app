@@ -56,6 +56,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 	ordersData := []*model.DeliveryUnitsReport{
 		{
 			ReferenceID:          "REF123",
+			Status:               ptrString("planned,in_route,on_its_way,delivered,undelivered"),
 			DeliveryInstructions: ptrString("Dejar en la puerta trasera"),
 			Commerce:             ptrString("kiosclub"),
 			Consumer:             ptrString("apikios"),
@@ -237,13 +238,12 @@ func (r *queryResolver) DeliveryUnitsReports(
 			},
 			Delivery: &model.Delivery{
 				EvidencePhotos: []*model.EvidencePhoto{
-					&model.EvidencePhoto{
+					{
 						TakenAt: ptrString("2025-05-10T02:22:07Z"),
 						Type:    ptrString("HOUSE_NUMBER"),
 						URL:     ptrString("ignaciojeria.github.io"),
 					},
 				},
-				Status:    ptrString("planned,in_route,on_its_way,delivered,undelivered"),
 				HandledAt: ptrString("2025-05-10T02:22:07Z"),
 				Failure: &model.DeliveryFailure{
 					Detail:      ptrString("No se encontraba el destinatario"),

@@ -6,6 +6,7 @@ import (
 
 type DeliveryUnitsProjectionResult struct {
 	ID                                    int64               `json:"id"`
+	Status                                string              `json:"status"`
 	Channel                               string              `json:"channel"`
 	Consumer                              string              `json:"order_consumer"`
 	Commerce                              string              `json:"order_commerce"`

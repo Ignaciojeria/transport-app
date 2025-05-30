@@ -58,7 +58,6 @@ type DateRange struct {
 }
 
 type Delivery struct {
-	Status         *string            `json:"status,omitempty"`
 	Recipient      *DeliveryRecipient `json:"recipient,omitempty"`
 	HandledAt      *string            `json:"handledAt,omitempty"`
 	Failure        *DeliveryFailure   `json:"failure,omitempty"`
@@ -95,6 +94,7 @@ type DeliveryUnitsReport struct {
 	Commerce                *string                  `json:"commerce,omitempty"`
 	Consumer                *string                  `json:"consumer,omitempty"`
 	Channel                 *string                  `json:"channel,omitempty"`
+	Status                  *string                  `json:"status,omitempty"`
 	DeliveryInstructions    *string                  `json:"deliveryInstructions,omitempty"`
 	ReferenceID             string                   `json:"referenceID"`
 	GroupBy                 *GroupBy                 `json:"groupBy,omitempty"`

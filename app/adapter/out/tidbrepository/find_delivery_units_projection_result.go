@@ -38,6 +38,8 @@ func NewFindDeliveryUnitsProjectionResult(
 		du   = "du"   // delivery_units
 		dul  = "dul"  // delivery_unit_labels
 		oh   = "oh"   // order_headers
+		ot   = "ot"   // order_types
+		s    = "s"    // status
 	)
 
 	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
@@ -88,6 +90,14 @@ func NewFindDeliveryUnitsProjectionResult(
 		// Campos de delivery_units_histories
 		if projection.Channel().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(duh + ".channel").As("channel"))
+		}
+
+		if projection.Status().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("statuses").As(s),
+				goqu.On(goqu.I(s+".document_id").Eq(goqu.I(duh+".delivery_unit_status_doc"))),
+			).
+				SelectAppend(goqu.I(s + ".status").As("status"))
 		}
 
 		// LPN and Package Information
@@ -162,17 +172,17 @@ func NewFindDeliveryUnitsProjectionResult(
 		// Campos de orderType
 		if projection.OrderType().Has(filters.RequestedFields) {
 			ds = ds.InnerJoin(
-				goqu.T("order_types").As("ot"),
-				goqu.On(goqu.I("ot.document_id").Eq(goqu.I(o+".order_type_doc"))),
+				goqu.T("order_types").As(ot),
+				goqu.On(goqu.I(ot+".document_id").Eq(goqu.I(o+".order_type_doc"))),
 			)
 		}
 
 		if projection.OrderTypeType().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("ot.type").As("order_type"))
+			ds = ds.SelectAppend(goqu.I(ot + ".type").As("order_type"))
 		}
 
 		if projection.OrderTypeDescription().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("ot.description").As("order_type_description"))
+			ds = ds.SelectAppend(goqu.I(ot + ".description").As("order_type_description"))
 		}
 
 		// Campos de address_infos

@@ -193,7 +193,6 @@ type EvidencePhoto {
 }
 
 type Delivery {
-  status: String
   recipient: DeliveryRecipient
   handledAt: String
   failure: DeliveryFailure
@@ -206,6 +205,7 @@ type DeliveryUnitsReport {
   commerce: String
   consumer: String
   channel:  String
+  status: String
   deliveryInstructions: String
   referenceID: String!
   groupBy: GroupBy
