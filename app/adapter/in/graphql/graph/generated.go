@@ -47,16 +47,15 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AddressInfo struct {
-		AddressLine1         func(childComplexity int) int
-		AddressLine2         func(childComplexity int) int
-		Contact              func(childComplexity int) int
-		Coordinates          func(childComplexity int) int
-		District             func(childComplexity int) int
-		Province             func(childComplexity int) int
-		RequiresManualReview func(childComplexity int) int
-		State                func(childComplexity int) int
-		TimeZone             func(childComplexity int) int
-		ZipCode              func(childComplexity int) int
+		AddressLine1 func(childComplexity int) int
+		AddressLine2 func(childComplexity int) int
+		Contact      func(childComplexity int) int
+		Coordinates  func(childComplexity int) int
+		District     func(childComplexity int) int
+		Province     func(childComplexity int) int
+		State        func(childComplexity int) int
+		TimeZone     func(childComplexity int) int
+		ZipCode      func(childComplexity int) int
 	}
 
 	Carrier struct {
@@ -354,13 +353,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.AddressInfo.Province(childComplexity), true
-
-	case "AddressInfo.requiresManualReview":
-		if e.complexity.AddressInfo.RequiresManualReview == nil {
-			break
-		}
-
-		return e.complexity.AddressInfo.RequiresManualReview(childComplexity), true
 
 	case "AddressInfo.state":
 		if e.complexity.AddressInfo.State == nil {
@@ -1676,47 +1668,6 @@ func (ec *executionContext) fieldContext_AddressInfo_addressLine2(_ context.Cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AddressInfo_requiresManualReview(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_requiresManualReview(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RequiresManualReview, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AddressInfo_requiresManualReview(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AddressInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	return fc, nil
@@ -6081,8 +6032,6 @@ func (ec *executionContext) fieldContext_Location_addressInfo(_ context.Context,
 				return ec.fieldContext_AddressInfo_addressLine1(ctx, field)
 			case "addressLine2":
 				return ec.fieldContext_AddressInfo_addressLine2(ctx, field)
-			case "requiresManualReview":
-				return ec.fieldContext_AddressInfo_requiresManualReview(ctx, field)
 			case "contact":
 				return ec.fieldContext_AddressInfo_contact(ctx, field)
 			case "district":
@@ -9459,8 +9408,6 @@ func (ec *executionContext) _AddressInfo(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._AddressInfo_addressLine1(ctx, field, obj)
 		case "addressLine2":
 			out.Values[i] = ec._AddressInfo_addressLine2(ctx, field, obj)
-		case "requiresManualReview":
-			out.Values[i] = ec._AddressInfo_requiresManualReview(ctx, field, obj)
 		case "contact":
 			out.Values[i] = ec._AddressInfo_contact(ctx, field, obj)
 		case "district":
@@ -11404,7 +11351,6 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (
 }
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
-	_ = sel
 	res := graphql.MarshalBoolean(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -11562,7 +11508,6 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) 
 }
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -11626,7 +11571,6 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Con
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -11815,7 +11759,6 @@ func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v a
 }
 
 func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -11838,8 +11781,6 @@ func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (
 }
 
 func (ec *executionContext) marshalOBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
-	_ = sel
-	_ = ctx
 	res := graphql.MarshalBoolean(v)
 	return res
 }
@@ -11856,8 +11797,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
-	_ = ctx
 	res := graphql.MarshalBoolean(*v)
 	return res
 }
@@ -12117,7 +12056,6 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
 }
@@ -12148,8 +12086,6 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
-	_ = ctx
 	res := graphql.MarshalInt(*v)
 	return res
 }
@@ -12430,8 +12366,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	if v == nil {
 		return graphql.Null
 	}
-	_ = sel
-	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
 }

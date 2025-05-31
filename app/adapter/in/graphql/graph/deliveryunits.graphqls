@@ -26,7 +26,6 @@ type Contact {
 type AddressInfo {
   addressLine1: String
   addressLine2: String
-  requiresManualReview: Boolean
   contact: Contact
   district: String
   coordinates: Coordinates

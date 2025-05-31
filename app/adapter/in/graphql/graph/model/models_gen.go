@@ -3,16 +3,15 @@
 package model
 
 type AddressInfo struct {
-	AddressLine1         *string      `json:"addressLine1,omitempty"`
-	AddressLine2         *string      `json:"addressLine2,omitempty"`
-	RequiresManualReview *bool        `json:"requiresManualReview,omitempty"`
-	Contact              *Contact     `json:"contact,omitempty"`
-	District             *string      `json:"district,omitempty"`
-	Coordinates          *Coordinates `json:"coordinates,omitempty"`
-	Province             *string      `json:"province,omitempty"`
-	State                *string      `json:"state,omitempty"`
-	TimeZone             *string      `json:"timeZone,omitempty"`
-	ZipCode              *string      `json:"zipCode,omitempty"`
+	AddressLine1 *string      `json:"addressLine1,omitempty"`
+	AddressLine2 *string      `json:"addressLine2,omitempty"`
+	Contact      *Contact     `json:"contact,omitempty"`
+	District     *string      `json:"district,omitempty"`
+	Coordinates  *Coordinates `json:"coordinates,omitempty"`
+	Province     *string      `json:"province,omitempty"`
+	State        *string      `json:"state,omitempty"`
+	TimeZone     *string      `json:"timeZone,omitempty"`
+	ZipCode      *string      `json:"zipCode,omitempty"`
 }
 
 type Carrier struct {
