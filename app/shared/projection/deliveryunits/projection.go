@@ -123,10 +123,6 @@ func (p Projection) DestinationZipCode() Field {
 	return Field{path: "destination.addressInfo.zipCode"}
 }
 
-func (p Projection) DestinationRequiresManualReview() Field {
-	return Field{path: "destination.addressInfo.requiresManualReview"}
-}
-
 // Métodos para campos de Contact en Destination
 func (p Projection) DestinationContact() Field {
 	return Field{path: "destination.addressInfo.contact"}

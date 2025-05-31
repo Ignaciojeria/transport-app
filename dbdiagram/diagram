@@ -159,6 +159,7 @@ Table DeliveryUnit {
   weight json [note: 'JSONWeight: weight_value, weight_unit']
   insurance json [note: 'JSONInsurance: currency, unit_value']
   items json [note: 'JSONItems: sku, description, quantity_number, quantity_unit']
+  size_category_doc char(64) [ref: > SizeCategory.document_id]
   created_at timestamp
   updated_at timestamp
   deleted_at timestamp
