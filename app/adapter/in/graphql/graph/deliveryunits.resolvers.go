@@ -12,7 +12,9 @@ import (
 
 	//	"transport-app/app/adapter/in/graphql/graph/mapper"
 
+	"transport-app/app/adapter/in/graphql/graph/mapper"
 	"transport-app/app/adapter/in/graphql/graph/model"
+	"transport-app/app/domain"
 )
 
 // Orders is the resolver for the orders field.
@@ -48,229 +50,26 @@ func (r *queryResolver) DeliveryUnitsReports(
 		afterID = string(decoded)
 	}
 
-	// En una implementación real, obtendrías datos de tu repositorio
-	// ordersData, err := r.OrderRepository.GetOrders(filter, afterID, limit+1)
+	requestedFieldsAsMap := ConvertSelectedPathsToMap(ctx)
 
-	// Por ahora, simulamos datos para demostración
-	// Aquí simulamos obtener limit+1 registros para verificar hasNextPage
-	ordersData := []*model.DeliveryUnitsReport{
-		{
-			ReferenceID:          "REF123",
-			Status:               ptrString("planned,in_route,on_its_way,delivered,undelivered"),
-			DeliveryInstructions: ptrString("Dejar en la puerta trasera"),
-			Commerce:             ptrString("kiosclub"),
-			Consumer:             ptrString("apikios"),
-			Channel:              ptrString("shipconfirm,dispatch,web,mobile"),
-			CollectAvailabilityDate: &model.CollectAvailabilityDate{
-				Date: ptrString("2025-05-01"),
-				TimeRange: &model.TimeRange{
-					StartTime: ptrString("08:00"),
-					EndTime:   ptrString("18:00"),
-				},
-			},
-			Destination: &model.Location{
-				AddressInfo: &model.AddressInfo{
-					AddressLine1: ptrString("Avenida Siempre Viva 742"),
-					AddressLine2: ptrString("Depto 12B"),
-					Contact: &model.Contact{
-						AdditionalContactMethods: []*model.ContactMethod{
-							{Type: ptrString("phone"), Value: ptrString("+56911111111")},
-							{Type: ptrString("whatsapp"), Value: ptrString("+56922222222")},
-						},
-						Documents: []*model.Document{
-							{Type: ptrString("passport"), Value: ptrString("ABC123456")},
-						},
-						Email:      ptrString("homer.simpson@example.com"),
-						FullName:   ptrString("Homer Simpson"),
-						NationalID: ptrString("12345678-9"),
-						Phone:      ptrString("+56933333333"),
-					},
-					District: ptrString("Springfield"),
-					Coordinates: &model.Coordinates{
-						Latitude:  ptrFloat64(10.123),
-						Longitude: ptrFloat64(20.456),
-						Source:    ptrString("google_maps"),
-						Confidence: &model.Confidence{
-							Level:   ptrFloat64(0.95),
-							Message: ptrString("High confidence location"),
-							Reason:  ptrString("Verified address"),
-						},
-					},
-					Province: ptrString("Springfield Province"),
-					State:    ptrString("Springfield State"),
-					TimeZone: ptrString("America/Santiago"),
-					ZipCode:  ptrString("12345"),
-				},
-				NodeInfo: &model.NodeInfo{
-					ReferenceID: ptrString("NODE-001"),
-					Name:        ptrString("Central Warehouse"),
-				},
-			},
-			Origin: &model.Location{
-				AddressInfo: &model.AddressInfo{
-					AddressLine1: ptrString("Avenida Siempre Viva 742"),
-					AddressLine2: ptrString("Bodega Principal"),
-					Contact: &model.Contact{
-						AdditionalContactMethods: []*model.ContactMethod{
-							{Type: ptrString("telegram"), Value: ptrString("@springfield")},
-						},
-						Documents: []*model.Document{
-							{Type: ptrString("driver_license"), Value: ptrString("XYZ987654")},
-						},
-						Email:      ptrString("warehouse@example.com"),
-						FullName:   ptrString("Warehouse Manager"),
-						NationalID: ptrString("98765432-1"),
-						Phone:      ptrString("+56944444444"),
-					},
-					District: ptrString("Springfield"),
-					Coordinates: &model.Coordinates{
-						Latitude:  ptrFloat64(30.123),
-						Longitude: ptrFloat64(40.456),
-						Source:    ptrString("google_maps"),
-						Confidence: &model.Confidence{
-							Level:   ptrFloat64(0.95),
-							Message: ptrString("High confidence location"),
-							Reason:  ptrString("Verified address"),
-						},
-					},
-					Province: ptrString("Springfield Province"),
-					State:    ptrString("Springfield State"),
-					TimeZone: ptrString("America/Santiago"),
-					ZipCode:  ptrString("54321"),
-				},
-				NodeInfo: &model.NodeInfo{
-					ReferenceID: ptrString("NODE-002"),
-					Name:        ptrString("Secondary Warehouse"),
-				},
-			},
-			OrderType: &model.OrderType{
-				Type:        ptrString("devolución,entrega,retiro_en_tienda,...."),
-				Description: ptrString("Order retiro a cliente,Orden de entrega a cliente"),
-			},
-			DeliveryUnit: &model.DeliveryUnit{
-				Lpn: ptrString("PKG123"),
-				Weight: &model.Weight{
-					Unit:  ptrString("kg"),
-					Value: ptrInt(5),
-				},
-				Dimensions: &model.Dimension{
-					Length: ptrInt(40),
-					Height: ptrInt(30),
-					Width:  ptrInt(20),
-					Unit:   ptrString("cm"),
-				},
-				Insurance: &model.Insurance{
-					Currency:  ptrString("USD"),
-					UnitValue: ptrInt(100),
-				},
-				Items: []*model.Item{
-					{
-						Sku:         ptrString("SKU-001"),
-						Description: ptrString("Producto de prueba"),
-						Dimensions: &model.Dimension{
-							Length: ptrInt(10),
-							Height: ptrInt(10),
-							Width:  ptrInt(10),
-							Unit:   ptrString("cm"),
-						},
-						Insurance: &model.Insurance{
-							Currency:  ptrString("USD"),
-							UnitValue: ptrInt(10),
-						},
-						Skills: []*model.Skill{
-							{
-								Type:        ptrString("fragile"),
-								Value:       ptrString("yes"),
-								Description: ptrString("Manejo delicado"),
-							},
-						},
-						Quantity: &model.Quantity{
-							QuantityNumber: ptrInt(1),
-							QuantityUnit:   ptrString("unit"),
-						},
-						Weight: &model.Weight{
-							Unit:  ptrString("kg"),
-							Value: ptrInt(1),
-						},
-					},
-				},
-				Labels: []*model.Label{
-					{Type: ptrString("soc"), Value: ptrString("SOC-0001")},
-				},
-			},
-			PromisedDate: &model.PromisedDate{
-				DateRange: &model.DateRange{
-					StartDate: ptrString("2025-05-01"),
-					EndDate:   ptrString("2025-05-01"),
-				},
-				ServiceCategory: ptrString("standard"),
-				TimeRange: &model.TimeRange{
-					StartTime: ptrString("08:00"),
-					EndTime:   ptrString("18:00"),
-				},
-			},
-			References: []*model.Reference{
-				{Type: ptrString("internal"), Value: ptrString("INT-0001")},
-			},
-			ExtraFields: []*model.KeyValuePair{
-				{Key: "destinationPoliticalAreaID", Value: "893f5624-a01f-4f78-94f3-2d6f67abb6f6"},
-			},
-			Carrier: &model.Carrier{
-				NationalID: ptrString("76234829-1"),
-				Name:       ptrString("Transporte Springfield S.A."),
-			},
-			Vehicle: &model.Vehicle{
-				Plate: ptrString("ABCZ11"),
-			},
-			Driver: &model.Driver{
-				NationalID: ptrString("11222333-4"),
-				Name:       ptrString("Otto Mann"),
-				Email:      ptrString("otto.mann@example.com"),
-			},
-			Route: &model.Route{
-				RouteID:       ptrString("ROUTE-001"),
-				LpnContainer:  ptrString("000000009999214553"),
-				RoutePosition: ptrInt(1),
-			},
-			GroupBy: &model.GroupBy{
-				Type:  ptrString("parentOrder"),
-				Value: ptrString("23401234123"),
-			},
-			Delivery: &model.Delivery{
-				EvidencePhotos: []*model.EvidencePhoto{
-					{
-						TakenAt: ptrString("2025-05-10T02:22:07Z"),
-						Type:    ptrString("HOUSE_NUMBER"),
-						URL:     ptrString("ignaciojeria.github.io"),
-					},
-				},
-				HandledAt: ptrString("2025-05-10T02:22:07Z"),
-				Failure: &model.DeliveryFailure{
-					Detail:      ptrString("No se encontraba el destinatario"),
-					Reason:      ptrString("absent"),
-					ReferenceID: ptrString("REF123"),
-				},
-				Location: &model.DeliveryLocation{
-					Latitude:  ptrFloat64(-33.45),
-					Longitude: ptrFloat64(-70.66),
-				},
-				Recipient: &model.DeliveryRecipient{
-					FullName:   ptrString("Pedro Gómez"),
-					NationalID: ptrString("11111111-1"),
-				},
-			},
-		},
+	results, err := r.findDeliveryUnitsProjectionResult(ctx, domain.DeliveryUnitsFilter{
+		RequestedFields: requestedFieldsAsMap,
+	})
+	if err != nil {
+		return nil, err
 	}
 
+	deliveryUnits := mapper.MapDeliveryUnits(ctx, results)
+
 	// Verificar si hay más páginas
-	hasNextPage := len(ordersData) > limit
+	hasNextPage := len(deliveryUnits) > limit
 	if hasNextPage {
-		ordersData = ordersData[:limit] // quitar el elemento extra
+		deliveryUnits = deliveryUnits[:limit] // quitar el elemento extra
 	}
 
 	// Construir edges
-	edges := make([]*model.DeliveryUnitsReportEdge, len(ordersData))
-	for i, order := range ordersData {
+	edges := make([]*model.DeliveryUnitsReportEdge, len(deliveryUnits))
+	for i, order := range deliveryUnits {
 		// En una aplicación real, usarías un ID único como orderID
 		orderID := strconv.Itoa(i + 1)
 		if afterID != "" {
@@ -306,14 +105,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 		StartCursor:     &startCursor, // Ahora usamos la variable
 		EndCursor:       endCursor,
 	}
-	/*
-		r.SearchOrders(ctx, mapper.MapOrderFilterWithPagination(filter, domain.Pagination{
-			First:  first,
-			Last:   last,
-			After:  after,
-			Before: before,
-		}, requestedFields))
-	*/
+
 	return &model.DeliveryUnitsReportConnection{
 		Edges:    edges,
 		PageInfo: pageInfo,
