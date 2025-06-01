@@ -1,9 +1,16 @@
 package projectionresult
 
 import (
+	"testing"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+func TestProjectionResult(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "ProjectionResult Suite")
+}
 
 var _ = Describe("DeliveryUnitsProjectionResults", func() {
 	It("should reverse the order of results when using Reversed()", func() {
