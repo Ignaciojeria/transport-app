@@ -40,8 +40,8 @@ func (r *queryResolver) DeliveryUnitsReports(
 		}
 	}
 
-	// Procesar cursor si existe
-	var afterID string
+	// Procesar cursores si existen
+	var afterID, beforeID string
 	if after != nil {
 		decoded, err := base64.StdEncoding.DecodeString(*after)
 		if err != nil {
@@ -49,11 +49,30 @@ func (r *queryResolver) DeliveryUnitsReports(
 		}
 		afterID = string(decoded)
 	}
+	if before != nil {
+		decoded, err := base64.StdEncoding.DecodeString(*before)
+		if err != nil {
+			return nil, err
+		}
+		beforeID = string(decoded)
+	}
+
+	pagination := domain.Pagination{
+		After:  &afterID,
+		First:  first,
+		Last:   last,
+		Before: &beforeID,
+	}
+
+	if err := pagination.IsValid(); err != nil {
+		return nil, err
+	}
 
 	requestedFieldsAsMap := ConvertSelectedPathsToMap(ctx)
 
 	results, err := r.findDeliveryUnitsProjectionResult(ctx, domain.DeliveryUnitsFilter{
 		RequestedFields: requestedFieldsAsMap,
+		Pagination:      pagination,
 	})
 	if err != nil {
 		return nil, err
@@ -62,7 +81,8 @@ func (r *queryResolver) DeliveryUnitsReports(
 	deliveryUnits := mapper.MapDeliveryUnits(ctx, results)
 
 	// Verificar si hay más páginas
-	hasNextPage := len(deliveryUnits) > limit
+	var hasNextPage bool
+	hasNextPage = len(deliveryUnits) > limit
 	if hasNextPage {
 		deliveryUnits = deliveryUnits[:limit] // quitar el elemento extra
 	}
@@ -70,15 +90,8 @@ func (r *queryResolver) DeliveryUnitsReports(
 	// Construir edges
 	edges := make([]*model.DeliveryUnitsReportEdge, len(deliveryUnits))
 	for i, order := range deliveryUnits {
-		// En una aplicación real, usarías un ID único como orderID
-		orderID := strconv.Itoa(i + 1)
-		if afterID != "" {
-			// Si hay un cursor, incrementar el índice basado en él
-			afterIDInt, _ := strconv.Atoi(afterID)
-			orderID = strconv.Itoa(afterIDInt + i + 1)
-		}
-
-		cursor := base64.StdEncoding.EncodeToString([]byte(orderID))
+		// Usar el ID de la base de datos como cursor
+		cursor := base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(results[i].ID, 10)))
 		edges[i] = &model.DeliveryUnitsReportEdge{
 			Cursor: cursor,
 			Node:   order,
@@ -93,16 +106,13 @@ func (r *queryResolver) DeliveryUnitsReports(
 	}
 
 	// Determinar hasPreviousPage
-	// En una implementación real, esto dependería de tu lógica de paginación
-	hasPreviousPage := false
-	if after != nil {
-		hasPreviousPage = true // Si hay un cursor 'after', entonces hay páginas previas
-	}
+	var hasPreviousPage bool
+	hasPreviousPage = before != nil
 
 	pageInfo := &model.PageInfo{
 		HasNextPage:     hasNextPage,
 		HasPreviousPage: hasPreviousPage,
-		StartCursor:     &startCursor, // Ahora usamos la variable
+		StartCursor:     &startCursor,
 		EndCursor:       endCursor,
 	}
 
