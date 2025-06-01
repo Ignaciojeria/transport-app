@@ -1,6 +1,7 @@
 package projectionresult
 
 import (
+	"slices"
 	"transport-app/app/adapter/out/tidbrepository/table"
 )
 
@@ -88,4 +89,13 @@ type DeliveryUnitsProjectionResult struct {
 
 	// Extra Fields and Group By
 	ExtraFields table.JSONMap `json:"extra_fields" gorm:"column:extra_fields;type:jsonb"`
+}
+
+type DeliveryUnitsProjectionResults []DeliveryUnitsProjectionResult
+
+func (r DeliveryUnitsProjectionResults) Reversed() DeliveryUnitsProjectionResults {
+	copied := make(DeliveryUnitsProjectionResults, len(r))
+	copy(copied, r)
+	slices.Reverse(copied)
+	return copied
 }

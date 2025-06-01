@@ -14,7 +14,7 @@ import (
 
 type FindDeliveryUnitsProjectionResult func(
 	ctx context.Context,
-	filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error)
+	filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, error)
 
 func init() {
 	ioc.Registry(
@@ -46,8 +46,8 @@ func NewFindDeliveryUnitsProjectionResult(
 		s    = "s"    // status
 	)
 
-	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) ([]projectionresult.DeliveryUnitsProjectionResult, error) {
-		var results []projectionresult.DeliveryUnitsProjectionResult
+	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, error) {
+		var results projectionresult.DeliveryUnitsProjectionResults
 
 		// Dataset base
 		ds := goqu.From(goqu.T("delivery_units_histories").As(duh)).
@@ -59,6 +59,19 @@ func NewFindDeliveryUnitsProjectionResult(
 			Where(goqu.Ex{
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
 			})
+
+		if filters.Pagination.IsForward() {
+			ds = ds.Order(goqu.I(duh + ".id").Asc())
+			if filters.Pagination.First != nil {
+				ds = ds.Limit(uint(*filters.Pagination.First))
+			}
+		}
+		if filters.Pagination.IsBackward() {
+			ds = ds.Order(goqu.I(duh + ".id").Desc())
+			if filters.Pagination.Last != nil {
+				ds = ds.Limit(uint(*filters.Pagination.Last))
+			}
+		}
 
 		// Add order references using WITH clause
 		if projection.References().Has(filters.RequestedFields) {
@@ -435,6 +448,10 @@ func NewFindDeliveryUnitsProjectionResult(
 		err = conn.WithContext(ctx).Raw(sql, args...).Scan(&results).Error
 		if err != nil {
 			return nil, err
+		}
+
+		if filters.Pagination.IsBackward() {
+			results = results.Reversed()
 		}
 
 		return results, nil

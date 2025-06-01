@@ -920,4 +920,100 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			{Type: "passport", Value: "CD876543"},
 		}))
 	})
+
+	It("should order results correctly based on pagination direction", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear varios orders con diferentes IDs para probar el ordenamiento
+		orders := []domain.Order{
+			{
+				ReferenceID: "order1",
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+			{
+				ReferenceID: "order2",
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+			{
+				ReferenceID: "order3",
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+		}
+
+		// Insertar los orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+
+		// Probar paginación hacia adelante
+		forwardResults, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			Pagination: domain.Pagination{
+				First: ptr(1),
+			},
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(forwardResults).To(HaveLen(1))
+		// Verificar que tenemos el primer order
+		Expect(forwardResults[0].OrderReferenceID).To(Equal("order1"))
+
+		// Probar paginación hacia atrás
+		backwardResults, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			Pagination: domain.Pagination{
+				Last: ptr(1),
+			},
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(backwardResults).To(HaveLen(1))
+		// Verificar que tenemos el último order (el repositorio aplica Reversed() internamente)
+		Expect(backwardResults[0].OrderReferenceID).To(Equal("order3"))
+
+		// Probar sin paginación - debería devolver todos los resultados en orden ascendente
+		noPaginationResults, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(noPaginationResults).To(HaveLen(3))
+		// Verificar que tenemos todos los orders en orden ascendente
+		Expect(noPaginationResults[0].OrderReferenceID).To(Equal("order1"))
+		Expect(noPaginationResults[1].OrderReferenceID).To(Equal("order2"))
+		Expect(noPaginationResults[2].OrderReferenceID).To(Equal("order3"))
+	})
 })
+
+// Helper function to create pointer to int
+func ptr(i int) *int {
+	return &i
+}

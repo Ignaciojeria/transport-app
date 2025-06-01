@@ -1,5 +1,7 @@
 package domain
 
+import "github.com/cockroachdb/errors"
+
 // Pagination defines Relay-style pagination parameters.
 //
 // Fields:
@@ -48,4 +50,33 @@ type Pagination struct {
 
 	Last   *int    // ✅ number of items to return before the cursor (backward pagination)
 	Before *string // ✅ base64 cursor indicating where to end (used with 'Last')
+}
+
+func (p Pagination) IsValid() error {
+	if p.First != nil && p.Last != nil {
+		return errors.New("invalid pagination: cannot use both 'first' and 'last'")
+	}
+	if p.First != nil && p.Before != nil {
+		return errors.New("invalid pagination: cannot use 'first' with 'before'")
+	}
+	if p.Last != nil && p.After != nil {
+		return errors.New("invalid pagination: cannot use 'last' with 'after'")
+	}
+	return nil
+}
+
+func (p Pagination) IsForward() bool {
+	return p.First != nil
+}
+
+func (p Pagination) IsBackward() bool {
+	return p.Last != nil
+}
+
+func (p Pagination) HasAfter() bool {
+	return p.After != nil && *p.After != ""
+}
+
+func (p Pagination) HasBefore() bool {
+	return p.Before != nil && *p.Before != ""
 }
