@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"strconv"
 
 	//	"transport-app/app/adapter/in/graphql/graph/mapper"
 
@@ -32,36 +31,41 @@ func (r *queryResolver) DeliveryUnitsReports(
 	fmt.Println("Requested fields:", requestedFields)
 
 	// Definir límites
-	limit := 10 // valor por defecto
+	const maxLimit = 100 // límite máximo razonable para paginación
+	limit := 1           // valor por defecto
 	if first != nil {
-		limit = *first
-		if limit > 100 {
-			limit = 100 // límite máximo
+		if *first > maxLimit {
+			return nil, fmt.Errorf("requested limit %d exceeds maximum allowed limit of %d", *first, maxLimit)
 		}
+		limit = *first
 	}
 
 	// Procesar cursores si existen
-	var afterID, beforeID string
-	if after != nil {
+	var afterID, beforeID *string
+
+	if after != nil && *after != "" {
 		decoded, err := base64.StdEncoding.DecodeString(*after)
 		if err != nil {
 			return nil, err
 		}
-		afterID = string(decoded)
+		s := string(decoded)
+		afterID = &s
 	}
-	if before != nil {
+
+	if before != nil && *before != "" {
 		decoded, err := base64.StdEncoding.DecodeString(*before)
 		if err != nil {
 			return nil, err
 		}
-		beforeID = string(decoded)
+		s := string(decoded)
+		beforeID = &s
 	}
 
 	pagination := domain.Pagination{
-		After:  &afterID,
 		First:  first,
+		After:  afterID,
 		Last:   last,
-		Before: &beforeID,
+		Before: beforeID,
 	}
 
 	if err := pagination.IsValid(); err != nil {
@@ -90,8 +94,8 @@ func (r *queryResolver) DeliveryUnitsReports(
 	// Construir edges
 	edges := make([]*model.DeliveryUnitsReportEdge, len(deliveryUnits))
 	for i, order := range deliveryUnits {
-		// Usar el ID de la base de datos como cursor
-		cursor := base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(results[i].ID, 10)))
+		// Usar el ID del modelo como cursor
+		cursor := base64.StdEncoding.EncodeToString([]byte(order.ID))
 		edges[i] = &model.DeliveryUnitsReportEdge{
 			Cursor: cursor,
 			Node:   order,

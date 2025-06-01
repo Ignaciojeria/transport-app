@@ -90,6 +90,7 @@ type DeliveryUnit struct {
 }
 
 type DeliveryUnitsReport struct {
+	ID                      string                   `json:"id"`
 	Commerce                *string                  `json:"commerce,omitempty"`
 	Consumer                *string                  `json:"consumer,omitempty"`
 	Channel                 *string                  `json:"channel,omitempty"`

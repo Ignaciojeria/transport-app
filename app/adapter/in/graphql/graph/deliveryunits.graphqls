@@ -201,6 +201,7 @@ type Delivery {
 
 # 🚛 DeliveryUnitsReport final completísimo
 type DeliveryUnitsReport {
+  id: String!
   commerce: String
   consumer: String
   channel:  String

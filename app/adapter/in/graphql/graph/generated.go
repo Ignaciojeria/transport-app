@@ -146,6 +146,7 @@ type ComplexityRoot struct {
 		Driver                  func(childComplexity int) int
 		ExtraFields             func(childComplexity int) int
 		GroupBy                 func(childComplexity int) int
+		ID                      func(childComplexity int) int
 		OrderType               func(childComplexity int) int
 		Origin                  func(childComplexity int) int
 		PromisedDate            func(childComplexity int) int
@@ -731,6 +732,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DeliveryUnitsReport.GroupBy(childComplexity), true
+
+	case "DeliveryUnitsReport.id":
+		if e.complexity.DeliveryUnitsReport.ID == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.ID(childComplexity), true
 
 	case "DeliveryUnitsReport.orderType":
 		if e.complexity.DeliveryUnitsReport.OrderType == nil {
@@ -3681,6 +3689,50 @@ func (ec *executionContext) fieldContext_DeliveryUnit_weight(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnitsReport_id(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReport_commerce(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReport_commerce(ctx, field)
 	if err != nil {
@@ -4796,6 +4848,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "id":
+				return ec.fieldContext_DeliveryUnitsReport_id(ctx, field)
 			case "commerce":
 				return ec.fieldContext_DeliveryUnitsReport_commerce(ctx, field)
 			case "consumer":
@@ -9942,6 +9996,11 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DeliveryUnitsReport")
+		case "id":
+			out.Values[i] = ec._DeliveryUnitsReport_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "commerce":
 			out.Values[i] = ec._DeliveryUnitsReport_commerce(ctx, field, obj)
 		case "consumer":

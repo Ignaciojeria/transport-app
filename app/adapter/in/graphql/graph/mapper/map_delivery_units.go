@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"context"
+	"strconv"
 	"transport-app/app/adapter/in/graphql/graph/model"
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 )
@@ -11,6 +12,7 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 
 	for i, du := range deliveryUnits {
 		report := &model.DeliveryUnitsReport{
+			ID:                   strconv.FormatInt(du.ID, 10),
 			Commerce:             &du.Commerce,
 			Consumer:             &du.Consumer,
 			Channel:              &du.Channel,
