@@ -141,11 +141,6 @@ func NewFindDeliveryUnitsProjectionResult(
 			if len(filters.References) > 0 {
 				const orf = "orf" // alias exclusivo para evitar colisión con la CTE `order_refs`
 
-				ds = ds.InnerJoin(
-					goqu.T("order_references").As(orf),
-					goqu.On(goqu.I(orf+".order_doc").Eq(goqu.I(o+".document_id"))),
-				)
-
 				inRefs := []string{}
 				for _, ref := range filters.References {
 					ref := domain.Reference{
@@ -154,7 +149,13 @@ func NewFindDeliveryUnitsProjectionResult(
 					}
 					inRefs = append(inRefs, string(ref.DocID(ctx)))
 				}
-				ds = ds.Where(goqu.I(orf + ".document_id").In(inRefs))
+
+				// Subconsulta simple para obtener IDs únicos
+				ds = ds.Where(goqu.I(duh + ".order_doc").In(
+					goqu.From(goqu.T("order_references").As(orf)).
+						Select(goqu.I(orf + ".order_doc")).
+						Where(goqu.I(orf + ".document_id").In(inRefs)),
+				))
 			}
 
 		}
