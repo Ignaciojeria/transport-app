@@ -83,6 +83,20 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		changed = true
 	}
 
+	// Validar cambios en el nivel de confianza
+	if newAddress.Coordinates.Confidence.Level != a.Coordinates.Confidence.Level {
+		updated.Coordinates.Confidence.Level = newAddress.Coordinates.Confidence.Level
+		changed = true
+	}
+	if newAddress.Coordinates.Confidence.Message != "" && newAddress.Coordinates.Confidence.Message != a.Coordinates.Confidence.Message {
+		updated.Coordinates.Confidence.Message = newAddress.Coordinates.Confidence.Message
+		changed = true
+	}
+	if newAddress.Coordinates.Confidence.Reason != "" && newAddress.Coordinates.Confidence.Reason != a.Coordinates.Confidence.Reason {
+		updated.Coordinates.Confidence.Reason = newAddress.Coordinates.Confidence.Reason
+		changed = true
+	}
+
 	if !newAddress.State.IsEmpty() && !newAddress.State.Equals(a.State) {
 		updated.State = newAddress.State
 		changed = true

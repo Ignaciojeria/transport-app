@@ -113,6 +113,70 @@ var _ = Describe("AddressInfo", func() {
 			Expect(updated.Coordinates.Point).To(Equal(newPoint))
 		})
 
+		It("should mark as changed when confidence level is updated", func() {
+			input := AddressInfo{
+				Coordinates: Coordinates{
+					Confidence: CoordinatesConfidence{
+						Level:   0.7,
+						Message: "Updated confidence",
+						Reason:  "New reason",
+					},
+				},
+			}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Coordinates.Confidence.Level).To(Equal(0.7))
+			Expect(updated.Coordinates.Confidence.Message).To(Equal("Updated confidence"))
+			Expect(updated.Coordinates.Confidence.Reason).To(Equal("New reason"))
+		})
+
+		It("should mark as changed when confidence level is zero", func() {
+			input := AddressInfo{
+				Coordinates: Coordinates{
+					Confidence: CoordinatesConfidence{
+						Level:   0.0,
+						Message: "Zero confidence",
+						Reason:  "Zero reason",
+					},
+				},
+			}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Coordinates.Confidence.Level).To(Equal(0.0))
+			Expect(updated.Coordinates.Confidence.Message).To(Equal("Zero confidence"))
+			Expect(updated.Coordinates.Confidence.Reason).To(Equal("Zero reason"))
+		})
+
+		It("should not mark as changed when confidence message is empty", func() {
+			input := AddressInfo{
+				Coordinates: Coordinates{
+					Confidence: CoordinatesConfidence{
+						Level:   original.Coordinates.Confidence.Level,
+						Message: "",
+						Reason:  original.Coordinates.Confidence.Reason,
+					},
+				},
+			}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeFalse())
+			Expect(updated.Coordinates.Confidence.Message).To(Equal(original.Coordinates.Confidence.Message))
+		})
+
+		It("should not mark as changed when confidence reason is empty", func() {
+			input := AddressInfo{
+				Coordinates: Coordinates{
+					Confidence: CoordinatesConfidence{
+						Level:   original.Coordinates.Confidence.Level,
+						Message: original.Coordinates.Confidence.Message,
+						Reason:  "",
+					},
+				},
+			}
+			updated, changed := original.UpdateIfChanged(input)
+			Expect(changed).To(BeFalse())
+			Expect(updated.Coordinates.Confidence.Reason).To(Equal(original.Coordinates.Confidence.Reason))
+		})
+
 		It("should mark as changed when State is updated", func() {
 			input := AddressInfo{State: "Valparaíso"}
 			updated, changed := original.UpdateIfChanged(input)
@@ -156,10 +220,20 @@ var _ = Describe("AddressInfo", func() {
 		})
 
 		It("should ignore empty fields in input", func() {
-			input := AddressInfo{}
+			input := AddressInfo{
+				Coordinates: Coordinates{
+					Confidence: CoordinatesConfidence{
+						Level:   original.Coordinates.Confidence.Level,
+						Message: "",
+						Reason:  "",
+					},
+				},
+			}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeFalse())
-			Expect(updated).To(Equal(original))
+			Expect(updated.Coordinates.Confidence.Level).To(Equal(original.Coordinates.Confidence.Level))
+			Expect(updated.Coordinates.Confidence.Message).To(Equal(original.Coordinates.Confidence.Message))
+			Expect(updated.Coordinates.Confidence.Reason).To(Equal(original.Coordinates.Confidence.Reason))
 		})
 
 		It("should update multiple fields at once", func() {
