@@ -374,6 +374,14 @@
         {
             "kind": "gcp-subscription",
             "name": "deliveries-confirmation-submitted"
+        },
+        {
+            "kind": "usecase",
+            "name": "confirm-delivery"
+        },
+        {
+            "kind": "usecase",
+            "name": "confirm-deliveries"
         }
     ]
 }

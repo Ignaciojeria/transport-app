@@ -189,6 +189,11 @@ func injectBaggageMiddleware(next http.Handler) http.Handler {
 			members = append(members, m)
 		}
 
+		if v := r.Header.Get("channel"); v != "" {
+			m, _ := baggage.NewMember(sharedcontext.BaggageChannel, v)
+			members = append(members, m)
+		}
+
 		bag, _ := baggage.New(members...)
 		ctx := baggage.ContextWithBaggage(r.Context(), bag)
 		next.ServeHTTP(w, r.WithContext(ctx))
