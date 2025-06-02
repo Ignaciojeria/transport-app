@@ -86,6 +86,18 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.Where(goqu.I(du + ".lpn").In(filters.Lpns))
 		}
 
+		// Agregar filtro por originNodeReferences si existen
+		if len(filters.OriginNodeReferences) > 0 {
+			nodeDocs := []string{}
+			for _, ref := range filters.OriginNodeReferences {
+				ni := domain.NodeInfo{
+					ReferenceID: domain.ReferenceID(ref),
+				}
+				nodeDocs = append(nodeDocs, string(ni.DocID(ctx)))
+			}
+			ds = ds.Where(goqu.I(o + ".origin_node_info_doc").In(nodeDocs))
+		}
+
 		// Join address_infos si se requiere algún campo de addressInfo
 		if projection.DestinationAddressInfo().Has(filters.RequestedFields) || filters.CoordinatesConfidenceLevel != nil {
 			ds = ds.InnerJoin(

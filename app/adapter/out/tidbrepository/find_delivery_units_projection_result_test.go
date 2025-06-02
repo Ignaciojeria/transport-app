@@ -1775,6 +1775,92 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		))
 	})
 
+	It("should filter delivery units by origin node references", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear nodo de origen
+		originNode := domain.NodeInfo{
+			ReferenceID: "NODE-001",
+		}
+		err = NewUpsertNodeInfo(conn)(ctx, originNode)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear orden con el nodo de origen
+		order := domain.Order{
+			ReferenceID: "ORDER-001",
+			Origin:      originNode,
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear otra orden con un nodo de origen diferente
+		otherOriginNode := domain.NodeInfo{
+			ReferenceID: "NODE-002",
+		}
+		err = NewUpsertNodeInfo(conn)(ctx, otherOriginNode)
+		Expect(err).ToNot(HaveOccurred())
+
+		otherOrder := domain.Order{
+			ReferenceID: "ORDER-002",
+			Origin:      otherOriginNode,
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, otherOrder)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear historial de unidades de entrega
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{order, otherOrder},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		// Buscar unidades de entrega filtrando por el primer nodo de origen
+		projection := deliveryunits.NewProjection()
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection,
+		)
+
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			OriginNodeReferences: []string{"NODE-001"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1), "Debería retornar solo una unidad de entrega")
+		Expect(results[0].OrderReferenceID).To(Equal("ORDER-001"), "Debería retornar la orden con el nodo de origen especificado")
+
+		// Buscar unidades de entrega filtrando por el segundo nodo de origen
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			OriginNodeReferences: []string{"NODE-002"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1), "Debería retornar solo una unidad de entrega")
+		Expect(results[0].OrderReferenceID).To(Equal("ORDER-002"), "Debería retornar la orden con el nodo de origen especificado")
+
+		// Buscar unidades de entrega filtrando por ambos nodos de origen
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			OriginNodeReferences: []string{"NODE-001", "NODE-002"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2), "Debería retornar ambas unidades de entrega")
+	})
+
 })
 
 // Helper function to create pointer to int

@@ -149,6 +149,17 @@ func (r *queryResolver) DeliveryUnitsReports(
 			deliveryUnitsFilter.Lpns = lpns
 		}
 
+		if len(filter.OriginNodeReferences) > 0 {
+			// Convertir []*string a []string
+			originNodeReferences := make([]string, len(filter.OriginNodeReferences))
+			for i, ref := range filter.OriginNodeReferences {
+				if ref != nil {
+					originNodeReferences[i] = *ref
+				}
+			}
+			deliveryUnitsFilter.OriginNodeReferences = originNodeReferences
+		}
+
 		if filter.CoordinatesConfidenceLevel != nil {
 			deliveryUnitsFilter.CoordinatesConfidenceLevel = &domain.CoordinatesConfidenceLevelFilter{
 				Min: filter.CoordinatesConfidenceLevel.Min,
