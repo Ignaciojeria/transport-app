@@ -78,14 +78,12 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Agregar filtro por reference_id si existe
 		if len(filters.ReferenceIds) > 0 {
-			docIds := []string{}
-			for _, referenceId := range filters.ReferenceIds {
-				o := domain.Order{
-					ReferenceID: domain.ReferenceID(referenceId),
-				}
-				docIds = append(docIds, string(o.DocID(ctx)))
-			}
-			ds = ds.Where(goqu.I(o + ".document_id").In(docIds))
+			ds = ds.Where(goqu.I(o + ".reference_id").In(filters.ReferenceIds))
+		}
+
+		// Agregar filtro por LPNs si existen
+		if len(filters.Lpns) > 0 {
+			ds = ds.Where(goqu.I(du + ".lpn").In(filters.Lpns))
 		}
 
 		if filters.Pagination.IsForward() {
@@ -195,11 +193,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 				docIds := []string{}
 				for _, label := range filters.Labels {
-					ref := domain.Reference{
-						Type:  label.Type,
-						Value: label.Value,
-					}
-					docIds = append(docIds, string(ref.DocID(ctx)))
+					docIds = append(docIds, string(domain.Reference(label).DocID(ctx)))
 				}
 
 				// Subconsulta simple para obtener IDs únicos

@@ -1339,6 +1339,116 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results).To(BeEmpty())
 	})
 
+	It("should filter delivery units by LPNs", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units con diferentes LPNs
+		deliveryUnit1 := domain.DeliveryUnit{
+			Lpn: "LPN001",
+		}
+
+		deliveryUnit2 := domain.DeliveryUnit{
+			Lpn: "LPN002",
+		}
+
+		deliveryUnit3 := domain.DeliveryUnit{
+			Lpn: "LPN003",
+		}
+
+		// Crear orders con las delivery units
+		orders := []domain.Order{
+			{
+				ReferenceID: "REF-001",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit1,
+				},
+			},
+			{
+				ReferenceID: "REF-002",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit2,
+				},
+			},
+			{
+				ReferenceID: "REF-003",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit3,
+				},
+			},
+		}
+
+		// Insertar delivery units
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
+		Expect(err).ToNot(HaveOccurred())
+
+		// Insertar orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		// Test filtrando por un solo LPN
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():     "",
+				projection.DeliveryUnitLPN().String(): "",
+			},
+			Lpns: []string{"LPN001"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
+		Expect(results[0].LPN).To(Equal("LPN001"))
+
+		// Test filtrando por múltiples LPNs
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():     "",
+				projection.DeliveryUnitLPN().String(): "",
+			},
+			Lpns: []string{"LPN001", "LPN003"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-001")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-003")),
+		))
+
+		// Test filtrando por LPN no existente
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():     "",
+				projection.DeliveryUnitLPN().String(): "",
+			},
+			Lpns: []string{"NON-EXISTENT-LPN"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
+	})
+
 })
 
 // Helper function to create pointer to int
