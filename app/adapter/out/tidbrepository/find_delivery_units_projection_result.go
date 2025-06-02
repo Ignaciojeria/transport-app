@@ -181,14 +181,23 @@ func NewFindDeliveryUnitsProjectionResult(
 
 			// Add filter conditions for labels if provided
 			if len(filters.Labels) > 0 {
-				conditions := make([]goqu.Expression, len(filters.Labels))
-				for i, label := range filters.Labels {
-					conditions[i] = goqu.And(
-						goqu.I(dul+".type").Eq(label.Type),
-						goqu.I(dul+".value").Eq(label.Value),
-					)
+				const dulf = "dulf" // alias exclusivo para evitar colisión con la CTE `delivery_unit_labels`
+
+				docIds := []string{}
+				for _, label := range filters.Labels {
+					ref := domain.Reference{
+						Type:  label.Type,
+						Value: label.Value,
+					}
+					docIds = append(docIds, string(ref.DocID(ctx)))
 				}
-				ds = ds.Where(goqu.And(conditions...))
+
+				// Subconsulta simple para obtener IDs únicos
+				ds = ds.Where(goqu.I(duh + ".delivery_unit_doc").In(
+					goqu.From(goqu.T("delivery_units_labels").As(dulf)).
+						Select(goqu.I(dulf + ".delivery_unit_doc")).
+						Where(goqu.I(dulf + ".document_id").In(docIds)),
+				))
 			}
 		}
 
