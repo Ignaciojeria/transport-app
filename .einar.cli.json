@@ -362,6 +362,18 @@
         {
             "kind": "gcp-subscription",
             "name": "registration-submitted"
+        },
+        {
+            "kind": "post-controller",
+            "name": "confirm-deliveries"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "deliveries-submitted"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "deliveries-confirmation-submitted"
         }
     ]
 }
