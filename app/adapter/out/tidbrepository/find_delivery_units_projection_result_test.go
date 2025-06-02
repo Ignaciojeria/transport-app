@@ -3,6 +3,7 @@ package tidbrepository
 import (
 	"context"
 	"time"
+	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
@@ -1010,6 +1011,191 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(noPaginationResults[0].OrderReferenceID).To(Equal("order1"))
 		Expect(noPaginationResults[1].OrderReferenceID).To(Equal("order2"))
 		Expect(noPaginationResults[2].OrderReferenceID).To(Equal("order3"))
+	})
+
+	It("should filter delivery units by references", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create an order with references
+		order := domain.Order{
+			ReferenceID: "REF-001",
+			References: []domain.Reference{
+				{Type: "TRACKING", Value: "TRK-123"},
+				{Type: "EXTERNAL", Value: "EXT-456"},
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create another order with different references
+		order2 := domain.Order{
+			ReferenceID: "REF-002",
+			References: []domain.Reference{
+				{Type: "TRACKING", Value: "TRK-789"},
+				{Type: "EXTERNAL", Value: "EXT-012"},
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order2)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertOrderReferences(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+		err = NewUpsertOrderReferences(conn)(ctx, order2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create delivery units history for both orders
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{order, order2},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		// Test filtering by a single reference
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+				projection.References().String():  "",
+			},
+			References: []domain.ReferenceFilter{
+				{Type: "TRACKING", Value: "TRK-123"},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
+
+		// Test filtering by multiple references
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+				projection.References().String():  "",
+			},
+			References: []domain.ReferenceFilter{
+				{Type: "EXTERNAL", Value: "EXT-012"},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(results[0].OrderReferenceID).To(Equal("REF-002"))
+
+		// Test filtering with non-existent reference
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+				projection.References().String():  "",
+			},
+			References: []domain.ReferenceFilter{
+				{Type: "TRACKING", Value: "NON-EXISTENT"},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
+	})
+
+	It("should filter delivery units by reference ids", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create orders with different reference IDs
+		orders := []domain.Order{
+			{
+				ReferenceID: "REF-001",
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+			{
+				ReferenceID: "REF-002",
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+			{
+				ReferenceID: "REF-003",
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+		}
+
+		// Insert orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Create delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		// Test filtering by a single reference ID
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			ReferenceIds: []string{"REF-001"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
+
+		// Test filtering by multiple reference IDs
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			ReferenceIds: []string{"REF-001", "REF-003"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-001")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-003")),
+		))
+
+		// Test filtering with non-existent reference ID
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			ReferenceIds: []string{"NON-EXISTENT"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
 	})
 })
 

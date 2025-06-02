@@ -231,6 +231,12 @@ input DeliveryUnitsReportFilterInput {
   originNodeReferences: [String]
   commerces: [String]
   consumers: [String]
+  references: [ReferenceFilterInput]
+}
+
+input ReferenceFilterInput {
+  type: String!
+  value: String!
 }
 
 # 🔄 PageInfo y conexión Relay

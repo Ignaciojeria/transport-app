@@ -104,20 +104,44 @@ func NewFindDeliveryUnitsProjectionResult(
 			}
 		}
 
-		// Add order references using WITH clause
-		if projection.References().Has(filters.RequestedFields) {
+		// Add order references using WITH clause if either requested or filtered
+		if projection.References().Has(filters.RequestedFields) || len(filters.References) > 0 {
 			ds = ds.With("order_refs", goqu.From(goqu.T("order_references").As(or)).
 				Select(
 					goqu.I(or+".order_doc"),
-					goqu.L("jsonb_agg(jsonb_build_object('type', type::text, 'value', value::text))").As("references"),
+					goqu.L("jsonb_agg(jsonb_build_object('type', type, 'value', value))").As("references"),
 				).
 				GroupBy(goqu.I(or+".order_doc")),
 			).
 				InnerJoin(
 					goqu.T("order_refs").As(or),
 					goqu.On(goqu.I(or+".order_doc").Eq(goqu.I(o+".document_id"))),
-				).
-				SelectAppend(goqu.Cast(goqu.I(or+".references"), "jsonb").As("order_references"))
+				)
+
+			// Only append the references field if it was requested
+			if projection.References().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.Cast(goqu.I(or+".references"), "jsonb").As("order_references"))
+			}
+
+			if len(filters.References) > 0 {
+				const orf = "orf" // alias exclusivo para evitar colisión con la CTE `order_refs`
+
+				ds = ds.InnerJoin(
+					goqu.T("order_references").As(orf),
+					goqu.On(goqu.I(orf+".order_doc").Eq(goqu.I(o+".document_id"))),
+				)
+
+				conditions := make([]goqu.Expression, len(filters.References))
+				for i, ref := range filters.References {
+					conditions[i] = goqu.And(
+						goqu.I(orf+".type").Eq(ref.Type),
+						goqu.I(orf+".value").Eq(ref.Value),
+					)
+				}
+
+				ds = ds.Where(goqu.Or(conditions...))
+			}
+
 		}
 
 		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) {

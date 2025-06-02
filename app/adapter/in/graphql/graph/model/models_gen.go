@@ -124,11 +124,12 @@ type DeliveryUnitsReportEdge struct {
 }
 
 type DeliveryUnitsReportFilterInput struct {
-	ReferenceIds         []*string `json:"referenceIds,omitempty"`
-	Lpns                 []*string `json:"lpns,omitempty"`
-	OriginNodeReferences []*string `json:"originNodeReferences,omitempty"`
-	Commerces            []*string `json:"commerces,omitempty"`
-	Consumers            []*string `json:"consumers,omitempty"`
+	ReferenceIds         []*string               `json:"referenceIds,omitempty"`
+	Lpns                 []*string               `json:"lpns,omitempty"`
+	OriginNodeReferences []*string               `json:"originNodeReferences,omitempty"`
+	Commerces            []*string               `json:"commerces,omitempty"`
+	Consumers            []*string               `json:"consumers,omitempty"`
+	References           []*ReferenceFilterInput `json:"references,omitempty"`
 }
 
 type Dimension struct {
@@ -224,6 +225,11 @@ type Query struct {
 type Reference struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
+}
+
+type ReferenceFilterInput struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
 type Route struct {

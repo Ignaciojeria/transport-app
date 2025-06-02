@@ -110,6 +110,20 @@ func (r *queryResolver) DeliveryUnitsReports(
 			}
 			deliveryUnitsFilter.ReferenceIds = referenceIds
 		}
+
+		if filter.References != nil && len(filter.References) > 0 {
+			// Convertir los references del modelo GraphQL al dominio
+			references := make([]domain.ReferenceFilter, len(filter.References))
+			for i, ref := range filter.References {
+				if ref != nil {
+					references[i] = domain.ReferenceFilter{
+						Type:  ref.Type,
+						Value: ref.Value,
+					}
+				}
+			}
+			deliveryUnitsFilter.References = references
+		}
 	}
 
 	results, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)

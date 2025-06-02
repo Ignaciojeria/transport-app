@@ -1,5 +1,10 @@
 package domain
 
+type ReferenceFilter struct {
+	Type  string
+	Value string
+}
+
 type DeliveryUnitsFilter struct {
 	Pagination           Pagination
 	ReferenceIds         []string
@@ -13,4 +18,5 @@ type DeliveryUnitsFilter struct {
 	Commerces            []string
 	Consumers            []string
 	RequestedFields      map[string]any
+	References           []ReferenceFilter
 }
