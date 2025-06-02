@@ -60,6 +60,11 @@ func NewFindDeliveryUnitsProjectionResult(
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
 			})
 
+		// Agregar filtro por reference_id si existe
+		if len(filters.ReferenceIds) > 0 {
+			ds = ds.Where(goqu.I(o + ".reference_id").In(filters.ReferenceIds))
+		}
+
 		if filters.Pagination.IsForward() {
 			ds = ds.Order(goqu.I("duh.id").Asc())
 

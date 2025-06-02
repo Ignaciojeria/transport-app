@@ -92,10 +92,27 @@ func (r *queryResolver) DeliveryUnitsReports(
 
 	requestedFieldsAsMap := ConvertSelectedPathsToMap(ctx)
 
-	results, err := r.findDeliveryUnitsProjectionResult(ctx, domain.DeliveryUnitsFilter{
+	// Construir el filtro
+	deliveryUnitsFilter := domain.DeliveryUnitsFilter{
 		RequestedFields: requestedFieldsAsMap,
 		Pagination:      pagination,
-	})
+	}
+
+	// Agregar filtros si existen
+	if filter != nil {
+		if filter.ReferenceIds != nil && len(filter.ReferenceIds) > 0 {
+			// Convertir []*string a []string
+			referenceIds := make([]string, len(filter.ReferenceIds))
+			for i, ref := range filter.ReferenceIds {
+				if ref != nil {
+					referenceIds[i] = *ref
+				}
+			}
+			deliveryUnitsFilter.ReferenceIds = referenceIds
+		}
+	}
+
+	results, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)
 	if err != nil {
 		return nil, err
 	}
