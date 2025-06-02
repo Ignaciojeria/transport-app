@@ -1,6 +1,10 @@
 package domain
 
-import "github.com/cockroachdb/errors"
+import (
+	"strconv"
+
+	"github.com/cockroachdb/errors"
+)
 
 // Pagination defines Relay-style pagination parameters.
 //
@@ -14,19 +18,20 @@ import "github.com/cockroachdb/errors"
 //
 // Item    Generated Cursor
 // -----   -----------------
-//   1     "cursor:1"
-//   2     "cursor:2"
-//   ...   ...
-//  10     "cursor:10"
+//
+//	 1     "cursor:1"
+//	 2     "cursor:2"
+//	 ...   ...
+//	10     "cursor:10"
 //
 // To get items 11 to 20, use:
 //
-// query {
-//   deliveryUnits(first: 10, after: "cursor:10")
-// }
+//	query {
+//	  deliveryUnits(first: 10, after: "cursor:10")
+//	}
 //
 // The backend interprets this as:
-// → “Give me the next 10 results that come after the item with cursor 'cursor:10'.”
+// → "Give me the next 10 results that come after the item with cursor 'cursor:10'."
 //
 // ⚠️ Pagination rules (Relay compliant):
 //
@@ -35,15 +40,17 @@ import "github.com/cockroachdb/errors"
 // - `last` can be used alone or with `before`, but never with `after`.
 //
 // Valid combinations:
-//   ✓ first
-//   ✓ first + after
-//   ✓ last
-//   ✓ last + before
+//
+//	✓ first
+//	✓ first + after
+//	✓ last
+//	✓ last + before
 //
 // Invalid combinations:
-//   ✗ first + last
-//   ✗ first + before
-//   ✗ last + after
+//
+//	✗ first + last
+//	✗ first + before
+//	✗ last + after
 type Pagination struct {
 	First *int    // ✅ number of items to return after the cursor (forward pagination)
 	After *string // ✅ base64 cursor indicating where to start (used with 'First')
@@ -79,4 +86,26 @@ func (p Pagination) HasAfter() bool {
 
 func (p Pagination) HasBefore() bool {
 	return p.Before != nil && *p.Before != ""
+}
+
+func (p Pagination) AfterID() (*int64, error) {
+	if !p.HasAfter() {
+		return nil, nil
+	}
+	id, err := strconv.ParseInt(*p.After, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid 'after' ID format")
+	}
+	return &id, nil
+}
+
+func (p Pagination) BeforeID() (*int64, error) {
+	if !p.HasBefore() {
+		return nil, nil
+	}
+	id, err := strconv.ParseInt(*p.Before, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid 'before' ID format")
+	}
+	return &id, nil
 }

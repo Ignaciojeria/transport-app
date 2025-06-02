@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	//	"transport-app/app/adapter/in/graphql/graph/mapper"
 
@@ -33,11 +34,18 @@ func (r *queryResolver) DeliveryUnitsReports(
 	// Definir límites
 	const maxLimit = 100 // límite máximo razonable para paginación
 	limit := 1           // valor por defecto
+
+	// Procesar first/last
 	if first != nil {
 		if *first > maxLimit {
 			return nil, fmt.Errorf("requested limit %d exceeds maximum allowed limit of %d", *first, maxLimit)
 		}
 		limit = *first
+	} else if last != nil {
+		if *last > maxLimit {
+			return nil, fmt.Errorf("requested limit %d exceeds maximum allowed limit of %d", *last, maxLimit)
+		}
+		limit = *last
 	}
 
 	// Procesar cursores si existen
@@ -46,18 +54,28 @@ func (r *queryResolver) DeliveryUnitsReports(
 	if after != nil && *after != "" {
 		decoded, err := base64.StdEncoding.DecodeString(*after)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid 'after' cursor: %v", err)
 		}
-		s := string(decoded)
+		// Convertir el string decodificado a int64
+		id, err := strconv.ParseInt(string(decoded), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid 'after' cursor format: %v", err)
+		}
+		s := strconv.FormatInt(id, 10)
 		afterID = &s
 	}
 
 	if before != nil && *before != "" {
 		decoded, err := base64.StdEncoding.DecodeString(*before)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid 'before' cursor: %v", err)
 		}
-		s := string(decoded)
+		// Convertir el string decodificado a int64
+		id, err := strconv.ParseInt(string(decoded), 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid 'before' cursor format: %v", err)
+		}
+		s := strconv.FormatInt(id, 10)
 		beforeID = &s
 	}
 
@@ -82,20 +100,20 @@ func (r *queryResolver) DeliveryUnitsReports(
 		return nil, err
 	}
 
-	deliveryUnits := mapper.MapDeliveryUnits(ctx, results)
-
-	// Verificar si hay más páginas
-	var hasNextPage bool
-	hasNextPage = len(deliveryUnits) > limit
+	// Verificar si hay más páginas antes de mapear
+	hasNextPage := len(results) > limit
 	if hasNextPage {
-		deliveryUnits = deliveryUnits[:limit] // quitar el elemento extra
+		results = results[:limit] // quitar el elemento extra antes de mapear
 	}
+
+	// Mapear solo los resultados que vamos a mostrar
+	deliveryUnits := mapper.MapDeliveryUnits(ctx, results)
 
 	// Construir edges
 	edges := make([]*model.DeliveryUnitsReportEdge, len(deliveryUnits))
 	for i, order := range deliveryUnits {
-		// Usar el ID del modelo como cursor
-		cursor := base64.StdEncoding.EncodeToString([]byte(order.ID))
+		// Codificar el ID numérico en base64
+		cursor := base64.StdEncoding.EncodeToString([]byte(strconv.FormatInt(results[i].ID, 10)))
 		edges[i] = &model.DeliveryUnitsReportEdge{
 			Cursor: cursor,
 			Node:   order,
@@ -109,9 +127,16 @@ func (r *queryResolver) DeliveryUnitsReports(
 		endCursor = edges[len(edges)-1].Cursor
 	}
 
-	// Determinar hasPreviousPage
-	var hasPreviousPage bool
-	hasPreviousPage = before != nil
+	// Determinar hasPreviousPage y hasNextPage
+	hasPreviousPage := before != nil
+	if last != nil {
+		// En paginación hacia atrás, hasNextPage es true si hay más resultados
+		hasNextPage = len(results) > limit
+		hasPreviousPage = len(results) > limit
+	} else {
+		// En paginación hacia adelante, hasNextPage es true si hay más resultados
+		hasNextPage = len(results) > limit
+	}
 
 	pageInfo := &model.PageInfo{
 		HasNextPage:     hasNextPage,

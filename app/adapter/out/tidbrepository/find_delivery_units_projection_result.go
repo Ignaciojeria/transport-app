@@ -61,6 +61,32 @@ func NewFindDeliveryUnitsProjectionResult(
 			})
 
 		if filters.Pagination.IsForward() {
+			ds = ds.Order(goqu.I("duh.id").Asc())
+
+			if afterID, err := filters.Pagination.AfterID(); err != nil {
+				return nil, err
+			} else if afterID != nil {
+				ds = ds.Where(goqu.I("duh.id").Gt(*afterID))
+			}
+
+			limit := *filters.Pagination.First + 1 // pedir uno extra para saber si hay más
+			ds = ds.Limit(uint(limit))
+		}
+
+		if filters.Pagination.IsBackward() {
+			ds = ds.Order(goqu.I("duh.id").Desc())
+
+			if beforeID, err := filters.Pagination.BeforeID(); err != nil {
+				return nil, err
+			} else if beforeID != nil {
+				ds = ds.Where(goqu.I("duh.id").Lt(*beforeID))
+			}
+
+			limit := *filters.Pagination.Last + 1
+			ds = ds.Limit(uint(limit))
+		}
+
+		if filters.Pagination.IsForward() {
 			ds = ds.Order(goqu.I(duh + ".id").Asc())
 			if filters.Pagination.First != nil {
 				ds = ds.Limit(uint(*filters.Pagination.First))
