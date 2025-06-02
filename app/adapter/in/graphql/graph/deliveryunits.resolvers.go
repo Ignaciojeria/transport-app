@@ -148,6 +148,13 @@ func (r *queryResolver) DeliveryUnitsReports(
 			}
 			deliveryUnitsFilter.Lpns = lpns
 		}
+
+		if filter.CoordinatesConfidenceLevel != nil {
+			deliveryUnitsFilter.CoordinatesConfidenceLevel = &domain.CoordinatesConfidenceLevelFilter{
+				Min: filter.CoordinatesConfidenceLevel.Min,
+				Max: filter.CoordinatesConfidenceLevel.Max,
+			}
+		}
 	}
 
 	results, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)

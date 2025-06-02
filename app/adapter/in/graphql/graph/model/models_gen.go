@@ -51,6 +51,11 @@ type Coordinates struct {
 	Confidence *Confidence `json:"confidence,omitempty"`
 }
 
+type CoordinatesConfidenceLevelFilter struct {
+	Min *float64 `json:"min,omitempty"`
+	Max *float64 `json:"max,omitempty"`
+}
+
 type DateRange struct {
 	StartDate *string `json:"startDate,omitempty"`
 	EndDate   *string `json:"endDate,omitempty"`
@@ -124,13 +129,12 @@ type DeliveryUnitsReportEdge struct {
 }
 
 type DeliveryUnitsReportFilterInput struct {
-	ReferenceIds         []*string               `json:"referenceIds,omitempty"`
-	Lpns                 []*string               `json:"lpns,omitempty"`
-	OriginNodeReferences []*string               `json:"originNodeReferences,omitempty"`
-	Commerces            []*string               `json:"commerces,omitempty"`
-	Consumers            []*string               `json:"consumers,omitempty"`
-	References           []*ReferenceFilterInput `json:"references,omitempty"`
-	Labels               []*LabelFilterInput     `json:"labels,omitempty"`
+	ReferenceIds               []*string                         `json:"referenceIds,omitempty"`
+	Lpns                       []*string                         `json:"lpns,omitempty"`
+	OriginNodeReferences       []*string                         `json:"originNodeReferences,omitempty"`
+	References                 []*ReferenceFilterInput           `json:"references,omitempty"`
+	Labels                     []*LabelFilterInput               `json:"labels,omitempty"`
+	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidenceLevel,omitempty"`
 }
 
 type Dimension struct {

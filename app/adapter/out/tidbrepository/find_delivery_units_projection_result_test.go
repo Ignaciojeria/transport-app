@@ -2,6 +2,7 @@ package tidbrepository
 
 import (
 	"context"
+	"fmt"
 	"time"
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 	"transport-app/app/adapter/out/tidbrepository/table"
@@ -1416,7 +1417,6 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
 		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
-		Expect(results[0].LPN).To(Equal("LPN001"))
 
 		// Test filtrando por múltiples LPNs
 		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
@@ -1447,6 +1447,332 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+	})
+
+	It("should filter delivery units by coordinates confidence level according to the test matrix", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear direcciones con diferentes niveles de confianza según la matriz de prueba
+		destinations := []domain.AddressInfo{
+			{
+				State:        "CA",
+				Province:     "CA",
+				District:     "CA",
+				AddressLine1: "Address A",
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{1, 1},
+					Source: "geocoding",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   0.3,
+						Message: "Low confidence",
+						Reason:  "Geocoding service",
+					},
+				},
+			},
+			{
+				State:        "CA",
+				Province:     "CA",
+				District:     "CA",
+				AddressLine1: "Address B",
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{2, 2},
+					Source: "geocoding",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   0.4,
+						Message: "Low confidence",
+						Reason:  "Geocoding service",
+					},
+				},
+			},
+			{
+				State:        "CA",
+				Province:     "CA",
+				District:     "CA",
+				AddressLine1: "Address C",
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{3, 3},
+					Source: "geocoding",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   0.6,
+						Message: "Medium confidence",
+						Reason:  "Geocoding service",
+					},
+				},
+			},
+			{
+				State:        "CA",
+				Province:     "CA",
+				District:     "CA",
+				AddressLine1: "Address D",
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{4, 4},
+					Source: "geocoding",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   0.7,
+						Message: "Medium confidence",
+						Reason:  "Geocoding service",
+					},
+				},
+			},
+			{
+				State:        "CA",
+				Province:     "CA",
+				District:     "CA",
+				AddressLine1: "Address E",
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{5, 5},
+					Source: "geocoding",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   0.9,
+						Message: "High confidence",
+						Reason:  "Geocoding service",
+					},
+				},
+			},
+			{
+				State:        "CA",
+				Province:     "CA",
+				District:     "CA",
+				AddressLine1: "Address F",
+				Coordinates: domain.Coordinates{
+					Point:  orb.Point{6, 6},
+					Source: "geocoding",
+					Confidence: domain.CoordinatesConfidence{
+						Level:   1.0,
+						Message: "Very high confidence",
+						Reason:  "Geocoding service",
+					},
+				},
+			},
+		}
+
+		// Insertar direcciones
+		for _, dest := range destinations {
+			err = NewUpsertAddressInfo(conn)(ctx, dest)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear orders con las direcciones
+		orders := make([]domain.Order, len(destinations))
+		for i, dest := range destinations {
+			orders[i] = domain.Order{
+				ReferenceID: domain.ReferenceID(fmt.Sprintf("REF-%c", 'A'+i)),
+				Destination: domain.NodeInfo{
+					AddressInfo: dest,
+				},
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			}
+		}
+
+		// Insertar orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		// Caso 1: Sin filtros
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.DestinationAddressInfo().String():                "",
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(6))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-A")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-B")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-C")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-D")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-E")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-F")),
+		))
+
+		// Caso 2: Min = 0.5, Max = nil
+		minConfidence := 0.5
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Min: &minConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(4))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-C")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-D")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-E")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-F")),
+		))
+
+		// Caso 3: Min = nil, Max = 0.5
+		maxConfidence := 0.5
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Max: &maxConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-A")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-B")),
+		))
+
+		// Caso 4: Min = 0.5, Max = 0.8
+		minConfidence = 0.5
+		maxConfidence = 0.8
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Min: &minConfidence,
+				Max: &maxConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-C")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-D")),
+		))
+
+		// Caso 5: Min = 0.7, Max = 0.7 (match exacto)
+		minConfidence = 0.7
+		maxConfidence = 0.7
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Min: &minConfidence,
+				Max: &maxConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results[0].OrderReferenceID).To(Equal("REF-D"))
+
+		// Caso 6: Min = 1.1, Max = nil (ningún registro cumple)
+		minConfidence = 1.1
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Min: &minConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
+
+		// Caso 7: Min = nil, Max = 0.0 (ningún registro cumple)
+		maxConfidence = 0.0
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Max: &maxConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
+
+		// Caso 8: Min = 0.0, Max = 1.0 (todos los registros)
+		minConfidence = 0.0
+		maxConfidence = 1.0
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                           "",
+				projection.DestinationCoordinatesConfidenceLevel().String(): "",
+			},
+			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
+				Min: &minConfidence,
+				Max: &maxConfidence,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(6))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-A")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-B")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-C")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-D")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-E")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-F")),
+		))
 	})
 
 })

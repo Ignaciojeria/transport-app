@@ -81,6 +81,24 @@ Al publicar un evento como `orderSubmitted`, los atributos se propagan como:
 
 ---
 
+## Filtros
+
+### CoordinatesConfidenceLevel
+
+🎯 **Filtros y resultados esperados**
+
+| Filtro Min     | Filtro Max     | Resultado esperado (IDs) | Lógica SQL aplicada                                      |
+|----------------|----------------|---------------------------|-----------------------------------------------------------|
+| *(sin filtro)* | *(sin filtro)* | A, B, C, D, E, F          | No se aplica condición (`WHERE 1=1`)                      |
+| 0.5            | *(sin filtro)* | C, D, E, F                | `level >= 0.5`                                            |
+| *(sin filtro)* | 0.5            | A, B                      | `level <= 0.5`                                            |
+| 0.5            | 0.8            | C, D                      | `level >= 0.5 AND level <= 0.8`                           |
+| 0.7            | 0.7            | *(vacío)*                 | `level >= 0.7 AND level <= 0.7` (match exacto)            |
+| 1.1            | *(sin filtro)* | *(vacío)*                 | `level >= 1.1` (ningún registro cumple)                   |
+| *(sin filtro)* | 0.0            | *(vacío)*                 | `level <= 0.0` (ningún registro cumple)                   |
+| 0.0            | 1.0            | A, B, C, D, E, F          | `level >= 0.0 AND level <= 1.0` (todos los registros)     |
+
+
 ## 📦 Sistema de Gestión de Paquetes
 
 ### Tipos de Paquetes

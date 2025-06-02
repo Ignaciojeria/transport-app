@@ -229,10 +229,15 @@ type DeliveryUnitsReport {
     referenceIds: [String]
     lpns: [String]
     originNodeReferences: [String]
-    commerces: [String]
-    consumers: [String]
     references: [ReferenceFilterInput]
     labels: [LabelFilterInput]
+    coordinatesConfidenceLevel: CoordinatesConfidenceLevelFilter
+  }
+
+  # Reutilizable en múltiples filtros
+  input CoordinatesConfidenceLevelFilter {
+    min: Float
+    max: Float
   }
 
   input ReferenceFilterInput {

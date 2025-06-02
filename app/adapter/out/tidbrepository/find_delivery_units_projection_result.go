@@ -86,6 +86,25 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.Where(goqu.I(du + ".lpn").In(filters.Lpns))
 		}
 
+		// Join address_infos si se requiere algún campo de addressInfo
+		if projection.DestinationAddressInfo().Has(filters.RequestedFields) || filters.CoordinatesConfidenceLevel != nil {
+			ds = ds.InnerJoin(
+				goqu.T("address_infos").As(dadi),
+				goqu.On(goqu.I(dadi+".document_id").Eq(goqu.I(o+".destination_address_info_doc"))),
+			)
+		}
+
+		// Agregar filtro por nivel de confianza de coordenadas si existe
+		if filters.CoordinatesConfidenceLevel != nil {
+			// Aplicar filtros de nivel de confianza
+			if filters.CoordinatesConfidenceLevel.Min != nil {
+				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Gte(*filters.CoordinatesConfidenceLevel.Min))
+			}
+			if filters.CoordinatesConfidenceLevel.Max != nil {
+				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Lte(*filters.CoordinatesConfidenceLevel.Max))
+			}
+		}
+
 		if filters.Pagination.IsForward() {
 			ds = ds.Order(goqu.I("duh.id").Asc())
 
@@ -313,14 +332,6 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		if projection.Consumer().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(oh + ".consumer").As("consumer"))
-		}
-
-		// Join address_infos si se requiere algún campo de addressInfo
-		if projection.DestinationAddressInfo().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("address_infos").As(dadi),
-				goqu.On(goqu.I(dadi+".document_id").Eq(goqu.I(o+".destination_address_info_doc"))),
-			)
 		}
 
 		// Campos de address_infos
