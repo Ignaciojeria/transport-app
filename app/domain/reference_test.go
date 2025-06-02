@@ -19,8 +19,8 @@ var _ = Describe("Reference", func() {
 		It("should generate consistent IDs for the same context, Type and Value", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 
-			id1 := ref.DocID(ctx1, "ORDER-123")
-			id2 := ref.DocID(ctx1, "ORDER-123")
+			id1 := ref.DocID(ctx1)
+			id2 := ref.DocID(ctx1)
 
 			Expect(id1).To(Equal(id2))
 		})
@@ -28,8 +28,8 @@ var _ = Describe("Reference", func() {
 		It("should generate different IDs for different contexts", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 
-			id1 := ref.DocID(ctx1, "ORDER-123")
-			id2 := ref.DocID(ctx2, "ORDER-123")
+			id1 := ref.DocID(ctx1)
+			id2 := ref.DocID(ctx2)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -38,8 +38,8 @@ var _ = Describe("Reference", func() {
 			ref1 := Reference{Type: "CODE", Value: "ABC123"}
 			ref2 := Reference{Type: "ALT_CODE", Value: "ABC123"}
 
-			id1 := ref1.DocID(ctx1, "ORDER-123")
-			id2 := ref2.DocID(ctx1, "ORDER-123")
+			id1 := ref1.DocID(ctx1)
+			id2 := ref2.DocID(ctx1)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
@@ -48,20 +48,12 @@ var _ = Describe("Reference", func() {
 			ref1 := Reference{Type: "CODE", Value: "ABC123"}
 			ref2 := Reference{Type: "CODE", Value: "XYZ789"}
 
-			id1 := ref1.DocID(ctx1, "ORDER-123")
-			id2 := ref2.DocID(ctx1, "ORDER-123")
+			id1 := ref1.DocID(ctx1)
+			id2 := ref2.DocID(ctx1)
 
 			Expect(id1).ToNot(Equal(id2))
 		})
 
-		It("should generate different IDs for different OrderReferences", func() {
-			ref := Reference{Type: "CODE", Value: "ABC123"}
-
-			id1 := ref.DocID(ctx1, "ORDER-123")
-			id2 := ref.DocID(ctx1, "ORDER-999")
-
-			Expect(id1).ToNot(Equal(id2))
-		})
 	})
 
 	Describe("UpdateIfChange", func() {
@@ -155,9 +147,9 @@ var _ = Describe("Reference", func() {
 			ref := Reference{Type: "CODE", Value: "ABC123"}
 			newRef := Reference{Type: "NEW_CODE", Value: "XYZ789"}
 
-			originalID := ref.DocID(ctx1, "ORDER-999")
+			originalID := ref.DocID(ctx1)
 			updated, _ := ref.UpdateIfChange(newRef)
-			newID := updated.DocID(ctx1, "ORDER-999")
+			newID := updated.DocID(ctx1)
 
 			Expect(newID).ToNot(Equal(originalID))
 		})

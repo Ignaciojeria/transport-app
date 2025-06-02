@@ -5,6 +5,11 @@ type ReferenceFilter struct {
 	Value string
 }
 
+type LabelFilter struct {
+	Type  string
+	Value string
+}
+
 type DeliveryUnitsFilter struct {
 	Pagination           Pagination
 	ReferenceIds         []string
@@ -19,4 +24,5 @@ type DeliveryUnitsFilter struct {
 	Consumers            []string
 	RequestedFields      map[string]any
 	References           []ReferenceFilter
+	Labels               []LabelFilter
 }

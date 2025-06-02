@@ -1230,6 +1230,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputDeliveryUnitsReportFilterInput,
+		ec.unmarshalInputLabelFilterInput,
 		ec.unmarshalInputReferenceFilterInput,
 	)
 	first := true
@@ -9392,7 +9393,7 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceIds", "lpns", "originNodeReferences", "commerces", "consumers", "references"}
+	fieldsInOrder := [...]string{"referenceIds", "lpns", "originNodeReferences", "commerces", "consumers", "references", "labels"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9441,6 +9442,47 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.References = data
+		case "labels":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("labels"))
+			data, err := ec.unmarshalOLabelFilterInput2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabelFilterInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Labels = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputLabelFilterInput(ctx context.Context, obj any) (model.LabelFilterInput, error) {
+	var it model.LabelFilterInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "value":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Value = data
 		}
 	}
 
@@ -12285,6 +12327,32 @@ func (ec *executionContext) marshalOLabel2ᚖtransportᚑappᚋappᚋadapterᚋi
 		return graphql.Null
 	}
 	return ec._Label(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOLabelFilterInput2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabelFilterInput(ctx context.Context, v any) ([]*model.LabelFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []any
+	vSlice = graphql.CoerceList(v)
+	var err error
+	res := make([]*model.LabelFilterInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOLabelFilterInput2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabelFilterInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOLabelFilterInput2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabelFilterInput(ctx context.Context, v any) (*model.LabelFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputLabelFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOLocation2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {

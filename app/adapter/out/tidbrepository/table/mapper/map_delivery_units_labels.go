@@ -11,7 +11,7 @@ func MapDeliveryUnitsLabels(ctx context.Context, order domain.Order) []table.Del
 	for _, pkg := range order.DeliveryUnits {
 		if len(pkg.Labels) == 0 {
 			labels = append(labels, table.DeliveryUnitsLabels{
-				DocumentID:      domain.Reference{}.DocID(ctx, pkg.DocID(ctx).String()).String(),
+				DocumentID:      domain.Reference{}.DocID(ctx).String(),
 				DeliveryUnitDoc: pkg.DocID(ctx).String(),
 				Type:            "",
 				Value:           "",
@@ -20,7 +20,7 @@ func MapDeliveryUnitsLabels(ctx context.Context, order domain.Order) []table.Del
 		}
 		for _, label := range pkg.Labels {
 			labels = append(labels, table.DeliveryUnitsLabels{
-				DocumentID:      label.DocID(ctx, pkg.DocID(ctx).String()).String(),
+				DocumentID:      label.DocID(ctx).String(),
 				Type:            label.Type,
 				Value:           label.Value,
 				DeliveryUnitDoc: pkg.DocID(ctx).String(),
@@ -31,7 +31,7 @@ func MapDeliveryUnitsLabels(ctx context.Context, order domain.Order) []table.Del
 		emptyPkg := domain.DeliveryUnit{}
 		deliveryUnitDoc := emptyPkg.DocID(ctx).String()
 		labels = append(labels, table.DeliveryUnitsLabels{
-			DocumentID:      domain.Reference{}.DocID(ctx, deliveryUnitDoc).String(),
+			DocumentID:      domain.Reference{}.DocID(ctx).String(),
 			DeliveryUnitDoc: deliveryUnitDoc,
 			Type:            "",
 			Value:           "",

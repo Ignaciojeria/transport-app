@@ -124,6 +124,20 @@ func (r *queryResolver) DeliveryUnitsReports(
 			}
 			deliveryUnitsFilter.References = references
 		}
+
+		if filter.Labels != nil && len(filter.Labels) > 0 {
+			labels := make([]domain.LabelFilter, len(filter.Labels))
+			for i, label := range filter.Labels {
+				if label != nil {
+					labels[i] = domain.LabelFilter{
+						Type:  label.Type,
+						Value: label.Value,
+					}
+				}
+			}
+			deliveryUnitsFilter.Labels = labels
+		}
+
 	}
 
 	results, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)

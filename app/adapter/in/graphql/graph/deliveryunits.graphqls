@@ -224,20 +224,26 @@ type DeliveryUnitsReport {
   delivery: Delivery
 }
 
-# 🔎 Filtro
-input DeliveryUnitsReportFilterInput {
-  referenceIds: [String]
-  lpns: [String]
-  originNodeReferences: [String]
-  commerces: [String]
-  consumers: [String]
-  references: [ReferenceFilterInput]
-}
+  # 🔎 Filtro
+  input DeliveryUnitsReportFilterInput {
+    referenceIds: [String]
+    lpns: [String]
+    originNodeReferences: [String]
+    commerces: [String]
+    consumers: [String]
+    references: [ReferenceFilterInput]
+    labels: [LabelFilterInput]
+  }
 
-input ReferenceFilterInput {
-  type: String!
-  value: String!
-}
+  input ReferenceFilterInput {
+    type: String!
+    value: String!
+  }
+
+  input LabelFilterInput {
+    type: String!
+    value: String!
+  }
 
 # 🔄 PageInfo y conexión Relay
 type PageInfo {

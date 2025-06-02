@@ -50,19 +50,33 @@ func NewFindDeliveryUnitsProjectionResult(
 		var results projectionresult.DeliveryUnitsProjectionResults
 
 		// Dataset base
-		ds := goqu.From(goqu.T("delivery_units_histories").As(duh)).
-			Select(goqu.I(duh+".id").As("id")).
-			InnerJoin(
-				goqu.T("orders").As(o),
-				goqu.On(goqu.I(o+".document_id").Eq(goqu.I(duh+".order_doc"))),
-			).
+		baseQuery := goqu.From(goqu.T("delivery_units_histories").As(duh)).
+			Select(goqu.I(duh + ".id").As("id")).
 			Where(goqu.Ex{
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
 			})
 
+		ds := goqu.From(baseQuery.As("base")).
+			Select(goqu.I("base.id").As("id")).
+			InnerJoin(
+				goqu.T("delivery_units_histories").As(duh),
+				goqu.On(goqu.I(duh+".id").Eq(goqu.I("base.id"))),
+			).
+			InnerJoin(
+				goqu.T("orders").As(o),
+				goqu.On(goqu.I(o+".document_id").Eq(goqu.I(duh+".order_doc"))),
+			)
+
 		// Agregar filtro por reference_id si existe
 		if len(filters.ReferenceIds) > 0 {
-			ds = ds.Where(goqu.I(o + ".reference_id").In(filters.ReferenceIds))
+			docIds := []string{}
+			for _, referenceId := range filters.ReferenceIds {
+				o := domain.Order{
+					ReferenceID: domain.ReferenceID(referenceId),
+				}
+				docIds = append(docIds, string(o.DocID(ctx)))
+			}
+			ds = ds.Where(goqu.I(o + ".document_id").In(docIds))
 		}
 
 		if filters.Pagination.IsForward() {
@@ -123,6 +137,7 @@ func NewFindDeliveryUnitsProjectionResult(
 				ds = ds.SelectAppend(goqu.Cast(goqu.I(or+".references"), "jsonb").As("order_references"))
 			}
 
+			// Add filter conditions for references if provided
 			if len(filters.References) > 0 {
 				const orf = "orf" // alias exclusivo para evitar colisión con la CTE `order_refs`
 
@@ -131,32 +146,49 @@ func NewFindDeliveryUnitsProjectionResult(
 					goqu.On(goqu.I(orf+".order_doc").Eq(goqu.I(o+".document_id"))),
 				)
 
-				conditions := make([]goqu.Expression, len(filters.References))
-				for i, ref := range filters.References {
-					conditions[i] = goqu.And(
-						goqu.I(orf+".type").Eq(ref.Type),
-						goqu.I(orf+".value").Eq(ref.Value),
-					)
+				inRefs := []string{}
+				for _, ref := range filters.References {
+					ref := domain.Reference{
+						Type:  ref.Type,
+						Value: ref.Value,
+					}
+					inRefs = append(inRefs, string(ref.DocID(ctx)))
 				}
-
-				ds = ds.Where(goqu.Or(conditions...))
+				ds = ds.Where(goqu.I(orf + ".document_id").In(inRefs))
 			}
 
 		}
 
-		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) {
+		// Add delivery unit labels if requested or filtered
+		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) || len(filters.Labels) > 0 {
 			ds = ds.With("delivery_unit_labels", goqu.From(goqu.T("delivery_units_labels").As(dul)).
 				Select(
 					goqu.I(dul+".delivery_unit_doc"),
-					goqu.L("jsonb_agg(jsonb_build_object('type', type::text, 'value', value::text))").As("delivery_unit_labels"),
+					goqu.L("jsonb_agg(jsonb_build_object('type', type, 'value', value))").As("delivery_unit_labels"),
 				).
 				GroupBy(goqu.I(dul+".delivery_unit_doc")),
 			).
 				InnerJoin(
 					goqu.T("delivery_unit_labels").As(dul),
 					goqu.On(goqu.I(dul+".delivery_unit_doc").Eq(goqu.I(duh+".delivery_unit_doc"))),
-				).
-				SelectAppend(goqu.Cast(goqu.I(dul+".delivery_unit_labels"), "jsonb").As("delivery_unit_labels"))
+				)
+
+			// Only append the labels field if it was requested
+			if projection.DeliveryUnitLabels().Has(filters.RequestedFields) {
+				ds = ds.SelectAppend(goqu.Cast(goqu.I(dul+".delivery_unit_labels"), "jsonb").As("delivery_unit_labels"))
+			}
+
+			// Add filter conditions for labels if provided
+			if len(filters.Labels) > 0 {
+				conditions := make([]goqu.Expression, len(filters.Labels))
+				for i, label := range filters.Labels {
+					conditions[i] = goqu.And(
+						goqu.I(dul+".type").Eq(label.Type),
+						goqu.I(dul+".value").Eq(label.Value),
+					)
+				}
+				ds = ds.Where(goqu.And(conditions...))
+			}
 		}
 
 		// Campos de delivery_units_histories

@@ -130,6 +130,7 @@ type DeliveryUnitsReportFilterInput struct {
 	Commerces            []*string               `json:"commerces,omitempty"`
 	Consumers            []*string               `json:"consumers,omitempty"`
 	References           []*ReferenceFilterInput `json:"references,omitempty"`
+	Labels               []*LabelFilterInput     `json:"labels,omitempty"`
 }
 
 type Dimension struct {
@@ -184,6 +185,11 @@ type KeyValuePair struct {
 type Label struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
+}
+
+type LabelFilterInput struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
 }
 
 type Location struct {
