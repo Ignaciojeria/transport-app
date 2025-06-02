@@ -100,7 +100,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 
 	// Agregar filtros si existen
 	if filter != nil {
-		if filter.ReferenceIds != nil && len(filter.ReferenceIds) > 0 {
+		if len(filter.ReferenceIds) > 0 {
 			// Convertir []*string a []string
 			referenceIds := make([]string, len(filter.ReferenceIds))
 			for i, ref := range filter.ReferenceIds {
@@ -111,7 +111,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 			deliveryUnitsFilter.ReferenceIds = referenceIds
 		}
 
-		if filter.References != nil && len(filter.References) > 0 {
+		if len(filter.References) > 0 {
 			// Convertir los references del modelo GraphQL al dominio
 			references := make([]domain.ReferenceFilter, len(filter.References))
 			for i, ref := range filter.References {
@@ -125,7 +125,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 			deliveryUnitsFilter.References = references
 		}
 
-		if filter.Labels != nil && len(filter.Labels) > 0 {
+		if len(filter.Labels) > 0 {
 			labels := make([]domain.LabelFilter, len(filter.Labels))
 			for i, label := range filter.Labels {
 				if label != nil {
@@ -138,6 +138,16 @@ func (r *queryResolver) DeliveryUnitsReports(
 			deliveryUnitsFilter.Labels = labels
 		}
 
+		if len(filter.Lpns) > 0 {
+			// Convertir []*string a []string
+			lpns := make([]string, len(filter.Lpns))
+			for i, lpn := range filter.Lpns {
+				if lpn != nil {
+					lpns[i] = *lpn
+				}
+			}
+			deliveryUnitsFilter.Lpns = lpns
+		}
 	}
 
 	results, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)

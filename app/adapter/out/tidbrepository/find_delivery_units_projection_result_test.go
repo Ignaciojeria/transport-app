@@ -1197,6 +1197,148 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
 	})
+
+	It("should filter delivery units by labels", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units con diferentes etiquetas
+		deliveryUnit1 := domain.DeliveryUnit{
+			Lpn: "LPN001",
+			Labels: []domain.Reference{
+				{Type: "PRIORITY", Value: "HIGH"},
+				{Type: "FRAGILE", Value: "YES"},
+			},
+		}
+
+		deliveryUnit2 := domain.DeliveryUnit{
+			Lpn: "LPN002",
+			Labels: []domain.Reference{
+				{Type: "PRIORITY", Value: "LOW"},
+				{Type: "TEMPERATURE", Value: "COLD"},
+			},
+		}
+
+		deliveryUnit3 := domain.DeliveryUnit{
+			Lpn: "LPN003",
+			Labels: []domain.Reference{
+				{Type: "PRIORITY", Value: "HIGH"},
+				{Type: "TEMPERATURE", Value: "HOT"},
+			},
+		}
+
+		// Crear orders con las delivery units
+		orders := []domain.Order{
+			{
+				ReferenceID: "REF-001",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit1,
+				},
+			},
+			{
+				ReferenceID: "REF-002",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit2,
+				},
+			},
+			{
+				ReferenceID: "REF-003",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit3,
+				},
+			},
+		}
+
+		// Insertar delivery units
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
+		Expect(err).ToNot(HaveOccurred())
+
+		// Insertar orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Insertar labels
+		for _, order := range orders {
+			err = NewUpsertDeliveryUnitsLabels(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		// Test filtrando por una sola etiqueta
+		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():        "",
+				projection.DeliveryUnitLabels().String(): "",
+			},
+			Labels: []domain.LabelFilter{
+				{Type: "PRIORITY", Value: "HIGH"},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-001")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-003")),
+		))
+
+		// Test filtrando por múltiples etiquetas
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():        "",
+				projection.DeliveryUnitLabels().String(): "",
+			},
+			Labels: []domain.LabelFilter{
+				{Type: "PRIORITY", Value: "HIGH"},
+				{Type: "TEMPERATURE", Value: "HOT"},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-001")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-003")),
+		))
+
+		// Test filtrando por etiqueta no existente
+		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():        "",
+				projection.DeliveryUnitLabels().String(): "",
+			},
+			Labels: []domain.LabelFilter{
+				{Type: "NON_EXISTENT", Value: "VALUE"},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
+	})
+
 })
 
 // Helper function to create pointer to int

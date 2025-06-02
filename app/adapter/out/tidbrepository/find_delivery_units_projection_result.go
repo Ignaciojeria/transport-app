@@ -67,6 +67,15 @@ func NewFindDeliveryUnitsProjectionResult(
 				goqu.On(goqu.I(o+".document_id").Eq(goqu.I(duh+".order_doc"))),
 			)
 
+		// Agregar join con delivery_units si se solicita cualquier campo relacionado
+		if projection.DeliveryUnit().Has(filters.RequestedFields) ||
+			len(filters.Lpns) > 0 || len(filters.Labels) > 0 {
+			ds = ds.InnerJoin(
+				goqu.T("delivery_units").As(du),
+				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
+			)
+		}
+
 		// Agregar filtro por reference_id si existe
 		if len(filters.ReferenceIds) > 0 {
 			docIds := []string{}
@@ -162,6 +171,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Add delivery unit labels if requested or filtered
 		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) || len(filters.Labels) > 0 {
+
 			ds = ds.With("delivery_unit_labels", goqu.From(goqu.T("delivery_units_labels").As(dul)).
 				Select(
 					goqu.I(dul+".delivery_unit_doc"),
@@ -212,14 +222,6 @@ func NewFindDeliveryUnitsProjectionResult(
 				goqu.On(goqu.I(s+".document_id").Eq(goqu.I(duh+".delivery_unit_status_doc"))),
 			).
 				SelectAppend(goqu.I(s + ".status").As("status"))
-		}
-
-		// LPN and Package Information
-		if projection.DeliveryUnit().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("delivery_units").As(du),
-				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
-			)
 		}
 
 		if projection.DeliveryUnitLPN().Has(filters.RequestedFields) {
