@@ -58,7 +58,7 @@ func (pkgs *DeliveryUnits) assignIndexesIfNoLPN(referenceID string) {
 		groupCounter[key]++
 		pkg.Index = groupCounter[key]
 		pkg.SkuIndex = key
-		pkg.NoLPNReference = referenceID
+		pkg.noLPNReference = referenceID
 	}
 }
 

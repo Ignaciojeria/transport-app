@@ -9,7 +9,7 @@ import (
 type DeliveryUnit struct {
 	SizeCategory    SizeCategory
 	Lpn             string
-	NoLPNReference  string
+	noLPNReference  string
 	Dimensions      Dimensions
 	Weight          Weight
 	Insurance       Insurance
@@ -38,7 +38,7 @@ func (p DeliveryUnit) DocID(ctx context.Context) DocumentID {
 	}
 	sort.Strings(skus)
 	allInputs = append(allInputs, skus...)
-	allInputs = append(allInputs, p.NoLPNReference)
+	allInputs = append(allInputs, p.noLPNReference)
 	return HashByTenant(ctx, allInputs...)
 }
 

@@ -32,7 +32,7 @@ var _ = Describe("Package", func() {
 		It("should generate ID based on reference, index and sorted items when Lpn is empty", func() {
 			pkg := DeliveryUnit{
 				Lpn:            "",
-				NoLPNReference: "REF001",
+				noLPNReference: "REF001",
 				Index:          1,
 				Items: []Item{
 					{Sku: "SKU002"},
@@ -92,7 +92,7 @@ var _ = Describe("Package", func() {
 		It("should handle the case with no LPN and no items", func() {
 			pkg := DeliveryUnit{
 				Lpn:            "",
-				NoLPNReference: "REF001",
+				noLPNReference: "REF001",
 				Items:          []Item{},
 				Index:          1,
 			}
@@ -447,7 +447,7 @@ var _ = Describe("Package", func() {
 		It("should correctly handle packages transitioning from no LPN to having LPN", func() {
 			originalPackage := DeliveryUnit{
 				Lpn:            "",
-				NoLPNReference: "REF001",
+				noLPNReference: "REF001",
 				Index:          1,
 				Items: []Item{
 					{Sku: "SKU001"},
