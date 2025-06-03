@@ -32,9 +32,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 	})
 
 	It("should return delivery units when they exist", func() {
@@ -148,7 +149,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                             "",
 				projection.Channel().String():                                 "",
@@ -179,6 +180,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred(), "Failed to find delivery units: %v", err)
 		Expect(results).To(HaveLen(1), "Expected 1 result, got %d", len(results))
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].ID).To(BeNumerically(">", 0), "ID should be greater than 0")
 		Expect(results[0].OrderReferenceID).To(Equal("123"), "Unexpected reference ID")
 		Expect(results[0].OrderCollectAvailabilityDate).To(Equal("2025-05-26T00:00:00Z"), "Unexpected collect availability date")
@@ -311,7 +313,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.DestinationAddressInfo().String():              "",
 				projection.DestinationContact().String():                  "",
@@ -325,6 +327,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validaciones de Destination Contact
 		Expect(results[0].DestinationContactEmail).To(Equal("test@example.com"))
@@ -410,7 +413,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.DeliveryUnit().String():           "",
 				projection.DeliveryUnitLPN().String():        "",
@@ -424,6 +427,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validaciones de Delivery Unit
 		Expect(results[0].LPN).To(Equal("LPN123"), "LPN incorrecto")
@@ -492,13 +496,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ExtraFields().String(): "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validar que los extra fields se recuperaron correctamente
 		Expect(results[0].ExtraFields).To(Equal(table.JSONMap{
@@ -548,7 +553,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.OrderType().String():            "",
 				projection.OrderTypeType().String():        "",
@@ -557,6 +562,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validar que el order type se recuperó correctamente
 		Expect(results[0].OrderType).To(Equal("EXPRESS"))
@@ -602,13 +608,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.Status().String(): "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validar que el status se recuperó correctamente
 		Expect(results[0].Status).To(Equal(domain.StatusPlanned))
@@ -622,7 +629,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			noTablesContainerConnection,
 			deliveryunits.NewProjection())
-		_, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
+		_, _, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("delivery_units_histories"))
 	})
@@ -686,13 +693,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.References().String(): "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validar que las referencias se recuperaron correctamente
 		Expect(results[0].OrderReferences).To(HaveLen(3))
@@ -759,13 +767,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.DeliveryUnitLabels().String(): "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validar que las etiquetas se recuperaron correctamente
 		Expect(results[0].DeliveryUnitLabels).To(HaveLen(3))
@@ -863,7 +872,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.OriginAddressInfo().String():                  "",
 				projection.OriginAddressLine1().String():                 "",
@@ -890,6 +899,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 
 		// Validaciones de Origin Address
 		Expect(results[0].OriginAddressLine1).To(Equal("456 Park Ave"))
@@ -973,7 +983,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 
 		// Probar paginación hacia adelante
-		forwardResults, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		forwardResults, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			Pagination: domain.Pagination{
 				First: ptr(1),
 			},
@@ -983,11 +993,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(forwardResults).To(HaveLen(1))
+		Expect(hasMore).To(BeTrue(), "Debería indicar que hay más resultados")
 		// Verificar que tenemos el primer order
 		Expect(forwardResults[0].OrderReferenceID).To(Equal("order1"))
 
 		// Probar paginación hacia atrás
-		backwardResults, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		backwardResults, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			Pagination: domain.Pagination{
 				Last: ptr(1),
 			},
@@ -997,21 +1008,36 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(backwardResults).To(HaveLen(1))
+		Expect(hasMore).To(BeTrue(), "Debería indicar que hay más resultados")
 		// Verificar que tenemos el último order (el repositorio aplica Reversed() internamente)
 		Expect(backwardResults[0].OrderReferenceID).To(Equal("order3"))
 
 		// Probar sin paginación - debería devolver todos los resultados en orden ascendente
-		noPaginationResults, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		noPaginationResults, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(noPaginationResults).To(HaveLen(3))
+		Expect(hasMore).To(BeFalse(), "No debería indicar que hay más resultados cuando se obtienen todos")
 		// Verificar que tenemos todos los orders en orden ascendente
 		Expect(noPaginationResults[0].OrderReferenceID).To(Equal("order1"))
 		Expect(noPaginationResults[1].OrderReferenceID).To(Equal("order2"))
 		Expect(noPaginationResults[2].OrderReferenceID).To(Equal("order3"))
+
+		// Probar paginación con límite igual al total de resultados
+		exactLimitResults, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			Pagination: domain.Pagination{
+				First: ptr(3),
+			},
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(exactLimitResults).To(HaveLen(3))
+		Expect(hasMore).To(BeFalse(), "No debería indicar que hay más resultados cuando el límite es igual al total")
 	})
 
 	It("should filter delivery units by references", func() {
@@ -1069,7 +1095,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			conn,
 			projection)
 
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 				projection.References().String():  "",
@@ -1080,10 +1106,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
 
 		// Test filtering by multiple references
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 				projection.References().String():  "",
@@ -1094,10 +1121,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].OrderReferenceID).To(Equal("REF-002"))
 
 		// Test filtering with non-existent reference
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 				projection.References().String():  "",
@@ -1108,6 +1136,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 	})
 
 	It("should filter delivery units by reference ids", func() {
@@ -1160,7 +1189,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			projection)
 
 		// Test filtering by a single reference ID
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
@@ -1168,10 +1197,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
 
 		// Test filtering by multiple reference IDs
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
@@ -1179,6 +1209,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1189,7 +1220,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		))
 
 		// Test filtering with non-existent reference ID
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
@@ -1197,6 +1228,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 	})
 
 	It("should filter delivery units by labels", func() {
@@ -1284,7 +1316,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			projection)
 
 		// Test filtrando por una sola etiqueta
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():        "",
 				projection.DeliveryUnitLabels().String(): "",
@@ -1295,6 +1327,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1305,7 +1338,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		))
 
 		// Test filtrando por múltiples etiquetas
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():        "",
 				projection.DeliveryUnitLabels().String(): "",
@@ -1317,6 +1350,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1327,7 +1361,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		))
 
 		// Test filtrando por etiqueta no existente
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():        "",
 				projection.DeliveryUnitLabels().String(): "",
@@ -1338,6 +1372,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 	})
 
 	It("should filter delivery units by LPNs", func() {
@@ -1407,7 +1442,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			projection)
 
 		// Test filtrando por un solo LPN
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():     "",
 				projection.DeliveryUnitLPN().String(): "",
@@ -1416,10 +1451,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
 
 		// Test filtrando por múltiples LPNs
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():     "",
 				projection.DeliveryUnitLPN().String(): "",
@@ -1428,6 +1464,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1438,7 +1475,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		))
 
 		// Test filtrando por LPN no existente
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():     "",
 				projection.DeliveryUnitLPN().String(): "",
@@ -1447,6 +1484,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 	})
 
 	It("should filter delivery units by coordinates confidence level according to the test matrix", func() {
@@ -1590,7 +1628,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			projection)
 
 		// Caso 1: Sin filtros
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.DestinationAddressInfo().String():                "",
 				projection.ReferenceID().String():                           "",
@@ -1599,6 +1637,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(6))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1622,7 +1661,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Caso 2: Min = 0.5, Max = nil
 		minConfidence := 0.5
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1633,6 +1672,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(4))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1650,7 +1690,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Caso 3: Min = nil, Max = 0.5
 		maxConfidence := 0.5
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1661,6 +1701,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1673,7 +1714,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Caso 4: Min = 0.5, Max = 0.8
 		minConfidence = 0.5
 		maxConfidence = 0.8
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1685,6 +1726,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1697,7 +1739,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Caso 5: Min = 0.7, Max = 0.7 (match exacto)
 		minConfidence = 0.7
 		maxConfidence = 0.7
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1709,10 +1751,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results[0].OrderReferenceID).To(Equal("REF-D"))
+		Expect(hasMore).To(BeFalse())
 
 		// Caso 6: Min = 1.1, Max = nil (ningún registro cumple)
 		minConfidence = 1.1
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1723,10 +1766,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 
 		// Caso 7: Min = nil, Max = 0.0 (ningún registro cumple)
 		maxConfidence = 0.0
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1737,11 +1781,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
 
 		// Caso 8: Min = 0.0, Max = 1.0 (todos los registros)
 		minConfidence = 0.0
 		maxConfidence = 1.0
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
@@ -1753,6 +1798,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(6))
+		Expect(hasMore).To(BeFalse())
 		Expect(results).To(ContainElements(
 			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
 				return r.OrderReferenceID
@@ -1832,7 +1878,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			projection,
 		)
 
-		results, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
@@ -1840,10 +1886,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1), "Debería retornar solo una unidad de entrega")
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].OrderReferenceID).To(Equal("ORDER-001"), "Debería retornar la orden con el nodo de origen especificado")
 
 		// Buscar unidades de entrega filtrando por el segundo nodo de origen
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
@@ -1851,14 +1898,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1), "Debería retornar solo una unidad de entrega")
+		Expect(hasMore).To(BeFalse())
 		Expect(results[0].OrderReferenceID).To(Equal("ORDER-002"), "Debería retornar la orden con el nodo de origen especificado")
 
 		// Buscar unidades de entrega filtrando por ambos nodos de origen
-		results, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			OriginNodeReferences: []string{"NODE-001", "NODE-002"},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2), "Debería retornar ambas unidades de entrega")
+		Expect(hasMore).To(BeFalse())
 	})
 
 })

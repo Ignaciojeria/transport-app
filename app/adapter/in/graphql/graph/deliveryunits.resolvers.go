@@ -33,19 +33,16 @@ func (r *queryResolver) DeliveryUnitsReports(
 
 	// Definir límites
 	const maxLimit = 100 // límite máximo razonable para paginación
-	limit := 1           // valor por defecto
 
 	// Procesar first/last
 	if first != nil {
 		if *first > maxLimit {
 			return nil, fmt.Errorf("requested limit %d exceeds maximum allowed limit of %d", *first, maxLimit)
 		}
-		limit = *first
 	} else if last != nil {
 		if *last > maxLimit {
 			return nil, fmt.Errorf("requested limit %d exceeds maximum allowed limit of %d", *last, maxLimit)
 		}
-		limit = *last
 	}
 
 	// Procesar cursores si existen
@@ -168,18 +165,12 @@ func (r *queryResolver) DeliveryUnitsReports(
 		}
 	}
 
-	results, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)
+	results, hasMore, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	// Verificar si hay más páginas antes de mapear
-	hasNextPage := len(results) > limit
-	if hasNextPage {
-		results = results[:limit] // quitar el elemento extra antes de mapear
-	}
-
-	// Mapear solo los resultados que vamos a mostrar
+	// Mapear los resultados
 	deliveryUnits := mapper.MapDeliveryUnits(ctx, results)
 
 	// Construir edges
@@ -202,13 +193,14 @@ func (r *queryResolver) DeliveryUnitsReports(
 
 	// Determinar hasPreviousPage y hasNextPage
 	hasPreviousPage := before != nil
+	var hasNextPage bool
 	if last != nil {
 		// En paginación hacia atrás, hasNextPage es true si hay más resultados
-		hasNextPage = len(results) > limit
-		hasPreviousPage = len(results) > limit
+		hasNextPage = hasMore
+		hasPreviousPage = hasMore
 	} else {
 		// En paginación hacia adelante, hasNextPage es true si hay más resultados
-		hasNextPage = len(results) > limit
+		hasNextPage = hasMore
 	}
 
 	pageInfo := &model.PageInfo{

@@ -2,6 +2,7 @@ package tidbrepository
 
 import (
 	"context"
+	"time"
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
@@ -14,7 +15,7 @@ import (
 
 type FindDeliveryUnitsProjectionResult func(
 	ctx context.Context,
-	filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, error)
+	filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, bool, error)
 
 func init() {
 	ioc.Registry(
@@ -46,8 +47,9 @@ func NewFindDeliveryUnitsProjectionResult(
 		s    = "s"    // status
 	)
 
-	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, error) {
+	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, bool, error) {
 		var results projectionresult.DeliveryUnitsProjectionResults
+		hasMoreResults := false
 
 		// Dataset base
 		baseQuery := goqu.From(goqu.T("delivery_units_histories").As(duh)).
@@ -118,12 +120,31 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if filters.Pagination.IsForward() {
-			ds = ds.Order(goqu.I("duh.id").Asc())
+			ds = ds.Order(goqu.I(duh+".updated_at").Asc(), goqu.I(duh+".id").Asc())
 
 			if afterID, err := filters.Pagination.AfterID(); err != nil {
-				return nil, err
+				return nil, false, err
 			} else if afterID != nil {
-				ds = ds.Where(goqu.I("duh.id").Gt(*afterID))
+				// Obtener el updated_at del registro con ese ID
+				var updatedAt time.Time
+				err := conn.WithContext(ctx).
+					Table("delivery_units_histories").
+					Select("updated_at").
+					Where("id = ?", *afterID).
+					Scan(&updatedAt).Error
+				if err != nil {
+					return nil, false, err
+				}
+
+				ds = ds.Where(
+					goqu.Or(
+						goqu.I(duh+".updated_at").Gt(updatedAt),
+						goqu.And(
+							goqu.I(duh+".updated_at").Eq(updatedAt),
+							goqu.I(duh+".id").Gt(*afterID),
+						),
+					),
+				)
 			}
 
 			limit := *filters.Pagination.First + 1 // pedir uno extra para saber si hay más
@@ -131,29 +152,35 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if filters.Pagination.IsBackward() {
-			ds = ds.Order(goqu.I("duh.id").Desc())
+			ds = ds.Order(goqu.I(duh+".updated_at").Desc(), goqu.I(duh+".id").Desc())
 
 			if beforeID, err := filters.Pagination.BeforeID(); err != nil {
-				return nil, err
+				return nil, false, err
 			} else if beforeID != nil {
-				ds = ds.Where(goqu.I("duh.id").Lt(*beforeID))
+				// Obtener el updated_at del registro con ese ID
+				var updatedAt time.Time
+				err := conn.WithContext(ctx).
+					Table("delivery_units_histories").
+					Select("updated_at").
+					Where("id = ?", *beforeID).
+					Scan(&updatedAt).Error
+				if err != nil {
+					return nil, false, err
+				}
+
+				ds = ds.Where(
+					goqu.Or(
+						goqu.I(duh+".updated_at").Lt(updatedAt),
+						goqu.And(
+							goqu.I(duh+".updated_at").Eq(updatedAt),
+							goqu.I(duh+".id").Lt(*beforeID),
+						),
+					),
+				)
 			}
 
 			limit := *filters.Pagination.Last + 1
 			ds = ds.Limit(uint(limit))
-		}
-
-		if filters.Pagination.IsForward() {
-			ds = ds.Order(goqu.I(duh + ".id").Asc())
-			if filters.Pagination.First != nil {
-				ds = ds.Limit(uint(*filters.Pagination.First))
-			}
-		}
-		if filters.Pagination.IsBackward() {
-			ds = ds.Order(goqu.I(duh + ".id").Desc())
-			if filters.Pagination.Last != nil {
-				ds = ds.Limit(uint(*filters.Pagination.Last))
-			}
 		}
 
 		// Add order references using WITH clause if either requested or filtered
@@ -558,18 +585,27 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		sql, args, err := ds.Prepared(true).ToSQL()
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 
 		err = conn.WithContext(ctx).Raw(sql, args...).Scan(&results).Error
 		if err != nil {
-			return nil, err
+			return nil, false, err
+		}
+
+		// Si hay más resultados que el límite solicitado, eliminar el último resultado
+		if filters.Pagination.IsForward() && len(results) > *filters.Pagination.First {
+			results = results[:*filters.Pagination.First]
+			hasMoreResults = true
+		} else if filters.Pagination.IsBackward() && len(results) > *filters.Pagination.Last {
+			results = results[:*filters.Pagination.Last]
+			hasMoreResults = true
 		}
 
 		if filters.Pagination.IsBackward() {
 			results = results.Reversed()
 		}
 
-		return results, nil
+		return results, hasMoreResults, nil
 	}
 }
