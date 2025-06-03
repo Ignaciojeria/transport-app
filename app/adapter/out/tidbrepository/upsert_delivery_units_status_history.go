@@ -25,19 +25,14 @@ func NewUpsertDeliveryUnitsHistory(conn database.ConnectionFactory) UpsertDelive
 
 		// For each delivery unit history record
 		for _, duh := range deliveryUnitsHistory {
-			var existing table.DeliveryUnitsHistory
+			var existing table.DeliveryUnitsStatusHistory
 			err := conn.DB.WithContext(ctx).
-				Table("delivery_units_histories").
+				Table("delivery_units_status_histories").
 				Where("document_id = ?", duh.DocumentID).
 				First(&existing).Error
 
 			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
-			}
-
-			// Si ya existe, lo saltamos ya que es inmutable
-			if err == nil {
-				continue
 			}
 
 			// No existe → insert

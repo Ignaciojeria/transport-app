@@ -29,7 +29,7 @@ func NewFindDeliveryUnitsProjectionResult(
 	conn database.ConnectionFactory,
 	projection deliveryunits.Projection) FindDeliveryUnitsProjectionResult {
 	const (
-		duh  = "duh"  // delivery_units_histories
+		duh  = "duh"  // delivery_units_status_histories
 		o    = "o"    // orders
 		or   = "or"   // order_references
 		dadi = "dadi" // destination_address_infos
@@ -52,7 +52,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		hasMoreResults := false
 
 		// Dataset base
-		baseQuery := goqu.From(goqu.T("delivery_units_histories").As(duh)).
+		baseQuery := goqu.From(goqu.T("delivery_units_status_histories").As(duh)).
 			Select(goqu.I(duh + ".id").As("id")).
 			Where(goqu.Ex{
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
@@ -61,7 +61,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		ds := goqu.From(baseQuery.As("base")).
 			Select(goqu.I("base.id").As("id")).
 			InnerJoin(
-				goqu.T("delivery_units_histories").As(duh),
+				goqu.T("delivery_units_status_histories").As(duh),
 				goqu.On(goqu.I(duh+".id").Eq(goqu.I("base.id"))),
 			).
 			InnerJoin(
@@ -128,7 +128,7 @@ func NewFindDeliveryUnitsProjectionResult(
 				// Obtener el updated_at del registro con ese ID
 				var updatedAt time.Time
 				err := conn.WithContext(ctx).
-					Table("delivery_units_histories").
+					Table("delivery_units_status_histories").
 					Select("updated_at").
 					Where("id = ?", *afterID).
 					Scan(&updatedAt).Error
@@ -160,7 +160,7 @@ func NewFindDeliveryUnitsProjectionResult(
 				// Obtener el updated_at del registro con ese ID
 				var updatedAt time.Time
 				err := conn.WithContext(ctx).
-					Table("delivery_units_histories").
+					Table("delivery_units_status_histories").
 					Select("updated_at").
 					Where("id = ?", *beforeID).
 					Scan(&updatedAt).Error
@@ -263,7 +263,7 @@ func NewFindDeliveryUnitsProjectionResult(
 			}
 		}
 
-		// Campos de delivery_units_histories
+		// Campos de delivery_units_status_histories
 		if projection.Channel().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(duh + ".channel").As("channel"))
 		}

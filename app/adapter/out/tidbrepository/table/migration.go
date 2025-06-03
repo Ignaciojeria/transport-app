@@ -56,7 +56,7 @@ func NewRunMigrations(
 			&Plan{},
 			&PlanHeaders{},
 			&Route{},
-			&DeliveryUnitsHistory{},
+			&DeliveryUnitsStatusHistory{},
 			&SizeCategory{},
 			&DeliveryUnitsLabels{},
 		}

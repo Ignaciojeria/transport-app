@@ -7,12 +7,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type DeliveryUnitsHistory struct {
+type DeliveryUnitsStatusHistory struct {
 	gorm.Model
 	ID                       int64              `gorm:"primaryKey"`
 	TenantID                 uuid.UUID          `gorm:"not null"`
 	Tenant                   Tenant             `gorm:"foreignKey:TenantID"`
-	DocumentID               string             `gorm:"type:char(64);uniqueIndex"`
+	DocumentID               string             `gorm:"type:char(64);"`
 	Channel                  string             `gorm:"default:''"`
 	OrderDoc                 string             `gorm:"type:char(64);index"`
 	DeliveryUnitDoc          string             `gorm:"type:char(64);index"`

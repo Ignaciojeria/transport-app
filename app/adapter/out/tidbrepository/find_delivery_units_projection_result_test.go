@@ -138,7 +138,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Verify delivery units history was created
 		var historyCount int64
 		err = conn.DB.WithContext(ctx).
-			Table("delivery_units_histories").
+			Table("delivery_units_status_histories").
 			Where("order_doc = ?", order.DocID(ctx)).
 			Count(&historyCount).Error
 		Expect(err).ToNot(HaveOccurred(), "Failed to verify delivery units history: %v", err)
@@ -621,7 +621,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].Status).To(Equal(domain.StatusPlanned))
 	})
 
-	It("should fail if database has no delivery_units_histories table", func() {
+	It("should fail if database has no delivery_units_status_histories table", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
@@ -631,7 +631,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 		_, _, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("delivery_units_histories"))
+		Expect(err.Error()).To(ContainSubstring("delivery_units_status_histories"))
 	})
 
 	It("should return delivery units with order references", func() {

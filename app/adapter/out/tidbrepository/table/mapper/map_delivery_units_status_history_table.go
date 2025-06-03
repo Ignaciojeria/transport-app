@@ -9,13 +9,13 @@ import (
 	"transport-app/app/shared/sharedcontext"
 )
 
-func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.DeliveryUnitsHistory {
-	var deliveryUnitsHistory []table.DeliveryUnitsHistory
+func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.DeliveryUnitsStatusHistory {
+	var deliveryUnitsHistory []table.DeliveryUnitsStatusHistory
 
 	for _, route := range p.Routes {
 		for _, order := range route.Orders {
 			for _, pkg := range order.DeliveryUnits {
-				deliveryUnitsHistory = append(deliveryUnitsHistory, table.DeliveryUnitsHistory{
+				deliveryUnitsHistory = append(deliveryUnitsHistory, table.DeliveryUnitsStatusHistory{
 					OrderDoc:                 string(order.DocID(ctx)),
 					TenantID:                 sharedcontext.TenantIDFromContext(ctx),
 					DeliveryUnitDoc:          string(pkg.DocID(ctx)),
