@@ -53,13 +53,20 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Dataset base
 		baseQuery := goqu.From(goqu.T("delivery_units_status_histories").As(duh)).
-			Select(goqu.I(duh + ".id").As("id")).
+			Select(
+				goqu.I(duh+".id").As("id"),
+				goqu.I(duh+".updated_at").As("updated_at"),
+			).
 			Where(goqu.Ex{
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
-			})
+			}).
+			Order(goqu.I(duh + ".document_id").Asc())
 
 		ds := goqu.From(baseQuery.As("base")).
-			Select(goqu.I("base.id").As("id")).
+			Select(
+				goqu.I("base.id").As("id"),
+				goqu.I("base.updated_at").As("updated_at"),
+			).
 			InnerJoin(
 				goqu.T("delivery_units_status_histories").As(duh),
 				goqu.On(goqu.I(duh+".id").Eq(goqu.I("base.id"))),
@@ -117,6 +124,28 @@ func NewFindDeliveryUnitsProjectionResult(
 			if filters.CoordinatesConfidenceLevel.Max != nil {
 				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Lte(*filters.CoordinatesConfidenceLevel.Max))
 			}
+		}
+
+		// Agregar ordenamiento por reference_id
+		if filters.Pagination.IsForward() {
+			if filters.Pagination.HasAfter() {
+				// Si hay cursor, ordenar por updated_at e id
+				ds = ds.Order(goqu.I(duh+".updated_at").Asc(), goqu.I(duh+".id").Asc())
+			} else {
+				// Si no hay cursor, ordenar por reference_id
+				ds = ds.Order(goqu.I(o + ".reference_id").Asc())
+			}
+		} else if filters.Pagination.IsBackward() {
+			if filters.Pagination.HasBefore() {
+				// Si hay cursor, ordenar por updated_at e id
+				ds = ds.Order(goqu.I(duh+".updated_at").Desc(), goqu.I(duh+".id").Desc())
+			} else {
+				// Si no hay cursor, ordenar por reference_id
+				ds = ds.Order(goqu.I(o + ".reference_id").Desc())
+			}
+		} else {
+			// Si no hay paginación, ordenar por reference_id ascendente
+			ds = ds.Order(goqu.I(o + ".reference_id").Asc())
 		}
 
 		if filters.Pagination.IsForward() {
