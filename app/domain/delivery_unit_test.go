@@ -31,14 +31,15 @@ var _ = Describe("Package", func() {
 
 		It("should generate ID based on reference, index and sorted items when Lpn is empty", func() {
 			pkg := DeliveryUnit{
-				Lpn:   "",
-				Index: 1,
+				Lpn:            "",
+				NoLPNReference: "REF001",
+				Index:          1,
 				Items: []Item{
 					{Sku: "SKU002"},
 					{Sku: "SKU001"},
 				},
 			}
-			expectedInputs := []string{"index:1", "SKU001", "SKU002"} // ordenados
+			expectedInputs := []string{"index:1", "SKU001", "SKU002", "REF001"} // ordenados
 			Expect(pkg.DocID(ctx1)).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 		})
 
@@ -90,12 +91,13 @@ var _ = Describe("Package", func() {
 
 		It("should handle the case with no LPN and no items", func() {
 			pkg := DeliveryUnit{
-				Lpn:   "",
-				Items: []Item{},
-				Index: 1,
+				Lpn:            "",
+				NoLPNReference: "REF001",
+				Items:          []Item{},
+				Index:          1,
 			}
 
-			expected := HashByTenant(ctx1, "index:1")
+			expected := HashByTenant(ctx1, "index:1", "REF001")
 			Expect(pkg.DocID(ctx1)).To(Equal(expected))
 		})
 
@@ -444,15 +446,16 @@ var _ = Describe("Package", func() {
 
 		It("should correctly handle packages transitioning from no LPN to having LPN", func() {
 			originalPackage := DeliveryUnit{
-				Lpn:   "",
-				Index: 1,
+				Lpn:            "",
+				NoLPNReference: "REF001",
+				Index:          1,
 				Items: []Item{
 					{Sku: "SKU001"},
 					{Sku: "SKU002"},
 				},
 			}
 
-			expectedInputs := []string{"index:1", "SKU001", "SKU002"}
+			expectedInputs := []string{"index:1", "SKU001", "SKU002", "REF001"}
 			originalDocID := originalPackage.DocID(ctx1)
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 

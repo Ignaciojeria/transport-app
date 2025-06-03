@@ -9,6 +9,7 @@ import (
 type DeliveryUnit struct {
 	SizeCategory    SizeCategory
 	Lpn             string
+	NoLPNReference  string
 	Dimensions      Dimensions
 	Weight          Weight
 	Insurance       Insurance
@@ -37,7 +38,7 @@ func (p DeliveryUnit) DocID(ctx context.Context) DocumentID {
 	}
 	sort.Strings(skus)
 	allInputs = append(allInputs, skus...)
-
+	allInputs = append(allInputs, p.NoLPNReference)
 	return HashByTenant(ctx, allInputs...)
 }
 
@@ -85,22 +86,14 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 	return p, changed
 }
 
-/*
-func (p *Package) ExplodeIfNoLpn() []Package {
-	// Si el paquete tiene LPN, se considera agrupado y no se descompone
-	if p.Lpn != "" {
-		return []Package{*p}
+func (p *DeliveryUnit) UpdateStatusBasedOnNonDelivery() {
+	if p.ConfirmDelivery.NonDeliveryReason.IsEmpty() {
+		p.Status = Status{
+			Status: StatusFinished,
+		}
+	} else {
+		p.Status = Status{
+			Status: StatusPending,
+		}
 	}
-
-	var exploded []Package
-	for _, item := range p.Items {
-		exploded = append(exploded, Package{
-			Dimensions: p.Dimensions, // Puedes replicar si aplica
-			Weight:     item.Weight,  // O usar el general si prefieres
-			Insurance:  item.Insurance,
-			Items:      []Item{item},
-		})
-	}
-	return exploded
 }
-*/

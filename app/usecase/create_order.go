@@ -48,6 +48,7 @@ func NewCreateOrder(
 		normalizationGroup, group1Ctx := errgroup.WithContext(ctx)
 		inOrder.Origin.AddressInfo.ToLowerAndRemovePunctuation()
 		inOrder.Destination.AddressInfo.ToLowerAndRemovePunctuation()
+		inOrder.AssignIndexesIfNoLPN()
 		normalizationGroup.Go(func() error {
 			return inOrder.Origin.AddressInfo.NormalizeAndGeocode(
 				group1Ctx,

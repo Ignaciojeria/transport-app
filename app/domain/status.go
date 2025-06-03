@@ -6,6 +6,7 @@ import (
 
 const (
 	StatusAvailable = "available"
+	StatusPending   = "pending"
 	StatusScanned   = "scanned"
 	StatusPicked    = "picked"
 	StatusPlanned   = "planned"

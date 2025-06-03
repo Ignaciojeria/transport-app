@@ -28,3 +28,7 @@ func (r NonDeliveryReason) UpdateIfChanged(newR NonDeliveryReason) (NonDeliveryR
 
 	return updated, changed
 }
+
+func (r NonDeliveryReason) IsEmpty() bool {
+	return r.ReferenceID == "" && r.Reason == "" && r.Details == ""
+}

@@ -31,9 +31,13 @@ type Order struct {
 	}
 }
 
+func (o *Order) AssignIndexesIfNoLPN() {
+	o.DeliveryUnits.assignIndexesIfNoLPN(o.ReferenceID.String())
+}
+
 type DeliveryUnits []DeliveryUnit
 
-func (pkgs *DeliveryUnits) AssignIndexesIfNoLPN() {
+func (pkgs *DeliveryUnits) assignIndexesIfNoLPN(referenceID string) {
 	groupCounter := make(map[string]int)
 
 	for i := range *pkgs {
@@ -54,6 +58,7 @@ func (pkgs *DeliveryUnits) AssignIndexesIfNoLPN() {
 		groupCounter[key]++
 		pkg.Index = groupCounter[key]
 		pkg.SkuIndex = key
+		pkg.NoLPNReference = referenceID
 	}
 }
 

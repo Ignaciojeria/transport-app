@@ -382,7 +382,7 @@ var _ = Describe("Order DocID", func() {
 				{Lpn: "", Items: []Item{{Sku: "SKU-3"}}},      // First occurrence of SKU-3
 			}
 
-			packages.AssignIndexesIfNoLPN()
+			packages.assignIndexesIfNoLPN("REF-0001")
 
 			expectations := []int{0, 1, 1, 2, 2, 1} // LPN package has index 0, others are counted by SKU
 
@@ -416,7 +416,7 @@ var _ = Describe("Order DocID", func() {
 				},
 			}
 
-			packages.AssignIndexesIfNoLPN()
+			packages.assignIndexesIfNoLPN("REF-0001")
 
 			// Primer grupo: A,B
 			Expect(packages[0].Index).To(Equal(1))

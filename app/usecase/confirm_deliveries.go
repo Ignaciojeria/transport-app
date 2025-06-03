@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"context"
-	"fmt"
+	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -11,12 +11,19 @@ import (
 type ConfirmDeliveries func(ctx context.Context, input domain.Route) error
 
 func init() {
-	ioc.Registry(NewConfirmDeliveries)
+	ioc.Registry(NewConfirmDeliveries, tidbrepository.NewUpsertDeliveryUnitsHistory)
 }
 
-func NewConfirmDeliveries() ConfirmDeliveries {
+func NewConfirmDeliveries(
+	upsertDeliveryUnitsHistory tidbrepository.UpsertDeliveryUnitsHistory) ConfirmDeliveries {
 	return func(ctx context.Context, input domain.Route) error {
-		fmt.Println(input)
-		return nil
+		for i := range input.Orders {
+			for j := range input.Orders[i].DeliveryUnits {
+				input.Orders[i].DeliveryUnits[j].UpdateStatusBasedOnNonDelivery()
+			}
+		}
+		return upsertDeliveryUnitsHistory(ctx, domain.Plan{
+			Routes: []domain.Route{input},
+		})
 	}
 }

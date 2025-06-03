@@ -47,6 +47,10 @@ func NewLoadStatuses(conn database.ConnectionFactory) LoadStatuses {
 			ID:     7,
 			Status: domain.StatusFinished,
 		}
+		pending := domain.Status{
+			ID:     8,
+			Status: domain.StatusPending,
+		}
 		var records = []table.Status{
 			{ID: 1, Status: available.Status, DocumentID: available.DocID().String()},
 			{ID: 2, Status: scanned.Status, DocumentID: scanned.DocID().String()},
@@ -55,7 +59,9 @@ func NewLoadStatuses(conn database.ConnectionFactory) LoadStatuses {
 			{ID: 5, Status: inTransit.Status, DocumentID: inTransit.DocID().String()},
 			{ID: 6, Status: cancelled.Status, DocumentID: cancelled.DocID().String()},
 			{ID: 7, Status: finished.Status, DocumentID: finished.DocID().String()},
+			{ID: 8, Status: pending.Status, DocumentID: pending.DocID().String()},
 		}
+
 		if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
 			return err
 		}
