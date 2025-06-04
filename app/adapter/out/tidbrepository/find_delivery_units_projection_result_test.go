@@ -1910,6 +1910,78 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(hasMore).To(BeFalse())
 	})
 
+	It("should filter by onlyLatestStatus flag", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear múltiples estados para la misma unidad de entrega
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear otro estado para la misma unidad
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+
+		// Test con onlyLatestStatus = true
+		resultsWithLatest, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			OnlyLatestStatus: true,
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(resultsWithLatest).To(HaveLen(1), "Debería retornar solo el último estado")
+		Expect(hasMore).To(BeFalse())
+
+		// Test con onlyLatestStatus = false
+		resultsWithoutLatest, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			OnlyLatestStatus: false,
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(resultsWithoutLatest).To(HaveLen(2), "Debería retornar todos los estados")
+		Expect(hasMore).To(BeFalse())
+
+		// Verificar que el ID del resultado con onlyLatestStatus es mayor que el otro
+		Expect(resultsWithLatest[0].ID).To(BeNumerically(">", resultsWithoutLatest[0].ID),
+			"El ID del último estado debería ser mayor")
+	})
+
 })
 
 // Helper function to create pointer to int

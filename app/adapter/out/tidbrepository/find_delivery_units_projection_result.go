@@ -54,7 +54,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		var baseQuery *goqu.SelectDataset
 
-		if true {
+		if filters.OnlyLatestStatus {
 			// Subquery que agrupa y obtiene el último id por combinación
 			latestIDsSubquery := goqu.From(goqu.T("delivery_units_status_histories").As(duh)).
 				Select(
@@ -73,7 +73,9 @@ func NewFindDeliveryUnitsProjectionResult(
 					goqu.I("delivery_units_status_histories.id").Eq(goqu.I("latest_ids.id")),
 				)).
 				Select(goqu.I("delivery_units_status_histories.id"))
-		} else {
+		}
+
+		if !filters.OnlyLatestStatus {
 			// Opción sin filtrar por último estado
 			baseQuery = goqu.From("delivery_units_status_histories").
 				Where(goqu.Ex{
