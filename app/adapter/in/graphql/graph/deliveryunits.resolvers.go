@@ -96,106 +96,17 @@ func (r *queryResolver) DeliveryUnitsReports(
 		Pagination:      pagination,
 	}
 
-	// Agregar filtros si existen
+	// Mapear los filtros si existen
 	if filter != nil {
-		if filter.OnlyLatestStatus != nil {
-			deliveryUnitsFilter.OnlyLatestStatus = *filter.OnlyLatestStatus
-		}
-
-		if len(filter.ReferenceIds) > 0 {
-			// Convertir []*string a []string
-			referenceIds := make([]string, len(filter.ReferenceIds))
-			for i, ref := range filter.ReferenceIds {
-				if ref != nil {
-					referenceIds[i] = *ref
-				}
-			}
-			deliveryUnitsFilter.ReferenceIds = referenceIds
-		}
-
-		if len(filter.References) > 0 {
-			// Convertir los references del modelo GraphQL al dominio
-			references := make([]domain.ReferenceFilter, len(filter.References))
-			for i, ref := range filter.References {
-				if ref != nil {
-					references[i] = domain.ReferenceFilter{
-						Type:  ref.Type,
-						Value: ref.Value,
-					}
-				}
-			}
-			deliveryUnitsFilter.References = references
-		}
-
-		if len(filter.Labels) > 0 {
-			labels := make([]domain.LabelFilter, len(filter.Labels))
-			for i, label := range filter.Labels {
-				if label != nil {
-					labels[i] = domain.LabelFilter{
-						Type:  label.Type,
-						Value: label.Value,
-					}
-				}
-			}
-			deliveryUnitsFilter.Labels = labels
-		}
-
-		if len(filter.Lpns) > 0 {
-			// Convertir []*string a []string
-			lpns := make([]string, len(filter.Lpns))
-			for i, lpn := range filter.Lpns {
-				if lpn != nil {
-					lpns[i] = *lpn
-				}
-			}
-			deliveryUnitsFilter.Lpns = lpns
-		}
-
-		if len(filter.OriginNodeReferences) > 0 {
-			// Convertir []*string a []string
-			originNodeReferences := make([]string, len(filter.OriginNodeReferences))
-			for i, ref := range filter.OriginNodeReferences {
-				if ref != nil {
-					originNodeReferences[i] = *ref
-				}
-			}
-			deliveryUnitsFilter.OriginNodeReferences = originNodeReferences
-		}
-
-		if filter.CoordinatesConfidenceLevel != nil {
-			deliveryUnitsFilter.CoordinatesConfidenceLevel = &domain.CoordinatesConfidenceLevelFilter{
-				Min: filter.CoordinatesConfidenceLevel.Min,
-				Max: filter.CoordinatesConfidenceLevel.Max,
-			}
-		}
-
-		if filter.PromisedDateRangeFilter != nil {
-			deliveryUnitsFilter.PromisedDateRange = &domain.PromisedDateRangeFilter{
-				StartDate: filter.PromisedDateRangeFilter.StartDate,
-				EndDate:   filter.PromisedDateRangeFilter.EndDate,
-			}
-		}
-
-		if len(filter.SizeCategories) > 0 {
-			// Convertir []*string a []string
-			sizeCategories := make([]string, len(filter.SizeCategories))
-			for i, size := range filter.SizeCategories {
-				if size != nil {
-					sizeCategories[i] = *size
-				}
-			}
-			deliveryUnitsFilter.SizeCategories = sizeCategories
-		}
-
-		if len(filter.CollectAvailabilityDates) > 0 {
-			// Convertir []*string a []string
-			collectAvailabilityDates := make([]string, len(filter.CollectAvailabilityDates))
-			for i, date := range filter.CollectAvailabilityDates {
-				if date != nil {
-					collectAvailabilityDates[i] = *date
-				}
-			}
-			deliveryUnitsFilter.CollectAvailabilityDates = collectAvailabilityDates
+		mappedFilter := mapper.MapDeliveryUnitsFilter(filter)
+		if mappedFilter != nil {
+			deliveryUnitsFilter.Order = mappedFilter.Order
+			deliveryUnitsFilter.DeliveryUnit = mappedFilter.DeliveryUnit
+			deliveryUnitsFilter.Origin = mappedFilter.Origin
+			deliveryUnitsFilter.Destination = mappedFilter.Destination
+			deliveryUnitsFilter.PromisedDate = mappedFilter.PromisedDate
+			deliveryUnitsFilter.CollectAvailability = mappedFilter.CollectAvailability
+			deliveryUnitsFilter.OnlyLatestStatus = mappedFilter.OnlyLatestStatus
 		}
 	}
 

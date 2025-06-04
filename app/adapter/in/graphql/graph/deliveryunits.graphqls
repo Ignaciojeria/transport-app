@@ -224,41 +224,94 @@ type DeliveryUnitsReport {
   delivery: Delivery
 }
 
-  # 🔎 Filtro
-  input DeliveryUnitsReportFilterInput {
-    referenceIds: [String]
-    lpns: [String]
-    sizeCategories:[String]
-    originNodeReferences: [String]
-    references: [ReferenceFilterInput]
-    labels: [LabelFilterInput]
-    coordinatesConfidenceLevel: CoordinatesConfidenceLevelFilter
-    promisedDateRangeFilter: PromisedDateRangeFilter
-    collectAvailabilityDates: [String]
-    onlyLatestStatus: Boolean
-  }
+ # 🔎 Filtro principal para reporte de unidades de entrega
+input DeliveryUnitsReportFilterInput {
+  order: OrderFilter
+  deliveryUnit: DeliveryUnitFilter
+  origin: LocationFilter
+  destination: LocationFilter
+  promisedDate: PromisedDateFilter
+  collectAvailability: CollectAvailabilityFilter
+  onlyLatestStatus: Boolean
+}
 
-  # Reutilizable en múltiples filtros
-  input CoordinatesConfidenceLevelFilter {
-    min: Float
-    max: Float
-  }
+# 📦 Filtro por unidad de entrega
+input DeliveryUnitFilter {
+  lpns: [String]
+  sizeCategories: [String]
+  labels: [LabelFilterInput]
+}
 
-  input PromisedDateRangeFilter{
-    startDate: String
-    endDate: String
-  }
-  
+# 🧾 Filtro por orden
+input OrderFilter {
+  referenceIds: [String]
+  references: [ReferenceFilterInput]
+  orderType: OrderTypeFilter
+  groupBy: GroupByFilter
+}
 
-  input ReferenceFilterInput {
-    type: String!
-    value: String!
-  }
+# 🧩 Tipo de orden
+input OrderTypeFilter {
+  type: String
+  description: String
+}
 
-  input LabelFilterInput {
-    type: String!
-    value: String!
-  }
+# 🔗 Agrupación de órdenes
+input GroupByFilter {
+  type: String
+  value: String
+}
+
+# 📍 Filtro por ubicación (origen o destino)
+input LocationFilter {
+  nodeReferences: [String]              # nodeInfo.referenceID (opcional)
+  addressLines: [String]                # addressLine1 y addressLine2
+  districts: [String]
+  provinces: [String]
+  states: [String]
+  zipCodes: [String]
+  coordinatesConfidence: CoordinatesConfidenceLevelFilter
+}
+
+# 📅 Filtro por fecha prometida
+input PromisedDateFilter {
+  dateRange: DateRangeFilter
+  timeRange: TimeRangeFilter
+}
+
+# 📅 Filtro por disponibilidad de retiro
+input CollectAvailabilityFilter {
+  dates: [String]                      # Formato YYYY-MM-DD
+  timeRange: TimeRangeFilter
+}
+
+# 📚 Sub-filtros reutilizables
+
+input ReferenceFilterInput {
+  type: String!
+  value: String!
+}
+
+input LabelFilterInput {
+  type: String!
+  value: String!
+}
+
+input CoordinatesConfidenceLevelFilter {
+  min: Float
+  max: Float
+}
+
+input DateRangeFilter {
+  startDate: String
+  endDate: String
+}
+
+input TimeRangeFilter {
+  startTime: String
+  endTime: String
+}
+
 
 # 🔄 PageInfo y conexión Relay
 type PageInfo {
