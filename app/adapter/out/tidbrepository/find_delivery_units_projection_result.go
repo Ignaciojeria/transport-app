@@ -50,20 +50,41 @@ func NewFindDeliveryUnitsProjectionResult(
 		var results projectionresult.DeliveryUnitsProjectionResults
 		hasMoreResults := false
 
-		// Dataset base
-		baseQuery := goqu.From(goqu.T("delivery_units_status_histories").As(duh)).
-			Select(
-				goqu.I(duh+".id").As("id"),
-				goqu.I(duh+".updated_at").As("updated_at"),
-			).
-			Where(goqu.Ex{
-				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
-			})
+		duh := "duh"
+
+		var baseQuery *goqu.SelectDataset
+
+		if true {
+			// Subquery que agrupa y obtiene el último id por combinación
+			latestIDsSubquery := goqu.From(goqu.T("delivery_units_status_histories").As(duh)).
+				Select(
+					goqu.MAX(goqu.I(duh+".id")).As("id"),
+				).
+				Where(goqu.Ex{
+					duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
+				}).
+				GroupBy(
+					goqu.I(duh+".delivery_unit_doc"),
+					goqu.I(duh+".order_doc"),
+				).As("latest_ids")
+
+			baseQuery = goqu.From("delivery_units_status_histories").
+				Join(latestIDsSubquery, goqu.On(
+					goqu.I("delivery_units_status_histories.id").Eq(goqu.I("latest_ids.id")),
+				)).
+				Select(goqu.I("delivery_units_status_histories.id"))
+		} else {
+			// Opción sin filtrar por último estado
+			baseQuery = goqu.From("delivery_units_status_histories").
+				Where(goqu.Ex{
+					"tenant_id": sharedcontext.TenantIDFromContext(ctx),
+				}).
+				Select(goqu.I("id"))
+		}
 
 		ds := goqu.From(baseQuery.As("base")).
 			Select(
 				goqu.I("base.id").As("id"),
-				goqu.I("base.updated_at").As("updated_at"),
 			).
 			InnerJoin(
 				goqu.T("delivery_units_status_histories").As(duh),
