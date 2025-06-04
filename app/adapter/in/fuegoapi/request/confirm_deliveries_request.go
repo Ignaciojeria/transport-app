@@ -113,6 +113,10 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 				Lpn:   du.Lpn,
 				Items: items,
 				ConfirmDelivery: domain.ConfirmDelivery{
+					ManualChange: domain.ManualChange{
+						PerformedBy: r.ManualChange.PerformedBy,
+						Reason:      r.ManualChange.Reason,
+					},
 					HandledAt: t,
 					Latitude:  order.Delivery.Location.Latitude,
 					Longitude: order.Delivery.Location.Longitude,

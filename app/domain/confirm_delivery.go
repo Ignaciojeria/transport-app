@@ -4,6 +4,7 @@ import "time"
 
 type ConfirmDelivery struct {
 	RequestBody       []byte
+	ManualChange      ManualChange
 	HandledAt         time.Time
 	Recipient         Recipient
 	EvidencePhotos    EvidencePhotos
@@ -15,4 +16,9 @@ type ConfirmDelivery struct {
 type Recipient struct {
 	FullName   string
 	NationalID string
+}
+
+type ManualChange struct {
+	PerformedBy string
+	Reason      string
 }
