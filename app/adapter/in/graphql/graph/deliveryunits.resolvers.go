@@ -168,6 +168,13 @@ func (r *queryResolver) DeliveryUnitsReports(
 				Max: filter.CoordinatesConfidenceLevel.Max,
 			}
 		}
+
+		if filter.PromisedDateRangeDateFilter != nil {
+			deliveryUnitsFilter.PromisedDateRange = &domain.PromisedDateRangeFilter{
+				StartDate: filter.PromisedDateRangeDateFilter.StartDate,
+				EndDate:   filter.PromisedDateRangeDateFilter.EndDate,
+			}
+		}
 	}
 
 	results, hasMore, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)

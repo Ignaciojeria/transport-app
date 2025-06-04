@@ -15,6 +15,11 @@ type CoordinatesConfidenceLevelFilter struct {
 	Max *float64
 }
 
+type PromisedDateRangeFilter struct {
+	StartDate *string
+	EndDate   *string
+}
+
 type DeliveryUnitsFilter struct {
 	Pagination                 Pagination
 	ReferenceIds               []string
@@ -31,5 +36,6 @@ type DeliveryUnitsFilter struct {
 	References                 []ReferenceFilter
 	Labels                     []LabelFilter
 	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter
+	PromisedDateRange          *PromisedDateRangeFilter
 	OnlyLatestStatus           bool
 }

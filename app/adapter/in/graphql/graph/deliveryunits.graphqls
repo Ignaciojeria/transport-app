@@ -232,6 +232,7 @@ type DeliveryUnitsReport {
     references: [ReferenceFilterInput]
     labels: [LabelFilterInput]
     coordinatesConfidenceLevel: CoordinatesConfidenceLevelFilter
+    promisedDateRangeDateFilter: PromisedDateRangeDateFilter
     onlyLatestStatus: Boolean
   }
 
@@ -239,6 +240,11 @@ type DeliveryUnitsReport {
   input CoordinatesConfidenceLevelFilter {
     min: Float
     max: Float
+  }
+
+  input PromisedDateRangeDateFilter{
+    startDate: String
+    endDate: String
   }
 
   input ReferenceFilterInput {

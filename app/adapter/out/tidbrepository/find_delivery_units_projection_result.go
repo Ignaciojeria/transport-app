@@ -147,6 +147,16 @@ func NewFindDeliveryUnitsProjectionResult(
 			}
 		}
 
+		// Agregar filtro por rango de fecha prometida si existe
+		if filters.PromisedDateRange != nil {
+			if filters.PromisedDateRange.StartDate != nil {
+				ds = ds.Where(goqu.I(o + ".promised_date_range_start").Gte(*filters.PromisedDateRange.StartDate))
+			}
+			if filters.PromisedDateRange.EndDate != nil {
+				ds = ds.Where(goqu.I(o + ".promised_date_range_end").Lte(*filters.PromisedDateRange.EndDate))
+			}
+		}
+
 		// Agregar ordenamiento por reference_id
 		ds = ds.Order(goqu.I(o + ".reference_id").Asc())
 

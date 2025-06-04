@@ -1982,6 +1982,133 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			"El ID del último estado debería ser mayor")
 	})
 
+	It("should filter delivery units by promised date range", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear dos órdenes con diferentes fechas prometidas
+		fixedDate1 := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
+		fixedDate2 := time.Date(2025, 5, 28, 0, 0, 0, 0, time.UTC)
+
+		// Primera orden
+		order1 := domain.Order{
+			ReferenceID: "123",
+			Destination: domain.NodeInfo{
+				AddressInfo: domain.AddressInfo{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+				},
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+			PromisedDate: domain.PromisedDate{
+				DateRange: domain.DateRange{
+					StartDate: fixedDate1,
+					EndDate:   fixedDate1.Add(24 * time.Hour),
+				},
+				TimeRange: domain.TimeRange{
+					StartTime: "10:00",
+					EndTime:   "17:00",
+				},
+				ServiceCategory: "STANDARD",
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order1)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Segunda orden
+		order2 := domain.Order{
+			ReferenceID: "456",
+			Destination: domain.NodeInfo{
+				AddressInfo: domain.AddressInfo{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+				},
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+			PromisedDate: domain.PromisedDate{
+				DateRange: domain.DateRange{
+					StartDate: fixedDate2,
+					EndDate:   fixedDate2.Add(24 * time.Hour),
+				},
+				TimeRange: domain.TimeRange{
+					StartTime: "10:00",
+					EndTime:   "17:00",
+				},
+				ServiceCategory: "STANDARD",
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear historial de unidades de entrega
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{order1, order2},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		// Probar filtro con rango que incluye solo la primera orden
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+
+		startDate := "2025-05-25T00:00:00Z"
+		endDate := "2025-05-27T00:00:00Z"
+
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                    "",
+				projection.PromisedDateDateRangeStartDate().String(): "",
+				projection.PromisedDateDateRangeEndDate().String():   "",
+			},
+			PromisedDateRange: &domain.PromisedDateRangeFilter{
+				StartDate: &startDate,
+				EndDate:   &endDate,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1), "Expected 1 result, got %d", len(results))
+		Expect(hasMore).To(BeFalse())
+		Expect(results[0].OrderReferenceID).To(Equal("123"), "Unexpected reference ID")
+		Expect(results[0].OrderPromisedDateStartDate).To(Equal("2025-05-26T00:00:00Z"), "Unexpected promised date start")
+		Expect(results[0].OrderPromisedDateEndDate).To(Equal("2025-05-27T00:00:00Z"), "Unexpected promised date end")
+
+		// Probar filtro con rango que incluye ambas órdenes
+		startDate = "2025-05-25T00:00:00Z"
+		endDate = "2025-05-29T00:00:00Z"
+
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                    "",
+				projection.PromisedDateDateRangeStartDate().String(): "",
+				projection.PromisedDateDateRangeEndDate().String():   "",
+			},
+			PromisedDateRange: &domain.PromisedDateRangeFilter{
+				StartDate: &startDate,
+				EndDate:   &endDate,
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2), "Expected 2 results, got %d", len(results))
+		Expect(hasMore).To(BeFalse())
+
+		// Verificar que las órdenes están ordenadas por reference_id
+		Expect(results[0].OrderReferenceID).To(Equal("123"), "Unexpected first reference ID")
+		Expect(results[1].OrderReferenceID).To(Equal("456"), "Unexpected second reference ID")
+	})
+
 })
 
 // Helper function to create pointer to int

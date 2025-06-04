@@ -129,13 +129,14 @@ type DeliveryUnitsReportEdge struct {
 }
 
 type DeliveryUnitsReportFilterInput struct {
-	ReferenceIds               []*string                         `json:"referenceIds,omitempty"`
-	Lpns                       []*string                         `json:"lpns,omitempty"`
-	OriginNodeReferences       []*string                         `json:"originNodeReferences,omitempty"`
-	References                 []*ReferenceFilterInput           `json:"references,omitempty"`
-	Labels                     []*LabelFilterInput               `json:"labels,omitempty"`
-	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidenceLevel,omitempty"`
-	OnlyLatestStatus           *bool                             `json:"onlyLatestStatus,omitempty"`
+	ReferenceIds                []*string                         `json:"referenceIds,omitempty"`
+	Lpns                        []*string                         `json:"lpns,omitempty"`
+	OriginNodeReferences        []*string                         `json:"originNodeReferences,omitempty"`
+	References                  []*ReferenceFilterInput           `json:"references,omitempty"`
+	Labels                      []*LabelFilterInput               `json:"labels,omitempty"`
+	CoordinatesConfidenceLevel  *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidenceLevel,omitempty"`
+	PromisedDateRangeDateFilter *PromisedDateRangeDateFilter      `json:"promisedDateRangeDateFilter,omitempty"`
+	OnlyLatestStatus            *bool                             `json:"onlyLatestStatus,omitempty"`
 }
 
 type Dimension struct {
@@ -223,6 +224,11 @@ type PromisedDate struct {
 	DateRange       *DateRange `json:"dateRange,omitempty"`
 	ServiceCategory *string    `json:"serviceCategory,omitempty"`
 	TimeRange       *TimeRange `json:"timeRange,omitempty"`
+}
+
+type PromisedDateRangeDateFilter struct {
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate   *string `json:"endDate,omitempty"`
 }
 
 type Quantity struct {
