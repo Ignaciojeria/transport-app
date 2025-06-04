@@ -232,6 +232,7 @@ type DeliveryUnitsReport {
     references: [ReferenceFilterInput]
     labels: [LabelFilterInput]
     coordinatesConfidenceLevel: CoordinatesConfidenceLevelFilter
+    onlyLatestStatus: Boolean
   }
 
   # Reutilizable en múltiples filtros

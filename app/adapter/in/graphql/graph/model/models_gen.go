@@ -135,6 +135,7 @@ type DeliveryUnitsReportFilterInput struct {
 	References                 []*ReferenceFilterInput           `json:"references,omitempty"`
 	Labels                     []*LabelFilterInput               `json:"labels,omitempty"`
 	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidenceLevel,omitempty"`
+	OnlyLatestStatus           *bool                             `json:"onlyLatestStatus,omitempty"`
 }
 
 type Dimension struct {

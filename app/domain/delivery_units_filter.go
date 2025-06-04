@@ -31,4 +31,5 @@ type DeliveryUnitsFilter struct {
 	References                 []ReferenceFilter
 	Labels                     []LabelFilter
 	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter
+	OnlyLatestStatus           bool
 }

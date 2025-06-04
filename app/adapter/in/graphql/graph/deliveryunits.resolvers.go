@@ -88,6 +88,7 @@ func (r *queryResolver) DeliveryUnitsReports(
 	}
 
 	requestedFieldsAsMap := ConvertSelectedPathsToMap(ctx)
+	fmt.Printf("requestedFieldsAsMap type: %T\n", requestedFieldsAsMap)
 
 	// Construir el filtro
 	deliveryUnitsFilter := domain.DeliveryUnitsFilter{
@@ -97,6 +98,10 @@ func (r *queryResolver) DeliveryUnitsReports(
 
 	// Agregar filtros si existen
 	if filter != nil {
+		if filter.OnlyLatestStatus != nil {
+			deliveryUnitsFilter.OnlyLatestStatus = *filter.OnlyLatestStatus
+		}
+
 		if len(filter.ReferenceIds) > 0 {
 			// Convertir []*string a []string
 			referenceIds := make([]string, len(filter.ReferenceIds))
