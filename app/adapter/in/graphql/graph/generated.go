@@ -9429,7 +9429,7 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceIds", "lpns", "sizeCategories", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeFilter", "onlyLatestStatus"}
+	fieldsInOrder := [...]string{"referenceIds", "lpns", "sizeCategories", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeFilter", "collectAvailabilityDates", "onlyLatestStatus"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9492,6 +9492,13 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.PromisedDateRangeFilter = data
+		case "collectAvailabilityDates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectAvailabilityDates"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CollectAvailabilityDates = data
 		case "onlyLatestStatus":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyLatestStatus"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)

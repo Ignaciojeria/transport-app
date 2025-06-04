@@ -2210,6 +2210,127 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		))
 	})
 
+	It("should filter delivery units by collect availability dates", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear fechas fijas para las pruebas
+		date1 := time.Date(2024, 3, 20, 0, 0, 0, 0, time.UTC)
+		date2 := time.Date(2024, 3, 21, 0, 0, 0, 0, time.UTC)
+		date3 := time.Date(2024, 3, 22, 0, 0, 0, 0, time.UTC)
+
+		// Crear orders con diferentes fechas de disponibilidad de recolección
+		orders := []domain.Order{
+			{
+				ReferenceID: "REF-001",
+				CollectAvailabilityDate: domain.CollectAvailabilityDate{
+					Date: date1,
+					TimeRange: domain.TimeRange{
+						StartTime: "09:00",
+						EndTime:   "18:00",
+					},
+				},
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+			{
+				ReferenceID: "REF-002",
+				CollectAvailabilityDate: domain.CollectAvailabilityDate{
+					Date: date2,
+					TimeRange: domain.TimeRange{
+						StartTime: "10:00",
+						EndTime:   "19:00",
+					},
+				},
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+			{
+				ReferenceID: "REF-003",
+				CollectAvailabilityDate: domain.CollectAvailabilityDate{
+					Date: date3,
+					TimeRange: domain.TimeRange{
+						StartTime: "11:00",
+						EndTime:   "20:00",
+					},
+				},
+				DeliveryUnits: []domain.DeliveryUnit{
+					{},
+				},
+			},
+		}
+
+		// Insertar orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		// Test filtrando por una sola fecha
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():             "",
+				projection.CollectAvailabilityDate().String(): "",
+			},
+			CollectAvailabilityDates: []string{"2024-03-20"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
+
+		// Test filtrando por múltiples fechas
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():             "",
+				projection.CollectAvailabilityDate().String(): "",
+			},
+			CollectAvailabilityDates: []string{"2024-03-20", "2024-03-22"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-001")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-003")),
+		))
+
+		// Test filtrando por fecha no existente
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():             "",
+				projection.CollectAvailabilityDate().String(): "",
+			},
+			CollectAvailabilityDates: []string{"2024-03-25"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(BeEmpty())
+		Expect(hasMore).To(BeFalse())
+	})
+
 })
 
 // Helper function to create pointer to int

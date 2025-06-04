@@ -39,4 +39,5 @@ type DeliveryUnitsFilter struct {
 	PromisedDateRange          *PromisedDateRangeFilter
 	OnlyLatestStatus           bool
 	SizeCategories             []string
+	CollectAvailabilityDates   []string
 }

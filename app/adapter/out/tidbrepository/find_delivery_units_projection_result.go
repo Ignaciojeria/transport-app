@@ -166,6 +166,11 @@ func NewFindDeliveryUnitsProjectionResult(
 			}
 		}
 
+		// Agregar filtro por CollectAvailabilityDates si existen
+		if len(filters.CollectAvailabilityDates) > 0 {
+			ds = ds.Where(goqu.I(o + ".collect_availability_date").In(filters.CollectAvailabilityDates))
+		}
+
 		// Agregar ordenamiento por reference_id
 		ds = ds.Order(goqu.I(o + ".reference_id").Asc())
 

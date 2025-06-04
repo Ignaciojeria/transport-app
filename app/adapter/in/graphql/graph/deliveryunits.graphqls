@@ -234,6 +234,7 @@ type DeliveryUnitsReport {
     labels: [LabelFilterInput]
     coordinatesConfidenceLevel: CoordinatesConfidenceLevelFilter
     promisedDateRangeFilter: PromisedDateRangeFilter
+    collectAvailabilityDates: [String]
     onlyLatestStatus: Boolean
   }
 
@@ -247,6 +248,7 @@ type DeliveryUnitsReport {
     startDate: String
     endDate: String
   }
+  
 
   input ReferenceFilterInput {
     type: String!

@@ -137,6 +137,7 @@ type DeliveryUnitsReportFilterInput struct {
 	Labels                     []*LabelFilterInput               `json:"labels,omitempty"`
 	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidenceLevel,omitempty"`
 	PromisedDateRangeFilter    *PromisedDateRangeFilter          `json:"promisedDateRangeFilter,omitempty"`
+	CollectAvailabilityDates   []*string                         `json:"collectAvailabilityDates,omitempty"`
 	OnlyLatestStatus           *bool                             `json:"onlyLatestStatus,omitempty"`
 }
 

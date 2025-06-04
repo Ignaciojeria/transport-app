@@ -186,6 +186,17 @@ func (r *queryResolver) DeliveryUnitsReports(
 			}
 			deliveryUnitsFilter.SizeCategories = sizeCategories
 		}
+
+		if len(filter.CollectAvailabilityDates) > 0 {
+			// Convertir []*string a []string
+			collectAvailabilityDates := make([]string, len(filter.CollectAvailabilityDates))
+			for i, date := range filter.CollectAvailabilityDates {
+				if date != nil {
+					collectAvailabilityDates[i] = *date
+				}
+			}
+			deliveryUnitsFilter.CollectAvailabilityDates = collectAvailabilityDates
+		}
 	}
 
 	results, hasMore, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)
