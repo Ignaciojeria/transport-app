@@ -7,23 +7,23 @@ import (
 )
 
 type UpsertOrderRequest struct {
-	ReferenceID string            `json:"referenceID" validate:"required"`
+	ReferenceID string            `json:"referenceID" validate:"required" example:"1400001234567890"`
 	ExtraFields map[string]string `json:"extraFields"`
 	GroupBy     struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
+		Type  string `json:"type" example:"customerOrder"`
+		Value string `json:"value" example:"1234567890"`
 	} `json:"groupBy"`
 	CollectAvailabilityDate struct {
-		Date      string `json:"date"`
+		Date      string `json:"date" example:"2025-03-30"`
 		TimeRange struct {
-			EndTime   string `json:"endTime"`
-			StartTime string `json:"startTime"`
+			EndTime   string `json:"endTime" example:"09:00"`
+			StartTime string `json:"startTime" example:"19:00"`
 		} `json:"timeRange"`
 	} `json:"collectAvailabilityDate"`
 	Destination struct {
 		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
+			AddressLine1 string `json:"addressLine1" example:"Inglaterra 59"`
+			AddressLine2 string `json:"addressLine2" example:"Piso 2214"`
 			Contact      struct {
 				AdditionalContactMethods []struct {
 					Type  string `json:"type"`
@@ -38,7 +38,7 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			District    string `json:"district"`
+			District    string `json:"district" example:"la florida"`
 			Coordinates struct {
 				Latitude   float64 `json:"latitude"`
 				Longitude  float64 `json:"longitude"`
@@ -49,10 +49,10 @@ type UpsertOrderRequest struct {
 					Reason  string  `json:"reason"`
 				} `json:"confidence"`
 			} `json:"coordinates"`
-			Province string `json:"province"`
-			State    string `json:"state"`
-			TimeZone string `json:"timeZone"`
-			ZipCode  string `json:"zipCode"`
+			Province string `json:"province" example:"santiago"`
+			State    string `json:"state" example:"region metropolitana de santiago"`
+			TimeZone string `json:"timeZone" example:"America/Santiago"`
+			ZipCode  string `json:"zipCode" example:"7500000"`
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
@@ -65,8 +65,8 @@ type UpsertOrderRequest struct {
 	} `json:"orderType"`
 	Origin struct {
 		AddressInfo struct {
-			AddressLine1 string `json:"addressLine1"`
-			AddressLine2 string `json:"addressLine2"`
+			AddressLine1 string `json:"addressLine1" example:"Inglaterra 59"`
+			AddressLine2 string `json:"addressLine2" example:"Piso 2214"`
 			Contact      struct {
 				AdditionalContactMethods []struct {
 					Type  string `json:"type"`
@@ -81,7 +81,7 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			District    string `json:"district"`
+			District    string `json:"district" example:"la florida"`
 			Coordinates struct {
 				Latitude   float64 `json:"latitude"`
 				Longitude  float64 `json:"longitude"`
@@ -92,10 +92,10 @@ type UpsertOrderRequest struct {
 					Reason  string  `json:"reason"`
 				} `json:"confidence"`
 			} `json:"coordinates"`
-			Province string `json:"province"`
-			State    string `json:"state"`
-			TimeZone string `json:"timeZone"`
-			ZipCode  string `json:"zipCode"`
+			Province string `json:"province" example:"santiago"`
+			State    string `json:"state" example:"region metropolitana de santiago"`
+			TimeZone string `json:"timeZone" example:"America/Santiago"`
+			ZipCode  string `json:"zipCode" example:"7500000"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`

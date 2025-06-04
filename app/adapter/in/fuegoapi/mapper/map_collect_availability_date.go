@@ -3,10 +3,10 @@ package mapper
 import "transport-app/app/domain"
 
 func MapCollectAvailabilityDateToDomain(collectDate struct {
-	Date      string `json:"date"`
+	Date      string `json:"date" example:"2025-03-30"`
 	TimeRange struct {
-		EndTime   string `json:"endTime"`
-		StartTime string `json:"startTime"`
+		EndTime   string `json:"endTime" example:"09:00"`
+		StartTime string `json:"startTime" example:"19:00"`
 	} `json:"timeRange"`
 }) domain.CollectAvailabilityDate {
 	return domain.CollectAvailabilityDate{

@@ -8,6 +8,10 @@ import (
 )
 
 type ConfirmDeliveriesRequest struct {
+	ManualChange struct {
+		PerformedBy string `json:"performedBy" example:"juan@example.com"`
+		Reason      string `json:"reason" example:"Corrección tras reclamo de transporte"`
+	} `json:"manualChange"`
 	Carrier struct {
 		Name       string `json:"name"`
 		NationalID string `json:"nationalID"`

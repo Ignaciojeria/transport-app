@@ -9,8 +9,8 @@ import (
 func MapNodeInfoToDomain(nodeInfo struct {
 	ReferenceID string `json:"referenceID"`
 }, addressInfo struct {
-	AddressLine1 string `json:"addressLine1"`
-	AddressLine2 string `json:"addressLine2"`
+	AddressLine1 string `json:"addressLine1" example:"Inglaterra 59"`
+	AddressLine2 string `json:"addressLine2" example:"Piso 2214"`
 	Contact      struct {
 		AdditionalContactMethods []struct {
 			Type  string `json:"type"`
@@ -26,7 +26,7 @@ func MapNodeInfoToDomain(nodeInfo struct {
 		FullName string `json:"fullName"`
 	} `json:"contact"`
 
-	District    string `json:"district"`
+	District    string `json:"district" example:"la florida"`
 	Coordinates struct {
 		Latitude   float64 `json:"latitude"`
 		Longitude  float64 `json:"longitude"`
@@ -37,10 +37,10 @@ func MapNodeInfoToDomain(nodeInfo struct {
 			Reason  string  `json:"reason"`
 		} `json:"confidence"`
 	} `json:"coordinates"`
-	Province string `json:"province"`
-	State    string `json:"state"`
-	TimeZone string `json:"timeZone"`
-	ZipCode  string `json:"zipCode"`
+	Province string `json:"province" example:"santiago"`
+	State    string `json:"state" example:"region metropolitana de santiago"`
+	TimeZone string `json:"timeZone" example:"America/Santiago"`
+	ZipCode  string `json:"zipCode" example:"7500000"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
@@ -77,8 +77,7 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 }, struct {
 	AddressLine1 string `json:"addressLine1"`
 	AddressLine2 string `json:"addressLine2"`
-
-	Contact struct {
+	Contact      struct {
 		Email      string `json:"email"`
 		Phone      string `json:"phone"`
 		NationalID string `json:"nationalID"`
@@ -88,7 +87,6 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 		} `json:"documents"`
 		FullName string `json:"fullName"`
 	} `json:"contact"`
-
 	District  string  `json:"district"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
@@ -108,8 +106,7 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	responseAddressInfo := struct {
 		AddressLine1 string `json:"addressLine1"`
 		AddressLine2 string `json:"addressLine2"`
-
-		Contact struct {
+		Contact      struct {
 			Email      string `json:"email"`
 			Phone      string `json:"phone"`
 			NationalID string `json:"nationalID"`
@@ -119,7 +116,6 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 			} `json:"documents"`
 			FullName string `json:"fullName"`
 		} `json:"contact"`
-
 		District  string  `json:"district"`
 		Latitude  float64 `json:"latitude"`
 		Longitude float64 `json:"longitude"`
@@ -129,19 +125,15 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 		ZipCode   string  `json:"zipCode"`
 	}{
 		AddressLine1: nodeInfo.AddressInfo.AddressLine1,
-		//	AddressLine2: nodeInfo.AddressInfo.AddressLine2,
-		//	AddressLine3: nodeInfo.AddressInfo.AddressLine3,
-		//	Locality:     nodeInfo.AddressInfo.Locality,
-		District:  nodeInfo.AddressInfo.District.String(),
-		Province:  nodeInfo.AddressInfo.Province.String(),
-		State:     nodeInfo.AddressInfo.State.String(),
-		ZipCode:   nodeInfo.AddressInfo.ZipCode,
-		TimeZone:  nodeInfo.AddressInfo.TimeZone,
-		Latitude:  nodeInfo.AddressInfo.Coordinates.Point.Lat(), // Latitud
-		Longitude: nodeInfo.AddressInfo.Coordinates.Point.Lon(), // Longitud
+		District:     nodeInfo.AddressInfo.District.String(),
+		Province:     nodeInfo.AddressInfo.Province.String(),
+		State:        nodeInfo.AddressInfo.State.String(),
+		ZipCode:      nodeInfo.AddressInfo.ZipCode,
+		TimeZone:     nodeInfo.AddressInfo.TimeZone,
+		Latitude:     nodeInfo.AddressInfo.Coordinates.Point.Lat(),
+		Longitude:    nodeInfo.AddressInfo.Coordinates.Point.Lon(),
 	}
 
-	// Mapear contacto
 	responseAddressInfo.Contact.FullName = nodeInfo.AddressInfo.Contact.FullName
 	responseAddressInfo.Contact.Email = nodeInfo.AddressInfo.Contact.PrimaryEmail
 	responseAddressInfo.Contact.Phone = nodeInfo.AddressInfo.Contact.PrimaryPhone

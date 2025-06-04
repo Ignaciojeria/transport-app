@@ -65,7 +65,7 @@ Al publicar un evento como `orderSubmitted`, los atributos se propagan como:
 | `addressLine2`          | Info adicional | `dpto 2214`                        |
 | `district`              | Comuna         | `la florida`                       |
 | `province`              | Provincia      | `santiago`                         |
-| `state`                 | Región         | `región metropolitana de santiago` |
+| `state`                 | Región         | `region metropolitana de santiago` |
 | `latitude`, `longitude` | Coordenadas    | `-33.5204181`, `-70.6006178`       |
 
 ### México
