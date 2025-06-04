@@ -29,4 +29,6 @@ type DeliveryUnitsStatusHistory struct {
 	ConfirmDeliveryHandledAt time.Time          `gorm:"default:null"`
 	ConfirmDeliveryLatitude  float64            `gorm:"default:0"`
 	ConfirmDeliveryLongitude float64            `gorm:"default:0"`
+	ManualChangePerformedBy  string             `gorm:"default:''"`
+	ManualChangeReason       string             `gorm:"default:''"`
 }

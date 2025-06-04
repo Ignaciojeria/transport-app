@@ -33,6 +33,8 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 					ConfirmDeliveryHandledAt: pkg.ConfirmDelivery.HandledAt,
 					ConfirmDeliveryLatitude:  pkg.ConfirmDelivery.Latitude,
 					ConfirmDeliveryLongitude: pkg.ConfirmDelivery.Longitude,
+					ManualChangePerformedBy:  pkg.ConfirmDelivery.ManualChange.PerformedBy,
+					ManualChangeReason:       pkg.ConfirmDelivery.ManualChange.Reason,
 					DocumentID: domain.HashByTenant(
 						ctx,
 						string(order.DocID(ctx)),
@@ -47,10 +49,11 @@ func MapDeliveryUnitsHistoryTable(ctx context.Context, p domain.Plan) []table.De
 						pkg.ConfirmDelivery.HandledAt.Format(time.RFC3339),
 						fmt.Sprintf("%f", pkg.ConfirmDelivery.Latitude),
 						fmt.Sprintf("%f", pkg.ConfirmDelivery.Longitude),
+						pkg.ConfirmDelivery.ManualChange.PerformedBy,
+						pkg.ConfirmDelivery.ManualChange.Reason,
 					).String(),
 				})
 			}
-
 		}
 	}
 

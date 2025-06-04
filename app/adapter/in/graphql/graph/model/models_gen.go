@@ -24,6 +24,11 @@ type CollectAvailabilityDate struct {
 	TimeRange *TimeRange `json:"timeRange,omitempty"`
 }
 
+type CollectAvailabilityFilter struct {
+	Dates     []*string        `json:"dates,omitempty"`
+	TimeRange *TimeRangeFilter `json:"timeRange,omitempty"`
+}
+
 type Confidence struct {
 	Level   *float64 `json:"level,omitempty"`
 	Message *string  `json:"message,omitempty"`
@@ -61,6 +66,11 @@ type DateRange struct {
 	EndDate   *string `json:"endDate,omitempty"`
 }
 
+type DateRangeFilter struct {
+	StartDate *string `json:"startDate,omitempty"`
+	EndDate   *string `json:"endDate,omitempty"`
+}
+
 type Delivery struct {
 	Recipient      *DeliveryRecipient `json:"recipient,omitempty"`
 	HandledAt      *string            `json:"handledAt,omitempty"`
@@ -94,6 +104,12 @@ type DeliveryUnit struct {
 	Weight     *Weight    `json:"weight,omitempty"`
 }
 
+type DeliveryUnitFilter struct {
+	Lpns           []*string           `json:"lpns,omitempty"`
+	SizeCategories []*string           `json:"sizeCategories,omitempty"`
+	Labels         []*LabelFilterInput `json:"labels,omitempty"`
+}
+
 type DeliveryUnitsReport struct {
 	ID                      string                   `json:"id"`
 	Commerce                *string                  `json:"commerce,omitempty"`
@@ -116,6 +132,7 @@ type DeliveryUnitsReport struct {
 	Driver                  *Driver                  `json:"driver,omitempty"`
 	Route                   *Route                   `json:"route,omitempty"`
 	Delivery                *Delivery                `json:"delivery,omitempty"`
+	ManualChange            *ManualChange            `json:"manualChange,omitempty"`
 }
 
 type DeliveryUnitsReportConnection struct {
@@ -129,16 +146,13 @@ type DeliveryUnitsReportEdge struct {
 }
 
 type DeliveryUnitsReportFilterInput struct {
-	ReferenceIds               []*string                         `json:"referenceIds,omitempty"`
-	Lpns                       []*string                         `json:"lpns,omitempty"`
-	SizeCategories             []*string                         `json:"sizeCategories,omitempty"`
-	OriginNodeReferences       []*string                         `json:"originNodeReferences,omitempty"`
-	References                 []*ReferenceFilterInput           `json:"references,omitempty"`
-	Labels                     []*LabelFilterInput               `json:"labels,omitempty"`
-	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidenceLevel,omitempty"`
-	PromisedDateRangeFilter    *PromisedDateRangeFilter          `json:"promisedDateRangeFilter,omitempty"`
-	CollectAvailabilityDates   []*string                         `json:"collectAvailabilityDates,omitempty"`
-	OnlyLatestStatus           *bool                             `json:"onlyLatestStatus,omitempty"`
+	Order               *OrderFilter               `json:"order,omitempty"`
+	DeliveryUnit        *DeliveryUnitFilter        `json:"deliveryUnit,omitempty"`
+	Origin              *LocationFilter            `json:"origin,omitempty"`
+	Destination         *LocationFilter            `json:"destination,omitempty"`
+	PromisedDate        *PromisedDateFilter        `json:"promisedDate,omitempty"`
+	CollectAvailability *CollectAvailabilityFilter `json:"collectAvailability,omitempty"`
+	OnlyLatestStatus    *bool                      `json:"onlyLatestStatus,omitempty"`
 }
 
 type Dimension struct {
@@ -166,6 +180,11 @@ type EvidencePhoto struct {
 }
 
 type GroupBy struct {
+	Type  *string `json:"type,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
+type GroupByFilter struct {
 	Type  *string `json:"type,omitempty"`
 	Value *string `json:"value,omitempty"`
 }
@@ -205,12 +224,39 @@ type Location struct {
 	NodeInfo    *NodeInfo    `json:"nodeInfo,omitempty"`
 }
 
+type LocationFilter struct {
+	NodeReferences        []*string                         `json:"nodeReferences,omitempty"`
+	AddressLines          []*string                         `json:"addressLines,omitempty"`
+	Districts             []*string                         `json:"districts,omitempty"`
+	Provinces             []*string                         `json:"provinces,omitempty"`
+	States                []*string                         `json:"states,omitempty"`
+	ZipCodes              []*string                         `json:"zipCodes,omitempty"`
+	CoordinatesConfidence *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidence,omitempty"`
+}
+
+type ManualChange struct {
+	PerformedBy *string `json:"performedBy,omitempty"`
+	Reason      *string `json:"reason,omitempty"`
+}
+
 type NodeInfo struct {
 	ReferenceID *string `json:"referenceId,omitempty"`
 	Name        *string `json:"name,omitempty"`
 }
 
+type OrderFilter struct {
+	ReferenceIds []*string               `json:"referenceIds,omitempty"`
+	References   []*ReferenceFilterInput `json:"references,omitempty"`
+	OrderType    *OrderTypeFilter        `json:"orderType,omitempty"`
+	GroupBy      *GroupByFilter          `json:"groupBy,omitempty"`
+}
+
 type OrderType struct {
+	Type        *string `json:"type,omitempty"`
+	Description *string `json:"description,omitempty"`
+}
+
+type OrderTypeFilter struct {
 	Type        *string `json:"type,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
@@ -228,9 +274,9 @@ type PromisedDate struct {
 	TimeRange       *TimeRange `json:"timeRange,omitempty"`
 }
 
-type PromisedDateRangeFilter struct {
-	StartDate *string `json:"startDate,omitempty"`
-	EndDate   *string `json:"endDate,omitempty"`
+type PromisedDateFilter struct {
+	DateRange *DateRangeFilter `json:"dateRange,omitempty"`
+	TimeRange *TimeRangeFilter `json:"timeRange,omitempty"`
 }
 
 type Quantity struct {
@@ -264,6 +310,11 @@ type Skill struct {
 }
 
 type TimeRange struct {
+	StartTime *string `json:"startTime,omitempty"`
+	EndTime   *string `json:"endTime,omitempty"`
+}
+
+type TimeRangeFilter struct {
 	StartTime *string `json:"startTime,omitempty"`
 	EndTime   *string `json:"endTime,omitempty"`
 }

@@ -99,7 +99,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Agregar join con delivery_units si se solicita cualquier campo relacionado
 		if projection.DeliveryUnit().Has(filters.RequestedFields) ||
-			len(filters.Lpns) > 0 || len(filters.Labels) > 0 || len(filters.SizeCategories) > 0 {
+			(filters.DeliveryUnit != nil && (len(filters.DeliveryUnit.Lpns) > 0 || len(filters.DeliveryUnit.Labels) > 0 || len(filters.DeliveryUnit.SizeCategories) > 0)) {
 			ds = ds.InnerJoin(
 				goqu.T("delivery_units").As(du),
 				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
@@ -107,28 +107,28 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		// Agregar filtro por reference_id si existe
-		if len(filters.ReferenceIds) > 0 {
-			ds = ds.Where(goqu.I(o + ".reference_id").In(filters.ReferenceIds))
+		if filters.Order != nil && len(filters.Order.ReferenceIds) > 0 {
+			ds = ds.Where(goqu.I(o + ".reference_id").In(filters.Order.ReferenceIds))
 		}
 
 		// Agregar filtro por LPNs si existen
-		if len(filters.Lpns) > 0 {
-			ds = ds.Where(goqu.I(du + ".lpn").In(filters.Lpns))
+		if filters.DeliveryUnit != nil && len(filters.DeliveryUnit.Lpns) > 0 {
+			ds = ds.Where(goqu.I(du + ".lpn").In(filters.DeliveryUnit.Lpns))
 		}
 
 		// Agregar filtro por SizeCategories si existen
-		if len(filters.SizeCategories) > 0 {
+		if filters.DeliveryUnit != nil && len(filters.DeliveryUnit.SizeCategories) > 0 {
 			sizeCategoriesDocs := []string{}
-			for _, sizeCategory := range filters.SizeCategories {
+			for _, sizeCategory := range filters.DeliveryUnit.SizeCategories {
 				sizeCategoriesDocs = append(sizeCategoriesDocs, string(domain.SizeCategory{Code: sizeCategory}.DocumentID(ctx)))
 			}
 			ds = ds.Where(goqu.I(du + ".size_category_doc").In(sizeCategoriesDocs))
 		}
 
 		// Agregar filtro por originNodeReferences si existen
-		if len(filters.OriginNodeReferences) > 0 {
+		if filters.Origin != nil && len(filters.Origin.NodeReferences) > 0 {
 			nodeDocs := []string{}
-			for _, ref := range filters.OriginNodeReferences {
+			for _, ref := range filters.Origin.NodeReferences {
 				ni := domain.NodeInfo{
 					ReferenceID: domain.ReferenceID(ref),
 				}
@@ -138,7 +138,8 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		// Join address_infos si se requiere algún campo de addressInfo
-		if projection.DestinationAddressInfo().Has(filters.RequestedFields) || filters.CoordinatesConfidenceLevel != nil {
+		if projection.DestinationAddressInfo().Has(filters.RequestedFields) ||
+			(filters.Destination != nil && filters.Destination.CoordinatesConfidence != nil) {
 			ds = ds.InnerJoin(
 				goqu.T("address_infos").As(dadi),
 				goqu.On(goqu.I(dadi+".document_id").Eq(goqu.I(o+".destination_address_info_doc"))),
@@ -146,29 +147,29 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		// Agregar filtro por nivel de confianza de coordenadas si existe
-		if filters.CoordinatesConfidenceLevel != nil {
+		if filters.Destination != nil && filters.Destination.CoordinatesConfidence != nil {
 			// Aplicar filtros de nivel de confianza
-			if filters.CoordinatesConfidenceLevel.Min != nil {
-				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Gte(*filters.CoordinatesConfidenceLevel.Min))
+			if filters.Destination.CoordinatesConfidence.Min != nil {
+				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Gte(*filters.Destination.CoordinatesConfidence.Min))
 			}
-			if filters.CoordinatesConfidenceLevel.Max != nil {
-				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Lte(*filters.CoordinatesConfidenceLevel.Max))
+			if filters.Destination.CoordinatesConfidence.Max != nil {
+				ds = ds.Where(goqu.I(dadi + ".coordinate_confidence").Lte(*filters.Destination.CoordinatesConfidence.Max))
 			}
 		}
 
 		// Agregar filtro por rango de fecha prometida si existe
-		if filters.PromisedDateRange != nil {
-			if filters.PromisedDateRange.StartDate != nil {
-				ds = ds.Where(goqu.I(o + ".promised_date_range_start").Gte(*filters.PromisedDateRange.StartDate))
+		if filters.PromisedDate != nil && filters.PromisedDate.DateRange != nil {
+			if filters.PromisedDate.DateRange.StartDate != nil {
+				ds = ds.Where(goqu.I(o + ".promised_date_range_start").Gte(*filters.PromisedDate.DateRange.StartDate))
 			}
-			if filters.PromisedDateRange.EndDate != nil {
-				ds = ds.Where(goqu.I(o + ".promised_date_range_end").Lte(*filters.PromisedDateRange.EndDate))
+			if filters.PromisedDate.DateRange.EndDate != nil {
+				ds = ds.Where(goqu.I(o + ".promised_date_range_end").Lte(*filters.PromisedDate.DateRange.EndDate))
 			}
 		}
 
 		// Agregar filtro por CollectAvailabilityDates si existen
-		if len(filters.CollectAvailabilityDates) > 0 {
-			ds = ds.Where(goqu.I(o + ".collect_availability_date").In(filters.CollectAvailabilityDates))
+		if filters.CollectAvailability != nil && len(filters.CollectAvailability.Dates) > 0 {
+			ds = ds.Where(goqu.I(o + ".collect_availability_date").In(filters.CollectAvailability.Dates))
 		}
 
 		// Agregar ordenamiento por reference_id
@@ -211,7 +212,8 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		// Add order references using WITH clause if either requested or filtered
-		if projection.References().Has(filters.RequestedFields) || len(filters.References) > 0 {
+		if projection.References().Has(filters.RequestedFields) ||
+			(filters.Order != nil && len(filters.Order.References) > 0) {
 			ds = ds.With("order_refs", goqu.From(goqu.T("order_references").As(or)).
 				Select(
 					goqu.I(or+".order_doc"),
@@ -230,11 +232,11 @@ func NewFindDeliveryUnitsProjectionResult(
 			}
 
 			// Add filter conditions for references if provided
-			if len(filters.References) > 0 {
+			if filters.Order != nil && len(filters.Order.References) > 0 {
 				const orf = "orf" // alias exclusivo para evitar colisión con la CTE `order_refs`
 
 				inRefs := []string{}
-				for _, ref := range filters.References {
+				for _, ref := range filters.Order.References {
 					ref := domain.Reference{
 						Type:  ref.Type,
 						Value: ref.Value,
@@ -249,12 +251,11 @@ func NewFindDeliveryUnitsProjectionResult(
 						Where(goqu.I(orf + ".document_id").In(inRefs)),
 				))
 			}
-
 		}
 
 		// Add delivery unit labels if requested or filtered
-		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) || len(filters.Labels) > 0 {
-
+		if projection.DeliveryUnitLabels().Has(filters.RequestedFields) ||
+			(filters.DeliveryUnit != nil && len(filters.DeliveryUnit.Labels) > 0) {
 			ds = ds.With("delivery_unit_labels", goqu.From(goqu.T("delivery_units_labels").As(dul)).
 				Select(
 					goqu.I(dul+".delivery_unit_doc"),
@@ -273,11 +274,11 @@ func NewFindDeliveryUnitsProjectionResult(
 			}
 
 			// Add filter conditions for labels if provided
-			if len(filters.Labels) > 0 {
+			if filters.DeliveryUnit != nil && len(filters.DeliveryUnit.Labels) > 0 {
 				const dulf = "dulf" // alias exclusivo para evitar colisión con la CTE `delivery_unit_labels`
 
 				docIds := []string{}
-				for _, label := range filters.Labels {
+				for _, label := range filters.DeliveryUnit.Labels {
 					docIds = append(docIds, string(domain.Reference(label).DocID(ctx)))
 				}
 
@@ -301,6 +302,14 @@ func NewFindDeliveryUnitsProjectionResult(
 				goqu.On(goqu.I(s+".document_id").Eq(goqu.I(duh+".delivery_unit_status_doc"))),
 			).
 				SelectAppend(goqu.I(s + ".status").As("status"))
+		}
+
+		if projection.ManualChangePerformedBy().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".manual_change_performed_by").As("manual_change_performed_by"))
+		}
+
+		if projection.ManualChangeReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".manual_change_reason").As("manual_change_reason"))
 		}
 
 		if projection.DeliveryUnitLPN().Has(filters.RequestedFields) {

@@ -30,6 +30,10 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 					EndTime:   &du.OrderCollectAvailabilityDateEndTime,
 				},
 			},
+			ManualChange: &model.ManualChange{
+				PerformedBy: &du.ManualChangePerformedBy,
+				Reason:      &du.ManualChangeReason,
+			},
 			Destination: &model.Location{
 				AddressInfo: &model.AddressInfo{
 					AddressLine1: &du.DestinationAddressLine1,

@@ -147,6 +147,7 @@ type ComplexityRoot struct {
 		ExtraFields             func(childComplexity int) int
 		GroupBy                 func(childComplexity int) int
 		ID                      func(childComplexity int) int
+		ManualChange            func(childComplexity int) int
 		OrderType               func(childComplexity int) int
 		Origin                  func(childComplexity int) int
 		PromisedDate            func(childComplexity int) int
@@ -224,6 +225,11 @@ type ComplexityRoot struct {
 	Location struct {
 		AddressInfo func(childComplexity int) int
 		NodeInfo    func(childComplexity int) int
+	}
+
+	ManualChange struct {
+		PerformedBy func(childComplexity int) int
+		Reason      func(childComplexity int) int
 	}
 
 	NodeInfo struct {
@@ -740,6 +746,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryUnitsReport.ID(childComplexity), true
 
+	case "DeliveryUnitsReport.manualChange":
+		if e.complexity.DeliveryUnitsReport.ManualChange == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.ManualChange(childComplexity), true
+
 	case "DeliveryUnitsReport.orderType":
 		if e.complexity.DeliveryUnitsReport.OrderType == nil {
 			break
@@ -1027,6 +1040,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.Location.NodeInfo(childComplexity), true
 
+	case "ManualChange.performedBy":
+		if e.complexity.ManualChange.PerformedBy == nil {
+			break
+		}
+
+		return e.complexity.ManualChange.PerformedBy(childComplexity), true
+
+	case "ManualChange.reason":
+		if e.complexity.ManualChange.Reason == nil {
+			break
+		}
+
+		return e.complexity.ManualChange.Reason(childComplexity), true
+
 	case "NodeInfo.name":
 		if e.complexity.NodeInfo.Name == nil {
 			break
@@ -1229,11 +1256,19 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	opCtx := graphql.GetOperationContext(ctx)
 	ec := executionContext{opCtx, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputCollectAvailabilityFilter,
 		ec.unmarshalInputCoordinatesConfidenceLevelFilter,
+		ec.unmarshalInputDateRangeFilter,
+		ec.unmarshalInputDeliveryUnitFilter,
 		ec.unmarshalInputDeliveryUnitsReportFilterInput,
+		ec.unmarshalInputGroupByFilter,
 		ec.unmarshalInputLabelFilterInput,
-		ec.unmarshalInputPromisedDateRangeFilter,
+		ec.unmarshalInputLocationFilter,
+		ec.unmarshalInputOrderFilter,
+		ec.unmarshalInputOrderTypeFilter,
+		ec.unmarshalInputPromisedDateFilter,
 		ec.unmarshalInputReferenceFilterInput,
+		ec.unmarshalInputTimeRangeFilter,
 	)
 	first := true
 
@@ -4665,6 +4700,53 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_delivery(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnitsReport_manualChange(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_manualChange(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ManualChange, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ManualChange)
+	fc.Result = res
+	return ec.marshalOManualChange2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐManualChange(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_manualChange(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "performedBy":
+				return ec.fieldContext_ManualChange_performedBy(ctx, field)
+			case "reason":
+				return ec.fieldContext_ManualChange_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ManualChange", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReportConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReportConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReportConnection_edges(ctx, field)
 	if err != nil {
@@ -4894,6 +4976,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 				return ec.fieldContext_DeliveryUnitsReport_route(ctx, field)
 			case "delivery":
 				return ec.fieldContext_DeliveryUnitsReport_delivery(ctx, field)
+			case "manualChange":
+				return ec.fieldContext_DeliveryUnitsReport_manualChange(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DeliveryUnitsReport", field.Name)
 		},
@@ -6153,6 +6237,88 @@ func (ec *executionContext) fieldContext_Location_nodeInfo(_ context.Context, fi
 				return ec.fieldContext_NodeInfo_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NodeInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManualChange_performedBy(ctx context.Context, field graphql.CollectedField, obj *model.ManualChange) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManualChange_performedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerformedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManualChange_performedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManualChange",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManualChange_reason(ctx context.Context, field graphql.CollectedField, obj *model.ManualChange) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManualChange_reason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reason, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManualChange_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManualChange",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -9388,6 +9554,40 @@ func (ec *executionContext) fieldContext___Type_isOneOf(_ context.Context, field
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputCollectAvailabilityFilter(ctx context.Context, obj any) (model.CollectAvailabilityFilter, error) {
+	var it model.CollectAvailabilityFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"dates", "timeRange"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "dates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dates"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Dates = data
+		case "timeRange":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeRange"))
+			data, err := ec.unmarshalOTimeRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐTimeRangeFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TimeRange = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCoordinatesConfidenceLevelFilter(ctx context.Context, obj any) (model.CoordinatesConfidenceLevelFilter, error) {
 	var it model.CoordinatesConfidenceLevelFilter
 	asMap := map[string]any{}
@@ -9422,27 +9622,54 @@ func (ec *executionContext) unmarshalInputCoordinatesConfidenceLevelFilter(ctx c
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx context.Context, obj any) (model.DeliveryUnitsReportFilterInput, error) {
-	var it model.DeliveryUnitsReportFilterInput
+func (ec *executionContext) unmarshalInputDateRangeFilter(ctx context.Context, obj any) (model.DateRangeFilter, error) {
+	var it model.DateRangeFilter
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceIds", "lpns", "sizeCategories", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeFilter", "collectAvailabilityDates", "onlyLatestStatus"}
+	fieldsInOrder := [...]string{"startDate", "endDate"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "referenceIds":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIds"))
-			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+		case "startDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.ReferenceIds = data
+			it.StartDate = data
+		case "endDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndDate = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeliveryUnitFilter(ctx context.Context, obj any) (model.DeliveryUnitFilter, error) {
+	var it model.DeliveryUnitFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"lpns", "sizeCategories", "labels"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
 		case "lpns":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lpns"))
 			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
@@ -9457,20 +9684,6 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.SizeCategories = data
-		case "originNodeReferences":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originNodeReferences"))
-			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.OriginNodeReferences = data
-		case "references":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("references"))
-			data, err := ec.unmarshalOReferenceFilterInput2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐReferenceFilterInput(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.References = data
 		case "labels":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("labels"))
 			data, err := ec.unmarshalOLabelFilterInput2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLabelFilterInput(ctx, v)
@@ -9478,27 +9691,68 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.Labels = data
-		case "coordinatesConfidenceLevel":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("coordinatesConfidenceLevel"))
-			data, err := ec.unmarshalOCoordinatesConfidenceLevelFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐCoordinatesConfidenceLevelFilter(ctx, v)
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx context.Context, obj any) (model.DeliveryUnitsReportFilterInput, error) {
+	var it model.DeliveryUnitsReportFilterInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"order", "deliveryUnit", "origin", "destination", "promisedDate", "collectAvailability", "onlyLatestStatus"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "order":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
+			data, err := ec.unmarshalOOrderFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐOrderFilter(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CoordinatesConfidenceLevel = data
-		case "promisedDateRangeFilter":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promisedDateRangeFilter"))
-			data, err := ec.unmarshalOPromisedDateRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateRangeFilter(ctx, v)
+			it.Order = data
+		case "deliveryUnit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("deliveryUnit"))
+			data, err := ec.unmarshalODeliveryUnitFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDeliveryUnitFilter(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.PromisedDateRangeFilter = data
-		case "collectAvailabilityDates":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectAvailabilityDates"))
-			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			it.DeliveryUnit = data
+		case "origin":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("origin"))
+			data, err := ec.unmarshalOLocationFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLocationFilter(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.CollectAvailabilityDates = data
+			it.Origin = data
+		case "destination":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("destination"))
+			data, err := ec.unmarshalOLocationFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLocationFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Destination = data
+		case "promisedDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promisedDate"))
+			data, err := ec.unmarshalOPromisedDateFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PromisedDate = data
+		case "collectAvailability":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("collectAvailability"))
+			data, err := ec.unmarshalOCollectAvailabilityFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐCollectAvailabilityFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CollectAvailability = data
 		case "onlyLatestStatus":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyLatestStatus"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -9506,6 +9760,40 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.OnlyLatestStatus = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputGroupByFilter(ctx context.Context, obj any) (model.GroupByFilter, error) {
+	var it model.GroupByFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type", "value"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "value":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Value = data
 		}
 	}
 
@@ -9546,34 +9834,185 @@ func (ec *executionContext) unmarshalInputLabelFilterInput(ctx context.Context, 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPromisedDateRangeFilter(ctx context.Context, obj any) (model.PromisedDateRangeFilter, error) {
-	var it model.PromisedDateRangeFilter
+func (ec *executionContext) unmarshalInputLocationFilter(ctx context.Context, obj any) (model.LocationFilter, error) {
+	var it model.LocationFilter
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"startDate", "endDate"}
+	fieldsInOrder := [...]string{"nodeReferences", "addressLines", "districts", "provinces", "states", "zipCodes", "coordinatesConfidence"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "startDate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startDate"))
+		case "nodeReferences":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nodeReferences"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NodeReferences = data
+		case "addressLines":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addressLines"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AddressLines = data
+		case "districts":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("districts"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Districts = data
+		case "provinces":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provinces"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Provinces = data
+		case "states":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("states"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.States = data
+		case "zipCodes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zipCodes"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ZipCodes = data
+		case "coordinatesConfidence":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("coordinatesConfidence"))
+			data, err := ec.unmarshalOCoordinatesConfidenceLevelFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐCoordinatesConfidenceLevelFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CoordinatesConfidence = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrderFilter(ctx context.Context, obj any) (model.OrderFilter, error) {
+	var it model.OrderFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"referenceIds", "references", "orderType", "groupBy"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "referenceIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIds"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIds = data
+		case "references":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("references"))
+			data, err := ec.unmarshalOReferenceFilterInput2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐReferenceFilterInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.References = data
+		case "orderType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("orderType"))
+			data, err := ec.unmarshalOOrderTypeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐOrderTypeFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.OrderType = data
+		case "groupBy":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("groupBy"))
+			data, err := ec.unmarshalOGroupByFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐGroupByFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.GroupBy = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrderTypeFilter(ctx context.Context, obj any) (model.OrderTypeFilter, error) {
+	var it model.OrderTypeFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"type", "description"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.StartDate = data
-		case "endDate":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endDate"))
+			it.Type = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.EndDate = data
+			it.Description = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPromisedDateFilter(ctx context.Context, obj any) (model.PromisedDateFilter, error) {
+	var it model.PromisedDateFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"dateRange", "timeRange"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "dateRange":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dateRange"))
+			data, err := ec.unmarshalODateRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDateRangeFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DateRange = data
+		case "timeRange":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeRange"))
+			data, err := ec.unmarshalOTimeRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐTimeRangeFilter(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TimeRange = data
 		}
 	}
 
@@ -9608,6 +10047,40 @@ func (ec *executionContext) unmarshalInputReferenceFilterInput(ctx context.Conte
 				return it, err
 			}
 			it.Value = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTimeRangeFilter(ctx context.Context, obj any) (model.TimeRangeFilter, error) {
+	var it model.TimeRangeFilter
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"startTime", "endTime"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "startTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.StartTime = data
+		case "endTime":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("endTime"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EndTime = data
 		}
 	}
 
@@ -10222,6 +10695,8 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._DeliveryUnitsReport_route(ctx, field, obj)
 		case "delivery":
 			out.Values[i] = ec._DeliveryUnitsReport_delivery(ctx, field, obj)
+		case "manualChange":
+			out.Values[i] = ec._DeliveryUnitsReport_manualChange(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10714,6 +11189,44 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Location_addressInfo(ctx, field, obj)
 		case "nodeInfo":
 			out.Values[i] = ec._Location_nodeInfo(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var manualChangeImplementors = []string{"ManualChange"}
+
+func (ec *executionContext) _ManualChange(ctx context.Context, sel ast.SelectionSet, obj *model.ManualChange) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, manualChangeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ManualChange")
+		case "performedBy":
+			out.Values[i] = ec._ManualChange_performedBy(ctx, field, obj)
+		case "reason":
+			out.Values[i] = ec._ManualChange_reason(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12057,6 +12570,14 @@ func (ec *executionContext) marshalOCollectAvailabilityDate2ᚖtransportᚑapp�
 	return ec._CollectAvailabilityDate(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOCollectAvailabilityFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐCollectAvailabilityFilter(ctx context.Context, v any) (*model.CollectAvailabilityFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputCollectAvailabilityFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalOConfidence2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐConfidence(ctx context.Context, sel ast.SelectionSet, v *model.Confidence) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -12141,6 +12662,14 @@ func (ec *executionContext) marshalODateRange2ᚖtransportᚑappᚋappᚋadapter
 	return ec._DateRange(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalODateRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDateRangeFilter(ctx context.Context, v any) (*model.DateRangeFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDateRangeFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalODelivery2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDelivery(ctx context.Context, sel ast.SelectionSet, v *model.Delivery) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -12174,6 +12703,14 @@ func (ec *executionContext) marshalODeliveryUnit2ᚖtransportᚑappᚋappᚋadap
 		return graphql.Null
 	}
 	return ec._DeliveryUnit(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalODeliveryUnitFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDeliveryUnitFilter(ctx context.Context, v any) (*model.DeliveryUnitFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputDeliveryUnitFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalODeliveryUnitsReportFilterInput2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐDeliveryUnitsReportFilterInput(ctx context.Context, v any) (*model.DeliveryUnitsReportFilterInput, error) {
@@ -12316,6 +12853,14 @@ func (ec *executionContext) marshalOGroupBy2ᚖtransportᚑappᚋappᚋadapter�
 		return graphql.Null
 	}
 	return ec._GroupBy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOGroupByFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐGroupByFilter(ctx context.Context, v any) (*model.GroupByFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputGroupByFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOInsurance2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐInsurance(ctx context.Context, sel ast.SelectionSet, v *model.Insurance) graphql.Marshaler {
@@ -12472,11 +13017,34 @@ func (ec *executionContext) marshalOLocation2ᚖtransportᚑappᚋappᚋadapter�
 	return ec._Location(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOLocationFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLocationFilter(ctx context.Context, v any) (*model.LocationFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputLocationFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOManualChange2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐManualChange(ctx context.Context, sel ast.SelectionSet, v *model.ManualChange) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ManualChange(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalONodeInfo2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeInfo) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._NodeInfo(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOOrderFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐOrderFilter(ctx context.Context, v any) (*model.OrderFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrderFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOOrderType2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐOrderType(ctx context.Context, sel ast.SelectionSet, v *model.OrderType) graphql.Marshaler {
@@ -12486,6 +13054,14 @@ func (ec *executionContext) marshalOOrderType2ᚖtransportᚑappᚋappᚋadapter
 	return ec._OrderType(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalOOrderTypeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐOrderTypeFilter(ctx context.Context, v any) (*model.OrderTypeFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputOrderTypeFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalOPromisedDate2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDate(ctx context.Context, sel ast.SelectionSet, v *model.PromisedDate) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -12493,11 +13069,11 @@ func (ec *executionContext) marshalOPromisedDate2ᚖtransportᚑappᚋappᚋadap
 	return ec._PromisedDate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOPromisedDateRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateRangeFilter(ctx context.Context, v any) (*model.PromisedDateRangeFilter, error) {
+func (ec *executionContext) unmarshalOPromisedDateFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateFilter(ctx context.Context, v any) (*model.PromisedDateFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputPromisedDateRangeFilter(ctx, v)
+	res, err := ec.unmarshalInputPromisedDateFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -12690,6 +13266,14 @@ func (ec *executionContext) marshalOTimeRange2ᚖtransportᚑappᚋappᚋadapter
 		return graphql.Null
 	}
 	return ec._TimeRange(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOTimeRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐTimeRangeFilter(ctx context.Context, v any) (*model.TimeRangeFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTimeRangeFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOVehicle2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐVehicle(ctx context.Context, sel ast.SelectionSet, v *model.Vehicle) graphql.Marshaler {

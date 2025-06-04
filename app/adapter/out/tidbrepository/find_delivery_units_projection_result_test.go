@@ -1100,8 +1100,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String(): "",
 				projection.References().String():  "",
 			},
-			References: []domain.ReferenceFilter{
-				{Type: "TRACKING", Value: "TRK-123"},
+			Order: &domain.OrderFilter{
+				References: []domain.ReferenceFilter{
+					{Type: "TRACKING", Value: "TRK-123"},
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1115,8 +1117,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String(): "",
 				projection.References().String():  "",
 			},
-			References: []domain.ReferenceFilter{
-				{Type: "EXTERNAL", Value: "EXT-012"},
+			Order: &domain.OrderFilter{
+				References: []domain.ReferenceFilter{
+					{Type: "EXTERNAL", Value: "EXT-012"},
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1130,8 +1134,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String(): "",
 				projection.References().String():  "",
 			},
-			References: []domain.ReferenceFilter{
-				{Type: "TRACKING", Value: "NON-EXISTENT"},
+			Order: &domain.OrderFilter{
+				References: []domain.ReferenceFilter{
+					{Type: "TRACKING", Value: "NON-EXISTENT"},
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1193,7 +1199,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			ReferenceIds: []string{"REF-001"},
+			Order: &domain.OrderFilter{
+				ReferenceIds: []string{"REF-001"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
@@ -1205,7 +1213,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			ReferenceIds: []string{"REF-001", "REF-003"},
+			Order: &domain.OrderFilter{
+				ReferenceIds: []string{"REF-001", "REF-003"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
@@ -1224,7 +1234,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			ReferenceIds: []string{"NON-EXISTENT"},
+			Order: &domain.OrderFilter{
+				ReferenceIds: []string{"NON-EXISTENT"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
@@ -1321,8 +1333,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():        "",
 				projection.DeliveryUnitLabels().String(): "",
 			},
-			Labels: []domain.LabelFilter{
-				{Type: "PRIORITY", Value: "HIGH"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				Labels: []domain.LabelFilter{
+					{Type: "PRIORITY", Value: "HIGH"},
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1343,9 +1357,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():        "",
 				projection.DeliveryUnitLabels().String(): "",
 			},
-			Labels: []domain.LabelFilter{
-				{Type: "PRIORITY", Value: "HIGH"},
-				{Type: "TEMPERATURE", Value: "HOT"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				Labels: []domain.LabelFilter{
+					{Type: "PRIORITY", Value: "HIGH"},
+					{Type: "TEMPERATURE", Value: "HOT"},
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1366,8 +1382,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():        "",
 				projection.DeliveryUnitLabels().String(): "",
 			},
-			Labels: []domain.LabelFilter{
-				{Type: "NON_EXISTENT", Value: "VALUE"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				Labels: []domain.LabelFilter{
+					{Type: "NON_EXISTENT", Value: "VALUE"},
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1447,7 +1465,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():     "",
 				projection.DeliveryUnitLPN().String(): "",
 			},
-			Lpns: []string{"LPN001"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				Lpns: []string{"LPN001"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
@@ -1460,7 +1480,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():     "",
 				projection.DeliveryUnitLPN().String(): "",
 			},
-			Lpns: []string{"LPN001", "LPN003"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				Lpns: []string{"LPN001", "LPN003"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
@@ -1480,7 +1502,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():     "",
 				projection.DeliveryUnitLPN().String(): "",
 			},
-			Lpns: []string{"NON-EXISTENT-LPN"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				Lpns: []string{"NON-EXISTENT-LPN"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
@@ -1666,8 +1690,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Min: &minConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Min: &minConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1695,8 +1721,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Max: &maxConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Max: &maxConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1719,9 +1747,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Min: &minConfidence,
-				Max: &maxConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Min: &minConfidence,
+					Max: &maxConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1744,9 +1774,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Min: &minConfidence,
-				Max: &maxConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Min: &minConfidence,
+					Max: &maxConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1760,8 +1792,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Min: &minConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Min: &minConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1775,8 +1809,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Max: &maxConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Max: &maxConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1791,9 +1827,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():                           "",
 				projection.DestinationCoordinatesConfidenceLevel().String(): "",
 			},
-			CoordinatesConfidenceLevel: &domain.CoordinatesConfidenceLevelFilter{
-				Min: &minConfidence,
-				Max: &maxConfidence,
+			Destination: &domain.LocationFilter{
+				CoordinatesConfidence: &domain.CoordinatesConfidenceLevelFilter{
+					Min: &minConfidence,
+					Max: &maxConfidence,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -1882,7 +1920,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			OriginNodeReferences: []string{"NODE-001"},
+			Origin: &domain.LocationFilter{
+				NodeReferences: []string{"NODE-001"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1), "Debería retornar solo una unidad de entrega")
@@ -1894,7 +1934,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			OriginNodeReferences: []string{"NODE-002"},
+			Origin: &domain.LocationFilter{
+				NodeReferences: []string{"NODE-002"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1), "Debería retornar solo una unidad de entrega")
@@ -1903,7 +1945,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Buscar unidades de entrega filtrando por ambos nodos de origen
 		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
-			OriginNodeReferences: []string{"NODE-001", "NODE-002"},
+			Origin: &domain.LocationFilter{
+				NodeReferences: []string{"NODE-001", "NODE-002"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2), "Debería retornar ambas unidades de entrega")
@@ -2073,9 +2117,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.PromisedDateDateRangeStartDate().String(): "",
 				projection.PromisedDateDateRangeEndDate().String():   "",
 			},
-			PromisedDateRange: &domain.PromisedDateRangeFilter{
-				StartDate: &startDate,
-				EndDate:   &endDate,
+			PromisedDate: &domain.PromisedDateFilter{
+				DateRange: &domain.DateRangeFilter{
+					StartDate: &startDate,
+					EndDate:   &endDate,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -2095,9 +2141,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.PromisedDateDateRangeStartDate().String(): "",
 				projection.PromisedDateDateRangeEndDate().String():   "",
 			},
-			PromisedDateRange: &domain.PromisedDateRangeFilter{
-				StartDate: &startDate,
-				EndDate:   &endDate,
+			PromisedDate: &domain.PromisedDateFilter{
+				DateRange: &domain.DateRangeFilter{
+					StartDate: &startDate,
+					EndDate:   &endDate,
+				},
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -2183,7 +2231,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			SizeCategories: []string{"SMALL"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				SizeCategories: []string{"SMALL"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
@@ -2195,7 +2245,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			RequestedFields: map[string]any{
 				projection.ReferenceID().String(): "",
 			},
-			SizeCategories: []string{"SMALL", "LARGE"},
+			DeliveryUnit: &domain.DeliveryUnitFilter{
+				SizeCategories: []string{"SMALL", "LARGE"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
@@ -2291,7 +2343,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():             "",
 				projection.CollectAvailabilityDate().String(): "",
 			},
-			CollectAvailabilityDates: []string{"2024-03-20"},
+			CollectAvailability: &domain.CollectAvailabilityFilter{
+				Dates: []string{"2024-03-20"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
@@ -2304,7 +2358,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():             "",
 				projection.CollectAvailabilityDate().String(): "",
 			},
-			CollectAvailabilityDates: []string{"2024-03-20", "2024-03-22"},
+			CollectAvailability: &domain.CollectAvailabilityFilter{
+				Dates: []string{"2024-03-20", "2024-03-22"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(2))
@@ -2324,11 +2380,69 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.ReferenceID().String():             "",
 				projection.CollectAvailabilityDate().String(): "",
 			},
-			CollectAvailabilityDates: []string{"2024-03-25"},
+			CollectAvailability: &domain.CollectAvailabilityFilter{
+				Dates: []string{"2024-03-25"},
+			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(BeEmpty())
 		Expect(hasMore).To(BeFalse())
+	})
+
+	It("should return delivery units with manual change information", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con manual change
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{
+					ConfirmDelivery: domain.ConfirmDelivery{
+						ManualChange: domain.ManualChange{
+							PerformedBy: "juan@example.com",
+							Reason:      "Corrección tras reclamo de transporte",
+						},
+					},
+				},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():             "",
+				projection.ManualChange().String():            "",
+				projection.ManualChangePerformedBy().String(): "",
+				projection.ManualChangeReason().String():      "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+
+		// Validar que la información de manual change se recuperó correctamente
+		Expect(results[0].OrderReferenceID).To(Equal("123"))
+		Expect(results[0].ManualChangePerformedBy).To(Equal("juan@example.com"))
+		Expect(results[0].ManualChangeReason).To(Equal("Corrección tras reclamo de transporte"))
 	})
 
 })
