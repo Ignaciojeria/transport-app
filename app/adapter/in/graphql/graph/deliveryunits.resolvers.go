@@ -175,6 +175,17 @@ func (r *queryResolver) DeliveryUnitsReports(
 				EndDate:   filter.PromisedDateRangeDateFilter.EndDate,
 			}
 		}
+
+		if len(filter.SizeCategories) > 0 {
+			// Convertir []*string a []string
+			sizeCategories := make([]string, len(filter.SizeCategories))
+			for i, size := range filter.SizeCategories {
+				if size != nil {
+					sizeCategories[i] = *size
+				}
+			}
+			deliveryUnitsFilter.SizeCategories = sizeCategories
+		}
 	}
 
 	results, hasMore, err := r.findDeliveryUnitsProjectionResult(ctx, deliveryUnitsFilter)

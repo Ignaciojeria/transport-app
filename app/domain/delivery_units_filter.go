@@ -38,4 +38,5 @@ type DeliveryUnitsFilter struct {
 	CoordinatesConfidenceLevel *CoordinatesConfidenceLevelFilter
 	PromisedDateRange          *PromisedDateRangeFilter
 	OnlyLatestStatus           bool
+	SizeCategories             []string
 }

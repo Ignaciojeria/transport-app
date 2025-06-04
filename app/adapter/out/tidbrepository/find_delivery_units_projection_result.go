@@ -99,7 +99,7 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Agregar join con delivery_units si se solicita cualquier campo relacionado
 		if projection.DeliveryUnit().Has(filters.RequestedFields) ||
-			len(filters.Lpns) > 0 || len(filters.Labels) > 0 {
+			len(filters.Lpns) > 0 || len(filters.Labels) > 0 || len(filters.SizeCategories) > 0 {
 			ds = ds.InnerJoin(
 				goqu.T("delivery_units").As(du),
 				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
@@ -114,6 +114,15 @@ func NewFindDeliveryUnitsProjectionResult(
 		// Agregar filtro por LPNs si existen
 		if len(filters.Lpns) > 0 {
 			ds = ds.Where(goqu.I(du + ".lpn").In(filters.Lpns))
+		}
+
+		// Agregar filtro por SizeCategories si existen
+		if len(filters.SizeCategories) > 0 {
+			sizeCategoriesDocs := []string{}
+			for _, sizeCategory := range filters.SizeCategories {
+				sizeCategoriesDocs = append(sizeCategoriesDocs, string(domain.SizeCategory{Code: sizeCategory}.DocumentID(ctx)))
+			}
+			ds = ds.Where(goqu.I(du + ".size_category_doc").In(sizeCategoriesDocs))
 		}
 
 		// Agregar filtro por originNodeReferences si existen

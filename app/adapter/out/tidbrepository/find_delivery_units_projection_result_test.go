@@ -2109,6 +2109,107 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[1].OrderReferenceID).To(Equal("456"), "Unexpected second reference ID")
 	})
 
+	It("should filter delivery units by size categories", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units con diferentes size categories
+		deliveryUnit1 := domain.DeliveryUnit{
+			Lpn:          "1234567890",
+			SizeCategory: domain.SizeCategory{Code: "SMALL"},
+		}
+
+		deliveryUnit2 := domain.DeliveryUnit{
+			Lpn:          "1234567891",
+			SizeCategory: domain.SizeCategory{Code: "MEDIUM"},
+		}
+
+		deliveryUnit3 := domain.DeliveryUnit{
+			Lpn:          "1234567892",
+			SizeCategory: domain.SizeCategory{Code: "LARGE"},
+		}
+
+		// Crear orders con las delivery units
+		orders := []domain.Order{
+			{
+				ReferenceID: "REF-001",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit1,
+				},
+			},
+			{
+				ReferenceID: "REF-002",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit2,
+				},
+			},
+			{
+				ReferenceID: "REF-003",
+				DeliveryUnits: []domain.DeliveryUnit{
+					deliveryUnit3,
+				},
+			},
+		}
+
+		// Insertar delivery units
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
+		Expect(err).ToNot(HaveOccurred())
+
+		// Insertar orders
+		for _, order := range orders {
+			err = NewUpsertOrder(conn)(ctx, order)
+			Expect(err).ToNot(HaveOccurred())
+		}
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: orders,
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		// Test filtrando por una sola size category
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			SizeCategories: []string{"SMALL"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+		Expect(results[0].OrderReferenceID).To(Equal("REF-001"))
+
+		// Test filtrando por múltiples size categories
+		results, hasMore, err = findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String(): "",
+			},
+			SizeCategories: []string{"SMALL", "LARGE"},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(2))
+		Expect(hasMore).To(BeFalse())
+		Expect(results).To(ContainElements(
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-001")),
+			WithTransform(func(r projectionresult.DeliveryUnitsProjectionResult) string {
+				return r.OrderReferenceID
+			}, Equal("REF-003")),
+		))
+	})
+
 })
 
 // Helper function to create pointer to int

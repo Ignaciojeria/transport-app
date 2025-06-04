@@ -9429,7 +9429,7 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceIds", "lpns", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeDateFilter", "onlyLatestStatus"}
+	fieldsInOrder := [...]string{"referenceIds", "lpns", "sizeCategories", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeDateFilter", "onlyLatestStatus"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9450,6 +9450,13 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.Lpns = data
+		case "sizeCategories":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sizeCategories"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SizeCategories = data
 		case "originNodeReferences":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("originNodeReferences"))
 			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)

@@ -131,6 +131,7 @@ type DeliveryUnitsReportEdge struct {
 type DeliveryUnitsReportFilterInput struct {
 	ReferenceIds                []*string                         `json:"referenceIds,omitempty"`
 	Lpns                        []*string                         `json:"lpns,omitempty"`
+	SizeCategories              []*string                         `json:"sizeCategories,omitempty"`
 	OriginNodeReferences        []*string                         `json:"originNodeReferences,omitempty"`
 	References                  []*ReferenceFilterInput           `json:"references,omitempty"`
 	Labels                      []*LabelFilterInput               `json:"labels,omitempty"`
