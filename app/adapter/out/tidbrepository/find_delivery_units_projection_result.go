@@ -2,7 +2,6 @@ package tidbrepository
 
 import (
 	"context"
-	"time"
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
@@ -59,8 +58,7 @@ func NewFindDeliveryUnitsProjectionResult(
 			).
 			Where(goqu.Ex{
 				duh + ".tenant_id": sharedcontext.TenantIDFromContext(ctx),
-			}).
-			Order(goqu.I(duh + ".document_id").Asc())
+			})
 
 		ds := goqu.From(baseQuery.As("base")).
 			Select(
@@ -127,85 +125,38 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		// Agregar ordenamiento por reference_id
+		ds = ds.Order(goqu.I(o + ".reference_id").Asc())
+
 		if filters.Pagination.IsForward() {
-			if filters.Pagination.HasAfter() {
-				// Si hay cursor, ordenar por updated_at e id
-				ds = ds.Order(goqu.I(duh+".updated_at").Asc(), goqu.I(duh+".id").Asc())
-			} else {
-				// Si no hay cursor, ordenar por reference_id
-				ds = ds.Order(goqu.I(o + ".reference_id").Asc())
-			}
-		} else if filters.Pagination.IsBackward() {
-			if filters.Pagination.HasBefore() {
-				// Si hay cursor, ordenar por updated_at e id
-				ds = ds.Order(goqu.I(duh+".updated_at").Desc(), goqu.I(duh+".id").Desc())
-			} else {
-				// Si no hay cursor, ordenar por reference_id
-				ds = ds.Order(goqu.I(o + ".reference_id").Desc())
-			}
-		} else {
-			// Si no hay paginación, ordenar por reference_id ascendente
-			ds = ds.Order(goqu.I(o + ".reference_id").Asc())
+			ds = ds.Order(goqu.I(duh + ".id").Asc())
+		}
+
+		if filters.Pagination.IsBackward() {
+			ds = ds.Order(goqu.I(duh + ".id").Desc())
 		}
 
 		if filters.Pagination.IsForward() {
-			ds = ds.Order(goqu.I(duh+".updated_at").Asc(), goqu.I(duh+".id").Asc())
-
-			if afterID, err := filters.Pagination.AfterID(); err != nil {
+			afterID, err := filters.Pagination.AfterID()
+			if err != nil {
 				return nil, false, err
-			} else if afterID != nil {
-				// Obtener el updated_at del registro con ese ID
-				var updatedAt time.Time
-				err := conn.WithContext(ctx).
-					Table("delivery_units_status_histories").
-					Select("updated_at").
-					Where("id = ?", *afterID).
-					Scan(&updatedAt).Error
-				if err != nil {
-					return nil, false, err
-				}
-
-				ds = ds.Where(
-					goqu.Or(
-						goqu.I(duh+".updated_at").Gt(updatedAt),
-						goqu.And(
-							goqu.I(duh+".updated_at").Eq(updatedAt),
-							goqu.I(duh+".id").Gt(*afterID),
-						),
-					),
-				)
 			}
 
-			limit := *filters.Pagination.First + 1 // pedir uno extra para saber si hay más
+			if afterID != nil {
+				ds = ds.Where(goqu.I(duh + ".id").Gt(*afterID))
+			}
+
+			limit := *filters.Pagination.First + 1
 			ds = ds.Limit(uint(limit))
 		}
 
 		if filters.Pagination.IsBackward() {
-			ds = ds.Order(goqu.I(duh+".updated_at").Desc(), goqu.I(duh+".id").Desc())
-
-			if beforeID, err := filters.Pagination.BeforeID(); err != nil {
+			beforeID, err := filters.Pagination.BeforeID()
+			if err != nil {
 				return nil, false, err
-			} else if beforeID != nil {
-				// Obtener el updated_at del registro con ese ID
-				var updatedAt time.Time
-				err := conn.WithContext(ctx).
-					Table("delivery_units_status_histories").
-					Select("updated_at").
-					Where("id = ?", *beforeID).
-					Scan(&updatedAt).Error
-				if err != nil {
-					return nil, false, err
-				}
+			}
 
-				ds = ds.Where(
-					goqu.Or(
-						goqu.I(duh+".updated_at").Lt(updatedAt),
-						goqu.And(
-							goqu.I(duh+".updated_at").Eq(updatedAt),
-							goqu.I(duh+".id").Lt(*beforeID),
-						),
-					),
-				)
+			if beforeID != nil {
+				ds = ds.Where(goqu.I(duh + ".id").Lt(*beforeID))
 			}
 
 			limit := *filters.Pagination.Last + 1
