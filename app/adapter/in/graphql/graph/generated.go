@@ -1232,7 +1232,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCoordinatesConfidenceLevelFilter,
 		ec.unmarshalInputDeliveryUnitsReportFilterInput,
 		ec.unmarshalInputLabelFilterInput,
-		ec.unmarshalInputPromisedDateRangeDateFilter,
+		ec.unmarshalInputPromisedDateRangeFilter,
 		ec.unmarshalInputReferenceFilterInput,
 	)
 	first := true
@@ -9429,7 +9429,7 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"referenceIds", "lpns", "sizeCategories", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeDateFilter", "onlyLatestStatus"}
+	fieldsInOrder := [...]string{"referenceIds", "lpns", "sizeCategories", "originNodeReferences", "references", "labels", "coordinatesConfidenceLevel", "promisedDateRangeFilter", "onlyLatestStatus"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -9485,13 +9485,13 @@ func (ec *executionContext) unmarshalInputDeliveryUnitsReportFilterInput(ctx con
 				return it, err
 			}
 			it.CoordinatesConfidenceLevel = data
-		case "promisedDateRangeDateFilter":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promisedDateRangeDateFilter"))
-			data, err := ec.unmarshalOPromisedDateRangeDateFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateRangeDateFilter(ctx, v)
+		case "promisedDateRangeFilter":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("promisedDateRangeFilter"))
+			data, err := ec.unmarshalOPromisedDateRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateRangeFilter(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.PromisedDateRangeDateFilter = data
+			it.PromisedDateRangeFilter = data
 		case "onlyLatestStatus":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("onlyLatestStatus"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
@@ -9539,8 +9539,8 @@ func (ec *executionContext) unmarshalInputLabelFilterInput(ctx context.Context, 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputPromisedDateRangeDateFilter(ctx context.Context, obj any) (model.PromisedDateRangeDateFilter, error) {
-	var it model.PromisedDateRangeDateFilter
+func (ec *executionContext) unmarshalInputPromisedDateRangeFilter(ctx context.Context, obj any) (model.PromisedDateRangeFilter, error) {
+	var it model.PromisedDateRangeFilter
 	asMap := map[string]any{}
 	for k, v := range obj.(map[string]any) {
 		asMap[k] = v
@@ -12486,11 +12486,11 @@ func (ec *executionContext) marshalOPromisedDate2ᚖtransportᚑappᚋappᚋadap
 	return ec._PromisedDate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOPromisedDateRangeDateFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateRangeDateFilter(ctx context.Context, v any) (*model.PromisedDateRangeDateFilter, error) {
+func (ec *executionContext) unmarshalOPromisedDateRangeFilter2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDateRangeFilter(ctx context.Context, v any) (*model.PromisedDateRangeFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalInputPromisedDateRangeDateFilter(ctx, v)
+	res, err := ec.unmarshalInputPromisedDateRangeFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

@@ -169,10 +169,10 @@ func (r *queryResolver) DeliveryUnitsReports(
 			}
 		}
 
-		if filter.PromisedDateRangeDateFilter != nil {
+		if filter.PromisedDateRangeFilter != nil {
 			deliveryUnitsFilter.PromisedDateRange = &domain.PromisedDateRangeFilter{
-				StartDate: filter.PromisedDateRangeDateFilter.StartDate,
-				EndDate:   filter.PromisedDateRangeDateFilter.EndDate,
+				StartDate: filter.PromisedDateRangeFilter.StartDate,
+				EndDate:   filter.PromisedDateRangeFilter.EndDate,
 			}
 		}
 
