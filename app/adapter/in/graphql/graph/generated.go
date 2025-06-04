@@ -147,6 +147,7 @@ type ComplexityRoot struct {
 		ExtraFields             func(childComplexity int) int
 		GroupBy                 func(childComplexity int) int
 		ID                      func(childComplexity int) int
+		ManualChange            func(childComplexity int) int
 		OrderType               func(childComplexity int) int
 		Origin                  func(childComplexity int) int
 		PromisedDate            func(childComplexity int) int
@@ -224,6 +225,11 @@ type ComplexityRoot struct {
 	Location struct {
 		AddressInfo func(childComplexity int) int
 		NodeInfo    func(childComplexity int) int
+	}
+
+	ManualChange struct {
+		PerformedBy func(childComplexity int) int
+		Reason      func(childComplexity int) int
 	}
 
 	NodeInfo struct {
@@ -740,6 +746,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryUnitsReport.ID(childComplexity), true
 
+	case "DeliveryUnitsReport.manualChange":
+		if e.complexity.DeliveryUnitsReport.ManualChange == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnitsReport.ManualChange(childComplexity), true
+
 	case "DeliveryUnitsReport.orderType":
 		if e.complexity.DeliveryUnitsReport.OrderType == nil {
 			break
@@ -1026,6 +1039,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Location.NodeInfo(childComplexity), true
+
+	case "ManualChange.performedBy":
+		if e.complexity.ManualChange.PerformedBy == nil {
+			break
+		}
+
+		return e.complexity.ManualChange.PerformedBy(childComplexity), true
+
+	case "ManualChange.reason":
+		if e.complexity.ManualChange.Reason == nil {
+			break
+		}
+
+		return e.complexity.ManualChange.Reason(childComplexity), true
 
 	case "NodeInfo.name":
 		if e.complexity.NodeInfo.Name == nil {
@@ -4673,6 +4700,53 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_delivery(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnitsReport_manualChange(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReport) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnitsReport_manualChange(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ManualChange, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ManualChange)
+	fc.Result = res
+	return ec.marshalOManualChange2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐManualChange(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnitsReport_manualChange(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnitsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "performedBy":
+				return ec.fieldContext_ManualChange_performedBy(ctx, field)
+			case "reason":
+				return ec.fieldContext_ManualChange_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ManualChange", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnitsReportConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnitsReportConnection) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnitsReportConnection_edges(ctx, field)
 	if err != nil {
@@ -4902,6 +4976,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReportEdge_node(_ context.
 				return ec.fieldContext_DeliveryUnitsReport_route(ctx, field)
 			case "delivery":
 				return ec.fieldContext_DeliveryUnitsReport_delivery(ctx, field)
+			case "manualChange":
+				return ec.fieldContext_DeliveryUnitsReport_manualChange(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type DeliveryUnitsReport", field.Name)
 		},
@@ -6161,6 +6237,88 @@ func (ec *executionContext) fieldContext_Location_nodeInfo(_ context.Context, fi
 				return ec.fieldContext_NodeInfo_name(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NodeInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManualChange_performedBy(ctx context.Context, field graphql.CollectedField, obj *model.ManualChange) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManualChange_performedBy(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PerformedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManualChange_performedBy(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManualChange",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ManualChange_reason(ctx context.Context, field graphql.CollectedField, obj *model.ManualChange) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ManualChange_reason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Reason, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ManualChange_reason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ManualChange",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -10537,6 +10695,8 @@ func (ec *executionContext) _DeliveryUnitsReport(ctx context.Context, sel ast.Se
 			out.Values[i] = ec._DeliveryUnitsReport_route(ctx, field, obj)
 		case "delivery":
 			out.Values[i] = ec._DeliveryUnitsReport_delivery(ctx, field, obj)
+		case "manualChange":
+			out.Values[i] = ec._DeliveryUnitsReport_manualChange(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11029,6 +11189,44 @@ func (ec *executionContext) _Location(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._Location_addressInfo(ctx, field, obj)
 		case "nodeInfo":
 			out.Values[i] = ec._Location_nodeInfo(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var manualChangeImplementors = []string{"ManualChange"}
+
+func (ec *executionContext) _ManualChange(ctx context.Context, sel ast.SelectionSet, obj *model.ManualChange) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, manualChangeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ManualChange")
+		case "performedBy":
+			out.Values[i] = ec._ManualChange_performedBy(ctx, field, obj)
+		case "reason":
+			out.Values[i] = ec._ManualChange_reason(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12825,6 +13023,13 @@ func (ec *executionContext) unmarshalOLocationFilter2ᚖtransportᚑappᚋappᚋ
 	}
 	res, err := ec.unmarshalInputLocationFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOManualChange2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐManualChange(ctx context.Context, sel ast.SelectionSet, v *model.ManualChange) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ManualChange(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalONodeInfo2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeInfo) graphql.Marshaler {

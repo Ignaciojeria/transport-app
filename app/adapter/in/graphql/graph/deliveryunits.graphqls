@@ -222,9 +222,15 @@ type DeliveryUnitsReport {
   driver: Driver
   route: Route
   delivery: Delivery
+  manualChange: ManualChange
 }
 
- # 🔎 Filtro principal para reporte de unidades de entrega
+type ManualChange {
+  performedBy: String
+  reason: String
+}
+
+# 🔎 Filtro principal para reporte de unidades de entrega
 input DeliveryUnitsReportFilterInput {
   order: OrderFilter
   deliveryUnit: DeliveryUnitFilter

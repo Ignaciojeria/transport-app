@@ -304,6 +304,14 @@ func NewFindDeliveryUnitsProjectionResult(
 				SelectAppend(goqu.I(s + ".status").As("status"))
 		}
 
+		if projection.ManualChangePerformedBy().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".manual_change_performed_by").As("manual_change_performed_by"))
+		}
+
+		if projection.ManualChangeReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".manual_change_reason").As("manual_change_reason"))
+		}
+
 		if projection.DeliveryUnitLPN().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".lpn").As("lpn"))
 		}

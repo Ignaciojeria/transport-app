@@ -2389,6 +2389,62 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(hasMore).To(BeFalse())
 	})
 
+	It("should return delivery units with manual change information", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con manual change
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{
+					ConfirmDelivery: domain.ConfirmDelivery{
+						ManualChange: domain.ManualChange{
+							PerformedBy: "juan@example.com",
+							Reason:      "Corrección tras reclamo de transporte",
+						},
+					},
+				},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():             "",
+				projection.ManualChange().String():            "",
+				projection.ManualChangePerformedBy().String(): "",
+				projection.ManualChangeReason().String():      "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+
+		// Validar que la información de manual change se recuperó correctamente
+		Expect(results[0].OrderReferenceID).To(Equal("123"))
+		Expect(results[0].ManualChangePerformedBy).To(Equal("juan@example.com"))
+		Expect(results[0].ManualChangeReason).To(Equal("Corrección tras reclamo de transporte"))
+	})
+
 })
 
 // Helper function to create pointer to int

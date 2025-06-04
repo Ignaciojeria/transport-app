@@ -683,6 +683,19 @@ func (p Projection) OriginCoordinatesConfidenceReason() Field {
 	return Field{path: "origin.addressInfo.coordinates.confidence.reason"}
 }
 
+// Métodos para campos de ManualChange
+func (p Projection) ManualChange() Field {
+	return Field{path: "manualChange"}
+}
+
+func (p Projection) ManualChangePerformedBy() Field {
+	return Field{path: "manualChange.performedBy"}
+}
+
+func (p Projection) ManualChangeReason() Field {
+	return Field{path: "manualChange.reason"}
+}
+
 // GetAllProjections devuelve un mapa con todas las proyecciones disponibles
 func getAllProjections() map[string]Field {
 	var p Projection

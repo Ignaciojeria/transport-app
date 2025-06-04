@@ -132,6 +132,7 @@ type DeliveryUnitsReport struct {
 	Driver                  *Driver                  `json:"driver,omitempty"`
 	Route                   *Route                   `json:"route,omitempty"`
 	Delivery                *Delivery                `json:"delivery,omitempty"`
+	ManualChange            *ManualChange            `json:"manualChange,omitempty"`
 }
 
 type DeliveryUnitsReportConnection struct {
@@ -231,6 +232,11 @@ type LocationFilter struct {
 	States                []*string                         `json:"states,omitempty"`
 	ZipCodes              []*string                         `json:"zipCodes,omitempty"`
 	CoordinatesConfidence *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidence,omitempty"`
+}
+
+type ManualChange struct {
+	PerformedBy *string `json:"performedBy,omitempty"`
+	Reason      *string `json:"reason,omitempty"`
 }
 
 type NodeInfo struct {

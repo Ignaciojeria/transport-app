@@ -24,6 +24,8 @@ type DeliveryUnitsProjectionResult struct {
 	OrderPromisedDateStartTime            string              `json:"order_promised_date_start_time"`
 	OrderPromisedDateEndTime              string              `json:"order_promised_date_end_time"`
 	OrderPromisedDateServiceCategory      string              `json:"order_promised_date_service_category"`
+	ManualChangePerformedBy               string              `json:"manual_change_performed_by"`
+	ManualChangeReason                    string              `json:"manual_change_reason"`
 
 	// OrderType Information
 	OrderType            string `json:"order_type"`
