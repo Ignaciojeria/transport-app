@@ -325,6 +325,10 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(duh + ".non_delivery_detail").As("non_delivery_detail"))
 		}
 
+		if projection.DeliveryEvidencePhotos().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".evidence_photos").As("evidence_photos"))
+		}
+
 		if projection.DeliveryUnitLPN().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".lpn").As("lpn"))
 		}

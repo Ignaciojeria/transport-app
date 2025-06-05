@@ -2504,6 +2504,72 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].NonDeliveryDetail).To(Equal("Cliente no se encuentra en la dirección"))
 	})
 
+	It("should return delivery units with evidence photos", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con evidence photos
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{
+					ConfirmDelivery: domain.ConfirmDelivery{
+						EvidencePhotos: []domain.EvidencePhoto{
+							{
+								URL:     "https://example.com/photo1.jpg",
+								Type:    "DELIVERY",
+								TakenAt: time.Now(),
+							},
+							{
+								URL:     "https://example.com/photo2.jpg",
+								Type:    "SIGNATURE",
+								TakenAt: time.Now().Add(time.Hour),
+							},
+						},
+					},
+				},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():            "",
+				projection.DeliveryEvidencePhotos().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+
+		// Validar que las fotos de evidencia se recuperaron correctamente
+		Expect(results[0].OrderReferenceID).To(Equal("123"))
+		Expect(results[0].EvidencePhotos).To(HaveLen(2))
+		Expect(results[0].EvidencePhotos[0].URL).To(Equal("https://example.com/photo1.jpg"))
+		Expect(results[0].EvidencePhotos[0].Type).To(Equal("DELIVERY"))
+		Expect(results[0].EvidencePhotos[1].URL).To(Equal("https://example.com/photo2.jpg"))
+		Expect(results[0].EvidencePhotos[1].Type).To(Equal("SIGNATURE"))
+	})
+
 })
 
 // Helper function to create pointer to int
