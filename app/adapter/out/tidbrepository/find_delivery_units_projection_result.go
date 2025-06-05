@@ -312,6 +312,19 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(duh + ".manual_change_reason").As("manual_change_reason"))
 		}
 
+		// Campos de delivery failure
+		if projection.DeliveryFailureReferenceID().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".non_delivery_reason_reference_id").As("non_delivery_reason_reference_id"))
+		}
+
+		if projection.DeliveryFailureReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".non_delivery_reason").As("non_delivery_reason"))
+		}
+
+		if projection.DeliveryFailureDetail().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(duh + ".non_delivery_detail").As("non_delivery_detail"))
+		}
+
 		if projection.DeliveryUnitLPN().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".lpn").As("lpn"))
 		}

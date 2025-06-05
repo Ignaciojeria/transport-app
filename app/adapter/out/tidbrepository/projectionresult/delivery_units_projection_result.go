@@ -27,6 +27,14 @@ type DeliveryUnitsProjectionResult struct {
 	ManualChangePerformedBy               string              `json:"manual_change_performed_by"`
 	ManualChangeReason                    string              `json:"manual_change_reason"`
 
+	// Delivery Failure Information
+	NonDeliveryReasonReferenceID string `json:"non_delivery_reason_reference_id"`
+	NonDeliveryReason            string `json:"non_delivery_reason"`
+	NonDeliveryDetail            string `json:"non_delivery_detail"`
+
+	// Evidence Photos Information
+	EvidencePhotos table.JSONEvidencePhotos `json:"evidence_photos" gorm:"type:json;"`
+
 	// OrderType Information
 	OrderType            string `json:"order_type"`
 	OrderTypeDescription string `json:"order_type_description"`

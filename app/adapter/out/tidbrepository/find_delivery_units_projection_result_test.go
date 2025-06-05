@@ -2445,6 +2445,65 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].ManualChangeReason).To(Equal("Corrección tras reclamo de transporte"))
 	})
 
+	It("should return delivery units with non delivery reason fields", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con non delivery reason
+		order := domain.Order{
+			ReferenceID: "123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				{
+					ConfirmDelivery: domain.ConfirmDelivery{
+						NonDeliveryReason: domain.NonDeliveryReason{
+							ReferenceID: "REF-001",
+							Reason:      "CLIENT_NOT_FOUND",
+							Details:     "Cliente no se encuentra en la dirección",
+						},
+					},
+				},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():                "",
+				projection.DeliveryFailureReferenceID().String(): "",
+				projection.DeliveryFailureReason().String():      "",
+				projection.DeliveryFailureDetail().String():      "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+
+		// Validar que los campos de non delivery reason se recuperaron correctamente
+		Expect(results[0].OrderReferenceID).To(Equal("123"))
+		Expect(results[0].NonDeliveryReasonReferenceID).To(Equal("REF-001"))
+		Expect(results[0].NonDeliveryReason).To(Equal("CLIENT_NOT_FOUND"))
+		Expect(results[0].NonDeliveryDetail).To(Equal("Cliente no se encuentra en la dirección"))
+	})
+
 })
 
 // Helper function to create pointer to int

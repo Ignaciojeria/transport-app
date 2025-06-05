@@ -3,6 +3,7 @@ package mapper
 import (
 	"context"
 	"strconv"
+	"time"
 	"transport-app/app/adapter/in/graphql/graph/model"
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 )
@@ -29,6 +30,33 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 					StartTime: &du.OrderCollectAvailabilityDateStartTime,
 					EndTime:   &du.OrderCollectAvailabilityDateEndTime,
 				},
+			},
+			Delivery: &model.Delivery{
+				Recipient: &model.DeliveryRecipient{
+					FullName:   &du.DestinationContactFullName,
+					NationalID: &du.DestinationContactNationalID,
+				},
+
+				Failure: &model.DeliveryFailure{
+					ReferenceID: &du.NonDeliveryReasonReferenceID,
+					Reason:      &du.NonDeliveryReason,
+					Detail:      &du.NonDeliveryDetail,
+				},
+				EvidencePhotos: func() []*model.EvidencePhoto {
+					if du.EvidencePhotos == nil {
+						return nil
+					}
+					photos := make([]*model.EvidencePhoto, len(du.EvidencePhotos))
+					for i, photo := range du.EvidencePhotos {
+						takenAt := photo.TakenAt.Format(time.RFC3339)
+						photos[i] = &model.EvidencePhoto{
+							TakenAt: &takenAt,
+							Type:    &photo.Type,
+							URL:     &photo.URL,
+						}
+					}
+					return photos
+				}(),
 			},
 			ManualChange: &model.ManualChange{
 				PerformedBy: &du.ManualChangePerformedBy,
