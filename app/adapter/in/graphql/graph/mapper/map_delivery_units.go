@@ -8,6 +8,19 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/projectionresult"
 )
 
+// formatDate extrae la fecha en formato YYYY-MM-DD de un string en formato RFC3339
+func formatDate(dateStr string) *string {
+	if dateStr == "" {
+		return nil
+	}
+	date, err := time.Parse(time.RFC3339, dateStr)
+	if err != nil {
+		return &dateStr
+	}
+	formatted := date.Format("2006-01-02")
+	return &formatted
+}
+
 func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.DeliveryUnitsProjectionResult) []*model.DeliveryUnitsReport {
 	deliveryUnitsReport := make([]*model.DeliveryUnitsReport, len(deliveryUnits))
 
@@ -25,7 +38,7 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 				Value: &du.OrderGroupByValue,
 			},
 			CollectAvailabilityDate: &model.CollectAvailabilityDate{
-				Date: &du.OrderCollectAvailabilityDate,
+				Date: formatDate(du.OrderCollectAvailabilityDate),
 				TimeRange: &model.TimeRange{
 					StartTime: &du.OrderCollectAvailabilityDateStartTime,
 					EndTime:   &du.OrderCollectAvailabilityDateEndTime,
@@ -126,8 +139,8 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 			PromisedDate: &model.PromisedDate{
 				ServiceCategory: &du.OrderPromisedDateServiceCategory,
 				DateRange: &model.DateRange{
-					StartDate: &du.OrderPromisedDateStartDate,
-					EndDate:   &du.OrderPromisedDateEndDate,
+					StartDate: formatDate(du.OrderPromisedDateStartDate),
+					EndDate:   formatDate(du.OrderPromisedDateEndDate),
 				},
 				TimeRange: &model.TimeRange{
 					StartTime: &du.OrderPromisedDateStartTime,
