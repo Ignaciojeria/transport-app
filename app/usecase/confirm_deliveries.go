@@ -19,6 +19,7 @@ func NewConfirmDeliveries(
 	return func(ctx context.Context, input domain.Route) error {
 		for i := range input.Orders {
 			for j := range input.Orders[i].DeliveryUnits {
+				input.Orders[i].AssignIndexesIfNoLPN()
 				input.Orders[i].DeliveryUnits[j].UpdateStatusBasedOnNonDelivery()
 			}
 		}

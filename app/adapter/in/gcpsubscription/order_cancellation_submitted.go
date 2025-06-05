@@ -11,6 +11,8 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
 )
 
 func init() {
@@ -33,6 +35,7 @@ func newOrderCancellationSubmitted(
 			m.Ack()
 			return http.StatusAccepted, nil
 		}
+		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(m.Attributes))
 		var input request.CancelOrdersRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
