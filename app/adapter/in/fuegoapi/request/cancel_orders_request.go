@@ -16,12 +16,12 @@ type CancelOrdersRequest struct {
 			Commerce string `json:"commerce"`
 			Consumer string `json:"consumer"`
 		} `json:"businessIdentifiers"`
-		ReferenceID string `json:"referenceID"`
+		ReferenceID string `json:"referenceID" example:"1400001234567890"`
 	} `json:"orders"`
 	CancellationReason struct {
-		Detail      string `json:"detail"`
-		Reason      string `json:"reason"`
-		ReferenceID string `json:"referenceID"`
+		Detail      string `json:"detail" example:"no quiso recibir producto porque la caja estaba dañada"`
+		Reason      string `json:"reason" example:"CLIENTE_RECHAZA_ENTREGA"`
+		ReferenceID string `json:"referenceID" example:"1021"`
 	} `json:"cancellationReason"`
 }
 

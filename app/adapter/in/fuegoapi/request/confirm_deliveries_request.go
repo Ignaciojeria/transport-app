@@ -28,9 +28,9 @@ type ConfirmDeliveriesRequest struct {
 			} `json:"businessIdentifiers"`
 			Delivery struct {
 				Failure struct {
-					Detail      string `json:"detail"`
-					Reason      string `json:"reason"`
-					ReferenceID string `json:"referenceID"`
+					Detail      string `json:"detail" example:"no quiso recibir producto porque la caja estaba dañada"`
+					Reason      string `json:"reason" example:"CLIENTE_RECHAZA_ENTREGA"`
+					ReferenceID string `json:"referenceID" example:"1021"`
 				} `json:"failure"`
 				HandledAt string `json:"handledAt"`
 				Location  struct {
