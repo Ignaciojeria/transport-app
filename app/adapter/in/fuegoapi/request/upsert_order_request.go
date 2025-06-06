@@ -40,13 +40,13 @@ type UpsertOrderRequest struct {
 			} `json:"contact"`
 			District    string `json:"district" example:"la florida"`
 			Coordinates struct {
-				Latitude   float64 `json:"latitude"`
-				Longitude  float64 `json:"longitude"`
-				Source     string  `json:"source"`
+				Latitude   float64 `json:"latitude" example:"-33.5147889"`
+				Longitude  float64 `json:"longitude" example:"-70.6130425"`
+				Source     string  `json:"source" example:"GOOGLE_MAPS"`
 				Confidence struct {
-					Level   float64 `json:"level"`
-					Message string  `json:"message"`
-					Reason  string  `json:"reason"`
+					Level   float64 `json:"level" example:"0.1"`
+					Message string  `json:"message" example:"DISTRICT_CENTROID"`
+					Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
 				} `json:"confidence"`
 			} `json:"coordinates"`
 			Province string `json:"province" example:"santiago"`
@@ -83,13 +83,13 @@ type UpsertOrderRequest struct {
 			} `json:"contact"`
 			District    string `json:"district" example:"la florida"`
 			Coordinates struct {
-				Latitude   float64 `json:"latitude"`
-				Longitude  float64 `json:"longitude"`
-				Source     string  `json:"source"`
+				Latitude   float64 `json:"latitude" example:"-33.5147889"`
+				Longitude  float64 `json:"longitude" example:"-70.6130425"`
+				Source     string  `json:"source" example:"GOOGLE_MAPS"`
 				Confidence struct {
-					Level   float64 `json:"level"`
-					Message string  `json:"message"`
-					Reason  string  `json:"reason"`
+					Level   float64 `json:"level" example:"0.1"`
+					Message string  `json:"message" example:"DISTRICT_CENTROID"`
+					Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
 				} `json:"confidence"`
 			} `json:"coordinates"`
 			Province string `json:"province" example:"santiago"`
