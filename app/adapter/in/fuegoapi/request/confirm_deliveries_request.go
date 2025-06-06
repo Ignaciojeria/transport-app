@@ -13,12 +13,12 @@ type ConfirmDeliveriesRequest struct {
 		Reason      string `json:"reason" example:"Corrección tras reclamo de transporte"`
 	} `json:"manualChange"`
 	Carrier struct {
-		Name       string `json:"name"`
-		NationalID string `json:"nationalID"`
+		Name       string `json:"name" example:"Transportes ABC"`
+		NationalID string `json:"nationalID" example:"1234567890"`
 	} `json:"carrier"`
 	Driver struct {
-		Email      string `json:"email"`
-		NationalID string `json:"nationalID"`
+		Email      string `json:"email" example:"juan@example.com"`
+		NationalID string `json:"nationalID" example:"1234567890"`
 	} `json:"driver"`
 	Routes struct {
 		Orders []struct {
@@ -32,33 +32,33 @@ type ConfirmDeliveriesRequest struct {
 					Reason      string `json:"reason" example:"CLIENTE_RECHAZA_ENTREGA"`
 					ReferenceID string `json:"referenceID" example:"1021"`
 				} `json:"failure"`
-				HandledAt string `json:"handledAt"`
+				HandledAt string `json:"handledAt" example:"2025-06-06T14:30:00Z"`
 				Location  struct {
-					Latitude  float64 `json:"latitude"`
-					Longitude float64 `json:"longitude"`
+					Latitude  float64 `json:"latitude" example:"19.432607"`
+					Longitude float64 `json:"longitude" example:"-99.133209"`
 				} `json:"location"`
 			} `json:"delivery"`
 			EvidencePhotos []struct {
-				TakenAt string `json:"takenAt"`
-				Type    string `json:"type"`
-				URL     string `json:"url"`
+				TakenAt string `json:"takenAt" example:"2025-06-06T14:30:00Z"`
+				Type    string `json:"type" example:"HOUSE_PHOTO"`
+				URL     string `json:"url" example:"https://ignaciojeria.github.io/"`
 			} `json:"evidencePhotos"`
 			DeliveryUnits []struct {
 				Items []struct {
-					Sku string `json:"sku"`
+					Sku string `json:"sku" example:"SKU123"`
 				} `json:"items"`
-				Lpn string `json:"lpn"`
+				Lpn string `json:"lpn" example:"ABC123"`
 			} `json:"deliveryUnits"`
 			Recipient struct {
-				FullName   string `json:"fullName"`
-				NationalID string `json:"nationalID"`
+				FullName   string `json:"fullName" example:"Juan Perez"`
+				NationalID string `json:"nationalID" example:"1234567890"`
 			} `json:"recipient"`
 			ReferenceID string `json:"referenceID"`
 		} `json:"orders"`
 		ReferenceID string `json:"referenceID"`
 	} `json:"route"`
 	Vehicle struct {
-		Plate string `json:"plate"`
+		Plate string `json:"plate" example:"ABC123"`
 	} `json:"vehicle"`
 }
 
