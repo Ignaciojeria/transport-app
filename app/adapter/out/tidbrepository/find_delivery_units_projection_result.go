@@ -368,10 +368,10 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if projection.CollectAvailabilityDateStartTime().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_time_range_start").As("order_collect_availability_date_start_time"))
+			ds = ds.SelectAppend(goqu.L("to_char(" + o + ".collect_availability_time_range_start, 'HH24:MI')").As("order_collect_availability_date_start_time"))
 		}
 		if projection.CollectAvailabilityDateEndTime().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".collect_availability_time_range_end").As("order_collect_availability_date_end_time"))
+			ds = ds.SelectAppend(goqu.L("to_char(" + o + ".collect_availability_time_range_end, 'HH24:MI')").As("order_collect_availability_date_end_time"))
 		}
 
 		if projection.PromisedDateDateRangeStartDate().Has(filters.RequestedFields) {
@@ -381,10 +381,10 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(o + ".promised_date_range_end").As("order_promised_date_end_date"))
 		}
 		if projection.PromisedDateTimeRangeStartTime().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".promised_time_range_start").As("order_promised_date_start_time"))
+			ds = ds.SelectAppend(goqu.L("to_char(" + o + ".promised_time_range_start, 'HH24:MI')").As("order_promised_date_start_time"))
 		}
 		if projection.PromisedDateTimeRangeEndTime().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(o + ".promised_time_range_end").As("order_promised_date_end_time"))
+			ds = ds.SelectAppend(goqu.L("to_char(" + o + ".promised_time_range_end, 'HH24:MI')").As("order_promised_date_end_time"))
 		}
 		if projection.PromisedDateServiceCategory().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(o + ".service_category").As("order_promised_date_service_category"))
