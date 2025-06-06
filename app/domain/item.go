@@ -1,12 +1,14 @@
 package domain
 
+type Skill struct {
+	Type        string `json:"type"`
+	Value       string `json:"value"`
+	Description string `json:"description"`
+}
+
 type Item struct {
-	Sku    string
-	Skills []struct {
-		Type        string `json:"type"`
-		Value       string `json:"value"`
-		Description string `json:"description"`
-	} `json:"skills"`
+	Sku         string
+	Skills      []Skill `json:"skills"`
 	Quantity    Quantity
 	Insurance   Insurance
 	Description string

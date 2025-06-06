@@ -23,9 +23,17 @@ type Items struct {
 }
 
 func (i Items) Map() domain.Item {
+	skills := make([]domain.Skill, len(i.Skills))
+	for j, skill := range i.Skills {
+		skills[j] = domain.Skill{
+			Type:        skill.Type,
+			Value:       skill.Value,
+			Description: skill.Description,
+		}
+	}
 	return domain.Item{
 		Sku:    i.Sku,
-		Skills: i.Skills,
+		Skills: skills,
 		Quantity: domain.Quantity{
 			QuantityNumber: i.QuantityNumber,
 			QuantityUnit:   i.QuantityUnit,

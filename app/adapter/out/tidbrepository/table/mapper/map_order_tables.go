@@ -51,9 +51,27 @@ func safePtrTime(t time.Time) *time.Time {
 func mapItemsToTable(items []domain.Item) table.JSONItems {
 	mapped := make(table.JSONItems, len(items))
 	for i, item := range items {
+		skills := make([]struct {
+			Type        string `json:"type"`
+			Value       string `json:"value"`
+			Description string `json:"description"`
+		}, len(item.Skills))
+
+		for j, skill := range item.Skills {
+			skills[j] = struct {
+				Type        string `json:"type"`
+				Value       string `json:"value"`
+				Description string `json:"description"`
+			}{
+				Type:        skill.Type,
+				Value:       skill.Value,
+				Description: skill.Description,
+			}
+		}
+
 		mapped[i] = table.Items{
 			Sku:            item.Sku,
-			Skills:         item.Skills,
+			Skills:         skills,
 			QuantityNumber: item.Quantity.QuantityNumber,
 			QuantityUnit:   item.Quantity.QuantityUnit,
 			JSONInsurance: table.JSONInsurance{
