@@ -156,10 +156,10 @@ type DeliveryUnitsReportFilterInput struct {
 }
 
 type Dimension struct {
-	Length *int    `json:"length,omitempty"`
-	Height *int    `json:"height,omitempty"`
-	Width  *int    `json:"width,omitempty"`
-	Unit   *string `json:"unit,omitempty"`
+	Length *float64 `json:"length,omitempty"`
+	Height *float64 `json:"height,omitempty"`
+	Width  *float64 `json:"width,omitempty"`
+	Unit   *string  `json:"unit,omitempty"`
 }
 
 type Document struct {
@@ -190,8 +190,8 @@ type GroupByFilter struct {
 }
 
 type Insurance struct {
-	Currency  *string `json:"currency,omitempty"`
-	UnitValue *int    `json:"unitValue,omitempty"`
+	Currency  *string  `json:"currency,omitempty"`
+	UnitValue *float64 `json:"unitValue,omitempty"`
 }
 
 type Item struct {

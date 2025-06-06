@@ -69,15 +69,15 @@ type CollectAvailabilityDate {
 }
 
 type Dimension {
-  length: Int
-  height: Int
-  width: Int
+  length: Float
+  height: Float
+  width: Float
   unit: String
 }
 
 type Insurance {
   currency: String
-  unitValue: Int
+  unitValue: Float
 }
 
 type Skill {

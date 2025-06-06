@@ -135,6 +135,53 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 			},
 			DeliveryUnit: &model.DeliveryUnit{
 				Lpn: &du.LPN,
+				Dimensions: &model.Dimension{
+					Length: &du.JSONDimensions.Length,
+					Width:  &du.JSONDimensions.Width,
+					Height: &du.JSONDimensions.Height,
+					Unit:   &du.JSONDimensions.Unit,
+				},
+				Items: func() []*model.Item {
+					if du.JSONItems == nil {
+						return nil
+					}
+					items := make([]*model.Item, len(du.JSONItems))
+					for i, item := range du.JSONItems {
+						items[i] = &model.Item{
+							Sku:         &item.Sku,
+							Description: &item.Description,
+							Quantity: &model.Quantity{
+								QuantityNumber: &item.QuantityNumber,
+								QuantityUnit:   &item.QuantityUnit,
+							},
+							Dimensions: &model.Dimension{
+								Length: &item.JSONDimensions.Length,
+								Width:  &item.JSONDimensions.Width,
+								Height: &item.JSONDimensions.Height,
+								Unit:   &item.JSONDimensions.Unit,
+							},
+							Insurance: &model.Insurance{
+								UnitValue: &item.JSONInsurance.UnitValue,
+								Currency:  &item.JSONInsurance.Currency,
+							},
+							Skills: func() []*model.Skill {
+								if item.Skills == nil {
+									return nil
+								}
+								skills := make([]*model.Skill, len(item.Skills))
+								for j, skill := range item.Skills {
+									skills[j] = &model.Skill{
+										Type:        &skill.Type,
+										Value:       &skill.Value,
+										Description: &skill.Description,
+									}
+								}
+								return skills
+							}(),
+						}
+					}
+					return items
+				}(),
 			},
 			PromisedDate: &model.PromisedDate{
 				ServiceCategory: &du.OrderPromisedDateServiceCategory,
