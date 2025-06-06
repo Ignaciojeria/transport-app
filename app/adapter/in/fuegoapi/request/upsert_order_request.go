@@ -126,9 +126,9 @@ type UpsertOrderRequest struct {
 				UnitValue float64 `json:"unitValue" example:"10000"`
 			} `json:"insurance"`
 			Skills []struct {
-				Type        string `json:"type" example:"age_restricted"`
-				Value       string `json:"value" example:"18"`
-				Description string `json:"description" example:"Require customer age validation"`
+				Type        string `json:"type" example:"requires_refrigeration"`
+				Value       string `json:"value" example:"2°C-8°C"`
+				Description string `json:"description" example:"Producto refrigerado"`
 			} `json:"skills"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -143,7 +143,7 @@ type UpsertOrderRequest struct {
 		Lpn    string `json:"lpn" example:"1234567890"`
 		Labels []struct {
 			Type  string `json:"type" example:"skill"`
-			Value string `json:"value" example:"age_restricted"`
+			Value string `json:"value" example:"requires_refrigeration"`
 		} `json:"labels"`
 		Weight struct {
 			Unit  string  `json:"unit" example:"kg"`

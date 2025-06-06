@@ -15,9 +15,9 @@ func MapItemsToDomain(items []struct {
 		UnitValue float64 `json:"unitValue" example:"10000"`
 	} `json:"insurance"`
 	Skills []struct {
-		Type        string `json:"type" example:"age_restricted"`
-		Value       string `json:"value" example:"18"`
-		Description string `json:"description" example:"Require customer age validation"`
+		Type        string `json:"type" example:"requires_refrigeration"`
+		Value       string `json:"value" example:"2°C-8°C"`
+		Description string `json:"description" example:"Producto refrigerado"`
 	} `json:"skills"`
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -59,9 +59,9 @@ func MapItemsToDomain(items []struct {
 }
 
 func MapSkillsToDomain(skills []struct {
-	Type        string `json:"type" example:"age_restricted"`
-	Value       string `json:"value" example:"18"`
-	Description string `json:"description" example:"Require customer age validation"`
+	Type        string `json:"type" example:"requires_refrigeration"`
+	Value       string `json:"value" example:"2°C-8°C"`
+	Description string `json:"description" example:"Producto refrigerado"`
 }) []domain.Skill {
 	mapped := make([]domain.Skill, len(skills))
 	for i, skill := range skills {
@@ -75,20 +75,20 @@ func MapSkillsToDomain(skills []struct {
 }
 
 func MapSkillsFromDomain(skills []domain.Skill) []struct {
-	Type        string `json:"type" example:"age_restricted"`
-	Value       string `json:"value" example:"18"`
-	Description string `json:"description" example:"Require customer age validation"`
+	Type        string `json:"type" example:"requires_refrigeration"`
+	Value       string `json:"value" example:"2°C-8°C"`
+	Description string `json:"description" example:"Producto refrigerado"`
 } {
 	mapped := make([]struct {
-		Type        string `json:"type" example:"age_restricted"`
-		Value       string `json:"value" example:"18"`
-		Description string `json:"description" example:"Require customer age validation"`
+		Type        string `json:"type" example:"requires_refrigeration"`
+		Value       string `json:"value" example:"2°C-8°C"`
+		Description string `json:"description" example:"Producto refrigerado"`
 	}, len(skills))
 	for i, skill := range skills {
 		mapped[i] = struct {
-			Type        string `json:"type" example:"age_restricted"`
-			Value       string `json:"value" example:"18"`
-			Description string `json:"description" example:"Require customer age validation"`
+			Type        string `json:"type" example:"requires_refrigeration"`
+			Value       string `json:"value" example:"2°C-8°C"`
+			Description string `json:"description" example:"Producto refrigerado"`
 		}{
 			Type:        skill.Type,
 			Value:       skill.Value,
@@ -111,9 +111,9 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		UnitValue float64 `json:"unitValue" example:"10000"`
 	} `json:"insurance"`
 	Skills []struct {
-		Type        string `json:"type" example:"age_restricted"`
-		Value       string `json:"value" example:"18"`
-		Description string `json:"description" example:"Require customer age validation"`
+		Type        string `json:"type" example:"requires_refrigeration"`
+		Value       string `json:"value" example:"2°C-8°C"`
+		Description string `json:"description" example:"Producto refrigerado"`
 	} `json:"skills"`
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -138,9 +138,9 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			UnitValue float64 `json:"unitValue" example:"10000"`
 		} `json:"insurance"`
 		Skills []struct {
-			Type        string `json:"type" example:"age_restricted"`
-			Value       string `json:"value" example:"18"`
-			Description string `json:"description" example:"Require customer age validation"`
+			Type        string `json:"type" example:"requires_refrigeration"`
+			Value       string `json:"value" example:"2°C-8°C"`
+			Description string `json:"description" example:"Producto refrigerado"`
 		} `json:"skills"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -167,9 +167,9 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				UnitValue float64 `json:"unitValue" example:"10000"`
 			} `json:"insurance"`
 			Skills []struct {
-				Type        string `json:"type" example:"age_restricted"`
-				Value       string `json:"value" example:"18"`
-				Description string `json:"description" example:"Require customer age validation"`
+				Type        string `json:"type" example:"requires_refrigeration"`
+				Value       string `json:"value" example:"2°C-8°C"`
+				Description string `json:"description" example:"Producto refrigerado"`
 			} `json:"skills"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber" example:"1"`
