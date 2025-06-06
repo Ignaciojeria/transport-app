@@ -99,6 +99,32 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 						FullName:   &du.DestinationContactFullName,
 						NationalID: &du.DestinationContactNationalID,
 						Phone:      &du.DestinationContactPhone,
+						Documents: func() []*model.Document {
+							if du.DestinationContactDocuments == nil {
+								return nil
+							}
+							documents := make([]*model.Document, len(du.DestinationContactDocuments))
+							for j, doc := range du.DestinationContactDocuments {
+								documents[j] = &model.Document{
+									Type:  &doc.Type,
+									Value: &doc.Value,
+								}
+							}
+							return documents
+						}(),
+						AdditionalContactMethods: func() []*model.ContactMethod {
+							if du.DestinationAdditionalContactMethods == nil {
+								return nil
+							}
+							methods := make([]*model.ContactMethod, len(du.DestinationAdditionalContactMethods))
+							for j, method := range du.DestinationAdditionalContactMethods {
+								methods[j] = &model.ContactMethod{
+									Type:  &method.Type,
+									Value: &method.Value,
+								}
+							}
+							return methods
+						}(),
 					},
 				},
 			},
@@ -126,6 +152,32 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 						FullName:   &du.OriginContactFullName,
 						NationalID: &du.OriginContactNationalID,
 						Phone:      &du.OriginContactPhone,
+						Documents: func() []*model.Document {
+							if du.OriginContactDocuments == nil {
+								return nil
+							}
+							documents := make([]*model.Document, len(du.OriginContactDocuments))
+							for j, doc := range du.OriginContactDocuments {
+								documents[j] = &model.Document{
+									Type:  &doc.Type,
+									Value: &doc.Value,
+								}
+							}
+							return documents
+						}(),
+						AdditionalContactMethods: func() []*model.ContactMethod {
+							if du.OriginAdditionalContactMethods == nil {
+								return nil
+							}
+							methods := make([]*model.ContactMethod, len(du.OriginAdditionalContactMethods))
+							for j, method := range du.OriginAdditionalContactMethods {
+								methods[j] = &model.ContactMethod{
+									Type:  &method.Type,
+									Value: &method.Value,
+								}
+							}
+							return methods
+						}(),
 					},
 				},
 			},

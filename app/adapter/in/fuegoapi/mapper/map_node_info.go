@@ -46,11 +46,12 @@ func MapNodeInfoToDomain(nodeInfo struct {
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
 		AddressInfo: domain.AddressInfo{
 			Contact: domain.Contact{
-				FullName:     addressInfo.Contact.FullName,
-				PrimaryEmail: addressInfo.Contact.Email,
-				PrimaryPhone: addressInfo.Contact.Phone,
-				NationalID:   addressInfo.Contact.NationalID,
-				Documents:    MapDocumentsToDomain(addressInfo.Contact.Documents),
+				FullName:                 addressInfo.Contact.FullName,
+				PrimaryEmail:             addressInfo.Contact.Email,
+				PrimaryPhone:             addressInfo.Contact.Phone,
+				NationalID:               addressInfo.Contact.NationalID,
+				Documents:                MapDocumentsToDomain(addressInfo.Contact.Documents),
+				AdditionalContactMethods: MapAdditionalContactMethodsToDomain(addressInfo.Contact.AdditionalContactMethods),
 			},
 			State:        domain.State(addressInfo.State),
 			Province:     domain.Province(addressInfo.Province),
@@ -86,7 +87,11 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 			Type  string `json:"type"`
 			Value string `json:"value"`
 		} `json:"documents"`
-		FullName string `json:"fullName"`
+		FullName                 string `json:"fullName"`
+		AdditionalContactMethods []struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		} `json:"additionalContactMethods"`
 	} `json:"contact"`
 	District  string  `json:"district"`
 	Latitude  float64 `json:"latitude"`
@@ -115,7 +120,11 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 				Type  string `json:"type"`
 				Value string `json:"value"`
 			} `json:"documents"`
-			FullName string `json:"fullName"`
+			FullName                 string `json:"fullName"`
+			AdditionalContactMethods []struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			} `json:"additionalContactMethods"`
 		} `json:"contact"`
 		District  string  `json:"district"`
 		Latitude  float64 `json:"latitude"`
@@ -140,5 +149,49 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 	responseAddressInfo.Contact.Phone = nodeInfo.AddressInfo.Contact.PrimaryPhone
 	responseAddressInfo.Contact.NationalID = nodeInfo.AddressInfo.Contact.NationalID
 	responseAddressInfo.Contact.Documents = MapDocumentsFromDomain(nodeInfo.AddressInfo.Contact.Documents)
+	responseAddressInfo.Contact.AdditionalContactMethods = MapAdditionalContactMethodsFromDomain(nodeInfo.AddressInfo.Contact.AdditionalContactMethods)
 	return responseNodeInfo, responseAddressInfo
+}
+
+func MapAdditionalContactMethodsToDomain(methods []struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}) []domain.ContactMethod {
+	if methods == nil {
+		return nil
+	}
+
+	domainMethods := make([]domain.ContactMethod, len(methods))
+	for i, method := range methods {
+		domainMethods[i] = domain.ContactMethod{
+			Type:  method.Type,
+			Value: method.Value,
+		}
+	}
+	return domainMethods
+}
+
+func MapAdditionalContactMethodsFromDomain(methods []domain.ContactMethod) []struct {
+	Type  string `json:"type"`
+	Value string `json:"value"`
+} {
+	if methods == nil {
+		return nil
+	}
+
+	responseMethods := make([]struct {
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	}, len(methods))
+
+	for i, method := range methods {
+		responseMethods[i] = struct {
+			Type  string `json:"type"`
+			Value string `json:"value"`
+		}{
+			Type:  method.Type,
+			Value: method.Value,
+		}
+	}
+	return responseMethods
 }

@@ -77,6 +77,9 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
+			if inOrder.Origin.AddressInfo.Contact.Equals(group2Ctx, inOrder.Destination.AddressInfo.Contact) {
+				return nil
+			}
 			return upsertContact(group2Ctx, inOrder.Origin.AddressInfo.Contact)
 		})
 

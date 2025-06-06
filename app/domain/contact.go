@@ -13,6 +13,10 @@ type Contact struct {
 	AdditionalContactMethods []ContactMethod
 }
 
+func (c Contact) Equals(ctx context.Context, other Contact) bool {
+	return c.DocID(ctx) == other.DocID(ctx)
+}
+
 type ContactMethod struct {
 	Type  string `json:"type"`  // Ej: "email", "phone", "whatsapp"
 	Value string `json:"value"` // Ej: "ejemplo@correo.com"
