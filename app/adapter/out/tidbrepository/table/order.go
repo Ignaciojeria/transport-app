@@ -69,12 +69,12 @@ type Order struct {
 	DeliveryUnits []DeliveryUnit `gorm:"-"`
 
 	CollectAvailabilityDate           *time.Time `gorm:"type:date;default:null"`
-	CollectAvailabilityTimeRangeStart string     `gorm:"default:null"`
-	CollectAvailabilityTimeRangeEnd   string     `gorm:"default:null"`
+	CollectAvailabilityTimeRangeStart string     `gorm:"type:time without time zone;default:null"`
+	CollectAvailabilityTimeRangeEnd   string     `gorm:"type:time without time zone;default:null"`
 	PromisedDateRangeStart            *time.Time `gorm:"type:date;default:null"`
 	PromisedDateRangeEnd              *time.Time `gorm:"type:date;default:null"`
-	PromisedTimeRangeStart            string     `gorm:"default:null"`
-	PromisedTimeRangeEnd              string     `gorm:"default:null"`
+	PromisedTimeRangeStart            string     `gorm:"type:time without time zone;default:null"`
+	PromisedTimeRangeEnd              string     `gorm:"type:time without time zone;default:null"`
 	ServiceCategory                   string     `gorm:"default:null"`
 }
 
@@ -96,6 +96,19 @@ func (m *JSONMap) Scan(value interface{}) error {
 	return json.Unmarshal(bytes, m)
 }
 
+func parseTimeString(timeStr string) *time.Time {
+	if timeStr == "" {
+		return nil
+	}
+
+	// Parse the time string in format "15:04"
+	t, err := time.Parse("15:04", timeStr)
+	if err != nil {
+		return nil
+	}
+	return &t
+}
+
 func (o Order) Map() domain.Order {
 	order := domain.Order{
 		ReferenceID: domain.ReferenceID(o.ReferenceID),
@@ -105,8 +118,8 @@ func (o Order) Map() domain.Order {
 	order.CollectAvailabilityDate = domain.CollectAvailabilityDate{
 		Date: safeTime(o.CollectAvailabilityDate),
 		TimeRange: domain.TimeRange{
-			StartTime: o.CollectAvailabilityTimeRangeStart,
-			EndTime:   o.CollectAvailabilityTimeRangeEnd,
+			StartTime: formatTimeToHHMM(parseTimeString(o.CollectAvailabilityTimeRangeStart)),
+			EndTime:   formatTimeToHHMM(parseTimeString(o.CollectAvailabilityTimeRangeEnd)),
 		},
 	}
 
@@ -117,8 +130,8 @@ func (o Order) Map() domain.Order {
 			EndDate:   safeTime(o.PromisedDateRangeEnd),
 		},
 		TimeRange: domain.TimeRange{
-			StartTime: o.PromisedTimeRangeStart,
-			EndTime:   o.PromisedTimeRangeEnd,
+			StartTime: formatTimeToHHMM(parseTimeString(o.PromisedTimeRangeStart)),
+			EndTime:   formatTimeToHHMM(parseTimeString(o.PromisedTimeRangeEnd)),
 		},
 	}
 
@@ -127,7 +140,21 @@ func (o Order) Map() domain.Order {
 
 func safeTime(t *time.Time) time.Time {
 	if t == nil {
-		return time.Time{} // Retorna un time.Time vacío en lugar de nil
+		return time.Time{}
 	}
 	return *t
+}
+
+func safeString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func formatTimeToHHMM(t *time.Time) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format("15:04")
 }

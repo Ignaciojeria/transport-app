@@ -29,7 +29,7 @@ func newDeliveriesSubmitted(
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.DELIVERIES_SUBMITTED_SUBSCRIPTION
 	subscriptionRef := sm.Subscription(subscriptionName)
-	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 5
+	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 10
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
 		if m.Attributes["eventType"] != "deliveriesSubmitted" {
 			m.Ack()

@@ -2,6 +2,8 @@ package mapper
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"time"
 
 	"transport-app/app/adapter/out/tidbrepository/table"
@@ -45,6 +47,28 @@ func safePtrTime(t time.Time) *time.Time {
 	if t.IsZero() {
 		return nil // Retorna nil si la fecha es vacía en el dominio
 	}
+	return &t
+}
+
+func parseTime(timeStr string) *time.Time {
+	if timeStr == "" {
+		return nil
+	}
+	parts := strings.Split(timeStr, ":")
+	if len(parts) != 2 {
+		return nil
+	}
+	hour, err := strconv.Atoi(parts[0])
+	if err != nil || hour < 0 || hour > 23 {
+		return nil
+	}
+	minute, err := strconv.Atoi(parts[1])
+	if err != nil || minute < 0 || minute > 59 {
+		return nil
+	}
+
+	// Crear hora sin fecha ni zona
+	t := time.Date(0, 1, 1, hour, minute, 0, 0, time.UTC)
 	return &t
 }
 

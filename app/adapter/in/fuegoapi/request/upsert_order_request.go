@@ -180,6 +180,13 @@ func (req UpsertOrderRequest) Map(ctx context.Context) domain.Order {
 		PromisedDate:            mapper.MapPromisedDateToDomain(req.PromisedDate),
 		DeliveryInstructions:    req.Destination.DeliveryInstructions,
 		ExtraFields:             req.ExtraFields,
+		GroupBy: struct {
+			Type  string
+			Value string
+		}{
+			Type:  req.GroupBy.Type,
+			Value: req.GroupBy.Value,
+		},
 	}
 	order.Headers.SetFromContext(ctx)
 	if order.Commerce == "" {

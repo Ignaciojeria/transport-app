@@ -30,7 +30,7 @@ func newOrderSubmitted(
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.ORDER_SUBMITTED_SUBSCRIPTION
 	subscriptionRef := sm.Subscription(subscriptionName)
-	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 1
+	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 10
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
 		// Filtro defensivo para evitar procesamiento incorrecto
 		if m.Attributes["eventType"] != "orderSubmitted" {
