@@ -20,7 +20,7 @@ type ConfirmDeliveriesRequest struct {
 		Email      string `json:"email" example:"juan@example.com"`
 		NationalID string `json:"nationalID" example:"1234567890"`
 	} `json:"driver"`
-	Routes struct {
+	Route struct {
 		Orders []struct {
 			BusinessIdentifiers struct {
 				Commerce string `json:"commerce"`
@@ -65,7 +65,7 @@ type ConfirmDeliveriesRequest struct {
 func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 
 	route := domain.Route{
-		ReferenceID: r.Routes.ReferenceID,
+		ReferenceID: r.Route.ReferenceID,
 		Vehicle: domain.Vehicle{
 			Plate: r.Vehicle.Plate,
 			Carrier: domain.Carrier{
@@ -80,8 +80,8 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 	}
 
 	// Mapear órdenes
-	orders := make([]domain.Order, 0, len(r.Routes.Orders))
-	for _, order := range r.Routes.Orders {
+	orders := make([]domain.Order, 0, len(r.Route.Orders))
+	for _, order := range r.Route.Orders {
 		domainOrder := domain.Order{
 			Headers: domain.Headers{
 				Consumer: order.BusinessIdentifiers.Consumer,

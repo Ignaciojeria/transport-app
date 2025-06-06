@@ -394,6 +394,10 @@
         {
             "kind": "gcp-subscription",
             "name": "order-cancellation-submitted"
+        },
+        {
+            "kind": "post-controller",
+            "name": "route-started"
         }
     ]
 }

@@ -2,6 +2,7 @@ package fuegoapi
 
 const (
 	tagAccounts         = "accounts"
+	tagRoutes           = "routes"
 	tagOrders           = "orders"
 	tagDelivery         = "delivery"
 	tagTenants          = "tenants"
