@@ -50,6 +50,9 @@ func NewCreateOrder(
 		inOrder.Destination.AddressInfo.ToLowerAndRemovePunctuation()
 		inOrder.AssignIndexesIfNoLPN()
 		normalizationGroup.Go(func() error {
+			if inOrder.Origin.AddressInfo.Equals(group1Ctx, inOrder.Destination.AddressInfo) {
+				return nil
+			}
 			return inOrder.Origin.AddressInfo.NormalizeAndGeocode(
 				group1Ctx,
 				geocode,
@@ -82,6 +85,9 @@ func NewCreateOrder(
 		})
 
 		group.Go(func() error {
+			if inOrder.Origin.AddressInfo.Equals(group1Ctx, inOrder.Destination.AddressInfo) {
+				return nil
+			}
 			return upsertAddressInfo(group2Ctx, inOrder.Origin.AddressInfo)
 		})
 

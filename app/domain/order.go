@@ -84,6 +84,16 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 		changed = true
 	}
 
+	// GroupBy
+	if newOrder.GroupBy.Type != "" && newOrder.GroupBy.Type != o.GroupBy.Type {
+		o.GroupBy.Type = newOrder.GroupBy.Type
+		changed = true
+	}
+	if newOrder.GroupBy.Value != "" && newOrder.GroupBy.Value != o.GroupBy.Value {
+		o.GroupBy.Value = newOrder.GroupBy.Value
+		changed = true
+	}
+
 	// PromisedDate
 	if !newOrder.PromisedDate.DateRange.StartDate.IsZero() && !newOrder.PromisedDate.DateRange.StartDate.Equal(o.PromisedDate.DateRange.StartDate) {
 		o.PromisedDate.DateRange.StartDate = newOrder.PromisedDate.DateRange.StartDate

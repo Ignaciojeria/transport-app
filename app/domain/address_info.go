@@ -147,3 +147,7 @@ func concatenateWithCommas(values ...string) string {
 	}
 	return result
 }
+
+func (a AddressInfo) Equals(ctx context.Context, other AddressInfo) bool {
+	return a.DocID(ctx) == other.DocID(ctx)
+}
