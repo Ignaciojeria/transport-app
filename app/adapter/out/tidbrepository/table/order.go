@@ -69,12 +69,12 @@ type Order struct {
 	DeliveryUnits []DeliveryUnit `gorm:"-"`
 
 	CollectAvailabilityDate           *time.Time `gorm:"type:date;default:null"`
-	CollectAvailabilityTimeRangeStart string     `gorm:"type:time without time zone;default:null"`
-	CollectAvailabilityTimeRangeEnd   string     `gorm:"type:time without time zone;default:null"`
+	CollectAvailabilityTimeRangeStart *string    `gorm:"type:time without time zone;default:null"`
+	CollectAvailabilityTimeRangeEnd   *string    `gorm:"type:time without time zone;default:null"`
 	PromisedDateRangeStart            *time.Time `gorm:"type:date;default:null"`
 	PromisedDateRangeEnd              *time.Time `gorm:"type:date;default:null"`
-	PromisedTimeRangeStart            string     `gorm:"type:time without time zone;default:null"`
-	PromisedTimeRangeEnd              string     `gorm:"type:time without time zone;default:null"`
+	PromisedTimeRangeStart            *string    `gorm:"type:time without time zone;default:null"`
+	PromisedTimeRangeEnd              *string    `gorm:"type:time without time zone;default:null"`
 	ServiceCategory                   string     `gorm:"default:null"`
 }
 
@@ -118,8 +118,8 @@ func (o Order) Map() domain.Order {
 	order.CollectAvailabilityDate = domain.CollectAvailabilityDate{
 		Date: safeTime(o.CollectAvailabilityDate),
 		TimeRange: domain.TimeRange{
-			StartTime: formatTimeToHHMM(parseTimeString(o.CollectAvailabilityTimeRangeStart)),
-			EndTime:   formatTimeToHHMM(parseTimeString(o.CollectAvailabilityTimeRangeEnd)),
+			StartTime: formatTimeToHHMM(parseTimeString(safeString(o.CollectAvailabilityTimeRangeStart))),
+			EndTime:   formatTimeToHHMM(parseTimeString(safeString(o.CollectAvailabilityTimeRangeEnd))),
 		},
 	}
 
@@ -130,8 +130,8 @@ func (o Order) Map() domain.Order {
 			EndDate:   safeTime(o.PromisedDateRangeEnd),
 		},
 		TimeRange: domain.TimeRange{
-			StartTime: formatTimeToHHMM(parseTimeString(o.PromisedTimeRangeStart)),
-			EndTime:   formatTimeToHHMM(parseTimeString(o.PromisedTimeRangeEnd)),
+			StartTime: formatTimeToHHMM(parseTimeString(safeString(o.PromisedTimeRangeStart))),
+			EndTime:   formatTimeToHHMM(parseTimeString(safeString(o.PromisedTimeRangeEnd))),
 		},
 	}
 

@@ -210,8 +210,8 @@ var _ = Describe("UpsertOrder", func() {
 
 		// Verificar que las fechas se actualizaron
 		Expect(dbOrder.PromisedDateRangeStart.Format("2006-01-02")).To(Equal(updatedDate.Format("2006-01-02")))
-		Expect(dbOrder.PromisedTimeRangeStart).To(Equal("14:00"))
-		Expect(dbOrder.PromisedTimeRangeEnd).To(Equal("18:00"))
+		Expect(*dbOrder.PromisedTimeRangeStart).To(Equal("14:00:00"))
+		Expect(*dbOrder.PromisedTimeRangeEnd).To(Equal("18:00:00"))
 	})
 
 	It("should update packages if changed", func() {

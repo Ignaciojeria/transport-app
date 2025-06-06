@@ -31,12 +31,12 @@ func MapOrderToTable(ctx context.Context, order domain.Order) table.Order {
 		ExtraFields:                       order.ExtraFields,
 		DeliveryInstructions:              order.DeliveryInstructions,
 		CollectAvailabilityDate:           safePtrTime(order.CollectAvailabilityDate.Date),
-		CollectAvailabilityTimeRangeStart: order.CollectAvailabilityDate.TimeRange.StartTime,
-		CollectAvailabilityTimeRangeEnd:   order.CollectAvailabilityDate.TimeRange.EndTime,
+		CollectAvailabilityTimeRangeStart: safePtrString(order.CollectAvailabilityDate.TimeRange.StartTime),
+		CollectAvailabilityTimeRangeEnd:   safePtrString(order.CollectAvailabilityDate.TimeRange.EndTime),
 		PromisedDateRangeStart:            safePtrTime(order.PromisedDate.DateRange.StartDate),
 		PromisedDateRangeEnd:              safePtrTime(order.PromisedDate.DateRange.EndDate),
-		PromisedTimeRangeStart:            order.PromisedDate.TimeRange.StartTime,
-		PromisedTimeRangeEnd:              order.PromisedDate.TimeRange.EndTime,
+		PromisedTimeRangeStart:            safePtrString(order.PromisedDate.TimeRange.StartTime),
+		PromisedTimeRangeEnd:              safePtrString(order.PromisedDate.TimeRange.EndTime),
 		GroupByType:                       order.GroupBy.Type,
 		GroupByValue:                      order.GroupBy.Value,
 	}
@@ -48,6 +48,13 @@ func safePtrTime(t time.Time) *time.Time {
 		return nil // Retorna nil si la fecha es vacía en el dominio
 	}
 	return &t
+}
+
+func safePtrString(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
 }
 
 func parseTime(timeStr string) *time.Time {
