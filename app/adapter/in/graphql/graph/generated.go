@@ -125,12 +125,13 @@ type ComplexityRoot struct {
 	}
 
 	DeliveryUnit struct {
-		Dimensions func(childComplexity int) int
-		Insurance  func(childComplexity int) int
-		Items      func(childComplexity int) int
-		Labels     func(childComplexity int) int
-		Lpn        func(childComplexity int) int
-		Weight     func(childComplexity int) int
+		Dimensions   func(childComplexity int) int
+		Insurance    func(childComplexity int) int
+		Items        func(childComplexity int) int
+		Labels       func(childComplexity int) int
+		Lpn          func(childComplexity int) int
+		SizeCategory func(childComplexity int) int
+		Weight       func(childComplexity int) int
 	}
 
 	DeliveryUnitsReport struct {
@@ -647,6 +648,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DeliveryUnit.Lpn(childComplexity), true
+
+	case "DeliveryUnit.sizeCategory":
+		if e.complexity.DeliveryUnit.SizeCategory == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.SizeCategory(childComplexity), true
 
 	case "DeliveryUnit.weight":
 		if e.complexity.DeliveryUnit.Weight == nil {
@@ -3438,6 +3446,47 @@ func (ec *executionContext) fieldContext_DeliveryRecipient_nationalID(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _DeliveryUnit_sizeCategory(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_sizeCategory(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SizeCategory, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_DeliveryUnit_sizeCategory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DeliveryUnit",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _DeliveryUnit_dimensions(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_DeliveryUnit_dimensions(ctx, field)
 	if err != nil {
@@ -4292,6 +4341,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_deliveryUnit(_ cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "sizeCategory":
+				return ec.fieldContext_DeliveryUnit_sizeCategory(ctx, field)
 			case "dimensions":
 				return ec.fieldContext_DeliveryUnit_dimensions(ctx, field)
 			case "insurance":
@@ -10598,6 +10649,8 @@ func (ec *executionContext) _DeliveryUnit(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("DeliveryUnit")
+		case "sizeCategory":
+			out.Values[i] = ec._DeliveryUnit_sizeCategory(ctx, field, obj)
 		case "dimensions":
 			out.Values[i] = ec._DeliveryUnit_dimensions(ctx, field, obj)
 		case "insurance":

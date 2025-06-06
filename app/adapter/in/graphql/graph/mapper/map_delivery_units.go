@@ -134,7 +134,8 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 				Description: &du.OrderTypeDescription,
 			},
 			DeliveryUnit: &model.DeliveryUnit{
-				Lpn: &du.LPN,
+				Lpn:          &du.LPN,
+				SizeCategory: &du.SizeCategory,
 				Dimensions: &model.Dimension{
 					Length: &du.JSONDimensions.Length,
 					Width:  &du.JSONDimensions.Width,

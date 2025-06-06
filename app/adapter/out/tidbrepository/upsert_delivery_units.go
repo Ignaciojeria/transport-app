@@ -62,7 +62,7 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits
 			if existingPkg, found := existingMap[docID]; found {
 				updatedDomainPkg, _ := existingPkg.Map().UpdateIfChanged(domainPkg)
 				updatedTablePkg := mapper.MapPackageToTable(ctx, updatedDomainPkg)
-
+				updatedTablePkg.SizeCategoryDoc = domainPkg.SizeCategory.DocumentID(ctx).String()
 				// Preservar campos importantes
 				updatedTablePkg.ID = existingPkg.ID
 				updatedTablePkg.CreatedAt = existingPkg.CreatedAt

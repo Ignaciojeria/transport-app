@@ -47,6 +47,8 @@ type DeliveryUnitsProjectionResult struct {
 	JSONItems          table.JSONItems      `json:"json_items"`
 	DeliveryUnitLabels table.JSONReference  `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 
+	SizeCategory string `json:"size_category"`
+
 	// Origin Address Information
 	OriginAddressLine1 string `json:"origin_address_line1"`
 	OriginAddressLine2 string `json:"origin_address_line2"`

@@ -290,6 +290,10 @@ func (p Projection) DeliveryUnitLPN() Field {
 	return Field{path: "deliveryUnit.lpn"}
 }
 
+func (p Projection) DeliveryUnitSizeCategory() Field {
+	return Field{path: "deliveryUnit.sizeCategory"}
+}
+
 // Métodos para campos de Weight en Package
 func (p Projection) DeliveryUnitWeight() Field {
 	return Field{path: "deliveryUnit.weight"}

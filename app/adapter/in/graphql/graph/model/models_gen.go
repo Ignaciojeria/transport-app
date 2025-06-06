@@ -96,12 +96,13 @@ type DeliveryRecipient struct {
 }
 
 type DeliveryUnit struct {
-	Dimensions *Dimension `json:"dimensions,omitempty"`
-	Insurance  *Insurance `json:"insurance,omitempty"`
-	Items      []*Item    `json:"items,omitempty"`
-	Labels     []*Label   `json:"labels,omitempty"`
-	Lpn        *string    `json:"lpn,omitempty"`
-	Weight     *Weight    `json:"weight,omitempty"`
+	SizeCategory *string    `json:"sizeCategory,omitempty"`
+	Dimensions   *Dimension `json:"dimensions,omitempty"`
+	Insurance    *Insurance `json:"insurance,omitempty"`
+	Items        []*Item    `json:"items,omitempty"`
+	Labels       []*Label   `json:"labels,omitempty"`
+	Lpn          *string    `json:"lpn,omitempty"`
+	Weight       *Weight    `json:"weight,omitempty"`
 }
 
 type DeliveryUnitFilter struct {

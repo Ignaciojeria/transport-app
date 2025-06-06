@@ -333,6 +333,14 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(du + ".lpn").As("lpn"))
 		}
 
+		if projection.DeliveryUnitSizeCategory().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("size_categories").As("sc"),
+				goqu.On(goqu.I("sc.document_id").Eq(goqu.I(du+".size_category_doc"))),
+			)
+			ds = ds.SelectAppend(goqu.I("sc.code").As("size_category"))
+		}
+
 		if projection.DeliveryUnitDimensions().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".json_dimensions").As("json_dimensions"))
 		}
