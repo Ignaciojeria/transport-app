@@ -56,6 +56,7 @@ func MapNodeInfoToDomain(nodeInfo struct {
 			Province:     domain.Province(addressInfo.Province),
 			District:     domain.District(addressInfo.District),
 			AddressLine1: addressInfo.AddressLine1,
+			AddressLine2: addressInfo.AddressLine2,
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{addressInfo.Coordinates.Longitude, addressInfo.Coordinates.Latitude},
 				Source: addressInfo.Coordinates.Source,
