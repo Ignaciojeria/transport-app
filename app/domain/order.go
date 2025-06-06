@@ -241,8 +241,8 @@ type CollectAvailabilityDate struct {
 }
 
 type TimeRange struct {
-	StartTime string `json:"startTime"`
-	EndTime   string `json:"endTime"`
+	StartTime string `json:"startTime" example:"10:30"`
+	EndTime   string `json:"endTime" example:"21:30"`
 }
 
 type DateRange struct {

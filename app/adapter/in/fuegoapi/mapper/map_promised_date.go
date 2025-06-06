@@ -4,13 +4,13 @@ import "transport-app/app/domain"
 
 func MapPromisedDateToDomain(promisedDate struct {
 	DateRange struct {
-		EndDate   string `json:"endDate"`
-		StartDate string `json:"startDate"`
+		EndDate   string `json:"endDate" example:"2025-03-30"`
+		StartDate string `json:"startDate"  example:"2025-03-28"`
 	} `json:"dateRange"`
-	ServiceCategory string `json:"serviceCategory"`
+	ServiceCategory string `json:"serviceCategory" example:"REGULAR / SAME DAY"`
 	TimeRange       struct {
-		EndTime   string `json:"endTime"`
-		StartTime string `json:"startTime"`
+		EndTime   string `json:"endTime" example:"21:30"`
+		StartTime string `json:"startTime" example:"10:30"`
 	} `json:"timeRange"`
 }) domain.PromisedDate {
 	return domain.PromisedDate{
@@ -28,24 +28,24 @@ func MapPromisedDateToDomain(promisedDate struct {
 
 func MapPromisedDateFromDomain(promisedDate domain.PromisedDate) struct {
 	DateRange struct {
-		EndDate   string `json:"endDate"`
-		StartDate string `json:"startDate"`
+		EndDate   string `json:"endDate" example:"2025-03-30"`
+		StartDate string `json:"startDate"  example:"2025-03-28"`
 	} `json:"dateRange"`
-	ServiceCategory string `json:"serviceCategory"`
+	ServiceCategory string `json:"serviceCategory" example:"REGULAR / SAME DAY"`
 	TimeRange       struct {
-		EndTime   string `json:"endTime"`
-		StartTime string `json:"startTime"`
+		EndTime   string `json:"endTime" example:"21:30"`
+		StartTime string `json:"startTime" example:"10:30"`
 	} `json:"timeRange"`
 } {
 	response := struct {
 		DateRange struct {
-			EndDate   string `json:"endDate"`
-			StartDate string `json:"startDate"`
+			EndDate   string `json:"endDate" example:"2025-03-30"`
+			StartDate string `json:"startDate"  example:"2025-03-28"`
 		} `json:"dateRange"`
-		ServiceCategory string `json:"serviceCategory"`
+		ServiceCategory string `json:"serviceCategory" example:"REGULAR / SAME DAY"`
 		TimeRange       struct {
-			EndTime   string `json:"endTime"`
-			StartTime string `json:"startTime"`
+			EndTime   string `json:"endTime" example:"21:30"`
+			StartTime string `json:"startTime" example:"10:30"`
 		} `json:"timeRange"`
 	}{
 		ServiceCategory: promisedDate.ServiceCategory,
