@@ -2,6 +2,7 @@ package request
 
 import (
 	"context"
+	"errors"
 	"time"
 	"transport-app/app/domain"
 	"transport-app/app/shared/sharedcontext"
@@ -101,6 +102,15 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 
 		// Mapear unidades de entrega
 		deliveryUnits := make(domain.DeliveryUnits, 0, len(order.DeliveryUnits))
+		if len(order.DeliveryUnits) == 0 {
+			order.DeliveryUnits = append(order.DeliveryUnits, struct {
+				Items []struct {
+					Sku string `json:"sku" example:"SKU123"`
+				} `json:"items"`
+				Lpn string `json:"lpn" example:"ABC123"`
+			}{})
+		}
+
 		for _, du := range order.DeliveryUnits {
 			items := make([]domain.Item, 0, len(du.Items))
 			for _, item := range du.Items {
@@ -148,4 +158,16 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 	route.Orders = orders
 
 	return route
+}
+
+func (r ConfirmDeliveriesRequest) Validate() error {
+	for _, order := range r.Route.Orders {
+		for _, du := range order.DeliveryUnits {
+			// Si no hay LPN ni SKUs, retornar error
+			if du.Lpn == "" && len(du.Items) == 0 {
+				return errors.New("delivery unit must have either LPN or SKUs")
+			}
+		}
+	}
+	return nil
 }

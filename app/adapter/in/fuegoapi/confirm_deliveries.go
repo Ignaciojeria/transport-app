@@ -39,6 +39,14 @@ func confirmDeliveries(
 				return response.ConfirmDeliveriesResponse{}, err
 			}
 
+			if err := requestBody.Validate(); err != nil {
+				return response.ConfirmDeliveriesResponse{}, fuego.HTTPError{
+					Title:  "error validating deliveries",
+					Detail: err.Error(),
+					Status: http.StatusBadRequest,
+				}
+			}
+
 			eventPayload, _ := json.Marshal(requestBody)
 
 			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
