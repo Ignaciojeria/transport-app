@@ -40,6 +40,14 @@ func cancelOrders(
 				return response.CancelOrdersResponse{}, err
 			}
 
+			if err := requestBody.Validate(); err != nil {
+				return response.CancelOrdersResponse{}, fuego.HTTPError{
+					Title:  "error validating cancellations",
+					Detail: err.Error(),
+					Status: http.StatusBadRequest,
+				}
+			}
+
 			eventPayload, _ := json.Marshal(requestBody)
 
 			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
