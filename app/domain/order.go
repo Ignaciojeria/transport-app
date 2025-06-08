@@ -38,26 +38,11 @@ func (o *Order) AssignIndexesIfNoLPN() {
 type DeliveryUnits []DeliveryUnit
 
 func (pkgs *DeliveryUnits) assignIndexesIfNoLPN(referenceID string) {
-	groupCounter := make(map[string]int)
-
 	for i := range *pkgs {
 		pkg := &(*pkgs)[i]
-
 		if pkg.Lpn != "" {
 			continue
 		}
-
-		skus := make([]string, 0, len(pkg.Items))
-		for _, item := range pkg.Items {
-			skus = append(skus, item.Sku)
-		}
-
-		sort.Strings(skus)
-		key := strings.Join(skus, ",")
-
-		groupCounter[key]++
-		pkg.Index = groupCounter[key]
-		pkg.SkuIndex = key
 		pkg.noLPNReference = referenceID
 	}
 }
@@ -133,6 +118,43 @@ func (o Order) UpdateIfChanged(newOrder Order) (Order, bool) {
 	return o, changed
 }
 
+func (o Order) ValidateDeliveryUnits() error {
+	// Mapa para trackear LPNs duplicados
+	lpnSet := make(map[string]struct{})
+	// Mapa para trackear conjuntos de SKUs duplicados
+	skuSetMap := make(map[string]struct{})
+
+	for _, pkg := range o.DeliveryUnits {
+		// Validar LPNs duplicados
+		if pkg.Lpn != "" {
+			if _, exists := lpnSet[pkg.Lpn]; exists {
+				return apperrors.MarkAsAlertable(
+					errors.Wrap(ErrInvalidPackageFormat, "duplicate LPN found: each LPN must be unique within an order"))
+			}
+			lpnSet[pkg.Lpn] = struct{}{}
+			continue
+		}
+
+		// Para paquetes sin LPN, validar conjuntos de SKUs duplicados
+		if len(pkg.Items) > 0 {
+			skus := make([]string, 0, len(pkg.Items))
+			for _, item := range pkg.Items {
+				skus = append(skus, item.Sku)
+			}
+			sort.Strings(skus)
+			skuKey := strings.Join(skus, ",")
+
+			if _, exists := skuSetMap[skuKey]; exists {
+				return apperrors.MarkAsAlertable(
+					errors.Wrap(ErrInvalidPackageFormat, "duplicate SKU set found: identical SKU combinations must be grouped in a single package"))
+			}
+			skuSetMap[skuKey] = struct{}{}
+		}
+	}
+
+	return nil
+}
+
 func (o Order) Validate() error {
 	// Validaciones existentes
 	if err := o.ValidateCollectAvailabilityDate(); err != nil {
@@ -142,7 +164,12 @@ func (o Order) Validate() error {
 		return apperrors.MarkAsAlertable(errors.Wrap(err, "validation failed for PromisedDate"))
 	}
 
-	// Nueva validación sobre los paquetes
+	// Validar duplicados en unidades de entrega
+	if err := o.ValidateDeliveryUnits(); err != nil {
+		return err
+	}
+
+	// Validación sobre los paquetes
 	for _, pkg := range o.DeliveryUnits {
 		if pkg.Lpn == "" {
 			if len(pkg.Items) == 0 {

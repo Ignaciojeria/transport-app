@@ -29,17 +29,16 @@ var _ = Describe("Package", func() {
 			Expect(package1.DocID(ctx1)).ToNot(Equal(package1.DocID(ctx2)))
 		})
 
-		It("should generate ID based on reference, index and sorted items when Lpn is empty", func() {
+		It("should generate ID based on reference and sorted items when Lpn is empty", func() {
 			pkg := DeliveryUnit{
 				Lpn:            "",
 				noLPNReference: "REF001",
-				Index:          1,
 				Items: []Item{
 					{Sku: "SKU002"},
 					{Sku: "SKU001"},
 				},
 			}
-			expectedInputs := []string{"index:1", "SKU001", "SKU002", "REF001"} // ordenados
+			expectedInputs := []string{"REF001", "SKU001", "SKU002"}
 			Expect(pkg.DocID(ctx1)).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 		})
 
@@ -94,10 +93,9 @@ var _ = Describe("Package", func() {
 				Lpn:            "",
 				noLPNReference: "REF001",
 				Items:          []Item{},
-				Index:          1,
 			}
 
-			expected := HashByTenant(ctx1, "index:1", "REF001")
+			expected := HashByTenant(ctx1, "REF001")
 			Expect(pkg.DocID(ctx1)).To(Equal(expected))
 		})
 
@@ -448,14 +446,13 @@ var _ = Describe("Package", func() {
 			originalPackage := DeliveryUnit{
 				Lpn:            "",
 				noLPNReference: "REF001",
-				Index:          1,
 				Items: []Item{
 					{Sku: "SKU001"},
 					{Sku: "SKU002"},
 				},
 			}
 
-			expectedInputs := []string{"index:1", "SKU001", "SKU002", "REF001"}
+			expectedInputs := []string{"REF001", "SKU001", "SKU002"} // ordenados
 			originalDocID := originalPackage.DocID(ctx1)
 			Expect(originalDocID).To(Equal(HashByTenant(ctx1, expectedInputs...)))
 
@@ -474,16 +471,16 @@ var _ = Describe("Package", func() {
 
 	It("should generate same ID regardless of item SKU order", func() {
 		pkg1 := DeliveryUnit{
-			Lpn:   "",
-			Index: 1,
+			Lpn:            "",
+			noLPNReference: "REF001",
 			Items: []Item{
 				{Sku: "SKU001"},
 				{Sku: "SKU002"},
 			},
 		}
 		pkg2 := DeliveryUnit{
-			Lpn:   "",
-			Index: 1,
+			Lpn:            "",
+			noLPNReference: "REF001",
 			Items: []Item{
 				{Sku: "SKU002"},
 				{Sku: "SKU001"}, // orden diferente

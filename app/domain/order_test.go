@@ -370,66 +370,130 @@ var _ = Describe("Order DocID", func() {
 
 		Expect(order.Validate()).To(Succeed())
 	})
+})
 
-	var _ = Describe("Packages Indexing", func() {
-		It("should assign incremental indices to packages without LPN based on SKU occurrence", func() {
-			packages := DeliveryUnits{
-				{Lpn: "LPN-1", Items: []Item{{Sku: "SKU-1"}}}, // LPN, no indexing
-				{Lpn: "", Items: []Item{{Sku: "SKU-1"}}},      // First occurrence of SKU-1
-				{Lpn: "", Items: []Item{{Sku: "SKU-2"}}},      // First occurrence of SKU-2
-				{Lpn: "", Items: []Item{{Sku: "SKU-1"}}},      // Second occurrence of SKU-1
-				{Lpn: "", Items: []Item{{Sku: "SKU-2"}}},      // Second occurrence of SKU-2
-				{Lpn: "", Items: []Item{{Sku: "SKU-3"}}},      // First occurrence of SKU-3
+var _ = Describe("Order Validation", func() {
+	Describe("ValidateDeliveryUnits", func() {
+		It("should fail when there are duplicate LPNs", func() {
+			order := Order{
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "LPN-001",
+						Items: []Item{
+							{Sku: "SKU-1"},
+						},
+					},
+					{
+						Lpn: "LPN-001", // LPN duplicado
+						Items: []Item{
+							{Sku: "SKU-2"},
+						},
+					},
+				},
 			}
 
-			packages.assignIndexesIfNoLPN("REF-0001")
+			err := order.Validate()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("duplicate LPN found"))
+		})
 
-			expectations := []int{0, 1, 1, 2, 2, 1} // LPN package has index 0, others are counted by SKU
-
-			for i, pkg := range packages {
-				Expect(pkg.Index).To(Equal(expectations[i]),
-					"package %d with SKU %s should have index %d", i, pkg.Items[0].Sku, expectations[i])
+		It("should fail when there are duplicate SKU sets in packages without LPN", func() {
+			order := Order{
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "",
+						Items: []Item{
+							{Sku: "SKU-1"},
+							{Sku: "SKU-2"},
+						},
+					},
+					{
+						Lpn: "",
+						Items: []Item{
+							{Sku: "SKU-2"}, // Mismo conjunto de SKUs en diferente orden
+							{Sku: "SKU-1"},
+						},
+					},
+				},
 			}
+
+			err := order.Validate()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring("duplicate SKU set found"))
+		})
+
+		It("should succeed when packages have unique LPNs", func() {
+			order := Order{
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "LPN-001",
+						Items: []Item{
+							{Sku: "SKU-1"},
+						},
+					},
+					{
+						Lpn: "LPN-002",
+						Items: []Item{
+							{Sku: "SKU-2"},
+						},
+					},
+				},
+			}
+
+			Expect(order.Validate()).To(Succeed())
+		})
+
+		It("should succeed when packages without LPN have different SKU sets", func() {
+			order := Order{
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "",
+						Items: []Item{
+							{Sku: "SKU-1"},
+							{Sku: "SKU-2"},
+						},
+					},
+					{
+						Lpn: "",
+						Items: []Item{
+							{Sku: "SKU-1"},
+							{Sku: "SKU-3"}, // Diferente conjunto de SKUs
+						},
+					},
+				},
+			}
+
+			Expect(order.Validate()).To(Succeed())
+		})
+
+		It("should succeed with mixed LPN and non-LPN packages", func() {
+			order := Order{
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "LPN-001",
+						Items: []Item{
+							{Sku: "SKU-1"},
+						},
+					},
+					{
+						Lpn: "",
+						Items: []Item{
+							{Sku: "SKU-2"},
+							{Sku: "SKU-3"},
+						},
+					},
+				},
+			}
+
+			Expect(order.Validate()).To(Succeed())
+		})
+
+		It("should handle empty delivery units", func() {
+			order := Order{
+				DeliveryUnits: []DeliveryUnit{},
+			}
+
+			Expect(order.Validate()).To(Succeed())
 		})
 	})
-
-	var _ = Describe("Packages Index Assignment", func() {
-		It("should assign incremental indices to unnamed packages based on sorted SKU groupings", func() {
-			packages := DeliveryUnits{
-				{
-					Items: []Item{{Sku: "B"}, {Sku: "A"}},
-				},
-				{
-					Items: []Item{{Sku: "A"}, {Sku: "B"}}, // mismo set que el anterior (A,B)
-				},
-				{
-					Items: []Item{{Sku: "C"}, {Sku: "D"}}, // nuevo set (C,D)
-				},
-				{
-					Items: []Item{{Sku: "C"}, {Sku: "D"}}, // igual al anterior
-				},
-				{
-					Items: []Item{{Sku: "D"}, {Sku: "C"}}, // también igual al anterior
-				},
-				{
-					Items: []Item{{Sku: "D"}, {Sku: "B"}}, // también igual al anterior
-				},
-			}
-
-			packages.assignIndexesIfNoLPN("REF-0001")
-
-			// Primer grupo: A,B
-			Expect(packages[0].Index).To(Equal(1))
-			Expect(packages[1].Index).To(Equal(2))
-
-			// Segundo grupo: C,D
-			Expect(packages[2].Index).To(Equal(1))
-			Expect(packages[3].Index).To(Equal(2))
-			Expect(packages[4].Index).To(Equal(3))
-
-			//Tercero D,B
-			Expect(packages[5].Index).To(Equal(1))
-		})
-	})
-
 })

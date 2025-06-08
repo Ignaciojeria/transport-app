@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"fmt"
 	"sort"
 )
 
@@ -13,8 +12,6 @@ type DeliveryUnit struct {
 	Dimensions      Dimensions
 	Weight          Weight
 	Insurance       Insurance
-	Index           int
-	SkuIndex        string
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -28,17 +25,17 @@ func (p DeliveryUnit) DocID(ctx context.Context) DocumentID {
 
 	var allInputs []string
 
-	// Agregar índice del paquete (por posición)
-	allInputs = append(allInputs, fmt.Sprintf("index:%d", p.Index))
+	// Primero agregar la referencia
+	allInputs = append(allInputs, p.noLPNReference)
 
-	// Agregar SKUs ordenados
+	// Luego agregar SKUs ordenados
 	skus := make([]string, 0, len(p.Items))
 	for _, item := range p.Items {
 		skus = append(skus, item.Sku)
 	}
 	sort.Strings(skus)
 	allInputs = append(allInputs, skus...)
-	allInputs = append(allInputs, p.noLPNReference)
+
 	return HashByTenant(ctx, allInputs...)
 }
 
