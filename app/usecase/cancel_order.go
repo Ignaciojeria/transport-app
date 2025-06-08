@@ -25,52 +25,70 @@ func NewCancelOrder(
 	upsertDeliveryUnitsHistory tidbrepository.UpsertDeliveryUnitsHistory,
 ) CancelOrder {
 	return func(ctx context.Context, input domain.Route) error {
-		referenceIds := []string{}
-		for _, order := range input.Orders {
-			referenceIds = append(referenceIds, order.ReferenceID.String())
-		}
-		last := 100
-		results, _, err := findDeliveryUnitsProjectionResult(ctx, domain.DeliveryUnitsFilter{
-			Order: &domain.OrderFilter{
-				ReferenceIds: referenceIds,
-			},
-			RequestedFields: map[string]any{
-				projection.DeliveryUnit().String():      true,
-				projection.ReferenceID().String():       true,
-				projection.DeliveryUnitLPN().String():   true,
-				projection.DeliveryUnitItems().String(): true,
-			},
-			OnlyLatestStatus: true,
-			Pagination: domain.Pagination{
-				Last: &last,
-			},
-		})
-		if err != nil {
-			return err
-		}
-
 		nonDeliveryReason := input.Orders[0].DeliveryUnits[0].ConfirmDelivery.NonDeliveryReason
 		manualChange := input.Orders[0].DeliveryUnits[0].ConfirmDelivery.ManualChange
-		input.Orders[0].DeliveryUnits = nil
-		// Primero asignamos los LPNs y SKUs a las órdenes
+
+		// Procesamos cada orden
 		for i := range input.Orders {
-			for _, deliveryUnit := range results {
-				if deliveryUnit.OrderReferenceID == input.Orders[i].ReferenceID.String() {
-					input.Orders[i].DeliveryUnits = append(input.Orders[i].DeliveryUnits, domain.DeliveryUnit{
-						Lpn:    deliveryUnit.LPN,
-						Items:  deliveryUnit.JSONItems.Map(),
-						Status: domain.Status{Status: domain.StatusCancelled},
-						ConfirmDelivery: domain.ConfirmDelivery{
-							NonDeliveryReason: nonDeliveryReason,
-							ManualChange:      manualChange,
-						},
-					})
+			needsHydration := false
+			for j := range input.Orders[i].DeliveryUnits {
+				if input.Orders[i].DeliveryUnits[j].Lpn == "" && len(input.Orders[i].DeliveryUnits[j].Items) == 0 {
+					needsHydration = true
+					break
 				}
 			}
-		}
 
-		// Después de asignar los LPNs y SKUs, asignamos los índices y actualizamos el estado
-		for i := range input.Orders {
+			if needsHydration {
+				// Buscamos los datos de la orden
+				last := 100
+				results, _, err := findDeliveryUnitsProjectionResult(ctx, domain.DeliveryUnitsFilter{
+					Order: &domain.OrderFilter{
+						ReferenceIds: []string{input.Orders[i].ReferenceID.String()},
+					},
+					RequestedFields: map[string]any{
+						projection.DeliveryUnit().String():      true,
+						projection.ReferenceID().String():       true,
+						projection.DeliveryUnitLPN().String():   true,
+						projection.DeliveryUnitItems().String(): true,
+					},
+					OnlyLatestStatus: true,
+					Pagination: domain.Pagination{
+						Last: &last,
+					},
+				})
+				if err != nil {
+					return err
+				}
+
+				// Asignamos los LPNs y SKUs a la orden
+				input.Orders[i].DeliveryUnits = nil
+				for _, deliveryUnit := range results {
+					if deliveryUnit.OrderReferenceID == input.Orders[i].ReferenceID.String() {
+						input.Orders[i].DeliveryUnits = append(input.Orders[i].DeliveryUnits, domain.DeliveryUnit{
+							Lpn:    deliveryUnit.LPN,
+							Items:  deliveryUnit.JSONItems.Map(),
+							Status: domain.Status{Status: domain.StatusCancelled},
+							ConfirmDelivery: domain.ConfirmDelivery{
+								NonDeliveryReason: nonDeliveryReason,
+								ManualChange:      manualChange,
+							},
+						})
+					}
+				}
+			} else {
+				// Si ya tiene LPN y SKUs, solo actualizamos el estado y ConfirmDelivery
+				for j := range input.Orders[i].DeliveryUnits {
+					input.Orders[i].DeliveryUnits[j].Status = domain.Status{Status: domain.StatusCancelled}
+					if input.Orders[i].DeliveryUnits[j].ConfirmDelivery.NonDeliveryReason.IsEmpty() {
+						input.Orders[i].DeliveryUnits[j].ConfirmDelivery = domain.ConfirmDelivery{
+							NonDeliveryReason: nonDeliveryReason,
+							ManualChange:      manualChange,
+						}
+					}
+				}
+			}
+
+			// Actualizamos los índices
 			input.Orders[i].AssignIndexesIfNoLPN()
 		}
 

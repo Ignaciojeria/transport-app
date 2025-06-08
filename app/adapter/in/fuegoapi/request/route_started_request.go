@@ -1,5 +1,11 @@
 package request
 
+import (
+	"context"
+	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
+)
+
 type RouteStartedRequest struct {
 	StartedAt string `json:"startedAt" example:"2025-06-06T14:30:00Z"`
 	Carrier   struct {
@@ -29,4 +35,56 @@ type RouteStartedRequest struct {
 		} `json:"orders"`
 		ReferenceID string `json:"referenceID"`
 	} `json:"route"`
+}
+
+func (r RouteStartedRequest) Map(ctx context.Context) domain.Route {
+	route := domain.Route{
+		ReferenceID: r.Route.ReferenceID,
+		Vehicle: domain.Vehicle{
+			Plate: r.Vehicle.Plate,
+			Carrier: domain.Carrier{
+				Name:       r.Carrier.Name,
+				NationalID: r.Carrier.NationalID,
+				Driver: domain.Driver{
+					Email:      r.Driver.Email,
+					NationalID: r.Driver.NationalID,
+				},
+			},
+		},
+	}
+
+	// Map orders
+	orders := make([]domain.Order, 0, len(r.Route.Orders))
+	for _, order := range r.Route.Orders {
+		domainOrder := domain.Order{
+			Headers: domain.Headers{
+				Consumer: order.BusinessIdentifiers.Consumer,
+				Commerce: order.BusinessIdentifiers.Commerce,
+				Channel:  sharedcontext.ChannelFromContext(ctx),
+			},
+			ReferenceID: domain.ReferenceID(order.ReferenceID),
+		}
+
+		// Map delivery units
+		deliveryUnits := make(domain.DeliveryUnits, 0, len(order.DeliveryUnits))
+		for _, du := range order.DeliveryUnits {
+			items := make([]domain.Item, 0, len(du.Items))
+			for _, item := range du.Items {
+				items = append(items, domain.Item{
+					Sku: item.Sku,
+				})
+			}
+			deliveryUnits = append(deliveryUnits, domain.DeliveryUnit{
+				Lpn:   du.Lpn,
+				Items: items,
+			})
+		}
+
+		domainOrder.DeliveryUnits = deliveryUnits
+		orders = append(orders, domainOrder)
+	}
+
+	route.Orders = orders
+
+	return route
 }
