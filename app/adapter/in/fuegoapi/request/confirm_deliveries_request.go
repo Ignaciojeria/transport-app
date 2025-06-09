@@ -46,7 +46,9 @@ type ConfirmDeliveriesRequest struct {
 			} `json:"evidencePhotos"`
 			DeliveryUnits []struct {
 				Items []struct {
-					Sku string `json:"sku" example:"SKU123"`
+					Sku       string `json:"sku" example:"SKU123"`
+					Expected  int    `json:"expected" example:"1"`
+					Delivered int    `json:"delivered" example:"1"`
 				} `json:"items"`
 				Lpn string `json:"lpn" example:"ABC123"`
 			} `json:"deliveryUnits"`
@@ -105,7 +107,9 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 		if len(order.DeliveryUnits) == 0 {
 			order.DeliveryUnits = append(order.DeliveryUnits, struct {
 				Items []struct {
-					Sku string `json:"sku" example:"SKU123"`
+					Sku       string `json:"sku" example:"SKU123"`
+					Expected  int    `json:"expected" example:"1"`
+					Delivered int    `json:"delivered" example:"1"`
 				} `json:"items"`
 				Lpn string `json:"lpn" example:"ABC123"`
 			}{})
