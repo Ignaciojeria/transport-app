@@ -50,7 +50,6 @@ func newOrderCancellationSubmitted(
 		return http.StatusOK, nil
 	}
 	go sm.WithMessageProcessor(messageProcessor).
-		WithPushHandler("/subscription/" + subscriptionName).
 		Start(subscriptionRef)
 	return messageProcessor
 }
