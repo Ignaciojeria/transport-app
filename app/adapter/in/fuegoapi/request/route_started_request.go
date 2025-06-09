@@ -55,6 +55,7 @@ func (r RouteStartedRequest) Map(ctx context.Context) domain.Route {
 
 	// Map orders
 	orders := make([]domain.Order, 0, len(r.Route.Orders))
+
 	for _, order := range r.Route.Orders {
 		domainOrder := domain.Order{
 			Headers: domain.Headers{
@@ -63,6 +64,15 @@ func (r RouteStartedRequest) Map(ctx context.Context) domain.Route {
 				Channel:  sharedcontext.ChannelFromContext(ctx),
 			},
 			ReferenceID: domain.ReferenceID(order.ReferenceID),
+		}
+
+		if len(order.DeliveryUnits) == 0 {
+			order.DeliveryUnits = append(order.DeliveryUnits, struct {
+				Items []struct {
+					Sku string "json:\"sku\" example:\"SKU123\""
+				} "json:\"items\""
+				Lpn string "json:\"lpn\" example:\"ABC123\""
+			}{})
 		}
 
 		// Map delivery units
