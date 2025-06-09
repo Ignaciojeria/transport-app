@@ -151,6 +151,10 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 						Details:     order.Delivery.Failure.Detail,
 						ReferenceID: order.Delivery.Failure.ReferenceID,
 					},
+					Recipient: domain.Recipient{
+						FullName:   order.Recipient.FullName,
+						NationalID: order.Recipient.NationalID,
+					},
 				},
 			})
 		}

@@ -25,6 +25,7 @@ func NewConfirmDeliveries(
 	upsertDeliveryUnitsHistory tidbrepository.UpsertDeliveryUnitsHistory) ConfirmDeliveries {
 	return func(ctx context.Context, input domain.Route) error {
 		// Si la orden no tiene LPN ni SKU, buscamos los datos
+		confirmDeliveries := input.Orders[0].DeliveryUnits[0].ConfirmDelivery
 		for i := range input.Orders {
 
 			needsHydration := false
@@ -62,8 +63,9 @@ func NewConfirmDeliveries(
 				for _, deliveryUnit := range results {
 					if deliveryUnit.OrderReferenceID == input.Orders[i].ReferenceID.String() {
 						input.Orders[i].DeliveryUnits = append(input.Orders[i].DeliveryUnits, domain.DeliveryUnit{
-							Lpn:   deliveryUnit.LPN,
-							Items: deliveryUnit.JSONItems.Map(),
+							Lpn:             deliveryUnit.LPN,
+							Items:           deliveryUnit.JSONItems.Map(),
+							ConfirmDelivery: confirmDeliveries,
 						})
 					}
 				}
