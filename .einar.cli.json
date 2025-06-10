@@ -402,6 +402,10 @@
         {
             "kind": "gcp-subscription",
             "name": "node-submitted"
+        },
+        {
+            "kind": "post-controller",
+            "name": "fix-coordinates"
         }
     ]
 }

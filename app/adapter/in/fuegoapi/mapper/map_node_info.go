@@ -37,10 +37,18 @@ func MapNodeInfoToDomain(nodeInfo struct {
 			Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
 		} `json:"confidence"`
 	} `json:"coordinates"`
-	Province string `json:"province" example:"santiago"`
-	State    string `json:"state" example:"region metropolitana de santiago"`
-	TimeZone string `json:"timeZone" example:"America/Santiago"`
-	ZipCode  string `json:"zipCode" example:"7500000"`
+	Province      string `json:"province" example:"santiago"`
+	State         string `json:"state" example:"region metropolitana de santiago"`
+	TimeZone      string `json:"timeZone" example:"America/Santiago"`
+	ZipCode       string `json:"zipCode" example:"7500000"`
+	PoliticalArea struct {
+		ID         string `json:"id" example:"cl-rm-la-florida"`
+		Confidence struct {
+			Level   float64 `json:"level" example:"0.0"`
+			Message string  `json:"message" example:""`
+			Reason  string  `json:"reason" example:""`
+		} `json:"confidence"`
+	} `json:"politicalArea"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
