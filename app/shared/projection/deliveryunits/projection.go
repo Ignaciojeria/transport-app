@@ -505,27 +505,6 @@ func (p Projection) ExtraFieldValue() Field {
 	return Field{path: "extraFields.value"}
 }
 
-// Métodos para campos de paginación
-func (p Projection) PageInfo() Field {
-	return Field{path: "pageInfo"}
-}
-
-func (p Projection) PageInfoHasNextPage() Field {
-	return Field{path: "pageInfo.hasNextPage"}
-}
-
-func (p Projection) PageInfoHasPreviousPage() Field {
-	return Field{path: "pageInfo.hasPreviousPage"}
-}
-
-func (p Projection) PageInfoStartCursor() Field {
-	return Field{path: "pageInfo.startCursor"}
-}
-
-func (p Projection) PageInfoEndCursor() Field {
-	return Field{path: "pageInfo.endCursor"}
-}
-
 // Métodos para campos de DeliveryUnitsReport
 func (p Projection) Commerce() Field {
 	return Field{path: "commerce"}

@@ -59,6 +59,7 @@ func NewRunMigrations(
 			&DeliveryUnitsStatusHistory{},
 			&SizeCategory{},
 			&DeliveryUnitsLabels{},
+			&NodeReferences{},
 		}
 
 		// Crear las tablas nuevamente

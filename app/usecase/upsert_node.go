@@ -17,7 +17,7 @@ func init() {
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
 		tidbrepository.NewUpsertNodeType,
-		tidbrepository.NewUpsertNodeInfoHeaders,
+		tidbrepository.NewUpsertNodeReferences,
 	)
 }
 
@@ -26,7 +26,7 @@ func NewUpsertNode(
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	upsertNodeType tidbrepository.UpsertNodeType,
-	upsertNodeInfoHeaders tidbrepository.UpsertNodeInfoHeaders,
+	upsertNodeReferences tidbrepository.UpsertNodeReferences,
 ) UpsertNode {
 	return func(ctx context.Context, input domain.NodeInfo) error {
 
@@ -42,6 +42,11 @@ func NewUpsertNode(
 
 		// Actualizar o insertar la información de dirección
 		if err := upsertAddressInfo(ctx, input.AddressInfo); err != nil {
+			return err
+		}
+
+		// Actualizar o insertar las referencias del nodo
+		if err := upsertNodeReferences(ctx, input); err != nil {
 			return err
 		}
 

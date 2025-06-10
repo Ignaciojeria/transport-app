@@ -240,9 +240,27 @@ type ManualChange struct {
 	Reason      *string `json:"reason,omitempty"`
 }
 
+type NodeConnection struct {
+	Edges    []*NodeEdge `json:"edges"`
+	PageInfo *PageInfo   `json:"pageInfo"`
+}
+
+type NodeEdge struct {
+	Cursor string    `json:"cursor"`
+	Node   *Location `json:"node"`
+}
+
+type NodeFilterInput struct {
+	ReferenceIds []*string               `json:"referenceIds,omitempty"`
+	Name         *string                 `json:"name,omitempty"`
+	References   []*ReferenceFilterInput `json:"references,omitempty"`
+}
+
 type NodeInfo struct {
-	ReferenceID *string `json:"referenceId,omitempty"`
-	Name        *string `json:"name,omitempty"`
+	ReferenceID *string      `json:"referenceId,omitempty"`
+	Name        *string      `json:"name,omitempty"`
+	Type        *string      `json:"type,omitempty"`
+	References  []*Reference `json:"references,omitempty"`
 }
 
 type OrderFilter struct {

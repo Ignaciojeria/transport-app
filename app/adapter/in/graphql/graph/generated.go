@@ -233,9 +233,21 @@ type ComplexityRoot struct {
 		Reason      func(childComplexity int) int
 	}
 
+	NodeConnection struct {
+		Edges    func(childComplexity int) int
+		PageInfo func(childComplexity int) int
+	}
+
+	NodeEdge struct {
+		Cursor func(childComplexity int) int
+		Node   func(childComplexity int) int
+	}
+
 	NodeInfo struct {
 		Name        func(childComplexity int) int
 		ReferenceID func(childComplexity int) int
+		References  func(childComplexity int) int
+		Type        func(childComplexity int) int
 	}
 
 	OrderType struct {
@@ -263,6 +275,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		DeliveryUnitsReports func(childComplexity int, filter *model.DeliveryUnitsReportFilterInput, first *int, after *string, last *int, before *string) int
+		Nodes                func(childComplexity int, filter *model.NodeFilterInput, first *int, after *string, last *int, before *string) int
 	}
 
 	Reference struct {
@@ -299,6 +312,7 @@ type ComplexityRoot struct {
 
 type QueryResolver interface {
 	DeliveryUnitsReports(ctx context.Context, filter *model.DeliveryUnitsReportFilterInput, first *int, after *string, last *int, before *string) (*model.DeliveryUnitsReportConnection, error)
+	Nodes(ctx context.Context, filter *model.NodeFilterInput, first *int, after *string, last *int, before *string) (*model.NodeConnection, error)
 }
 
 type executableSchema struct {
@@ -1062,6 +1076,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.ManualChange.Reason(childComplexity), true
 
+	case "NodeConnection.edges":
+		if e.complexity.NodeConnection.Edges == nil {
+			break
+		}
+
+		return e.complexity.NodeConnection.Edges(childComplexity), true
+
+	case "NodeConnection.pageInfo":
+		if e.complexity.NodeConnection.PageInfo == nil {
+			break
+		}
+
+		return e.complexity.NodeConnection.PageInfo(childComplexity), true
+
+	case "NodeEdge.cursor":
+		if e.complexity.NodeEdge.Cursor == nil {
+			break
+		}
+
+		return e.complexity.NodeEdge.Cursor(childComplexity), true
+
+	case "NodeEdge.node":
+		if e.complexity.NodeEdge.Node == nil {
+			break
+		}
+
+		return e.complexity.NodeEdge.Node(childComplexity), true
+
 	case "NodeInfo.name":
 		if e.complexity.NodeInfo.Name == nil {
 			break
@@ -1075,6 +1117,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.NodeInfo.ReferenceID(childComplexity), true
+
+	case "NodeInfo.references":
+		if e.complexity.NodeInfo.References == nil {
+			break
+		}
+
+		return e.complexity.NodeInfo.References(childComplexity), true
+
+	case "NodeInfo.type":
+		if e.complexity.NodeInfo.Type == nil {
+			break
+		}
+
+		return e.complexity.NodeInfo.Type(childComplexity), true
 
 	case "OrderType.description":
 		if e.complexity.OrderType.Description == nil {
@@ -1164,6 +1220,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.DeliveryUnitsReports(childComplexity, args["filter"].(*model.DeliveryUnitsReportFilterInput), args["first"].(*int), args["after"].(*string), args["last"].(*int), args["before"].(*string)), true
+
+	case "Query.nodes":
+		if e.complexity.Query.Nodes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_nodes_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Nodes(childComplexity, args["filter"].(*model.NodeFilterInput), args["first"].(*int), args["after"].(*string), args["last"].(*int), args["before"].(*string)), true
 
 	case "Reference.type":
 		if e.complexity.Reference.Type == nil {
@@ -1272,6 +1340,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputGroupByFilter,
 		ec.unmarshalInputLabelFilterInput,
 		ec.unmarshalInputLocationFilter,
+		ec.unmarshalInputNodeFilterInput,
 		ec.unmarshalInputOrderFilter,
 		ec.unmarshalInputOrderTypeFilter,
 		ec.unmarshalInputPromisedDateFilter,
@@ -1358,7 +1427,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(ec.Schema(), ec.Schema().Types[name]), nil
 }
 
-//go:embed "deliveryunits.graphqls"
+//go:embed "deliveryunits.graphqls" "nodes.graphqls"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1371,6 +1440,7 @@ func sourceData(filename string) string {
 
 var sources = []*ast.Source{
 	{Name: "deliveryunits.graphqls", Input: sourceData("deliveryunits.graphqls"), BuiltIn: false},
+	{Name: "nodes.graphqls", Input: sourceData("nodes.graphqls"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
@@ -1509,6 +1579,126 @@ func (ec *executionContext) field_Query_deliveryUnitsReports_argsLast(
 }
 
 func (ec *executionContext) field_Query_deliveryUnitsReports_argsBefore(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["before"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("before"))
+	if tmp, ok := rawArgs["before"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nodes_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := ec.field_Query_nodes_argsFilter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	arg1, err := ec.field_Query_nodes_argsFirst(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["first"] = arg1
+	arg2, err := ec.field_Query_nodes_argsAfter(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["after"] = arg2
+	arg3, err := ec.field_Query_nodes_argsLast(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["last"] = arg3
+	arg4, err := ec.field_Query_nodes_argsBefore(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["before"] = arg4
+	return args, nil
+}
+func (ec *executionContext) field_Query_nodes_argsFilter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*model.NodeFilterInput, error) {
+	if _, ok := rawArgs["filter"]; !ok {
+		var zeroVal *model.NodeFilterInput
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+	if tmp, ok := rawArgs["filter"]; ok {
+		return ec.unmarshalONodeFilterInput2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeFilterInput(ctx, tmp)
+	}
+
+	var zeroVal *model.NodeFilterInput
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nodes_argsFirst(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["first"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("first"))
+	if tmp, ok := rawArgs["first"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nodes_argsAfter(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*string, error) {
+	if _, ok := rawArgs["after"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("after"))
+	if tmp, ok := rawArgs["after"]; ok {
+		return ec.unmarshalOString2ᚖstring(ctx, tmp)
+	}
+
+	var zeroVal *string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nodes_argsLast(
+	ctx context.Context,
+	rawArgs map[string]any,
+) (*int, error) {
+	if _, ok := rawArgs["last"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("last"))
+	if tmp, ok := rawArgs["last"]; ok {
+		return ec.unmarshalOInt2ᚖint(ctx, tmp)
+	}
+
+	var zeroVal *int
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_nodes_argsBefore(
 	ctx context.Context,
 	rawArgs map[string]any,
 ) (*string, error) {
@@ -6286,6 +6476,10 @@ func (ec *executionContext) fieldContext_Location_nodeInfo(_ context.Context, fi
 				return ec.fieldContext_NodeInfo_referenceId(ctx, field)
 			case "name":
 				return ec.fieldContext_NodeInfo_name(ctx, field)
+			case "type":
+				return ec.fieldContext_NodeInfo_type(ctx, field)
+			case "references":
+				return ec.fieldContext_NodeInfo_references(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NodeInfo", field.Name)
 		},
@@ -6375,6 +6569,204 @@ func (ec *executionContext) fieldContext_ManualChange_reason(_ context.Context, 
 	return fc, nil
 }
 
+func (ec *executionContext) _NodeConnection_edges(ctx context.Context, field graphql.CollectedField, obj *model.NodeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NodeConnection_edges(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Edges, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.NodeEdge)
+	fc.Result = res
+	return ec.marshalNNodeEdge2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeEdgeᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NodeConnection_edges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "cursor":
+				return ec.fieldContext_NodeEdge_cursor(ctx, field)
+			case "node":
+				return ec.fieldContext_NodeEdge_node(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NodeEdge", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NodeConnection_pageInfo(ctx context.Context, field graphql.CollectedField, obj *model.NodeConnection) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NodeConnection_pageInfo(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PageInfo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PageInfo)
+	fc.Result = res
+	return ec.marshalNPageInfo2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPageInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NodeConnection_pageInfo(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NodeConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "hasNextPage":
+				return ec.fieldContext_PageInfo_hasNextPage(ctx, field)
+			case "hasPreviousPage":
+				return ec.fieldContext_PageInfo_hasPreviousPage(ctx, field)
+			case "startCursor":
+				return ec.fieldContext_PageInfo_startCursor(ctx, field)
+			case "endCursor":
+				return ec.fieldContext_PageInfo_endCursor(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PageInfo", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NodeEdge_cursor(ctx context.Context, field graphql.CollectedField, obj *model.NodeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NodeEdge_cursor(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cursor, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NodeEdge_cursor(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NodeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NodeEdge_node(ctx context.Context, field graphql.CollectedField, obj *model.NodeEdge) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NodeEdge_node(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Node, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Location)
+	fc.Result = res
+	return ec.marshalNLocation2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLocation(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NodeEdge_node(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NodeEdge",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "addressInfo":
+				return ec.fieldContext_Location_addressInfo(ctx, field)
+			case "nodeInfo":
+				return ec.fieldContext_Location_nodeInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Location", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _NodeInfo_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.NodeInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_NodeInfo_referenceId(ctx, field)
 	if err != nil {
@@ -6452,6 +6844,94 @@ func (ec *executionContext) fieldContext_NodeInfo_name(_ context.Context, field 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NodeInfo_type(ctx context.Context, field graphql.CollectedField, obj *model.NodeInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NodeInfo_type(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Type, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NodeInfo_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NodeInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _NodeInfo_references(ctx context.Context, field graphql.CollectedField, obj *model.NodeInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_NodeInfo_references(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.References, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Reference)
+	fc.Result = res
+	return ec.marshalOReference2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐReference(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_NodeInfo_references(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "NodeInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "type":
+				return ec.fieldContext_Reference_type(ctx, field)
+			case "value":
+				return ec.fieldContext_Reference_value(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Reference", field.Name)
 		},
 	}
 	return fc, nil
@@ -6984,6 +7464,67 @@ func (ec *executionContext) fieldContext_Query_deliveryUnitsReports(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_deliveryUnitsReports_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_nodes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_nodes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Nodes(rctx, fc.Args["filter"].(*model.NodeFilterInput), fc.Args["first"].(*int), fc.Args["after"].(*string), fc.Args["last"].(*int), fc.Args["before"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.NodeConnection)
+	fc.Result = res
+	return ec.marshalNNodeConnection2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeConnection(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_nodes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "edges":
+				return ec.fieldContext_NodeConnection_edges(ctx, field)
+			case "pageInfo":
+				return ec.fieldContext_NodeConnection_pageInfo(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NodeConnection", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_nodes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -9954,6 +10495,47 @@ func (ec *executionContext) unmarshalInputLocationFilter(ctx context.Context, ob
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNodeFilterInput(ctx context.Context, obj any) (model.NodeFilterInput, error) {
+	var it model.NodeFilterInput
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"referenceIds", "name", "references"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "referenceIds":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceIds"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceIds = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "references":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("references"))
+			data, err := ec.unmarshalOReferenceFilterInput2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐReferenceFilterInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.References = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputOrderFilter(ctx context.Context, obj any) (model.OrderFilter, error) {
 	var it model.OrderFilter
 	asMap := map[string]any{}
@@ -11303,6 +11885,94 @@ func (ec *executionContext) _ManualChange(ctx context.Context, sel ast.Selection
 	return out
 }
 
+var nodeConnectionImplementors = []string{"NodeConnection"}
+
+func (ec *executionContext) _NodeConnection(ctx context.Context, sel ast.SelectionSet, obj *model.NodeConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nodeConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NodeConnection")
+		case "edges":
+			out.Values[i] = ec._NodeConnection_edges(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pageInfo":
+			out.Values[i] = ec._NodeConnection_pageInfo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var nodeEdgeImplementors = []string{"NodeEdge"}
+
+func (ec *executionContext) _NodeEdge(ctx context.Context, sel ast.SelectionSet, obj *model.NodeEdge) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, nodeEdgeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("NodeEdge")
+		case "cursor":
+			out.Values[i] = ec._NodeEdge_cursor(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "node":
+			out.Values[i] = ec._NodeEdge_node(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
 var nodeInfoImplementors = []string{"NodeInfo"}
 
 func (ec *executionContext) _NodeInfo(ctx context.Context, sel ast.SelectionSet, obj *model.NodeInfo) graphql.Marshaler {
@@ -11318,6 +11988,10 @@ func (ec *executionContext) _NodeInfo(ctx context.Context, sel ast.SelectionSet,
 			out.Values[i] = ec._NodeInfo_referenceId(ctx, field, obj)
 		case "name":
 			out.Values[i] = ec._NodeInfo_name(ctx, field, obj)
+		case "type":
+			out.Values[i] = ec._NodeInfo_type(ctx, field, obj)
+		case "references":
+			out.Values[i] = ec._NodeInfo_references(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11537,6 +12211,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_deliveryUnitsReports(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "nodes":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_nodes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -12151,6 +12847,7 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (
 }
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
+	_ = sel
 	res := graphql.MarshalBoolean(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12292,6 +12989,84 @@ func (ec *executionContext) marshalNKeyValuePair2ᚖtransportᚑappᚋappᚋadap
 	return ec._KeyValuePair(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNLocation2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐLocation(ctx context.Context, sel ast.SelectionSet, v *model.Location) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Location(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNNodeConnection2transportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeConnection(ctx context.Context, sel ast.SelectionSet, v model.NodeConnection) graphql.Marshaler {
+	return ec._NodeConnection(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNNodeConnection2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeConnection(ctx context.Context, sel ast.SelectionSet, v *model.NodeConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NodeConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNNodeEdge2ᚕᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeEdgeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.NodeEdge) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNNodeEdge2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeEdge(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNNodeEdge2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeEdge(ctx context.Context, sel ast.SelectionSet, v *model.NodeEdge) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._NodeEdge(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNPageInfo2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPageInfo(ctx context.Context, sel ast.SelectionSet, v *model.PageInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12308,6 +13083,7 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) 
 }
 
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12371,6 +13147,7 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Con
 }
 
 func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12559,6 +13336,7 @@ func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v a
 }
 
 func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	_ = sel
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -12581,6 +13359,8 @@ func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (
 }
 
 func (ec *executionContext) marshalOBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
+	_ = sel
+	_ = ctx
 	res := graphql.MarshalBoolean(v)
 	return res
 }
@@ -12597,6 +13377,8 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	if v == nil {
 		return graphql.Null
 	}
+	_ = sel
+	_ = ctx
 	res := graphql.MarshalBoolean(*v)
 	return res
 }
@@ -12888,6 +13670,7 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	if v == nil {
 		return graphql.Null
 	}
+	_ = sel
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
 }
@@ -12926,6 +13709,8 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 	if v == nil {
 		return graphql.Null
 	}
+	_ = sel
+	_ = ctx
 	res := graphql.MarshalInt(*v)
 	return res
 }
@@ -13072,6 +13857,14 @@ func (ec *executionContext) marshalOManualChange2ᚖtransportᚑappᚋappᚋadap
 		return graphql.Null
 	}
 	return ec._ManualChange(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalONodeFilterInput2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeFilterInput(ctx context.Context, v any) (*model.NodeFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNodeFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalONodeInfo2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐNodeInfo(ctx context.Context, sel ast.SelectionSet, v *model.NodeInfo) graphql.Marshaler {
@@ -13297,6 +14090,8 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	if v == nil {
 		return graphql.Null
 	}
+	_ = sel
+	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
 }
