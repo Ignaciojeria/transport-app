@@ -153,14 +153,6 @@
         },
         {
             "kind": "usecase",
-            "name": "upsert-node"
-        },
-        {
-            "kind": "gcp-subscription",
-            "name": "node-submitted"
-        },
-        {
-            "kind": "usecase",
             "name": "upsert-vehicle"
         },
         {
@@ -398,6 +390,18 @@
         {
             "kind": "post-controller",
             "name": "route-started"
+        },
+        {
+            "kind": "post-controller",
+            "name": "upsert-nodes"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-node"
+        },
+        {
+            "kind": "gcp-subscription",
+            "name": "node-submitted"
         }
     ]
 }

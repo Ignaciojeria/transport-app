@@ -6,7 +6,7 @@ const (
 	tagOrders           = "orders"
 	tagDelivery         = "delivery"
 	tagTenants          = "tenants"
-	tagNetwork          = "network"
+	tagNodes            = "nodes"
 	tagFleets           = "fleets"
 	tagPlanning         = "planning"
 	tagAlgorithm        = "algorithm"
