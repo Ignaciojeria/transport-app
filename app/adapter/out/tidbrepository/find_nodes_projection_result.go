@@ -263,10 +263,42 @@ func NewFindNodesProjectionResult(
 		}
 
 		// Agregar ordenamiento por id
-		ds = ds.Order(goqu.I(ni + ".id").Asc())
+		if filters.Pagination.IsForward() {
+			ds = ds.Order(goqu.I(ni + ".id").Asc())
+		}
 
-		// Agregar límite
-		ds = ds.Limit(100)
+		if filters.Pagination.IsBackward() {
+			ds = ds.Order(goqu.I(ni + ".id").Desc())
+		}
+
+		// Apply pagination filters
+		if filters.Pagination.IsForward() {
+			afterID, err := filters.Pagination.AfterID()
+			if err != nil {
+				return nil, false, err
+			}
+
+			if afterID != nil {
+				ds = ds.Where(goqu.I(ni + ".id").Gt(*afterID))
+			}
+
+			limit := *filters.Pagination.First + 1
+			ds = ds.Limit(uint(limit))
+		}
+
+		if filters.Pagination.IsBackward() {
+			beforeID, err := filters.Pagination.BeforeID()
+			if err != nil {
+				return nil, false, err
+			}
+
+			if beforeID != nil {
+				ds = ds.Where(goqu.I(ni + ".id").Lt(*beforeID))
+			}
+
+			limit := *filters.Pagination.Last + 1
+			ds = ds.Limit(uint(limit))
+		}
 
 		sql, args, err := ds.Prepared(true).ToSQL()
 		if err != nil {
@@ -276,6 +308,20 @@ func NewFindNodesProjectionResult(
 		err = conn.WithContext(ctx).Raw(sql, args...).Scan(&results).Error
 		if err != nil {
 			return nil, false, err
+		}
+
+		// Check if there are more results than requested
+		if filters.Pagination.IsForward() && len(results) > *filters.Pagination.First {
+			results = results[:*filters.Pagination.First]
+			hasMoreResults = true
+		} else if filters.Pagination.IsBackward() && len(results) > *filters.Pagination.Last {
+			results = results[:*filters.Pagination.Last]
+			hasMoreResults = true
+		}
+
+		// Reverse results for backward pagination
+		if filters.Pagination.IsBackward() {
+			results = results.Reversed()
 		}
 
 		return results, hasMoreResults, nil
