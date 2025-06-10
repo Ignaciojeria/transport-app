@@ -6,7 +6,7 @@ import (
 )
 
 type OrderDestinationFixRequest struct {
-	Original struct {
+	Destination struct {
 		AddressLine1 string `json:"addressLine1" example:"Inglaterra 59"`
 		AddressLine2 string `json:"addressLine2" example:"Piso 2214"`
 		Coordinates  struct {
@@ -32,34 +32,7 @@ type OrderDestinationFixRequest struct {
 				Reason  string  `json:"reason" example:""`
 			} `json:"confidence"`
 		} `json:"politicalArea"`
-	} `json:"original"`
-	Correction struct {
-		AddressLine1 string `json:"addressLine1" example:"Inglaterra 59"`
-		AddressLine2 string `json:"addressLine2" example:"Piso 2214"`
-		Coordinates  struct {
-			Confidence struct {
-				Level   float64 `json:"level" example:"0.1"`
-				Message string  `json:"message" example:"DISTRICT_CENTROID"`
-				Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
-			} `json:"confidence"`
-			Latitude  float64 `json:"latitude" example:"-33.5147889"`
-			Longitude float64 `json:"longitude" example:"-70.6130425"`
-			Source    string  `json:"source" example:"GOOGLE_MAPS"`
-		} `json:"coordinates"`
-		District      string `json:"district" example:"la florida"`
-		Province      string `json:"province" example:"santiago"`
-		State         string `json:"state" example:"region metropolitana de santiago"`
-		TimeZone      string `json:"timeZone" example:"America/Santiago"`
-		ZipCode       string `json:"zipCode" example:"7500000"`
-		PoliticalArea struct {
-			ID         string `json:"id" example:"cl-rm-la-florida"`
-			Confidence struct {
-				Level   float64 `json:"level" example:"0.0"`
-				Message string  `json:"message" example:""`
-				Reason  string  `json:"reason" example:""`
-			} `json:"confidence"`
-		} `json:"politicalArea"`
-	} `json:"correction"`
+	} `json:"destination"`
 	OrderReferenceIDs []struct {
 		BusinessIdentifiers struct {
 			Commerce string `json:"commerce" example:"string"`
