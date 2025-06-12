@@ -38,7 +38,6 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			District    string `json:"district" example:"la florida"`
 			Coordinates struct {
 				Latitude   float64 `json:"latitude" example:"-33.5147889"`
 				Longitude  float64 `json:"longitude" example:"-70.6130425"`
@@ -49,18 +48,19 @@ type UpsertOrderRequest struct {
 					Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
 				} `json:"confidence"`
 			} `json:"coordinates"`
-			Province      string `json:"province" example:"santiago"`
-			State         string `json:"state" example:"region metropolitana de santiago"`
-			TimeZone      string `json:"timeZone" example:"America/Santiago"`
-			ZipCode       string `json:"zipCode" example:"7500000"`
 			PoliticalArea struct {
-				ID         string `json:"id" example:"cl-rm-la-florida"`
+				Code       string `json:"code" example:"cl-rm-la-florida"`
+				Province   string `json:"province" example:"santiago"`
+				State      string `json:"state" example:"region metropolitana de santiago"`
+				District   string `json:"district" example:"la florida"`
+				TimeZone   string `json:"timeZone" example:"America/Santiago"`
 				Confidence struct {
 					Level   float64 `json:"level" example:"0.0"`
 					Message string  `json:"message" example:""`
 					Reason  string  `json:"reason" example:""`
 				} `json:"confidence"`
 			} `json:"politicalArea"`
+			ZipCode string `json:"zipCode" example:"7500000"`
 		} `json:"addressInfo"`
 		DeliveryInstructions string `json:"deliveryInstructions"`
 		NodeInfo             struct {
@@ -89,7 +89,6 @@ type UpsertOrderRequest struct {
 				} `json:"documents"`
 				FullName string `json:"fullName"`
 			} `json:"contact"`
-			District    string `json:"district" example:"la florida"`
 			Coordinates struct {
 				Latitude   float64 `json:"latitude" example:"-33.5147889"`
 				Longitude  float64 `json:"longitude" example:"-70.6130425"`
@@ -100,18 +99,19 @@ type UpsertOrderRequest struct {
 					Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
 				} `json:"confidence"`
 			} `json:"coordinates"`
-			Province      string `json:"province" example:"santiago"`
-			State         string `json:"state" example:"region metropolitana de santiago"`
-			TimeZone      string `json:"timeZone" example:"America/Santiago"`
-			ZipCode       string `json:"zipCode" example:"7500000"`
 			PoliticalArea struct {
-				ID         string `json:"id" example:"cl-rm-la-florida"`
+				Code       string `json:"code" example:"cl-rm-la-florida"`
+				Province   string `json:"province" example:"santiago"`
+				State      string `json:"state" example:"region metropolitana de santiago"`
+				District   string `json:"district" example:"la florida"`
+				TimeZone   string `json:"timeZone" example:"America/Santiago"`
 				Confidence struct {
 					Level   float64 `json:"level" example:"0.0"`
 					Message string  `json:"message" example:""`
 					Reason  string  `json:"reason" example:""`
 				} `json:"confidence"`
 			} `json:"politicalArea"`
+			ZipCode string `json:"zipCode" example:"7500000"`
 		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`

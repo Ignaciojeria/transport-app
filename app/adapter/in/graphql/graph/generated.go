@@ -47,15 +47,12 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	AddressInfo struct {
-		AddressLine1 func(childComplexity int) int
-		AddressLine2 func(childComplexity int) int
-		Contact      func(childComplexity int) int
-		Coordinates  func(childComplexity int) int
-		District     func(childComplexity int) int
-		Province     func(childComplexity int) int
-		State        func(childComplexity int) int
-		TimeZone     func(childComplexity int) int
-		ZipCode      func(childComplexity int) int
+		AddressLine1  func(childComplexity int) int
+		AddressLine2  func(childComplexity int) int
+		Contact       func(childComplexity int) int
+		Coordinates   func(childComplexity int) int
+		PoliticalArea func(childComplexity int) int
+		ZipCode       func(childComplexity int) int
 	}
 
 	Carrier struct {
@@ -262,6 +259,15 @@ type ComplexityRoot struct {
 		StartCursor     func(childComplexity int) int
 	}
 
+	PoliticalArea struct {
+		Code       func(childComplexity int) int
+		Confidence func(childComplexity int) int
+		District   func(childComplexity int) int
+		Province   func(childComplexity int) int
+		State      func(childComplexity int) int
+		TimeZone   func(childComplexity int) int
+	}
+
 	PromisedDate struct {
 		DateRange       func(childComplexity int) int
 		ServiceCategory func(childComplexity int) int
@@ -362,33 +368,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.AddressInfo.Coordinates(childComplexity), true
 
-	case "AddressInfo.district":
-		if e.complexity.AddressInfo.District == nil {
+	case "AddressInfo.politicalArea":
+		if e.complexity.AddressInfo.PoliticalArea == nil {
 			break
 		}
 
-		return e.complexity.AddressInfo.District(childComplexity), true
-
-	case "AddressInfo.province":
-		if e.complexity.AddressInfo.Province == nil {
-			break
-		}
-
-		return e.complexity.AddressInfo.Province(childComplexity), true
-
-	case "AddressInfo.state":
-		if e.complexity.AddressInfo.State == nil {
-			break
-		}
-
-		return e.complexity.AddressInfo.State(childComplexity), true
-
-	case "AddressInfo.timeZone":
-		if e.complexity.AddressInfo.TimeZone == nil {
-			break
-		}
-
-		return e.complexity.AddressInfo.TimeZone(childComplexity), true
+		return e.complexity.AddressInfo.PoliticalArea(childComplexity), true
 
 	case "AddressInfo.zipCode":
 		if e.complexity.AddressInfo.ZipCode == nil {
@@ -1173,6 +1158,48 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PageInfo.StartCursor(childComplexity), true
+
+	case "PoliticalArea.code":
+		if e.complexity.PoliticalArea.Code == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.Code(childComplexity), true
+
+	case "PoliticalArea.confidence":
+		if e.complexity.PoliticalArea.Confidence == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.Confidence(childComplexity), true
+
+	case "PoliticalArea.district":
+		if e.complexity.PoliticalArea.District == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.District(childComplexity), true
+
+	case "PoliticalArea.province":
+		if e.complexity.PoliticalArea.Province == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.Province(childComplexity), true
+
+	case "PoliticalArea.state":
+		if e.complexity.PoliticalArea.State == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.State(childComplexity), true
+
+	case "PoliticalArea.timeZone":
+		if e.complexity.PoliticalArea.TimeZone == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.TimeZone(childComplexity), true
 
 	case "PromisedDate.dateRange":
 		if e.complexity.PromisedDate.DateRange == nil {
@@ -1973,47 +2000,6 @@ func (ec *executionContext) fieldContext_AddressInfo_contact(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _AddressInfo_district(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_district(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.District, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AddressInfo_district(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AddressInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _AddressInfo_coordinates(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AddressInfo_coordinates(ctx, field)
 	if err != nil {
@@ -2065,129 +2051,6 @@ func (ec *executionContext) fieldContext_AddressInfo_coordinates(_ context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _AddressInfo_province(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_province(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Province, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AddressInfo_province(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AddressInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AddressInfo_state(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_state(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.State, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AddressInfo_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AddressInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _AddressInfo_timeZone(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_AddressInfo_timeZone(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TimeZone, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_AddressInfo_timeZone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "AddressInfo",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _AddressInfo_zipCode(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_AddressInfo_zipCode(ctx, field)
 	if err != nil {
@@ -2224,6 +2087,61 @@ func (ec *executionContext) fieldContext_AddressInfo_zipCode(_ context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _AddressInfo_politicalArea(ctx context.Context, field graphql.CollectedField, obj *model.AddressInfo) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_AddressInfo_politicalArea(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.PoliticalArea, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.PoliticalArea)
+	fc.Result = res
+	return ec.marshalOPoliticalArea2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPoliticalArea(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_AddressInfo_politicalArea(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "AddressInfo",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "code":
+				return ec.fieldContext_PoliticalArea_code(ctx, field)
+			case "province":
+				return ec.fieldContext_PoliticalArea_province(ctx, field)
+			case "state":
+				return ec.fieldContext_PoliticalArea_state(ctx, field)
+			case "district":
+				return ec.fieldContext_PoliticalArea_district(ctx, field)
+			case "timeZone":
+				return ec.fieldContext_PoliticalArea_timeZone(ctx, field)
+			case "confidence":
+				return ec.fieldContext_PoliticalArea_confidence(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PoliticalArea", field.Name)
 		},
 	}
 	return fc, nil
@@ -6417,18 +6335,12 @@ func (ec *executionContext) fieldContext_Location_addressInfo(_ context.Context,
 				return ec.fieldContext_AddressInfo_addressLine2(ctx, field)
 			case "contact":
 				return ec.fieldContext_AddressInfo_contact(ctx, field)
-			case "district":
-				return ec.fieldContext_AddressInfo_district(ctx, field)
 			case "coordinates":
 				return ec.fieldContext_AddressInfo_coordinates(ctx, field)
-			case "province":
-				return ec.fieldContext_AddressInfo_province(ctx, field)
-			case "state":
-				return ec.fieldContext_AddressInfo_state(ctx, field)
-			case "timeZone":
-				return ec.fieldContext_AddressInfo_timeZone(ctx, field)
 			case "zipCode":
 				return ec.fieldContext_AddressInfo_zipCode(ctx, field)
+			case "politicalArea":
+				return ec.fieldContext_AddressInfo_politicalArea(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type AddressInfo", field.Name)
 		},
@@ -7187,6 +7099,260 @@ func (ec *executionContext) fieldContext_PageInfo_endCursor(_ context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_code(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_code(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Code, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_province(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_province(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Province, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_province(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_state(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_state(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.State, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_district(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_district(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.District, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_district(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_timeZone(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_timeZone(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TimeZone, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_timeZone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_confidence(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_confidence(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Confidence, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Confidence)
+	fc.Result = res
+	return ec.marshalOConfidence2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐConfidence(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "level":
+				return ec.fieldContext_Confidence_level(ctx, field)
+			case "message":
+				return ec.fieldContext_Confidence_message(ctx, field)
+			case "reason":
+				return ec.fieldContext_Confidence_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Confidence", field.Name)
 		},
 	}
 	return fc, nil
@@ -10745,18 +10911,12 @@ func (ec *executionContext) _AddressInfo(ctx context.Context, sel ast.SelectionS
 			out.Values[i] = ec._AddressInfo_addressLine2(ctx, field, obj)
 		case "contact":
 			out.Values[i] = ec._AddressInfo_contact(ctx, field, obj)
-		case "district":
-			out.Values[i] = ec._AddressInfo_district(ctx, field, obj)
 		case "coordinates":
 			out.Values[i] = ec._AddressInfo_coordinates(ctx, field, obj)
-		case "province":
-			out.Values[i] = ec._AddressInfo_province(ctx, field, obj)
-		case "state":
-			out.Values[i] = ec._AddressInfo_state(ctx, field, obj)
-		case "timeZone":
-			out.Values[i] = ec._AddressInfo_timeZone(ctx, field, obj)
 		case "zipCode":
 			out.Values[i] = ec._AddressInfo_zipCode(ctx, field, obj)
+		case "politicalArea":
+			out.Values[i] = ec._AddressInfo_politicalArea(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12081,6 +12241,52 @@ func (ec *executionContext) _PageInfo(ctx context.Context, sel ast.SelectionSet,
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var politicalAreaImplementors = []string{"PoliticalArea"}
+
+func (ec *executionContext) _PoliticalArea(ctx context.Context, sel ast.SelectionSet, obj *model.PoliticalArea) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, politicalAreaImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PoliticalArea")
+		case "code":
+			out.Values[i] = ec._PoliticalArea_code(ctx, field, obj)
+		case "province":
+			out.Values[i] = ec._PoliticalArea_province(ctx, field, obj)
+		case "state":
+			out.Values[i] = ec._PoliticalArea_state(ctx, field, obj)
+		case "district":
+			out.Values[i] = ec._PoliticalArea_district(ctx, field, obj)
+		case "timeZone":
+			out.Values[i] = ec._PoliticalArea_timeZone(ctx, field, obj)
+		case "confidence":
+			out.Values[i] = ec._PoliticalArea_confidence(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13895,6 +14101,13 @@ func (ec *executionContext) unmarshalOOrderTypeFilter2ᚖtransportᚑappᚋapp�
 	}
 	res, err := ec.unmarshalInputOrderTypeFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPoliticalArea2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPoliticalArea(ctx context.Context, sel ast.SelectionSet, v *model.PoliticalArea) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PoliticalArea(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOPromisedDate2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐPromisedDate(ctx context.Context, sel ast.SelectionSet, v *model.PromisedDate) graphql.Marshaler {

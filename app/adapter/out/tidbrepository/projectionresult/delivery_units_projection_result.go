@@ -58,6 +58,12 @@ type DeliveryUnitsProjectionResult struct {
 	OriginTimeZone     string `json:"origin_time_zone"`
 	OriginZipCode      string `json:"origin_zip_code"`
 
+	// Origin Political Area Information
+	OriginPoliticalAreaCode              string  `json:"origin_political_area_code"`
+	OriginPoliticalAreaConfidenceLevel   float64 `json:"origin_political_area_confidence_level"`
+	OriginPoliticalAreaConfidenceMessage string  `json:"origin_political_area_confidence_message"`
+	OriginPoliticalAreaConfidenceReason  string  `json:"origin_political_area_confidence_reason"`
+
 	// Origin Coordinates Information
 	OriginCoordinatesLatitude          float64 `json:"origin_coordinates_latitude"`
 	OriginCoordinatesLongitude         float64 `json:"origin_coordinates_longitude"`
@@ -82,6 +88,12 @@ type DeliveryUnitsProjectionResult struct {
 	DestinationState        string `json:"destination_state"`
 	DestinationTimeZone     string `json:"destination_time_zone"`
 	DestinationZipCode      string `json:"destination_zip_code"`
+
+	// Destination Political Area Information
+	DestinationPoliticalAreaCode              string  `json:"destination_political_area_code"`
+	DestinationPoliticalAreaConfidenceLevel   float64 `json:"destination_political_area_confidence_level"`
+	DestinationPoliticalAreaConfidenceMessage string  `json:"destination_political_area_confidence_message"`
+	DestinationPoliticalAreaConfidenceReason  string  `json:"destination_political_area_confidence_reason"`
 
 	// Destination Coordinates Information
 	DestinationCoordinatesLatitude          float64 `json:"destination_coordinates_latitude"`

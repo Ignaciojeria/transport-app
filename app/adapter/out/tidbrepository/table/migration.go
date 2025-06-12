@@ -49,9 +49,6 @@ func NewRunMigrations(
 			&Carrier{},
 			&Vehicle{},
 			&Driver{},
-			&State{},
-			&District{},
-			&Province{},
 			&NonDeliveryReason{},
 			&Plan{},
 			&PlanHeaders{},
@@ -60,6 +57,7 @@ func NewRunMigrations(
 			&SizeCategory{},
 			&DeliveryUnitsLabels{},
 			&NodeReferences{},
+			&PoliticalArea{},
 		}
 
 		// Crear las tablas nuevamente

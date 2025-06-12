@@ -106,7 +106,15 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		// Create test node
 		nodeType := domain.NodeType{Value: "STORE"}
 		addressInfo := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    "State",
+				Province: "Central",
+				District: "Downtown",
+				TimeZone: "America/Santiago",
+			},
 			AddressLine1: "Store Address",
+			AddressLine2: "Suite 100",
+			ZipCode:      "12345",
 		}
 		nodeInfo := domain.NodeInfo{
 			Name:        "Test Store",
@@ -271,11 +279,14 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		// Create test node
 		nodeType := domain.NodeType{Value: "STORE"}
 		addressInfo := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    "State",
+				Province: "Central",
+				District: "Downtown",
+				TimeZone: "America/Santiago",
+			},
 			AddressLine1: "Store Address",
 			AddressLine2: "Suite 100",
-			District:     "Downtown",
-			Province:     "Central",
-			State:        "State",
 			ZipCode:      "12345",
 		}
 		nodeInfo := domain.NodeInfo{

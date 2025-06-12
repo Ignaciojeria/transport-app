@@ -79,11 +79,19 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 				AddressInfo: &model.AddressInfo{
 					AddressLine1: &du.DestinationAddressLine1,
 					AddressLine2: &du.DestinationAddressLine2,
-					District:     &du.DestinationDistrict,
-					Province:     &du.DestinationProvince,
-					State:        &du.DestinationState,
-					TimeZone:     &du.DestinationTimeZone,
 					ZipCode:      &du.DestinationZipCode,
+					PoliticalArea: &model.PoliticalArea{
+						Code:     &du.DestinationPoliticalAreaCode,
+						District: &du.DestinationDistrict,
+						Province: &du.DestinationProvince,
+						State:    &du.DestinationState,
+						TimeZone: &du.DestinationTimeZone,
+						Confidence: &model.Confidence{
+							Level:   &du.DestinationPoliticalAreaConfidenceLevel,
+							Message: &du.DestinationPoliticalAreaConfidenceMessage,
+							Reason:  &du.DestinationPoliticalAreaConfidenceReason,
+						},
+					},
 					Coordinates: &model.Coordinates{
 						Latitude:  &du.DestinationCoordinatesLatitude,
 						Longitude: &du.DestinationCoordinatesLongitude,
@@ -132,11 +140,19 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 				AddressInfo: &model.AddressInfo{
 					AddressLine1: &du.OriginAddressLine1,
 					AddressLine2: &du.OriginAddressLine2,
-					District:     &du.OriginDistrict,
-					Province:     &du.OriginProvince,
-					State:        &du.OriginState,
-					TimeZone:     &du.OriginTimeZone,
 					ZipCode:      &du.OriginZipCode,
+					PoliticalArea: &model.PoliticalArea{
+						Code:     &du.OriginPoliticalAreaCode,
+						District: &du.OriginDistrict,
+						Province: &du.OriginProvince,
+						State:    &du.OriginState,
+						TimeZone: &du.OriginTimeZone,
+						Confidence: &model.Confidence{
+							Level:   &du.OriginPoliticalAreaConfidenceLevel,
+							Message: &du.OriginPoliticalAreaConfidenceMessage,
+							Reason:  &du.OriginPoliticalAreaConfidenceReason,
+						},
+					},
 					Coordinates: &model.Coordinates{
 						Latitude:  &du.OriginCoordinatesLatitude,
 						Longitude: &du.OriginCoordinatesLongitude,

@@ -27,15 +27,23 @@ var _ = Describe("UpsertAddressInfo", func() {
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		state := domain.State("Metropolitana")
-		province := domain.Province("Santiago")
-		district := domain.District("Providencia")
+		politicalArea := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
 
 		addressInfo := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				Code:     politicalArea.Code,
+				State:    politicalArea.State,
+				Province: politicalArea.Province,
+				District: politicalArea.District,
+				TimeZone: politicalArea.TimeZone,
+			},
 			AddressLine1: "Av Providencia 1234",
-			State:        state,
-			Province:     province,
-			District:     district,
 			ZipCode:      "7500000",
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{-70.6506, -33.4372}, // [lon, lat]
@@ -51,35 +59,20 @@ var _ = Describe("UpsertAddressInfo", func() {
 		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Verify state was created
-		var dbState table.State
-		err = conn.DB.WithContext(ctx).
-			Table("states").
-			Where("document_id = ?", state.DocID(ctx).String()).
-			First(&dbState).Error
+		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbState.Name).To(Equal("Metropolitana"))
-		Expect(dbState.TenantID.String()).To(Equal(tenant.ID.String()))
 
-		// Verify province was created
-		var dbProvince table.Province
+		// Verify political area was created
+		var dbPoliticalArea table.PoliticalArea
 		err = conn.DB.WithContext(ctx).
-			Table("provinces").
-			Where("document_id = ?", province.DocID(ctx).String()).
-			First(&dbProvince).Error
+			Table("political_areas").
+			Where("document_id = ?", politicalArea.DocID(ctx)).
+			First(&dbPoliticalArea).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbProvince.Name).To(Equal("Santiago"))
-		Expect(dbProvince.TenantID.String()).To(Equal(tenant.ID.String()))
-
-		// Verify district was created
-		var dbDistrict table.District
-		err = conn.DB.WithContext(ctx).
-			Table("districts").
-			Where("document_id = ?", district.DocID(ctx).String()).
-			First(&dbDistrict).Error
-		Expect(err).ToNot(HaveOccurred())
-		Expect(dbDistrict.Name).To(Equal("Providencia"))
-		Expect(dbDistrict.TenantID.String()).To(Equal(tenant.ID.String()))
+		Expect(dbPoliticalArea.State).To(Equal("region metropolitana de santiago"))
+		Expect(dbPoliticalArea.Province).To(Equal("santiago"))
+		Expect(dbPoliticalArea.District).To(Equal("la florida"))
+		Expect(dbPoliticalArea.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		// Verify addressInfo was created with correct references
 		var dbAddressInfo table.AddressInfo
@@ -89,22 +82,32 @@ var _ = Describe("UpsertAddressInfo", func() {
 			First(&dbAddressInfo).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo.AddressLine1).To(Equal("Av Providencia 1234"))
-		Expect(dbAddressInfo.StateDoc).To(Equal(state.DocID(ctx).String()))
-		Expect(dbAddressInfo.ProvinceDoc).To(Equal(province.DocID(ctx).String()))
-		Expect(dbAddressInfo.DistrictDoc).To(Equal(district.DocID(ctx).String()))
+		politicalAreaDoc := politicalArea.DocID(ctx).String()
+		Expect(dbAddressInfo.PoliticalAreaDoc).To(Equal(politicalAreaDoc))
 		Expect(dbAddressInfo.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
 
-	It("should create new address and reuse existing entities when fields change", func() {
+	It("should create new address and reuse existing political area when fields change", func() {
 		// Create a new tenant for this test
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		politicalArea := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
+
 		original := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    politicalArea.State,
+				Province: politicalArea.Province,
+				District: politicalArea.District,
+				TimeZone: politicalArea.TimeZone,
+			},
 			AddressLine1: "Dirección Original",
-			District:     "Las Condes",
-			Province:     "Santiago",
-			State:        "Metropolitana",
 			ZipCode:      "7550000",
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{-70.5768, -33.4002},
@@ -123,16 +126,18 @@ var _ = Describe("UpsertAddressInfo", func() {
 		// Get the original DocID
 		originalDocID := original.DocID(ctx)
 
-		// Get the IDs of the related entities
-		stateID := original.State.DocID(ctx).String()
-		provinceID := original.Province.DocID(ctx).String()
-		districtID := original.District.DocID(ctx).String()
+		// Get the ID of the political area
+		politicalAreaID := politicalArea.DocID(ctx).String()
 
 		modified := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				Code:     politicalArea.Code,
+				State:    politicalArea.State,
+				Province: politicalArea.Province,
+				District: politicalArea.District,
+				TimeZone: politicalArea.TimeZone,
+			},
 			AddressLine1: "Dirección Modificada",
-			District:     "Las Condes",
-			Province:     "Santiago",
-			State:        "Metropolitana",
 			ZipCode:      "7560000", // Cambiado
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{-70.5800, -33.4100},
@@ -183,10 +188,8 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(modifiedAddress.AddressLine1).To(Equal("Dirección Modificada"))
 		Expect(modifiedAddress.ZipCode).To(Equal("7560000"))
 
-		// Verify that the related entities were reused (same IDs)
-		Expect(modifiedAddress.StateDoc).To(Equal(stateID))
-		Expect(modifiedAddress.ProvinceDoc).To(Equal(provinceID))
-		Expect(modifiedAddress.DistrictDoc).To(Equal(districtID))
+		// Verify that the political area was reused (same ID)
+		Expect(modifiedAddress.PoliticalAreaDoc).To(Equal(politicalAreaID))
 	})
 
 	It("should allow same address info for different tenants", func() {
@@ -196,11 +199,30 @@ var _ = Describe("UpsertAddressInfo", func() {
 		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		politicalArea1 := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
+
+		politicalArea2 := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
+
 		addressInfo1 := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    politicalArea1.State,
+				Province: politicalArea1.Province,
+				District: politicalArea1.District,
+				TimeZone: politicalArea1.TimeZone,
+			},
 			AddressLine1: "Test Street",
-			State:        domain.State("Test State"),
-			Province:     domain.Province("Test Province"),
-			District:     domain.District("Test District"),
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{-70.6506, -33.4372},
 				Source: "test",
@@ -213,10 +235,13 @@ var _ = Describe("UpsertAddressInfo", func() {
 		}
 
 		addressInfo2 := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    politicalArea2.State,
+				Province: politicalArea2.Province,
+				District: politicalArea2.District,
+				TimeZone: politicalArea2.TimeZone,
+			},
 			AddressLine1: "Test Street",
-			State:        domain.State("Test State"),
-			Province:     domain.Province("Test Province"),
-			District:     domain.District("Test District"),
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{-70.6506, -33.4372},
 				Source: "test",
@@ -257,18 +282,10 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbAddressInfo2.TenantID.String()).To(Equal(tenant2.ID.String()))
 
-		// Verify that related entities were created for each tenant
-		state1ID := addressInfo1.State.DocID(ctx1).String()
-		state2ID := addressInfo2.State.DocID(ctx2).String()
-		Expect(state1ID).ToNot(Equal(state2ID))
-
-		province1ID := addressInfo1.Province.DocID(ctx1).String()
-		province2ID := addressInfo2.Province.DocID(ctx2).String()
-		Expect(province1ID).ToNot(Equal(province2ID))
-
-		district1ID := addressInfo1.District.DocID(ctx1).String()
-		district2ID := addressInfo2.District.DocID(ctx2).String()
-		Expect(district1ID).ToNot(Equal(district2ID))
+		// Verify that political areas were created for each tenant
+		politicalArea1ID := politicalArea1.DocID(ctx1).String()
+		politicalArea2ID := politicalArea2.DocID(ctx2).String()
+		Expect(politicalArea1ID).ToNot(Equal(politicalArea2ID))
 	})
 
 	It("should update location coordinates correctly", func() {
@@ -276,11 +293,22 @@ var _ = Describe("UpsertAddressInfo", func() {
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		politicalArea := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
+
 		original := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    politicalArea.State,
+				Province: politicalArea.Province,
+				District: politicalArea.District,
+				TimeZone: politicalArea.TimeZone,
+			},
 			AddressLine1: "Dirección Original",
-			District:     "Ñuñoa",
-			Province:     "Santiago",
-			State:        "Metropolitana",
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{-70.5975, -33.4566}, // [lon, lat]
 				Source: "test",
@@ -321,11 +349,22 @@ var _ = Describe("UpsertAddressInfo", func() {
 		tenant, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		politicalArea := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
+
 		addressInfo := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    politicalArea.State,
+				Province: politicalArea.Province,
+				District: politicalArea.District,
+				TimeZone: politicalArea.TimeZone,
+			},
 			AddressLine1: "Sin Coordenadas",
-			District:     "La Florida",
-			Province:     "Santiago",
-			State:        "Metropolitana",
 		}
 
 		err = upsert(ctx, addressInfo)
@@ -351,11 +390,22 @@ var _ = Describe("UpsertAddressInfo", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		politicalArea := domain.PoliticalArea{
+			Code:     "cl-rm-la-florida",
+			State:    "region metropolitana de santiago",
+			Province: "santiago",
+			District: "la florida",
+			TimeZone: "America/Santiago",
+		}
+
 		addressInfo := domain.AddressInfo{
+			PoliticalArea: domain.PoliticalArea{
+				State:    politicalArea.State,
+				Province: politicalArea.Province,
+				District: politicalArea.District,
+				TimeZone: politicalArea.TimeZone,
+			},
 			AddressLine1: "Error Esperado",
-			District:     "Providencia",
-			Province:     "Santiago",
-			State:        "Metropolitana",
 		}
 
 		upsert := NewUpsertAddressInfo(noTablesContainerConnection)

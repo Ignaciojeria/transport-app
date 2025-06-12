@@ -16,6 +16,20 @@ type FindDeliveryUnitsProjectionResult func(
 	ctx context.Context,
 	filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, bool, error)
 
+type deliveryUnitProjectionResult struct {
+	// ... existing code ...
+	DestinationPoliticalAreaCode              string  `db:"destination_political_area_code"`
+	DestinationPoliticalAreaConfidenceLevel   float64 `db:"destination_political_area_confidence_level"`
+	DestinationPoliticalAreaConfidenceMessage string  `db:"destination_political_area_confidence_message"`
+	DestinationPoliticalAreaConfidenceReason  string  `db:"destination_political_area_confidence_reason"`
+	// ... existing code ...
+	OriginPoliticalAreaCode              string  `db:"origin_political_area_code"`
+	OriginPoliticalAreaConfidenceLevel   float64 `db:"origin_political_area_confidence_level"`
+	OriginPoliticalAreaConfidenceMessage string  `db:"origin_political_area_confidence_message"`
+	OriginPoliticalAreaConfidenceReason  string  `db:"origin_political_area_confidence_reason"`
+	// ... existing code ...
+}
+
 func init() {
 	ioc.Registry(
 		NewFindDeliveryUnitsProjectionResult,
@@ -439,31 +453,39 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(dadi + ".address_line1").As("destination_address_line1"))
 		}
 
+		if projection.DestinationPoliticalArea().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("political_areas").As("dpa"),
+				goqu.On(goqu.I("dpa.document_id").Eq(goqu.I(dadi+".political_area_doc"))),
+			)
+			ds = ds.SelectAppend(goqu.I("dpa.code").As("destination_political_area_code"))
+		}
+
+		if projection.DestinationPoliticalAreaConfidenceLevel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_confidence").As("destination_political_area_confidence_level"))
+		}
+
+		if projection.DestinationPoliticalAreaConfidenceMessage().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_message").As("destination_political_area_confidence_message"))
+		}
+
+		if projection.DestinationPoliticalAreaConfidenceReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_reason").As("destination_political_area_confidence_reason"))
+		}
+
 		// Join con districts
 		if projection.DestinationDistrict().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("districts").As(dd),
-				goqu.On(goqu.I(dd+".document_id").Eq(goqu.I(dadi+".district_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(dd + ".name").As("destination_district"))
+			ds = ds.SelectAppend(goqu.I("dpa.district").As("destination_district"))
 		}
 
 		// Join con provinces
 		if projection.DestinationProvince().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("provinces").As(dp),
-				goqu.On(goqu.I(dp+".document_id").Eq(goqu.I(dadi+".province_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(dp + ".name").As("destination_province"))
+			ds = ds.SelectAppend(goqu.I("dpa.province").As("destination_province"))
 		}
 
 		// Join con states
 		if projection.DestinationState().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("states").As(dst),
-				goqu.On(goqu.I(dst+".document_id").Eq(goqu.I(dadi+".state_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(dst + ".name").As("destination_state"))
+			ds = ds.SelectAppend(goqu.I("dpa.state").As("destination_state"))
 		}
 
 		if projection.DestinationZipCode().Has(filters.RequestedFields) {
@@ -496,7 +518,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if projection.DestinationTimeZone().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(dadi + ".time_zone").As("destination_time_zone"))
+			ds = ds.SelectAppend(goqu.I("dpa.time_zone").As("destination_time_zone"))
 		}
 
 		// Campos de contacto del destino
@@ -548,31 +570,44 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(oadi + ".address_line2").As("origin_address_line2"))
 		}
 
+		if projection.OriginPoliticalArea().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("opa.code").As("origin_political_area_code"))
+		}
+
+		if projection.OriginPoliticalAreaConfidenceLevel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_confidence").As("origin_political_area_confidence_level"))
+		}
+
+		if projection.OriginPoliticalAreaConfidenceMessage().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_message").As("origin_political_area_confidence_message"))
+		}
+
+		if projection.OriginPoliticalAreaConfidenceReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_reason").As("origin_political_area_confidence_reason"))
+		}
+
 		// Join con districts para origen
 		if projection.OriginDistrict().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("districts").As(od),
-				goqu.On(goqu.I(od+".document_id").Eq(goqu.I(oadi+".district_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(od + ".name").As("origin_district"))
+			ds = ds.SelectAppend(goqu.I("opa.district").As("origin_district"))
 		}
 
 		// Join con provinces para origen
 		if projection.OriginProvince().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("provinces").As(op),
-				goqu.On(goqu.I(op+".document_id").Eq(goqu.I(oadi+".province_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(op + ".name").As("origin_province"))
+			ds = ds.SelectAppend(goqu.I("opa.province").As("origin_province"))
 		}
 
 		// Join con states para origen
 		if projection.OriginState().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("opa.state").As("origin_state"))
+		}
+
+		// Agregar campos de political area para origen
+		if projection.OriginPoliticalArea().Has(filters.RequestedFields) {
 			ds = ds.InnerJoin(
-				goqu.T("states").As(ost),
-				goqu.On(goqu.I(ost+".document_id").Eq(goqu.I(oadi+".state_doc"))),
+				goqu.T("political_areas").As("opa"),
+				goqu.On(goqu.I("opa.document_id").Eq(goqu.I(oadi+".political_area_doc"))),
 			)
-			ds = ds.SelectAppend(goqu.I(ost + ".name").As("origin_state"))
+			ds = ds.SelectAppend(goqu.I("opa.code").As("origin_political_area_code"))
 		}
 
 		if projection.OriginZipCode().Has(filters.RequestedFields) {
@@ -605,7 +640,7 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if projection.OriginTimeZone().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(oadi + ".time_zone").As("origin_time_zone"))
+			ds = ds.SelectAppend(goqu.I("opa.time_zone").As("origin_time_zone"))
 		}
 
 		// Campos de contacto del origen
@@ -668,5 +703,22 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		return results, hasMoreResults, nil
+	}
+}
+
+func (r *deliveryUnitProjectionResult) Map() domain.DeliveryUnitProjection {
+	return domain.DeliveryUnitProjection{
+		DestinationPoliticalArea: domain.PoliticalAreaProjection{
+			Code:              r.DestinationPoliticalAreaCode,
+			ConfidenceLevel:   r.DestinationPoliticalAreaConfidenceLevel,
+			ConfidenceMessage: r.DestinationPoliticalAreaConfidenceMessage,
+			ConfidenceReason:  r.DestinationPoliticalAreaConfidenceReason,
+		},
+		OriginPoliticalArea: domain.PoliticalAreaProjection{
+			Code:              r.OriginPoliticalAreaCode,
+			ConfidenceLevel:   r.OriginPoliticalAreaConfidenceLevel,
+			ConfidenceMessage: r.OriginPoliticalAreaConfidenceMessage,
+			ConfidenceReason:  r.OriginPoliticalAreaConfidenceReason,
+		},
 	}
 }

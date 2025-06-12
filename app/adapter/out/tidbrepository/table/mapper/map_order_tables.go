@@ -196,15 +196,12 @@ func mapOrderTypeToTable(t domain.OrderType, orgID uuid.UUID) table.OrderType {
 func MapAddressInfoToTable(ctx context.Context, address domain.AddressInfo) table.AddressInfo {
 	return table.AddressInfo{
 		TenantID:         sharedcontext.TenantIDFromContext(ctx),
-		StateDoc:         address.State.DocID(ctx).String(),
-		ProvinceDoc:      address.Province.DocID(ctx).String(),
-		DistrictDoc:      address.District.DocID(ctx).String(),
+		PoliticalAreaDoc: address.PoliticalArea.DocID(ctx).String(),
 		AddressLine1:     address.AddressLine1,
 		DocumentID:       string(address.DocID(ctx)),
 		Latitude:         address.Coordinates.Point.Lat(),
 		Longitude:        address.Coordinates.Point.Lon(),
 		ZipCode:          address.ZipCode,
-		TimeZone:         address.TimeZone,
 		CoordinateSource: address.Coordinates.Source,
 	}
 }
