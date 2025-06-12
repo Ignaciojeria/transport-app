@@ -107,6 +107,22 @@ func (p Projection) DestinationPoliticalArea() Field {
 	return Field{path: "destination.addressInfo.politicalArea"}
 }
 
+func (p Projection) DestinationPoliticalAreaConfidence() Field {
+	return Field{path: "destination.addressInfo.politicalArea.confidence"}
+}
+
+func (p Projection) DestinationPoliticalAreaConfidenceLevel() Field {
+	return Field{path: "destination.addressInfo.politicalArea.confidence.level"}
+}
+
+func (p Projection) DestinationPoliticalAreaConfidenceMessage() Field {
+	return Field{path: "destination.addressInfo.politicalArea.confidence.message"}
+}
+
+func (p Projection) DestinationPoliticalAreaConfidenceReason() Field {
+	return Field{path: "destination.addressInfo.politicalArea.confidence.reason"}
+}
+
 func (p Projection) DestinationDistrict() Field {
 	return Field{path: "destination.addressInfo.politicalArea.district"}
 }
@@ -207,6 +223,22 @@ func (p Projection) OriginAddressLine2() Field {
 
 func (p Projection) OriginPoliticalArea() Field {
 	return Field{path: "origin.addressInfo.politicalArea"}
+}
+
+func (p Projection) OriginPoliticalAreaConfidence() Field {
+	return Field{path: "origin.addressInfo.politicalArea.confidence"}
+}
+
+func (p Projection) OriginPoliticalAreaConfidenceLevel() Field {
+	return Field{path: "origin.addressInfo.politicalArea.confidence.level"}
+}
+
+func (p Projection) OriginPoliticalAreaConfidenceMessage() Field {
+	return Field{path: "origin.addressInfo.politicalArea.confidence.message"}
+}
+
+func (p Projection) OriginPoliticalAreaConfidenceReason() Field {
+	return Field{path: "origin.addressInfo.politicalArea.confidence.reason"}
 }
 
 func (p Projection) OriginDistrict() Field {

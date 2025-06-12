@@ -2686,14 +2686,20 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 	It("should return delivery units with political area information", func() {
 		// Create a new tenant for this test
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
-		Expect(err).ToNot(HaveOccurred(), "Failed to create test tenant: %v", err)
+		Expect(err).ToNot(HaveOccurred())
 
 		// Crear political area
 		politicalArea := domain.PoliticalArea{
+			Code:     "CA",
 			State:    "CA",
-			Province: "Los Angeles",
-			District: "Downtown",
-			TimeZone: "America/Los_Angeles",
+			Province: "CA",
+			District: "CA",
+			TimeZone: "America/Santiago",
+			Confidence: domain.CoordinatesConfidence{
+				Level:   0.8,
+				Message: "High confidence",
+				Reason:  "Geocoding service",
+			},
 		}
 		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
 		Expect(err).ToNot(HaveOccurred())
@@ -2717,9 +2723,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
 
-		// Crear orden con el address info
+		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear order con el address info
 		order := domain.Order{
-			ReferenceID: "TEST-123",
+			ReferenceID: "123",
 			Destination: domain.NodeInfo{
 				AddressInfo: destination,
 			},
@@ -2744,32 +2753,27 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		projection := deliveryunits.NewProjection()
 
-		// Buscar delivery units solicitando campos de political area
 		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
 			conn,
 			deliveryunits.NewProjection())
 		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
-				projection.ReferenceID().String():              "",
-				projection.DestinationAddressInfo().String():   "",
-				projection.DestinationState().String():         "",
-				projection.DestinationProvince().String():      "",
-				projection.DestinationDistrict().String():      "",
-				projection.DestinationTimeZone().String():      "",
-				projection.DestinationAddressLine1().String():  "",
-				projection.DestinationPoliticalArea().String(): "",
+				projection.DestinationPoliticalArea().String():                  "",
+				projection.DestinationAddressInfo().String():                    "",
+				projection.DestinationPoliticalAreaConfidenceLevel().String():   "",
+				projection.DestinationPoliticalAreaConfidenceMessage().String(): "",
+				projection.DestinationPoliticalAreaConfidenceReason().String():  "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
 		Expect(results).To(HaveLen(1))
 		Expect(hasMore).To(BeFalse())
 
-		// Validar que los datos de political area se obtuvieron correctamente
-		Expect(results[0].DestinationState).To(Equal("CA"))
-		Expect(results[0].DestinationProvince).To(Equal("Los Angeles"))
-		Expect(results[0].DestinationDistrict).To(Equal("Downtown"))
-		Expect(results[0].DestinationTimeZone).To(Equal("America/Los_Angeles"))
-		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"))
+		// Validar campos de political area
+		Expect(results[0].DestinationPoliticalAreaCode).To(Equal("CA"), "Unexpected political area code")
+		Expect(results[0].DestinationPoliticalAreaConfidenceLevel).To(Equal(0.8), "Unexpected confidence level")
+		Expect(results[0].DestinationPoliticalAreaConfidenceMessage).To(Equal("High confidence"), "Unexpected confidence message")
+		Expect(results[0].DestinationPoliticalAreaConfidenceReason).To(Equal("Geocoding service"), "Unexpected confidence reason")
 	})
 
 })

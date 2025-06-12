@@ -285,11 +285,12 @@ type PageInfo struct {
 }
 
 type PoliticalArea struct {
-	Code     *string `json:"code,omitempty"`
-	Province *string `json:"province,omitempty"`
-	State    *string `json:"state,omitempty"`
-	District *string `json:"district,omitempty"`
-	TimeZone *string `json:"timeZone,omitempty"`
+	Code       *string     `json:"code,omitempty"`
+	Province   *string     `json:"province,omitempty"`
+	State      *string     `json:"state,omitempty"`
+	District   *string     `json:"district,omitempty"`
+	TimeZone   *string     `json:"timeZone,omitempty"`
+	Confidence *Confidence `json:"confidence,omitempty"`
 }
 
 type PromisedDate struct {

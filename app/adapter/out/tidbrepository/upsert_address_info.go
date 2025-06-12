@@ -51,6 +51,7 @@ func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 			updateData := mapper.MapAddressInfoTable(ctx, updated)
 			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 			updateData.CreatedAt = existing.CreatedAt
+			updateData.PoliticalAreaDoc = ai.PoliticalArea.DocID(ctx).String()
 
 			return tx.Omit("Tenant").Save(&updateData).Error
 		})

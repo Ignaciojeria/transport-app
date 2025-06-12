@@ -81,10 +81,16 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 					AddressLine2: &du.DestinationAddressLine2,
 					ZipCode:      &du.DestinationZipCode,
 					PoliticalArea: &model.PoliticalArea{
+						Code:     &du.DestinationPoliticalAreaCode,
 						District: &du.DestinationDistrict,
 						Province: &du.DestinationProvince,
 						State:    &du.DestinationState,
 						TimeZone: &du.DestinationTimeZone,
+						Confidence: &model.Confidence{
+							Level:   &du.DestinationPoliticalAreaConfidenceLevel,
+							Message: &du.DestinationPoliticalAreaConfidenceMessage,
+							Reason:  &du.DestinationPoliticalAreaConfidenceReason,
+						},
 					},
 					Coordinates: &model.Coordinates{
 						Latitude:  &du.DestinationCoordinatesLatitude,
@@ -136,10 +142,16 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 					AddressLine2: &du.OriginAddressLine2,
 					ZipCode:      &du.OriginZipCode,
 					PoliticalArea: &model.PoliticalArea{
+						Code:     &du.OriginPoliticalAreaCode,
 						District: &du.OriginDistrict,
 						Province: &du.OriginProvince,
 						State:    &du.OriginState,
 						TimeZone: &du.OriginTimeZone,
+						Confidence: &model.Confidence{
+							Level:   &du.OriginPoliticalAreaConfidenceLevel,
+							Message: &du.OriginPoliticalAreaConfidenceMessage,
+							Reason:  &du.OriginPoliticalAreaConfidenceReason,
+						},
 					},
 					Coordinates: &model.Coordinates{
 						Latitude:  &du.OriginCoordinatesLatitude,

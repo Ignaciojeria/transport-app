@@ -37,6 +37,7 @@ type PoliticalArea {
   state: String
   district: String
   timeZone: String
+  confidence: Confidence
 }
 
 type Coordinates {

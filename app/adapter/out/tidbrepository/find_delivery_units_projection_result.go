@@ -16,6 +16,20 @@ type FindDeliveryUnitsProjectionResult func(
 	ctx context.Context,
 	filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, bool, error)
 
+type deliveryUnitProjectionResult struct {
+	// ... existing code ...
+	DestinationPoliticalAreaCode              string  `db:"destination_political_area_code"`
+	DestinationPoliticalAreaConfidenceLevel   float64 `db:"destination_political_area_confidence_level"`
+	DestinationPoliticalAreaConfidenceMessage string  `db:"destination_political_area_confidence_message"`
+	DestinationPoliticalAreaConfidenceReason  string  `db:"destination_political_area_confidence_reason"`
+	// ... existing code ...
+	OriginPoliticalAreaCode              string  `db:"origin_political_area_code"`
+	OriginPoliticalAreaConfidenceLevel   float64 `db:"origin_political_area_confidence_level"`
+	OriginPoliticalAreaConfidenceMessage string  `db:"origin_political_area_confidence_message"`
+	OriginPoliticalAreaConfidenceReason  string  `db:"origin_political_area_confidence_reason"`
+	// ... existing code ...
+}
+
 func init() {
 	ioc.Registry(
 		NewFindDeliveryUnitsProjectionResult,
@@ -444,6 +458,19 @@ func NewFindDeliveryUnitsProjectionResult(
 				goqu.T("political_areas").As("dpa"),
 				goqu.On(goqu.I("dpa.document_id").Eq(goqu.I(dadi+".political_area_doc"))),
 			)
+			ds = ds.SelectAppend(goqu.I("dpa.code").As("destination_political_area_code"))
+		}
+
+		if projection.DestinationPoliticalAreaConfidenceLevel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_confidence").As("destination_political_area_confidence_level"))
+		}
+
+		if projection.DestinationPoliticalAreaConfidenceMessage().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_message").As("destination_political_area_confidence_message"))
+		}
+
+		if projection.DestinationPoliticalAreaConfidenceReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_reason").As("destination_political_area_confidence_reason"))
 		}
 
 		// Join con districts
@@ -544,10 +571,19 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		if projection.OriginPoliticalArea().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("political_areas").As("opa"),
-				goqu.On(goqu.I("opa.document_id").Eq(goqu.I(oadi+".political_area_doc"))),
-			)
+			ds = ds.SelectAppend(goqu.I("opa.code").As("origin_political_area_code"))
+		}
+
+		if projection.OriginPoliticalAreaConfidenceLevel().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_confidence").As("origin_political_area_confidence_level"))
+		}
+
+		if projection.OriginPoliticalAreaConfidenceMessage().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_message").As("origin_political_area_confidence_message"))
+		}
+
+		if projection.OriginPoliticalAreaConfidenceReason().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_reason").As("origin_political_area_confidence_reason"))
 		}
 
 		// Join con districts para origen
@@ -563,6 +599,15 @@ func NewFindDeliveryUnitsProjectionResult(
 		// Join con states para origen
 		if projection.OriginState().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I("opa.state").As("origin_state"))
+		}
+
+		// Agregar campos de political area para origen
+		if projection.OriginPoliticalArea().Has(filters.RequestedFields) {
+			ds = ds.InnerJoin(
+				goqu.T("political_areas").As("opa"),
+				goqu.On(goqu.I("opa.document_id").Eq(goqu.I(oadi+".political_area_doc"))),
+			)
+			ds = ds.SelectAppend(goqu.I("opa.code").As("origin_political_area_code"))
 		}
 
 		if projection.OriginZipCode().Has(filters.RequestedFields) {
@@ -658,5 +703,22 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		return results, hasMoreResults, nil
+	}
+}
+
+func (r *deliveryUnitProjectionResult) Map() domain.DeliveryUnitProjection {
+	return domain.DeliveryUnitProjection{
+		DestinationPoliticalArea: domain.PoliticalAreaProjection{
+			Code:              r.DestinationPoliticalAreaCode,
+			ConfidenceLevel:   r.DestinationPoliticalAreaConfidenceLevel,
+			ConfidenceMessage: r.DestinationPoliticalAreaConfidenceMessage,
+			ConfidenceReason:  r.DestinationPoliticalAreaConfidenceReason,
+		},
+		OriginPoliticalArea: domain.PoliticalAreaProjection{
+			Code:              r.OriginPoliticalAreaCode,
+			ConfidenceLevel:   r.OriginPoliticalAreaConfidenceLevel,
+			ConfidenceMessage: r.OriginPoliticalAreaConfidenceMessage,
+			ConfidenceReason:  r.OriginPoliticalAreaConfidenceReason,
+		},
 	}
 }

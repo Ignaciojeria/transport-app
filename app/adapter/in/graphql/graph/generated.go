@@ -260,11 +260,12 @@ type ComplexityRoot struct {
 	}
 
 	PoliticalArea struct {
-		Code     func(childComplexity int) int
-		District func(childComplexity int) int
-		Province func(childComplexity int) int
-		State    func(childComplexity int) int
-		TimeZone func(childComplexity int) int
+		Code       func(childComplexity int) int
+		Confidence func(childComplexity int) int
+		District   func(childComplexity int) int
+		Province   func(childComplexity int) int
+		State      func(childComplexity int) int
+		TimeZone   func(childComplexity int) int
 	}
 
 	PromisedDate struct {
@@ -1164,6 +1165,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PoliticalArea.Code(childComplexity), true
+
+	case "PoliticalArea.confidence":
+		if e.complexity.PoliticalArea.Confidence == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.Confidence(childComplexity), true
 
 	case "PoliticalArea.district":
 		if e.complexity.PoliticalArea.District == nil {
@@ -2130,6 +2138,8 @@ func (ec *executionContext) fieldContext_AddressInfo_politicalArea(_ context.Con
 				return ec.fieldContext_PoliticalArea_district(ctx, field)
 			case "timeZone":
 				return ec.fieldContext_PoliticalArea_timeZone(ctx, field)
+			case "confidence":
+				return ec.fieldContext_PoliticalArea_confidence(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type PoliticalArea", field.Name)
 		},
@@ -7299,6 +7309,55 @@ func (ec *executionContext) fieldContext_PoliticalArea_timeZone(_ context.Contex
 	return fc, nil
 }
 
+func (ec *executionContext) _PoliticalArea_confidence(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_confidence(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Confidence, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Confidence)
+	fc.Result = res
+	return ec.marshalOConfidence2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐConfidence(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_confidence(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "level":
+				return ec.fieldContext_Confidence_level(ctx, field)
+			case "message":
+				return ec.fieldContext_Confidence_message(ctx, field)
+			case "reason":
+				return ec.fieldContext_Confidence_reason(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Confidence", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PromisedDate_dateRange(ctx context.Context, field graphql.CollectedField, obj *model.PromisedDate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PromisedDate_dateRange(ctx, field)
 	if err != nil {
@@ -12226,6 +12285,8 @@ func (ec *executionContext) _PoliticalArea(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._PoliticalArea_district(ctx, field, obj)
 		case "timeZone":
 			out.Values[i] = ec._PoliticalArea_timeZone(ctx, field, obj)
+		case "confidence":
+			out.Values[i] = ec._PoliticalArea_confidence(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
