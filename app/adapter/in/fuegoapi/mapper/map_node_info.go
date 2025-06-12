@@ -66,6 +66,11 @@ func MapNodeInfoToDomain(nodeInfo struct {
 				Province: addressInfo.PoliticalArea.Province,
 				District: addressInfo.PoliticalArea.District,
 				TimeZone: addressInfo.PoliticalArea.TimeZone,
+				Confidence: domain.CoordinatesConfidence{
+					Level:   addressInfo.PoliticalArea.Confidence.Level,
+					Message: addressInfo.PoliticalArea.Confidence.Message,
+					Reason:  addressInfo.PoliticalArea.Confidence.Reason,
+				},
 			},
 			AddressLine1: addressInfo.AddressLine1,
 			AddressLine2: addressInfo.AddressLine2,

@@ -10,21 +10,24 @@ import (
 
 type AddressInfo struct {
 	gorm.Model
-	ID                   int64         `gorm:"primaryKey"`
-	TenantID             uuid.UUID     `gorm:"not null;"`
-	Tenant               Tenant        `gorm:"foreignKey:TenantID"`
-	DocumentID           string        `gorm:"type:char(64);uniqueIndex"`
-	PoliticalAreaDoc     string        `gorm:"type:char(64);default:null"`
-	PoliticalArea        PoliticalArea `gorm:"-"`
-	AddressLine1         string        `gorm:"not null"`
-	AddressLine2         string        `gorm:"default:null"`
-	Latitude             float64       `gorm:"default:null"`
-	Longitude            float64       `gorm:"default:null"`
-	CoordinateSource     string        `gorm:"default:null"`
-	CoordinateConfidence float64       `gorm:"default:null"`
-	CoordinateMessage    string        `gorm:"default:null"`
-	CoordinateReason     string        `gorm:"default:null"`
-	ZipCode              string        `gorm:"default:null"`
+	ID                      int64         `gorm:"primaryKey"`
+	TenantID                uuid.UUID     `gorm:"not null;"`
+	Tenant                  Tenant        `gorm:"foreignKey:TenantID"`
+	DocumentID              string        `gorm:"type:char(64);uniqueIndex"`
+	PoliticalAreaDoc        string        `gorm:"type:char(64);default:null"`
+	PoliticalArea           PoliticalArea `gorm:"-"`
+	AddressLine1            string        `gorm:"not null"`
+	AddressLine2            string        `gorm:"default:null"`
+	Latitude                float64       `gorm:"default:null"`
+	Longitude               float64       `gorm:"default:null"`
+	CoordinateSource        string        `gorm:"default:null"`
+	CoordinateConfidence    float64       `gorm:"default:null"`
+	CoordinateMessage       string        `gorm:"default:null"`
+	CoordinateReason        string        `gorm:"default:null"`
+	PoliticalAreaConfidence float64       `gorm:"default:null"`
+	PoliticalAreaMessage    string        `gorm:"default:null"`
+	PoliticalAreaReason     string        `gorm:"default:null"`
+	ZipCode                 string        `gorm:"default:null"`
 }
 
 func (a AddressInfo) Map() domain.AddressInfo {

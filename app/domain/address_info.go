@@ -119,6 +119,20 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		changed = true
 	}
 
+	// Validar cambios en el nivel de confianza del PoliticalArea
+	if newAddress.PoliticalArea.Confidence.Level != a.PoliticalArea.Confidence.Level {
+		updated.PoliticalArea.Confidence.Level = newAddress.PoliticalArea.Confidence.Level
+		changed = true
+	}
+	if newAddress.PoliticalArea.Confidence.Message != "" && newAddress.PoliticalArea.Confidence.Message != a.PoliticalArea.Confidence.Message {
+		updated.PoliticalArea.Confidence.Message = newAddress.PoliticalArea.Confidence.Message
+		changed = true
+	}
+	if newAddress.PoliticalArea.Confidence.Reason != "" && newAddress.PoliticalArea.Confidence.Reason != a.PoliticalArea.Confidence.Reason {
+		updated.PoliticalArea.Confidence.Reason = newAddress.PoliticalArea.Confidence.Reason
+		changed = true
+	}
+
 	return updated, changed
 }
 
