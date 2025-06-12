@@ -3,15 +3,12 @@
 package model
 
 type AddressInfo struct {
-	AddressLine1 *string      `json:"addressLine1,omitempty"`
-	AddressLine2 *string      `json:"addressLine2,omitempty"`
-	Contact      *Contact     `json:"contact,omitempty"`
-	District     *string      `json:"district,omitempty"`
-	Coordinates  *Coordinates `json:"coordinates,omitempty"`
-	Province     *string      `json:"province,omitempty"`
-	State        *string      `json:"state,omitempty"`
-	TimeZone     *string      `json:"timeZone,omitempty"`
-	ZipCode      *string      `json:"zipCode,omitempty"`
+	AddressLine1  *string        `json:"addressLine1,omitempty"`
+	AddressLine2  *string        `json:"addressLine2,omitempty"`
+	Contact       *Contact       `json:"contact,omitempty"`
+	Coordinates   *Coordinates   `json:"coordinates,omitempty"`
+	ZipCode       *string        `json:"zipCode,omitempty"`
+	PoliticalArea *PoliticalArea `json:"politicalArea,omitempty"`
 }
 
 type Carrier struct {
@@ -285,6 +282,14 @@ type PageInfo struct {
 	HasPreviousPage bool    `json:"hasPreviousPage"`
 	StartCursor     *string `json:"startCursor,omitempty"`
 	EndCursor       string  `json:"endCursor"`
+}
+
+type PoliticalArea struct {
+	Code     *string `json:"code,omitempty"`
+	Province *string `json:"province,omitempty"`
+	State    *string `json:"state,omitempty"`
+	District *string `json:"district,omitempty"`
+	TimeZone *string `json:"timeZone,omitempty"`
 }
 
 type PromisedDate struct {

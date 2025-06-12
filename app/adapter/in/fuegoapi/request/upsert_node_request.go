@@ -10,16 +10,31 @@ type UpsertNodeRequest struct {
 	ReferenceID string `json:"referenceID"`
 	Name        string `json:"name"`
 	NodeAddress struct {
-		AddressLine1 string  `json:"addressLine1"`
-		AddressLine2 string  `json:"addressLine2"`
-		District     string  `json:"district"`
-		Latitude     float64 `json:"latitude"`
-		Locality     string  `json:"locality"`
-		Longitude    float64 `json:"longitude"`
-		Province     string  `json:"province"`
-		State        string  `json:"state"`
-		TimeZone     string  `json:"timeZone"`
-		ZipCode      string  `json:"zipCode"`
+		AddressLine1 string `json:"addressLine1"`
+		AddressLine2 string `json:"addressLine2"`
+		Coordinates  struct {
+			Latitude   float64 `json:"latitude" example:"-33.5147889"`
+			Longitude  float64 `json:"longitude" example:"-70.6130425"`
+			Source     string  `json:"source" example:"GOOGLE_MAPS"`
+			Confidence struct {
+				Level   float64 `json:"level" example:"0.1"`
+				Message string  `json:"message" example:"DISTRICT_CENTROID"`
+				Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
+			} `json:"confidence"`
+		} `json:"coordinates"`
+		PoliticalArea struct {
+			Code       string `json:"id" example:"cl-rm-la-florida"`
+			Province   string `json:"province" example:"santiago"`
+			State      string `json:"state" example:"region metropolitana de santiago"`
+			District   string `json:"district" example:"la florida"`
+			TimeZone   string `json:"timeZone" example:"America/Santiago"`
+			Confidence struct {
+				Level   float64 `json:"level" example:"0.0"`
+				Message string  `json:"message" example:""`
+				Reason  string  `json:"reason" example:""`
+			} `json:"confidence"`
+		} `json:"politicalArea"`
+		ZipCode string `json:"zipCode"`
 	} `json:"nodeAddress"`
 	Contact struct {
 		Documents []struct {
@@ -73,16 +88,28 @@ func (r UpsertNodeRequest) Map() domain.NodeInfo {
 				PrimaryPhone: r.Contact.Phone,
 				NationalID:   r.Contact.NationalID,
 			},
-			State:        domain.State(r.NodeAddress.State),
-			Province:     domain.Province(r.NodeAddress.Province),
-			District:     domain.District(r.NodeAddress.District),
+			PoliticalArea: domain.PoliticalArea{
+				Code:     r.NodeAddress.PoliticalArea.Code,
+				State:    r.NodeAddress.PoliticalArea.State,
+				Province: r.NodeAddress.PoliticalArea.Province,
+				District: r.NodeAddress.PoliticalArea.District,
+				TimeZone: r.NodeAddress.PoliticalArea.TimeZone,
+			},
 			AddressLine1: r.NodeAddress.AddressLine1,
 			AddressLine2: r.NodeAddress.AddressLine2,
 			Coordinates: domain.Coordinates{
-				Point: orb.Point{r.NodeAddress.Longitude, r.NodeAddress.Latitude},
+				Point: orb.Point{
+					r.NodeAddress.Coordinates.Longitude,
+					r.NodeAddress.Coordinates.Latitude,
+				},
+				Source: r.NodeAddress.Coordinates.Source,
+				Confidence: domain.CoordinatesConfidence{
+					Level:   r.NodeAddress.Coordinates.Confidence.Level,
+					Message: r.NodeAddress.Coordinates.Confidence.Message,
+					Reason:  r.NodeAddress.Coordinates.Confidence.Reason,
+				},
 			},
-			ZipCode:  r.NodeAddress.ZipCode,
-			TimeZone: r.NodeAddress.TimeZone,
+			ZipCode: r.NodeAddress.ZipCode,
 		},
 	}
 }

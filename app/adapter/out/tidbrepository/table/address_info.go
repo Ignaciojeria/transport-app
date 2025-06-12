@@ -10,33 +10,32 @@ import (
 
 type AddressInfo struct {
 	gorm.Model
-	ID                   int64     `gorm:"primaryKey"`
-	TenantID             uuid.UUID `gorm:"not null;"`
-	Tenant               Tenant    `gorm:"foreignKey:TenantID"`
-	DocumentID           string    `gorm:"type:char(64);uniqueIndex"`
-	StateDoc             string    `gorm:"type:char(64);default:null"`
-	State                State     `gorm:"-"`
-	ProvinceDoc          string    `gorm:"type:char(64);default:null"`
-	Province             Province  `gorm:"-"`
-	DistrictDoc          string    `gorm:"type:char(64);default:null"`
-	District             District  `gorm:"-"`
-	AddressLine1         string    `gorm:"not null"`
-	AddressLine2         string    `gorm:"default:null"`
-	Latitude             float64   `gorm:"default:null"`
-	Longitude            float64   `gorm:"default:null"`
-	CoordinateSource     string    `gorm:"default:null"`
-	CoordinateConfidence float64   `gorm:"default:null"`
-	CoordinateMessage    string    `gorm:"default:null"`
-	CoordinateReason     string    `gorm:"default:null"`
-	ZipCode              string    `gorm:"default:null"`
-	TimeZone             string    `gorm:"default:null"`
+	ID                   int64         `gorm:"primaryKey"`
+	TenantID             uuid.UUID     `gorm:"not null;"`
+	Tenant               Tenant        `gorm:"foreignKey:TenantID"`
+	DocumentID           string        `gorm:"type:char(64);uniqueIndex"`
+	PoliticalAreaDoc     string        `gorm:"type:char(64);default:null"`
+	PoliticalArea        PoliticalArea `gorm:"-"`
+	AddressLine1         string        `gorm:"not null"`
+	AddressLine2         string        `gorm:"default:null"`
+	Latitude             float64       `gorm:"default:null"`
+	Longitude            float64       `gorm:"default:null"`
+	CoordinateSource     string        `gorm:"default:null"`
+	CoordinateConfidence float64       `gorm:"default:null"`
+	CoordinateMessage    string        `gorm:"default:null"`
+	CoordinateReason     string        `gorm:"default:null"`
+	ZipCode              string        `gorm:"default:null"`
 }
 
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
-		State:        domain.State(a.State.Name),
-		Province:     domain.Province(a.Province.Name),
-		District:     domain.District(a.District.Name),
+		PoliticalArea: domain.PoliticalArea{
+			Code:     a.PoliticalArea.Code,
+			Province: a.PoliticalArea.Province,
+			State:    a.PoliticalArea.State,
+			District: a.PoliticalArea.District,
+			TimeZone: a.PoliticalArea.TimeZone,
+		},
 		AddressLine1: a.AddressLine1,
 		AddressLine2: a.AddressLine2,
 		Coordinates: domain.Coordinates{
@@ -48,7 +47,6 @@ func (a AddressInfo) Map() domain.AddressInfo {
 				Reason:  a.CoordinateReason,
 			},
 		},
-		ZipCode:  a.ZipCode,
-		TimeZone: a.TimeZone,
+		ZipCode: a.ZipCode,
 	}
 }

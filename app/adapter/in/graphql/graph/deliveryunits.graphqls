@@ -26,12 +26,17 @@ type AddressInfo {
   addressLine1: String
   addressLine2: String
   contact: Contact
-  district: String
   coordinates: Coordinates
+  zipCode: String
+  politicalArea: PoliticalArea
+}
+
+type PoliticalArea {
+  code: String
   province: String
   state: String
+  district: String
   timeZone: String
-  zipCode: String
 }
 
 type Coordinates {

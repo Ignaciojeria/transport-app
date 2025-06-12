@@ -103,20 +103,24 @@ func (p Projection) DestinationAddressLine2() Field {
 	return Field{path: "destination.addressInfo.addressLine2"}
 }
 
+func (p Projection) DestinationPoliticalArea() Field {
+	return Field{path: "destination.addressInfo.politicalArea"}
+}
+
 func (p Projection) DestinationDistrict() Field {
-	return Field{path: "destination.addressInfo.district"}
+	return Field{path: "destination.addressInfo.politicalArea.district"}
 }
 
 func (p Projection) DestinationProvince() Field {
-	return Field{path: "destination.addressInfo.province"}
+	return Field{path: "destination.addressInfo.politicalArea.province"}
 }
 
 func (p Projection) DestinationState() Field {
-	return Field{path: "destination.addressInfo.state"}
+	return Field{path: "destination.addressInfo.politicalArea.state"}
 }
 
 func (p Projection) DestinationTimeZone() Field {
-	return Field{path: "destination.addressInfo.timeZone"}
+	return Field{path: "destination.addressInfo.politicalArea.timeZone"}
 }
 
 func (p Projection) DestinationZipCode() Field {
@@ -201,20 +205,24 @@ func (p Projection) OriginAddressLine2() Field {
 	return Field{path: "origin.addressInfo.addressLine2"}
 }
 
+func (p Projection) OriginPoliticalArea() Field {
+	return Field{path: "origin.addressInfo.politicalArea"}
+}
+
 func (p Projection) OriginDistrict() Field {
-	return Field{path: "origin.addressInfo.district"}
+	return Field{path: "origin.addressInfo.politicalArea.district"}
 }
 
 func (p Projection) OriginProvince() Field {
-	return Field{path: "origin.addressInfo.province"}
+	return Field{path: "origin.addressInfo.politicalArea.province"}
 }
 
 func (p Projection) OriginState() Field {
-	return Field{path: "origin.addressInfo.state"}
+	return Field{path: "origin.addressInfo.politicalArea.state"}
 }
 
 func (p Projection) OriginTimeZone() Field {
-	return Field{path: "origin.addressInfo.timeZone"}
+	return Field{path: "origin.addressInfo.politicalArea.timeZone"}
 }
 
 func (p Projection) OriginZipCode() Field {

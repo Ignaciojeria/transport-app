@@ -6,6 +6,10 @@ import (
 )
 
 type OrderDestinationFixRequest struct {
+	ManualChange struct {
+		PerformedBy string `json:"performedBy" example:"juan@example.com"`
+		Reason      string `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
+	} `json:"manualChange"`
 	Destination struct {
 		AddressLine1 string `json:"addressLine1" example:"Inglaterra 59"`
 		AddressLine2 string `json:"addressLine2" example:"Piso 2214"`
@@ -19,13 +23,13 @@ type OrderDestinationFixRequest struct {
 			Longitude float64 `json:"longitude" example:"-70.6130425"`
 			Source    string  `json:"source" example:"GOOGLE_MAPS"`
 		} `json:"coordinates"`
-		District      string `json:"district" example:"la florida"`
-		Province      string `json:"province" example:"santiago"`
-		State         string `json:"state" example:"region metropolitana de santiago"`
-		TimeZone      string `json:"timeZone" example:"America/Santiago"`
 		ZipCode       string `json:"zipCode" example:"7500000"`
 		PoliticalArea struct {
-			ID         string `json:"id" example:"cl-rm-la-florida"`
+			Code       string `json:"id" example:"cl-rm-la-florida"`
+			Province   string `json:"province" example:"santiago"`
+			State      string `json:"state" example:"region metropolitana de santiago"`
+			District   string `json:"district" example:"la florida"`
+			TimeZone   string `json:"timeZone" example:"America/Santiago"`
 			Confidence struct {
 				Level   float64 `json:"level" example:"0.0"`
 				Message string  `json:"message" example:""`

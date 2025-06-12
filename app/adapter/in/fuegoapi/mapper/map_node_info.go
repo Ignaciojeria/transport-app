@@ -25,8 +25,6 @@ func MapNodeInfoToDomain(nodeInfo struct {
 		} `json:"documents"`
 		FullName string `json:"fullName"`
 	} `json:"contact"`
-
-	District    string `json:"district" example:"la florida"`
 	Coordinates struct {
 		Latitude   float64 `json:"latitude" example:"-33.5147889"`
 		Longitude  float64 `json:"longitude" example:"-70.6130425"`
@@ -37,18 +35,19 @@ func MapNodeInfoToDomain(nodeInfo struct {
 			Reason  string  `json:"reason" example:"PROVIDER_RESULT_OUT_OF_DISTRICT"`
 		} `json:"confidence"`
 	} `json:"coordinates"`
-	Province      string `json:"province" example:"santiago"`
-	State         string `json:"state" example:"region metropolitana de santiago"`
-	TimeZone      string `json:"timeZone" example:"America/Santiago"`
-	ZipCode       string `json:"zipCode" example:"7500000"`
 	PoliticalArea struct {
-		ID         string `json:"id" example:"cl-rm-la-florida"`
+		Code       string `json:"code" example:"cl-rm-la-florida"`
+		Province   string `json:"province" example:"santiago"`
+		State      string `json:"state" example:"region metropolitana de santiago"`
+		District   string `json:"district" example:"la florida"`
+		TimeZone   string `json:"timeZone" example:"America/Santiago"`
 		Confidence struct {
 			Level   float64 `json:"level" example:"0.0"`
 			Message string  `json:"message" example:""`
 			Reason  string  `json:"reason" example:""`
 		} `json:"confidence"`
 	} `json:"politicalArea"`
+	ZipCode string `json:"zipCode" example:"7500000"`
 }) domain.NodeInfo {
 	return domain.NodeInfo{
 		ReferenceID: domain.ReferenceID(nodeInfo.ReferenceID),
@@ -61,9 +60,13 @@ func MapNodeInfoToDomain(nodeInfo struct {
 				Documents:                MapDocumentsToDomain(addressInfo.Contact.Documents),
 				AdditionalContactMethods: MapAdditionalContactMethodsToDomain(addressInfo.Contact.AdditionalContactMethods),
 			},
-			State:        domain.State(addressInfo.State),
-			Province:     domain.Province(addressInfo.Province),
-			District:     domain.District(addressInfo.District),
+			PoliticalArea: domain.PoliticalArea{
+				Code:     addressInfo.PoliticalArea.Code,
+				State:    addressInfo.PoliticalArea.State,
+				Province: addressInfo.PoliticalArea.Province,
+				District: addressInfo.PoliticalArea.District,
+				TimeZone: addressInfo.PoliticalArea.TimeZone,
+			},
 			AddressLine1: addressInfo.AddressLine1,
 			AddressLine2: addressInfo.AddressLine2,
 			Coordinates: domain.Coordinates{
@@ -75,8 +78,7 @@ func MapNodeInfoToDomain(nodeInfo struct {
 					Reason:  addressInfo.Coordinates.Confidence.Reason,
 				},
 			},
-			ZipCode:  addressInfo.ZipCode,
-			TimeZone: addressInfo.TimeZone,
+			ZipCode: addressInfo.ZipCode,
 		},
 	}
 }
@@ -143,11 +145,11 @@ func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
 		ZipCode   string  `json:"zipCode"`
 	}{
 		AddressLine1: nodeInfo.AddressInfo.AddressLine1,
-		District:     nodeInfo.AddressInfo.District.String(),
-		Province:     nodeInfo.AddressInfo.Province.String(),
-		State:        nodeInfo.AddressInfo.State.String(),
+		District:     nodeInfo.AddressInfo.PoliticalArea.District,
+		Province:     nodeInfo.AddressInfo.PoliticalArea.Province,
+		State:        nodeInfo.AddressInfo.PoliticalArea.State,
 		ZipCode:      nodeInfo.AddressInfo.ZipCode,
-		TimeZone:     nodeInfo.AddressInfo.TimeZone,
+		TimeZone:     nodeInfo.AddressInfo.PoliticalArea.TimeZone,
 		Latitude:     nodeInfo.AddressInfo.Coordinates.Point.Lat(),
 		Longitude:    nodeInfo.AddressInfo.Coordinates.Point.Lon(),
 	}

@@ -84,7 +84,7 @@ func (p Projection) ContactAdditionalContactMethods() Field {
 }
 
 func (p Projection) District() Field {
-	return Field{path: "addressInfo.district"}
+	return Field{path: "addressInfo.politicalArea.district"}
 }
 
 func (p Projection) Coordinates() Field {
@@ -120,15 +120,15 @@ func (p Projection) CoordinatesConfidenceReason() Field {
 }
 
 func (p Projection) Province() Field {
-	return Field{path: "addressInfo.province"}
+	return Field{path: "addressInfo.politicalArea.province"}
 }
 
 func (p Projection) State() Field {
-	return Field{path: "addressInfo.state"}
+	return Field{path: "addressInfo.politicalArea.state"}
 }
 
 func (p Projection) TimeZone() Field {
-	return Field{path: "addressInfo.timeZone"}
+	return Field{path: "addressInfo.politicalArea.timeZone"}
 }
 
 func (p Projection) ZipCode() Field {

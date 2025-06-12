@@ -21,18 +21,8 @@ func init() {
 func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 	return func(ctx context.Context, ai domain.AddressInfo) error {
 		return conn.DB.Transaction(func(tx *gorm.DB) error {
-			// Upsert State
-			if err := upsertState(ctx, tx, ai.State); err != nil {
-				return err
-			}
-
-			// Upsert Province
-			if err := upsertProvince(ctx, tx, ai.Province); err != nil {
-				return err
-			}
-
-			// Upsert District
-			if err := upsertDistrict(ctx, tx, ai.District); err != nil {
+			// Upsert PoliticalArea
+			if err := upsertPoliticalArea(ctx, tx, ai.PoliticalArea); err != nil {
 				return err
 			}
 
@@ -67,65 +57,23 @@ func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 	}
 }
 
-func upsertState(ctx context.Context, tx *gorm.DB, state domain.State) error {
-	var existing table.State
+func upsertPoliticalArea(ctx context.Context, tx *gorm.DB, pa domain.PoliticalArea) error {
+	var existing table.PoliticalArea
 	err := tx.WithContext(ctx).
-		Table("states").
-		Where("document_id = ?", state.DocID(ctx).String()).
+		Table("political_areas").
+		Where("document_id = ?", pa.DocID(ctx).String()).
 		First(&existing).Error
 
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
-	// Si ya existe, no hacemos nada porque el nombre es el mismo
+	// Si ya existe, no hacemos nada porque los datos son los mismos
 	if err == nil {
 		return nil
 	}
 
 	// No existe → insert
-	newState := mapper.MapStateTable(ctx, state)
-	return tx.Create(&newState).Error
-}
-
-func upsertProvince(ctx context.Context, tx *gorm.DB, province domain.Province) error {
-	var existing table.Province
-	err := tx.WithContext(ctx).
-		Table("provinces").
-		Where("document_id = ?", province.DocID(ctx).String()).
-		First(&existing).Error
-
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-
-	// Si ya existe, no hacemos nada porque el nombre es el mismo
-	if err == nil {
-		return nil
-	}
-
-	// No existe → insert
-	newProvince := mapper.MapProvinceTable(ctx, province)
-	return tx.Create(&newProvince).Error
-}
-
-func upsertDistrict(ctx context.Context, tx *gorm.DB, district domain.District) error {
-	var existing table.District
-	err := tx.WithContext(ctx).
-		Table("districts").
-		Where("document_id = ?", district.DocID(ctx).String()).
-		First(&existing).Error
-
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return err
-	}
-
-	// Si ya existe, no hacemos nada porque el nombre es el mismo
-	if err == nil {
-		return nil
-	}
-
-	// No existe → insert
-	newDistrict := mapper.MapDistrictTable(ctx, district)
-	return tx.Create(&newDistrict).Error
+	newPoliticalArea := mapper.MapPoliticalArea(ctx, pa)
+	return tx.Create(&newPoliticalArea).Error
 }

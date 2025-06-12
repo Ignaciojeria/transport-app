@@ -52,10 +52,20 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred(), "Failed to verify tenant: %v", err)
 		Expect(tenantCount).To(Equal(int64(1)), "Tenant was not created properly")
 
+		politicalArea := domain.PoliticalArea{
+			State:    "CA",
+			Province: "CA",
+			District: "CA",
+			TimeZone: "America/Santiago",
+		}
+
 		destination := domain.AddressInfo{
-			State:        "CA",
-			Province:     "CA",
-			District:     "CA",
+			PoliticalArea: domain.PoliticalArea{
+				State:    "CA",
+				Province: "CA",
+				District: "CA",
+				TimeZone: "America/Santiago",
+			},
 			AddressLine1: "123 Main St",
 			AddressLine2: "Apt 1",
 			Coordinates: domain.Coordinates{
@@ -63,15 +73,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				Source: "geocoding",
 				Confidence: domain.CoordinatesConfidence{
 					Level:   0.8,
-					Message: "Medium confidence",
+					Message: "High confidence",
 					Reason:  "Geocoding service",
 				},
 			},
-			TimeZone: "America/Santiago",
-			ZipCode:  "12345",
+			ZipCode: "12345",
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred(), "Failed to upsert address info: %v", err)
+
+		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		Expect(err).ToNot(HaveOccurred())
 
 		// Verify address was created
 		var addressCount int64
@@ -174,6 +186,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DestinationState().String():                        "",
 				projection.DestinationTimeZone().String():                     "",
 				projection.DestinationZipCode().String():                      "",
+				projection.DestinationPoliticalArea().String():                "",
 				projection.DestinationAddressLine2().String():                 "",
 				projection.DeliveryInstructions().String():                    "",
 			},
@@ -201,7 +214,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationCoordinatesLongitude).To(Equal(1.0), "Unexpected longitude")
 		Expect(results[0].DestinationCoordinatesSource).To(Equal("geocoding"), "Unexpected source")
 		Expect(results[0].DestinationCoordinatesConfidenceLevel).To(Equal(0.8), "Unexpected confidence level")
-		Expect(results[0].DestinationCoordinatesConfidenceMessage).To(Equal("Medium confidence"), "Unexpected confidence message")
+		Expect(results[0].DestinationCoordinatesConfidenceMessage).To(Equal("High confidence"), "Unexpected confidence message")
 		Expect(results[0].DestinationCoordinatesConfidenceReason).To(Equal("Geocoding service"), "Unexpected confidence reason")
 		Expect(results[0].DestinationProvince).To(Equal("CA"), "Unexpected province")
 		Expect(results[0].DestinationState).To(Equal("CA"), "Unexpected state")
@@ -246,22 +259,24 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		destination := domain.AddressInfo{
-			State:        "CA",
-			Province:     "CA",
-			District:     "CA",
+			PoliticalArea: domain.PoliticalArea{
+				State:    "CA",
+				Province: "CA",
+				District: "CA",
+				TimeZone: "America/Santiago",
+			},
 			AddressLine1: "123 Main St",
 			Coordinates: domain.Coordinates{
 				Point:  orb.Point{1, 1},
 				Source: "geocoding",
 				Confidence: domain.CoordinatesConfidence{
 					Level:   0.8,
-					Message: "Medium confidence",
+					Message: "High confidence",
 					Reason:  "Geocoding service",
 				},
 			},
-			TimeZone: "America/Santiago",
-			ZipCode:  "12345",
-			Contact:  contact,
+			ZipCode: "12345",
+			Contact: contact,
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
@@ -840,9 +855,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Crear dirección de origen
 		origin := domain.AddressInfo{
-			State:        "NY",
-			Province:     "NY",
-			District:     "Manhattan",
+			PoliticalArea: domain.PoliticalArea{
+				State:    "NY",
+				Province: "NY",
+				District: "Manhattan",
+				TimeZone: "America/New_York",
+			},
 			AddressLine1: "456 Park Ave",
 			AddressLine2: "Suite 100",
 			Coordinates: domain.Coordinates{
@@ -854,11 +872,13 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 					Reason:  "Geocoding service",
 				},
 			},
-			TimeZone: "America/New_York",
-			ZipCode:  "10022",
-			Contact:  originContact,
+			ZipCode: "10022",
+			Contact: originContact,
 		}
 		err = NewUpsertAddressInfo(conn)(ctx, origin)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertPoliticalArea(conn)(ctx, origin.PoliticalArea)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear order con información de origen
@@ -912,6 +932,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.OriginContactNationalID().String():            "",
 				projection.OriginContactPhone().String():                 "",
 				projection.OriginContactMethods().String():               "",
+				projection.OriginPoliticalArea().String():                "",
 				projection.OriginDocuments().String():                    "",
 			},
 		})
@@ -1537,10 +1558,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Crear direcciones con diferentes niveles de confianza según la matriz de prueba
 		destinations := []domain.AddressInfo{
 			{
-				State:        "CA",
-				Province:     "CA",
-				District:     "CA",
+				PoliticalArea: domain.PoliticalArea{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+					TimeZone: "America/Santiago",
+				},
 				AddressLine1: "Address A",
+				AddressLine2: "Apt 1",
 				Coordinates: domain.Coordinates{
 					Point:  orb.Point{1, 1},
 					Source: "geocoding",
@@ -1550,12 +1575,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						Reason:  "Geocoding service",
 					},
 				},
+				ZipCode: "12345",
 			},
 			{
-				State:        "CA",
-				Province:     "CA",
-				District:     "CA",
+				PoliticalArea: domain.PoliticalArea{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+					TimeZone: "America/Santiago",
+				},
 				AddressLine1: "Address B",
+				AddressLine2: "Apt 2",
 				Coordinates: domain.Coordinates{
 					Point:  orb.Point{2, 2},
 					Source: "geocoding",
@@ -1565,12 +1595,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						Reason:  "Geocoding service",
 					},
 				},
+				ZipCode: "12345",
 			},
 			{
-				State:        "CA",
-				Province:     "CA",
-				District:     "CA",
+				PoliticalArea: domain.PoliticalArea{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+					TimeZone: "America/Santiago",
+				},
 				AddressLine1: "Address C",
+				AddressLine2: "Apt 3",
 				Coordinates: domain.Coordinates{
 					Point:  orb.Point{3, 3},
 					Source: "geocoding",
@@ -1580,12 +1615,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						Reason:  "Geocoding service",
 					},
 				},
+				ZipCode: "12345",
 			},
 			{
-				State:        "CA",
-				Province:     "CA",
-				District:     "CA",
+				PoliticalArea: domain.PoliticalArea{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+					TimeZone: "America/Santiago",
+				},
 				AddressLine1: "Address D",
+				AddressLine2: "Apt 4",
 				Coordinates: domain.Coordinates{
 					Point:  orb.Point{4, 4},
 					Source: "geocoding",
@@ -1595,12 +1635,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						Reason:  "Geocoding service",
 					},
 				},
+				ZipCode: "12345",
 			},
 			{
-				State:        "CA",
-				Province:     "CA",
-				District:     "CA",
+				PoliticalArea: domain.PoliticalArea{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+					TimeZone: "America/Santiago",
+				},
 				AddressLine1: "Address E",
+				AddressLine2: "Apt 5",
 				Coordinates: domain.Coordinates{
 					Point:  orb.Point{5, 5},
 					Source: "geocoding",
@@ -1610,12 +1655,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						Reason:  "Geocoding service",
 					},
 				},
+				ZipCode: "12345",
 			},
 			{
-				State:        "CA",
-				Province:     "CA",
-				District:     "CA",
+				PoliticalArea: domain.PoliticalArea{
+					State:    "CA",
+					Province: "CA",
+					District: "CA",
+					TimeZone: "America/Santiago",
+				},
 				AddressLine1: "Address F",
+				AddressLine2: "Apt 6",
 				Coordinates: domain.Coordinates{
 					Point:  orb.Point{6, 6},
 					Source: "geocoding",
@@ -1625,6 +1675,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						Reason:  "Geocoding service",
 					},
 				},
+				ZipCode: "12345",
 			},
 		}
 
@@ -2058,13 +2109,35 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			ReferenceID: "123",
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
+					PoliticalArea: domain.PoliticalArea{
+						State:    "CA",
+						Province: "CA",
+						District: "CA",
+						TimeZone: "America/Santiago",
+					},
+					AddressLine1: "123 Main St",
+					AddressLine2: "Apt 1",
+					Coordinates: domain.Coordinates{
+						Point:  orb.Point{1, 1},
+						Source: "geocoding",
+						Confidence: domain.CoordinatesConfidence{
+							Level:   0.8,
+							Message: "High confidence",
+							Reason:  "Geocoding service",
+						},
+					},
+					ZipCode: "12345",
 				},
 			},
 			DeliveryUnits: []domain.DeliveryUnit{
 				{},
+			},
+			CollectAvailabilityDate: domain.CollectAvailabilityDate{
+				Date: fixedDate1,
+				TimeRange: domain.TimeRange{
+					StartTime: "09:00",
+					EndTime:   "18:00",
+				},
 			},
 			PromisedDate: domain.PromisedDate{
 				DateRange: domain.DateRange{
@@ -2086,13 +2159,35 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			ReferenceID: "456",
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
+					PoliticalArea: domain.PoliticalArea{
+						State:    "CA",
+						Province: "CA",
+						District: "CA",
+						TimeZone: "America/Santiago",
+					},
+					AddressLine1: "123 Main St",
+					AddressLine2: "Apt 2",
+					Coordinates: domain.Coordinates{
+						Point:  orb.Point{2, 2},
+						Source: "geocoding",
+						Confidence: domain.CoordinatesConfidence{
+							Level:   0.8,
+							Message: "High confidence",
+							Reason:  "Geocoding service",
+						},
+					},
+					ZipCode: "12345",
 				},
 			},
 			DeliveryUnits: []domain.DeliveryUnit{
 				{},
+			},
+			CollectAvailabilityDate: domain.CollectAvailabilityDate{
+				Date: fixedDate2,
+				TimeRange: domain.TimeRange{
+					StartTime: "10:00",
+					EndTime:   "17:00",
+				},
 			},
 			PromisedDate: domain.PromisedDate{
 				DateRange: domain.DateRange{
@@ -2586,6 +2681,95 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].EvidencePhotos[0].Type).To(Equal("DELIVERY"))
 		Expect(results[0].EvidencePhotos[1].URL).To(Equal("https://example.com/photo2.jpg"))
 		Expect(results[0].EvidencePhotos[1].Type).To(Equal("SIGNATURE"))
+	})
+
+	It("should return delivery units with political area information", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred(), "Failed to create test tenant: %v", err)
+
+		// Crear political area
+		politicalArea := domain.PoliticalArea{
+			State:    "CA",
+			Province: "Los Angeles",
+			District: "Downtown",
+			TimeZone: "America/Los_Angeles",
+		}
+		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear address info con political area
+		destination := domain.AddressInfo{
+			PoliticalArea: politicalArea,
+			AddressLine1:  "123 Main St",
+			AddressLine2:  "Apt 1",
+			Coordinates: domain.Coordinates{
+				Point:  orb.Point{1, 1},
+				Source: "geocoding",
+				Confidence: domain.CoordinatesConfidence{
+					Level:   0.8,
+					Message: "High confidence",
+					Reason:  "Geocoding service",
+				},
+			},
+			ZipCode: "12345",
+		}
+		err = NewUpsertAddressInfo(conn)(ctx, destination)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear orden con el address info
+		order := domain.Order{
+			ReferenceID: "TEST-123",
+			Destination: domain.NodeInfo{
+				AddressInfo: destination,
+			},
+			DeliveryUnits: []domain.DeliveryUnit{
+				{},
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Crear delivery units history
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		projection := deliveryunits.NewProjection()
+
+		// Buscar delivery units solicitando campos de political area
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			deliveryunits.NewProjection())
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():              "",
+				projection.DestinationAddressInfo().String():   "",
+				projection.DestinationState().String():         "",
+				projection.DestinationProvince().String():      "",
+				projection.DestinationDistrict().String():      "",
+				projection.DestinationTimeZone().String():      "",
+				projection.DestinationAddressLine1().String():  "",
+				projection.DestinationPoliticalArea().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+
+		// Validar que los datos de political area se obtuvieron correctamente
+		Expect(results[0].DestinationState).To(Equal("CA"))
+		Expect(results[0].DestinationProvince).To(Equal("Los Angeles"))
+		Expect(results[0].DestinationDistrict).To(Equal("Downtown"))
+		Expect(results[0].DestinationTimeZone).To(Equal("America/Los_Angeles"))
+		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"))
 	})
 
 })

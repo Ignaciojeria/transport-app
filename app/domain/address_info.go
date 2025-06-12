@@ -20,15 +20,12 @@ type Coordinates struct {
 }
 
 type AddressInfo struct {
-	Contact      Contact
-	State        State
-	Province     Province
-	District     District
-	AddressLine1 string
-	AddressLine2 string
-	Coordinates  Coordinates
-	ZipCode      string
-	TimeZone     string
+	Contact       Contact
+	PoliticalArea PoliticalArea
+	AddressLine1  string
+	AddressLine2  string
+	Coordinates   Coordinates
+	ZipCode       string
 }
 
 func (a AddressInfo) DocID(ctx context.Context) DocumentID {
@@ -36,9 +33,9 @@ func (a AddressInfo) DocID(ctx context.Context) DocumentID {
 		ctx,
 		a.AddressLine1,
 		a.AddressLine2,
-		a.District.String(),
-		a.Province.String(),
-		a.State.String())
+		a.PoliticalArea.District,
+		a.PoliticalArea.Province,
+		a.PoliticalArea.State)
 }
 
 func (a *AddressInfo) UpdatePoint(point orb.Point) {
@@ -61,9 +58,10 @@ func (a *AddressInfo) NormalizeAndGeocode(
 // Normalize limpia y formatea los valores de State, Province y District.
 func (a *AddressInfo) ToLowerAndRemovePunctuation() {
 	a.AddressLine1 = utils.NormalizeText(a.AddressLine1)
-	a.State = State(utils.NormalizeText(a.State.String()))
-	a.Province = Province(utils.NormalizeText(a.Province.String()))
-	a.District = District(utils.NormalizeText(a.District.String()))
+	a.PoliticalArea.State = utils.NormalizeText(a.PoliticalArea.State)
+	a.PoliticalArea.Province = utils.NormalizeText(a.PoliticalArea.Province)
+	a.PoliticalArea.District = utils.NormalizeText(a.PoliticalArea.District)
+	a.PoliticalArea.TimeZone = utils.NormalizeText(a.PoliticalArea.TimeZone)
 }
 
 func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool) {
@@ -97,18 +95,18 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		changed = true
 	}
 
-	if !newAddress.State.IsEmpty() && !newAddress.State.Equals(a.State) {
-		updated.State = newAddress.State
+	if newAddress.PoliticalArea.State != "" && newAddress.PoliticalArea.State != a.PoliticalArea.State {
+		updated.PoliticalArea.State = newAddress.PoliticalArea.State
 		changed = true
 	}
 
-	if !newAddress.Province.IsEmpty() && !newAddress.Province.Equals(a.Province) {
-		updated.Province = newAddress.Province
+	if newAddress.PoliticalArea.Province != "" && newAddress.PoliticalArea.Province != a.PoliticalArea.Province {
+		updated.PoliticalArea.Province = newAddress.PoliticalArea.Province
 		changed = true
 	}
 
-	if !newAddress.District.IsEmpty() && !newAddress.District.Equals(a.District) {
-		updated.District = newAddress.District
+	if newAddress.PoliticalArea.District != "" && newAddress.PoliticalArea.District != a.PoliticalArea.District {
+		updated.PoliticalArea.District = newAddress.PoliticalArea.District
 		changed = true
 	}
 
@@ -116,8 +114,8 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		updated.ZipCode = newAddress.ZipCode
 		changed = true
 	}
-	if newAddress.TimeZone != "" && newAddress.TimeZone != a.TimeZone {
-		updated.TimeZone = newAddress.TimeZone
+	if newAddress.PoliticalArea.TimeZone != "" && newAddress.PoliticalArea.TimeZone != a.PoliticalArea.TimeZone {
+		updated.PoliticalArea.TimeZone = newAddress.PoliticalArea.TimeZone
 		changed = true
 	}
 
@@ -127,9 +125,9 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 func (a AddressInfo) FullAddress() string {
 	parts := []string{
 		a.AddressLine1,
-		a.District.String(),
-		a.Province.String(),
-		a.State.String(),
+		a.PoliticalArea.District,
+		a.PoliticalArea.Province,
+		a.PoliticalArea.State,
 		a.ZipCode,
 	}
 	return concatenateWithCommas(parts...)
