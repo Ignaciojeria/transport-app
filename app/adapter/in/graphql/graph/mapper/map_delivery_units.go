@@ -202,7 +202,18 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 				Description: &du.OrderTypeDescription,
 			},
 			DeliveryUnit: &model.DeliveryUnit{
-				Lpn:          &du.LPN,
+				Lpn: &du.LPN,
+				Skills: func() []*string {
+					if du.DeliveryUnitSkills == nil {
+						return nil
+					}
+					skills := make([]*string, len(du.DeliveryUnitSkills))
+					for i, skill := range du.DeliveryUnitSkills {
+						skillCopy := skill
+						skills[i] = &skillCopy
+					}
+					return skills
+				}(),
 				SizeCategory: &du.SizeCategory,
 				Dimensions: &model.Dimension{
 					Length: &du.JSONDimensions.Length,
