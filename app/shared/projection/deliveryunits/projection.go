@@ -441,21 +441,8 @@ func (p Projection) DeliveryUnitItemsInsuranceUnitValue() Field {
 	return Field{path: "deliveryUnit.items.insurance.unitValue"}
 }
 
-// Métodos para campos de Skill en Item
-func (p Projection) DeliveryUnitItemsSkills() Field {
-	return Field{path: "deliveryUnit.items.skills"}
-}
-
-func (p Projection) DeliveryUnitItemsSkillsType() Field {
-	return Field{path: "deliveryUnit.items.skills.type"}
-}
-
-func (p Projection) DeliveryUnitItemsSkillsValue() Field {
-	return Field{path: "deliveryUnit.items.skills.value"}
-}
-
-func (p Projection) DeliveryUnitItemsSkillsDescription() Field {
-	return Field{path: "deliveryUnit.items.skills.description"}
+func (p Projection) DeliveryUnitSkills() Field {
+	return Field{path: "deliveryUnit.skills"}
 }
 
 // Métodos para campos de Quantity en Item

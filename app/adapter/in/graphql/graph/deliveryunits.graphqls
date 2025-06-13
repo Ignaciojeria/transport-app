@@ -87,11 +87,7 @@ type Insurance {
   unitValue: Float
 }
 
-type Skill {
-  type: String
-  value: String
-  description: String
-}
+
 
 # Quantity mejorado
 type Quantity {
@@ -109,7 +105,6 @@ type Item {
   description: String
   dimensions: Dimension
   insurance: Insurance
-  skills: [Skill]
   quantity: Quantity
   weight: Weight
 }
@@ -125,6 +120,7 @@ type DeliveryUnit {
   insurance: Insurance
   items: [Item]
   labels: [Label]
+  skills: [String]
   lpn: String
   weight: Weight
 }

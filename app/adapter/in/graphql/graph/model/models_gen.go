@@ -98,6 +98,7 @@ type DeliveryUnit struct {
 	Insurance    *Insurance `json:"insurance,omitempty"`
 	Items        []*Item    `json:"items,omitempty"`
 	Labels       []*Label   `json:"labels,omitempty"`
+	Skills       []*string  `json:"skills,omitempty"`
 	Lpn          *string    `json:"lpn,omitempty"`
 	Weight       *Weight    `json:"weight,omitempty"`
 }
@@ -197,7 +198,6 @@ type Item struct {
 	Description *string    `json:"description,omitempty"`
 	Dimensions  *Dimension `json:"dimensions,omitempty"`
 	Insurance   *Insurance `json:"insurance,omitempty"`
-	Skills      []*Skill   `json:"skills,omitempty"`
 	Quantity    *Quantity  `json:"quantity,omitempty"`
 	Weight      *Weight    `json:"weight,omitempty"`
 }
@@ -326,12 +326,6 @@ type Route struct {
 	RouteID       *string `json:"routeID,omitempty"`
 	LpnContainer  *string `json:"lpnContainer,omitempty"`
 	RoutePosition *int    `json:"routePosition,omitempty"`
-}
-
-type Skill struct {
-	Type        *string `json:"type,omitempty"`
-	Value       *string `json:"value,omitempty"`
-	Description *string `json:"description,omitempty"`
 }
 
 type TimeRange struct {
