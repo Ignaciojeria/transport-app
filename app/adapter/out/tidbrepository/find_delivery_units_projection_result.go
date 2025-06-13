@@ -16,20 +16,6 @@ type FindDeliveryUnitsProjectionResult func(
 	ctx context.Context,
 	filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, bool, error)
 
-type deliveryUnitProjectionResult struct {
-	// ... existing code ...
-	DestinationPoliticalAreaCode              string  `db:"destination_political_area_code"`
-	DestinationPoliticalAreaConfidenceLevel   float64 `db:"destination_political_area_confidence_level"`
-	DestinationPoliticalAreaConfidenceMessage string  `db:"destination_political_area_confidence_message"`
-	DestinationPoliticalAreaConfidenceReason  string  `db:"destination_political_area_confidence_reason"`
-	// ... existing code ...
-	OriginPoliticalAreaCode              string  `db:"origin_political_area_code"`
-	OriginPoliticalAreaConfidenceLevel   float64 `db:"origin_political_area_confidence_level"`
-	OriginPoliticalAreaConfidenceMessage string  `db:"origin_political_area_confidence_message"`
-	OriginPoliticalAreaConfidenceReason  string  `db:"origin_political_area_confidence_reason"`
-	// ... existing code ...
-}
-
 func init() {
 	ioc.Registry(
 		NewFindDeliveryUnitsProjectionResult,
@@ -58,6 +44,8 @@ func NewFindDeliveryUnitsProjectionResult(
 		oh   = "oh"   // order_headers
 		ot   = "ot"   // order_types
 		s    = "s"    // status
+		dus  = "dus"  // delivery_units_skills
+		sk   = "sk"   // skills
 	)
 
 	return func(ctx context.Context, filters domain.DeliveryUnitsFilter) (projectionresult.DeliveryUnitsProjectionResults, bool, error) {
@@ -113,7 +101,9 @@ func NewFindDeliveryUnitsProjectionResult(
 
 		// Agregar join con delivery_units si se solicita cualquier campo relacionado
 		if projection.DeliveryUnit().Has(filters.RequestedFields) ||
-			(filters.DeliveryUnit != nil && (len(filters.DeliveryUnit.Lpns) > 0 || len(filters.DeliveryUnit.Labels) > 0 || len(filters.DeliveryUnit.SizeCategories) > 0)) {
+			(filters.DeliveryUnit != nil && (len(filters.DeliveryUnit.Lpns) > 0 ||
+				len(filters.DeliveryUnit.Labels) > 0 ||
+				len(filters.DeliveryUnit.SizeCategories) > 0)) {
 			ds = ds.InnerJoin(
 				goqu.T("delivery_units").As(du),
 				goqu.On(goqu.I(du+".document_id").Eq(goqu.I(duh+".delivery_unit_doc"))),
@@ -223,6 +213,22 @@ func NewFindDeliveryUnitsProjectionResult(
 
 			limit := *filters.Pagination.Last + 1
 			ds = ds.Limit(uint(limit))
+		}
+
+		if projection.DeliveryUnitSkills().Has(filters.RequestedFields) {
+			ds = ds.With("delivery_unit_skills", goqu.From(goqu.T("delivery_units_skills").As(dus)).
+				Select(
+					goqu.I(dus+".delivery_unit_doc"),
+					goqu.L("jsonb_agg(skill)").As("skills"),
+				).
+				GroupBy(goqu.I(dus+".delivery_unit_doc")),
+			).
+				LeftJoin(
+					goqu.T("delivery_unit_skills").As(dus),
+					goqu.On(goqu.I(dus+".delivery_unit_doc").Eq(goqu.I(duh+".delivery_unit_doc"))),
+				)
+
+			ds = ds.SelectAppend(goqu.Cast(goqu.I(dus+".skills"), "jsonb").As("delivery_unit_skills"))
 		}
 
 		// Add order references using WITH clause if either requested or filtered
@@ -703,22 +709,5 @@ func NewFindDeliveryUnitsProjectionResult(
 		}
 
 		return results, hasMoreResults, nil
-	}
-}
-
-func (r *deliveryUnitProjectionResult) Map() domain.DeliveryUnitProjection {
-	return domain.DeliveryUnitProjection{
-		DestinationPoliticalArea: domain.PoliticalAreaProjection{
-			Code:              r.DestinationPoliticalAreaCode,
-			ConfidenceLevel:   r.DestinationPoliticalAreaConfidenceLevel,
-			ConfidenceMessage: r.DestinationPoliticalAreaConfidenceMessage,
-			ConfidenceReason:  r.DestinationPoliticalAreaConfidenceReason,
-		},
-		OriginPoliticalArea: domain.PoliticalAreaProjection{
-			Code:              r.OriginPoliticalAreaCode,
-			ConfidenceLevel:   r.OriginPoliticalAreaConfidenceLevel,
-			ConfidenceMessage: r.OriginPoliticalAreaConfidenceMessage,
-			ConfidenceReason:  r.OriginPoliticalAreaConfidenceReason,
-		},
 	}
 }

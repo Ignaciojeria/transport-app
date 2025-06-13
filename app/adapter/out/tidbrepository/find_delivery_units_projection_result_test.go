@@ -2758,6 +2758,77 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].DestinationPoliticalAreaConfidenceReason).To(Equal("Geocoding service"), "Unexpected confidence reason")
 	})
 
+	It("should return delivery units with their associated skills", func() {
+		// Create a new tenant for this test
+		_, ctx, err := CreateTestTenant(context.Background(), conn)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create test skills using domain entities
+		skill1 := domain.Skill("FRAGILE")
+		skill2 := domain.Skill("REFRIGERATED")
+
+		// Use the repository to persist skills
+		upsertSkill := NewUpsertSkill(conn)
+		err = upsertSkill(ctx, skill1)
+		Expect(err).ToNot(HaveOccurred())
+		err = upsertSkill(ctx, skill2)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create a delivery unit with skills
+		deliveryUnit := domain.DeliveryUnit{
+			Skills: []domain.Skill{skill1, skill2},
+		}
+		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{
+			deliveryUnit,
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		// Create order and history
+		order := domain.Order{
+			ReferenceID: "TEST123",
+			DeliveryUnits: []domain.DeliveryUnit{
+				deliveryUnit,
+			},
+		}
+		err = NewUpsertOrder(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+			Routes: []domain.Route{
+				{
+					Orders: []domain.Order{
+						order,
+					},
+				},
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+
+		err = NewUpsertDeliveryUnitsSkills(conn)(ctx, order)
+		Expect(err).ToNot(HaveOccurred())
+
+		// Query for delivery units with skills
+		projection := deliveryunits.NewProjection()
+		findDeliveryUnits := NewFindDeliveryUnitsProjectionResult(
+			conn,
+			projection)
+
+		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
+			RequestedFields: map[string]any{
+				projection.ReferenceID().String():        "",
+				projection.DeliveryUnit().String():       "",
+				projection.DeliveryUnitSkills().String(): "",
+			},
+		})
+		Expect(err).ToNot(HaveOccurred())
+		Expect(results).To(HaveLen(1))
+		Expect(hasMore).To(BeFalse())
+
+		// Validate skills
+		Expect(results[0].DeliveryUnitSkills).To(HaveLen(2))
+		Expect(results[0].DeliveryUnitSkills).To(ContainElements("FRAGILE", "REFRIGERATED"))
+	})
+
 })
 
 // Helper function to create pointer to int

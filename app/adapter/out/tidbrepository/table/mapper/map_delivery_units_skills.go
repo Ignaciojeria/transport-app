@@ -11,14 +11,14 @@ func MapDeliveryUnitsSkills(ctx context.Context, order domain.Order) []table.Del
 	for _, du := range order.DeliveryUnits {
 		if len(du.Skills) == 0 {
 			skills = append(skills, table.DeliveryUnitsSkills{
-				SkillDoc:        domain.Reference{}.DocID(ctx).String(),
+				Skill:           "",
 				DeliveryUnitDoc: du.DocID(ctx).String(),
 			})
 			continue
 		}
 		for _, skill := range du.Skills {
 			skills = append(skills, table.DeliveryUnitsSkills{
-				SkillDoc:        domain.Reference{Type: string(skill), Value: string(skill)}.DocID(ctx).String(),
+				Skill:           string(skill),
 				DeliveryUnitDoc: du.DocID(ctx).String(),
 			})
 		}
@@ -27,7 +27,7 @@ func MapDeliveryUnitsSkills(ctx context.Context, order domain.Order) []table.Del
 		emptyDu := domain.DeliveryUnit{}
 		deliveryUnitDoc := emptyDu.DocID(ctx).String()
 		skills = append(skills, table.DeliveryUnitsSkills{
-			SkillDoc:        domain.Reference{}.DocID(ctx).String(),
+			Skill:           "",
 			DeliveryUnitDoc: deliveryUnitDoc,
 		})
 	}

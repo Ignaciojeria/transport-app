@@ -1,9 +1,40 @@
 package projectionresult
 
 import (
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"slices"
 	"transport-app/app/adapter/out/tidbrepository/table"
 )
+
+// DeliveryUnitSkills is a custom type to handle JSON array scanning
+type DeliveryUnitSkills []string
+
+// Value implements the driver.Valuer interface
+func (s DeliveryUnitSkills) Value() (driver.Value, error) {
+	if s == nil {
+		return nil, nil
+	}
+	return json.Marshal(s)
+}
+
+// Scan implements the sql.Scanner interface
+func (s *DeliveryUnitSkills) Scan(value interface{}) error {
+	if value == nil {
+		*s = nil
+		return nil
+	}
+
+	switch v := value.(type) {
+	case []byte:
+		return json.Unmarshal(v, s)
+	case string:
+		return json.Unmarshal([]byte(v), s)
+	default:
+		return errors.New("type assertion to []byte or string failed")
+	}
+}
 
 type DeliveryUnitsProjectionResult struct {
 	ID                                    int64               `json:"id"`
@@ -26,6 +57,7 @@ type DeliveryUnitsProjectionResult struct {
 	OrderPromisedDateServiceCategory      string              `json:"order_promised_date_service_category"`
 	ManualChangePerformedBy               string              `json:"manual_change_performed_by"`
 	ManualChangeReason                    string              `json:"manual_change_reason"`
+	DeliveryUnitSkills                    DeliveryUnitSkills  `json:"delivery_unit_skills" gorm:"type:jsonb"`
 
 	// Delivery Failure Information
 	NonDeliveryReasonReferenceID string `json:"non_delivery_reason_reference_id"`
