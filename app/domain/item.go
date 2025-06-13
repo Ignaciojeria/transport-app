@@ -1,11 +1,5 @@
 package domain
 
-type Skill struct {
-	Type        string `json:"type"`
-	Value       string `json:"value"`
-	Description string `json:"description"`
-}
-
 type Item struct {
 	Sku         string
 	Quantity    Quantity

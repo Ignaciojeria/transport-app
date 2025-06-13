@@ -70,159 +70,17 @@ func MapPackagesToDomain(packages []struct {
 			},
 			Labels: MapLabelsToDomain(pkg.Labels),
 			Items:  MapItemsToDomain(pkg.Items),
+			Skills: MapSkillsToDomain(pkg.Skills),
 		}
 	}
 	return mapped
 }
 
-func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
-	Dimensions struct {
-		Length float64 `json:"length"`
-		Height float64 `json:"height"`
-		Unit   string  `json:"unit"`
-		Width  float64 `json:"width"`
-	} `json:"dimensions"`
-	Insurance struct {
-		Currency  string  `json:"currency"`
-		UnitValue float64 `json:"unitValue"`
-	} `json:"insurance"`
-	Items []struct {
-		Description string `json:"description"`
-		Dimensions  struct {
-			Length float64 `json:"length"`
-			Height float64 `json:"height"`
-			Unit   string  `json:"unit"`
-			Width  float64 `json:"width"`
-		} `json:"dimensions"`
-		Insurance struct {
-			Currency  string  `json:"currency"`
-			UnitValue float64 `json:"unitValue"`
-		} `json:"insurance"`
-		Quantity struct {
-			QuantityNumber int    `json:"quantityNumber"`
-			QuantityUnit   string `json:"quantityUnit"`
-		} `json:"quantity"`
-		Sku    string `json:"sku"`
-		Weight struct {
-			Unit  string  `json:"unit"`
-			Value float64 `json:"value"`
-		} `json:"weight"`
-	} `json:"items"`
-	Lpn    string `json:"lpn"`
-	Weight struct {
-		Unit  string  `json:"unit"`
-		Value float64 `json:"value"`
-	} `json:"weight"`
-} {
-	mapped := make([]struct {
-		Dimensions struct {
-			Length float64 `json:"length"`
-			Height float64 `json:"height"`
-			Unit   string  `json:"unit"`
-			Width  float64 `json:"width"`
-		} `json:"dimensions"`
-		Insurance struct {
-			Currency  string  `json:"currency"`
-			UnitValue float64 `json:"unitValue"`
-		} `json:"insurance"`
-		Items []struct {
-			Description string `json:"description"`
-			Dimensions  struct {
-				Length float64 `json:"length"`
-				Height float64 `json:"height"`
-				Unit   string  `json:"unit"`
-				Width  float64 `json:"width"`
-			} `json:"dimensions"`
-			Insurance struct {
-				Currency  string  `json:"currency"`
-				UnitValue float64 `json:"unitValue"`
-			} `json:"insurance"`
-			Quantity struct {
-				QuantityNumber int    `json:"quantityNumber"`
-				QuantityUnit   string `json:"quantityUnit"`
-			} `json:"quantity"`
-			Sku    string `json:"sku"`
-			Weight struct {
-				Unit  string  `json:"unit"`
-				Value float64 `json:"value"`
-			} `json:"weight"`
-		} `json:"items"`
-		Lpn    string `json:"lpn"`
-		Weight struct {
-			Unit  string  `json:"unit"`
-			Value float64 `json:"value"`
-		} `json:"weight"`
-	}, len(packages))
-
-	for i, pkg := range packages {
-		mapped[i] = struct {
-			Dimensions struct {
-				Length float64 `json:"length"`
-				Height float64 `json:"height"`
-				Unit   string  `json:"unit"`
-				Width  float64 `json:"width"`
-			} `json:"dimensions"`
-			Insurance struct {
-				Currency  string  `json:"currency"`
-				UnitValue float64 `json:"unitValue"`
-			} `json:"insurance"`
-			Items []struct {
-				Description string `json:"description"`
-				Dimensions  struct {
-					Length float64 `json:"length"`
-					Height float64 `json:"height"`
-					Unit   string  `json:"unit"`
-					Width  float64 `json:"width"`
-				} `json:"dimensions"`
-				Insurance struct {
-					Currency  string  `json:"currency"`
-					UnitValue float64 `json:"unitValue"`
-				} `json:"insurance"`
-				Quantity struct {
-					QuantityNumber int    `json:"quantityNumber"`
-					QuantityUnit   string `json:"quantityUnit"`
-				} `json:"quantity"`
-				Sku    string `json:"sku"`
-				Weight struct {
-					Unit  string  `json:"unit"`
-					Value float64 `json:"value"`
-				} `json:"weight"`
-			} `json:"items"`
-			Lpn    string `json:"lpn"`
-			Weight struct {
-				Unit  string  `json:"unit"`
-				Value float64 `json:"value"`
-			} `json:"weight"`
-		}{
-			Dimensions: struct {
-				Length float64 `json:"length"`
-				Height float64 `json:"height"`
-				Unit   string  `json:"unit"`
-				Width  float64 `json:"width"`
-			}{
-				Length: pkg.Dimensions.Length,
-				Height: pkg.Dimensions.Height,
-				Unit:   pkg.Dimensions.Unit,
-				Width:  pkg.Dimensions.Width,
-			},
-			Insurance: struct {
-				Currency  string  `json:"currency"`
-				UnitValue float64 `json:"unitValue"`
-			}{
-				Currency:  pkg.Insurance.Currency,
-				UnitValue: pkg.Insurance.UnitValue,
-			},
-			Lpn: pkg.Lpn,
-			Weight: struct {
-				Unit  string  `json:"unit"`
-				Value float64 `json:"value"`
-			}{
-				Unit:  pkg.Weight.Unit,
-				Value: pkg.Weight.Value,
-			},
-		}
+func MapSkillsToDomain(skills []string) []domain.Skill {
+	mapped := make([]domain.Skill, len(skills))
+	for i, skill := range skills {
+		mapped[i] = domain.Skill(skill)
 	}
-
 	return mapped
 }
 

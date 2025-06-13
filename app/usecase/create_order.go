@@ -26,6 +26,7 @@ func init() {
 		tidbrepository.NewUpsertDeliveryUnitsHistory,
 		tidbrepository.NewUpsertSizeCategory,
 		tidbrepository.NewUpsertDeliveryUnitsLabels,
+		tidbrepository.NewUpsertSkill,
 		geocoding.NewGeocodingStrategy,
 	)
 }
@@ -42,6 +43,7 @@ func NewCreateOrder(
 	upsertDeliveryUnitsHistory tidbrepository.UpsertDeliveryUnitsHistory,
 	upsertSizeCategory tidbrepository.UpsertSizeCategory,
 	upsertDeliveryUnitsLabels tidbrepository.UpsertDeliveryUnitsLabels,
+	upsertSkill tidbrepository.UpsertSkill,
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
@@ -120,6 +122,21 @@ func NewCreateOrder(
 
 		group.Go(func() error {
 			return upsertDeliveryUnitsLabels(group2Ctx, inOrder)
+		})
+
+		group.Go(func() error {
+			processedSkills := make(map[domain.Skill]struct{})
+			for _, deliveryUnit := range inOrder.DeliveryUnits {
+				for _, skill := range deliveryUnit.Skills {
+					if _, exists := processedSkills[skill]; !exists {
+						processedSkills[skill] = struct{}{}
+						if err := upsertSkill(group2Ctx, skill); err != nil {
+							return err
+						}
+					}
+				}
+			}
+			return nil
 		})
 
 		group.Go(func() error {

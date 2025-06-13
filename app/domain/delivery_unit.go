@@ -16,6 +16,7 @@ type DeliveryUnit struct {
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
 	Labels          []Reference `json:"labels"`
+	Skills          []Skill
 }
 
 func (p DeliveryUnit) DocID(ctx context.Context) DocumentID {
