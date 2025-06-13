@@ -8,7 +8,6 @@ type Skill struct {
 
 type Item struct {
 	Sku         string
-	Skills      []Skill `json:"skills"`
 	Quantity    Quantity
 	Insurance   Insurance
 	Description string

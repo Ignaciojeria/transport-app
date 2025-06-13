@@ -27,11 +27,6 @@ func MapPackagesToDomain(packages []struct {
 			Currency  string  `json:"currency" example:"CLP"`
 			UnitValue float64 `json:"unitValue" example:"10000"`
 		} `json:"insurance"`
-		Skills []struct {
-			Type        string `json:"type" example:"requires_refrigeration"`
-			Value       string `json:"value" example:"2°C-8°C"`
-			Description string `json:"description" example:"Producto refrigerado"`
-		} `json:"skills"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber" example:"1"`
 			QuantityUnit   string `json:"quantityUnit" example:"unit"`
@@ -44,9 +39,10 @@ func MapPackagesToDomain(packages []struct {
 	} `json:"items"`
 	Lpn    string `json:"lpn" example:"1234567890"`
 	Labels []struct {
-		Type  string `json:"type" example:"skill"`
-		Value string `json:"value" example:"requires_refrigeration"`
+		Type  string `json:"type" example:"packageCode"`
+		Value string `json:"value" example:"uuid"`
 	} `json:"labels"`
+	Skills []string `json:"skills"`
 	Weight struct {
 		Unit  string  `json:"unit" example:"kg"`
 		Value float64 `json:"value" example:"1.8"`
@@ -102,11 +98,6 @@ func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
 			Currency  string  `json:"currency"`
 			UnitValue float64 `json:"unitValue"`
 		} `json:"insurance"`
-		Skills []struct {
-			Type        string `json:"type"`
-			Value       string `json:"value"`
-			Description string `json:"description"`
-		} `json:"skills"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber"`
 			QuantityUnit   string `json:"quantityUnit"`
@@ -146,11 +137,6 @@ func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
 				Currency  string  `json:"currency"`
 				UnitValue float64 `json:"unitValue"`
 			} `json:"insurance"`
-			Skills []struct {
-				Type        string `json:"type"`
-				Value       string `json:"value"`
-				Description string `json:"description"`
-			} `json:"skills"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber"`
 				QuantityUnit   string `json:"quantityUnit"`
@@ -192,11 +178,6 @@ func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
 					Currency  string  `json:"currency"`
 					UnitValue float64 `json:"unitValue"`
 				} `json:"insurance"`
-				Skills []struct {
-					Type        string `json:"type"`
-					Value       string `json:"value"`
-					Description string `json:"description"`
-				} `json:"skills"`
 				Quantity struct {
 					QuantityNumber int    `json:"quantityNumber"`
 					QuantityUnit   string `json:"quantityUnit"`
@@ -246,8 +227,8 @@ func MapPackagesFromDomain(packages []domain.DeliveryUnit) []struct {
 }
 
 func MapLabelsToDomain(labels []struct {
-	Type  string `json:"type" example:"skill"`
-	Value string `json:"value" example:"requires_refrigeration"`
+	Type  string `json:"type" example:"packageCode"`
+	Value string `json:"value" example:"uuid"`
 }) []domain.Reference {
 	mapped := make([]domain.Reference, len(labels))
 	for i, label := range labels {
@@ -260,17 +241,17 @@ func MapLabelsToDomain(labels []struct {
 }
 
 func MapLabelsFromDomain(labels []domain.Reference) []struct {
-	Type  string `json:"type" example:"skill"`
-	Value string `json:"value" example:"requires_refrigeration"`
+	Type  string `json:"type" example:"packageCode"`
+	Value string `json:"value" example:"uuid"`
 } {
 	mapped := make([]struct {
-		Type  string `json:"type" example:"skill"`
-		Value string `json:"value" example:"requires_refrigeration"`
+		Type  string `json:"type" example:"packageCode"`
+		Value string `json:"value" example:"uuid"`
 	}, len(labels))
 	for i, label := range labels {
 		mapped[i] = struct {
-			Type  string `json:"type" example:"skill"`
-			Value string `json:"value" example:"requires_refrigeration"`
+			Type  string `json:"type" example:"packageCode"`
+			Value string `json:"value" example:"uuid"`
 		}{
 			Type:  label.Type,
 			Value: label.Value,

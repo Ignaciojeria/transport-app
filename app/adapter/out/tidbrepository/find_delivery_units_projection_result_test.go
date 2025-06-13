@@ -389,13 +389,6 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 						QuantityNumber: 2,
 						QuantityUnit:   "pcs",
 					},
-					Skills: []domain.Skill{
-						{
-							Type:        "requires_refrigeration",
-							Value:       "2°C-8°C",
-							Description: "Producto refrigerado",
-						},
-					},
 				},
 			},
 		}
@@ -475,17 +468,6 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Description:    "Test Item",
 			QuantityNumber: 2,
 			QuantityUnit:   "pcs",
-			Skills: []struct {
-				Type        string `json:"type"`
-				Value       string `json:"value"`
-				Description string `json:"description"`
-			}{
-				{
-					Type:        "requires_refrigeration",
-					Value:       "2°C-8°C",
-					Description: "Producto refrigerado",
-				},
-			},
 		}), "Item incorrecto")
 
 		// Validaciones de Commerce y Consumer

@@ -241,20 +241,6 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 								Unit:  &item.JSONWeight.WeightUnit,
 								Value: &item.JSONWeight.WeightValue,
 							},
-							Skills: func() []*model.Skill {
-								if item.Skills == nil {
-									return nil
-								}
-								skills := make([]*model.Skill, len(item.Skills))
-								for j, skill := range item.Skills {
-									skills[j] = &model.Skill{
-										Type:        &skill.Type,
-										Value:       &skill.Value,
-										Description: &skill.Description,
-									}
-								}
-								return skills
-							}(),
 						}
 					}
 					return items
