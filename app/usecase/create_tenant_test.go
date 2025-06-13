@@ -115,6 +115,8 @@ func avoidJoin(table string) bool {
 		"non_delivery_reasons",
 		"size_categories",
 		"orders",
+		"skills",
+		"delivery_units_skills",
 		"routes":
 		return false // se permiten
 	default:
@@ -154,6 +156,7 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewUpsertNonDeliveryReason(connection),
 		tidbrepository.NewLoadStatuses(connection),
 		tidbrepository.NewUpsertSizeCategory(connection),
+		tidbrepository.NewUpsertSkill(connection),
 	)(ctx, domain.Tenant{
 		ID: tenantID,
 		Operator: domain.Operator{

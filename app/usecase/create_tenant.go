@@ -37,6 +37,7 @@ func init() {
 		tidbrepository.NewUpsertNonDeliveryReason,
 		tidbrepository.NewLoadStatuses,
 		tidbrepository.NewUpsertSizeCategory,
+		tidbrepository.NewUpsertSkill,
 	)
 }
 
@@ -64,6 +65,7 @@ func NewCreateTenant(
 	upsertNonDeliveryReason tidbrepository.UpsertNonDeliveryReason,
 	loadStatuses tidbrepository.LoadStatuses,
 	upsertSizeCategory tidbrepository.UpsertSizeCategory,
+	upsertSkill tidbrepository.UpsertSkill,
 ) CreateTenant {
 	return func(ctx context.Context, org domain.Tenant) error {
 		_, err := saveTenant(ctx, org)
@@ -156,6 +158,10 @@ func NewCreateTenant(
 
 		group.Go(func() error {
 			return upsertSizeCategory(groupCtx, domain.SizeCategory{})
+		})
+
+		group.Go(func() error {
+			return upsertSkill(groupCtx, domain.Skill(""))
 		})
 
 		return group.Wait()

@@ -8,13 +8,23 @@ import (
 )
 
 func MapSkills(ctx context.Context, skills []domain.Skill) []table.Skill {
-	skillsRecords := make([]table.Skill, len(skills))
-	for i, skill := range skills {
-		skillsRecords[i] = table.Skill{
+	var skillsRecords []table.Skill
+	if len(skills) == 0 {
+		emptySkill := domain.Skill("")
+		skillsRecords = append(skillsRecords, table.Skill{
+			Name:       "",
+			TenantID:   sharedcontext.TenantIDFromContext(ctx),
+			DocumentID: emptySkill.DocumentID(ctx).String(),
+		})
+		return skillsRecords
+	}
+
+	for _, skill := range skills {
+		skillsRecords = append(skillsRecords, table.Skill{
 			Name:       string(skill),
 			TenantID:   sharedcontext.TenantIDFromContext(ctx),
-			DocumentID: string(skill.DocumentID(ctx)),
-		}
+			DocumentID: skill.DocumentID(ctx).String(),
+		})
 	}
 	return skillsRecords
 }
