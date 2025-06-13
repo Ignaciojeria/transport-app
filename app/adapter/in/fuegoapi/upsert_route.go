@@ -9,12 +9,14 @@ import (
 )
 
 func init() {
-	ioc.Registry(routeCreated, httpserver.New)
+	ioc.Registry(upsertRoute, httpserver.New)
 }
-func routeCreated(s httpserver.Server) {
-	fuego.Post(s.Manager, "/insert-your-custom-pattern-here",
+func upsertRoute(s httpserver.Server) {
+	fuego.Post(s.Manager, "/routes",
 		func(c fuego.ContextNoBody) (any, error) {
 
 			return "unimplemented", nil
-		}, option.Summary("routeCreated"))
+		},
+		option.Summary("upsert route"),
+		option.Tags(tagRoutes))
 }

@@ -30,7 +30,7 @@ func routeStarted(
 	s httpserver.Server,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
-	fuego.Post(s.Manager, "/routes/started",
+	fuego.Post(s.Manager, "/routes/start",
 		func(c fuego.ContextWithBody[request.RouteStartedRequest]) (response.RouteStartedResponse, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "routeStarted")
 			defer span.End()
@@ -66,7 +66,7 @@ func routeStarted(
 				Message: "Route started successfully",
 			}, nil
 		},
-		option.Summary("route started"),
+		option.Summary("route start"),
 		option.Header("tenant", "api tenant", param.Required()),
 		option.Header("channel", "api channel", param.Required()),
 		option.Tags(tagRoutes))
