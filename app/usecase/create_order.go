@@ -27,6 +27,7 @@ func init() {
 		tidbrepository.NewUpsertSizeCategory,
 		tidbrepository.NewUpsertDeliveryUnitsLabels,
 		tidbrepository.NewUpsertSkill,
+		tidbrepository.NewUpsertDeliveryUnitsSkills,
 		geocoding.NewGeocodingStrategy,
 	)
 }
@@ -44,6 +45,7 @@ func NewCreateOrder(
 	upsertSizeCategory tidbrepository.UpsertSizeCategory,
 	upsertDeliveryUnitsLabels tidbrepository.UpsertDeliveryUnitsLabels,
 	upsertSkill tidbrepository.UpsertSkill,
+	upsertDeliveryUnitsSkills tidbrepository.UpsertDeliveryUnitsSkills,
 	geocode geocoding.GeocodingStrategy,
 ) CreateOrder {
 	return func(ctx context.Context, inOrder domain.Order) error {
@@ -122,6 +124,10 @@ func NewCreateOrder(
 
 		group.Go(func() error {
 			return upsertDeliveryUnitsLabels(group2Ctx, inOrder)
+		})
+
+		group.Go(func() error {
+			return upsertDeliveryUnitsSkills(group2Ctx, inOrder)
 		})
 
 		group.Go(func() error {

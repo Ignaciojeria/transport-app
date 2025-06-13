@@ -58,6 +58,8 @@ func NewRunMigrations(
 			&DeliveryUnitsLabels{},
 			&NodeReferences{},
 			&PoliticalArea{},
+			&Skill{},
+			&DeliveryUnitsSkills{},
 		}
 
 		// Crear las tablas nuevamente
