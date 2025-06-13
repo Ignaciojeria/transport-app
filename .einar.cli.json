@@ -406,6 +406,10 @@
         {
             "kind": "post-controller",
             "name": "fix-coordinates"
+        },
+        {
+            "kind": "post-controller",
+            "name": "route-created"
         }
     ]
 }

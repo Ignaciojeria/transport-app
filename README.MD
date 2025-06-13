@@ -5,6 +5,84 @@
 
 ---
 
+# 🗺️ Optimización de rutas con OSRM + VROOM
+
+Este entorno Docker permite levantar una instancia local de **OSRM** para ruteo y **VROOM** para optimización de rutas de última milla. Ideal para SaaS logísticos, simulaciones o soluciones descentralizadas.
+
+## 📦 Requisitos
+
+- Docker
+- Docker Compose
+- Conexión a Internet para descargar los mapas
+
+## 📁 Estructura del proyecto
+
+```
+.
+├── docker-compose.yml
+└── osrm/
+    └── chile-latest.osm.pbf      # Archivo del mapa descargado manualmente
+```
+
+## 🌍 Paso 1: Descargar el mapa de Chile
+
+```bash
+mkdir -p ./osrm
+curl -L https://download.geofabrik.de/south-america/chile-latest.osm.pbf -o ./osrm/chile-latest.osm.pbf
+```
+
+Puedes cambiar el país o región desde: https://download.geofabrik.de/
+
+## 🐳 Paso 2: Levantar los servicios
+
+```bash
+docker compose up --build
+```
+
+Esto ejecutará:
+
+- **OSRM**: procesará `chile-latest.osm.pbf` (extract → partition → customize) y servirá en `http://localhost:5000`
+- **VROOM**: se conectará a OSRM y servirá en `http://localhost:3000`
+
+## ✅ Verificación de estado
+
+```bash
+# Verifica OSRM
+curl "http://localhost:5000/route/v1/driving/-70.65,-33.45;-70.66,-33.46"
+
+# Verifica VROOM Powershell
+$body = '{"jobs":[{"id":1,"location":[-70.6483,-33.4372]}],"vehicles":[{"id":1,"start":[-70.6483,-33.4372]}]}'
+Invoke-RestMethod -Uri "http://localhost:3000/" -Method Post -Body $body -ContentType "application/json"
+```
+
+## 📤 Ejemplo de solicitud a VROOM
+
+```bash
+curl -X POST http://localhost:3000 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "vehicles": [{ "id": 1, "start": [ -70.653, -33.45 ] }],
+    "jobs": [
+      { "id": 1, "location": [ -70.65, -33.44 ] },
+      { "id": 2, "location": [ -70.66, -33.46 ] }
+    ]
+  }'
+```
+
+## ⚙️ Personalización
+
+- Cambia el mapa reemplazando `chile-latest.osm.pbf` en `./osrm/`.
+- Puedes modificar `car.lua` para ajustar reglas de tráfico.
+- VROOM permite una configuración avanzada vía `config.yml`.
+
+## 🧩 Extensiones posibles
+
+- Convertir en sidecar para microservicio de optimización.
+- Usar `zrok` para habilitar nodos descentralizados P2P.
+- Integrar sistema de staking y recompensas basado en rendimiento.
+- Registrar nodos vía healthcheck en un SaaS logístico.
+
+
 ## 🔄 Propagación de Contexto en Transport App
 
 Esta aplicación utiliza OpenTelemetry Baggage para propagar contexto entre componentes (API → eventos Pub/Sub → consumidores) de forma trazable, desacoplada y estandarizada.

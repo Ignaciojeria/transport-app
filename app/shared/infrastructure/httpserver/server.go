@@ -25,6 +25,7 @@ import (
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
+	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"github.com/hellofresh/health-go/v5"
 	"github.com/vektah/gqlparser/v2/ast"
 	"go.opentelemetry.io/otel/baggage"
@@ -93,18 +94,57 @@ func startAtEnd(e Server, resolver *graph.Resolver) error {
 }
 
 func (s Server) healthCheck() error {
+	// Retryable client configurado
+	client := retryablehttp.NewClient()
+	client.RetryMax = 2
+	client.RetryWaitMin = 300 * time.Millisecond
+	client.RetryWaitMax = 1 * time.Second
+	client.HTTPClient.Timeout = 3 * time.Second
+
+	/*
+			Puedes ejecutar este curl aca?
+			$body = '{"jobs":[{"id":1,"location":[-70.6483,-33.4372]}],"vehicles":[{"id":1,"start":[-70.6483,-33.4372]}]}'
+		Invoke-RestMethod -Uri 'http://localhost:3000/' -Method Post -Body $body -ContentType 'application/json'
+	*/
+
 	h, err := health.New(
 		health.WithComponent(health.Component{
 			Name:    s.conf.PROJECT_NAME,
 			Version: s.conf.VERSION,
-		}), health.WithSystemInfo())
+		}),
+		health.WithSystemInfo(),
+		func(h *health.Health) error {
+			h.Register(health.Config{
+				Name: "vroom",
+				Check: func(ctx context.Context) error {
+					body := `{"jobs":[{"id":1,"location":[-70.6483,-33.4372]}],"vehicles":[{"id":1,"start":[-70.6483,-33.4372]}]}`
+					req, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:3000/", strings.NewReader(body))
+					if err != nil {
+						return fmt.Errorf("failed to create request: %w", err)
+					}
+					req.Header.Set("Content-Type", "application/json")
+
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						return fmt.Errorf("failed to make request: %w", err)
+					}
+					defer resp.Body.Close()
+
+					if resp.StatusCode != http.StatusOK {
+						return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+					}
+					return nil
+				},
+				Timeout:   3 * time.Second,
+				SkipOnErr: false,
+			})
+			return nil
+		})
 	if err != nil {
 		return err
 	}
-	fuego.GetStd(s.Manager,
-		"/health",
-		h.Handler().ServeHTTP,
-		option.Summary("healthCheck"))
+
+	fuego.GetStd(s.Manager, "/health", h.Handler().ServeHTTP, option.Summary("healthCheck"))
 	return nil
 }
 
