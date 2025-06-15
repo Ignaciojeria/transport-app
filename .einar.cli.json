@@ -410,6 +410,10 @@
         {
             "kind": "post-controller",
             "name": "route-created"
+        },
+        {
+            "kind": "post-controller",
+            "name": "optimization"
         }
     ]
 }
