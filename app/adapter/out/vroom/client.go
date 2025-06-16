@@ -1,44 +1,38 @@
 package vroom
 
 import (
-	"net/http"
 	"time"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/hashicorp/go-retryablehttp"
+	"github.com/go-resty/resty/v2"
 )
 
 func init() {
-	ioc.Registry(NewVroomFastClient)
-	ioc.Registry(NewVroomDefaultClient)
-	ioc.Registry(NewVroomHeavyClient)
+	ioc.Registry(NewVroomRestyFastClient)
+	ioc.Registry(NewVroomRestyDefaultClient)
+	ioc.Registry(NewVroomRestyHeavyClient)
 }
 
-func NewVroomFastClient() *retryablehttp.Client {
-	return buildClient(2 * time.Minute)
+func NewVroomRestyFastClient() *resty.Client {
+	return buildRestyClient(2 * time.Minute)
 }
 
-func NewVroomDefaultClient() *retryablehttp.Client {
-	return buildClient(5 * time.Minute)
+func NewVroomRestyDefaultClient() *resty.Client {
+	return buildRestyClient(5 * time.Minute)
 }
 
-func NewVroomHeavyClient() *retryablehttp.Client {
-	return buildClient(10 * time.Minute)
+func NewVroomRestyHeavyClient() *resty.Client {
+	return buildRestyClient(10 * time.Minute)
 }
 
-func buildClient(timeout time.Duration) *retryablehttp.Client {
-	c := retryablehttp.NewClient()
-	c.RetryMax = 3
-	c.RetryWaitMin = 1 * time.Second
-	c.RetryWaitMax = 5 * time.Second
-	c.HTTPClient.Timeout = timeout
-	c.HTTPClient.Transport = &http.Transport{
-		MaxIdleConns:          100,
-		MaxIdleConnsPerHost:   100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   5 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-	c.Logger = nil
-	return c
+func buildRestyClient(timeout time.Duration) *resty.Client {
+	client := resty.New()
+	client.SetTimeout(timeout)
+
+	// Puedes personalizar más abajo si quieres:
+	client.
+		SetRetryCount(0).
+		SetHeader("Content-Type", "application/json")
+
+	return client
 }
