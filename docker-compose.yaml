@@ -1,25 +1,25 @@
-version: "2.4"
 services:
   osrm:
-    image: osrm/osrm-backend
+    image: ghcr.io/project-osrm/osrm-backend
     container_name: osrm
-    restart: always
-    ports:
-      - 5000:5000
+    command: osrm-routed --algorithm mld /data/chile-latest.osrm
     volumes:
       - ./osrm:/data
-    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/chile-latest.osrm"
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
     networks:
       - vroom-network
+
   vroom:
-    image: vroomvrp/vroom-docker:v1.10.0
+    image: ghcr.io/vroom-project/vroom-docker:v1.14.0
     container_name: vroom
     ports:
-      - 3000:3000
-    volumes:
-      - ./vroom-conf/:/conf
+      - "3000:3000"
     environment:
       - VROOM_ROUTER=osrm
+      - OSRM_HOST=172.24.0.2
+      - OSRM_PORT=5000
     depends_on:
       - osrm
     networks:
