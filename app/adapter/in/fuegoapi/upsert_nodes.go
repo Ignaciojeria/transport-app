@@ -59,7 +59,7 @@ func upsertNodes(
 			}
 
 			obs.Logger.InfoContext(spanCtx,
-				"NODE_SUBMISSION_SUCCEEDED",
+				"NODE_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.UpsertNodeResponse{

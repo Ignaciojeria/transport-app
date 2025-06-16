@@ -65,7 +65,7 @@ func confirmDeliveries(
 				}
 			}
 			obs.Logger.InfoContext(spanCtx,
-				"DELIVERIES_SUBMISSION_SUCCEEDED",
+				"DELIVERY_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.ConfirmDeliveriesResponse{

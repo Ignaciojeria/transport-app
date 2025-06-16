@@ -58,7 +58,7 @@ func optimization(
 			}
 
 			obs.Logger.InfoContext(spanCtx,
-				"OPTIMIZATION_REQUESTED_SUCCEEDED",
+				"OPTIMIZATION_REQUEST_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.OptimizationResponse{

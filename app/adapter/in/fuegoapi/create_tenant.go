@@ -97,7 +97,7 @@ func createTenant(
 			}
 
 			obs.Logger.InfoContext(spanCtx,
-				"TENANT_SUBMISSION_SUCCEEDED",
+				"TENANT_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.CreateTenantResponse{

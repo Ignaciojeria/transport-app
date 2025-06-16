@@ -1,32 +1,27 @@
+version: "2.4"
 services:
   osrm:
     image: osrm/osrm-backend
     container_name: osrm
-    command: >
-      sh -c "
-        osrm-extract -p /opt/car.lua /data/chile-latest.osm.pbf && 
-        osrm-partition /data/chile-latest.osm.pbf && 
-        osrm-customize /data/chile-latest.osm.pbf && 
-        osrm-routed --algorithm mld /data/chile-latest.osm.pbf
-      "
+    restart: always
+    ports:
+      - 5000:5000
     volumes:
       - ./osrm:/data
-    ports:
-      - "5000:5000"
-    restart: unless-stopped
+    command: "osrm-routed --max-matching-size 1000 --max-table-size 1000 --max-viaroute-size 1000 --algorithm mld /data/chile-latest.osrm"
     networks:
       - vroom-network
   vroom:
-    image: ghcr.io/vroom-project/vroom-docker:v1.14.0
+    image: vroomvrp/vroom-docker:v1.10.0
     container_name: vroom
     ports:
-      - "3000:3000"
+      - 3000:3000
+    volumes:
+      - ./vroom-conf/:/conf
     environment:
       - VROOM_ROUTER=osrm
-      - OSRM_HOST=osrm
     depends_on:
       - osrm
-    restart: unless-stopped
     networks:
       - vroom-network
 

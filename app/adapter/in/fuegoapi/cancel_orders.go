@@ -66,7 +66,7 @@ func cancelOrders(
 				}
 			}
 			obs.Logger.InfoContext(spanCtx,
-				"ORDERS_CANCELLATION_SUBMISSION_SUCCEEDED",
+				"ORDER_CANCELLATION_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.CancelOrdersResponse{

@@ -58,7 +58,7 @@ func register(
 				}
 			}
 			obs.Logger.InfoContext(spanCtx,
-				"REGISTRATION_SUBMISSION_SUCCEEDED",
+				"REGISTRATION_SUBMITTED",
 				slog.Any("payload", eventPayload))
 
 			return response.RegisterResponse{

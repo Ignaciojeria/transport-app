@@ -59,7 +59,7 @@ func routeStarted(
 			}
 
 			obs.Logger.InfoContext(spanCtx,
-				"ROUTE_STARTED_SUCCEEDED",
+				"ROUTE_START_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.RouteStartedResponse{

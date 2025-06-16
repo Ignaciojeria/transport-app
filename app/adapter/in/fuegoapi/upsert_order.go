@@ -64,7 +64,7 @@ func upsertOrder(
 				}
 			}
 			obs.Logger.InfoContext(spanCtx,
-				"ORDER_SUBMISSION_SUCCEEDED",
+				"ORDER_SUBMITTED",
 				slog.Any("payload", requestBody))
 
 			return response.UpsertOrderResponse{

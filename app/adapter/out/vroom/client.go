@@ -28,7 +28,9 @@ func NewVroomHeavyClient() *retryablehttp.Client {
 
 func buildClient(timeout time.Duration) *retryablehttp.Client {
 	c := retryablehttp.NewClient()
-	c.RetryMax = 0
+	c.RetryMax = 3
+	c.RetryWaitMin = 1 * time.Second
+	c.RetryWaitMax = 5 * time.Second
 	c.HTTPClient.Timeout = timeout
 	c.HTTPClient.Transport = &http.Transport{
 		MaxIdleConns:          100,
