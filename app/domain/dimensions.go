@@ -1,8 +1,8 @@
 package domain
 
 type Dimensions struct {
-	Height float64 `json:"height"`
-	Width  float64 `json:"width"`
-	Length float64 `json:"length"`
-	Unit   string  `json:"unit"`
+	Height int64  `json:"height"`
+	Width  int64  `json:"width"`
+	Length int64  `json:"length"`
+	Unit   string `json:"unit"`
 }

@@ -8,10 +8,10 @@ import (
 )
 
 type Dimensions struct {
-	Height float64 `gorm:"not null" json:"height"`
-	Width  float64 `gorm:"not null" json:"width"`
-	Length float64 `gorm:"not null" json:"length"`
-	Unit   string  `gorm:"not null" json:"unit"`
+	Height int64  `gorm:"not null" json:"height"`
+	Width  int64  `gorm:"not null" json:"width"`
+	Length int64  `gorm:"not null" json:"length"`
+	Unit   string `gorm:"not null" json:"unit"`
 }
 
 type JSONDimensions Dimensions

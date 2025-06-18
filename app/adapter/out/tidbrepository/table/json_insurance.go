@@ -8,8 +8,8 @@ import (
 )
 
 type Insurance struct {
-	UnitValue float64 `gorm:"not null" json:"unit_value"`
-	Currency  string  `gorm:"not null" json:"currency"`
+	UnitValue int64  `gorm:"not null" json:"unit_value"`
+	Currency  string `gorm:"not null" json:"currency"`
 }
 
 type JSONInsurance Insurance

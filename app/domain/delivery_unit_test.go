@@ -184,8 +184,8 @@ var _ = Describe("Package", func() {
 						Description: "Item 2 Description",
 						Quantity:    Quantity{QuantityNumber: 1, QuantityUnit: "unit"},
 						Weight: Weight{
-							Value: 0.5,
-							Unit:  "kg",
+							Value: 500,
+							Unit:  "g",
 						},
 					},
 				},
@@ -232,8 +232,8 @@ var _ = Describe("Package", func() {
 		It("should update Weight", func() {
 			newPackage := DeliveryUnit{
 				Weight: Weight{
-					Value: 7.5,
-					Unit:  "lb",
+					Value: 7500,
+					Unit:  "g",
 				},
 			}
 
@@ -275,8 +275,8 @@ var _ = Describe("Package", func() {
 						Description: "New Item 3",
 						Quantity:    Quantity{QuantityNumber: 3, QuantityUnit: "unit"},
 						Weight: Weight{
-							Value: 1.5,
-							Unit:  "kg",
+							Value: 1500,
+							Unit:  "g",
 						},
 					},
 					{

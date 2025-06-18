@@ -5,14 +5,14 @@ import "transport-app/app/domain"
 func MapItemsToDomain(items []struct {
 	Description string `json:"description" example:"Cama 1 plaza"`
 	Dimensions  struct {
-		Length float64 `json:"length" example:"100.0"`
-		Height float64 `json:"height" example:"100.0"`
-		Unit   string  `json:"unit" example:"cm"`
-		Width  float64 `json:"width" example:"100.0"`
+		Length int64  `json:"length" example:"100"`
+		Height int64  `json:"height" example:"100"`
+		Unit   string `json:"unit" example:"cm"`
+		Width  int64  `json:"width" example:"100"`
 	} `json:"dimensions"`
 	Insurance struct {
-		Currency  string  `json:"currency" example:"CLP"`
-		UnitValue float64 `json:"unitValue" example:"10000"`
+		Currency  string `json:"currency" example:"CLP"`
+		UnitValue int64  `json:"unitValue" example:"10000"`
 	} `json:"insurance"`
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -20,8 +20,8 @@ func MapItemsToDomain(items []struct {
 	} `json:"quantity"`
 	Sku    string `json:"sku" example:"1234567890"`
 	Weight struct {
-		Unit  string  `json:"unit" example:"kg"`
-		Value float64 `json:"value" example:"1.8"`
+		Unit  string `json:"unit" example:"g"`
+		Value int64  `json:"value" example:"1800"`
 	} `json:"weight"`
 }) []domain.Item {
 	mapped := make([]domain.Item, len(items))
@@ -55,14 +55,14 @@ func MapItemsToDomain(items []struct {
 func MapItemsFromDomain(items []domain.Item) []struct {
 	Description string `json:"description" example:"Cama 1 plaza"`
 	Dimensions  struct {
-		Length float64 `json:"length" example:"100.0"`
-		Height float64 `json:"height" example:"100.0"`
-		Unit   string  `json:"unit" example:"cm"`
-		Width  float64 `json:"width" example:"100.0"`
+		Length int64  `json:"length" example:"100"`
+		Height int64  `json:"height" example:"100"`
+		Unit   string `json:"unit" example:"cm"`
+		Width  int64  `json:"width" example:"100"`
 	} `json:"dimensions"`
 	Insurance struct {
-		Currency  string  `json:"currency" example:"CLP"`
-		UnitValue float64 `json:"unitValue" example:"10000"`
+		Currency  string `json:"currency" example:"CLP"`
+		UnitValue int64  `json:"unitValue" example:"10000"`
 	} `json:"insurance"`
 	Quantity struct {
 		QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -70,21 +70,21 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 	} `json:"quantity"`
 	Sku    string `json:"sku" example:"1234567890"`
 	Weight struct {
-		Unit  string  `json:"unit" example:"kg"`
-		Value float64 `json:"value" example:"1.8"`
+		Unit  string `json:"unit" example:"g"`
+		Value int64  `json:"value" example:"1800"`
 	} `json:"weight"`
 } {
 	mapped := make([]struct {
 		Description string `json:"description" example:"Cama 1 plaza"`
 		Dimensions  struct {
-			Length float64 `json:"length" example:"100.0"`
-			Height float64 `json:"height" example:"100.0"`
-			Unit   string  `json:"unit" example:"cm"`
-			Width  float64 `json:"width" example:"100.0"`
+			Length int64  `json:"length" example:"100"`
+			Height int64  `json:"height" example:"100"`
+			Unit   string `json:"unit" example:"cm"`
+			Width  int64  `json:"width" example:"100"`
 		} `json:"dimensions"`
 		Insurance struct {
-			Currency  string  `json:"currency" example:"CLP"`
-			UnitValue float64 `json:"unitValue" example:"10000"`
+			Currency  string `json:"currency" example:"CLP"`
+			UnitValue int64  `json:"unitValue" example:"10000"`
 		} `json:"insurance"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -92,8 +92,8 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		} `json:"quantity"`
 		Sku    string `json:"sku" example:"1234567890"`
 		Weight struct {
-			Unit  string  `json:"unit" example:"kg"`
-			Value float64 `json:"value" example:"1.8"`
+			Unit  string `json:"unit" example:"g"`
+			Value int64  `json:"value" example:"1800"`
 		} `json:"weight"`
 	}, len(items))
 
@@ -101,14 +101,14 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 		mapped[i] = struct {
 			Description string `json:"description" example:"Cama 1 plaza"`
 			Dimensions  struct {
-				Length float64 `json:"length" example:"100.0"`
-				Height float64 `json:"height" example:"100.0"`
-				Unit   string  `json:"unit" example:"cm"`
-				Width  float64 `json:"width" example:"100.0"`
+				Length int64  `json:"length" example:"100"`
+				Height int64  `json:"height" example:"100"`
+				Unit   string `json:"unit" example:"cm"`
+				Width  int64  `json:"width" example:"100"`
 			} `json:"dimensions"`
 			Insurance struct {
-				Currency  string  `json:"currency" example:"CLP"`
-				UnitValue float64 `json:"unitValue" example:"10000"`
+				Currency  string `json:"currency" example:"CLP"`
+				UnitValue int64  `json:"unitValue" example:"10000"`
 			} `json:"insurance"`
 			Quantity struct {
 				QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -116,16 +116,16 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			} `json:"quantity"`
 			Sku    string `json:"sku" example:"1234567890"`
 			Weight struct {
-				Unit  string  `json:"unit" example:"kg"`
-				Value float64 `json:"value" example:"1.8"`
+				Unit  string `json:"unit" example:"g"`
+				Value int64  `json:"value" example:"1800"`
 			} `json:"weight"`
 		}{
 			Description: item.Description,
 			Dimensions: struct {
-				Length float64 `json:"length" example:"100.0"`
-				Height float64 `json:"height" example:"100.0"`
-				Unit   string  `json:"unit" example:"cm"`
-				Width  float64 `json:"width" example:"100.0"`
+				Length int64  `json:"length" example:"100"`
+				Height int64  `json:"height" example:"100"`
+				Unit   string `json:"unit" example:"cm"`
+				Width  int64  `json:"width" example:"100"`
 			}{
 				Length: item.Dimensions.Length,
 				Height: item.Dimensions.Height,
@@ -133,8 +133,8 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 				Width:  item.Dimensions.Width,
 			},
 			Insurance: struct {
-				Currency  string  `json:"currency" example:"CLP"`
-				UnitValue float64 `json:"unitValue" example:"10000"`
+				Currency  string `json:"currency" example:"CLP"`
+				UnitValue int64  `json:"unitValue" example:"10000"`
 			}{
 				Currency:  item.Insurance.Currency,
 				UnitValue: item.Insurance.UnitValue,
@@ -148,8 +148,8 @@ func MapItemsFromDomain(items []domain.Item) []struct {
 			},
 			Sku: item.Sku,
 			Weight: struct {
-				Unit  string  `json:"unit" example:"kg"`
-				Value float64 `json:"value" example:"1.8"`
+				Unit  string `json:"unit" example:"g"`
+				Value int64  `json:"value" example:"1800"`
 			}{
 				Unit:  item.Weight.Unit,
 				Value: item.Weight.Value,

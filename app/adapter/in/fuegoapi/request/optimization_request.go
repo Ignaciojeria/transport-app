@@ -17,9 +17,9 @@ type OptimizationRequest struct {
 			End   string `json:"end" example:"18:00" description:"Time window end (24h format)"`
 		} `json:"timeWindow"`
 		Capacity struct {
-			Insurance             int `json:"insurance" example:"100000" description:"Maximum insurance value the vehicle can carry (CLP,MXN,PEN)"`
-			Weight                int `json:"weight" example:"1000" description:"Maximum weight in kilograms"`
-			DeliveryUnitsQuantity int `json:"deliveryUnitsQuantity" example:"50" description:"Maximum number of delivery units the vehicle can carry"`
+			Insurance             int64 `json:"insurance" example:"100000" description:"Maximum insurance value the vehicle can carry (CLP,MXN,PEN)"`
+			Weight                int64 `json:"weight" example:"1000" description:"Maximum weight in grams"`
+			DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity" example:"50" description:"Maximum number of delivery units the vehicle can carry"`
 		} `json:"capacity"`
 	} `json:"vehicles"`
 	Visits []struct {
@@ -32,16 +32,16 @@ type OptimizationRequest struct {
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Dispatch point longitude"`
 		} `json:"dispatchLocation"`
 		CapacityUsage struct {
-			Insurance             int `json:"insurance" example:"50000" description:"Insurance value of the delivery units"`
-			Weight                int `json:"weight" example:"500" description:"Total weight of the delivery units in kilograms"`
-			DeliveryUnitsQuantity int `json:"deliveryUnitsQuantity" example:"25" description:"Number of delivery units in this visit"`
+			Insurance             int64 `json:"insurance" example:"50000" description:"Insurance value of the delivery units"`
+			Weight                int64 `json:"weight" example:"500" description:"Total weight of the delivery units in kilograms"`
+			DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity" example:"25" description:"Number of delivery units in this visit"`
 		} `json:"capacityUsage"`
 		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
 		TimeWindow struct {
 			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
 			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
 		} `json:"timeWindow"`
-		ServiceTime int `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
 		Orders      []struct {
 			DeliveryUnits []struct {
 				Items []struct {

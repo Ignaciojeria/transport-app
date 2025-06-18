@@ -6,26 +6,26 @@ import "transport-app/app/domain"
 func MapPackagesToDomain(packages []struct {
 	SizeCategory string `json:"sizeCategory" example:"XL"`
 	Dimensions   struct {
-		Length float64 `json:"length" example:"100.0"`
-		Height float64 `json:"height" example:"100.0"`
-		Unit   string  `json:"unit" example:"cm"`
-		Width  float64 `json:"width" example:"100.0"`
+		Length int64  `json:"length" example:"100"`
+		Height int64  `json:"height" example:"100"`
+		Unit   string `json:"unit" example:"cm"`
+		Width  int64  `json:"width" example:"100"`
 	} `json:"dimensions"`
 	Insurance struct {
-		Currency  string  `json:"currency" example:"CLP"`
-		UnitValue float64 `json:"unitValue" example:"10000"`
+		Currency  string `json:"currency" example:"CLP"`
+		UnitValue int64  `json:"unitValue" example:"10000"`
 	} `json:"insurance"`
 	Items []struct {
 		Description string `json:"description" example:"Cama 1 plaza"`
 		Dimensions  struct {
-			Length float64 `json:"length" example:"100.0"`
-			Height float64 `json:"height" example:"100.0"`
-			Unit   string  `json:"unit" example:"cm"`
-			Width  float64 `json:"width" example:"100.0"`
+			Length int64  `json:"length" example:"100"`
+			Height int64  `json:"height" example:"100"`
+			Unit   string `json:"unit" example:"cm"`
+			Width  int64  `json:"width" example:"100"`
 		} `json:"dimensions"`
 		Insurance struct {
-			Currency  string  `json:"currency" example:"CLP"`
-			UnitValue float64 `json:"unitValue" example:"10000"`
+			Currency  string `json:"currency" example:"CLP"`
+			UnitValue int64  `json:"unitValue" example:"10000"`
 		} `json:"insurance"`
 		Quantity struct {
 			QuantityNumber int    `json:"quantityNumber" example:"1"`
@@ -33,8 +33,8 @@ func MapPackagesToDomain(packages []struct {
 		} `json:"quantity"`
 		Sku    string `json:"sku" example:"1234567890"`
 		Weight struct {
-			Unit  string  `json:"unit" example:"kg"`
-			Value float64 `json:"value" example:"1.8"`
+			Unit  string `json:"unit" example:"g"`
+			Value int64  `json:"value" example:"1800"`
 		} `json:"weight"`
 	} `json:"items"`
 	Lpn    string `json:"lpn" example:"1234567890"`
@@ -44,8 +44,8 @@ func MapPackagesToDomain(packages []struct {
 	} `json:"labels"`
 	Skills []string `json:"skills"`
 	Weight struct {
-		Unit  string  `json:"unit" example:"kg"`
-		Value float64 `json:"value" example:"1.8"`
+		Unit  string `json:"unit" example:"g"`
+		Value int64  `json:"value" example:"1800"`
 	} `json:"weight"`
 }) []domain.DeliveryUnit {
 	mapped := make([]domain.DeliveryUnit, len(packages))

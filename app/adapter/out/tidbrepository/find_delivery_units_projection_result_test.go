@@ -374,12 +374,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				Unit:   "cm",
 			},
 			Weight: domain.Weight{
-				Value: 5.5,
-				Unit:  "kg",
+				Value: 5500,
+				Unit:  "g",
 			},
 			Insurance: domain.Insurance{
 				Currency:  "USD",
-				UnitValue: 100.0,
+				UnitValue: 10000,
 			},
 			Items: []domain.Item{
 				{
@@ -453,12 +453,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Unit:   "cm",
 		}), "Dimensiones incorrectas")
 		Expect(results[0].JSONWeight).To(Equal(table.JSONWeight{
-			WeightValue: 5.5,
-			WeightUnit:  "kg",
+			WeightValue: 5500,
+			WeightUnit:  "g",
 		}), "Peso incorrecto")
 		Expect(results[0].JSONInsurance).To(Equal(table.JSONInsurance{
 			Currency:  "USD",
-			UnitValue: 100.0,
+			UnitValue: 10000,
 		}), "Seguro incorrecto")
 
 		// Validaciones de Items

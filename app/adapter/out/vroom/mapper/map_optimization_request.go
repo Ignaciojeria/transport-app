@@ -19,7 +19,7 @@ func MapOptimizationRequest(req request.OptimizationRequest) (model.VroomOptimiz
 				v.EndLocation.Longitude,
 				v.EndLocation.Latitude,
 			},
-			Capacity: []int{
+			Capacity: []int64{
 				v.Capacity.Weight,
 				v.Capacity.DeliveryUnitsQuantity,
 				v.Capacity.Insurance,
@@ -52,7 +52,7 @@ func MapOptimizationRequest(req request.OptimizationRequest) (model.VroomOptimiz
 			ID:       i + 1,
 			Pickup:   pickup,
 			Delivery: delivery,
-			Amount: []int{
+			Amount: []int64{
 				visit.CapacityUsage.Weight,
 				visit.CapacityUsage.DeliveryUnitsQuantity,
 				visit.CapacityUsage.Insurance,

@@ -12,7 +12,7 @@ type VroomVehicle struct {
 	ID         int         `json:"id"`
 	Start      *[2]float64 `json:"start,omitempty"`       // [lon, lat]
 	End        *[2]float64 `json:"end,omitempty"`         // [lon, lat]
-	Capacity   []int       `json:"capacity,omitempty"`    // Ej: [peso, volumen]
+	Capacity   []int64     `json:"capacity,omitempty"`    // Ej: [peso, volumen]
 	Skills     []int       `json:"skills,omitempty"`      // Habilidades codificadas como enteros
 	TimeWindow []int       `json:"time_window,omitempty"` // [start, end] en segundos desde medianoche
 }
@@ -21,8 +21,8 @@ type VroomVehicle struct {
 type VroomJob struct {
 	ID             int            `json:"id"`
 	Location       [2]float64     `json:"location"`                   // [lon, lat]
-	Service        int            `json:"service,omitempty"`          // En segundos
-	Amount         []int          `json:"amount,omitempty"`           // Ej: [peso, volumen]
+	Service        int64          `json:"service,omitempty"`          // En segundos
+	Amount         []int64        `json:"amount,omitempty"`           // Ej: [peso, volumen]
 	Skills         []int          `json:"skills,omitempty"`           // Habilidades requeridas
 	TimeWindows    [][]int        `json:"time_windows,omitempty"`     // [[start, end]]
 	Priority       int            `json:"priority,omitempty"`         // 0-100
@@ -34,10 +34,10 @@ type VroomShipment struct {
 	ID             int            `json:"id"`
 	Pickup         VroomStep      `json:"pickup"`
 	Delivery       VroomStep      `json:"delivery"`
-	Amount         []int          `json:"amount,omitempty"`
+	Amount         []int64        `json:"amount,omitempty"`
 	Skills         []int          `json:"skills,omitempty"`
 	TimeWindows    [][]int        `json:"time_windows,omitempty"`
-	Service        int            `json:"service,omitempty"`
+	Service        int64          `json:"service,omitempty"`
 	CustomUserData map[string]any `json:"custom_user_data,omitempty"`
 }
 

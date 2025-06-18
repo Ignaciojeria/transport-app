@@ -8,8 +8,8 @@ import (
 )
 
 type Weight struct {
-	WeightValue float64 `gorm:"not null" json:"weight_value"`
-	WeightUnit  string  `gorm:"not null" json:"weight_unit"`
+	WeightValue int64  `gorm:"not null" json:"weight_value"`
+	WeightUnit  string `gorm:"not null" json:"weight_unit"`
 }
 
 type JSONWeight Weight

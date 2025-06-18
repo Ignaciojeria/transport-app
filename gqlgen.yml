@@ -14,3 +14,8 @@ resolver:
   dir: app/adapter/in/graphql/graph
   package: graph
   preserve_resolver: true
+
+# Configuración de scalars personalizados
+models:
+  Long:
+    model: github.com/99designs/gqlgen/graphql.Int64

@@ -5181,9 +5181,9 @@ func (ec *executionContext) _Dimension_length(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOLong2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Dimension_length(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5193,7 +5193,7 @@ func (ec *executionContext) fieldContext_Dimension_length(_ context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type Long does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5222,9 +5222,9 @@ func (ec *executionContext) _Dimension_height(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOLong2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Dimension_height(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5234,7 +5234,7 @@ func (ec *executionContext) fieldContext_Dimension_height(_ context.Context, fie
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type Long does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5263,9 +5263,9 @@ func (ec *executionContext) _Dimension_width(ctx context.Context, field graphql.
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOLong2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Dimension_width(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5275,7 +5275,7 @@ func (ec *executionContext) fieldContext_Dimension_width(_ context.Context, fiel
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type Long does not have child fields")
 		},
 	}
 	return fc, nil
@@ -5796,9 +5796,9 @@ func (ec *executionContext) _Insurance_unitValue(ctx context.Context, field grap
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOLong2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Insurance_unitValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5808,7 +5808,7 @@ func (ec *executionContext) fieldContext_Insurance_unitValue(_ context.Context, 
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type Long does not have child fields")
 		},
 	}
 	return fc, nil
@@ -8185,9 +8185,9 @@ func (ec *executionContext) _Weight_value(ctx context.Context, field graphql.Col
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*float64)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOFloat2ᚖfloat64(ctx, field.Selections, res)
+	return ec.marshalOLong2ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Weight_value(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -8197,7 +8197,7 @@ func (ec *executionContext) fieldContext_Weight_value(_ context.Context, field g
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Float does not have child fields")
+			return nil, errors.New("field of type Long does not have child fields")
 		},
 	}
 	return fc, nil
@@ -13858,6 +13858,24 @@ func (ec *executionContext) unmarshalOLocationFilter2ᚖtransportᚑappᚋappᚋ
 	}
 	res, err := ec.unmarshalInputLocationFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOLong2ᚖint64(ctx context.Context, v any) (*int64, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt64(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLong2ᚖint64(ctx context.Context, sel ast.SelectionSet, v *int64) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalInt64(*v)
+	return res
 }
 
 func (ec *executionContext) marshalOManualChange2ᚖtransportᚑappᚋappᚋadapterᚋinᚋgraphqlᚋgraphᚋmodelᚐManualChange(ctx context.Context, sel ast.SelectionSet, v *model.ManualChange) graphql.Marshaler {
