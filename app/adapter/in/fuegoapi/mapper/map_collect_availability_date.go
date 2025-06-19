@@ -17,24 +17,3 @@ func MapCollectAvailabilityDateToDomain(collectDate struct {
 		},
 	}
 }
-
-func MapCollectAvailabilityDateFromDomain(collectDate domain.CollectAvailabilityDate) struct {
-	Date      string `json:"date"`
-	TimeRange struct {
-		EndTime   string `json:"endTime" example:"21:30"`
-		StartTime string `json:"startTime" example:"10:30"`
-	} `json:"timeRange"`
-} {
-	response := struct {
-		Date      string `json:"date"`
-		TimeRange struct {
-			EndTime   string `json:"endTime" example:"21:30"`
-			StartTime string `json:"startTime" example:"10:30"`
-		} `json:"timeRange"`
-	}{
-		Date: collectDate.Date.Format("2006-01-02"),
-	}
-	response.TimeRange.StartTime = collectDate.TimeRange.StartTime
-	response.TimeRange.EndTime = collectDate.TimeRange.EndTime
-	return response
-}

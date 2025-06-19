@@ -11,16 +11,3 @@ func MapOrderTypeToDomain(orderType struct {
 		Description: orderType.Description,
 	}
 }
-
-func MapOrderTypeFromDomain(orderType domain.OrderType) struct {
-	Description string `json:"description"`
-	Type        string `json:"type"`
-} {
-	return struct {
-		Description string `json:"description"`
-		Type        string `json:"type"`
-	}{
-		Description: orderType.Description,
-		Type:        orderType.Type,
-	}
-}

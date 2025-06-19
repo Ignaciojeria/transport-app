@@ -28,6 +28,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.37.0
 	github.com/testcontainers/testcontainers-go/modules/gcloud v0.37.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.37.0
+	github.com/twpayne/go-polyline v1.1.1
 	github.com/valkey-io/valkey-go v1.0.61
 	github.com/vektah/gqlparser/v2 v2.5.28
 	go.opentelemetry.io/contrib/bridges/otelslog v0.11.0

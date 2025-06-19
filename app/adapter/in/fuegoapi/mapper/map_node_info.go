@@ -88,86 +88,6 @@ func MapNodeInfoToDomain(nodeInfo struct {
 	}
 }
 
-func MapNodeInfoToResponseNodeInfo(nodeInfo domain.NodeInfo) (struct {
-	ReferenceID string `json:"referenceID"`
-	Name        string `json:"name"`
-}, struct {
-	AddressLine1 string `json:"addressLine1"`
-	AddressLine2 string `json:"addressLine2"`
-	Contact      struct {
-		Email      string `json:"email"`
-		Phone      string `json:"phone"`
-		NationalID string `json:"nationalID"`
-		Documents  []struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
-		} `json:"documents"`
-		FullName                 string `json:"fullName"`
-		AdditionalContactMethods []struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
-		} `json:"additionalContactMethods"`
-	} `json:"contact"`
-	District  string  `json:"district"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-	Province  string  `json:"province"`
-	State     string  `json:"state"`
-	TimeZone  string  `json:"timeZone"`
-	ZipCode   string  `json:"zipCode"`
-}) {
-	responseNodeInfo := struct {
-		ReferenceID string `json:"referenceID"`
-		Name        string `json:"name"`
-	}{
-		ReferenceID: string(nodeInfo.ReferenceID),
-		Name:        nodeInfo.Name,
-	}
-
-	responseAddressInfo := struct {
-		AddressLine1 string `json:"addressLine1"`
-		AddressLine2 string `json:"addressLine2"`
-		Contact      struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			Documents  []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"documents"`
-			FullName                 string `json:"fullName"`
-			AdditionalContactMethods []struct {
-				Type  string `json:"type"`
-				Value string `json:"value"`
-			} `json:"additionalContactMethods"`
-		} `json:"contact"`
-		District  string  `json:"district"`
-		Latitude  float64 `json:"latitude"`
-		Longitude float64 `json:"longitude"`
-		Province  string  `json:"province"`
-		State     string  `json:"state"`
-		TimeZone  string  `json:"timeZone"`
-		ZipCode   string  `json:"zipCode"`
-	}{
-		AddressLine1: nodeInfo.AddressInfo.AddressLine1,
-		District:     nodeInfo.AddressInfo.PoliticalArea.District,
-		Province:     nodeInfo.AddressInfo.PoliticalArea.Province,
-		State:        nodeInfo.AddressInfo.PoliticalArea.State,
-		ZipCode:      nodeInfo.AddressInfo.ZipCode,
-		TimeZone:     nodeInfo.AddressInfo.PoliticalArea.TimeZone,
-		Latitude:     nodeInfo.AddressInfo.Coordinates.Point.Lat(),
-		Longitude:    nodeInfo.AddressInfo.Coordinates.Point.Lon(),
-	}
-
-	responseAddressInfo.Contact.FullName = nodeInfo.AddressInfo.Contact.FullName
-	responseAddressInfo.Contact.Email = nodeInfo.AddressInfo.Contact.PrimaryEmail
-	responseAddressInfo.Contact.Phone = nodeInfo.AddressInfo.Contact.PrimaryPhone
-	responseAddressInfo.Contact.NationalID = nodeInfo.AddressInfo.Contact.NationalID
-	responseAddressInfo.Contact.Documents = MapDocumentsFromDomain(nodeInfo.AddressInfo.Contact.Documents)
-	responseAddressInfo.Contact.AdditionalContactMethods = MapAdditionalContactMethodsFromDomain(nodeInfo.AddressInfo.Contact.AdditionalContactMethods)
-	return responseNodeInfo, responseAddressInfo
-}
-
 func MapAdditionalContactMethodsToDomain(methods []struct {
 	Type  string `json:"type"`
 	Value string `json:"value"`
@@ -184,29 +104,4 @@ func MapAdditionalContactMethodsToDomain(methods []struct {
 		}
 	}
 	return domainMethods
-}
-
-func MapAdditionalContactMethodsFromDomain(methods []domain.ContactMethod) []struct {
-	Type  string `json:"type"`
-	Value string `json:"value"`
-} {
-	if methods == nil {
-		return nil
-	}
-
-	responseMethods := make([]struct {
-		Type  string `json:"type"`
-		Value string `json:"value"`
-	}, len(methods))
-
-	for i, method := range methods {
-		responseMethods[i] = struct {
-			Type  string `json:"type"`
-			Value string `json:"value"`
-		}{
-			Type:  method.Type,
-			Value: method.Value,
-		}
-	}
-	return responseMethods
 }

@@ -97,23 +97,3 @@ func MapLabelsToDomain(labels []struct {
 	}
 	return mapped
 }
-
-func MapLabelsFromDomain(labels []domain.Reference) []struct {
-	Type  string `json:"type" example:"packageCode"`
-	Value string `json:"value" example:"uuid"`
-} {
-	mapped := make([]struct {
-		Type  string `json:"type" example:"packageCode"`
-		Value string `json:"value" example:"uuid"`
-	}, len(labels))
-	for i, label := range labels {
-		mapped[i] = struct {
-			Type  string `json:"type" example:"packageCode"`
-			Value string `json:"value" example:"uuid"`
-		}{
-			Type:  label.Type,
-			Value: label.Value,
-		}
-	}
-	return mapped
-}
