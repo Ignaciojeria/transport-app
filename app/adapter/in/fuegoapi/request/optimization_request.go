@@ -6,10 +6,16 @@ type OptimizationRequest struct {
 		StartLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
+			NodeInfo  struct {
+				ReferenceID string `json:"referenceID"`
+			} `json:"nodeInfo"`
 		} `json:"startLocation"`
 		EndLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
+			NodeInfo  struct {
+				ReferenceID string `json:"referenceID"`
+			} `json:"nodeInfo"`
 		} `json:"endLocation"`
 		Skills     []string `json:"skills" description:"Vehicle capabilities such as size or equipment requirements. eg: XL, heavy, etc"`
 		TimeWindow struct {
@@ -36,6 +42,14 @@ type OptimizationRequest struct {
 				NationalID string `json:"nationalID"`
 				FullName   string `json:"fullName"`
 			} `json:"contact"`
+			Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+			TimeWindow struct {
+				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+			} `json:"timeWindow"`
+			NodeInfo struct {
+				ReferenceID string `json:"referenceID"`
+			} `json:"nodeInfo"`
 		} `json:"pickup"`
 		Delivery struct {
 			Coordinates struct {
@@ -49,12 +63,15 @@ type OptimizationRequest struct {
 				NationalID string `json:"nationalID"`
 				FullName   string `json:"fullName"`
 			} `json:"contact"`
+			Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+			TimeWindow struct {
+				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+			} `json:"timeWindow"`
+			NodeInfo struct {
+				ReferenceID string `json:"referenceID"`
+			} `json:"nodeInfo"`
 		} `json:"delivery"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
 		Orders []struct {
 			DeliveryUnits []struct {
 				Items []struct {

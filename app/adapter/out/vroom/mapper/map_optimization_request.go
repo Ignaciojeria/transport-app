@@ -92,6 +92,14 @@ func calculateVisitCapacity(visit struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"pickup"`
 	Delivery struct {
 		Coordinates struct {
@@ -105,12 +113,15 @@ func calculateVisitCapacity(visit struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"delivery"`
-	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-	TimeWindow struct {
-		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-	} `json:"timeWindow"`
 	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {
@@ -219,8 +230,8 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 			}
 
 			// Solo incluir TimeWindows si los valores son válidos
-			if visit.TimeWindow.Start != "" && visit.TimeWindow.End != "" {
-				pickup.TimeWindows = [][]int{parseTimeRange(visit.TimeWindow.Start, visit.TimeWindow.End)}
+			if visit.Pickup.TimeWindow.Start != "" && visit.Pickup.TimeWindow.End != "" {
+				pickup.TimeWindows = [][]int{parseTimeRange(visit.Pickup.TimeWindow.Start, visit.Pickup.TimeWindow.End)}
 			}
 
 			delivery := model.VroomStep{
@@ -236,8 +247,8 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 			}
 
 			// Solo incluir TimeWindows si los valores son válidos
-			if visit.TimeWindow.Start != "" && visit.TimeWindow.End != "" {
-				delivery.TimeWindows = [][]int{parseTimeRange(visit.TimeWindow.Start, visit.TimeWindow.End)}
+			if visit.Delivery.TimeWindow.Start != "" && visit.Delivery.TimeWindow.End != "" {
+				delivery.TimeWindows = [][]int{parseTimeRange(visit.Delivery.TimeWindow.Start, visit.Delivery.TimeWindow.End)}
 			}
 
 			shipment := model.VroomShipment{
@@ -255,9 +266,16 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 				}
 			}
 
-			// Solo incluir Skills si no está vacío
-			if len(visit.Skills) > 0 {
-				shipment.Skills = mapSkills(visit.Skills, registry)
+			// Solo incluir Skills si no está vacío (usar skills de pickup o delivery)
+			var skills []string
+			if len(visit.Pickup.Skills) > 0 {
+				skills = append(skills, visit.Pickup.Skills...)
+			}
+			if len(visit.Delivery.Skills) > 0 {
+				skills = append(skills, visit.Delivery.Skills...)
+			}
+			if len(skills) > 0 {
+				shipment.Skills = mapSkills(skills, registry)
 			}
 
 			// Solo incluir Service si no es cero
@@ -302,8 +320,8 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 			}
 
 			// Solo incluir TimeWindows si los valores son válidos
-			if visit.TimeWindow.Start != "" && visit.TimeWindow.End != "" {
-				job.TimeWindows = [][]int{parseTimeRange(visit.TimeWindow.Start, visit.TimeWindow.End)}
+			if visit.Delivery.TimeWindow.Start != "" && visit.Delivery.TimeWindow.End != "" {
+				job.TimeWindows = [][]int{parseTimeRange(visit.Delivery.TimeWindow.Start, visit.Delivery.TimeWindow.End)}
 			}
 
 			// Solo incluir Amount si al menos un valor no es cero
@@ -316,8 +334,8 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 			}
 
 			// Solo incluir Skills si no está vacío
-			if len(visit.Skills) > 0 {
-				job.Skills = mapSkills(visit.Skills, registry)
+			if len(visit.Delivery.Skills) > 0 {
+				job.Skills = mapSkills(visit.Delivery.Skills, registry)
 			}
 
 			// Solo incluir Service si no es cero

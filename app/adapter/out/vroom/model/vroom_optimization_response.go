@@ -190,6 +190,14 @@ func findVisitByJobID(jobID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"pickup"`
 	Delivery struct {
 		Coordinates struct {
@@ -203,12 +211,15 @@ func findVisitByJobID(jobID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"delivery"`
-	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-	TimeWindow struct {
-		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-	} `json:"timeWindow"`
 	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {
@@ -234,6 +245,14 @@ func findVisitByJobID(jobID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"pickup"`
 	Delivery struct {
 		Coordinates struct {
@@ -247,12 +266,15 @@ func findVisitByJobID(jobID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"delivery"`
-	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-	TimeWindow struct {
-		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-	} `json:"timeWindow"`
 	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {
@@ -294,6 +316,14 @@ func findVisitByShipmentID(shipmentID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"pickup"`
 	Delivery struct {
 		Coordinates struct {
@@ -307,12 +337,15 @@ func findVisitByShipmentID(shipmentID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"delivery"`
-	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-	TimeWindow struct {
-		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-	} `json:"timeWindow"`
 	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {
@@ -338,6 +371,14 @@ func findVisitByShipmentID(shipmentID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"pickup"`
 	Delivery struct {
 		Coordinates struct {
@@ -351,12 +392,15 @@ func findVisitByShipmentID(shipmentID int64, visits []struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"delivery"`
-	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-	TimeWindow struct {
-		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-	} `json:"timeWindow"`
 	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {
@@ -398,6 +442,14 @@ func createOrdersFromVisit(visit *struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"pickup"`
 	Delivery struct {
 		Coordinates struct {
@@ -411,12 +463,15 @@ func createOrdersFromVisit(visit *struct {
 			NationalID string `json:"nationalID"`
 			FullName   string `json:"fullName"`
 		} `json:"contact"`
+		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
+		NodeInfo struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
 	} `json:"delivery"`
-	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-	TimeWindow struct {
-		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-	} `json:"timeWindow"`
 	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {

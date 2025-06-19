@@ -1,23 +1,21 @@
 package request
 
 type ContainerOptimizationRequest struct {
+	NodeInfo struct {
+		ReferenceID string `json:"referenceID"`
+	} `json:"nodeInfo"`
 	Container struct {
-		Lpn string `json:"lpn" example:"0000910040000" description:"Lpn container"`
+		Lpn string `json:"lpn" example:"LPN456" description:"License plate number of the container"`
 	} `json:"container"`
+	Carrier struct {
+		Name       string `json:"name"`
+		NationalID string `json:"nationalID"`
+	} `json:"carrier"`
+	Driver struct {
+		Email      string `json:"email"`
+		NationalID string `json:"nationalID"`
+	} `json:"driver"`
 	Visits []struct {
-		Pickup struct {
-			Coordinates struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-			} `json:"coordinates"`
-			ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-			Contact     struct {
-				Email      string `json:"email"`
-				Phone      string `json:"phone"`
-				NationalID string `json:"nationalID"`
-				FullName   string `json:"fullName"`
-			} `json:"contact"`
-		} `json:"pickup"`
 		Delivery struct {
 			Coordinates struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
@@ -31,11 +29,6 @@ type ContainerOptimizationRequest struct {
 				FullName   string `json:"fullName"`
 			} `json:"contact"`
 		} `json:"delivery"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
 		Orders []struct {
 			DeliveryUnits []struct {
 				Items []struct {

@@ -13,9 +13,9 @@ func init() {
 	ioc.Registry(containerOptimization, httpserver.New)
 }
 func containerOptimization(s httpserver.Server) {
-	fuego.Post(s.Manager, "/container-optimization",
+	fuego.Post(s.Manager, "/picking-and-dispatch",
 		func(c fuego.ContextWithBody[request.ContainerOptimizationRequest]) (any, error) {
 
 			return "unimplemented", nil
-		}, option.Summary("container optimization"), option.Tags("optimization"))
+		}, option.Summary("picking & dispatch"), option.Tags("optimization"))
 }

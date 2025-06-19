@@ -422,6 +422,14 @@
         {
             "kind": "post-controller",
             "name": "container-optimization"
+        },
+        {
+            "kind": "post-controller",
+            "name": "picking-and-dispatch"
+        },
+        {
+            "kind": "post-controller",
+            "name": "picking"
         }
     ]
 }
