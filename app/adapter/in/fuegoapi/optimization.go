@@ -64,5 +64,5 @@ func optimization(
 			return response.OptimizationResponse{
 				TraceID: span.SpanContext().TraceID().String(),
 			}, nil
-		}, option.Summary("optimization"), option.Tags("optimization"))
+		}, option.Summary("fleet optimization"), option.Tags("optimization"))
 }

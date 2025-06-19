@@ -78,7 +78,7 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.Optimi
 					UnitOfMeasure string
 				}{
 					Value:         int(vehicle.Capacity.Weight),
-					UnitOfMeasure: "kg",
+					UnitOfMeasure: "g", // El modelo usa gramos
 				},
 				Insurance: struct {
 					PolicyStartDate      string
@@ -136,56 +136,22 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.Optimi
 			}
 		}
 
-		// Mapear órdenes basadas en los jobs de los steps
+		// Mapear órdenes basadas en los jobs y shipments de los steps
 		var orders []domain.Order
 		for _, step := range vroomRoute.Steps {
-			if step.Job > 0 && step.Job <= int64(len(req.Visits)) {
-				visit := req.Visits[step.Job-1] // VROOM usa índices basados en 1
+			// Manejar jobs (solo delivery)
+			if step.Job > 0 {
+				visit := findVisitByJobID(step.Job, req.Visits)
+				if visit != nil {
+					orders = append(orders, createOrdersFromVisit(visit, false)...)
+				}
+			}
 
-				// Crear orden para cada order en la visita
-				for _, orderReq := range visit.Orders {
-					order := domain.Order{
-						ReferenceID: domain.ReferenceID(orderReq.ReferenceID),
-						Origin: domain.NodeInfo{
-							ReferenceID: domain.ReferenceID(uuid.New().String()),
-							Name:        "Origen de recogida",
-							AddressInfo: domain.AddressInfo{
-								Coordinates: domain.Coordinates{
-									Point: orb.Point{visit.PickupLocation.Longitude, visit.PickupLocation.Latitude},
-								},
-							},
-						},
-						Destination: domain.NodeInfo{
-							ReferenceID: domain.ReferenceID(uuid.New().String()),
-							Name:        "Destino de entrega",
-							AddressInfo: domain.AddressInfo{
-								Coordinates: domain.Coordinates{
-									Point: orb.Point{visit.DispatchLocation.Longitude, visit.DispatchLocation.Latitude},
-								},
-							},
-						},
-					}
-
-					// Mapear delivery units
-					var deliveryUnits domain.DeliveryUnits
-					for _, duReq := range orderReq.DeliveryUnits {
-						deliveryUnit := domain.DeliveryUnit{
-							Lpn: duReq.Lpn,
-						}
-
-						// Mapear items
-						for _, itemReq := range duReq.Items {
-							item := domain.Item{
-								Sku: itemReq.Sku,
-							}
-							deliveryUnit.Items = append(deliveryUnit.Items, item)
-						}
-
-						deliveryUnits = append(deliveryUnits, deliveryUnit)
-					}
-					order.DeliveryUnits = deliveryUnits
-
-					orders = append(orders, order)
+			// Manejar shipments (pickup y delivery)
+			if step.Shipment > 0 {
+				visit := findVisitByShipmentID(step.Shipment, req.Visits)
+				if visit != nil {
+					orders = append(orders, createOrdersFromVisit(visit, true)...)
 				}
 			}
 		}
@@ -196,57 +162,320 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.Optimi
 
 	// Mapear trabajos no asignados
 	for _, unassigned := range ret.Unassigned {
-		if unassigned.ID > 0 && unassigned.ID <= int64(len(req.Visits)) {
-			visit := req.Visits[unassigned.ID-1]
-
-			// Crear órdenes no asignadas
-			for _, orderReq := range visit.Orders {
-				order := domain.Order{
-					ReferenceID:      domain.ReferenceID(orderReq.ReferenceID),
-					UnassignedReason: unassigned.Reason,
-					Origin: domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(uuid.New().String()),
-						Name:        "Origen de recogida",
-						AddressInfo: domain.AddressInfo{
-							Coordinates: domain.Coordinates{
-								Point: orb.Point{visit.PickupLocation.Longitude, visit.PickupLocation.Latitude},
-							},
-						},
-					},
-					Destination: domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(uuid.New().String()),
-						Name:        "Destino de entrega",
-						AddressInfo: domain.AddressInfo{
-							Coordinates: domain.Coordinates{
-								Point: orb.Point{visit.DispatchLocation.Longitude, visit.DispatchLocation.Latitude},
-							},
-						},
-					},
-				}
-
-				// Mapear delivery units
-				var deliveryUnits domain.DeliveryUnits
-				for _, duReq := range orderReq.DeliveryUnits {
-					deliveryUnit := domain.DeliveryUnit{
-						Lpn: duReq.Lpn,
-					}
-
-					// Mapear items
-					for _, itemReq := range duReq.Items {
-						item := domain.Item{
-							Sku: itemReq.Sku,
-						}
-						deliveryUnit.Items = append(deliveryUnit.Items, item)
-					}
-
-					deliveryUnits = append(deliveryUnits, deliveryUnit)
-				}
-				order.DeliveryUnits = deliveryUnits
-
-				plan.UnassignedOrders = append(plan.UnassignedOrders, order)
+		visit := findVisitByJobID(unassigned.ID, req.Visits)
+		if visit != nil {
+			unassignedOrders := createOrdersFromVisit(visit, false)
+			// Marcar como no asignadas
+			for i := range unassignedOrders {
+				unassignedOrders[i].UnassignedReason = unassigned.Reason
 			}
+			plan.UnassignedOrders = append(plan.UnassignedOrders, unassignedOrders...)
 		}
 	}
 
 	return plan
+}
+
+// findVisitByJobID busca una visita que corresponde a un job (solo delivery válido)
+func findVisitByJobID(jobID int64, visits []struct {
+	Pickup struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"pickup"`
+	Delivery struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"delivery"`
+	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+	TimeWindow struct {
+		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+	} `json:"timeWindow"`
+	ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+	Orders      []struct {
+		DeliveryUnits []struct {
+			Items []struct {
+				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
+			} `json:"items"`
+			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
+			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
+			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
+			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
+		} `json:"deliveryUnits"`
+		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
+	} `json:"orders"`
+}) *struct {
+	Pickup struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"pickup"`
+	Delivery struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"delivery"`
+	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+	TimeWindow struct {
+		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+	} `json:"timeWindow"`
+	ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+	Orders      []struct {
+		DeliveryUnits []struct {
+			Items []struct {
+				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
+			} `json:"items"`
+			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
+			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
+			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
+			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
+		} `json:"deliveryUnits"`
+		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
+	} `json:"orders"`
+} {
+	// Buscar la visita que corresponde a este job ID
+	for i, v := range visits {
+		// Verificar si esta visita tiene solo delivery válido (job)
+		hasValidPickup := v.Pickup.Coordinates.Longitude != 0 || v.Pickup.Coordinates.Latitude != 0
+		hasValidDelivery := v.Delivery.Coordinates.Longitude != 0 || v.Delivery.Coordinates.Latitude != 0
+
+		if !hasValidPickup && hasValidDelivery {
+			// Esta visita corresponde a un job
+			return &visits[i]
+		}
+	}
+	return nil
+}
+
+// findVisitByShipmentID busca una visita que corresponde a un shipment (pickup y delivery válidos)
+func findVisitByShipmentID(shipmentID int64, visits []struct {
+	Pickup struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"pickup"`
+	Delivery struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"delivery"`
+	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+	TimeWindow struct {
+		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+	} `json:"timeWindow"`
+	ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+	Orders      []struct {
+		DeliveryUnits []struct {
+			Items []struct {
+				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
+			} `json:"items"`
+			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
+			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
+			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
+			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
+		} `json:"deliveryUnits"`
+		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
+	} `json:"orders"`
+}) *struct {
+	Pickup struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"pickup"`
+	Delivery struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"delivery"`
+	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+	TimeWindow struct {
+		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+	} `json:"timeWindow"`
+	ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+	Orders      []struct {
+		DeliveryUnits []struct {
+			Items []struct {
+				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
+			} `json:"items"`
+			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
+			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
+			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
+			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
+		} `json:"deliveryUnits"`
+		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
+	} `json:"orders"`
+} {
+	// Buscar la visita que corresponde a este shipment ID
+	for i, v := range visits {
+		// Verificar si esta visita tiene pickup y delivery válidos (shipment)
+		hasValidPickup := v.Pickup.Coordinates.Longitude != 0 || v.Pickup.Coordinates.Latitude != 0
+		hasValidDelivery := v.Delivery.Coordinates.Longitude != 0 || v.Delivery.Coordinates.Latitude != 0
+
+		if hasValidPickup && hasValidDelivery {
+			// Esta visita corresponde a un shipment
+			return &visits[i]
+		}
+	}
+	return nil
+}
+
+// createOrdersFromVisit crea órdenes del dominio basadas en una visita
+func createOrdersFromVisit(visit *struct {
+	Pickup struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"pickup"`
+	Delivery struct {
+		Coordinates struct {
+			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
+			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
+		} `json:"coordinates"`
+		Contact struct {
+			Email      string `json:"email"`
+			Phone      string `json:"phone"`
+			NationalID string `json:"nationalID"`
+			FullName   string `json:"fullName"`
+		} `json:"contact"`
+	} `json:"delivery"`
+	Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+	TimeWindow struct {
+		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+	} `json:"timeWindow"`
+	ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+	Orders      []struct {
+		DeliveryUnits []struct {
+			Items []struct {
+				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
+			} `json:"items"`
+			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
+			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
+			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
+			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
+		} `json:"deliveryUnits"`
+		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
+	} `json:"orders"`
+}, hasPickup bool) []domain.Order {
+	var orders []domain.Order
+
+	// Crear orden para cada order en la visita
+	for _, orderReq := range visit.Orders {
+		order := domain.Order{
+			ReferenceID: domain.ReferenceID(orderReq.ReferenceID),
+			Destination: domain.NodeInfo{
+				ReferenceID: domain.ReferenceID(uuid.New().String()),
+				Name:        "Destino de entrega",
+				AddressInfo: domain.AddressInfo{
+					Coordinates: domain.Coordinates{
+						Point: orb.Point{visit.Delivery.Coordinates.Longitude, visit.Delivery.Coordinates.Latitude},
+					},
+				},
+			},
+		}
+
+		// Para shipments (pickup + delivery), incluir origen
+		if hasPickup {
+			order.Origin = domain.NodeInfo{
+				ReferenceID: domain.ReferenceID(uuid.New().String()),
+				Name:        "Origen de recogida",
+				AddressInfo: domain.AddressInfo{
+					Coordinates: domain.Coordinates{
+						Point: orb.Point{visit.Pickup.Coordinates.Longitude, visit.Pickup.Coordinates.Latitude},
+					},
+				},
+			}
+		}
+
+		// Mapear delivery units
+		var deliveryUnits domain.DeliveryUnits
+		for _, duReq := range orderReq.DeliveryUnits {
+			deliveryUnit := domain.DeliveryUnit{
+				Lpn: duReq.Lpn,
+			}
+
+			// Mapear items
+			for _, itemReq := range duReq.Items {
+				item := domain.Item{
+					Sku: itemReq.Sku,
+				}
+				deliveryUnit.Items = append(deliveryUnit.Items, item)
+			}
+
+			deliveryUnits = append(deliveryUnits, deliveryUnit)
+		}
+		order.DeliveryUnits = deliveryUnits
+
+		orders = append(orders, order)
+	}
+
+	return orders
 }

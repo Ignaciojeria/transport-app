@@ -418,6 +418,10 @@
         {
             "kind": "gcp-subscription",
             "name": "optimization-requested"
+        },
+        {
+            "kind": "post-controller",
+            "name": "container-optimization"
         }
     ]
 }

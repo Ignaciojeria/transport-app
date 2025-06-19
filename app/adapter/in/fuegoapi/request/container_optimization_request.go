@@ -1,28 +1,9 @@
 package request
 
-type OptimizationRequest struct {
-	Vehicles []struct {
-		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
-		StartLocation struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
-		} `json:"startLocation"`
-		EndLocation struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
-		} `json:"endLocation"`
-		Skills     []string `json:"skills" description:"Vehicle capabilities such as size or equipment requirements. eg: XL, heavy, etc"`
-		TimeWindow struct {
-			Start string `json:"start" example:"08:00" description:"Time window start (24h format)"`
-			End   string `json:"end" example:"18:00" description:"Time window end (24h format)"`
-		} `json:"timeWindow"`
-		Capacity struct {
-			Insurance             int64 `json:"insurance" example:"100000" description:"Maximum insurance value the vehicle can carry (CLP,MXN,PEN)"`
-			Volume                int64 `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight                int64 `json:"weight" example:"1000" description:"Maximum weight in grams"`
-			DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity" example:"50" description:"Maximum number of delivery units the vehicle can carry"`
-		} `json:"capacity"`
-	} `json:"vehicles"`
+type ContainerOptimizationRequest struct {
+	Container struct {
+		Lpn string `json:"lpn" example:"0000910040000" description:"Lpn container"`
+	} `json:"container"`
 	Visits []struct {
 		Pickup struct {
 			Coordinates struct {

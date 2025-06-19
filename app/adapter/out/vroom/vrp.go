@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/vroom/mapper"
+	"transport-app/app/adapter/out/vroom/model"
+	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/observability"
 
@@ -13,7 +15,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type Optimize func(ctx context.Context, request request.OptimizationRequest) (any, error)
+type Optimize func(ctx context.Context, request request.OptimizationRequest) (domain.Plan, error)
 
 func init() {
 	ioc.Registry(
@@ -29,15 +31,15 @@ func NewOptimize(
 	restyClient *resty.Client,
 	conf configuration.Conf,
 ) Optimize {
-	return func(ctx context.Context, req request.OptimizationRequest) (any, error) {
-		vroomRequest, err := mapper.MapOptimizationRequest(req)
+	return func(ctx context.Context, req request.OptimizationRequest) (domain.Plan, error) {
+		vroomRequest, err := mapper.MapOptimizationRequest(ctx, req)
 		if err != nil {
-			return nil, err
+			return domain.Plan{}, err
 		}
 
 		jsonBytes, err := json.Marshal(vroomRequest)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal VROOM request: %w", err)
+			return domain.Plan{}, fmt.Errorf("failed to marshal VROOM request: %w", err)
 		}
 
 		obs.Logger.InfoContext(ctx,
@@ -58,7 +60,7 @@ func NewOptimize(
 				"error", err.Error(),
 				"url", conf.VROOM_URL,
 			)
-			return nil, err
+			return domain.Plan{}, err
 		}
 
 		obs.Logger.InfoContext(ctx,
@@ -75,12 +77,47 @@ func NewOptimize(
 				"request", string(jsonBytes),
 			)
 
-			return nil, fmt.Errorf("VROOM API error (status %d): %s\nRequest payload: %s",
+			return domain.Plan{}, fmt.Errorf("VROOM API error (status %d): %s\nRequest payload: %s",
 				res.StatusCode(),
 				res.String(),
 				string(jsonBytes))
 		}
 
-		return nil, nil
+		// Deserializar la respuesta de VROOM
+		var vroomResponse model.VroomOptimizationResponse
+		if err := json.Unmarshal(res.Body(), &vroomResponse); err != nil {
+			obs.Logger.ErrorContext(ctx,
+				"VROOM_RESPONSE_DESERIALIZATION_ERROR",
+				"error", err.Error(),
+				"body", res.String(),
+			)
+			return domain.Plan{}, fmt.Errorf("failed to deserialize VROOM response: %w", err)
+		}
+
+		// Aplicar el mapper para convertir la respuesta a domain.Plan
+		plan := vroomResponse.Map(ctx, req)
+
+		// Log del plan completo para debugging
+		planJSON, err := json.MarshalIndent(plan, "", "  ")
+		if err != nil {
+			obs.Logger.ErrorContext(ctx,
+				"VROOM_PLAN_JSON_MARSHAL_ERROR",
+				"error", err.Error(),
+			)
+		} else {
+			obs.Logger.InfoContext(ctx,
+				"VROOM_PLAN_COMPLETE",
+				"plan_json", string(planJSON),
+			)
+		}
+
+		obs.Logger.InfoContext(ctx,
+			"VROOM_OPTIMIZATION_COMPLETED",
+			"plan_reference_id", plan.ReferenceID,
+			"routes_count", len(plan.Routes),
+			"unassigned_orders_count", len(plan.UnassignedOrders),
+		)
+
+		return plan, nil
 	}
 }
