@@ -52,6 +52,7 @@ func newOptimizationRequested(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
+
 		observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
 		fmt.Println("works")
 		m.Ack()

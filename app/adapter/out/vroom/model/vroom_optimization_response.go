@@ -2,12 +2,16 @@ package model
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"os"
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/domain"
 
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
+	"github.com/twpayne/go-polyline"
 )
 
 // VroomOptimizationResponse represents the complete response from VROOM API
@@ -56,6 +60,38 @@ type Step struct {
 	CustomUserData map[string]any `json:"custom_user_data,omitempty"`
 }
 
+// decodeGeometry decodifica la geometría Polyline y retorna información sobre la ruta
+func decodeGeometry(geometryStr string) (string, error) {
+	if geometryStr == "" {
+		return "Sin geometría disponible", nil
+	}
+
+	// Decodificar el polyline
+	coords, _, err := polyline.DecodeCoords([]byte(geometryStr))
+	if err != nil {
+		return "", fmt.Errorf("error decodificando polyline: %w", err)
+	}
+
+	n := len(coords)
+	if n == 0 {
+		return "Polyline vacío", nil
+	}
+
+	// Construir la lista completa de puntos
+	var pointsStr string
+	for i, coord := range coords {
+		if i > 0 {
+			pointsStr += ", "
+		}
+		pointsStr += fmt.Sprintf("[%.6f, %.6f]", coord[1], coord[0]) // lon, lat
+	}
+
+	return fmt.Sprintf(
+		"Polyline con %d puntos - Puntos completos: [%s]",
+		n, pointsStr,
+	), nil
+}
+
 func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.OptimizationRequest) domain.Plan {
 	plan := domain.Plan{
 		ReferenceID: uuid.New().String(),
@@ -66,6 +102,16 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.Optimi
 	for _, vroomRoute := range ret.Routes {
 		route := domain.Route{
 			ReferenceID: uuid.New().String(),
+		}
+
+		// Decodificar y mostrar la geometría si está disponible
+		if vroomRoute.Geometry != "" {
+			geometryInfo, err := decodeGeometry(vroomRoute.Geometry)
+			if err != nil {
+				fmt.Printf("Error decodificando geometría para ruta %d: %v\n", vroomRoute.Vehicle, err)
+			} else {
+				fmt.Printf("Geometría de ruta %d: %s\n", vroomRoute.Vehicle, geometryInfo)
+			}
 		}
 
 		// Mapear vehículo si existe en la solicitud
@@ -172,6 +218,8 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.Optimi
 			plan.UnassignedOrders = append(plan.UnassignedOrders, unassignedOrders...)
 		}
 	}
+
+	ret.ExportToGeoJSON("example")
 
 	return plan
 }
@@ -538,4 +586,176 @@ func createOrdersFromVisit(visit *struct {
 	}
 
 	return orders
+}
+
+// GeoJSONFeature representa una feature de GeoJSON
+type GeoJSONFeature struct {
+	Type       string                 `json:"type"`
+	Geometry   GeoJSONGeometry        `json:"geometry"`
+	Properties map[string]interface{} `json:"properties"`
+}
+
+// GeoJSONGeometry representa la geometría de GeoJSON
+type GeoJSONGeometry struct {
+	Type        string      `json:"type"`
+	Coordinates interface{} `json:"coordinates"`
+}
+
+// GeoJSONCollection representa una colección de features de GeoJSON
+type GeoJSONCollection struct {
+	Type     string           `json:"type"`
+	Features []GeoJSONFeature `json:"features"`
+}
+
+// ExportToGeoJSON exporta las rutas a un archivo GeoJSON
+func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string) error {
+	collection := GeoJSONCollection{
+		Type:     "FeatureCollection",
+		Features: []GeoJSONFeature{},
+	}
+
+	// Procesar cada ruta
+	for i, route := range ret.Routes {
+		if route.Geometry == "" {
+			continue
+		}
+
+		// Decodificar el polyline
+		coords, _, err := polyline.DecodeCoords([]byte(route.Geometry))
+		if err != nil {
+			fmt.Printf("Error decodificando polyline para ruta %d: %v\n", i, err)
+			continue
+		}
+
+		// Convertir coordenadas a formato GeoJSON (lon, lat)
+		var geoJSONCoords [][]float64
+		for _, coord := range coords {
+			geoJSONCoords = append(geoJSONCoords, []float64{coord[1], coord[0]}) // lon, lat
+		}
+
+		// Crear feature para la ruta
+		routeFeature := GeoJSONFeature{
+			Type: "Feature",
+			Geometry: GeoJSONGeometry{
+				Type:        "LineString",
+				Coordinates: geoJSONCoords,
+			},
+			Properties: map[string]interface{}{
+				"vehicle":        route.Vehicle,
+				"cost":           route.Cost,
+				"service":        route.Service,
+				"duration":       route.Duration,
+				"waiting_time":   route.WaitingTime,
+				"priority":       route.Priority,
+				"steps_count":    len(route.Steps),
+				"name":           fmt.Sprintf("Ruta del vehículo %d", route.Vehicle),
+				"stroke":         "#FF0000", // Color de la línea
+				"stroke-width":   3,         // Grosor de la línea
+				"stroke-opacity": 0.8,       // Opacidad de la línea
+			},
+		}
+
+		collection.Features = append(collection.Features, routeFeature)
+
+		// Agregar puntos para cada step con ubicación y símbolos de secuencia
+		for j, step := range route.Steps {
+			if len(step.Location) == 2 {
+				// Determinar el símbolo y color basado en el tipo de paso
+				symbol, color, size := getStepSymbol(step.Type, j)
+
+				stepFeature := GeoJSONFeature{
+					Type: "Feature",
+					Geometry: GeoJSONGeometry{
+						Type:        "Point",
+						Coordinates: []float64{step.Location[0], step.Location[1]}, // lon, lat
+					},
+					Properties: map[string]interface{}{
+						"vehicle":     route.Vehicle,
+						"step_index":  j,
+						"step_number": j,
+						"step_type":   step.Type,
+						"arrival":     step.Arrival,
+						"duration":    step.Duration,
+						"service":     step.Service,
+						"job":         step.Job,
+						"shipment":    step.Shipment,
+						"description": step.Description,
+						"name":        fmt.Sprintf("Paso %d - %s", j, step.Type),
+						// Propiedades para símbolos
+						"marker-symbol": symbol,
+						"marker-color":  color,
+						"marker-size":   size,
+						"title":         fmt.Sprintf("Vehículo %d - Paso %d: %s", route.Vehicle, j, step.Type),
+						"popup":         fmt.Sprintf("Vehículo: %d<br>Paso: %d<br>Tipo: %s<br>Llegada: %d seg", route.Vehicle, j, step.Type, step.Arrival),
+					},
+				}
+
+				collection.Features = append(collection.Features, stepFeature)
+			}
+		}
+	}
+
+	// Agregar puntos para trabajos no asignados
+	for _, unassigned := range ret.Unassigned {
+		if len(unassigned.Location) == 2 {
+			unassignedFeature := GeoJSONFeature{
+				Type: "Feature",
+				Geometry: GeoJSONGeometry{
+					Type:        "Point",
+					Coordinates: []float64{unassigned.Location[0], unassigned.Location[1]}, // lon, lat
+				},
+				Properties: map[string]interface{}{
+					"job_id": unassigned.ID,
+					"reason": unassigned.Reason,
+					"status": "unassigned",
+					"name":   fmt.Sprintf("Trabajo no asignado %d", unassigned.ID),
+					// Propiedades para símbolos de trabajos no asignados
+					"marker-symbol": "cross",
+					"marker-color":  "#FF0000",
+					"marker-size":   "large",
+					"title":         fmt.Sprintf("Trabajo no asignado %d", unassigned.ID),
+					"popup":         fmt.Sprintf("Trabajo: %d<br>Razón: %s", unassigned.ID, unassigned.Reason),
+				},
+			}
+
+			collection.Features = append(collection.Features, unassignedFeature)
+		}
+	}
+
+	// Convertir a JSON
+	jsonData, err := json.MarshalIndent(collection, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error serializando GeoJSON: %w", err)
+	}
+
+	// Escribir al archivo
+	err = os.WriteFile(filename, jsonData, 0644)
+	if err != nil {
+		return fmt.Errorf("error escribiendo archivo GeoJSON: %w", err)
+	}
+
+	fmt.Printf("GeoJSON exportado exitosamente a: %s\n", filename)
+	fmt.Printf("Total de features: %d\n", len(collection.Features))
+
+	return nil
+}
+
+// getStepSymbol determina el símbolo, color y tamaño basado en el tipo de paso
+func getStepSymbol(stepType string, stepNumber int) (symbol, color, size string) {
+	switch stepType {
+	case "start":
+		return "play", "#00FF00", "large" // Verde para inicio
+	case "end":
+		return "stop", "#FF0000", "large" // Rojo para fin
+	case "pickup":
+		return fmt.Sprintf("%d", stepNumber), "#0000FF", "medium" // Azul con número
+	case "delivery":
+		return fmt.Sprintf("%d", stepNumber), "#FF6600", "medium" // Naranja con número
+	case "job":
+		return fmt.Sprintf("%d", stepNumber), "#9932CC", "medium" // Púrpura con número
+	case "break":
+		return "coffee", "#8B4513", "medium" // Marrón para descanso
+	default:
+		return fmt.Sprintf("%d", stepNumber), "#666666", "medium" // Gris por defecto
+	}
 }
