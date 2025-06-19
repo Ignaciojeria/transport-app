@@ -85,7 +85,8 @@ func calculateVisitCapacity(visit struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
 		} `json:"coordinates"`
-		Contact struct {
+		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+		Contact     struct {
 			Email      string `json:"email"`
 			Phone      string `json:"phone"`
 			NationalID string `json:"nationalID"`
@@ -97,7 +98,8 @@ func calculateVisitCapacity(visit struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
 		} `json:"coordinates"`
-		Contact struct {
+		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+		Contact     struct {
 			Email      string `json:"email"`
 			Phone      string `json:"phone"`
 			NationalID string `json:"nationalID"`
@@ -109,8 +111,7 @@ func calculateVisitCapacity(visit struct {
 		Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
 		End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
 	} `json:"timeWindow"`
-	ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-	Orders      []struct {
+	Orders []struct {
 		DeliveryUnits []struct {
 			Items []struct {
 				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
@@ -260,8 +261,8 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 			}
 
 			// Solo incluir Service si no es cero
-			if visit.ServiceTime != 0 {
-				shipment.Service = visit.ServiceTime
+			if visit.Pickup.ServiceTime != 0 || visit.Delivery.ServiceTime != 0 {
+				shipment.Service = visit.Pickup.ServiceTime + visit.Delivery.ServiceTime
 			}
 
 			// Solo incluir CustomUserData si hay orders o información de contacto
@@ -320,8 +321,8 @@ func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest
 			}
 
 			// Solo incluir Service si no es cero
-			if visit.ServiceTime != 0 {
-				job.Service = visit.ServiceTime
+			if visit.Delivery.ServiceTime != 0 {
+				job.Service = visit.Delivery.ServiceTime
 			}
 
 			// Solo incluir CustomUserData si hay orders o información de contacto

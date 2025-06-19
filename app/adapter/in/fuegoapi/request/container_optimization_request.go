@@ -10,7 +10,8 @@ type ContainerOptimizationRequest struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
 				Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
 			} `json:"coordinates"`
-			Contact struct {
+			ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+			Contact     struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`
@@ -22,7 +23,8 @@ type ContainerOptimizationRequest struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
 				Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
 			} `json:"coordinates"`
-			Contact struct {
+			ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+			Contact     struct {
 				Email      string `json:"email"`
 				Phone      string `json:"phone"`
 				NationalID string `json:"nationalID"`
@@ -34,8 +36,7 @@ type ContainerOptimizationRequest struct {
 			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
 			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
 		} `json:"timeWindow"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Orders      []struct {
+		Orders []struct {
 			DeliveryUnits []struct {
 				Items []struct {
 					Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
