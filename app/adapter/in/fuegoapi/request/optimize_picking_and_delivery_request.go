@@ -15,6 +15,20 @@ type OptimizePickingAndDeliveryRequest struct {
 		Email      string `json:"email"`
 		NationalID string `json:"nationalID"`
 	} `json:"driver"`
+	StartLocation struct {
+		Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
+		Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
+		NodeInfo  struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
+	} `json:"startLocation"`
+	EndLocation struct {
+		Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
+		Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
+		NodeInfo  struct {
+			ReferenceID string `json:"referenceID"`
+		} `json:"nodeInfo"`
+	} `json:"endLocation"`
 	Visits []struct {
 		Delivery struct {
 			Coordinates struct {
