@@ -1,5 +1,7 @@
 package request
 
+import "transport-app/app/domain/optimization"
+
 type FleetsOptimizationRequest struct {
 	Vehicles []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
@@ -85,4 +87,123 @@ type FleetsOptimizationRequest struct {
 			ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
 		} `json:"orders"`
 	} `json:"visits"`
+}
+
+func (r *FleetsOptimizationRequest) Map() optimization.FleetOptimization {
+	vehicles := make([]optimization.Vehicle, len(r.Vehicles))
+	for i, v := range r.Vehicles {
+		vehicles[i] = optimization.Vehicle{
+			Plate: v.Plate,
+			StartLocation: optimization.Location{
+				Latitude:  v.StartLocation.Latitude,
+				Longitude: v.StartLocation.Longitude,
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.StartLocation.NodeInfo.ReferenceID,
+				},
+			},
+			EndLocation: optimization.Location{
+				Latitude:  v.EndLocation.Latitude,
+				Longitude: v.EndLocation.Longitude,
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.EndLocation.NodeInfo.ReferenceID,
+				},
+			},
+			Skills: v.Skills,
+			TimeWindow: optimization.TimeWindow{
+				Start: v.TimeWindow.Start,
+				End:   v.TimeWindow.End,
+			},
+			Capacity: optimization.Capacity{
+				Insurance:             v.Capacity.Insurance,
+				Volume:                v.Capacity.Volume,
+				Weight:                v.Capacity.Weight,
+				DeliveryUnitsQuantity: v.Capacity.DeliveryUnitsQuantity,
+			},
+		}
+	}
+
+	visits := make([]optimization.Visit, len(r.Visits))
+	for i, v := range r.Visits {
+		// Mapear pickup
+		pickup := optimization.VisitLocation{
+			Coordinates: optimization.Coordinates{
+				Latitude:  v.Pickup.Coordinates.Latitude,
+				Longitude: v.Pickup.Coordinates.Longitude,
+			},
+			ServiceTime: v.Pickup.ServiceTime,
+			Contact: optimization.Contact{
+				Email:      v.Pickup.Contact.Email,
+				Phone:      v.Pickup.Contact.Phone,
+				NationalID: v.Pickup.Contact.NationalID,
+				FullName:   v.Pickup.Contact.FullName,
+			},
+			Skills: v.Pickup.Skills,
+			TimeWindow: optimization.TimeWindow{
+				Start: v.Pickup.TimeWindow.Start,
+				End:   v.Pickup.TimeWindow.End,
+			},
+			NodeInfo: optimization.NodeInfo{
+				ReferenceID: v.Pickup.NodeInfo.ReferenceID,
+			},
+		}
+
+		// Mapear delivery
+		delivery := optimization.VisitLocation{
+			Coordinates: optimization.Coordinates{
+				Latitude:  v.Delivery.Coordinates.Latitude,
+				Longitude: v.Delivery.Coordinates.Longitude,
+			},
+			ServiceTime: v.Delivery.ServiceTime,
+			Contact: optimization.Contact{
+				Email:      v.Delivery.Contact.Email,
+				Phone:      v.Delivery.Contact.Phone,
+				NationalID: v.Delivery.Contact.NationalID,
+				FullName:   v.Delivery.Contact.FullName,
+			},
+			Skills: v.Delivery.Skills,
+			TimeWindow: optimization.TimeWindow{
+				Start: v.Delivery.TimeWindow.Start,
+				End:   v.Delivery.TimeWindow.End,
+			},
+			NodeInfo: optimization.NodeInfo{
+				ReferenceID: v.Delivery.NodeInfo.ReferenceID,
+			},
+		}
+
+		// Mapear órdenes
+		orders := make([]optimization.Order, len(v.Orders))
+		for j, o := range v.Orders {
+			deliveryUnits := make([]optimization.DeliveryUnit, len(o.DeliveryUnits))
+			for k, du := range o.DeliveryUnits {
+				items := make([]optimization.Item, len(du.Items))
+				for l, item := range du.Items {
+					items[l] = optimization.Item{
+						Sku: item.Sku,
+					}
+				}
+				deliveryUnits[k] = optimization.DeliveryUnit{
+					Items:     items,
+					Insurance: du.Insurance,
+					Volume:    du.Volume,
+					Weight:    du.Weight,
+					Lpn:       du.Lpn,
+				}
+			}
+			orders[j] = optimization.Order{
+				DeliveryUnits: deliveryUnits,
+				ReferenceID:   o.ReferenceID,
+			}
+		}
+
+		visits[i] = optimization.Visit{
+			Pickup:   pickup,
+			Delivery: delivery,
+			Orders:   orders,
+		}
+	}
+
+	return optimization.FleetOptimization{
+		Vehicles: vehicles,
+		Visits:   visits,
+	}
 }
