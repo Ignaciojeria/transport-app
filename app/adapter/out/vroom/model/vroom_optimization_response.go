@@ -220,8 +220,8 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 		}
 	}
 
-	if err := ret.ExportToGeoJSON("ui/static/dev/geojson.json"); err != nil {
-		fmt.Printf("error exportando GeoJSON: %v\n", err)
+	if err := ret.ExportToPolylineJSON("ui/static/dev/polyline.json"); err != nil {
+		fmt.Printf("error exportando datos de ruta: %v\n", err)
 	}
 
 	return plan
@@ -507,4 +507,130 @@ func getStepSymbolWithSequence(stepType string, stepNumber int, pickupCount, del
 	default:
 		return fmt.Sprintf("%d", stepNumber+1), "#666666", "medium" // Gris por defecto con número secuencial
 	}
+}
+
+// RouteData representa los datos de ruta para el frontend
+type RouteData struct {
+	Route      [][]float64       `json:"route"` // Coordenadas decodificadas del polyline
+	Steps      []StepPoint       `json:"steps"` // Puntos de parada
+	Vehicle    int64             `json:"vehicle"`
+	Cost       int64             `json:"cost"`
+	Duration   int64             `json:"duration"`
+	Unassigned []UnassignedPoint `json:"unassigned,omitempty"`
+}
+
+// StepPoint representa un punto de parada
+type StepPoint struct {
+	Location    [2]float64 `json:"location"`
+	StepType    string     `json:"step_type"`
+	StepNumber  int        `json:"step_number"`
+	Arrival     int64      `json:"arrival"`
+	Description string     `json:"description,omitempty"`
+}
+
+// UnassignedPoint representa un punto no asignado
+type UnassignedPoint struct {
+	Location [2]float64 `json:"location"`
+	JobID    int64      `json:"job_id"`
+	Reason   string     `json:"reason"`
+}
+
+// ExportToPolylineJSON exporta las rutas en formato optimizado para Leaflet
+func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string) error {
+	var routesData []RouteData
+
+	// Procesar cada ruta
+	for i, route := range ret.Routes {
+		routeData := RouteData{
+			Vehicle:  route.Vehicle,
+			Cost:     route.Cost,
+			Duration: route.Duration,
+		}
+
+		// Decodificar polyline si existe
+		if route.Geometry != "" {
+			coords, _, err := polyline.DecodeCoords([]byte(route.Geometry))
+			if err != nil {
+				fmt.Printf("Error decodificando polyline para ruta %d: %v\n", i, err)
+				continue
+			}
+
+			// Convertir a formato [lat, lng] para Leaflet
+			for _, coord := range coords {
+				routeData.Route = append(routeData.Route, []float64{coord[0], coord[1]}) // lat, lng
+			}
+		}
+
+		// Procesar steps
+		pickupCount := 1
+		deliveryCount := 1
+		jobCount := 1
+
+		for j, step := range route.Steps {
+			if len(step.Location) == 2 {
+				stepNumber := j
+
+				// Determinar número secuencial por tipo
+				switch step.Type {
+				case "pickup":
+					stepNumber = pickupCount
+					pickupCount++
+				case "delivery":
+					stepNumber = deliveryCount
+					deliveryCount++
+				case "job":
+					stepNumber = jobCount
+					jobCount++
+				}
+
+				stepPoint := StepPoint{
+					Location:    [2]float64{step.Location[1], step.Location[0]}, // lat, lng
+					StepType:    step.Type,
+					StepNumber:  stepNumber,
+					Arrival:     step.Arrival,
+					Description: step.Description,
+				}
+				routeData.Steps = append(routeData.Steps, stepPoint)
+			}
+		}
+
+		routesData = append(routesData, routeData)
+	}
+
+	// Procesar trabajos no asignados
+	for _, unassigned := range ret.Unassigned {
+		if len(unassigned.Location) == 2 {
+			unassignedPoint := UnassignedPoint{
+				Location: [2]float64{unassigned.Location[1], unassigned.Location[0]}, // lat, lng
+				JobID:    unassigned.ID,
+				Reason:   unassigned.Reason,
+			}
+			if len(routesData) > 0 {
+				routesData[0].Unassigned = append(routesData[0].Unassigned, unassignedPoint)
+			}
+		}
+	}
+
+	// Convertir a JSON
+	jsonData, err := json.MarshalIndent(routesData, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error serializando datos de ruta: %w", err)
+	}
+
+	// Asegurarse de que el directorio de destino exista
+	dir := filepath.Dir(filename)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("error creando directorio %s: %w", dir, err)
+	}
+
+	// Escribir al archivo
+	err = os.WriteFile(filename, jsonData, 0644)
+	if err != nil {
+		return fmt.Errorf("error escribiendo archivo: %w", err)
+	}
+
+	fmt.Printf("Datos de ruta exportados exitosamente a: %s\n", filename)
+	fmt.Printf("Total de rutas: %d\n", len(routesData))
+
+	return nil
 }

@@ -3,7 +3,9 @@
 	import { onMount } from 'svelte';
 	import Map from '$lib/components/Map.svelte';
 
-	let geoJsonData: any = null;
+	let routeData: any = null;
+	let lineString: number[][] = [];
+	let markers: any[] = [];
 
 	let mapConfig = {
 		center: [-33.52245, -70.575] as [number, number],
@@ -14,22 +16,41 @@
 		showMarkers: true
 	};
 
-	async function loadGeoJson() {
+	async function loadRouteData() {
 		if (!browser) return;
 		try {
-			const response = await fetch('/dev/geojson.json');
+			const response = await fetch('/dev/polyline.json');
 			if (response.ok) {
-				geoJsonData = await response.json();
+				routeData = await response.json();
+				
+				// Procesar la primera ruta (asumiendo que solo hay una)
+				if (routeData && routeData.length > 0) {
+					const route = routeData[0];
+					
+					// Usar las coordenadas decodificadas del polyline
+					lineString = route.route || [];
+					
+					// Procesar los steps para marcadores
+					markers = route.steps || [];
+					
+					console.log('Ruta cargada:', {
+						vehicle: route.vehicle,
+						cost: route.cost,
+						duration: route.duration,
+						routePoints: lineString.length,
+						steps: markers.length
+					});
+				}
 			} else {
-				console.error('Error cargando GeoJSON:', response.statusText);
+				console.error('Error cargando datos de ruta:', response.statusText);
 			}
 		} catch (error) {
-			console.error('Error cargando GeoJSON:', error);
+			console.error('Error cargando datos de ruta:', error);
 		}
 	}
 
 	onMount(() => {
-		loadGeoJson();
+		loadRouteData();
 	});
 </script>
 
@@ -40,7 +61,8 @@
 <div class="w-full h-screen">
 	{#if browser}
 		<Map 
-			geoJson={geoJsonData}
+			lineString={lineString}
+			customMarkers={markers}
 			center={mapConfig.center}
 			zoom={mapConfig.zoom}
 			height="100vh"

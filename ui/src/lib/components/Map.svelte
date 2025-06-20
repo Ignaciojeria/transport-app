@@ -4,6 +4,7 @@
 
 	export let lineString: number[][] = [];
 	export let geoJson: any = null;
+	export let customMarkers: any[] = [];
 	export let center: [number, number] = [40.4168, -3.7038];
 	export let zoom: number = 6;
 	export let height: string = '400px';
@@ -63,8 +64,57 @@
 
 		if (lineString.length === 0) return;
 
-		// Agregar marcadores si está habilitado
-		if (showMarkers) {
+		// Agregar marcadores personalizados si están disponibles
+		if (showMarkers && customMarkers.length > 0) {
+			customMarkers.forEach((step, index) => {
+				if (step.location && step.location.length === 2) {
+					const stepType = step.step_type;
+					let markerHtml = '';
+					let bgColor = lineColor; // default color
+
+					if (stepType === 'start') {
+						markerHtml = '▶';
+						bgColor = '#28a745'; // verde para start
+					} else if (stepType === 'end') {
+						markerHtml = '⏹️';
+						bgColor = '#dc3545'; // rojo para end
+					} else if (step.step_number) {
+						markerHtml = step.step_number.toString();
+					}
+
+					// No mostrar marcador si no hay nada que mostrar
+					if (!markerHtml) return;
+
+					const customIcon = L.divIcon({
+						className: 'custom-numbered-marker',
+						html: `<div style="
+							background-color: ${bgColor};
+							color: white;
+							border: 2px solid white;
+							border-radius: 50%;
+							width: 30px;
+							height: 30px;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							font-weight: bold;
+							font-size: 14px;
+							box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+						">${markerHtml}</div>`,
+						iconSize: [30, 30],
+						iconAnchor: [15, 15]
+					});
+					
+					const marker = L.marker(step.location, { icon: customIcon })
+						.addTo(map)
+						.bindPopup(
+							`Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg`
+						);
+					markers.push(marker);
+				}
+			});
+		} else if (showMarkers) {
+			// Marcadores simples para los puntos de la ruta
 			lineString.forEach((coord, index) => {
 				const marker = L.marker(coord)
 					.addTo(map)
@@ -194,6 +244,11 @@
 
 	// Observar cambios en lineString
 	$: if (map && lineString && L && lineString.length > 0) {
+		drawRoute();
+	}
+
+	// Observar cambios en customMarkers
+	$: if (map && customMarkers && L && customMarkers.length > 0) {
 		drawRoute();
 	}
 
