@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 	"transport-app/app/domain"
 	"transport-app/app/domain/optimization"
@@ -219,7 +220,9 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 		}
 	}
 
-	ret.ExportToGeoJSON("example")
+	if err := ret.ExportToGeoJSON("ui/static/dev/geojson.json"); err != nil {
+		fmt.Printf("error exportando GeoJSON: %v\n", err)
+	}
 
 	return plan
 }
@@ -466,6 +469,12 @@ func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string) error {
 	jsonData, err := json.MarshalIndent(collection, "", "  ")
 	if err != nil {
 		return fmt.Errorf("error serializando GeoJSON: %w", err)
+	}
+
+	// Asegurarse de que el directorio de destino exista
+	dir := filepath.Dir(filename)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("error creando directorio %s: %w", dir, err)
 	}
 
 	// Escribir al archivo
