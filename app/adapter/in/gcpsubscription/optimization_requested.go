@@ -41,7 +41,7 @@ func newOptimizationRequested(
 			return http.StatusAccepted, nil
 		}
 		ctx = otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(m.Attributes))
-		var input request.FleetsOptimizationRequest
+		var input request.OptimizeFleetRequest
 		if err := json.Unmarshal(m.Data, &input); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err

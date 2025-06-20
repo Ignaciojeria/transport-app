@@ -19,18 +19,18 @@ import (
 
 func init() {
 	ioc.Registry(
-		fleetsOptimization,
+		optimizeFleet,
 		httpserver.New,
 		gcppublisher.NewApplicationEvents,
 		observability.NewObservability)
 }
 
-func fleetsOptimization(
+func optimizeFleet(
 	s httpserver.Server,
 	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
-	fuego.Post(s.Manager, "/optimize",
-		func(c fuego.ContextWithBody[request.FleetsOptimizationRequest]) (response.OptimizationResponse, error) {
+	fuego.Post(s.Manager, "/optimize/fleet",
+		func(c fuego.ContextWithBody[request.OptimizeFleetRequest]) (response.OptimizationResponse, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "optimization")
 			defer span.End()
 
@@ -64,5 +64,5 @@ func fleetsOptimization(
 			return response.OptimizationResponse{
 				TraceID: span.SpanContext().TraceID().String(),
 			}, nil
-		}, option.Summary("fleets optimization"), option.Tags("optimization"))
+		}, option.Summary("optimize fleet"), option.Tags("optimization"))
 }

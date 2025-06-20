@@ -66,5 +66,5 @@ func register(
 			}, nil
 		},
 		option.Tags(tagRegistration),
-		option.Summary("register"))
+		option.Summary("register account"))
 }

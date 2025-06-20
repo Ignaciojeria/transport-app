@@ -73,7 +73,7 @@ func cancelOrders(
 				Message: "Orders cancellation submitted ok",
 			}, nil
 		},
-		option.Summary("cancel orders"),
+		option.Summary("cancel order"),
 		option.Header("tenant", "api tenant", param.Required()),
 		option.Header("channel", "api channel", param.Required()),
 		option.Tags(tagOrders),

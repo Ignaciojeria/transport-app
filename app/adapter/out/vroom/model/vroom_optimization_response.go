@@ -92,7 +92,7 @@ func decodeGeometry(geometryStr string) (string, error) {
 	), nil
 }
 
-func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.FleetsOptimizationRequest) domain.Plan {
+func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.OptimizeFleetRequest) domain.Plan {
 	plan := domain.Plan{
 		ReferenceID: uuid.New().String(),
 		PlannedDate: time.Now(),

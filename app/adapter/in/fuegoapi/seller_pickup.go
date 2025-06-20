@@ -13,8 +13,8 @@ func init() {
 	ioc.Registry(picking, httpserver.New)
 }
 func picking(s httpserver.Server) {
-	fuego.Post(s.Manager, "/picking/visit/confirm",
+	fuego.Post(s.Manager, "/seller/pickup",
 		func(c fuego.ContextWithBody[request.PickingVisitConfirmedRequest]) (any, error) {
 			return "unimplemented", nil
-		}, option.Summary("picking visit confirm"), option.Tags("logistic train"))
+		}, option.Summary("confirm seller pickup"), option.Tags("logistic train"))
 }

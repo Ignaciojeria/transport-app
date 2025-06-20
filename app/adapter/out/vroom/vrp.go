@@ -15,7 +15,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type Optimize func(ctx context.Context, request request.FleetsOptimizationRequest) (domain.Plan, error)
+type Optimize func(ctx context.Context, request request.OptimizeFleetRequest) (domain.Plan, error)
 
 func init() {
 	ioc.Registry(
@@ -31,7 +31,7 @@ func NewOptimize(
 	restyClient *resty.Client,
 	conf configuration.Conf,
 ) Optimize {
-	return func(ctx context.Context, req request.FleetsOptimizationRequest) (domain.Plan, error) {
+	return func(ctx context.Context, req request.OptimizeFleetRequest) (domain.Plan, error) {
 		vroomRequest, err := mapper.MapOptimizationRequest(ctx, req)
 		if err != nil {
 			return domain.Plan{}, err

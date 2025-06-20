@@ -2,7 +2,7 @@ package request
 
 import "transport-app/app/domain/optimization"
 
-type FleetsOptimizationRequest struct {
+type OptimizeFleetRequest struct {
 	Vehicles []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 		StartLocation struct {
@@ -89,7 +89,7 @@ type FleetsOptimizationRequest struct {
 	} `json:"visits"`
 }
 
-func (r *FleetsOptimizationRequest) Map() optimization.FleetOptimization {
+func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	vehicles := make([]optimization.Vehicle, len(r.Vehicles))
 	for i, v := range r.Vehicles {
 		vehicles[i] = optimization.Vehicle{
