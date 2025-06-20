@@ -145,7 +145,7 @@ func calculateVisitCapacity(visit struct {
 	return
 }
 
-func MapOptimizationRequest(ctx context.Context, req request.OptimizationRequest) (model.VroomOptimizationRequest, error) {
+func MapOptimizationRequest(ctx context.Context, req request.FleetsOptimizationRequest) (model.VroomOptimizationRequest, error) {
 	registry := newSkillRegistry()
 	locationRegistry := newLocationContactRegistry()
 

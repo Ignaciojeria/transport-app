@@ -1,6 +1,6 @@
 package request
 
-type OptimizationRequest struct {
+type FleetsOptimizationRequest struct {
 	Vehicles []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 		StartLocation struct {

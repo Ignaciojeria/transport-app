@@ -10,11 +10,11 @@ import (
 )
 
 func init() {
-	ioc.Registry(containerOptimization, httpserver.New)
+	ioc.Registry(pickingAndDispatch, httpserver.New)
 }
-func containerOptimization(s httpserver.Server) {
+func pickingAndDispatch(s httpserver.Server) {
 	fuego.Post(s.Manager, "/picking-and-dispatch",
-		func(c fuego.ContextWithBody[request.ContainerOptimizationRequest]) (any, error) {
+		func(c fuego.ContextWithBody[request.PickingAndDispatchRequest]) (any, error) {
 
 			return "unimplemented", nil
 		}, option.Summary("picking & dispatch"), option.Tags("optimization"))

@@ -1,6 +1,6 @@
 package request
 
-type ContainerOptimizationRequest struct {
+type PickingAndDispatchRequest struct {
 	NodeInfo struct {
 		ReferenceID string `json:"referenceID"`
 	} `json:"nodeInfo"`
