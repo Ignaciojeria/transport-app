@@ -10,3 +10,4 @@ gqlgen_test.yml
 .exe
 osrm
 access.log
+geojson.json
