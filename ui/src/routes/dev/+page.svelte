@@ -4,13 +4,25 @@
 	import Map from '$lib/components/Map.svelte';
 
 	let routeData: any = null;
-	let lineString: number[][] = [];
-	let markers: any[] = [];
+	let allLineStrings: number[][][] = [];
+	let allMarkers: any[] = [];
+	let multipleRoutes: { coordinates: number[][], color: string }[] = [];
+	let vehicleColors: string[] = [
+		'#3388ff', // Azul
+		'#ff4444', // Rojo
+		'#44ff44', // Verde
+		'#ffaa00', // Naranja
+		'#aa44ff', // Púrpura
+		'#ff44aa', // Rosa
+		'#44aaff', // Azul claro
+		'#aaff44', // Verde claro
+		'#ffaa44', // Naranja claro
+		'#aa44aa'  // Púrpura oscuro
+	];
 
 	let mapConfig = {
 		center: [-33.52245, -70.575] as [number, number],
-		zoom: 12, // Zoom out a bit to see the whole route
-		lineColor: '#3388ff',
+		zoom: 12,
 		lineWeight: 5,
 		lineOpacity: 0.7,
 		showMarkers: true
@@ -23,22 +35,40 @@
 			if (response.ok) {
 				routeData = await response.json();
 				
-				// Procesar la primera ruta (asumiendo que solo hay una)
+				// Procesar todas las rutas
 				if (routeData && routeData.length > 0) {
-					const route = routeData[0];
+					routeData.forEach((route: any, routeIndex: number) => {
+						// Usar las coordenadas decodificadas del polyline
+						if (route.route && route.route.length > 0) {
+							allLineStrings.push(route.route);
+							
+							// Agregar a múltiples rutas con color
+							const vehicleColor = vehicleColors[routeIndex % vehicleColors.length];
+							multipleRoutes.push({
+								coordinates: route.route,
+								color: vehicleColor
+							});
+						}
+						
+						// Procesar los steps para marcadores con información del vehículo
+						if (route.steps && route.steps.length > 0) {
+							const vehicleColor = vehicleColors[routeIndex % vehicleColors.length];
+							route.steps.forEach((step: any) => {
+								allMarkers.push({
+									...step,
+									vehicle: route.vehicle,
+									vehicleColor: vehicleColor,
+									routeIndex: routeIndex
+								});
+							});
+						}
+					});
 					
-					// Usar las coordenadas decodificadas del polyline
-					lineString = route.route || [];
-					
-					// Procesar los steps para marcadores
-					markers = route.steps || [];
-					
-					console.log('Ruta cargada:', {
-						vehicle: route.vehicle,
-						cost: route.cost,
-						duration: route.duration,
-						routePoints: lineString.length,
-						steps: markers.length
+					console.log('Rutas cargadas:', {
+						totalRoutes: routeData.length,
+						totalLineStrings: allLineStrings.length,
+						totalMarkers: allMarkers.length,
+						vehicles: routeData.map((r: any) => r.vehicle)
 					});
 				}
 			} else {
@@ -55,18 +85,17 @@
 </script>
 
 <svelte:head>
-	<title>Ruta Optimizada - La Florida, Santiago</title>
+	<title>Rutas Optimizadas - Múltiples Vehículos</title>
 </svelte:head>
 
 <div class="w-full h-screen">
 	{#if browser}
 		<Map 
-			lineString={lineString}
-			customMarkers={markers}
+			multipleRoutes={multipleRoutes}
+			customMarkers={allMarkers}
 			center={mapConfig.center}
 			zoom={mapConfig.zoom}
 			height="100vh"
-			lineColor={mapConfig.lineColor}
 			lineWeight={mapConfig.lineWeight}
 			lineOpacity={mapConfig.lineOpacity}
 			showMarkers={mapConfig.showMarkers}

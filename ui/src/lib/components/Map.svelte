@@ -2,9 +2,17 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 
+	// Extender Window interface para routeLayers
+	declare global {
+		interface Window {
+			routeLayers?: any[];
+		}
+	}
+
 	export let lineString: number[][] = [];
 	export let geoJson: any = null;
 	export let customMarkers: any[] = [];
+	export let multipleRoutes: { coordinates: number[][], color: string }[] = [];
 	export let center: [number, number] = [40.4168, -3.7038];
 	export let zoom: number = 6;
 	export let height: string = '400px';
@@ -62,67 +70,46 @@
 		// Limpiar capas existentes
 		clearRoute();
 
-		if (lineString.length === 0) return;
+		// Dibujar múltiples rutas si están disponibles
+		if (multipleRoutes.length > 0) {
+			drawMultipleRoutes();
+		} else if (lineString.length > 0) {
+			drawSingleRoute();
+		}
 
 		// Agregar marcadores personalizados si están disponibles
 		if (showMarkers && customMarkers.length > 0) {
-			customMarkers.forEach((step, index) => {
-				if (step.location && step.location.length === 2) {
-					const stepType = step.step_type;
-					let markerHtml = '';
-					let bgColor = lineColor; // default color
-
-					if (stepType === 'start') {
-						markerHtml = '▶';
-						bgColor = '#28a745'; // verde para start
-					} else if (stepType === 'end') {
-						markerHtml = '⏹️';
-						bgColor = '#dc3545'; // rojo para end
-					} else if (step.step_number) {
-						markerHtml = step.step_number.toString();
-					}
-
-					// No mostrar marcador si no hay nada que mostrar
-					if (!markerHtml) return;
-
-					const customIcon = L.divIcon({
-						className: 'custom-numbered-marker',
-						html: `<div style="
-							background-color: ${bgColor};
-							color: white;
-							border: 2px solid white;
-							border-radius: 50%;
-							width: 30px;
-							height: 30px;
-							display: flex;
-							align-items: center;
-							justify-content: center;
-							font-weight: bold;
-							font-size: 14px;
-							box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-						">${markerHtml}</div>`,
-						iconSize: [30, 30],
-						iconAnchor: [15, 15]
-					});
-					
-					const marker = L.marker(step.location, { icon: customIcon })
-						.addTo(map)
-						.bindPopup(
-							`Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg`
-						);
-					markers.push(marker);
-				}
-			});
-		} else if (showMarkers) {
-			// Marcadores simples para los puntos de la ruta
-			lineString.forEach((coord, index) => {
-				const marker = L.marker(coord)
-					.addTo(map)
-					.bindPopup(`Punto ${index + 1}: [${coord[0].toFixed(4)}, ${coord[1].toFixed(4)}]`);
-				markers.push(marker);
-			});
+			drawCustomMarkers();
 		}
+	}
 
+	// Función para dibujar múltiples rutas
+	function drawMultipleRoutes() {
+		multipleRoutes.forEach((route, index) => {
+			if (route.coordinates && route.coordinates.length > 0) {
+				const routeLayer = L.polyline(route.coordinates, {
+					color: route.color,
+					weight: lineWeight,
+					opacity: lineOpacity
+				}).addTo(map);
+				
+				// Guardar referencia para poder limpiar después
+				if (!window.routeLayers) {
+					window.routeLayers = [];
+				}
+				window.routeLayers.push(routeLayer);
+			}
+		});
+
+		// Ajustar la vista para mostrar todas las rutas
+		if (window.routeLayers && window.routeLayers.length > 0) {
+			const group = new L.featureGroup(window.routeLayers);
+			map.fitBounds(group.getBounds());
+		}
+	}
+
+	// Función para dibujar una sola ruta
+	function drawSingleRoute() {
 		// Dibujar la línea de la ruta
 		routeLayer = L.polyline(lineString, {
 			color: lineColor,
@@ -132,6 +119,58 @@
 
 		// Ajustar la vista para mostrar toda la ruta
 		map.fitBounds(routeLayer.getBounds());
+	}
+
+	// Función para dibujar marcadores personalizados
+	function drawCustomMarkers() {
+		customMarkers.forEach((step, index) => {
+			if (step.location && step.location.length === 2) {
+				const stepType = step.step_type;
+				let markerHtml = '';
+				let bgColor = step.vehicleColor || lineColor; // Usar color del vehículo si está disponible
+
+				if (stepType === 'start') {
+					markerHtml = '▶';
+					bgColor = '#28a745'; // verde para start
+				} else if (stepType === 'end') {
+					markerHtml = '⏹️';
+					bgColor = '#dc3545'; // rojo para end
+				} else if (step.step_number) {
+					markerHtml = step.step_number.toString();
+				}
+
+				// No mostrar marcador si no hay nada que mostrar
+				if (!markerHtml) return;
+
+				const customIcon = L.divIcon({
+					className: 'custom-numbered-marker',
+					html: `<div style="
+						background-color: ${bgColor};
+						color: white;
+						border: 2px solid white;
+						border-radius: 50%;
+						width: 30px;
+						height: 30px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						font-weight: bold;
+						font-size: 14px;
+						box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+					">${markerHtml}</div>`,
+					iconSize: [30, 30],
+					iconAnchor: [15, 15]
+				});
+				
+				const vehicleInfo = step.vehicle ? `Vehículo ${step.vehicle}<br>` : '';
+				const marker = L.marker(step.location, { icon: customIcon })
+					.addTo(map)
+					.bindPopup(
+						`${vehicleInfo}Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg`
+					);
+				markers.push(marker);
+			}
+		});
 	}
 
 	// Nueva función para dibujar GeoJSON
@@ -226,6 +265,14 @@
 			routeLayer = null;
 		}
 
+		// Limpiar múltiples rutas
+		if (window.routeLayers) {
+			window.routeLayers.forEach(layer => {
+				map.removeLayer(layer);
+			});
+			window.routeLayers = [];
+		}
+
 		markers.forEach(marker => {
 			map.removeLayer(marker);
 		});
@@ -249,6 +296,11 @@
 
 	// Observar cambios en customMarkers
 	$: if (map && customMarkers && L && customMarkers.length > 0) {
+		drawRoute();
+	}
+
+	// Observar cambios en multipleRoutes
+	$: if (map && multipleRoutes && L && multipleRoutes.length > 0) {
 		drawRoute();
 	}
 
