@@ -32,7 +32,10 @@ func NewOptimize(
 	conf configuration.Conf,
 ) Optimize {
 	return func(ctx context.Context, req request.OptimizeFleetRequest) (domain.Plan, error) {
-		vroomRequest, err := mapper.MapOptimizationRequest(ctx, req)
+		// Convertir el request a la estructura del dominio de optimización
+		fleetOptimization := req.Map()
+
+		vroomRequest, err := mapper.MapOptimizationRequest(ctx, fleetOptimization)
 		if err != nil {
 			return domain.Plan{}, err
 		}
@@ -95,7 +98,7 @@ func NewOptimize(
 		}
 
 		// Aplicar el mapper para convertir la respuesta a domain.Plan
-		plan := vroomResponse.Map(ctx, req)
+		plan := vroomResponse.Map(ctx, fleetOptimization)
 
 		// Log del plan completo para debugging
 		planJSON, err := json.MarshalIndent(plan, "", "  ")

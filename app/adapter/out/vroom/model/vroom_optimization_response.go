@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/domain"
+	"transport-app/app/domain/optimization"
 
 	"github.com/google/uuid"
 	"github.com/paulmach/orb"
@@ -92,7 +92,7 @@ func decodeGeometry(geometryStr string) (string, error) {
 	), nil
 }
 
-func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.OptimizeFleetRequest) domain.Plan {
+func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.FleetOptimization) domain.Plan {
 	plan := domain.Plan{
 		ReferenceID: uuid.New().String(),
 		PlannedDate: time.Now(),
@@ -225,117 +225,7 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req request.Optimi
 }
 
 // findVisitByJobID busca una visita que corresponde a un job (solo delivery válido)
-func findVisitByJobID(jobID int64, visits []struct {
-	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"pickup"`
-	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"delivery"`
-	Orders []struct {
-		DeliveryUnits []struct {
-			Items []struct {
-				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-			} `json:"items"`
-			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-		} `json:"deliveryUnits"`
-		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-	} `json:"orders"`
-}) *struct {
-	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"pickup"`
-	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"delivery"`
-	Orders []struct {
-		DeliveryUnits []struct {
-			Items []struct {
-				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-			} `json:"items"`
-			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-		} `json:"deliveryUnits"`
-		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-	} `json:"orders"`
-} {
+func findVisitByJobID(jobID int64, visits []optimization.Visit) *optimization.Visit {
 	// Buscar la visita que corresponde a este job ID
 	for i, v := range visits {
 		// Verificar si esta visita tiene solo delivery válido (job)
@@ -351,117 +241,7 @@ func findVisitByJobID(jobID int64, visits []struct {
 }
 
 // findVisitByShipmentID busca una visita que corresponde a un shipment (pickup y delivery válidos)
-func findVisitByShipmentID(shipmentID int64, visits []struct {
-	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"pickup"`
-	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"delivery"`
-	Orders []struct {
-		DeliveryUnits []struct {
-			Items []struct {
-				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-			} `json:"items"`
-			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-		} `json:"deliveryUnits"`
-		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-	} `json:"orders"`
-}) *struct {
-	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"pickup"`
-	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"delivery"`
-	Orders []struct {
-		DeliveryUnits []struct {
-			Items []struct {
-				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-			} `json:"items"`
-			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-		} `json:"deliveryUnits"`
-		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-	} `json:"orders"`
-} {
+func findVisitByShipmentID(shipmentID int64, visits []optimization.Visit) *optimization.Visit {
 	// Buscar la visita que corresponde a este shipment ID
 	for i, v := range visits {
 		// Verificar si esta visita tiene pickup y delivery válidos (shipment)
@@ -477,62 +257,7 @@ func findVisitByShipmentID(shipmentID int64, visits []struct {
 }
 
 // createOrdersFromVisit crea órdenes del dominio basadas en una visita
-func createOrdersFromVisit(visit *struct {
-	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"pickup"`
-	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"delivery"`
-	Orders []struct {
-		DeliveryUnits []struct {
-			Items []struct {
-				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-			} `json:"items"`
-			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-		} `json:"deliveryUnits"`
-		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-	} `json:"orders"`
-}, hasPickup bool) []domain.Order {
+func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.Order {
 	var orders []domain.Order
 
 	// Crear orden para cada order en la visita
@@ -657,11 +382,26 @@ func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string) error {
 
 		collection.Features = append(collection.Features, routeFeature)
 
+		// Contadores para secuencias independientes por tipo
+		pickupCount := 1
+		deliveryCount := 1
+		jobCount := 1
+
 		// Agregar puntos para cada step con ubicación y símbolos de secuencia
 		for j, step := range route.Steps {
 			if len(step.Location) == 2 {
-				// Determinar el símbolo y color basado en el tipo de paso
-				symbol, color, size := getStepSymbol(step.Type, j)
+				// Determinar el símbolo y color basado en el tipo de paso con secuencia independiente
+				symbol, color, size := getStepSymbolWithSequence(step.Type, j, pickupCount, deliveryCount, jobCount)
+
+				// Incrementar el contador correspondiente
+				switch step.Type {
+				case "pickup":
+					pickupCount++
+				case "delivery":
+					deliveryCount++
+				case "job":
+					jobCount++
+				}
 
 				stepFeature := GeoJSONFeature{
 					Type: "Feature",
@@ -740,22 +480,22 @@ func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string) error {
 	return nil
 }
 
-// getStepSymbol determina el símbolo, color y tamaño basado en el tipo de paso
-func getStepSymbol(stepType string, stepNumber int) (symbol, color, size string) {
+// getStepSymbolWithSequence determina el símbolo, color y tamaño basado en el tipo de paso con secuencias independientes
+func getStepSymbolWithSequence(stepType string, stepNumber int, pickupCount, deliveryCount, jobCount int) (symbol, color, size string) {
 	switch stepType {
 	case "start":
 		return "play", "#00FF00", "large" // Verde para inicio
 	case "end":
 		return "stop", "#FF0000", "large" // Rojo para fin
 	case "pickup":
-		return fmt.Sprintf("%d", stepNumber), "#0000FF", "medium" // Azul con número
+		return fmt.Sprintf("%d", pickupCount), "#0000FF", "medium" // Azul con número secuencial de pickup
 	case "delivery":
-		return fmt.Sprintf("%d", stepNumber), "#FF6600", "medium" // Naranja con número
+		return fmt.Sprintf("%d", deliveryCount), "#FF6600", "medium" // Naranja con número secuencial de delivery
 	case "job":
-		return fmt.Sprintf("%d", stepNumber), "#9932CC", "medium" // Púrpura con número
+		return fmt.Sprintf("%d", jobCount), "#9932CC", "medium" // Púrpura con número secuencial de job
 	case "break":
 		return "coffee", "#8B4513", "medium" // Marrón para descanso
 	default:
-		return fmt.Sprintf("%d", stepNumber), "#666666", "medium" // Gris por defecto
+		return fmt.Sprintf("%d", stepNumber+1), "#666666", "medium" // Gris por defecto con número secuencial
 	}
 }

@@ -3,9 +3,9 @@ package mapper
 import (
 	"context"
 	"fmt"
-	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/vroom/model"
 	"transport-app/app/domain"
+	"transport-app/app/domain/optimization"
 )
 
 type skillRegistry struct {
@@ -55,12 +55,7 @@ func generateLocationKey(lat, lon float64) string {
 	return fmt.Sprintf("%.6f_%.6f", lat, lon)
 }
 
-func getContactID(ctx context.Context, contact struct {
-	Email      string `json:"email"`
-	Phone      string `json:"phone"`
-	NationalID string `json:"nationalID"`
-	FullName   string `json:"fullName"`
-}) string {
+func getContactID(ctx context.Context, contact optimization.Contact) string {
 	// Si no hay información de contacto, usar coordenadas como identificador único
 	if contact.Email == "" && contact.Phone == "" && contact.NationalID == "" && contact.FullName == "" {
 		return ""
@@ -79,62 +74,7 @@ func getContactID(ctx context.Context, contact struct {
 }
 
 // calculateVisitCapacity calcula la capacidad total de una visita basada en sus orders
-func calculateVisitCapacity(visit struct {
-	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"pickup"`
-	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
-		NodeInfo struct {
-			ReferenceID string `json:"referenceID"`
-		} `json:"nodeInfo"`
-	} `json:"delivery"`
-	Orders []struct {
-		DeliveryUnits []struct {
-			Items []struct {
-				Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-			} `json:"items"`
-			Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-			Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-			Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-		} `json:"deliveryUnits"`
-		ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-	} `json:"orders"`
-}) (totalWeight, totalDeliveryUnits, totalInsurance int64) {
+func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliveryUnits, totalInsurance int64) {
 	for _, order := range visit.Orders {
 		for _, deliveryUnit := range order.DeliveryUnits {
 			totalWeight += deliveryUnit.Weight
@@ -145,7 +85,7 @@ func calculateVisitCapacity(visit struct {
 	return
 }
 
-func MapOptimizationRequest(ctx context.Context, req request.OptimizeFleetRequest) (model.VroomOptimizationRequest, error) {
+func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimization) (model.VroomOptimizationRequest, error) {
 	registry := newSkillRegistry()
 	locationRegistry := newLocationContactRegistry()
 
