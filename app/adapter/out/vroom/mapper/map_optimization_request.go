@@ -243,6 +243,63 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 
 			shipments = append(shipments, shipment)
 
+		} else if hasValidPickup {
+			// Solo pickup válido -> crear Job para pickup
+
+			// Generar identificador único para pickup basado en coordenadas y contacto
+			pickupLocationKey := generateLocationKey(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
+			pickupContactID := getContactID(ctx, visit.Pickup.Contact)
+			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
+
+			job := model.VroomJob{
+				ID: int(pickupID),
+				Location: [2]float64{
+					visit.Pickup.Coordinates.Longitude,
+					visit.Pickup.Coordinates.Latitude,
+				},
+			}
+
+			// Solo incluir TimeWindows si los valores son válidos
+			if visit.Pickup.TimeWindow.Start != "" && visit.Pickup.TimeWindow.End != "" {
+				job.TimeWindows = [][]int{parseTimeRange(visit.Pickup.TimeWindow.Start, visit.Pickup.TimeWindow.End)}
+			}
+
+			// Solo incluir Amount si al menos un valor no es cero
+			if totalWeight != 0 || totalInsurance != 0 {
+				job.Amount = []int64{
+					totalWeight,
+					totalDeliveryUnits,
+					totalInsurance,
+				}
+			}
+
+			// Solo incluir Skills si no está vacío
+			if len(visit.Pickup.Skills) > 0 {
+				job.Skills = mapSkills(visit.Pickup.Skills, registry)
+			}
+
+			// Solo incluir Service si no es cero
+			if visit.Pickup.ServiceTime != 0 {
+				job.Service = visit.Pickup.ServiceTime
+			}
+
+			// Solo incluir CustomUserData si hay orders o información de contacto
+			customData := make(map[string]any)
+			if len(visit.Orders) > 0 {
+				customData["orders"] = visit.Orders
+			}
+
+			// Incluir información de contacto en CustomUserData
+			if visit.Pickup.Contact.FullName != "" || visit.Pickup.Contact.Email != "" || visit.Pickup.Contact.Phone != "" {
+				customData["pickup_contact"] = visit.Pickup.Contact
+			}
+
+			if len(customData) > 0 {
+				job.CustomUserData = customData
+			}
+
+			jobs = append(jobs, job)
+
 		} else if hasValidDelivery {
 			// Solo delivery válido -> crear Job
 
