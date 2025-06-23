@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 	"transport-app/app/domain"
 	"transport-app/app/domain/optimization"
 
-	"github.com/google/uuid"
 	"github.com/paulmach/orb"
 	"github.com/twpayne/go-polyline"
 )
@@ -93,170 +91,131 @@ func decodeGeometry(geometryStr string) (string, error) {
 	), nil
 }
 
-func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.FleetOptimization) domain.Plan {
-	plan := domain.Plan{
-		ReferenceID: uuid.New().String(),
-		PlannedDate: time.Now(),
-	}
-
-	// Mapear rutas asignadas
-	for _, vroomRoute := range ret.Routes {
-		route := domain.Route{
-			ReferenceID: uuid.New().String(),
-		}
-
-		// Decodificar y mostrar la geometría si está disponible
-		if vroomRoute.Geometry != "" {
-			geometryInfo, err := decodeGeometry(vroomRoute.Geometry)
-			if err != nil {
-				fmt.Printf("Error decodificando geometría para ruta %d: %v\n", vroomRoute.Vehicle, err)
-			} else {
-				fmt.Printf("Geometría de ruta %d: %s\n", vroomRoute.Vehicle, geometryInfo)
-			}
-		}
-
-		// Mapear vehículo si existe en la solicitud
-		if vroomRoute.Vehicle < int64(len(req.Vehicles)) {
-			vehicle := req.Vehicles[vroomRoute.Vehicle]
-			route.Vehicle = domain.Vehicle{
-				Plate: vehicle.Plate,
-				Weight: struct {
-					Value         int
-					UnitOfMeasure string
-				}{
-					Value:         int(vehicle.Capacity.Weight),
-					UnitOfMeasure: "g", // El modelo usa gramos
-				},
-				Insurance: struct {
-					PolicyStartDate      string
-					PolicyExpirationDate string
-					PolicyRenewalDate    string
-					MaxInsuranceCoverage struct {
-						Amount   float64
-						Currency string
-					}
-				}{
-					MaxInsuranceCoverage: struct {
-						Amount   float64
-						Currency string
-					}{
-						Amount:   float64(vehicle.Capacity.Insurance),
-						Currency: "CLP", // Asumiendo pesos chilenos por defecto
-					},
-				},
-			}
-		}
-
-		// Mapear origen y destino basado en los steps
-		if len(vroomRoute.Steps) > 0 {
-			// Origen: primer step con location
-			for _, step := range vroomRoute.Steps {
-				if step.Type == "start" && len(step.Location) == 2 {
-					route.Origin = domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(uuid.New().String()),
-						Name:        "Origen",
-						AddressInfo: domain.AddressInfo{
-							Coordinates: domain.Coordinates{
-								Point: orb.Point{step.Location[0], step.Location[1]},
-							},
-						},
-					}
-					break
-				}
-			}
-
-			// Destino: último step con location
-			for i := len(vroomRoute.Steps) - 1; i >= 0; i-- {
-				step := vroomRoute.Steps[i]
-				if step.Type == "end" && len(step.Location) == 2 {
-					route.Destination = domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(uuid.New().String()),
-						Name:        "Destino",
-						AddressInfo: domain.AddressInfo{
-							Coordinates: domain.Coordinates{
-								Point: orb.Point{step.Location[0], step.Location[1]},
-							},
-						},
-					}
-					break
-				}
-			}
-		}
-
-		// Mapear órdenes basadas en los jobs y shipments de los steps
-		var orders []domain.Order
-		for _, step := range vroomRoute.Steps {
-			// Manejar jobs (solo delivery)
-			if step.Job > 0 {
-				visit := findVisitByJobID(step.Job, req.Visits)
-				if visit != nil {
-					orders = append(orders, createOrdersFromVisit(visit, false)...)
-				}
-			}
-
-			// Manejar shipments (pickup y delivery)
-			if step.Shipment > 0 {
-				visit := findVisitByShipmentID(step.Shipment, req.Visits)
-				if visit != nil {
-					orders = append(orders, createOrdersFromVisit(visit, true)...)
-				}
-			}
-		}
-		route.Orders = orders
-
-		plan.Routes = append(plan.Routes, route)
-	}
-
-	// Mapear trabajos no asignados
-	for _, unassigned := range ret.Unassigned {
-		visit := findVisitByJobID(unassigned.ID, req.Visits)
-		if visit != nil {
-			unassignedOrders := createOrdersFromVisit(visit, false)
-			// Marcar como no asignadas
-			for i := range unassignedOrders {
-				unassignedOrders[i].UnassignedReason = unassigned.Reason
-			}
-			plan.UnassignedOrders = append(plan.UnassignedOrders, unassignedOrders...)
-		}
-	}
-
-	if err := ret.ExportToPolylineJSON("ui/static/dev/polyline.json"); err != nil {
-		fmt.Printf("error exportando datos de ruta: %v\n", err)
-	}
-
-	return plan
+// VisitMappings contiene los mapeos bidireccionales para preservar la semántica
+type VisitMappings struct {
+	// Mapeo de Job ID de VROOM a índice de la Visit original
+	jobIDToVisit map[int64]int
+	// Mapeo de Shipment ID de VROOM a Visit original
+	shipmentIDToVisit map[int64]*optimization.Visit
+	// Mapeo inverso para debugging
+	visitToJobID      map[string]int64
+	visitToShipmentID map[string]int64
 }
 
-// findVisitByJobID busca una visita que corresponde a un job (solo delivery válido)
-func findVisitByJobID(jobID int64, visits []optimization.Visit) *optimization.Visit {
-	// Buscar la visita que corresponde a este job ID
-	for i, v := range visits {
-		// Verificar si esta visita tiene solo delivery válido (job)
-		hasValidPickup := v.Pickup.Coordinates.Longitude != 0 || v.Pickup.Coordinates.Latitude != 0
-		hasValidDelivery := v.Delivery.Coordinates.Longitude != 0 || v.Delivery.Coordinates.Latitude != 0
-
-		if !hasValidPickup && hasValidDelivery {
-			// Esta visita corresponde a un job
-			return &visits[i]
-		}
-	}
-	return nil
+// GetJobIDToVisit retorna el mapeo de Job ID a índice de Visit
+func (vm *VisitMappings) GetJobIDToVisit() map[int64]int {
+	return vm.jobIDToVisit
 }
 
-// findVisitByShipmentID busca una visita que corresponde a un shipment (pickup y delivery válidos)
-func findVisitByShipmentID(shipmentID int64, visits []optimization.Visit) *optimization.Visit {
-	// Buscar la visita que corresponde a este shipment ID
-	for i, v := range visits {
-		// Verificar si esta visita tiene pickup y delivery válidos (shipment)
-		hasValidPickup := v.Pickup.Coordinates.Longitude != 0 || v.Pickup.Coordinates.Latitude != 0
-		hasValidDelivery := v.Delivery.Coordinates.Longitude != 0 || v.Delivery.Coordinates.Latitude != 0
+// GetShipmentIDToVisit retorna el mapeo de Shipment ID a Visit
+func (vm *VisitMappings) GetShipmentIDToVisit() map[int64]*optimization.Visit {
+	return vm.shipmentIDToVisit
+}
+
+// CreateVisitMappings crea los mapeos bidireccionales basados en la lógica de mapeo de VROOM
+func CreateVisitMappings(ctx context.Context, visits []optimization.Visit) VisitMappings {
+	mappings := VisitMappings{
+		jobIDToVisit:      make(map[int64]int),
+		shipmentIDToVisit: make(map[int64]*optimization.Visit),
+		visitToJobID:      make(map[string]int64),
+		visitToShipmentID: make(map[string]int64),
+	}
+
+	// Crear registros que simulen exactamente la lógica del mapper de request
+	locationRegistry := newLocationContactRegistry()
+
+	for i, visit := range visits {
+		// Verificar si tenemos pickup válido
+		hasValidPickup := visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0
+		// Verificar si tenemos delivery válido
+		hasValidDelivery := visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0
+
+		// Crear identificador único para la visita basado en sus características
+		visitKey := createVisitKey(visit)
 
 		if hasValidPickup && hasValidDelivery {
-			// Esta visita corresponde a un shipment
-			return &visits[i]
+			// Ambos son válidos -> es un Shipment
+			shipmentID := int64(i + 1) // VROOM usa índices basados en 1
+			mappings.shipmentIDToVisit[shipmentID] = &visits[i]
+			mappings.visitToShipmentID[visitKey] = shipmentID
+		} else if hasValidDelivery {
+			// Solo delivery válido -> es un Job
+			// Usar exactamente la misma lógica que en el mapper de request
+			deliveryLocationKey := generateLocationKey(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
+			deliveryContactID := getContactID(ctx, visit.Delivery.Contact)
+			jobID := locationRegistry.getLocationContactID(deliveryLocationKey, deliveryContactID)
+
+			mappings.jobIDToVisit[jobID] = i
+			mappings.visitToJobID[visitKey] = jobID
 		}
 	}
-	return nil
+
+	return mappings
+}
+
+// locationContactRegistry simula exactamente la lógica del mapper de request
+type locationContactRegistry struct {
+	counter int64
+	mapping map[string]int64
+}
+
+func newLocationContactRegistry() *locationContactRegistry {
+	return &locationContactRegistry{
+		counter: 1,
+		mapping: make(map[string]int64),
+	}
+}
+
+func (r *locationContactRegistry) getLocationContactID(coordinates string, contactID string) int64 {
+	key := fmt.Sprintf("%s_%s", coordinates, contactID)
+	if id, ok := r.mapping[key]; ok {
+		return id
+	}
+	r.mapping[key] = r.counter
+	r.counter++
+	return r.mapping[key]
+}
+
+// generateLocationKey debe usar exactamente el mismo formato que en el mapper de request
+func generateLocationKey(lat, lon float64) string {
+	return fmt.Sprintf("%.6f_%.6f", lat, lon)
+}
+
+// getContactID debe usar exactamente la misma lógica que en el mapper de request
+func getContactID(ctx context.Context, contact optimization.Contact) string {
+	// Si no hay información de contacto, usar coordenadas como identificador único
+	if contact.Email == "" && contact.Phone == "" && contact.NationalID == "" && contact.FullName == "" {
+		return ""
+	}
+
+	// Usar la función DocID del dominio Contact
+	domainContact := domain.Contact{
+		PrimaryEmail: contact.Email,
+		PrimaryPhone: contact.Phone,
+		NationalID:   contact.NationalID,
+		FullName:     contact.FullName,
+	}
+
+	docID := domainContact.DocID(ctx)
+	return string(docID)
+}
+
+// createVisitKey crea una clave única para identificar una visita
+func createVisitKey(visit optimization.Visit) string {
+	// Usar las coordenadas de delivery como identificador principal
+	deliveryKey := fmt.Sprintf("%.6f,%.6f",
+		visit.Delivery.Coordinates.Latitude,
+		visit.Delivery.Coordinates.Longitude)
+
+	// Si hay pickup válido, incluirlo en la clave
+	if visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0 {
+		pickupKey := fmt.Sprintf("%.6f,%.6f",
+			visit.Pickup.Coordinates.Latitude,
+			visit.Pickup.Coordinates.Longitude)
+		return fmt.Sprintf("shipment:%s->%s", pickupKey, deliveryKey)
+	}
+
+	return fmt.Sprintf("job:%s", deliveryKey)
 }
 
 // createOrdersFromVisit crea órdenes del dominio basadas en una visita
@@ -268,11 +227,17 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 		order := domain.Order{
 			ReferenceID: domain.ReferenceID(orderReq.ReferenceID),
 			Destination: domain.NodeInfo{
-				ReferenceID: domain.ReferenceID(uuid.New().String()),
+				ReferenceID: domain.ReferenceID(visit.Delivery.NodeInfo.ReferenceID),
 				Name:        "Destino de entrega",
 				AddressInfo: domain.AddressInfo{
 					Coordinates: domain.Coordinates{
 						Point: orb.Point{visit.Delivery.Coordinates.Longitude, visit.Delivery.Coordinates.Latitude},
+					},
+					Contact: domain.Contact{
+						FullName:     visit.Delivery.Contact.FullName,
+						PrimaryEmail: visit.Delivery.Contact.Email,
+						PrimaryPhone: visit.Delivery.Contact.Phone,
+						NationalID:   visit.Delivery.Contact.NationalID,
 					},
 				},
 			},
@@ -281,11 +246,17 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 		// Para shipments (pickup + delivery), incluir origen
 		if hasPickup {
 			order.Origin = domain.NodeInfo{
-				ReferenceID: domain.ReferenceID(uuid.New().String()),
+				ReferenceID: domain.ReferenceID(visit.Pickup.NodeInfo.ReferenceID),
 				Name:        "Origen de recogida",
 				AddressInfo: domain.AddressInfo{
 					Coordinates: domain.Coordinates{
 						Point: orb.Point{visit.Pickup.Coordinates.Longitude, visit.Pickup.Coordinates.Latitude},
+					},
+					Contact: domain.Contact{
+						FullName:     visit.Pickup.Contact.FullName,
+						PrimaryEmail: visit.Pickup.Contact.Email,
+						PrimaryPhone: visit.Pickup.Contact.Phone,
+						NationalID:   visit.Pickup.Contact.NationalID,
 					},
 				},
 			}
@@ -296,6 +267,14 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 		for _, duReq := range orderReq.DeliveryUnits {
 			deliveryUnit := domain.DeliveryUnit{
 				Lpn: duReq.Lpn,
+				Weight: domain.Weight{
+					Value: duReq.Weight,
+					Unit:  "g",
+				},
+				Insurance: domain.Insurance{
+					UnitValue: duReq.Insurance,
+					Currency:  "CLP",
+				},
 			}
 
 			// Mapear items
