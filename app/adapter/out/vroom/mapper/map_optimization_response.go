@@ -17,6 +17,9 @@ func MapOptimizationResponse(
 	// Crear mapeos para preservar la semántica de las visitas originales
 	visitMappings := model.CreateVisitMappings(ctx, originalFleet.Visits)
 
+	if err := vroomResponse.ExportToPolylineJSON("ui/static/dev/polyline.json"); err != nil {
+		fmt.Printf("error exportando datos de ruta: %v\n", err)
+	}
 	// Mapear rutas optimizadas
 	optimizedRoutes := make([]optimization.OptimizedRoute, 0, len(vroomResponse.Routes))
 	for _, vroomRoute := range vroomResponse.Routes {
