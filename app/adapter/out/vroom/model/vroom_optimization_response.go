@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"fmt"
-	"transport-app/app/domain"
 	"transport-app/app/domain/optimization"
 )
 
@@ -83,8 +82,8 @@ func CreateVisitMappings(ctx context.Context, visits []optimization.Visit) Visit
 		visitToShipmentID: make(map[string]int64),
 	}
 
-	// Crear registros que simulen exactamente la lógica del mapper de request
-	locationRegistry := newLocationContactRegistry()
+	// Usar exactamente la misma lógica secuencial que el mapper de request
+	jobCounter := int64(1)
 
 	for i, visit := range visits {
 		// Verificar si tenemos pickup válido usando la misma lógica que el mapper de request
@@ -97,71 +96,45 @@ func CreateVisitMappings(ctx context.Context, visits []optimization.Visit) Visit
 
 		if hasValidPickup && hasValidDelivery {
 			// Ambos son válidos -> es un Shipment
-			shipmentID := int64(i + 1) // VROOM usa índices basados en 1
+			// Para shipments, VROOM usa el índice de la visita + 1 como ID del shipment
+			shipmentID := int64(i + 1)
 			mappings.shipmentIDToVisit[shipmentID] = &visits[i]
 			mappings.visitToShipmentID[visitKey] = shipmentID
 			fmt.Printf("DEBUG: Creando Shipment ID %d para visita %d\n", shipmentID, i)
-		} else if hasValidDelivery {
-			// Solo delivery válido -> es un Job
-			// Usar exactamente la misma lógica que en el mapper de request
-			deliveryLocationKey := generateLocationKey(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
-			deliveryContactID := getContactID(ctx, visit.Delivery.Contact)
-			jobID := locationRegistry.getLocationContactID(deliveryLocationKey, deliveryContactID)
+
+			// Los pasos de pickup y delivery de un shipment usan jobCounter secuencial
+			// pickup step ID = jobCounter
+			// delivery step ID = jobCounter + 1
+			pickupJobID := jobCounter
+			deliveryJobID := jobCounter + 1
+			jobCounter += 2
+
+			// Mapear ambos pasos a la misma visita
+			mappings.jobIDToVisit[pickupJobID] = i
+			mappings.jobIDToVisit[deliveryJobID] = i
+			fmt.Printf("DEBUG: Mapeando Job IDs %d (pickup) y %d (delivery) para Shipment ID %d\n", pickupJobID, deliveryJobID, shipmentID)
+
+		} else if hasValidPickup {
+			// Solo pickup válido -> es un Job
+			jobID := jobCounter
+			jobCounter++
 
 			mappings.jobIDToVisit[jobID] = i
 			mappings.visitToJobID[visitKey] = jobID
-			fmt.Printf("DEBUG: Creando Job ID %d para visita %d\n", jobID, i)
+			fmt.Printf("DEBUG: Creando Job ID %d para visita %d (pickup)\n", jobID, i)
+
+		} else if hasValidDelivery {
+			// Solo delivery válido -> es un Job
+			jobID := jobCounter
+			jobCounter++
+
+			mappings.jobIDToVisit[jobID] = i
+			mappings.visitToJobID[visitKey] = jobID
+			fmt.Printf("DEBUG: Creando Job ID %d para visita %d (delivery)\n", jobID, i)
 		}
 	}
 
 	return mappings
-}
-
-// locationContactRegistry simula exactamente la lógica del mapper de request
-type locationContactRegistry struct {
-	counter int64
-	mapping map[string]int64
-}
-
-func newLocationContactRegistry() *locationContactRegistry {
-	return &locationContactRegistry{
-		counter: 1,
-		mapping: make(map[string]int64),
-	}
-}
-
-func (r *locationContactRegistry) getLocationContactID(coordinates string, contactID string) int64 {
-	key := fmt.Sprintf("%s_%s", coordinates, contactID)
-	if id, ok := r.mapping[key]; ok {
-		return id
-	}
-	r.mapping[key] = r.counter
-	r.counter++
-	return r.mapping[key]
-}
-
-// generateLocationKey debe usar exactamente el mismo formato que en el mapper de request
-func generateLocationKey(lat, lon float64) string {
-	return fmt.Sprintf("%.6f_%.6f", lat, lon)
-}
-
-// getContactID debe usar exactamente la misma lógica que en el mapper de request
-func getContactID(ctx context.Context, contact optimization.Contact) string {
-	// Si no hay información de contacto, usar coordenadas como identificador único
-	if contact.Email == "" && contact.Phone == "" && contact.NationalID == "" && contact.FullName == "" {
-		return ""
-	}
-
-	// Usar la función DocID del dominio Contact
-	domainContact := domain.Contact{
-		PrimaryEmail: contact.Email,
-		PrimaryPhone: contact.Phone,
-		NationalID:   contact.NationalID,
-		FullName:     contact.FullName,
-	}
-
-	docID := domainContact.DocID(ctx)
-	return string(docID)
 }
 
 // createVisitKey crea una clave única para identificar una visita
