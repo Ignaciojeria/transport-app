@@ -57,6 +57,7 @@
 								allMarkers.push({
 									...step,
 									vehicle: route.vehicle,
+									vehiclePlate: route.vehicle_plate,
 									vehicleColor: vehicleColor,
 									routeIndex: routeIndex
 								});
@@ -68,7 +69,10 @@
 						totalRoutes: routeData.length,
 						totalLineStrings: allLineStrings.length,
 						totalMarkers: allMarkers.length,
-						vehicles: routeData.map((r: any) => r.vehicle)
+						vehicles: routeData.map((r: any) => ({ 
+							id: r.vehicle, 
+							plate: r.vehicle_plate 
+						}))
 					});
 				}
 			} else {

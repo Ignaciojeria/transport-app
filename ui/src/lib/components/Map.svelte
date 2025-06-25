@@ -163,13 +163,14 @@
 				});
 				
 				const vehicleInfo = step.vehicle ? `Vehículo ${step.vehicle}<br>` : '';
+				const vehiclePlateInfo = step.vehiclePlate ? `Patente: ${step.vehiclePlate}<br>` : '';
 				const referenceInfo = step.reference_ids && step.reference_ids.length > 0 
 					? `<br>Referencias: ${step.reference_ids.join(', ')}` 
 					: '';
 				const marker = L.marker(step.location, { icon: customIcon })
 					.addTo(map)
 					.bindPopup(
-						`${vehicleInfo}Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg${referenceInfo}`
+						`${vehicleInfo}${vehiclePlateInfo}Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg${referenceInfo}`
 					);
 				markers.push(marker);
 			}
@@ -235,6 +236,7 @@
 					
 					return L.marker(latlng, { icon: customIcon }).bindPopup(
 						(props.popup || props.name || `Punto`) + 
+						(props.vehicle_plate ? `<br>Patente: ${props.vehicle_plate}` : '') +
 						(props.reference_ids && props.reference_ids.length > 0 
 							? `<br>Referencias: ${props.reference_ids.join(', ')}` 
 							: '')

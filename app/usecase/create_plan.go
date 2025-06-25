@@ -21,6 +21,7 @@ func NewCreatePlan(
 	upsertDeliveryUnitsHistory tidbrepository.UpsertDeliveryUnitsHistory) CreatePlan {
 	return func(ctx context.Context, input domain.Plan) error {
 		input.AssignIndexesToAllOrders()
+		input.AssignSequenceNumbersToAllOrders()
 		err := upsertDeliveryUnitsHistory(ctx, input)
 		if err != nil {
 			return err

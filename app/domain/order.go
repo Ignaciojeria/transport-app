@@ -35,6 +35,19 @@ func (o *Order) AssignIndexesIfNoLPN() {
 	o.DeliveryUnits.assignIndexesIfNoLPN(o.ReferenceID.String())
 }
 
+// SetSequenceNumber establece el número de secuencia de la orden
+func (o *Order) SetSequenceNumber(sequence int) {
+	o.SequenceNumber = &sequence
+}
+
+// GetSequenceNumber retorna el número de secuencia de la orden
+func (o *Order) GetSequenceNumber() int {
+	if o.SequenceNumber == nil {
+		return 0
+	}
+	return *o.SequenceNumber
+}
+
 type DeliveryUnits []DeliveryUnit
 
 func (pkgs *DeliveryUnits) assignIndexesIfNoLPN(referenceID string) {

@@ -490,12 +490,13 @@ func getStepSymbolWithSequence(stepType string, stepNumber int, pickupCount, del
 
 // RouteData representa los datos de ruta para el frontend
 type RouteData struct {
-	Route      [][]float64       `json:"route"` // Coordenadas decodificadas del polyline
-	Steps      []StepPoint       `json:"steps"` // Puntos de parada
-	Vehicle    int64             `json:"vehicle"`
-	Cost       int64             `json:"cost"`
-	Duration   int64             `json:"duration"`
-	Unassigned []UnassignedPoint `json:"unassigned,omitempty"`
+	Route        [][]float64       `json:"route"` // Coordenadas decodificadas del polyline
+	Steps        []StepPoint       `json:"steps"` // Puntos de parada
+	Vehicle      int64             `json:"vehicle"`
+	VehiclePlate string            `json:"vehicle_plate"` // Patente del vehículo
+	Cost         int64             `json:"cost"`
+	Duration     int64             `json:"duration"`
+	Unassigned   []UnassignedPoint `json:"unassigned,omitempty"`
 }
 
 // StepPoint representa un punto de parada
@@ -527,10 +528,19 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, origi
 
 	// Procesar cada ruta
 	for i, route := range ret.Routes {
+		// Obtener la patente del vehículo
+		var vehiclePlate string
+		if originalFleet != nil && int(route.Vehicle) <= len(originalFleet.Vehicles) {
+			vehiclePlate = originalFleet.Vehicles[route.Vehicle-1].Plate
+		} else {
+			vehiclePlate = fmt.Sprintf("Vehicle-%d", route.Vehicle)
+		}
+
 		routeData := RouteData{
-			Vehicle:  route.Vehicle,
-			Cost:     route.Cost,
-			Duration: route.Duration,
+			Vehicle:      route.Vehicle,
+			VehiclePlate: vehiclePlate,
+			Cost:         route.Cost,
+			Duration:     route.Duration,
 		}
 
 		// Decodificar polyline si existe

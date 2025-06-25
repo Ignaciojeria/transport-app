@@ -58,11 +58,13 @@ func MapOptimizationResponse(
 		originalFleet,
 	)
 
-	return optimization.OptimizedFleet{
+	optimizedFleet := optimization.OptimizedFleet{
 		PlannedDate: time.Now(), // O usar una fecha específica si se proporciona
 		Routes:      optimizedRoutes,
 		Unassigned:  optimizedUnassigned,
-	}, nil
+	}
+
+	return optimizedFleet, nil
 }
 
 // mapVroomStepToOptimizedStep convierte un paso de VROOM a un paso optimizado del dominio

@@ -24,6 +24,7 @@ export interface StepPoint {
 	description?: string;
 	reference_ids?: string[];
 	vehicle?: number;
+	vehiclePlate?: string;
 	vehicleColor?: string;
 	routeIndex?: number;
 }
