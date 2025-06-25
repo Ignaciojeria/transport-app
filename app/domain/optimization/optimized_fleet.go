@@ -1,6 +1,8 @@
 package optimization
 
-import "time"
+import (
+	"time"
+)
 
 type OptimizedFleet struct {
 	PlannedDate time.Time

@@ -430,6 +430,10 @@
         {
             "kind": "post-controller",
             "name": "picking"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-plan"
         }
     ]
 }

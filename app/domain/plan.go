@@ -30,3 +30,18 @@ func (p Plan) UpdateIfChanged(newPlan Plan) (Plan, bool) {
 
 	return p, changed
 }
+
+// AssignIndexesToAllOrders itera sobre todas las órdenes del plan y ejecuta AssignIndexesIfNoLPN() en cada una
+func (p *Plan) AssignIndexesToAllOrders() {
+	// Iterar sobre órdenes no asignadas
+	for i := range p.UnassignedOrders {
+		p.UnassignedOrders[i].AssignIndexesIfNoLPN()
+	}
+
+	// Iterar sobre órdenes en las rutas
+	for i := range p.Routes {
+		for j := range p.Routes[i].Orders {
+			p.Routes[i].Orders[j].AssignIndexesIfNoLPN()
+		}
+	}
+}

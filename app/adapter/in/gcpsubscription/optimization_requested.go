@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/gcpsubscription/mapper"
 	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/usecase"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -24,6 +26,7 @@ func init() {
 		configuration.NewConf,
 		vroom.NewOptimize,
 		observability.NewObservability,
+		usecase.NewCreatePlan,
 	)
 }
 func newOptimizationRequested(
@@ -31,6 +34,7 @@ func newOptimizationRequested(
 	conf configuration.Conf,
 	optimize vroom.Optimize,
 	observability observability.Observability,
+	createPlan usecase.CreatePlan,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION
 	subscriptionRef := sm.Subscription(subscriptionName)
@@ -49,6 +53,13 @@ func newOptimizationRequested(
 		res, err := optimize(ctx, input)
 
 		if err != nil {
+			m.Ack()
+			return http.StatusAccepted, err
+		}
+
+		plan := mapper.MapOptimizedFleetToPlan(ctx, res)
+
+		if err := createPlan(ctx, plan); err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}

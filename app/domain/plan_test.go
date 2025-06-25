@@ -116,4 +116,173 @@ var _ = Describe("Plan", func() {
 			Expect(updated.PlannedDate).To(Equal(tomorrow))
 		})
 	})
+
+	Describe("AssignIndexesToAllOrders", func() {
+		It("should assign indexes to unassigned orders without LPN", func() {
+			// Crear órdenes sin asignar con unidades de entrega sin LPN
+			unassignedOrder1 := Order{
+				ReferenceID: "ORDER-001",
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "", // Sin LPN
+						Items: []Item{
+							{Sku: "SKU-001"},
+							{Sku: "SKU-002"},
+						},
+					},
+				},
+			}
+
+			unassignedOrder2 := Order{
+				ReferenceID: "ORDER-002",
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "LPN-001", // Con LPN - no debería cambiar
+						Items: []Item{
+							{Sku: "SKU-003"},
+						},
+					},
+					{
+						Lpn: "", // Sin LPN
+						Items: []Item{
+							{Sku: "SKU-004"},
+						},
+					},
+				},
+			}
+
+			plan := &Plan{
+				ReferenceID:      "PLAN-001",
+				UnassignedOrders: []Order{unassignedOrder1, unassignedOrder2},
+			}
+
+			// Ejecutar el método
+			plan.AssignIndexesToAllOrders()
+
+			// Verificar que las unidades sin LPN ahora tienen noLPNReference
+			Expect(plan.UnassignedOrders[0].DeliveryUnits[0].noLPNReference).To(Equal("ORDER-001"))
+			Expect(plan.UnassignedOrders[1].DeliveryUnits[0].noLPNReference).To(Equal("")) // Con LPN, no cambia
+			Expect(plan.UnassignedOrders[1].DeliveryUnits[1].noLPNReference).To(Equal("ORDER-002"))
+		})
+
+		It("should assign indexes to orders in routes without LPN", func() {
+			// Crear rutas con órdenes
+			routeOrder1 := Order{
+				ReferenceID: "ROUTE-ORDER-001",
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "", // Sin LPN
+						Items: []Item{
+							{Sku: "SKU-005"},
+						},
+					},
+				},
+			}
+
+			routeOrder2 := Order{
+				ReferenceID: "ROUTE-ORDER-002",
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "LPN-002", // Con LPN
+						Items: []Item{
+							{Sku: "SKU-006"},
+						},
+					},
+				},
+			}
+
+			route := Route{
+				ReferenceID: "ROUTE-001",
+				Orders:      []Order{routeOrder1, routeOrder2},
+			}
+
+			plan := &Plan{
+				ReferenceID: "PLAN-002",
+				Routes:      []Route{route},
+			}
+
+			// Ejecutar el método
+			plan.AssignIndexesToAllOrders()
+
+			// Verificar que las unidades sin LPN en las rutas ahora tienen noLPNReference
+			Expect(plan.Routes[0].Orders[0].DeliveryUnits[0].noLPNReference).To(Equal("ROUTE-ORDER-001"))
+			Expect(plan.Routes[0].Orders[1].DeliveryUnits[0].noLPNReference).To(Equal("")) // Con LPN, no cambia
+		})
+
+		It("should handle plan with both unassigned orders and routes", func() {
+			// Orden sin asignar
+			unassignedOrder := Order{
+				ReferenceID: "UNASSIGNED-001",
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "", // Sin LPN
+						Items: []Item{
+							{Sku: "SKU-007"},
+						},
+					},
+				},
+			}
+
+			// Orden en ruta
+			routeOrder := Order{
+				ReferenceID: "ROUTE-ORDER-003",
+				DeliveryUnits: []DeliveryUnit{
+					{
+						Lpn: "", // Sin LPN
+						Items: []Item{
+							{Sku: "SKU-008"},
+						},
+					},
+				},
+			}
+
+			route := Route{
+				ReferenceID: "ROUTE-002",
+				Orders:      []Order{routeOrder},
+			}
+
+			plan := &Plan{
+				ReferenceID:      "PLAN-003",
+				UnassignedOrders: []Order{unassignedOrder},
+				Routes:           []Route{route},
+			}
+
+			// Ejecutar el método
+			plan.AssignIndexesToAllOrders()
+
+			// Verificar que ambas órdenes tienen sus índices asignados
+			Expect(plan.UnassignedOrders[0].DeliveryUnits[0].noLPNReference).To(Equal("UNASSIGNED-001"))
+			Expect(plan.Routes[0].Orders[0].DeliveryUnits[0].noLPNReference).To(Equal("ROUTE-ORDER-003"))
+		})
+
+		It("should handle empty plan", func() {
+			plan := &Plan{
+				ReferenceID:      "PLAN-004",
+				UnassignedOrders: []Order{},
+				Routes:           []Route{},
+			}
+
+			// No debería causar error
+			Expect(func() {
+				plan.AssignIndexesToAllOrders()
+			}).ToNot(Panic())
+		})
+
+		It("should handle orders with empty delivery units", func() {
+			order := Order{
+				ReferenceID:   "EMPTY-ORDER-001",
+				DeliveryUnits: []DeliveryUnit{},
+			}
+
+			plan := &Plan{
+				ReferenceID:      "PLAN-005",
+				UnassignedOrders: []Order{order},
+			}
+
+			// No debería causar error
+			Expect(func() {
+				plan.AssignIndexesToAllOrders()
+			}).ToNot(Panic())
+		})
+	})
 })
