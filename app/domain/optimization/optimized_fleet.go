@@ -5,9 +5,10 @@ import (
 )
 
 type OptimizedFleet struct {
-	PlannedDate time.Time
-	Routes      []OptimizedRoute
-	Unassigned  OptimizedUnassigned
+	PlanReferenceID string
+	PlannedDate     time.Time
+	Routes          []OptimizedRoute
+	Unassigned      OptimizedUnassigned
 }
 
 type OptimizedRoute struct {

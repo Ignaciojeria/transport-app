@@ -16,6 +16,18 @@ export interface RoutePoint {
 	description?: string;
 }
 
+export interface StepPoint {
+	location: [number, number];
+	step_type: string;
+	step_number: number;
+	arrival: number;
+	description?: string;
+	reference_ids?: string[];
+	vehicle?: number;
+	vehicleColor?: string;
+	routeIndex?: number;
+}
+
 export interface Route {
 	id: string;
 	name: string;

@@ -41,8 +41,13 @@ func MapOptimizedFleetToPlan(
 		unassignedOrigins = append(unassignedOrigins, domainNodeInfo)
 	}
 
+	referenceID := trace.SpanContextFromContext(ctx).TraceID().String()
+	if optimizedFleet.PlanReferenceID != "" {
+		referenceID = optimizedFleet.PlanReferenceID
+	}
+
 	return domain.Plan{
-		ReferenceID:        trace.SpanContextFromContext(ctx).TraceID().String(),
+		ReferenceID:        referenceID,
 		UnassignedOrigins:  unassignedOrigins,
 		UnassignedVehicles: unassignedVehicles,
 		UnassignedOrders:   unassignedOrders,

@@ -3,7 +3,8 @@ package request
 import "transport-app/app/domain/optimization"
 
 type OptimizeFleetRequest struct {
-	Vehicles []struct {
+	PlanReferenceID string `json:"planReferenceID"`
+	Vehicles        []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 		StartLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
@@ -203,7 +204,8 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	}
 
 	return optimization.FleetOptimization{
-		Vehicles: vehicles,
-		Visits:   visits,
+		PlanReferenceID: r.PlanReferenceID,
+		Vehicles:        vehicles,
+		Visits:          visits,
 	}
 }

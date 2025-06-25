@@ -500,11 +500,12 @@ type RouteData struct {
 
 // StepPoint representa un punto de parada
 type StepPoint struct {
-	Location    [2]float64 `json:"location"`
-	StepType    string     `json:"step_type"`
-	StepNumber  int        `json:"step_number"`
-	Arrival     int64      `json:"arrival"`
-	Description string     `json:"description,omitempty"`
+	Location     [2]float64 `json:"location"`
+	StepType     string     `json:"step_type"`
+	StepNumber   int        `json:"step_number"`
+	Arrival      int64      `json:"arrival"`
+	Description  string     `json:"description,omitempty"`
+	ReferenceIDs []string   `json:"reference_ids,omitempty"` // ReferenceIDs de las órdenes asociadas
 }
 
 // UnassignedPoint representa un punto no asignado
@@ -515,8 +516,14 @@ type UnassignedPoint struct {
 }
 
 // ExportToPolylineJSON exporta las rutas en formato optimizado para Leaflet
-func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string) error {
+func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, originalFleet *optimization.FleetOptimization) error {
 	var routesData []RouteData
+
+	// Crear mapeos para preservar la semántica de las visitas originales
+	var visitMappings VisitMappings
+	if originalFleet != nil {
+		visitMappings = CreateVisitMappings(context.Background(), originalFleet.Visits)
+	}
 
 	// Procesar cada ruta
 	for i, route := range ret.Routes {
@@ -562,12 +569,19 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string) error
 					jobCount++
 				}
 
+				// Obtener ReferenceIDs de las órdenes asociadas
+				var referenceIDs []string
+				if originalFleet != nil {
+					referenceIDs = getOrderReferenceIDs(step, &visitMappings, originalFleet)
+				}
+
 				stepPoint := StepPoint{
-					Location:    [2]float64{step.Location[1], step.Location[0]}, // lat, lng
-					StepType:    step.Type,
-					StepNumber:  stepNumber,
-					Arrival:     step.Arrival,
-					Description: step.Description,
+					Location:     [2]float64{step.Location[1], step.Location[0]}, // lat, lng
+					StepType:     step.Type,
+					StepNumber:   stepNumber,
+					Arrival:      step.Arrival,
+					Description:  step.Description,
+					ReferenceIDs: referenceIDs,
 				}
 				routeData.Steps = append(routeData.Steps, stepPoint)
 			}
@@ -612,4 +626,32 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string) error
 	fmt.Printf("Total de rutas: %d\n", len(routesData))
 
 	return nil
+}
+
+// getOrderReferenceIDs obtiene los ReferenceIDs de las órdenes asociadas a un step
+func getOrderReferenceIDs(step Step, visitMappings *VisitMappings, originalFleet *optimization.FleetOptimization) []string {
+	var referenceIDs []string
+
+	var originalVisit *optimization.Visit
+	if step.Job != 0 { // Es un Job (solo delivery)
+		jobIDToVisitIndex := visitMappings.GetJobIDToVisit()
+		if index, exists := jobIDToVisitIndex[step.Job]; exists {
+			if index < len(originalFleet.Visits) {
+				originalVisit = &originalFleet.Visits[index]
+			}
+		}
+	} else if step.Shipment != 0 { // Es un Shipment (pickup y delivery)
+		shipmentIDToVisit := visitMappings.GetShipmentIDToVisit()
+		if visit, exists := shipmentIDToVisit[step.Shipment]; exists {
+			originalVisit = visit
+		}
+	}
+
+	if originalVisit != nil {
+		for _, order := range originalVisit.Orders {
+			referenceIDs = append(referenceIDs, string(order.ReferenceID))
+		}
+	}
+
+	return referenceIDs
 }

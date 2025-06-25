@@ -1,7 +1,8 @@
 package request
 
 type OptimizePickingAndDeliveryRequest struct {
-	NodeInfo struct {
+	PlanReferenceID string `json:"planReferenceID"`
+	NodeInfo        struct {
 		ReferenceID string `json:"referenceID"`
 	} `json:"nodeInfo"`
 	Container struct {

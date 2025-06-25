@@ -89,6 +89,7 @@ type Visit struct {
 
 // Optimization representa la estructura principal de optimización
 type FleetOptimization struct {
-	Vehicles []Vehicle
-	Visits   []Visit
+	PlanReferenceID string
+	Vehicles        []Vehicle
+	Visits          []Visit
 }
