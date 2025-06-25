@@ -184,8 +184,8 @@ func ExportPolylineJSONFromOptimizedFleetWithStartHours(filename string, fleet o
 				}
 			}
 
-			// Solo incluir steps que tengan ReferenceIDs o sean start/end
-			if len(referenceIDs) > 0 || step.Type == "start" || step.Type == "end" {
+			// Incluir siempre pickups, deliveries, start y end
+			if step.Type == "pickup" || step.Type == "delivery" || step.Type == "start" || step.Type == "end" {
 				polyline = append(polyline, []float64{lat, lng})
 
 				// Usar SequenceNumber de la primera orden si está disponible

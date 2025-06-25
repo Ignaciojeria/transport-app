@@ -87,10 +87,10 @@ func CreateVisitMappings(ctx context.Context, visits []optimization.Visit) Visit
 	locationRegistry := newLocationContactRegistry()
 
 	for i, visit := range visits {
-		// Verificar si tenemos pickup válido
-		hasValidPickup := visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0
-		// Verificar si tenemos delivery válido
-		hasValidDelivery := visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0
+		// Verificar si tenemos pickup válido usando la misma lógica que el mapper de request
+		hasValidPickup := isValidCoordinates(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
+		// Verificar si tenemos delivery válido usando la misma lógica que el mapper de request
+		hasValidDelivery := isValidCoordinates(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
 
 		// Crear identificador único para la visita basado en sus características
 		visitKey := createVisitKey(visit)
@@ -100,6 +100,7 @@ func CreateVisitMappings(ctx context.Context, visits []optimization.Visit) Visit
 			shipmentID := int64(i + 1) // VROOM usa índices basados en 1
 			mappings.shipmentIDToVisit[shipmentID] = &visits[i]
 			mappings.visitToShipmentID[visitKey] = shipmentID
+			fmt.Printf("DEBUG: Creando Shipment ID %d para visita %d\n", shipmentID, i)
 		} else if hasValidDelivery {
 			// Solo delivery válido -> es un Job
 			// Usar exactamente la misma lógica que en el mapper de request
@@ -109,6 +110,7 @@ func CreateVisitMappings(ctx context.Context, visits []optimization.Visit) Visit
 
 			mappings.jobIDToVisit[jobID] = i
 			mappings.visitToJobID[visitKey] = jobID
+			fmt.Printf("DEBUG: Creando Job ID %d para visita %d\n", jobID, i)
 		}
 	}
 
@@ -170,7 +172,7 @@ func createVisitKey(visit optimization.Visit) string {
 		visit.Delivery.Coordinates.Longitude)
 
 	// Si hay pickup válido, incluirlo en la clave
-	if visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0 {
+	if isValidCoordinates(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude) {
 		pickupKey := fmt.Sprintf("%.6f,%.6f",
 			visit.Pickup.Coordinates.Latitude,
 			visit.Pickup.Coordinates.Longitude)
@@ -178,4 +180,10 @@ func createVisitKey(visit optimization.Visit) string {
 	}
 
 	return fmt.Sprintf("job:%s", deliveryKey)
+}
+
+// isValidCoordinates valida que las coordenadas sean válidas
+// Debe usar exactamente la misma lógica que en el mapper de request
+func isValidCoordinates(lat, lon float64) bool {
+	return lat != 0 && lon != 0
 }

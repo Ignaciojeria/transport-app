@@ -135,6 +135,9 @@
 				} else if (stepType === 'end') {
 					markerHtml = '⏹️';
 					bgColor = '#dc3545'; // rojo para end
+				} else if (stepType === 'pickup') {
+					markerHtml = '📦';
+					bgColor = '#ffc107'; // amarillo para pickup
 				} else if (step.step_number) {
 					markerHtml = step.step_number.toString();
 				}
@@ -207,6 +210,9 @@
 					} else if (stepType === 'end') {
 						markerHtml = '⏹️';
 						bgColor = '#dc3545'; // rojo para end
+					} else if (stepType === 'pickup') {
+						markerHtml = '📦';
+						bgColor = '#ffc107'; // amarillo para pickup
 					} else if (props.step_number) {
 						markerHtml = props.step_number;
 					}

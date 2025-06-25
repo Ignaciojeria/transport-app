@@ -87,7 +87,6 @@ func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliver
 
 func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimization) (model.VroomOptimizationRequest, error) {
 	registry := newSkillRegistry()
-	locationRegistry := newLocationContactRegistry()
 
 	var vehicles []model.VroomVehicle
 	for i, v := range req.Vehicles {
@@ -135,12 +134,16 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 
 	var jobs []model.VroomJob
 	var shipments []model.VroomShipment
+	jobCounter := 1
 
 	for i, visit := range req.Visits {
-		// Verificar si tenemos pickup válido
-		hasValidPickup := visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0
-		// Verificar si tenemos delivery válido
-		hasValidDelivery := visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0
+		// Verificar si tenemos pickup válido usando la nueva función de validación
+		hasValidPickup := isValidCoordinates(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
+		hasValidDelivery := isValidCoordinates(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
+
+		fmt.Printf("DEBUG REQUEST: Visita %d | hasValidPickup=%v | hasValidDelivery=%v\n", i, hasValidPickup, hasValidDelivery)
+		fmt.Printf("DEBUG REQUEST:   Pickup: lat=%f, lon=%f, contact=%+v\n", visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude, visit.Pickup.Contact)
+		fmt.Printf("DEBUG REQUEST:   Delivery: lat=%f, lon=%f, contact=%+v\n", visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude, visit.Delivery.Contact)
 
 		// Calcular capacidad de la visita
 		totalWeight, totalDeliveryUnits, totalInsurance := calculateVisitCapacity(visit)
@@ -148,21 +151,13 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		if hasValidPickup && hasValidDelivery {
 			// Ambos son válidos -> crear Shipment
 
-			// Generar identificadores únicos para pickup y delivery basados en coordenadas y contacto
-			pickupLocationKey := generateLocationKey(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
-			pickupContactID := getContactID(ctx, visit.Pickup.Contact)
-			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
-
-			deliveryLocationKey := generateLocationKey(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
-			deliveryContactID := getContactID(ctx, visit.Delivery.Contact)
-			deliveryID := locationRegistry.getLocationContactID(deliveryLocationKey, deliveryContactID)
-
 			pickup := model.VroomStep{
-				ID: int(pickupID),
+				ID: jobCounter,
 			}
+			jobCounter++
 
-			// Solo incluir Location en pickup si las coordenadas no son cero
-			if visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0 {
+			// Solo incluir Location en pickup si las coordenadas son válidas
+			if isValidCoordinates(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude) {
 				pickup.Location = &[2]float64{
 					visit.Pickup.Coordinates.Longitude,
 					visit.Pickup.Coordinates.Latitude,
@@ -175,11 +170,12 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			delivery := model.VroomStep{
-				ID: int(deliveryID),
+				ID: jobCounter,
 			}
+			jobCounter++
 
-			// Solo incluir Location en delivery si las coordenadas no son cero
-			if visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0 {
+			// Solo incluir Location en delivery si las coordenadas son válidas
+			if isValidCoordinates(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude) {
 				delivery.Location = &[2]float64{
 					visit.Delivery.Coordinates.Longitude,
 					visit.Delivery.Coordinates.Latitude,
@@ -242,22 +238,19 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			shipments = append(shipments, shipment)
+			fmt.Printf("DEBUG: Creando Shipment ID %d para visita %d\n", shipment.ID, i)
 
 		} else if hasValidPickup {
 			// Solo pickup válido -> crear Job para pickup
 
-			// Generar identificador único para pickup basado en coordenadas y contacto
-			pickupLocationKey := generateLocationKey(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
-			pickupContactID := getContactID(ctx, visit.Pickup.Contact)
-			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
-
 			job := model.VroomJob{
-				ID: int(pickupID),
+				ID: jobCounter,
 				Location: [2]float64{
 					visit.Pickup.Coordinates.Longitude,
 					visit.Pickup.Coordinates.Latitude,
 				},
 			}
+			jobCounter++
 
 			// Solo incluir TimeWindows si los valores son válidos
 			if visit.Pickup.TimeWindow.Start != "" && visit.Pickup.TimeWindow.End != "" {
@@ -299,22 +292,19 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			jobs = append(jobs, job)
+			fmt.Printf("DEBUG: Creando Job ID %d para visita %d\n", job.ID, i)
 
 		} else if hasValidDelivery {
 			// Solo delivery válido -> crear Job
 
-			// Generar identificador único para delivery basado en coordenadas y contacto
-			deliveryLocationKey := generateLocationKey(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
-			deliveryContactID := getContactID(ctx, visit.Delivery.Contact)
-			deliveryID := locationRegistry.getLocationContactID(deliveryLocationKey, deliveryContactID)
-
 			job := model.VroomJob{
-				ID: int(deliveryID),
+				ID: jobCounter,
 				Location: [2]float64{
 					visit.Delivery.Coordinates.Longitude,
 					visit.Delivery.Coordinates.Latitude,
 				},
 			}
+			jobCounter++
 
 			// Solo incluir TimeWindows si los valores son válidos
 			if visit.Delivery.TimeWindow.Start != "" && visit.Delivery.TimeWindow.End != "" {
@@ -356,6 +346,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			jobs = append(jobs, job)
+			fmt.Printf("DEBUG: Creando Job ID %d para visita %d\n", job.ID, i)
 		}
 		// Si no hay ni pickup ni delivery válidos, se omite la visita
 	}
@@ -395,4 +386,8 @@ func mapSkills(skills []string, registry *skillRegistry) []int64 {
 		mapped = append(mapped, registry.getSkillID(skill))
 	}
 	return mapped
+}
+
+func isValidCoordinates(lat, lon float64) bool {
+	return lat != 0 && lon != 0
 }

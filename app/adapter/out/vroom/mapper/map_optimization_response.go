@@ -44,7 +44,10 @@ func MapOptimizationResponse(
 				stepSequence = 0
 			}
 
-			optimizedStep := mapVroomStepToOptimizedStep(ctx, vroomStep, &visitMappings, originalFleet, stepIndex, stepSequence)
+			optimizedStep, err := mapVroomStepToOptimizedStep(ctx, vroomStep, &visitMappings, originalFleet, stepIndex, stepSequence)
+			if err != nil {
+				return optimization.OptimizedFleet{}, err
+			}
 			if optimizedStep != nil {
 				optimizedSteps = append(optimizedSteps, *optimizedStep)
 			}
@@ -85,63 +88,210 @@ func mapVroomStepToOptimizedStep(
 	originalFleet optimization.FleetOptimization,
 	stepIndex int,
 	stepSequence int,
-) *optimization.OptimizedStep {
-	// Determinar el tipo de paso
-	stepType := mapVroomStepType(vroomStep.Type)
-
+) (*optimization.OptimizedStep, error) {
 	var originalVisit *optimization.Visit
-	visitIndex := -1 // Por defecto, -1 si no se encuentra
+	var visitIndex int = -1
 
+	// Buscar la visita original basada en el tipo de paso
 	if vroomStep.Job != 0 { // Es un Job (solo delivery, como en tu caso)
-		jobIDToVisitIndex := visitMappings.GetJobIDToVisit()
-		if index, exists := jobIDToVisitIndex[vroomStep.Job]; exists {
-			if index < len(originalFleet.Visits) {
-				originalVisit = &originalFleet.Visits[index]
-				visitIndex = index
+		// PRIMERO: Intentar buscar si este job corresponde a un shipment original
+		shipmentIDToVisit := visitMappings.GetShipmentIDToVisit()
+
+		// Buscar si el jobID corresponde directamente a un shipment
+		if visit, exists := shipmentIDToVisit[vroomStep.Job]; exists {
+			originalVisit = visit
+			// Buscar el índice de la visita en el slice original por contenido
+			for i, v := range originalFleet.Visits {
+				if v.Pickup.Coordinates.Latitude == visit.Pickup.Coordinates.Latitude &&
+					v.Pickup.Coordinates.Longitude == visit.Pickup.Coordinates.Longitude &&
+					v.Delivery.Coordinates.Latitude == visit.Delivery.Coordinates.Latitude &&
+					v.Delivery.Coordinates.Longitude == visit.Delivery.Coordinates.Longitude {
+					visitIndex = i
+					break
+				}
+			}
+			fmt.Printf("DEBUG: Encontrado Shipment ID %d -> Visita %d (por jobID directo)\n", vroomStep.Job, visitIndex)
+		} else {
+			// Buscar si el jobID corresponde a un paso de pickup o delivery de un shipment
+			// Los pasos de pickup y delivery de un shipment tienen IDs consecutivos
+			for shipmentID, visit := range shipmentIDToVisit {
+				// Verificar si el jobID es el pickup o delivery del shipment
+				if vroomStep.Job == shipmentID || vroomStep.Job == shipmentID+1 {
+					originalVisit = visit
+					// Buscar el índice de la visita en el slice original por contenido
+					for i, v := range originalFleet.Visits {
+						if v.Pickup.Coordinates.Latitude == visit.Pickup.Coordinates.Latitude &&
+							v.Pickup.Coordinates.Longitude == visit.Pickup.Coordinates.Longitude &&
+							v.Delivery.Coordinates.Latitude == visit.Delivery.Coordinates.Latitude &&
+							v.Delivery.Coordinates.Longitude == visit.Delivery.Coordinates.Longitude {
+							visitIndex = i
+							break
+						}
+					}
+					fmt.Printf("DEBUG: Encontrado Shipment ID %d -> Visita %d (jobID %d es pickup/delivery)\n", shipmentID, visitIndex, vroomStep.Job)
+					break
+				}
+			}
+		}
+
+		// SEGUNDO: Si no se encontró como shipment, buscar en el mapeo normal de jobs
+		if originalVisit == nil {
+			jobIDToVisitIndex := visitMappings.GetJobIDToVisit()
+			if index, exists := jobIDToVisitIndex[vroomStep.Job]; exists {
+				if index < len(originalFleet.Visits) {
+					originalVisit = &originalFleet.Visits[index]
+					visitIndex = index
+					fmt.Printf("DEBUG: Encontrado Job ID %d -> Visita %d\n", vroomStep.Job, index)
+				}
+			} else {
+				fmt.Printf("DEBUG: Job ID %d NO encontrado en jobIDToVisitIndex\n", vroomStep.Job)
 			}
 		}
 	} else if vroomStep.Shipment != 0 { // Es un Shipment (pickup y delivery)
 		shipmentIDToVisit := visitMappings.GetShipmentIDToVisit()
 		if visit, exists := shipmentIDToVisit[vroomStep.Shipment]; exists {
 			originalVisit = visit
-			// Buscar el índice del shipment de forma correcta
-			for i := range originalFleet.Visits {
-				if &originalFleet.Visits[i] == originalVisit {
+			// Buscar el índice de la visita en el slice original
+			for i, v := range originalFleet.Visits {
+				if &v == visit {
 					visitIndex = i
 					break
 				}
 			}
+			fmt.Printf("DEBUG: Encontrado Shipment ID %d -> Visita %d\n", vroomStep.Shipment, visitIndex)
+		} else {
+			fmt.Printf("DEBUG: Shipment ID %d NO encontrado en shipmentIDToVisit\n", vroomStep.Shipment)
 		}
 	}
 
-	// Si no encontramos la visita, crear un paso básico
 	if originalVisit == nil {
-		return &optimization.OptimizedStep{
-			Type:       stepType,
-			VisitIndex: -1, // Indicar que no corresponde a una visita original
-			Location: optimization.Location{
-				Latitude:  vroomStep.Location[1], // VROOM usa [lon, lat], convertimos a [lat, lon]
-				Longitude: vroomStep.Location[0],
-				NodeInfo:  optimization.NodeInfo{},
-			},
-			Orders: []optimization.Order{},
+		// Para pasos start/end, no necesitamos una visita original
+		if vroomStep.Type == "start" || vroomStep.Type == "end" {
+			fmt.Printf("DEBUG: Paso tipo %s sin visita original (normal para start/end)\n", vroomStep.Type)
+			// Determinar el tipo de paso
+			stepType := mapVroomStepType(vroomStep.Type)
+
+			// Crear ubicación básica para pasos start/end
+			var location optimization.Location
+			if len(vroomStep.Location) == 2 {
+				location = optimization.Location{
+					Latitude:  vroomStep.Location[1],
+					Longitude: vroomStep.Location[0],
+					NodeInfo:  optimization.NodeInfo{},
+				}
+			}
+
+			return &optimization.OptimizedStep{
+				Type:       stepType,
+				Location:   location,
+				VisitIndex: -1, // Indica que no corresponde a una visita específica
+			}, nil
+		}
+
+		// Intentar buscar si este job corresponde a un shipment original
+		if vroomStep.Job != 0 {
+			shipmentIDToVisit := visitMappings.GetShipmentIDToVisit()
+
+			// Buscar si el jobID corresponde a un shipment
+			if visit, exists := shipmentIDToVisit[vroomStep.Job]; exists {
+				originalVisit = visit
+				// Buscar el índice de la visita en el slice original por contenido
+				for i, v := range originalFleet.Visits {
+					if v.Pickup.Coordinates.Latitude == visit.Pickup.Coordinates.Latitude &&
+						v.Pickup.Coordinates.Longitude == visit.Pickup.Coordinates.Longitude &&
+						v.Delivery.Coordinates.Latitude == visit.Delivery.Coordinates.Latitude &&
+						v.Delivery.Coordinates.Longitude == visit.Delivery.Coordinates.Longitude {
+						visitIndex = i
+						break
+					}
+				}
+				fmt.Printf("DEBUG: Encontrado Shipment ID %d -> Visita %d (por jobID)\n", vroomStep.Job, visitIndex)
+			} else {
+				// Buscar si el jobID corresponde a un paso de pickup o delivery de un shipment
+				// Los pasos de pickup y delivery de un shipment tienen IDs consecutivos
+				for shipmentID, visit := range shipmentIDToVisit {
+					// Verificar si el jobID es el pickup o delivery del shipment
+					if vroomStep.Job == shipmentID || vroomStep.Job == shipmentID+1 {
+						originalVisit = visit
+						// Buscar el índice de la visita en el slice original por contenido
+						for i, v := range originalFleet.Visits {
+							if v.Pickup.Coordinates.Latitude == visit.Pickup.Coordinates.Latitude &&
+								v.Pickup.Coordinates.Longitude == visit.Pickup.Coordinates.Longitude &&
+								v.Delivery.Coordinates.Latitude == visit.Delivery.Coordinates.Latitude &&
+								v.Delivery.Coordinates.Longitude == visit.Delivery.Coordinates.Longitude {
+								visitIndex = i
+								break
+							}
+						}
+						fmt.Printf("DEBUG: Encontrado Shipment ID %d -> Visita %d (jobID %d es pickup/delivery)\n", shipmentID, visitIndex, vroomStep.Job)
+						break
+					}
+				}
+			}
+		}
+
+		// Si aún no se encontró la visita, crear un paso básico sin visita
+		if originalVisit == nil {
+			fmt.Printf("DEBUG: Creando paso sin visita original para tipo %s, Job: %d, Shipment: %d\n", vroomStep.Type, vroomStep.Job, vroomStep.Shipment)
+
+			var location optimization.Location
+			if len(vroomStep.Location) == 2 {
+				location = optimization.Location{
+					Latitude:  vroomStep.Location[1],
+					Longitude: vroomStep.Location[0],
+					NodeInfo:  optimization.NodeInfo{},
+				}
+			}
+
+			return &optimization.OptimizedStep{
+				Type:       mapVroomStepType(vroomStep.Type),
+				Location:   location,
+				VisitIndex: -1, // Indica que no corresponde a una visita específica
+			}, nil
 		}
 	}
+
+	// Determinar el tipo de paso
+	stepType := mapVroomStepType(vroomStep.Type)
 
 	// Mapear ubicación basada en el tipo de paso
 	var location optimization.Location
 	switch stepType {
 	case "pickup":
-		location = optimization.Location{
-			Latitude:  originalVisit.Pickup.Coordinates.Latitude,
-			Longitude: originalVisit.Pickup.Coordinates.Longitude,
-			NodeInfo:  originalVisit.Pickup.NodeInfo,
+		// Siempre usar las coordenadas de VROOM si están disponibles
+		if len(vroomStep.Location) == 2 {
+			location = optimization.Location{
+				Latitude:  vroomStep.Location[1], // VROOM usa [lon, lat], convertimos a [lat, lon]
+				Longitude: vroomStep.Location[0],
+				NodeInfo:  originalVisit.Pickup.NodeInfo,
+			}
+			fmt.Printf("DEBUG: Pickup para visita %d - usando coordenadas de VROOM: lat=%f, lon=%f\n", visitIndex, location.Latitude, location.Longitude)
+		} else {
+			// Si VROOM no tiene coordenadas, usar las originales
+			location = optimization.Location{
+				Latitude:  originalVisit.Pickup.Coordinates.Latitude,
+				Longitude: originalVisit.Pickup.Coordinates.Longitude,
+				NodeInfo:  originalVisit.Pickup.NodeInfo,
+			}
+			fmt.Printf("DEBUG: Pickup para visita %d - VROOM sin coordenadas, usando originales: lat=%f, lon=%f\n", visitIndex, location.Latitude, location.Longitude)
 		}
 	case "delivery":
-		location = optimization.Location{
-			Latitude:  originalVisit.Delivery.Coordinates.Latitude,
-			Longitude: originalVisit.Delivery.Coordinates.Longitude,
-			NodeInfo:  originalVisit.Delivery.NodeInfo,
+		// Siempre usar las coordenadas de VROOM si están disponibles
+		if len(vroomStep.Location) == 2 {
+			location = optimization.Location{
+				Latitude:  vroomStep.Location[1], // VROOM usa [lon, lat], convertimos a [lat, lon]
+				Longitude: vroomStep.Location[0],
+				NodeInfo:  originalVisit.Delivery.NodeInfo,
+			}
+			fmt.Printf("DEBUG: Delivery para visita %d - usando coordenadas de VROOM: lat=%f, lon=%f\n", visitIndex, location.Latitude, location.Longitude)
+		} else {
+			// Si VROOM no tiene coordenadas, usar las originales
+			location = optimization.Location{
+				Latitude:  originalVisit.Delivery.Coordinates.Latitude,
+				Longitude: originalVisit.Delivery.Coordinates.Longitude,
+				NodeInfo:  originalVisit.Delivery.NodeInfo,
+			}
+			fmt.Printf("DEBUG: Delivery para visita %d - VROOM sin coordenadas, usando originales: lat=%f, lon=%f\n", visitIndex, location.Latitude, location.Longitude)
 		}
 	default:
 		// Para pasos start/end, usar la ubicación de VROOM si está disponible
@@ -170,7 +320,7 @@ func mapVroomStepToOptimizedStep(
 		Location:   location,
 		Orders:     orders,
 		Arrival:    vroomStep.Arrival,
-	}
+	}, nil
 }
 
 // mapVroomStepType convierte el tipo de paso de VROOM al tipo del dominio
