@@ -66,8 +66,9 @@ type DeliveryUnit struct {
 
 // Order representa una orden
 type Order struct {
-	DeliveryUnits []DeliveryUnit
-	ReferenceID   string
+	DeliveryUnits  []DeliveryUnit
+	ReferenceID    string
+	SequenceNumber *int
 }
 
 // Vehicle representa un vehículo

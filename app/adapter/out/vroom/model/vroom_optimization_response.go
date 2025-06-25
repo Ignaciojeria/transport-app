@@ -225,7 +225,8 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 	// Crear orden para cada order en la visita
 	for _, orderReq := range visit.Orders {
 		order := domain.Order{
-			ReferenceID: domain.ReferenceID(orderReq.ReferenceID),
+			ReferenceID:    domain.ReferenceID(orderReq.ReferenceID),
+			SequenceNumber: orderReq.SequenceNumber,
 			Destination: domain.NodeInfo{
 				ReferenceID: domain.ReferenceID(visit.Delivery.NodeInfo.ReferenceID),
 				Name:        "Destino de entrega",
@@ -507,6 +508,12 @@ type StepPoint struct {
 	Arrival      int64      `json:"arrival"`
 	Description  string     `json:"description,omitempty"`
 	ReferenceIDs []string   `json:"reference_ids,omitempty"` // ReferenceIDs de las órdenes asociadas
+	// Metadata adicional para el punto final
+	IsEndPoint    bool   `json:"is_end_point,omitempty"`   // Indica si es el punto final de la ruta
+	VehicleID     int64  `json:"vehicle_id,omitempty"`     // ID del vehículo
+	VehiclePlate  string `json:"vehicle_plate,omitempty"`  // Patente del vehículo
+	TotalCost     int64  `json:"total_cost,omitempty"`     // Costo total de la ruta
+	TotalDuration int64  `json:"total_duration,omitempty"` // Duración total de la ruta
 }
 
 // UnassignedPoint representa un punto no asignado
@@ -563,35 +570,89 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, origi
 		jobCount := 1
 
 		for j, step := range route.Steps {
-			if len(step.Location) == 2 {
-				stepNumber := j
+			// Determinar número secuencial por tipo
+			stepNumber := j
+			switch step.Type {
+			case "pickup":
+				stepNumber = pickupCount
+				pickupCount++
+			case "delivery":
+				stepNumber = deliveryCount
+				deliveryCount++
+			case "job":
+				stepNumber = jobCount
+				jobCount++
+			}
 
-				// Determinar número secuencial por tipo
-				switch step.Type {
-				case "pickup":
-					stepNumber = pickupCount
-					pickupCount++
-				case "delivery":
-					stepNumber = deliveryCount
-					deliveryCount++
-				case "job":
-					stepNumber = jobCount
-					jobCount++
+			// Obtener ReferenceIDs de las órdenes asociadas
+			var referenceIDs []string
+			if originalFleet != nil {
+				referenceIDs = getOrderReferenceIDs(step, &visitMappings, originalFleet)
+			}
+
+			// Si es el último step y es de tipo end, solo incluirlo si NO hay un delivery/job en la misma ubicación justo antes
+			isEndPoint := j == len(route.Steps)-1 // Último step de la ruta
+			if isEndPoint && step.Type == "end" && j > 0 {
+				prevStep := route.Steps[j-1]
+				// Comparar ubicación con el paso anterior
+				if len(step.Location) == 2 && len(prevStep.Location) == 2 &&
+					step.Location[0] == prevStep.Location[0] && step.Location[1] == prevStep.Location[1] &&
+					(prevStep.Type == "delivery" || prevStep.Type == "job") {
+					// Si el paso anterior es una entrega/job en la misma ubicación, NO incluir el end
+					continue
 				}
+			}
 
-				// Obtener ReferenceIDs de las órdenes asociadas
-				var referenceIDs []string
-				if originalFleet != nil {
-					referenceIDs = getOrderReferenceIDs(step, &visitMappings, originalFleet)
+			// Solo incluir steps que tengan órdenes asociadas o sean start/end
+			if len(referenceIDs) > 0 || step.Type == "start" || step.Type == "end" {
+				var location [2]float64
+
+				// Usar coordenadas de VROOM si están disponibles
+				if len(step.Location) == 2 {
+					location = [2]float64{step.Location[1], step.Location[0]} // lat, lng
+				} else {
+					// Para steps sin coordenadas directas, intentar obtenerlas de la visita original
+					if originalFleet != nil {
+						var originalVisit *optimization.Visit
+
+						if step.Job != 0 { // Es un Job (solo delivery)
+							jobIDToVisitIndex := visitMappings.GetJobIDToVisit()
+							if index, exists := jobIDToVisitIndex[step.Job]; exists {
+								if index < len(originalFleet.Visits) {
+									originalVisit = &originalFleet.Visits[index]
+								}
+							}
+						} else if step.Shipment != 0 { // Es un Shipment (pickup y delivery)
+							shipmentIDToVisit := visitMappings.GetShipmentIDToVisit()
+							if visit, exists := shipmentIDToVisit[step.Shipment]; exists {
+								originalVisit = visit
+							}
+						}
+
+						if originalVisit != nil {
+							switch step.Type {
+							case "pickup":
+								location = [2]float64{originalVisit.Pickup.Coordinates.Latitude, originalVisit.Pickup.Coordinates.Longitude}
+							case "delivery", "job":
+								location = [2]float64{originalVisit.Delivery.Coordinates.Latitude, originalVisit.Delivery.Coordinates.Longitude}
+							}
+						}
+					}
 				}
 
 				stepPoint := StepPoint{
-					Location:     [2]float64{step.Location[1], step.Location[0]}, // lat, lng
+					Location:     location,
 					StepType:     step.Type,
 					StepNumber:   stepNumber,
 					Arrival:      step.Arrival,
 					Description:  step.Description,
 					ReferenceIDs: referenceIDs,
+					// Metadata adicional para el punto final
+					IsEndPoint:    isEndPoint,
+					VehicleID:     route.Vehicle,
+					VehiclePlate:  vehiclePlate,
+					TotalCost:     route.Cost,
+					TotalDuration: route.Duration,
 				}
 				routeData.Steps = append(routeData.Steps, stepPoint)
 			}

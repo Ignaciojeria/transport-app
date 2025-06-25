@@ -111,8 +111,9 @@ func mapOptimizationOrderToDomainOrder(ctx context.Context, optOrder optimizatio
 	}
 
 	return domain.Order{
-		ReferenceID:   domain.ReferenceID(optOrder.ReferenceID),
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:    domain.ReferenceID(optOrder.ReferenceID),
+		SequenceNumber: optOrder.SequenceNumber,
+		DeliveryUnits:  deliveryUnits,
 		// Nota: Algunos campos del domain.Order no están disponibles en optimization.Order
 		// Se pueden establecer valores por defecto o requerir parámetros adicionales
 	}

@@ -33,8 +33,21 @@ func MapOptimizationResponse(
 
 		// Mapear los pasos de la ruta
 		optimizedSteps := make([]optimization.OptimizedStep, 0, len(vroomRoute.Steps))
-		for _, vroomStep := range vroomRoute.Steps {
-			optimizedStep := mapVroomStepToOptimizedStep(ctx, vroomStep, &visitMappings, originalFleet)
+		sequence := 1
+
+		for stepIndex, vroomStep := range vroomRoute.Steps {
+			// Determinar la secuencia basada en el orden de los pasos con órdenes
+			var stepSequence int
+			if vroomStep.Type == "pickup" || vroomStep.Type == "delivery" || vroomStep.Type == "job" {
+				// Cada paso con órdenes recibe un número secuencial
+				stepSequence = sequence
+				sequence++
+			} else {
+				// Para pasos start/end, no asignar secuencia
+				stepSequence = 0
+			}
+
+			optimizedStep := mapVroomStepToOptimizedStep(ctx, vroomStep, &visitMappings, originalFleet, stepIndex, stepSequence)
 			if optimizedStep != nil {
 				optimizedSteps = append(optimizedSteps, *optimizedStep)
 			}
@@ -73,6 +86,8 @@ func mapVroomStepToOptimizedStep(
 	vroomStep model.Step,
 	visitMappings *model.VisitMappings,
 	originalFleet optimization.FleetOptimization,
+	stepIndex int,
+	stepSequence int,
 ) *optimization.OptimizedStep {
 	// Determinar el tipo de paso
 	stepType := mapVroomStepType(vroomStep.Type)
@@ -142,11 +157,21 @@ func mapVroomStepToOptimizedStep(
 		}
 	}
 
+	// Crear copias de las órdenes con el sequenceNumber asignado
+	orders := make([]optimization.Order, len(originalVisit.Orders))
+	for i, order := range originalVisit.Orders {
+		orders[i] = order
+		// Solo asignar sequenceNumber para pasos pickup, delivery o job (stepSequence > 0)
+		if stepSequence > 0 {
+			orders[i].SequenceNumber = &stepSequence
+		}
+	}
+
 	return &optimization.OptimizedStep{
 		Type:       stepType,
 		VisitIndex: visitIndex,
 		Location:   location,
-		Orders:     originalVisit.Orders,
+		Orders:     orders,
 	}
 }
 
