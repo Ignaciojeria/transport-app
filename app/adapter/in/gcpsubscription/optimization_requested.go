@@ -64,7 +64,9 @@ func newOptimizationRequested(
 			return http.StatusAccepted, err
 		}
 
-		vroom.ExportPolylineJSONFromOptimizedFleet("ui/static/dev/polyline.json", res)
+		// Obtener el FleetOptimization original para las horas de inicio de los vehículos
+		originalFleet := input.Map()
+		vroom.ExportPolylineJSONFromOptimizedFleet("ui/static/dev/polyline.json", res, originalFleet)
 
 		observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
 		fmt.Println("works")

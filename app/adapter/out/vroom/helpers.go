@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"time"
 	"transport-app/app/domain/optimization"
 )
 
@@ -106,16 +107,17 @@ type RouteData struct {
 }
 
 type StepPoint struct {
-	Location      [2]float64 `json:"location"`
-	StepType      string     `json:"step_type"`
-	StepNumber    int        `json:"step_number"`
-	Arrival       int64      `json:"arrival"`
-	Description   string     `json:"description,omitempty"`
-	ReferenceIDs  []string   `json:"reference_ids,omitempty"`
-	IsEndPoint    bool       `json:"is_end_point,omitempty"`
-	VehiclePlate  string     `json:"vehicle_plate,omitempty"`
-	TotalCost     int64      `json:"total_cost,omitempty"`
-	TotalDuration int64      `json:"total_duration,omitempty"`
+	Location             [2]float64 `json:"location"`
+	StepType             string     `json:"step_type"`
+	StepNumber           int        `json:"step_number"`
+	Arrival              int64      `json:"arrival"`
+	EstimatedArrivalTime string     `json:"estimated_arrival_time"`
+	Description          string     `json:"description,omitempty"`
+	ReferenceIDs         []string   `json:"reference_ids,omitempty"`
+	IsEndPoint           bool       `json:"is_end_point,omitempty"`
+	VehiclePlate         string     `json:"vehicle_plate,omitempty"`
+	TotalCost            int64      `json:"total_cost,omitempty"`
+	TotalDuration        int64      `json:"total_duration,omitempty"`
 }
 
 type UnassignedPoint struct {
@@ -125,10 +127,34 @@ type UnassignedPoint struct {
 }
 
 // ExportPolylineJSONFromOptimizedFleet exporta rutas y steps desde OptimizedFleet en formato idéntico a ExportToPolylineJSON.
-func ExportPolylineJSONFromOptimizedFleet(filename string, fleet optimization.OptimizedFleet) error {
+// Usa la hora de inicio específica de cada vehículo desde el FleetOptimization original.
+func ExportPolylineJSONFromOptimizedFleet(filename string, fleet optimization.OptimizedFleet, originalFleet optimization.FleetOptimization) error {
+	// Crear mapa de patentes a horas de inicio
+	vehicleStartHours := make(map[string]string)
+	for _, v := range originalFleet.Vehicles {
+		vehicleStartHours[v.Plate] = v.TimeWindow.Start
+	}
+
+	return ExportPolylineJSONFromOptimizedFleetWithStartHours(filename, fleet, vehicleStartHours)
+}
+
+// ExportPolylineJSONFromOptimizedFleetWithStartHours exporta rutas y steps desde OptimizedFleet usando un mapa de patentes a horas de inicio.
+// vehicleStartHours es un mapa donde la clave es la patente del vehículo y el valor es la hora de inicio en formato "HH:MM"
+func ExportPolylineJSONFromOptimizedFleetWithStartHours(filename string, fleet optimization.OptimizedFleet, vehicleStartHours map[string]string) error {
 	var routesData []RouteData
 
 	for _, route := range fleet.Routes {
+		// Obtener la hora de inicio del vehículo desde el mapa
+		startHour, exists := vehicleStartHours[route.VehiclePlate]
+		if !exists || startHour == "" {
+			startHour = "08:00" // Hora por defecto si no está definida
+		}
+
+		startTime, err := time.Parse("15:04", startHour)
+		if err != nil {
+			return fmt.Errorf("hora de inicio inválida para vehículo %s: %w", route.VehiclePlate, err)
+		}
+
 		routeData := RouteData{
 			VehiclePlate: route.VehiclePlate,
 			Cost:         route.Cost,
@@ -168,16 +194,19 @@ func ExportPolylineJSONFromOptimizedFleet(filename string, fleet optimization.Op
 					stepNumber = *step.Orders[0].SequenceNumber
 				}
 
+				estimatedArrival := startTime.Add(time.Duration(step.Arrival) * time.Second).Format("15:04")
+
 				steps = append(steps, StepPoint{
-					Location:      location,
-					StepType:      step.Type,
-					StepNumber:    stepNumber,
-					Arrival:       0, // Si tienes arrival en tu dominio, cámbialo aquí
-					ReferenceIDs:  referenceIDs,
-					IsEndPoint:    isEndPoint,
-					VehiclePlate:  route.VehiclePlate,
-					TotalCost:     route.Cost,
-					TotalDuration: route.Duration,
+					Location:             location,
+					StepType:             step.Type,
+					StepNumber:           stepNumber,
+					Arrival:              step.Arrival,
+					EstimatedArrivalTime: estimatedArrival,
+					ReferenceIDs:         referenceIDs,
+					IsEndPoint:           isEndPoint,
+					VehiclePlate:         route.VehiclePlate,
+					TotalCost:            route.Cost,
+					TotalDuration:        route.Duration,
 				})
 			}
 		}

@@ -22,6 +22,7 @@ type OptimizedStep struct {
 	Type       string // start, pickup, delivery, end
 	VisitIndex int    // índice de visita original
 	Location   Location
+	Arrival    int64
 	Orders     []Order
 }
 

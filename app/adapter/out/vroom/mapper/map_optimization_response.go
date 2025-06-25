@@ -169,6 +169,7 @@ func mapVroomStepToOptimizedStep(
 		VisitIndex: visitIndex,
 		Location:   location,
 		Orders:     orders,
+		Arrival:    vroomStep.Arrival,
 	}
 }
 

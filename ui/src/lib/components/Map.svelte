@@ -170,7 +170,7 @@
 				const marker = L.marker(step.location, { icon: customIcon })
 					.addTo(map)
 					.bindPopup(
-						`${vehicleInfo}${vehiclePlateInfo}Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg${referenceInfo}`
+						`${vehicleInfo}${vehiclePlateInfo}Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${formatSecondsToHHMM(step.arrival)}${referenceInfo}`
 					);
 				markers.push(marker);
 			}
@@ -237,6 +237,7 @@
 					return L.marker(latlng, { icon: customIcon }).bindPopup(
 						(props.popup || props.name || `Punto`) + 
 						(props.vehicle_plate ? `<br>Patente: ${props.vehicle_plate}` : '') +
+						(props.arrival !== undefined ? `<br>Llegada: ${formatSecondsToHHMM(props.arrival)}` : '') +
 						(props.reference_ids && props.reference_ids.length > 0 
 							? `<br>Referencias: ${props.reference_ids.join(', ')}` 
 							: '')
@@ -334,6 +335,13 @@
 			opacity: lineOpacity,
 			fillOpacity: 0.1
 		});
+	}
+
+	function formatSecondsToHHMM(seconds: number): string {
+		if (isNaN(seconds)) return 'N/A';
+		const h = Math.floor(seconds / 3600);
+		const m = Math.floor((seconds % 3600) / 60);
+		return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 	}
 </script>
 
