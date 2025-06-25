@@ -64,6 +64,8 @@ func newOptimizationRequested(
 			return http.StatusAccepted, err
 		}
 
+		vroom.ExportPolylineJSONFromOptimizedFleet("ui/static/dev/polyline.json", res)
+
 		observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
 		fmt.Println("works")
 		m.Ack()
