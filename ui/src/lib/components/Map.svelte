@@ -21,12 +21,31 @@
 	export let lineWeight: number = 3;
 	export let lineOpacity: number = 0.7;
 
+	// Paleta de colores para 10 rutas diferentes
+	const routeColors = [
+		'#FF6B6B', // Rojo coral
+		'#4ECDC4', // Turquesa
+		'#45B7D1', // Azul claro
+		'#96CEB4', // Verde menta
+		'#FFEAA7', // Amarillo claro
+		'#DDA0DD', // Ciruela
+		'#98D8C8', // Verde agua
+		'#F7DC6F', // Amarillo dorado
+		'#BB8FCE', // Lavanda
+		'#85C1E9'  // Azul cielo
+	];
+
 	let mapContainer: HTMLDivElement;
 	let map: any = null;
 	let routeLayer: any = null;
 	let geoJsonLayer: any = null;
 	let markers: any[] = [];
 	let L: any = null;
+
+	// Función para obtener el color de una ruta por índice
+	function getRouteColor(index: number): string {
+		return routeColors[index % routeColors.length];
+	}
 
 	onMount(async () => {
 		if (!browser) return;
@@ -87,8 +106,11 @@
 	function drawMultipleRoutes() {
 		multipleRoutes.forEach((route, index) => {
 			if (route.coordinates && route.coordinates.length > 0) {
+				// Usar color específico de la ruta o color de la paleta
+				const routeColor = route.color || getRouteColor(index);
+				
 				const routeLayer = L.polyline(route.coordinates, {
-					color: route.color,
+					color: routeColor,
 					weight: lineWeight,
 					opacity: lineOpacity
 				}).addTo(map);
@@ -127,7 +149,16 @@
 			if (step.location && step.location.length === 2) {
 				const stepType = step.step_type;
 				let markerHtml = '';
-				let bgColor = step.vehicleColor || lineColor; // Usar color del vehículo si está disponible
+				
+				// Determinar el color del marcador basado en la ruta
+				let bgColor = lineColor; // color por defecto
+				
+				// Si el marcador tiene información de ruta, usar ese color
+				if (step.route_index !== undefined) {
+					bgColor = getRouteColor(step.route_index);
+				} else if (step.vehicleColor) {
+					bgColor = step.vehicleColor;
+				}
 
 				if (stepType === 'start') {
 					markerHtml = '▶';
@@ -137,14 +168,13 @@
 					bgColor = '#dc3545'; // rojo para end
 				} else if (stepType === 'pickup') {
 					markerHtml = '📦';
-					bgColor = '#007bff'; // azul para pickup
+					// Mantener el color de la ruta para pickup
 				} else if (stepType === 'delivery') {
 					markerHtml = step.step_number ? step.step_number.toString() : '';
-					bgColor = '#ffc107'; // amarillo para delivery
+					// Mantener el color de la ruta para delivery
 				} else if (step.step_number) {
 					markerHtml = step.step_number.toString();
-					// Color por defecto para jobs (entregas directas)
-					bgColor = '#6f42c1'; // púrpura para jobs
+					// Mantener el color de la ruta para jobs
 				}
 
 				// No mostrar marcador si no hay nada que mostrar
@@ -171,6 +201,7 @@
 				});
 				
 				const vehicleInfo = step.vehicle ? `Vehículo ${step.vehicle}<br>` : '';
+				const routeInfo = step.route_index !== undefined ? `Ruta ${step.route_index + 1}<br>` : '';
 				const stepDescription = stepType === 'pickup' ? 'Recogida' : 
 									  stepType === 'delivery' ? 'Entrega' : 
 									  stepType === 'job' ? 'Entrega directa' : stepType;
@@ -183,7 +214,7 @@
 				const marker = L.marker(step.location, { icon: customIcon })
 					.addTo(map)
 					.bindPopup(
-						`${vehicleInfo}Paso ${step.step_number || index + 1}: ${stepDescription}<br>Llegada: ${step.arrival || 'N/A'} seg${orderInfo}`
+						`${routeInfo}${vehicleInfo}Paso ${step.step_number || index + 1}: ${stepDescription}<br>Llegada: ${step.arrival || 'N/A'} seg${orderInfo}`
 					);
 				markers.push(marker);
 			}
@@ -200,8 +231,12 @@
 		// Crear capa GeoJSON con estilo personalizado
 		geoJsonLayer = L.geoJSON(geoJson, {
 			style: function(feature) {
+				const props = feature.properties || {};
+				const routeIndex = props.route_index || 0;
+				const routeColor = getRouteColor(routeIndex);
+				
 				return {
-					color: lineColor,
+					color: routeColor,
 					weight: lineWeight,
 					opacity: lineOpacity,
 					fillOpacity: 0.1
@@ -212,7 +247,10 @@
 					const props = feature.properties || {};
 					const stepType = props.step_type;
 					let markerHtml = '';
-					let bgColor = lineColor; // default color
+					
+					// Determinar el color del marcador basado en la ruta
+					const routeIndex = props.route_index || 0;
+					let bgColor = getRouteColor(routeIndex);
 
 					if (stepType === 'start') {
 						markerHtml = '▶';
@@ -222,14 +260,13 @@
 						bgColor = '#dc3545'; // rojo para end
 					} else if (stepType === 'pickup') {
 						markerHtml = '📦';
-						bgColor = '#007bff'; // azul para pickup
+						// Mantener el color de la ruta para pickup
 					} else if (stepType === 'delivery') {
 						markerHtml = props.step_number ? props.step_number : '';
-						bgColor = '#ffc107'; // amarillo para delivery
+						// Mantener el color de la ruta para delivery
 					} else if (props.step_number) {
 						markerHtml = props.step_number;
-						// Color por defecto para jobs (entregas directas)
-						bgColor = '#6f42c1'; // púrpura para jobs
+						// Mantener el color de la ruta para jobs
 					}
 
 					// No mostrar marcador si no hay nada que mostrar
@@ -255,14 +292,19 @@
 						iconAnchor: [15, 15]
 					});
 					
-					return L.marker(latlng, { icon: customIcon }).bindPopup(
-						props.popup || props.name || `Punto`
-					);
+					const routeInfo = props.route_index !== undefined ? `Ruta ${props.route_index + 1}<br>` : '';
+					const popupContent = `${routeInfo}${props.popup || props.name || `Punto`}`;
+					
+					return L.marker(latlng, { icon: customIcon }).bindPopup(popupContent);
 				}
+				
+				const routeIndex = feature.properties?.route_index || 0;
+				const routeColor = getRouteColor(routeIndex);
+				
 				return L.circleMarker(latlng, {
 					radius: 6,
-					fillColor: lineColor,
-					color: lineColor,
+					fillColor: routeColor,
+					color: routeColor,
 					weight: 2,
 					opacity: 1,
 					fillOpacity: 0.8

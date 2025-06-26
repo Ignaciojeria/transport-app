@@ -184,6 +184,14 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 					ReferenceID: startLocation.ref,
 				},
 			},
+			// EndLocation se mantiene vacío (solo origen)
+			EndLocation: struct {
+				Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
+				Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
+				NodeInfo  struct {
+					ReferenceID string `json:"referenceID"`
+				} `json:"nodeInfo"`
+			}{},
 			Skills: []string{"delivery", "express"},
 			TimeWindow: struct {
 				Start string `json:"start" example:"08:00" description:"Time window start (24h format)"`
@@ -417,9 +425,6 @@ func generateVisits() []struct {
 			}
 		}
 
-		// Para algunas visitas, agregar pickup (shipment) - aproximadamente 5% de las visitas
-		hasPickup := i%20 == 0 // Solo 5% de las visitas tendrán pickup
-
 		visit := struct {
 			Pickup struct {
 				Coordinates struct {
@@ -496,18 +501,7 @@ func generateVisits() []struct {
 		visit.Delivery.PoliticalArea.Province = politicalArea.province
 		visit.Delivery.PoliticalArea.State = politicalArea.state
 
-		// Configurar pickup si es necesario
-		if hasPickup {
-			pickupLat := deliveryLat + (rand.Float64()-0.5)*0.01
-			pickupLon := deliveryLon + (rand.Float64()-0.5)*0.01
-			visit.Pickup.Coordinates.Latitude = pickupLat
-			visit.Pickup.Coordinates.Longitude = pickupLon
-			visit.Pickup.ServiceTime = 3000
-			visit.Pickup.Skills = []string{"delivery"}
-			visit.Pickup.TimeWindow.Start = "08:00"
-			visit.Pickup.TimeWindow.End = "17:00"
-			visit.Pickup.NodeInfo.ReferenceID = fmt.Sprintf("pickup-%s-%04d", zoneName, i+1)
-		}
+		// Pickup se mantiene vacío (no se generan pickups)
 
 		// Generar datos de contacto
 		nameIndex := i % len(names)
@@ -522,13 +516,6 @@ func generateVisits() []struct {
 		visit.Delivery.Contact.FullName = name
 		visit.Delivery.Contact.NationalID = nationalID
 		visit.Delivery.Contact.Phone = phone
-
-		if hasPickup {
-			visit.Pickup.Contact.Email = email
-			visit.Pickup.Contact.FullName = name
-			visit.Pickup.Contact.NationalID = nationalID
-			visit.Pickup.Contact.Phone = phone
-		}
 
 		// Generar órdenes - cada visita tiene 1 orden
 		order := struct {
