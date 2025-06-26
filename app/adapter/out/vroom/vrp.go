@@ -21,7 +21,7 @@ func init() {
 	ioc.Registry(
 		NewOptimize,
 		observability.NewObservability,
-		NewVroomRestyFastClient,
+		NewVroomRestyHeavyClient,
 		configuration.NewConf,
 	)
 }

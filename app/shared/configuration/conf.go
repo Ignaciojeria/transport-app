@@ -32,6 +32,7 @@ type Conf struct {
 	ROUTE_STARTED_SUBMITTED_SUBSCRIPTION      string `env:"ROUTE_STARTED_SUBMITTED_SUBSCRIPTION"`
 	OPTIMIZATION_REQUESTED_SUBSCRIPTION       string `env:"OPTIMIZATION_REQUESTED_SUBSCRIPTION"`
 	VROOM_URL                                 string `env:"VROOM_URL"`
+	CHECK_MY_POWER                            string `env:"CHECK_MY_POWER" envDefault:"false"`
 }
 
 func NewConf() (Conf, error) {
