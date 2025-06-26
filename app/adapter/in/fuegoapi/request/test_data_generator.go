@@ -494,7 +494,7 @@ func generateVisits() []struct {
 		visit.Delivery.ServiceTime = 30
 		visit.Delivery.Skills = []string{"delivery"}
 		visit.Delivery.TimeWindow.Start = "08:00"
-		visit.Delivery.TimeWindow.End = "17:00"
+		visit.Delivery.TimeWindow.End = "23:00"
 		visit.Delivery.NodeInfo.ReferenceID = fmt.Sprintf("delivery-%s-%04d", zoneName, i+1)
 		visit.Delivery.PoliticalArea.Code = politicalArea.code
 		visit.Delivery.PoliticalArea.District = politicalArea.district

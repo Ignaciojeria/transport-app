@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"time"
@@ -182,13 +183,17 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 		}
 
 		// Mapear órdenes basadas en los jobs y shipments de los steps
-		var orders []domain.Order
+		// Agrupar órdenes por coordenadas para evitar duplicados
+		orderMap := make(map[string][]domain.Order) // clave: coordenadas, valor: órdenes
+
 		for _, step := range vroomRoute.Steps {
+			var stepOrders []domain.Order
+
 			// Manejar jobs (solo delivery)
 			if step.Job > 0 {
 				visit := findVisitByJobID(step.Job, req.Visits)
 				if visit != nil {
-					orders = append(orders, createOrdersFromVisit(visit, false)...)
+					stepOrders = append(stepOrders, createOrdersFromVisit(visit, false)...)
 				}
 			}
 
@@ -196,9 +201,33 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 			if step.Shipment > 0 {
 				visit := findVisitByShipmentID(step.Shipment, req.Visits)
 				if visit != nil {
-					orders = append(orders, createOrdersFromVisit(visit, true)...)
+					stepOrders = append(stepOrders, createOrdersFromVisit(visit, true)...)
 				}
 			}
+
+			// Agrupar órdenes por coordenadas si el step tiene ubicación
+			if len(step.Location) == 2 && len(stepOrders) > 0 {
+				lat := roundCoordinate(step.Location[1], 6) // lat
+				lon := roundCoordinate(step.Location[0], 6) // lon
+				coordKey := fmt.Sprintf("%.6f,%.6f", lat, lon)
+
+				if existingOrders, exists := orderMap[coordKey]; exists {
+					// Combinar órdenes existentes con las nuevas, evitando duplicados por ReferenceID
+					combinedOrders := append(existingOrders, stepOrders...)
+					orderMap[coordKey] = removeDuplicateOrders(combinedOrders)
+				} else {
+					orderMap[coordKey] = stepOrders
+				}
+			} else if len(stepOrders) > 0 {
+				// Para steps sin ubicación, agregar a una clave especial
+				orderMap["no-location"] = append(orderMap["no-location"], stepOrders...)
+			}
+		}
+
+		// Convertir el mapa de órdenes agrupadas a una lista plana
+		var orders []domain.Order
+		for _, orderGroup := range orderMap {
+			orders = append(orders, orderGroup...)
 		}
 		route.Orders = orders
 
@@ -362,6 +391,28 @@ type GeoJSONCollection struct {
 	Features []GeoJSONFeature `json:"features"`
 }
 
+// getAllReferencesForStep busca todas las órdenes de todas las visitas con las mismas coordenadas
+func getAllReferencesForStep(step Step, visits []optimization.Visit) []string {
+	if len(step.Location) != 2 {
+		return nil
+	}
+	lat := roundCoordinate(step.Location[1], 6)
+	lon := roundCoordinate(step.Location[0], 6)
+	coordKey := fmt.Sprintf("%.6f,%.6f", lat, lon)
+	var refs []string
+	for _, visit := range visits {
+		vLat := roundCoordinate(visit.Delivery.Coordinates.Latitude, 6)
+		vLon := roundCoordinate(visit.Delivery.Coordinates.Longitude, 6)
+		vCoordKey := fmt.Sprintf("%.6f,%.6f", vLat, vLon)
+		if vCoordKey == coordKey {
+			for _, order := range visit.Orders {
+				refs = append(refs, order.ReferenceID)
+			}
+		}
+	}
+	return removeDuplicateReferences(refs)
+}
+
 // ExportToGeoJSON exporta las rutas a un archivo GeoJSON
 func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string, req optimization.FleetOptimization) error {
 	collection := GeoJSONCollection{
@@ -418,8 +469,8 @@ func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string, req optimi
 			if len(step.Location) == 2 {
 				symbol, color, size := getStepSymbolWithSequence(step.Type, stepCounter)
 
-				// Extraer referenceID de las órdenes
-				orderRefs := extractOrderRefsFromStep(step, req)
+				// Extraer referenceID de las órdenes agrupadas por coordenadas
+				orderRefs := getAllReferencesForStep(step, req.Visits)
 
 				stepFeature := GeoJSONFeature{
 					Type: "Feature",
@@ -440,7 +491,7 @@ func (ret VroomOptimizationResponse) ExportToGeoJSON(filename string, req optimi
 						"pickup":      step.Pickup,
 						"delivery":    step.Delivery,
 						"description": step.Description,
-						"order_refs":  orderRefs, // ReferenceIDs de las órdenes
+						"order_refs":  orderRefs, // ReferenceIDs de las órdenes agrupadas
 						"name":        fmt.Sprintf("Paso %d - %s", stepCounter, step.Type),
 						// Propiedades para símbolos
 						"marker-symbol": symbol,
@@ -578,31 +629,41 @@ type UnassignedPoint struct {
 	OrderRefs []string   `json:"order_refs,omitempty"` // ReferenceIDs de las órdenes no asignadas
 }
 
-// extractOrderRefsFromStep extrae las referenceID de las órdenes asociadas a un step
-func extractOrderRefsFromStep(step Step, req optimization.FleetOptimization) []string {
-	var orderRefs []string
+// roundCoordinate redondea una coordenada a un número específico de decimales
+func roundCoordinate(coord float64, decimals int) float64 {
+	multiplier := math.Pow(10, float64(decimals))
+	return math.Round(coord*multiplier) / multiplier
+}
 
-	// Buscar órdenes asociadas al job
-	if step.Job > 0 {
-		visit := findVisitByJobID(step.Job, req.Visits)
-		if visit != nil {
-			for _, order := range visit.Orders {
-				orderRefs = append(orderRefs, order.ReferenceID)
-			}
+// removeDuplicateReferences elimina referencias duplicadas de una lista
+func removeDuplicateReferences(refs []string) []string {
+	seen := make(map[string]bool)
+	var result []string
+
+	for _, ref := range refs {
+		if !seen[ref] {
+			seen[ref] = true
+			result = append(result, ref)
 		}
 	}
 
-	// Buscar órdenes asociadas al shipment
-	if step.Shipment > 0 {
-		visit := findVisitByShipmentID(step.Shipment, req.Visits)
-		if visit != nil {
-			for _, order := range visit.Orders {
-				orderRefs = append(orderRefs, order.ReferenceID)
-			}
+	return result
+}
+
+// removeDuplicateOrders elimina órdenes duplicadas basándose en el ReferenceID
+func removeDuplicateOrders(orders []domain.Order) []domain.Order {
+	seen := make(map[string]bool)
+	var result []domain.Order
+
+	for _, order := range orders {
+		refID := string(order.ReferenceID)
+		if !seen[refID] {
+			seen[refID] = true
+			result = append(result, order)
 		}
 	}
 
-	return orderRefs
+	return result
 }
 
 // ExportToPolylineJSON exporta las rutas en formato optimizado para Leaflet
@@ -648,7 +709,7 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, req o
 					StepNumber:  stepNumber, // Solo numerar jobs/pickups/deliveries
 					Arrival:     step.Arrival,
 					Description: step.Description,
-					OrderRefs:   extractOrderRefsFromStep(step, req),
+					OrderRefs:   getAllReferencesForStep(step, req.Visits),
 					JobID:       step.Job,
 					ShipmentID:  step.Shipment,
 					PickupID:    step.Pickup,
