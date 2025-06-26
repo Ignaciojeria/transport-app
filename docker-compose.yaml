@@ -4,7 +4,7 @@ services:
   osrm:
     image: ghcr.io/project-osrm/osrm-backend
     container_name: osrm
-    command: osrm-routed --algorithm mld /data/chile-latest.osrm
+    command: osrm-routed --algorithm mld --max-table-size 2000 --max-viaroute-size 2000 --max-trip-size 2000 /data/chile-latest.osrm
     volumes:
       - ./osrm:/data
     ports:

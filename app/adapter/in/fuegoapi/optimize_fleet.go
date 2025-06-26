@@ -18,6 +18,11 @@ import (
 )
 
 func init() {
+	ioc.Registry(generateTestData,
+		httpserver.New,
+		gcppublisher.NewApplicationEvents,
+		observability.NewObservability)
+
 	ioc.Registry(
 		optimizeFleet,
 		httpserver.New,
@@ -65,4 +70,47 @@ func optimizeFleet(
 				TraceID: span.SpanContext().TraceID().String(),
 			}, nil
 		}, option.Summary("optimize fleet"), option.Tags("optimization"))
+}
+
+// generateTestData crea un endpoint que genera datos de prueba masivos usando el test data generator
+func generateTestData(
+	s httpserver.Server,
+	publish gcppublisher.ApplicationEvents,
+	obs observability.Observability) {
+	fuego.Post(s.Manager, "/optimize/fleet/test-data",
+		func(c fuego.ContextNoBody) (response.OptimizationResponse, error) {
+			spanCtx, span := obs.Tracer.Start(c.Context(), "generate-test-data")
+			defer span.End()
+
+			// Generar datos de prueba masivos usando el test data generator
+			testData := request.GenerateMassiveTestData()
+
+			eventPayload, _ := json.Marshal(testData)
+
+			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
+				sharedcontext.EventContext{
+					EntityType: "optimization",
+					EventType:  "optimizationRequested",
+				})
+
+			if err := publish(eventCtx, domain.Outbox{
+				Payload: eventPayload,
+			}); err != nil {
+				return response.OptimizationResponse{}, fuego.HTTPError{
+					Title:  "error requesting optimization with test data",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
+			}
+
+			obs.Logger.InfoContext(spanCtx,
+				"TEST_DATA_OPTIMIZATION_REQUEST_SUBMITTED",
+				slog.String("planReferenceID", testData.PlanReferenceID),
+				slog.Int("vehiclesCount", len(testData.Vehicles)),
+				slog.Int("visitsCount", len(testData.Visits)))
+
+			return response.OptimizationResponse{
+				TraceID: span.SpanContext().TraceID().String(),
+			}, nil
+		}, option.Summary("generate test data for fleet optimization"), option.Tags("optimization", "testing"))
 }

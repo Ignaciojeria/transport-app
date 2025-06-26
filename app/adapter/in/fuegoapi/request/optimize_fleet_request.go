@@ -3,8 +3,15 @@ package request
 import "transport-app/app/domain/optimization"
 
 type OptimizeFleetRequest struct {
-	Vehicles []struct {
+	PlanReferenceID string `json:"planReferenceID"`
+	Vehicles        []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
+		PoliticalArea struct {
+			Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+			District string `json:"district" example:"la florida" description:"District name"`
+			Province string `json:"province" example:"santiago" description:"Province name"`
+			State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+		} `json:"politicalArea"`
 		StartLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -73,6 +80,12 @@ type OptimizeFleetRequest struct {
 			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
 		} `json:"delivery"`
 		Orders []struct {
 			DeliveryUnits []struct {
@@ -119,58 +132,38 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				Weight:                v.Capacity.Weight,
 				DeliveryUnitsQuantity: v.Capacity.DeliveryUnitsQuantity,
 			},
+			PoliticalArea: optimization.PoliticalArea{
+				Code:     v.PoliticalArea.Code,
+				District: v.PoliticalArea.District,
+				Province: v.PoliticalArea.Province,
+				State:    v.PoliticalArea.State,
+			},
 		}
 	}
 
 	visits := make([]optimization.Visit, len(r.Visits))
 	for i, v := range r.Visits {
-		// Mapear pickup solo si hay datos válidos
-		var pickup optimization.VisitLocation
-		if v.Pickup.Coordinates.Latitude != 0 || v.Pickup.Coordinates.Longitude != 0 {
-			pickup = optimization.VisitLocation{
-				Coordinates: optimization.Coordinates{
-					Latitude:  v.Pickup.Coordinates.Latitude,
-					Longitude: v.Pickup.Coordinates.Longitude,
-				},
-				ServiceTime: v.Pickup.ServiceTime,
-				Contact: optimization.Contact{
-					Email:      v.Pickup.Contact.Email,
-					Phone:      v.Pickup.Contact.Phone,
-					NationalID: v.Pickup.Contact.NationalID,
-					FullName:   v.Pickup.Contact.FullName,
-				},
-				Skills: v.Pickup.Skills,
-				TimeWindow: optimization.TimeWindow{
-					Start: v.Pickup.TimeWindow.Start,
-					End:   v.Pickup.TimeWindow.End,
-				},
-				NodeInfo: optimization.NodeInfo{
-					ReferenceID: v.Pickup.NodeInfo.ReferenceID,
-				},
-			}
-		} else {
-			// Crear una estructura vacía para pickup cuando no hay datos
-			pickup = optimization.VisitLocation{
-				Coordinates: optimization.Coordinates{
-					Latitude:  0,
-					Longitude: 0,
-				},
-				ServiceTime: 0,
-				Contact: optimization.Contact{
-					Email:      "",
-					Phone:      "",
-					NationalID: "",
-					FullName:   "",
-				},
-				Skills: []string{},
-				TimeWindow: optimization.TimeWindow{
-					Start: "",
-					End:   "",
-				},
-				NodeInfo: optimization.NodeInfo{
-					ReferenceID: "",
-				},
-			}
+		// Mapear pickup
+		pickup := optimization.VisitLocation{
+			Coordinates: optimization.Coordinates{
+				Latitude:  v.Pickup.Coordinates.Latitude,
+				Longitude: v.Pickup.Coordinates.Longitude,
+			},
+			ServiceTime: v.Pickup.ServiceTime,
+			Contact: optimization.Contact{
+				Email:      v.Pickup.Contact.Email,
+				Phone:      v.Pickup.Contact.Phone,
+				NationalID: v.Pickup.Contact.NationalID,
+				FullName:   v.Pickup.Contact.FullName,
+			},
+			Skills: v.Pickup.Skills,
+			TimeWindow: optimization.TimeWindow{
+				Start: v.Pickup.TimeWindow.Start,
+				End:   v.Pickup.TimeWindow.End,
+			},
+			NodeInfo: optimization.NodeInfo{
+				ReferenceID: v.Pickup.NodeInfo.ReferenceID,
+			},
 		}
 
 		// Mapear delivery
@@ -193,6 +186,12 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 			},
 			NodeInfo: optimization.NodeInfo{
 				ReferenceID: v.Delivery.NodeInfo.ReferenceID,
+			},
+			PoliticalArea: optimization.PoliticalArea{
+				Code:     v.Delivery.PoliticalArea.Code,
+				District: v.Delivery.PoliticalArea.District,
+				Province: v.Delivery.PoliticalArea.Province,
+				State:    v.Delivery.PoliticalArea.State,
 			},
 		}
 
@@ -229,7 +228,8 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	}
 
 	return optimization.FleetOptimization{
-		Vehicles: vehicles,
-		Visits:   visits,
+		PlanReferenceID: r.PlanReferenceID,
+		Vehicles:        vehicles,
+		Visits:          visits,
 	}
 }

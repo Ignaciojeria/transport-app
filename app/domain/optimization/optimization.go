@@ -40,14 +40,23 @@ type Contact struct {
 	FullName   string
 }
 
+// PoliticalArea representa información política/geográfica
+type PoliticalArea struct {
+	Code     string
+	District string
+	Province string
+	State    string
+}
+
 // VisitLocation representa una ubicación de visita con toda su información
 type VisitLocation struct {
-	Coordinates Coordinates
-	ServiceTime int64
-	Contact     Contact
-	Skills      []string
-	TimeWindow  TimeWindow
-	NodeInfo    NodeInfo
+	Coordinates   Coordinates
+	ServiceTime   int64
+	Contact       Contact
+	Skills        []string
+	TimeWindow    TimeWindow
+	NodeInfo      NodeInfo
+	PoliticalArea PoliticalArea
 }
 
 // Item representa un artículo
@@ -66,8 +75,9 @@ type DeliveryUnit struct {
 
 // Order representa una orden
 type Order struct {
-	DeliveryUnits []DeliveryUnit
-	ReferenceID   string
+	DeliveryUnits  []DeliveryUnit
+	ReferenceID    string
+	SequenceNumber *int
 }
 
 // Vehicle representa un vehículo
@@ -78,6 +88,7 @@ type Vehicle struct {
 	Skills        []string
 	TimeWindow    TimeWindow
 	Capacity      Capacity
+	PoliticalArea PoliticalArea
 }
 
 // Visit representa una visita con pickup, delivery y órdenes
@@ -89,6 +100,7 @@ type Visit struct {
 
 // Optimization representa la estructura principal de optimización
 type FleetOptimization struct {
-	Vehicles []Vehicle
-	Visits   []Visit
+	PlanReferenceID string
+	Vehicles        []Vehicle
+	Visits          []Visit
 }
