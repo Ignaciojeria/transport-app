@@ -11,15 +11,15 @@ func GenerateMassiveTestData() OptimizeFleetRequest {
 	// Semilla para generar datos consistentes
 	rand.Seed(time.Now().UnixNano())
 
-	// Coordenadas base de La Florida, Chile
-	baseLat := -33.5225
-	baseLon := -70.575
+	// Coordenadas del punto de inicio único para todos los vehículos
+	baseLat := -33.4505803
+	baseLon := -70.7857318
 
-	// Generar 10 vehículos con ubicaciones en Florida, Chile
+	// Generar 10 vehículos con capacidad para 100 visitas cada uno
 	vehicles := generateVehicles(baseLat, baseLon)
 
-	// Generar 10 visitas (5 por vehículo) con órdenes
-	visits := generateVisits(baseLat, baseLon)
+	// Generar 1000 visitas distribuidas en las tres zonas
+	visits := generateVisits()
 
 	return OptimizeFleetRequest{
 		PlanReferenceID: "MASSIVE_TEST_PLAN",
@@ -28,7 +28,7 @@ func GenerateMassiveTestData() OptimizeFleetRequest {
 	}
 }
 
-// generateVehicles genera 10 vehículos con capacidades variadas y ubicaciones en Florida, Chile
+// generateVehicles genera 10 vehículos con capacidad para 100 visitas cada uno
 func generateVehicles(baseLat, baseLon float64) []struct {
 	Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 	StartLocation struct {
@@ -86,7 +86,7 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 		} `json:"capacity"`
 	}
 
-	// Capacidades para los 10 vehículos (iguales para balancear)
+	// Capacidades para los 10 vehículos (cada uno puede llevar 100 delivery units)
 	capacities := []struct {
 		deliveryUnits int64
 		insurance     int64
@@ -99,24 +99,15 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 			insurance     int64
 			volume        int64
 			weight        int64
-		}{30, 999999999, 999999999, 999999999})
+		}{100, 999999999, 999999999, 999999999})
 	}
 
-	// Puntos de partida diferentes para cada vehículo en Florida, Chile
-	startLocations := []struct {
+	// Todos los vehículos parten desde la misma ubicación
+	startLocation := struct {
 		lat float64
 		lon float64
 		ref string
-	}{}
-	for i := 0; i < 10; i++ {
-		latOffset := (rand.Float64() - 0.5) * 0.05 // ±0.025 grados ≈ ±2.5km
-		lonOffset := (rand.Float64() - 0.5) * 0.05 // ±0.025 grados ≈ ±2.5km
-		startLocations = append(startLocations, struct {
-			lat float64
-			lon float64
-			ref string
-		}{baseLat + latOffset, baseLon + lonOffset, fmt.Sprintf("depot-la-florida-%d", i+1)})
-	}
+	}{baseLat, baseLon, "depot-central"}
 
 	for i := 0; i < 10; i++ {
 		plate := fmt.Sprintf("SERV-%d", 80+i)
@@ -156,12 +147,12 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
 			}{
-				Latitude:  startLocations[i].lat,
-				Longitude: startLocations[i].lon,
+				Latitude:  startLocation.lat,
+				Longitude: startLocation.lon,
 				NodeInfo: struct {
 					ReferenceID string `json:"referenceID"`
 				}{
-					ReferenceID: startLocations[i].ref,
+					ReferenceID: startLocation.ref,
 				},
 			},
 			Skills: []string{"delivery", "express"},
@@ -190,8 +181,8 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 	return vehicles
 }
 
-// generateVisits genera 10 visitas (5 por vehículo) con coordenadas aleatorias en La Florida
-func generateVisits(baseLat, baseLon float64) []struct {
+// generateVisits genera 1000 visitas distribuidas en tres zonas de Santiago
+func generateVisits() []struct {
 	Pickup struct {
 		Coordinates struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
@@ -304,23 +295,50 @@ func generateVisits(baseLat, baseLon float64) []struct {
 		} `json:"orders"`
 	}
 
-	// Nombres y datos de contacto para generar datos realistas
+	// Coordenadas base de las tres zonas
+	laFloridaBase := struct{ lat, lon float64 }{-33.5225, -70.575}       // La Florida
+	santiagoCentroBase := struct{ lat, lon float64 }{-33.4489, -70.6693} // Santiago Centro
+	lasCondesBase := struct{ lat, lon float64 }{-33.4167, -70.5833}      // Las Condes
+
+	// Nombres para generar datos realistas
 	names := []string{
 		"Juan Gonzalez", "Maria Perez", "Ana Rodriguez", "Carlos Morales", "Lucia Herrera",
 		"Roberto Silva", "Patricia Vargas", "Fernando Castro", "Gabriela Torres", "Miguel Ruiz",
+		"Carmen Vega", "Diego Mendoza", "Sofia Rojas", "Alejandro Fuentes", "Valentina Soto",
+		"Francisco Herrera", "Daniela Morales", "Sebastian Silva", "Camila Torres", "Matias Ruiz",
 	}
 
-	// Generar 10 visitas (5 por vehículo)
-	for i := 0; i < 10; i++ {
-		// Coordenadas aleatorias dentro de La Florida (aproximadamente 5km de radio)
-		latOffset := (rand.Float64() - 0.5) * 0.05 // ±0.025 grados ≈ ±2.5km
-		lonOffset := (rand.Float64() - 0.5) * 0.05 // ±0.025 grados ≈ ±2.5km
+	// Generar 1000 visitas
+	for i := 0; i < 1000; i++ {
+		var deliveryLat, deliveryLon float64
+		var zoneName string
 
-		deliveryLat := baseLat + latOffset
-		deliveryLon := baseLon + lonOffset
+		// Distribuir visitas en las tres zonas
+		if i < 300 {
+			// 300 visitas en La Florida
+			latOffset := (rand.Float64() - 0.5) * 0.05 // ±0.025 grados ≈ ±2.5km
+			lonOffset := (rand.Float64() - 0.5) * 0.05
+			deliveryLat = laFloridaBase.lat + latOffset
+			deliveryLon = laFloridaBase.lon + lonOffset
+			zoneName = "la-florida"
+		} else if i < 600 {
+			// 300 visitas en Santiago Centro
+			latOffset := (rand.Float64() - 0.5) * 0.03 // ±0.015 grados ≈ ±1.5km
+			lonOffset := (rand.Float64() - 0.5) * 0.03
+			deliveryLat = santiagoCentroBase.lat + latOffset
+			deliveryLon = santiagoCentroBase.lon + lonOffset
+			zoneName = "santiago-centro"
+		} else {
+			// 400 visitas en Las Condes
+			latOffset := (rand.Float64() - 0.5) * 0.04 // ±0.02 grados ≈ ±2km
+			lonOffset := (rand.Float64() - 0.5) * 0.04
+			deliveryLat = lasCondesBase.lat + latOffset
+			deliveryLon = lasCondesBase.lon + lonOffset
+			zoneName = "las-condes"
+		}
 
-		// Para algunas visitas, agregar pickup (shipment) - aproximadamente 10% de las visitas
-		hasPickup := i%10 == 0 // Solo la primera visita tendrá pickup
+		// Para algunas visitas, agregar pickup (shipment) - aproximadamente 5% de las visitas
+		hasPickup := i%20 == 0 // Solo 5% de las visitas tendrán pickup
 
 		visit := struct {
 			Pickup struct {
@@ -386,7 +404,7 @@ func generateVisits(baseLat, baseLon float64) []struct {
 		visit.Delivery.Skills = []string{"delivery"}
 		visit.Delivery.TimeWindow.Start = "08:00"
 		visit.Delivery.TimeWindow.End = "17:00"
-		visit.Delivery.NodeInfo.ReferenceID = fmt.Sprintf("delivery-%03d", i+1)
+		visit.Delivery.NodeInfo.ReferenceID = fmt.Sprintf("delivery-%s-%04d", zoneName, i+1)
 
 		// Configurar pickup si es necesario
 		if hasPickup {
@@ -398,7 +416,7 @@ func generateVisits(baseLat, baseLon float64) []struct {
 			visit.Pickup.Skills = []string{"delivery"}
 			visit.Pickup.TimeWindow.Start = "08:00"
 			visit.Pickup.TimeWindow.End = "17:00"
-			visit.Pickup.NodeInfo.ReferenceID = fmt.Sprintf("pickup-%03d", i+1)
+			visit.Pickup.NodeInfo.ReferenceID = fmt.Sprintf("pickup-%s-%04d", zoneName, i+1)
 		}
 
 		// Generar datos de contacto
@@ -454,16 +472,16 @@ func generateVisits(baseLat, baseLon float64) []struct {
 				Items: []struct {
 					Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
 				}{
-					{Sku: fmt.Sprintf("SKU%03d", i+1)},
+					{Sku: fmt.Sprintf("SKU%04d", i+1)},
 				},
 				Insurance: insurance,
 				Volume:    volume,
 				Weight:    weight,
-				Lpn:       fmt.Sprintf("LPN%03d", i+1),
+				Lpn:       fmt.Sprintf("LPN%04d", i+1),
 			},
 		}
 
-		order.ReferenceID = fmt.Sprintf("ORD%03d", i+1)
+		order.ReferenceID = fmt.Sprintf("ORD%04d", i+1)
 		visit.Orders = append(visit.Orders, order)
 
 		visits = append(visits, visit)
