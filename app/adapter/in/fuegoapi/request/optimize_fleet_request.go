@@ -6,6 +6,12 @@ type OptimizeFleetRequest struct {
 	PlanReferenceID string `json:"planReferenceID"`
 	Vehicles        []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
+		PoliticalArea struct {
+			Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+			District string `json:"district" example:"la florida" description:"District name"`
+			Province string `json:"province" example:"santiago" description:"Province name"`
+			State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+		} `json:"politicalArea"`
 		StartLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -74,6 +80,12 @@ type OptimizeFleetRequest struct {
 			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
 		} `json:"delivery"`
 		Orders []struct {
 			DeliveryUnits []struct {
@@ -119,6 +131,12 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				Volume:                v.Capacity.Volume,
 				Weight:                v.Capacity.Weight,
 				DeliveryUnitsQuantity: v.Capacity.DeliveryUnitsQuantity,
+			},
+			PoliticalArea: optimization.PoliticalArea{
+				Code:     v.PoliticalArea.Code,
+				District: v.PoliticalArea.District,
+				Province: v.PoliticalArea.Province,
+				State:    v.PoliticalArea.State,
 			},
 		}
 	}
@@ -168,6 +186,12 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 			},
 			NodeInfo: optimization.NodeInfo{
 				ReferenceID: v.Delivery.NodeInfo.ReferenceID,
+			},
+			PoliticalArea: optimization.PoliticalArea{
+				Code:     v.Delivery.PoliticalArea.Code,
+				District: v.Delivery.PoliticalArea.District,
+				Province: v.Delivery.PoliticalArea.Province,
+				State:    v.Delivery.PoliticalArea.State,
 			},
 		}
 

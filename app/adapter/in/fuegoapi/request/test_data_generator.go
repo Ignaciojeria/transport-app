@@ -31,6 +31,12 @@ func GenerateMassiveTestData() OptimizeFleetRequest {
 // generateVehicles genera 10 vehículos con capacidad para 100 visitas cada uno
 func generateVehicles(baseLat, baseLon float64) []struct {
 	Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
+	PoliticalArea struct {
+		Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+		District string `json:"district" example:"la florida" description:"District name"`
+		Province string `json:"province" example:"santiago" description:"Province name"`
+		State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+	} `json:"politicalArea"`
 	StartLocation struct {
 		Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 		Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -59,6 +65,12 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 } {
 	var vehicles []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
+		PoliticalArea struct {
+			Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+			District string `json:"district" example:"la florida" description:"District name"`
+			Province string `json:"province" example:"santiago" description:"Province name"`
+			State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+		} `json:"politicalArea"`
 		StartLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -113,6 +125,12 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 		plate := fmt.Sprintf("SERV-%d", 80+i)
 		vehicle := struct {
 			Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
 			StartLocation struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 				Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -140,9 +158,35 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 			} `json:"capacity"`
 		}{
 			Plate: plate,
+			PoliticalArea: struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			}{
+				Code:     "cl-rm-la-florida",
+				District: "la florida",
+				Province: "santiago",
+				State:    "region metropolitana de santiago",
+			},
 			StartLocation: struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 				Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
+				NodeInfo  struct {
+					ReferenceID string `json:"referenceID"`
+				} `json:"nodeInfo"`
+			}{
+				Latitude:  startLocation.lat,
+				Longitude: startLocation.lon,
+				NodeInfo: struct {
+					ReferenceID string `json:"referenceID"`
+				}{
+					ReferenceID: startLocation.ref,
+				},
+			},
+			EndLocation: struct {
+				Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
+				Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
 				NodeInfo  struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
@@ -224,6 +268,12 @@ func generateVisits() []struct {
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"nodeInfo"`
+		PoliticalArea struct {
+			Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+			District string `json:"district" example:"la florida" description:"District name"`
+			Province string `json:"province" example:"santiago" description:"Province name"`
+			State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+		} `json:"politicalArea"`
 	} `json:"delivery"`
 	Orders []struct {
 		DeliveryUnits []struct {
@@ -280,6 +330,12 @@ func generateVisits() []struct {
 			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
 		} `json:"delivery"`
 		Orders []struct {
 			DeliveryUnits []struct {
@@ -312,6 +368,12 @@ func generateVisits() []struct {
 	for i := 0; i < 1000; i++ {
 		var deliveryLat, deliveryLon float64
 		var zoneName string
+		var politicalArea struct {
+			code     string
+			district string
+			province string
+			state    string
+		}
 
 		// Distribuir visitas en las tres zonas
 		if i < 300 {
@@ -321,6 +383,17 @@ func generateVisits() []struct {
 			deliveryLat = laFloridaBase.lat + latOffset
 			deliveryLon = laFloridaBase.lon + lonOffset
 			zoneName = "la-florida"
+			politicalArea = struct {
+				code     string
+				district string
+				province string
+				state    string
+			}{
+				code:     "cl-rm-la-florida",
+				district: "la florida",
+				province: "santiago",
+				state:    "region metropolitana de santiago",
+			}
 		} else if i < 600 {
 			// 300 visitas en Santiago Centro
 			latOffset := (rand.Float64() - 0.5) * 0.03 // ±0.015 grados ≈ ±1.5km
@@ -328,6 +401,17 @@ func generateVisits() []struct {
 			deliveryLat = santiagoCentroBase.lat + latOffset
 			deliveryLon = santiagoCentroBase.lon + lonOffset
 			zoneName = "santiago-centro"
+			politicalArea = struct {
+				code     string
+				district string
+				province string
+				state    string
+			}{
+				code:     "cl-rm-santiago-centro",
+				district: "santiago centro",
+				province: "santiago",
+				state:    "region metropolitana de santiago",
+			}
 		} else {
 			// 400 visitas en Las Condes
 			latOffset := (rand.Float64() - 0.5) * 0.04 // ±0.02 grados ≈ ±2km
@@ -335,6 +419,17 @@ func generateVisits() []struct {
 			deliveryLat = lasCondesBase.lat + latOffset
 			deliveryLon = lasCondesBase.lon + lonOffset
 			zoneName = "las-condes"
+			politicalArea = struct {
+				code     string
+				district string
+				province string
+				state    string
+			}{
+				code:     "cl-rm-las-condes",
+				district: "las condes",
+				province: "santiago",
+				state:    "region metropolitana de santiago",
+			}
 		}
 
 		// Para algunas visitas, agregar pickup (shipment) - aproximadamente 5% de las visitas
@@ -382,6 +477,12 @@ func generateVisits() []struct {
 				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
 			} `json:"delivery"`
 			Orders []struct {
 				DeliveryUnits []struct {
@@ -405,6 +506,10 @@ func generateVisits() []struct {
 		visit.Delivery.TimeWindow.Start = "08:00"
 		visit.Delivery.TimeWindow.End = "17:00"
 		visit.Delivery.NodeInfo.ReferenceID = fmt.Sprintf("delivery-%s-%04d", zoneName, i+1)
+		visit.Delivery.PoliticalArea.Code = politicalArea.code
+		visit.Delivery.PoliticalArea.District = politicalArea.district
+		visit.Delivery.PoliticalArea.Province = politicalArea.province
+		visit.Delivery.PoliticalArea.State = politicalArea.state
 
 		// Configurar pickup si es necesario
 		if hasPickup {
