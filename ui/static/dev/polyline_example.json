@@ -1,0 +1,58 @@
+[
+  {
+    "vehicle": 1,
+    "cost": 12345,
+    "duration": 3600,
+    "route": [
+      [-33.4567, -70.6789],
+      [-33.4568, -70.6790],
+      [-33.4569, -70.6791]
+    ],
+    "steps": [
+      {
+        "location": [-33.4567, -70.6789],
+        "step_type": "start",
+        "step_number": 1,
+        "arrival": 0,
+        "description": "Inicio de ruta",
+        "order_refs": [],
+        "job_id": 0,
+        "shipment_id": 0,
+        "pickup_id": 0,
+        "delivery_id": 0
+      },
+      {
+        "location": [-33.4568, -70.6790],
+        "step_type": "pickup",
+        "step_number": 2,
+        "arrival": 1800,
+        "description": "Recogida de mercancía",
+        "order_refs": ["ORD-001", "ORD-002"],
+        "job_id": 0,
+        "shipment_id": 1,
+        "pickup_id": 1,
+        "delivery_id": 0
+      },
+      {
+        "location": [-33.4569, -70.6791],
+        "step_type": "delivery",
+        "step_number": 3,
+        "arrival": 3600,
+        "description": "Entrega de mercancía",
+        "order_refs": ["ORD-001", "ORD-002"],
+        "job_id": 0,
+        "shipment_id": 1,
+        "pickup_id": 0,
+        "delivery_id": 1
+      }
+    ],
+    "unassigned": [
+      {
+        "location": [-33.4570, -70.6792],
+        "job_id": 2,
+        "reason": "Sin vehículo disponible",
+        "order_refs": ["ORD-003"]
+      }
+    ]
+  }
+] 

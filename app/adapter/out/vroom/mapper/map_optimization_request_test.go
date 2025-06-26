@@ -555,6 +555,58 @@ var _ = Describe("MapOptimizationRequest", func() {
 			})
 		})
 
+		Context("Cuando una visita tiene coordenadas válidas con una coordenada en cero", func() {
+			It("debe procesar la visita correctamente", func() {
+				// Arrange - Caso donde latitud es 0 (ecuador) pero longitud es válida
+				fleetOptimization := optimization.FleetOptimization{
+					Vehicles: []optimization.Vehicle{},
+					Visits: []optimization.Visit{
+						{
+							Pickup: optimization.VisitLocation{
+								Coordinates: optimization.Coordinates{
+									Latitude:  0,
+									Longitude: 0,
+								},
+							},
+							Delivery: optimization.VisitLocation{
+								Coordinates: optimization.Coordinates{
+									Latitude:  0, // Ecuador
+									Longitude: -70.6789,
+								},
+								ServiceTime: 300,
+								Contact: optimization.Contact{
+									Email:    "cliente@test.com",
+									FullName: "Juan Pérez",
+								},
+							},
+							Orders: []optimization.Order{
+								{
+									ReferenceID: "ORD-001",
+									DeliveryUnits: []optimization.DeliveryUnit{
+										{
+											Lpn:    "LPN-001",
+											Weight: 500000,
+										},
+									},
+								},
+							},
+						},
+					},
+				}
+
+				// Act
+				result, err := MapOptimizationRequest(ctx, fleetOptimization)
+
+				// Assert
+				Expect(err).To(BeNil())
+				Expect(result.Jobs).To(HaveLen(1)) // Debe crear un job porque delivery tiene coordenadas válidas
+				Expect(result.Shipments).To(HaveLen(0))
+
+				job := result.Jobs[0]
+				Expect(job.Location).To(Equal([2]float64{-70.6789, 0})) // lon, lat
+			})
+		})
+
 		Context("Cuando hay múltiples tipos de visitas en el mismo request", func() {
 			It("debe mapear correctamente cada tipo de visita", func() {
 				// Arrange

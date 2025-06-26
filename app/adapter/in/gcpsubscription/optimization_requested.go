@@ -46,14 +46,15 @@ func newOptimizationRequested(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		res, err := optimize(ctx, input)
+
+		_, err := optimize(ctx, input)
 
 		if err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}
 
-		observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
+		//observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
 		fmt.Println("works")
 		m.Ack()
 		return http.StatusOK, nil

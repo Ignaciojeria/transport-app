@@ -124,27 +124,53 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 
 	visits := make([]optimization.Visit, len(r.Visits))
 	for i, v := range r.Visits {
-		// Mapear pickup
-		pickup := optimization.VisitLocation{
-			Coordinates: optimization.Coordinates{
-				Latitude:  v.Pickup.Coordinates.Latitude,
-				Longitude: v.Pickup.Coordinates.Longitude,
-			},
-			ServiceTime: v.Pickup.ServiceTime,
-			Contact: optimization.Contact{
-				Email:      v.Pickup.Contact.Email,
-				Phone:      v.Pickup.Contact.Phone,
-				NationalID: v.Pickup.Contact.NationalID,
-				FullName:   v.Pickup.Contact.FullName,
-			},
-			Skills: v.Pickup.Skills,
-			TimeWindow: optimization.TimeWindow{
-				Start: v.Pickup.TimeWindow.Start,
-				End:   v.Pickup.TimeWindow.End,
-			},
-			NodeInfo: optimization.NodeInfo{
-				ReferenceID: v.Pickup.NodeInfo.ReferenceID,
-			},
+		// Mapear pickup solo si hay datos válidos
+		var pickup optimization.VisitLocation
+		if v.Pickup.Coordinates.Latitude != 0 || v.Pickup.Coordinates.Longitude != 0 {
+			pickup = optimization.VisitLocation{
+				Coordinates: optimization.Coordinates{
+					Latitude:  v.Pickup.Coordinates.Latitude,
+					Longitude: v.Pickup.Coordinates.Longitude,
+				},
+				ServiceTime: v.Pickup.ServiceTime,
+				Contact: optimization.Contact{
+					Email:      v.Pickup.Contact.Email,
+					Phone:      v.Pickup.Contact.Phone,
+					NationalID: v.Pickup.Contact.NationalID,
+					FullName:   v.Pickup.Contact.FullName,
+				},
+				Skills: v.Pickup.Skills,
+				TimeWindow: optimization.TimeWindow{
+					Start: v.Pickup.TimeWindow.Start,
+					End:   v.Pickup.TimeWindow.End,
+				},
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.Pickup.NodeInfo.ReferenceID,
+				},
+			}
+		} else {
+			// Crear una estructura vacía para pickup cuando no hay datos
+			pickup = optimization.VisitLocation{
+				Coordinates: optimization.Coordinates{
+					Latitude:  0,
+					Longitude: 0,
+				},
+				ServiceTime: 0,
+				Contact: optimization.Contact{
+					Email:      "",
+					Phone:      "",
+					NationalID: "",
+					FullName:   "",
+				},
+				Skills: []string{},
+				TimeWindow: optimization.TimeWindow{
+					Start: "",
+					End:   "",
+				},
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: "",
+				},
+			}
 		}
 
 		// Mapear delivery

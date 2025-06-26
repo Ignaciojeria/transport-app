@@ -137,18 +137,79 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 	var shipments []model.VroomShipment
 
 	for i, visit := range req.Visits {
-		// Verificar si tenemos pickup válido
-		hasValidPickup := visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0
-		// Verificar si tenemos delivery válido
-		hasValidDelivery := visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0
-
 		// Calcular capacidad de la visita
 		totalWeight, totalDeliveryUnits, totalInsurance := calculateVisitCapacity(visit)
 
-		if hasValidPickup && hasValidDelivery {
-			// Ambos son válidos -> crear Shipment
+		// Verificar si hay pickup válido (coordenadas no son cero)
+		hasValidPickup := visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0
 
-			// Generar identificadores únicos para pickup y delivery basados en coordenadas y contacto
+		// Verificar si hay delivery válido (coordenadas no son cero)
+		hasValidDelivery := visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0
+
+		// Log de depuración
+		fmt.Printf("Visita %d: pickup=(%.6f, %.6f) delivery=(%.6f, %.6f) hasValidPickup=%v hasValidDelivery=%v\n",
+			i+1,
+			visit.Pickup.Coordinates.Longitude, visit.Pickup.Coordinates.Latitude,
+			visit.Delivery.Coordinates.Longitude, visit.Delivery.Coordinates.Latitude,
+			hasValidPickup, hasValidDelivery)
+
+		// Si no hay delivery válido, omitir esta visita
+		if !hasValidDelivery {
+			fmt.Printf("Omitiendo visita %d: no hay delivery válido\n", i+1)
+			continue
+		}
+
+		// Si no hay pickup válido, crear un Job (entrega directa)
+		if !hasValidPickup {
+			fmt.Printf("Creando Job para visita %d (solo delivery)\n", i+1)
+			job := model.VroomJob{
+				ID: i + 1,
+				Location: [2]float64{
+					visit.Delivery.Coordinates.Longitude,
+					visit.Delivery.Coordinates.Latitude,
+				},
+			}
+
+			// Solo incluir Amount si al menos un valor no es cero
+			if totalWeight != 0 || totalInsurance != 0 {
+				job.Amount = []int64{
+					totalWeight,
+					totalDeliveryUnits,
+					totalInsurance,
+				}
+			}
+
+			// Solo incluir Skills si no está vacío
+			if len(visit.Delivery.Skills) > 0 {
+				job.Skills = mapSkills(visit.Delivery.Skills, registry)
+			}
+
+			// Solo incluir Service si no es cero
+			if visit.Delivery.ServiceTime != 0 {
+				job.Service = visit.Delivery.ServiceTime
+			}
+
+			// Solo incluir TimeWindows si los valores son válidos
+			if visit.Delivery.TimeWindow.Start != "" && visit.Delivery.TimeWindow.End != "" {
+				job.TimeWindows = [][]int{parseTimeRange(visit.Delivery.TimeWindow.Start, visit.Delivery.TimeWindow.End)}
+			}
+
+			// Solo incluir CustomUserData si hay orders o información de contacto
+			customData := make(map[string]any)
+			if len(visit.Orders) > 0 {
+				customData["orders"] = visit.Orders
+			}
+			if visit.Delivery.Contact.FullName != "" || visit.Delivery.Contact.Email != "" || visit.Delivery.Contact.Phone != "" {
+				customData["delivery_contact"] = visit.Delivery.Contact
+			}
+			if len(customData) > 0 {
+				job.CustomUserData = customData
+			}
+
+			jobs = append(jobs, job)
+		} else {
+			// Si hay pickup válido, crear un Shipment (pickup + delivery)
+			fmt.Printf("Creando Shipment para visita %d (pickup + delivery)\n", i+1)
 			pickupLocationKey := generateLocationKey(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
 			pickupContactID := getContactID(ctx, visit.Pickup.Contact)
 			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
@@ -159,14 +220,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 
 			pickup := model.VroomStep{
 				ID: int(pickupID),
-			}
-
-			// Solo incluir Location en pickup si las coordenadas no son cero
-			if visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0 {
-				pickup.Location = &[2]float64{
+				Location: &[2]float64{
 					visit.Pickup.Coordinates.Longitude,
 					visit.Pickup.Coordinates.Latitude,
-				}
+				},
 			}
 
 			// Solo incluir TimeWindows si los valores son válidos
@@ -176,14 +233,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 
 			delivery := model.VroomStep{
 				ID: int(deliveryID),
-			}
-
-			// Solo incluir Location en delivery si las coordenadas no son cero
-			if visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0 {
-				delivery.Location = &[2]float64{
+				Location: &[2]float64{
 					visit.Delivery.Coordinates.Longitude,
 					visit.Delivery.Coordinates.Latitude,
-				}
+				},
 			}
 
 			// Solo incluir TimeWindows si los valores son válidos
@@ -242,123 +295,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			shipments = append(shipments, shipment)
-
-		} else if hasValidPickup {
-			// Solo pickup válido -> crear Job para pickup
-
-			// Generar identificador único para pickup basado en coordenadas y contacto
-			pickupLocationKey := generateLocationKey(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
-			pickupContactID := getContactID(ctx, visit.Pickup.Contact)
-			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
-
-			job := model.VroomJob{
-				ID: int(pickupID),
-				Location: [2]float64{
-					visit.Pickup.Coordinates.Longitude,
-					visit.Pickup.Coordinates.Latitude,
-				},
-			}
-
-			// Solo incluir TimeWindows si los valores son válidos
-			if visit.Pickup.TimeWindow.Start != "" && visit.Pickup.TimeWindow.End != "" {
-				job.TimeWindows = [][]int{parseTimeRange(visit.Pickup.TimeWindow.Start, visit.Pickup.TimeWindow.End)}
-			}
-
-			// Solo incluir Amount si al menos un valor no es cero
-			if totalWeight != 0 || totalInsurance != 0 {
-				job.Amount = []int64{
-					totalWeight,
-					totalDeliveryUnits,
-					totalInsurance,
-				}
-			}
-
-			// Solo incluir Skills si no está vacío
-			if len(visit.Pickup.Skills) > 0 {
-				job.Skills = mapSkills(visit.Pickup.Skills, registry)
-			}
-
-			// Solo incluir Service si no es cero
-			if visit.Pickup.ServiceTime != 0 {
-				job.Service = visit.Pickup.ServiceTime
-			}
-
-			// Solo incluir CustomUserData si hay orders o información de contacto
-			customData := make(map[string]any)
-			if len(visit.Orders) > 0 {
-				customData["orders"] = visit.Orders
-			}
-
-			// Incluir información de contacto en CustomUserData
-			if visit.Pickup.Contact.FullName != "" || visit.Pickup.Contact.Email != "" || visit.Pickup.Contact.Phone != "" {
-				customData["pickup_contact"] = visit.Pickup.Contact
-			}
-
-			if len(customData) > 0 {
-				job.CustomUserData = customData
-			}
-
-			jobs = append(jobs, job)
-
-		} else if hasValidDelivery {
-			// Solo delivery válido -> crear Job
-
-			// Generar identificador único para delivery basado en coordenadas y contacto
-			deliveryLocationKey := generateLocationKey(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
-			deliveryContactID := getContactID(ctx, visit.Delivery.Contact)
-			deliveryID := locationRegistry.getLocationContactID(deliveryLocationKey, deliveryContactID)
-
-			job := model.VroomJob{
-				ID: int(deliveryID),
-				Location: [2]float64{
-					visit.Delivery.Coordinates.Longitude,
-					visit.Delivery.Coordinates.Latitude,
-				},
-			}
-
-			// Solo incluir TimeWindows si los valores son válidos
-			if visit.Delivery.TimeWindow.Start != "" && visit.Delivery.TimeWindow.End != "" {
-				job.TimeWindows = [][]int{parseTimeRange(visit.Delivery.TimeWindow.Start, visit.Delivery.TimeWindow.End)}
-			}
-
-			// Solo incluir Amount si al menos un valor no es cero
-			if totalWeight != 0 || totalInsurance != 0 {
-				job.Amount = []int64{
-					totalWeight,
-					totalDeliveryUnits,
-					totalInsurance,
-				}
-			}
-
-			// Solo incluir Skills si no está vacío
-			if len(visit.Delivery.Skills) > 0 {
-				job.Skills = mapSkills(visit.Delivery.Skills, registry)
-			}
-
-			// Solo incluir Service si no es cero
-			if visit.Delivery.ServiceTime != 0 {
-				job.Service = visit.Delivery.ServiceTime
-			}
-
-			// Solo incluir CustomUserData si hay orders o información de contacto
-			customData := make(map[string]any)
-			if len(visit.Orders) > 0 {
-				customData["orders"] = visit.Orders
-			}
-
-			// Incluir información de contacto en CustomUserData
-			if visit.Delivery.Contact.FullName != "" || visit.Delivery.Contact.Email != "" || visit.Delivery.Contact.Phone != "" {
-				customData["delivery_contact"] = visit.Delivery.Contact
-			}
-
-			if len(customData) > 0 {
-				job.CustomUserData = customData
-			}
-
-			jobs = append(jobs, job)
 		}
-		// Si no hay ni pickup ni delivery válidos, se omite la visita
 	}
+
+	// Log final
+	fmt.Printf("Total jobs creados: %d, Total shipments creados: %d\n", len(jobs), len(shipments))
 
 	return model.VroomOptimizationRequest{
 		Vehicles:  vehicles,

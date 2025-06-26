@@ -135,8 +135,16 @@
 				} else if (stepType === 'end') {
 					markerHtml = '⏹️';
 					bgColor = '#dc3545'; // rojo para end
+				} else if (stepType === 'pickup') {
+					markerHtml = '📦';
+					bgColor = '#007bff'; // azul para pickup
+				} else if (stepType === 'delivery') {
+					markerHtml = step.step_number ? step.step_number.toString() : '';
+					bgColor = '#ffc107'; // amarillo para delivery
 				} else if (step.step_number) {
 					markerHtml = step.step_number.toString();
+					// Color por defecto para jobs (entregas directas)
+					bgColor = '#6f42c1'; // púrpura para jobs
 				}
 
 				// No mostrar marcador si no hay nada que mostrar
@@ -163,10 +171,19 @@
 				});
 				
 				const vehicleInfo = step.vehicle ? `Vehículo ${step.vehicle}<br>` : '';
+				const stepDescription = stepType === 'pickup' ? 'Recogida' : 
+									  stepType === 'delivery' ? 'Entrega' : 
+									  stepType === 'job' ? 'Entrega directa' : stepType;
+				
+				// Añadir información de órdenes si está disponible
+				const orderInfo = step.order_refs && step.order_refs.length > 0 
+					? `<br><strong>Órdenes:</strong> ${step.order_refs.join(', ')}` 
+					: '';
+				
 				const marker = L.marker(step.location, { icon: customIcon })
 					.addTo(map)
 					.bindPopup(
-						`${vehicleInfo}Paso ${step.step_number || index + 1}: ${step.step_type}<br>Llegada: ${step.arrival || 'N/A'} seg`
+						`${vehicleInfo}Paso ${step.step_number || index + 1}: ${stepDescription}<br>Llegada: ${step.arrival || 'N/A'} seg${orderInfo}`
 					);
 				markers.push(marker);
 			}
@@ -203,8 +220,16 @@
 					} else if (stepType === 'end') {
 						markerHtml = '⏹️';
 						bgColor = '#dc3545'; // rojo para end
+					} else if (stepType === 'pickup') {
+						markerHtml = '📦';
+						bgColor = '#007bff'; // azul para pickup
+					} else if (stepType === 'delivery') {
+						markerHtml = props.step_number ? props.step_number : '';
+						bgColor = '#ffc107'; // amarillo para delivery
 					} else if (props.step_number) {
 						markerHtml = props.step_number;
+						// Color por defecto para jobs (entregas directas)
+						bgColor = '#6f42c1'; // púrpura para jobs
 					}
 
 					// No mostrar marcador si no hay nada que mostrar
