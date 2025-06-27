@@ -4,7 +4,7 @@ services:
   osrm:
     image: ghcr.io/project-osrm/osrm-backend
     container_name: osrm
-    command: osrm-routed --algorithm mld --max-table-size 2000 --max-viaroute-size 2000 --max-trip-size 2000 /data/chile-latest.osrm
+    command: osrm-routed --algorithm mld --max-table-size 5000 --max-viaroute-size 2000 --max-trip-size 2000 /data/chile-latest.osrm
     volumes:
       - ./osrm:/data
     ports:
@@ -12,13 +12,25 @@ services:
     networks:
       - vroom-network
 
-  vroom:
+  optimizer:
     image: ghcr.io/vroom-project/vroom-docker:v1.14.0
-    container_name: vroom
+    container_name: optimizer
     ports:
       - "3000:3000"
     volumes:
-      - ./conf:/conf  # 🔁 Aquí montamos tu config.yml en /conf
+      - ./conf/optimizer:/conf
+    depends_on:
+      - osrm
+    networks:
+      - vroom-network
+
+  planner:
+    image: ghcr.io/vroom-project/vroom-docker:v1.14.0
+    container_name: planner
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./conf/planner:/conf
     depends_on:
       - osrm
     networks:

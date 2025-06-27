@@ -299,12 +299,6 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		Vehicles:  vehicles,
 		Jobs:      jobs,
 		Shipments: shipments,
-		Options: &model.VroomOptions{
-			G:                false,
-			Steps:            true,
-			Overview:         true,
-			MinimizeVehicles: true,
-		},
 	}, nil
 }
 

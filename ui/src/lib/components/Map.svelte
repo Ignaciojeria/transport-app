@@ -2,13 +2,6 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { browser } from '$app/environment';
 
-	// Extender Window interface para routeLayers
-	declare global {
-		interface Window {
-			routeLayers?: any[];
-		}
-	}
-
 	export let lineString: number[][] = [];
 	export let geoJson: any = null;
 	export let customMarkers: any[] = [];
@@ -20,6 +13,8 @@
 	export let lineColor: string = 'red';
 	export let lineWeight: number = 3;
 	export let lineOpacity: number = 0.7;
+	export let autoLoadPolylines: boolean = false; // Nueva prop para cargar automáticamente
+	export let polylineBasePath: string = '/dev/'; // Ruta base para los archivos polyline
 
 	// Paleta de colores para 10 rutas diferentes
 	const routeColors = [
@@ -41,10 +36,200 @@
 	let geoJsonLayer: any = null;
 	let markers: any[] = [];
 	let L: any = null;
+	let loadedPolylines: any[] = []; // Array para almacenar polylines cargados
+	let isLoading: boolean = false;
+	let routeLayers: any[] = []; // Array local para manejar las capas de rutas
 
 	// Función para obtener el color de una ruta por índice
 	function getRouteColor(index: number): string {
 		return routeColors[index % routeColors.length];
+	}
+
+	// Función para cargar un polyline individual
+	async function loadPolylineFile(fileNumber: number): Promise<any> {
+		try {
+			const filename = `polyline_${fileNumber.toString().padStart(3, '0')}.json`;
+			const response = await fetch(`${polylineBasePath}${filename}`);
+			
+			if (!response.ok) {
+				console.log(`Archivo ${filename} no encontrado`);
+				return null;
+			}
+			
+			const data = await response.json();
+			console.log(`Polyline ${fileNumber} cargado:`, data);
+			return data;
+		} catch (error) {
+			console.error(`Error cargando polyline ${fileNumber}:`, error);
+			return null;
+		}
+	}
+
+	// Función para cargar todos los polylines disponibles
+	async function loadAllPolylines() {
+		if (isLoading) return;
+		
+		isLoading = true;
+		loadedPolylines = [];
+		
+		console.log('Iniciando carga de polylines...');
+		
+		// Intentar cargar hasta 20 archivos (puedes ajustar este límite)
+		const maxFiles = 20;
+		const loadPromises = [];
+		
+		for (let i = 1; i <= maxFiles; i++) {
+			loadPromises.push(loadPolylineFile(i));
+		}
+		
+		try {
+			const results = await Promise.all(loadPromises);
+			
+			// Filtrar resultados exitosos
+			results.forEach((data, index) => {
+				if (data) {
+					loadedPolylines.push({
+						fileNumber: index + 1,
+						data: data,
+						color: getRouteColor(index)
+					});
+				}
+			});
+			
+			console.log(`Cargados ${loadedPolylines.length} polylines`);
+			
+			// Dibujar los polylines cargados
+			drawLoadedPolylines();
+			
+		} catch (error) {
+			console.error('Error cargando polylines:', error);
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	// Función para dibujar los polylines cargados
+	function drawLoadedPolylines() {
+		if (!L || !map || loadedPolylines.length === 0) return;
+		
+		// Limpiar polylines existentes
+		clearLoadedPolylines();
+		
+		loadedPolylines.forEach((polylineInfo, index) => {
+			let { data, color } = polylineInfo;
+
+			// Aceptar array o objeto con 'routes'
+			if (Array.isArray(data)) {
+				data = { routes: data };
+			}
+
+			// Procesar rutas del polyline
+			if (data.routes && Array.isArray(data.routes)) {
+				data.routes.forEach((route: any, routeIndex: number) => {
+					if (route.route && Array.isArray(route.route) && route.route.length > 0) {
+						// Crear capa de polyline
+						const routeLayer = L.polyline(route.route, {
+							color: color,
+							weight: lineWeight,
+							opacity: lineOpacity
+						}).addTo(map);
+						
+						// Guardar referencia
+						routeLayers.push(routeLayer);
+						
+						// Agregar marcadores para los steps
+						if (showMarkers && route.steps && Array.isArray(route.steps)) {
+							route.steps.forEach((step: any) => {
+								if (step.location && Array.isArray(step.location) && step.location.length === 2) {
+									const marker = createStepMarker(step, color, index, routeIndex);
+									if (marker) {
+										markers.push(marker);
+									}
+								}
+							});
+						}
+					}
+				});
+			}
+		});
+		
+		// Ajustar vista para mostrar todas las rutas
+		if (routeLayers.length > 0) {
+			const group = new L.featureGroup(routeLayers);
+			map.fitBounds(group.getBounds());
+		}
+	}
+
+	// Función para crear marcadores de steps
+	function createStepMarker(step: any, routeColor: string, polylineIndex: number, routeIndex: number) {
+		const stepType = step.step_type;
+		let markerHtml = '';
+		let bgColor = routeColor;
+		
+		if (stepType === 'start') {
+			markerHtml = '▶';
+			bgColor = '#28a745';
+		} else if (stepType === 'end') {
+			markerHtml = '⏹️';
+			bgColor = '#dc3545';
+		} else if (stepType === 'pickup') {
+			markerHtml = '📦';
+		} else if (stepType === 'delivery') {
+			markerHtml = step.step_number ? step.step_number.toString() : '';
+		} else if (step.step_number) {
+			markerHtml = step.step_number.toString();
+		}
+		
+		if (!markerHtml) return null;
+		
+		const customIcon = L.divIcon({
+			className: 'custom-numbered-marker',
+			html: `<div style="
+				background-color: ${bgColor};
+				color: white;
+				border: 2px solid white;
+				border-radius: 50%;
+				width: 30px;
+				height: 30px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-weight: bold;
+				font-size: 14px;
+				box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+			">${markerHtml}</div>`,
+			iconSize: [30, 30],
+			iconAnchor: [15, 15]
+		});
+		
+		const popupContent = `
+			<strong>Polyline ${polylineIndex + 1} - Ruta ${routeIndex + 1}</strong><br>
+			Vehículo: ${step.vehicle || 'N/A'}<br>
+			Paso ${step.step_number || 'N/A'}: ${stepType}<br>
+			Llegada: ${step.arrival || 'N/A'} seg<br>
+			${step.order_refs && step.order_refs.length > 0 ? `Órdenes: ${step.order_refs.join(', ')}` : ''}
+		`;
+		
+		return L.marker(step.location, { icon: customIcon })
+			.addTo(map)
+			.bindPopup(popupContent);
+	}
+
+	// Función para limpiar polylines cargados
+	function clearLoadedPolylines() {
+		if (!map) return;
+		
+		// Limpiar capas de rutas
+		routeLayers.forEach((layer: any) => {
+			map.removeLayer(layer);
+		});
+		routeLayers = [];
+		
+		// Limpiar marcadores
+		markers.forEach(marker => {
+			map.removeLayer(marker);
+		});
+		markers = [];
 	}
 
 	onMount(async () => {
@@ -64,6 +249,11 @@
 		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			attribution: '© OpenStreetMap contributors'
 		}).addTo(map);
+
+		// Cargar polylines automáticamente si está habilitado
+		if (autoLoadPolylines) {
+			await loadAllPolylines();
+		}
 
 		// Dibujar la ruta inicial si existe
 		if (lineString.length > 0) {
@@ -116,16 +306,13 @@
 				}).addTo(map);
 				
 				// Guardar referencia para poder limpiar después
-				if (!window.routeLayers) {
-					window.routeLayers = [];
-				}
-				window.routeLayers.push(routeLayer);
+				routeLayers.push(routeLayer);
 			}
 		});
 
 		// Ajustar la vista para mostrar todas las rutas
-		if (window.routeLayers && window.routeLayers.length > 0) {
-			const group = new L.featureGroup(window.routeLayers);
+		if (routeLayers.length > 0) {
+			const group = new L.featureGroup(routeLayers);
 			map.fitBounds(group.getBounds());
 		}
 	}
@@ -230,7 +417,7 @@
 
 		// Crear capa GeoJSON con estilo personalizado
 		geoJsonLayer = L.geoJSON(geoJson, {
-			style: function(feature) {
+			style: function(feature: any) {
 				const props = feature.properties || {};
 				const routeIndex = props.route_index || 0;
 				const routeColor = getRouteColor(routeIndex);
@@ -242,7 +429,7 @@
 					fillOpacity: 0.1
 				};
 			},
-			pointToLayer: function(feature, latlng) {
+			pointToLayer: function(feature: any, latlng: any) {
 				if (showMarkers) {
 					const props = feature.properties || {};
 					const stepType = props.step_type;
@@ -310,7 +497,7 @@
 					fillOpacity: 0.8
 				});
 			},
-			onEachFeature: function(feature, layer) {
+			onEachFeature: function(feature: any, layer: any) {
 				if (feature.properties && feature.properties.name) {
 					layer.bindPopup(feature.properties.name);
 				}
@@ -333,12 +520,10 @@
 		}
 
 		// Limpiar múltiples rutas
-		if (window.routeLayers) {
-			window.routeLayers.forEach(layer => {
-				map.removeLayer(layer);
-			});
-			window.routeLayers = [];
-		}
+		routeLayers.forEach((layer: any) => {
+			map.removeLayer(layer);
+		});
+		routeLayers = [];
 
 		markers.forEach(marker => {
 			map.removeLayer(marker);

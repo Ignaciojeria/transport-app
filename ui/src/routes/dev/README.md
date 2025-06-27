@@ -106,3 +106,141 @@ Para agregar nuevos componentes a esta vista de desarrollo:
 - Los marcadores muestran las coordenadas al hacer clic
 - El mapa se ajusta automáticamente para mostrar toda la ruta
 - El componente es reactivo y se actualiza cuando cambian las props 
+
+# Página de Desarrollo - Visualización de Rutas
+
+Esta página permite visualizar las rutas optimizadas generadas por el sistema de optimización de flota.
+
+## Funcionalidades
+
+### 🚀 Carga Automática de Polylines (Nuevo)
+
+La página ahora soporta carga automática de archivos polyline numerados:
+
+- **Archivos esperados**: `polyline_001.json`, `polyline_002.json`, `polyline_003.json`, etc.
+- **Ubicación**: `/ui/static/dev/` (accesible via `/dev/` en el navegador)
+- **Carga automática**: El mapa busca automáticamente hasta 20 archivos numerados
+- **Colores únicos**: Cada polyline tiene un color diferente de la paleta
+- **Marcadores detallados**: Información completa de cada paso de la ruta
+
+#### Estructura esperada de los archivos JSON:
+
+```json
+{
+  "routes": [
+    {
+      "vehicle": 1,
+      "cost": 1500,
+      "duration": 3600,
+      "route": [[lat1, lng1], [lat2, lng2], ...],
+      "steps": [
+        {
+          "step_type": "start",
+          "step_number": 0,
+          "arrival": 0,
+          "location": [lat, lng],
+          "vehicle": 1,
+          "order_refs": ["ORD001", "ORD002"]
+        },
+        {
+          "step_type": "pickup",
+          "step_number": 1,
+          "arrival": 300,
+          "location": [lat, lng],
+          "vehicle": 1,
+          "order_refs": ["ORD001"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+### 📁 Carga Manual (Legacy)
+
+También soporta la carga manual desde un archivo único:
+
+- **Archivo**: `/dev/polyline.json`
+- **Formato**: Array de rutas con coordenadas y marcadores
+- **Colores**: Asignados por vehículo
+
+## Controles de la Interfaz
+
+### Selector de Modo
+- **Carga Automática**: Busca archivos numerados automáticamente
+- **Carga Manual**: Carga desde el archivo polyline.json tradicional
+
+### Información Visual
+- **Rutas**: Líneas de colores en el mapa
+- **Marcadores**: Puntos con información detallada
+- **Popups**: Información completa al hacer clic en marcadores
+
+## Tipos de Marcadores
+
+- **▶ Inicio**: Verde - Punto de partida del vehículo
+- **⏹️ Fin**: Rojo - Punto de llegada del vehículo  
+- **📦 Recogida**: Color de la ruta - Punto de recogida
+- **Números**: Color de la ruta - Puntos de entrega numerados
+
+## Información en Popups
+
+### Carga Automática
+- Polyline y número de ruta
+- Número de vehículo
+- Tipo de paso y número
+- Tiempo de llegada
+- Referencias de órdenes asociadas
+
+### Carga Manual
+- Número de ruta
+- Número de vehículo
+- Tipo de paso
+- Tiempo de llegada
+- Referencias de órdenes
+
+## Configuración del Mapa
+
+- **Centro**: Santiago, Chile (-33.52245, -70.575)
+- **Zoom**: 12
+- **Grosor de línea**: 5px
+- **Opacidad**: 0.7
+- **Marcadores**: Habilitados por defecto
+
+## Desarrollo
+
+### Generación de Archivos Polyline
+
+Los archivos se generan automáticamente en el backend cuando se ejecuta una optimización:
+
+```go
+// En app/adapter/out/vroom/vrp.go
+polylineFilename := fmt.Sprintf("ui/static/dev/polyline_%03d.json", optimizationIndex+1)
+individualVroomResponse.ExportToPolylineJSON(polylineFilename, fleetOptimization)
+```
+
+### Estructura de Archivos
+
+```
+ui/static/dev/
+├── polyline_001.json     # Primera optimización
+├── polyline_002.json     # Segunda optimización
+├── polyline_003.json     # Tercera optimización
+└── polyline.json         # Archivo legacy (carga manual)
+```
+
+## Troubleshooting
+
+### No se ven las rutas
+1. Verificar que los archivos JSON existen en `/ui/static/dev/`
+2. Revisar la consola del navegador para errores
+3. Confirmar que el formato JSON es correcto
+
+### Marcadores no aparecen
+1. Verificar que `showMarkers` está habilitado
+2. Confirmar que los steps tienen coordenadas válidas
+3. Revisar que el campo `location` existe en cada step
+
+### Colores no se aplican
+1. Verificar que el array `routeColors` está definido
+2. Confirmar que cada polyline tiene un índice válido
+3. Revisar que no hay conflictos con estilos CSS 

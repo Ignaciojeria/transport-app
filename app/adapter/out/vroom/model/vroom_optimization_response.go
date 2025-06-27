@@ -94,6 +94,61 @@ func decodeGeometry(geometryStr string) (string, error) {
 	), nil
 }
 
+// MapOptimizationRequests convierte la respuesta de VROOM en múltiples requests de optimización
+// Retorna un slice de FleetOptimization, uno por cada ruta optimizada
+func (ret VroomOptimizationResponse) MapOptimizationRequests(ctx context.Context, originalReq optimization.FleetOptimization) ([]optimization.FleetOptimization, []optimization.Order) {
+	var fleetOptimizations []optimization.FleetOptimization
+	var unassignedOrders []optimization.Order
+
+	// Crear un mapa de jobs por ID para facilitar el acceso
+	jobMap := make(map[int64]optimization.Visit)
+	for i, visit := range originalReq.Visits {
+		jobMap[int64(i+1)] = visit
+	}
+
+	// Procesar cada ruta de la respuesta de VROOM
+	for _, route := range ret.Routes {
+		// Crear un nuevo FleetOptimization para esta ruta
+		fleetOpt := optimization.FleetOptimization{
+			PlanReferenceID: originalReq.PlanReferenceID,
+		}
+
+		// Agregar solo el vehículo correspondiente a esta ruta
+		if route.Vehicle > 0 && int(route.Vehicle) <= len(originalReq.Vehicles) {
+			fleetOpt.Vehicles = []optimization.Vehicle{originalReq.Vehicles[route.Vehicle-1]}
+		}
+
+		// Procesar los steps de la ruta para extraer las visitas
+		var routeVisits []optimization.Visit
+		for _, step := range route.Steps {
+			// Solo procesar steps que son jobs (no start, end, pickup, delivery)
+			if step.Type == "job" && step.Job > 0 {
+				if visit, exists := jobMap[step.Job]; exists {
+					routeVisits = append(routeVisits, visit)
+				}
+			}
+		}
+
+		// Solo crear el FleetOptimization si hay visitas asignadas
+		if len(routeVisits) > 0 {
+			fleetOpt.Visits = routeVisits
+			fleetOptimizations = append(fleetOptimizations, fleetOpt)
+		}
+	}
+
+	// Procesar jobs sin asignar
+	for _, unassigned := range ret.Unassigned {
+		if visit, exists := jobMap[unassigned.ID]; exists {
+			// Extraer todas las órdenes de la visita sin asignar
+			for _, order := range visit.Orders {
+				unassignedOrders = append(unassignedOrders, order)
+			}
+		}
+	}
+
+	return fleetOptimizations, unassignedOrders
+}
+
 func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.FleetOptimization) domain.Plan {
 	plan := domain.Plan{
 		ReferenceID: uuid.New().String(),

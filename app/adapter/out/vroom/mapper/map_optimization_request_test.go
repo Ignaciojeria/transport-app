@@ -480,27 +480,6 @@ var _ = Describe("MapOptimizationRequest", func() {
 		})
 	})
 
-	Describe("Opciones de VROOM", func() {
-		It("debe configurar las opciones correctamente", func() {
-			// Arrange
-			fleetOptimization := optimization.FleetOptimization{
-				Vehicles: []optimization.Vehicle{},
-				Visits:   []optimization.Visit{},
-			}
-
-			// Act
-			result, err := MapOptimizationRequest(ctx, fleetOptimization)
-
-			// Assert
-			Expect(err).To(BeNil())
-			Expect(result.Options).ToNot(BeNil())
-			Expect(result.Options.G).To(BeTrue())
-			Expect(result.Options.Steps).To(BeTrue())
-			Expect(result.Options.Overview).To(BeTrue())
-			Expect(result.Options.MinimizeVehicles).To(BeTrue())
-		})
-	})
-
 	Describe("Casos edge", func() {
 		Context("Cuando no hay vehículos ni visitas", func() {
 			It("debe retornar un request vacío pero válido", func() {
@@ -518,7 +497,6 @@ var _ = Describe("MapOptimizationRequest", func() {
 				Expect(result.Vehicles).To(HaveLen(0))
 				Expect(result.Jobs).To(HaveLen(0))
 				Expect(result.Shipments).To(HaveLen(0))
-				Expect(result.Options).ToNot(BeNil())
 			})
 		})
 
