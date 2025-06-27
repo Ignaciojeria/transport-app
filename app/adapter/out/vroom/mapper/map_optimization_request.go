@@ -111,13 +111,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 		}
 
-		// Solo incluir Capacity si al menos un valor no es cero
-		if v.Capacity.Weight != 0 || v.Capacity.DeliveryUnitsQuantity != 0 || v.Capacity.Insurance != 0 {
-			vehicle.Capacity = []int64{
-				v.Capacity.Weight,
-				v.Capacity.DeliveryUnitsQuantity,
-				v.Capacity.Insurance,
-			}
+		// Incluir Capacity siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+		vehicle.Capacity = []int64{
+			v.Capacity.Weight,
+			v.Capacity.DeliveryUnitsQuantity,
+			v.Capacity.Insurance,
 		}
 
 		// Solo incluir Skills si no está vacío
@@ -170,13 +168,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				},
 			}
 
-			// Solo incluir Amount si al menos un valor no es cero
-			if totalWeight != 0 || totalInsurance != 0 {
-				job.Amount = []int64{
-					totalWeight,
-					totalDeliveryUnits,
-					totalInsurance,
-				}
+			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+			job.Amount = []int64{
+				totalWeight,
+				totalDeliveryUnits,
+				totalInsurance,
 			}
 
 			// Solo incluir Skills si no está vacío
@@ -250,13 +246,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				Delivery: delivery,
 			}
 
-			// Solo incluir Amount si al menos un valor no es cero
-			if totalWeight != 0 || totalInsurance != 0 {
-				shipment.Amount = []int64{
-					totalWeight,
-					totalDeliveryUnits,
-					totalInsurance,
-				}
+			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+			shipment.Amount = []int64{
+				totalWeight,
+				totalDeliveryUnits,
+				totalInsurance,
 			}
 
 			// Solo incluir Skills si no está vacío (usar skills de pickup o delivery)
@@ -306,7 +300,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		Jobs:      jobs,
 		Shipments: shipments,
 		Options: &model.VroomOptions{
-			G:                true,
+			G:                false,
 			Steps:            true,
 			Overview:         true,
 			MinimizeVehicles: true,
