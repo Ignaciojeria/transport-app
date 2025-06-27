@@ -31,12 +31,6 @@ func GenerateMassiveTestData() OptimizeFleetRequest {
 // generateVehicles genera 10 vehículos con capacidad para 100 visitas cada uno
 func generateVehicles(baseLat, baseLon float64) []struct {
 	Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
-	PoliticalArea struct {
-		Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-		District string `json:"district" example:"la florida" description:"District name"`
-		Province string `json:"province" example:"santiago" description:"Province name"`
-		State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-	} `json:"politicalArea"`
 	StartLocation struct {
 		Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 		Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -65,12 +59,6 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 } {
 	var vehicles []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
-		PoliticalArea struct {
-			Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-			District string `json:"district" example:"la florida" description:"District name"`
-			Province string `json:"province" example:"santiago" description:"Province name"`
-			State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-		} `json:"politicalArea"`
 		StartLocation struct {
 			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -125,12 +113,6 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 		plate := fmt.Sprintf("SERV-%d", 80+i)
 		vehicle := struct {
 			Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
-			PoliticalArea struct {
-				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-				District string `json:"district" example:"la florida" description:"District name"`
-				Province string `json:"province" example:"santiago" description:"Province name"`
-				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-			} `json:"politicalArea"`
 			StartLocation struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 				Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -158,17 +140,6 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 			} `json:"capacity"`
 		}{
 			Plate: plate,
-			PoliticalArea: struct {
-				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-				District string `json:"district" example:"la florida" description:"District name"`
-				Province string `json:"province" example:"santiago" description:"Province name"`
-				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-			}{
-				Code:     "cl-rm-la-florida",
-				District: "la florida",
-				Province: "santiago",
-				State:    "region metropolitana de santiago",
-			},
 			StartLocation: struct {
 				Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
 				Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
@@ -221,52 +192,70 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 // generateVisits genera 1000 visitas distribuidas en tres zonas de Santiago
 func generateVisits() []struct {
 	Pickup struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
+		Instructions string `json:"instructions" example:"Recoger en recepción" description:"Instructions for pickup"`
+		AddressInfo  struct {
+			AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+			AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+			Contact      struct {
+				Email      string `json:"email"`
+				Phone      string `json:"phone"`
+				NationalID string `json:"nationalID"`
+				FullName   string `json:"fullName"`
+			} `json:"contact"`
+			Coordinates struct {
+				Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Pickup point latitude"`
+				Longitude float64 `json:"longitude" example:"-70.6130425" description:"Pickup point longitude"`
+			} `json:"coordinates"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
+			ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"nodeInfo"`
+		ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+		Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow  struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
 	} `json:"pickup"`
 	Delivery struct {
-		Coordinates struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-		} `json:"coordinates"`
-		ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-		Contact     struct {
-			Email      string `json:"email"`
-			Phone      string `json:"phone"`
-			NationalID string `json:"nationalID"`
-			FullName   string `json:"fullName"`
-		} `json:"contact"`
-		Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-		TimeWindow struct {
-			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-		} `json:"timeWindow"`
+		Instructions string `json:"instructions" example:"Entregar en recepción" description:"Instructions for delivery"`
+		AddressInfo  struct {
+			AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+			AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+			Contact      struct {
+				Email      string `json:"email"`
+				Phone      string `json:"phone"`
+				NationalID string `json:"nationalID"`
+				FullName   string `json:"fullName"`
+			} `json:"contact"`
+			Coordinates struct {
+				Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Delivery point latitude"`
+				Longitude float64 `json:"longitude" example:"-70.6130425" description:"Delivery point longitude"`
+			} `json:"coordinates"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
+			ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+		} `json:"addressInfo"`
 		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"nodeInfo"`
-		PoliticalArea struct {
-			Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-			District string `json:"district" example:"la florida" description:"District name"`
-			Province string `json:"province" example:"santiago" description:"Province name"`
-			State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-		} `json:"politicalArea"`
+		ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+		Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+		TimeWindow  struct {
+			Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+			End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+		} `json:"timeWindow"`
 	} `json:"delivery"`
 	Orders []struct {
 		DeliveryUnits []struct {
@@ -283,52 +272,70 @@ func generateVisits() []struct {
 } {
 	var visits []struct {
 		Pickup struct {
-			Coordinates struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-			} `json:"coordinates"`
-			ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-			Contact     struct {
-				Email      string `json:"email"`
-				Phone      string `json:"phone"`
-				NationalID string `json:"nationalID"`
-				FullName   string `json:"fullName"`
-			} `json:"contact"`
-			Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-			TimeWindow struct {
-				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-			} `json:"timeWindow"`
+			Instructions string `json:"instructions" example:"Recoger en recepción" description:"Instructions for pickup"`
+			AddressInfo  struct {
+				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+				Contact      struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					FullName   string `json:"fullName"`
+				} `json:"contact"`
+				Coordinates struct {
+					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Pickup point latitude"`
+					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Pickup point longitude"`
+				} `json:"coordinates"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
+				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+			} `json:"addressInfo"`
 			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
+			ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+			Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+			TimeWindow  struct {
+				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+			} `json:"timeWindow"`
 		} `json:"pickup"`
 		Delivery struct {
-			Coordinates struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-			} `json:"coordinates"`
-			ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-			Contact     struct {
-				Email      string `json:"email"`
-				Phone      string `json:"phone"`
-				NationalID string `json:"nationalID"`
-				FullName   string `json:"fullName"`
-			} `json:"contact"`
-			Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-			TimeWindow struct {
-				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-			} `json:"timeWindow"`
+			Instructions string `json:"instructions" example:"Entregar en recepción" description:"Instructions for delivery"`
+			AddressInfo  struct {
+				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+				Contact      struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					FullName   string `json:"fullName"`
+				} `json:"contact"`
+				Coordinates struct {
+					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Delivery point latitude"`
+					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Delivery point longitude"`
+				} `json:"coordinates"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
+				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+			} `json:"addressInfo"`
 			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
-			PoliticalArea struct {
-				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-				District string `json:"district" example:"la florida" description:"District name"`
-				Province string `json:"province" example:"santiago" description:"Province name"`
-				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-			} `json:"politicalArea"`
+			ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+			Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+			TimeWindow  struct {
+				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+			} `json:"timeWindow"`
 		} `json:"delivery"`
 		Orders []struct {
 			DeliveryUnits []struct {
@@ -427,52 +434,70 @@ func generateVisits() []struct {
 
 		visit := struct {
 			Pickup struct {
-				Coordinates struct {
-					Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-					Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-				} `json:"coordinates"`
-				ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-				Contact     struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					FullName   string `json:"fullName"`
-				} `json:"contact"`
-				Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-				TimeWindow struct {
-					Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-					End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-				} `json:"timeWindow"`
+				Instructions string `json:"instructions" example:"Recoger en recepción" description:"Instructions for pickup"`
+				AddressInfo  struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Pickup point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Pickup point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				} `json:"addressInfo"`
 				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
+				ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+				Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+				TimeWindow  struct {
+					Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+					End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+				} `json:"timeWindow"`
 			} `json:"pickup"`
 			Delivery struct {
-				Coordinates struct {
-					Latitude  float64 `json:"latitude" example:"-33.45" description:"Pickup point latitude"`
-					Longitude float64 `json:"longitude" example:"-70.66" description:"Pickup point longitude"`
-				} `json:"coordinates"`
-				ServiceTime int64 `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-				Contact     struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					FullName   string `json:"fullName"`
-				} `json:"contact"`
-				Skills     []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-				TimeWindow struct {
-					Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-					End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-				} `json:"timeWindow"`
+				Instructions string `json:"instructions" example:"Entregar en recepción" description:"Instructions for delivery"`
+				AddressInfo  struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Delivery point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Delivery point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				} `json:"addressInfo"`
 				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
-				PoliticalArea struct {
-					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					District string `json:"district" example:"la florida" description:"District name"`
-					Province string `json:"province" example:"santiago" description:"Province name"`
-					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
-				} `json:"politicalArea"`
+				ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
+				Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
+				TimeWindow  struct {
+					Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
+					End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
+				} `json:"timeWindow"`
 			} `json:"delivery"`
 			Orders []struct {
 				DeliveryUnits []struct {
@@ -489,19 +514,26 @@ func generateVisits() []struct {
 		}{}
 
 		// Configurar delivery
-		visit.Delivery.Coordinates.Latitude = deliveryLat
-		visit.Delivery.Coordinates.Longitude = deliveryLon
+		visit.Delivery.Instructions = "Entregar en recepción"
+		visit.Delivery.AddressInfo.Coordinates.Latitude = deliveryLat
+		visit.Delivery.AddressInfo.Coordinates.Longitude = deliveryLon
 		visit.Delivery.ServiceTime = 30
 		visit.Delivery.Skills = []string{"delivery"}
 		visit.Delivery.TimeWindow.Start = "08:00"
 		visit.Delivery.TimeWindow.End = "23:00"
 		visit.Delivery.NodeInfo.ReferenceID = fmt.Sprintf("delivery-%s-%04d", zoneName, i+1)
-		visit.Delivery.PoliticalArea.Code = politicalArea.code
-		visit.Delivery.PoliticalArea.District = politicalArea.district
-		visit.Delivery.PoliticalArea.Province = politicalArea.province
-		visit.Delivery.PoliticalArea.State = politicalArea.state
+		visit.Delivery.AddressInfo.PoliticalArea.Code = politicalArea.code
+		visit.Delivery.AddressInfo.PoliticalArea.District = politicalArea.district
+		visit.Delivery.AddressInfo.PoliticalArea.Province = politicalArea.province
+		visit.Delivery.AddressInfo.PoliticalArea.State = politicalArea.state
+
+		// Generar datos de dirección para delivery
+		visit.Delivery.AddressInfo.AddressLine1 = fmt.Sprintf("Calle %d", 1000+i)
+		visit.Delivery.AddressInfo.AddressLine2 = fmt.Sprintf("Piso %d", (i%20)+1)
+		visit.Delivery.AddressInfo.ZipCode = fmt.Sprintf("750%04d", 1000+i)
 
 		// Pickup se mantiene vacío (no se generan pickups)
+		visit.Pickup.Instructions = "Recoger en recepción"
 
 		// Generar datos de contacto
 		nameIndex := i % len(names)
@@ -512,10 +544,10 @@ func generateVisits() []struct {
 		phone := fmt.Sprintf("+569%08d", 80000000+i)
 		nationalID := fmt.Sprintf("%d-%d", 10000000+i, (i%9)+1)
 
-		visit.Delivery.Contact.Email = email
-		visit.Delivery.Contact.FullName = name
-		visit.Delivery.Contact.NationalID = nationalID
-		visit.Delivery.Contact.Phone = phone
+		visit.Delivery.AddressInfo.Contact.Email = email
+		visit.Delivery.AddressInfo.Contact.FullName = name
+		visit.Delivery.AddressInfo.Contact.NationalID = nationalID
+		visit.Delivery.AddressInfo.Contact.Phone = phone
 
 		// Generar órdenes - cada visita tiene 1 orden
 		order := struct {
