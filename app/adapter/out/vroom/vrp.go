@@ -150,7 +150,7 @@ func NewOptimize(
 				SetContext(ctx).
 				SetHeader("Content-Type", "application/json").
 				SetBody(individualVroomRequest).
-				Post("http://localhost:3001/")
+				Post("http://localhost:3000/")
 
 			if err != nil {
 				obs.Logger.ErrorContext(ctx,
