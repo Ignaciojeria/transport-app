@@ -46,7 +46,7 @@ func NewOptimize(
 
 		obs.Logger.InfoContext(ctx,
 			"VROOM_REQUEST",
-			"url", conf.VROOM_URL,
+			"url", conf.VROOM_PLANNER_URL,
 			"payload", vroomRequest,
 		)
 
@@ -54,13 +54,13 @@ func NewOptimize(
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").
 			SetBody(vroomRequest). // Resty hace el marshal automáticamente
-			Post(conf.VROOM_URL)
+			Post(conf.VROOM_PLANNER_URL)
 
 		if err != nil {
 			obs.Logger.ErrorContext(ctx,
 				"VROOM_REQUEST_ERROR",
 				"error", err.Error(),
-				"url", conf.VROOM_URL,
+				"url", conf.VROOM_PLANNER_URL,
 			)
 			return domain.Plan{}, err
 		}
@@ -142,7 +142,7 @@ func NewOptimize(
 
 			obs.Logger.InfoContext(ctx,
 				"INDIVIDUAL_VROOM_REQUEST",
-				"url", conf.VROOM_URL,
+				"url", conf.VROOM_OPTIMIZER_URL,
 				"payload", individualVroomRequest,
 			)
 
@@ -156,7 +156,7 @@ func NewOptimize(
 				obs.Logger.ErrorContext(ctx,
 					"INDIVIDUAL_VROOM_REQUEST_ERROR",
 					"error", err.Error(),
-					"url", conf.VROOM_URL,
+					"url", conf.VROOM_OPTIMIZER_URL,
 				)
 				continue
 			}
