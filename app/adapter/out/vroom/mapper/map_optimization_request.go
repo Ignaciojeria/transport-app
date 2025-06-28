@@ -139,16 +139,16 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		totalWeight, totalDeliveryUnits, totalInsurance := calculateVisitCapacity(visit)
 
 		// Verificar si hay pickup válido (coordenadas no son cero)
-		hasValidPickup := visit.Pickup.Coordinates.Longitude != 0 || visit.Pickup.Coordinates.Latitude != 0
+		hasValidPickup := visit.Pickup.AddressInfo.Coordinates.Longitude != 0 || visit.Pickup.AddressInfo.Coordinates.Latitude != 0
 
 		// Verificar si hay delivery válido (coordenadas no son cero)
-		hasValidDelivery := visit.Delivery.Coordinates.Longitude != 0 || visit.Delivery.Coordinates.Latitude != 0
+		hasValidDelivery := visit.Delivery.AddressInfo.Coordinates.Longitude != 0 || visit.Delivery.AddressInfo.Coordinates.Latitude != 0
 
 		// Log de depuración
 		fmt.Printf("Visita %d: pickup=(%.6f, %.6f) delivery=(%.6f, %.6f) hasValidPickup=%v hasValidDelivery=%v\n",
 			i+1,
-			visit.Pickup.Coordinates.Longitude, visit.Pickup.Coordinates.Latitude,
-			visit.Delivery.Coordinates.Longitude, visit.Delivery.Coordinates.Latitude,
+			visit.Pickup.AddressInfo.Coordinates.Longitude, visit.Pickup.AddressInfo.Coordinates.Latitude,
+			visit.Delivery.AddressInfo.Coordinates.Longitude, visit.Delivery.AddressInfo.Coordinates.Latitude,
 			hasValidPickup, hasValidDelivery)
 
 		// Si no hay delivery válido, omitir esta visita
@@ -163,8 +163,8 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			job := model.VroomJob{
 				ID: i + 1,
 				Location: [2]float64{
-					visit.Delivery.Coordinates.Longitude,
-					visit.Delivery.Coordinates.Latitude,
+					visit.Delivery.AddressInfo.Coordinates.Longitude,
+					visit.Delivery.AddressInfo.Coordinates.Latitude,
 				},
 			}
 
@@ -195,8 +195,8 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			if len(visit.Orders) > 0 {
 				customData["orders"] = visit.Orders
 			}
-			if visit.Delivery.Contact.FullName != "" || visit.Delivery.Contact.Email != "" || visit.Delivery.Contact.Phone != "" {
-				customData["delivery_contact"] = visit.Delivery.Contact
+			if visit.Delivery.AddressInfo.Contact.FullName != "" || visit.Delivery.AddressInfo.Contact.Email != "" || visit.Delivery.AddressInfo.Contact.Phone != "" {
+				customData["delivery_contact"] = visit.Delivery.AddressInfo.Contact
 			}
 			if len(customData) > 0 {
 				job.CustomUserData = customData
@@ -206,19 +206,19 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		} else {
 			// Si hay pickup válido, crear un Shipment (pickup + delivery)
 			fmt.Printf("Creando Shipment para visita %d (pickup + delivery)\n", i+1)
-			pickupLocationKey := generateLocationKey(visit.Pickup.Coordinates.Latitude, visit.Pickup.Coordinates.Longitude)
-			pickupContactID := getContactID(ctx, visit.Pickup.Contact)
+			pickupLocationKey := generateLocationKey(visit.Pickup.AddressInfo.Coordinates.Latitude, visit.Pickup.AddressInfo.Coordinates.Longitude)
+			pickupContactID := getContactID(ctx, visit.Pickup.AddressInfo.Contact)
 			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
 
-			deliveryLocationKey := generateLocationKey(visit.Delivery.Coordinates.Latitude, visit.Delivery.Coordinates.Longitude)
-			deliveryContactID := getContactID(ctx, visit.Delivery.Contact)
+			deliveryLocationKey := generateLocationKey(visit.Delivery.AddressInfo.Coordinates.Latitude, visit.Delivery.AddressInfo.Coordinates.Longitude)
+			deliveryContactID := getContactID(ctx, visit.Delivery.AddressInfo.Contact)
 			deliveryID := locationRegistry.getLocationContactID(deliveryLocationKey, deliveryContactID)
 
 			pickup := model.VroomStep{
 				ID: int(pickupID),
 				Location: &[2]float64{
-					visit.Pickup.Coordinates.Longitude,
-					visit.Pickup.Coordinates.Latitude,
+					visit.Pickup.AddressInfo.Coordinates.Longitude,
+					visit.Pickup.AddressInfo.Coordinates.Latitude,
 				},
 			}
 
@@ -230,8 +230,8 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			delivery := model.VroomStep{
 				ID: int(deliveryID),
 				Location: &[2]float64{
-					visit.Delivery.Coordinates.Longitude,
-					visit.Delivery.Coordinates.Latitude,
+					visit.Delivery.AddressInfo.Coordinates.Longitude,
+					visit.Delivery.AddressInfo.Coordinates.Latitude,
 				},
 			}
 
@@ -277,11 +277,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			// Incluir información de contacto en CustomUserData
-			if visit.Pickup.Contact.FullName != "" || visit.Pickup.Contact.Email != "" || visit.Pickup.Contact.Phone != "" {
-				customData["pickup_contact"] = visit.Pickup.Contact
+			if visit.Pickup.AddressInfo.Contact.FullName != "" || visit.Pickup.AddressInfo.Contact.Email != "" || visit.Pickup.AddressInfo.Contact.Phone != "" {
+				customData["pickup_contact"] = visit.Pickup.AddressInfo.Contact
 			}
-			if visit.Delivery.Contact.FullName != "" || visit.Delivery.Contact.Email != "" || visit.Delivery.Contact.Phone != "" {
-				customData["delivery_contact"] = visit.Delivery.Contact
+			if visit.Delivery.AddressInfo.Contact.FullName != "" || visit.Delivery.AddressInfo.Contact.Email != "" || visit.Delivery.AddressInfo.Contact.Phone != "" {
+				customData["delivery_contact"] = visit.Delivery.AddressInfo.Contact
 			}
 
 			if len(customData) > 0 {

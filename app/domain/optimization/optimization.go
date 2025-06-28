@@ -48,15 +48,24 @@ type PoliticalArea struct {
 	State    string
 }
 
+// AddressInfo representa información completa de dirección
+type AddressInfo struct {
+	AddressLine1  string
+	AddressLine2  string
+	Contact       Contact
+	Coordinates   Coordinates
+	PoliticalArea PoliticalArea
+	ZipCode       string
+}
+
 // VisitLocation representa una ubicación de visita con toda su información
 type VisitLocation struct {
-	Coordinates   Coordinates
-	ServiceTime   int64
-	Contact       Contact
-	Skills        []string
-	TimeWindow    TimeWindow
-	NodeInfo      NodeInfo
-	PoliticalArea PoliticalArea
+	Instructions string
+	AddressInfo  AddressInfo
+	NodeInfo     NodeInfo
+	ServiceTime  int64
+	Skills       []string
+	TimeWindow   TimeWindow
 }
 
 // Item representa un artículo
@@ -75,9 +84,8 @@ type DeliveryUnit struct {
 
 // Order representa una orden
 type Order struct {
-	DeliveryUnits  []DeliveryUnit
-	ReferenceID    string
-	SequenceNumber *int
+	DeliveryUnits []DeliveryUnit
+	ReferenceID   string
 }
 
 // Vehicle representa un vehículo
@@ -88,7 +96,6 @@ type Vehicle struct {
 	Skills        []string
 	TimeWindow    TimeWindow
 	Capacity      Capacity
-	PoliticalArea PoliticalArea
 }
 
 // Visit representa una visita con pickup, delivery y órdenes
@@ -98,7 +105,7 @@ type Visit struct {
 	Orders   []Order
 }
 
-// Optimization representa la estructura principal de optimización
+// FleetOptimization representa la estructura principal de optimización
 type FleetOptimization struct {
 	PlanReferenceID string
 	Vehicles        []Vehicle

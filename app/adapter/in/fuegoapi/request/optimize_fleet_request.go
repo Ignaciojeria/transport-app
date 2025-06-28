@@ -151,59 +151,71 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	for i, v := range r.Visits {
 		// Mapear pickup
 		pickup := optimization.VisitLocation{
-			Coordinates: optimization.Coordinates{
-				Latitude:  v.Pickup.AddressInfo.Coordinates.Latitude,
-				Longitude: v.Pickup.AddressInfo.Coordinates.Longitude,
-			},
-			ServiceTime: v.Pickup.ServiceTime,
-			Contact: optimization.Contact{
-				Email:      v.Pickup.AddressInfo.Contact.Email,
-				Phone:      v.Pickup.AddressInfo.Contact.Phone,
-				NationalID: v.Pickup.AddressInfo.Contact.NationalID,
-				FullName:   v.Pickup.AddressInfo.Contact.FullName,
-			},
-			Skills: v.Pickup.Skills,
-			TimeWindow: optimization.TimeWindow{
-				Start: v.Pickup.TimeWindow.Start,
-				End:   v.Pickup.TimeWindow.End,
+			Instructions: v.Pickup.Instructions,
+			AddressInfo: optimization.AddressInfo{
+				AddressLine1: v.Pickup.AddressInfo.AddressLine1,
+				AddressLine2: v.Pickup.AddressInfo.AddressLine2,
+				Contact: optimization.Contact{
+					Email:      v.Pickup.AddressInfo.Contact.Email,
+					Phone:      v.Pickup.AddressInfo.Contact.Phone,
+					NationalID: v.Pickup.AddressInfo.Contact.NationalID,
+					FullName:   v.Pickup.AddressInfo.Contact.FullName,
+				},
+				Coordinates: optimization.Coordinates{
+					Latitude:  v.Pickup.AddressInfo.Coordinates.Latitude,
+					Longitude: v.Pickup.AddressInfo.Coordinates.Longitude,
+				},
+				PoliticalArea: optimization.PoliticalArea{
+					Code:     v.Pickup.AddressInfo.PoliticalArea.Code,
+					District: v.Pickup.AddressInfo.PoliticalArea.District,
+					Province: v.Pickup.AddressInfo.PoliticalArea.Province,
+					State:    v.Pickup.AddressInfo.PoliticalArea.State,
+				},
+				ZipCode: v.Pickup.AddressInfo.ZipCode,
 			},
 			NodeInfo: optimization.NodeInfo{
 				ReferenceID: v.Pickup.NodeInfo.ReferenceID,
 			},
-			PoliticalArea: optimization.PoliticalArea{
-				Code:     v.Pickup.AddressInfo.PoliticalArea.Code,
-				District: v.Pickup.AddressInfo.PoliticalArea.District,
-				Province: v.Pickup.AddressInfo.PoliticalArea.Province,
-				State:    v.Pickup.AddressInfo.PoliticalArea.State,
+			ServiceTime: v.Pickup.ServiceTime,
+			Skills:      v.Pickup.Skills,
+			TimeWindow: optimization.TimeWindow{
+				Start: v.Pickup.TimeWindow.Start,
+				End:   v.Pickup.TimeWindow.End,
 			},
 		}
 
 		// Mapear delivery
 		delivery := optimization.VisitLocation{
-			Coordinates: optimization.Coordinates{
-				Latitude:  v.Delivery.AddressInfo.Coordinates.Latitude,
-				Longitude: v.Delivery.AddressInfo.Coordinates.Longitude,
-			},
-			ServiceTime: v.Delivery.ServiceTime,
-			Contact: optimization.Contact{
-				Email:      v.Delivery.AddressInfo.Contact.Email,
-				Phone:      v.Delivery.AddressInfo.Contact.Phone,
-				NationalID: v.Delivery.AddressInfo.Contact.NationalID,
-				FullName:   v.Delivery.AddressInfo.Contact.FullName,
-			},
-			Skills: v.Delivery.Skills,
-			TimeWindow: optimization.TimeWindow{
-				Start: v.Delivery.TimeWindow.Start,
-				End:   v.Delivery.TimeWindow.End,
+			Instructions: v.Delivery.Instructions,
+			AddressInfo: optimization.AddressInfo{
+				AddressLine1: v.Delivery.AddressInfo.AddressLine1,
+				AddressLine2: v.Delivery.AddressInfo.AddressLine2,
+				Contact: optimization.Contact{
+					Email:      v.Delivery.AddressInfo.Contact.Email,
+					Phone:      v.Delivery.AddressInfo.Contact.Phone,
+					NationalID: v.Delivery.AddressInfo.Contact.NationalID,
+					FullName:   v.Delivery.AddressInfo.Contact.FullName,
+				},
+				Coordinates: optimization.Coordinates{
+					Latitude:  v.Delivery.AddressInfo.Coordinates.Latitude,
+					Longitude: v.Delivery.AddressInfo.Coordinates.Longitude,
+				},
+				PoliticalArea: optimization.PoliticalArea{
+					Code:     v.Delivery.AddressInfo.PoliticalArea.Code,
+					District: v.Delivery.AddressInfo.PoliticalArea.District,
+					Province: v.Delivery.AddressInfo.PoliticalArea.Province,
+					State:    v.Delivery.AddressInfo.PoliticalArea.State,
+				},
+				ZipCode: v.Delivery.AddressInfo.ZipCode,
 			},
 			NodeInfo: optimization.NodeInfo{
 				ReferenceID: v.Delivery.NodeInfo.ReferenceID,
 			},
-			PoliticalArea: optimization.PoliticalArea{
-				Code:     v.Delivery.AddressInfo.PoliticalArea.Code,
-				District: v.Delivery.AddressInfo.PoliticalArea.District,
-				Province: v.Delivery.AddressInfo.PoliticalArea.Province,
-				State:    v.Delivery.AddressInfo.PoliticalArea.State,
+			ServiceTime: v.Delivery.ServiceTime,
+			Skills:      v.Delivery.Skills,
+			TimeWindow: optimization.TimeWindow{
+				Start: v.Delivery.TimeWindow.Start,
+				End:   v.Delivery.TimeWindow.End,
 			},
 		}
 

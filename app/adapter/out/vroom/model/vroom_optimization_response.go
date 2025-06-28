@@ -333,8 +333,8 @@ func findVisitByJobID(jobID int64, visits []optimization.Visit) *optimization.Vi
 	jobIndex := 0
 	for i, v := range visits {
 		// Verificar si esta visita tiene solo delivery válido (job)
-		hasValidPickup := v.Pickup.Coordinates.Longitude != 0 || v.Pickup.Coordinates.Latitude != 0
-		hasValidDelivery := v.Delivery.Coordinates.Longitude != 0 || v.Delivery.Coordinates.Latitude != 0
+		hasValidPickup := v.Pickup.AddressInfo.Coordinates.Longitude != 0 || v.Pickup.AddressInfo.Coordinates.Latitude != 0
+		hasValidDelivery := v.Delivery.AddressInfo.Coordinates.Longitude != 0 || v.Delivery.AddressInfo.Coordinates.Latitude != 0
 
 		if !hasValidPickup && hasValidDelivery {
 			// Esta visita corresponde a un job
@@ -356,8 +356,8 @@ func findVisitByShipmentID(shipmentID int64, visits []optimization.Visit) *optim
 	shipmentIndex := 0
 	for i, v := range visits {
 		// Verificar si esta visita tiene pickup y delivery válidos (shipment)
-		hasValidPickup := v.Pickup.Coordinates.Longitude != 0 || v.Pickup.Coordinates.Latitude != 0
-		hasValidDelivery := v.Delivery.Coordinates.Longitude != 0 || v.Delivery.Coordinates.Latitude != 0
+		hasValidPickup := v.Pickup.AddressInfo.Coordinates.Longitude != 0 || v.Pickup.AddressInfo.Coordinates.Latitude != 0
+		hasValidDelivery := v.Delivery.AddressInfo.Coordinates.Longitude != 0 || v.Delivery.AddressInfo.Coordinates.Latitude != 0
 
 		if hasValidPickup && hasValidDelivery {
 			// Esta visita corresponde a un shipment
@@ -383,7 +383,7 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 				Name:        "Destino de entrega",
 				AddressInfo: domain.AddressInfo{
 					Coordinates: domain.Coordinates{
-						Point: orb.Point{visit.Delivery.Coordinates.Longitude, visit.Delivery.Coordinates.Latitude},
+						Point: orb.Point{visit.Delivery.AddressInfo.Coordinates.Longitude, visit.Delivery.AddressInfo.Coordinates.Latitude},
 					},
 				},
 			},
@@ -396,7 +396,7 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 				Name:        "Origen de recogida",
 				AddressInfo: domain.AddressInfo{
 					Coordinates: domain.Coordinates{
-						Point: orb.Point{visit.Pickup.Coordinates.Longitude, visit.Pickup.Coordinates.Latitude},
+						Point: orb.Point{visit.Pickup.AddressInfo.Coordinates.Longitude, visit.Pickup.AddressInfo.Coordinates.Latitude},
 					},
 				},
 			}
@@ -456,8 +456,8 @@ func getAllReferencesForStep(step Step, visits []optimization.Visit) []string {
 	coordKey := fmt.Sprintf("%.6f,%.6f", lat, lon)
 	var refs []string
 	for _, visit := range visits {
-		vLat := roundCoordinate(visit.Delivery.Coordinates.Latitude, 6)
-		vLon := roundCoordinate(visit.Delivery.Coordinates.Longitude, 6)
+		vLat := roundCoordinate(visit.Delivery.AddressInfo.Coordinates.Latitude, 6)
+		vLon := roundCoordinate(visit.Delivery.AddressInfo.Coordinates.Longitude, 6)
 		vCoordKey := fmt.Sprintf("%.6f,%.6f", vLat, vLon)
 		if vCoordKey == coordKey {
 			for _, order := range visit.Orders {

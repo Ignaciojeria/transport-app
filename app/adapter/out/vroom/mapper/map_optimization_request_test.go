@@ -128,24 +128,28 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4567,
-									Longitude: -70.6789,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4567,
+										Longitude: -70.6789,
+									},
+									Contact: optimization.Contact{
+										Email:      "cliente@test.com",
+										Phone:      "+56912345678",
+										NationalID: "12345678-9",
+										FullName:   "Juan Pérez",
+									},
 								},
 								ServiceTime: 300, // 5 minutos
-								Contact: optimization.Contact{
-									Email:      "cliente@test.com",
-									Phone:      "+56912345678",
-									NationalID: "12345678-9",
-									FullName:   "Juan Pérez",
-								},
-								Skills: []string{"fragile"},
+								Skills:      []string{"fragile"},
 								TimeWindow: optimization.TimeWindow{
 									Start: "09:00",
 									End:   "17:00",
@@ -207,27 +211,31 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4566,
-									Longitude: -70.6788,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4566,
+										Longitude: -70.6788,
+									},
+									Contact: optimization.Contact{
+										Email:      "pickup@test.com",
+										Phone:      "+56987654321",
+										NationalID: "98765432-1",
+										FullName:   "María González",
+									},
 								},
 								ServiceTime: 180, // 3 minutos
-								Contact: optimization.Contact{
-									Email:      "pickup@test.com",
-									Phone:      "+56987654321",
-									NationalID: "98765432-1",
-									FullName:   "María González",
-								},
-								Skills: []string{"heavy"},
+								Skills:      []string{"heavy"},
 								TimeWindow: optimization.TimeWindow{
 									Start: "08:00",
 									End:   "12:00",
 								},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 							Orders: []optimization.Order{
@@ -285,36 +293,40 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4566,
-									Longitude: -70.6788,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4566,
+										Longitude: -70.6788,
+									},
+									Contact: optimization.Contact{
+										Email:      "pickup@test.com",
+										Phone:      "+56987654321",
+										NationalID: "98765432-1",
+										FullName:   "María González",
+									},
 								},
 								ServiceTime: 180, // 3 minutos
-								Contact: optimization.Contact{
-									Email:      "pickup@test.com",
-									Phone:      "+56987654321",
-									NationalID: "98765432-1",
-									FullName:   "María González",
-								},
-								Skills: []string{"heavy"},
+								Skills:      []string{"heavy"},
 								TimeWindow: optimization.TimeWindow{
 									Start: "08:00",
 									End:   "12:00",
 								},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4567,
-									Longitude: -70.6789,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4567,
+										Longitude: -70.6789,
+									},
+									Contact: optimization.Contact{
+										Email:      "delivery@test.com",
+										Phone:      "+56912345678",
+										NationalID: "12345678-9",
+										FullName:   "Juan Pérez",
+									},
 								},
 								ServiceTime: 300, // 5 minutos
-								Contact: optimization.Contact{
-									Email:      "delivery@test.com",
-									Phone:      "+56912345678",
-									NationalID: "12345678-9",
-									FullName:   "Juan Pérez",
-								},
-								Skills: []string{"fragile"},
+								Skills:      []string{"fragile"},
 								TimeWindow: optimization.TimeWindow{
 									Start: "14:00",
 									End:   "18:00",
@@ -400,9 +412,11 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4567,
-									Longitude: -70.6789,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4567,
+										Longitude: -70.6789,
+									},
 								},
 								Skills: []string{"refrigerated", "fragile"}, // refrigerated se repite
 							},
@@ -438,29 +452,33 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4567,
-									Longitude: -70.6789,
-								},
-								Contact: optimization.Contact{
-									Email:      "cliente@test.com",
-									Phone:      "+56912345678",
-									NationalID: "12345678-9",
-									FullName:   "Juan Pérez",
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4567,
+										Longitude: -70.6789,
+									},
+									Contact: optimization.Contact{
+										Email:      "cliente@test.com",
+										Phone:      "+56912345678",
+										NationalID: "12345678-9",
+										FullName:   "Juan Pérez",
+									},
 								},
 							},
 						},
 						{
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4567, // Misma ubicación
-									Longitude: -70.6789,
-								},
-								Contact: optimization.Contact{
-									Email:      "cliente@test.com", // Mismo contacto
-									Phone:      "+56912345678",
-									NationalID: "12345678-9",
-									FullName:   "Juan Pérez",
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4567, // Misma ubicación
+										Longitude: -70.6789,
+									},
+									Contact: optimization.Contact{
+										Email:      "cliente@test.com", // Mismo contacto
+										Phone:      "+56912345678",
+										NationalID: "12345678-9",
+										FullName:   "Juan Pérez",
+									},
 								},
 							},
 						},
@@ -508,15 +526,19 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 						},
@@ -541,21 +563,25 @@ var _ = Describe("MapOptimizationRequest", func() {
 					Visits: []optimization.Visit{
 						{
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0, // Ecuador
-									Longitude: -70.6789,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0, // Ecuador
+										Longitude: -70.6789,
+									},
+									Contact: optimization.Contact{
+										Email:    "cliente@test.com",
+										FullName: "Juan Pérez",
+									},
 								},
 								ServiceTime: 300,
-								Contact: optimization.Contact{
-									Email:    "cliente@test.com",
-									FullName: "Juan Pérez",
-								},
 							},
 							Orders: []optimization.Order{
 								{
@@ -594,21 +620,25 @@ var _ = Describe("MapOptimizationRequest", func() {
 						{
 							// Visita 1: Solo pickup válido -> Job
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4566,
-									Longitude: -70.6788,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4566,
+										Longitude: -70.6788,
+									},
+									Contact: optimization.Contact{
+										Email:    "pickup@test.com",
+										FullName: "María González",
+									},
 								},
 								ServiceTime: 180,
-								Contact: optimization.Contact{
-									Email:    "pickup@test.com",
-									FullName: "María González",
-								},
-								Skills: []string{"heavy"},
+								Skills:      []string{"heavy"},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 							Orders: []optimization.Order{
@@ -626,22 +656,26 @@ var _ = Describe("MapOptimizationRequest", func() {
 						{
 							// Visita 2: Solo delivery válido -> Job
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  0,
-									Longitude: 0,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  0,
+										Longitude: 0,
+									},
 								},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4567,
-									Longitude: -70.6789,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4567,
+										Longitude: -70.6789,
+									},
+									Contact: optimization.Contact{
+										Email:    "delivery@test.com",
+										FullName: "Juan Pérez",
+									},
 								},
 								ServiceTime: 300,
-								Contact: optimization.Contact{
-									Email:    "delivery@test.com",
-									FullName: "Juan Pérez",
-								},
-								Skills: []string{"fragile"},
+								Skills:      []string{"fragile"},
 							},
 							Orders: []optimization.Order{
 								{
@@ -658,28 +692,32 @@ var _ = Describe("MapOptimizationRequest", func() {
 						{
 							// Visita 3: Pickup y delivery válidos -> Shipment
 							Pickup: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4568,
-									Longitude: -70.6790,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4568,
+										Longitude: -70.6790,
+									},
+									Contact: optimization.Contact{
+										Email:    "pickup2@test.com",
+										FullName: "Ana López",
+									},
 								},
 								ServiceTime: 120,
-								Contact: optimization.Contact{
-									Email:    "pickup2@test.com",
-									FullName: "Ana López",
-								},
-								Skills: []string{"refrigerated"},
+								Skills:      []string{"refrigerated"},
 							},
 							Delivery: optimization.VisitLocation{
-								Coordinates: optimization.Coordinates{
-									Latitude:  -33.4569,
-									Longitude: -70.6791,
+								AddressInfo: optimization.AddressInfo{
+									Coordinates: optimization.Coordinates{
+										Latitude:  -33.4569,
+										Longitude: -70.6791,
+									},
+									Contact: optimization.Contact{
+										Email:    "delivery2@test.com",
+										FullName: "Carlos Ruiz",
+									},
 								},
 								ServiceTime: 240,
-								Contact: optimization.Contact{
-									Email:    "delivery2@test.com",
-									FullName: "Carlos Ruiz",
-								},
-								Skills: []string{"fragile"},
+								Skills:      []string{"fragile"},
 							},
 							Orders: []optimization.Order{
 								{
