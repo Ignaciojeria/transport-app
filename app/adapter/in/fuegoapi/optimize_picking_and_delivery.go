@@ -1,5 +1,5 @@
 package fuegoapi
-
+/*
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -19,3 +19,4 @@ func optimizePickingAndDelivery(s httpserver.Server) {
 			return "unimplemented", nil
 		}, option.Summary("optimize picking & delivery"), option.Tags("optimization"))
 }
+*/

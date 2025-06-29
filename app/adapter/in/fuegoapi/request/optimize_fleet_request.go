@@ -7,16 +7,54 @@ type OptimizeFleetRequest struct {
 	Vehicles        []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 		StartLocation struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
-			NodeInfo  struct {
+			AddressInfo struct {
+				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+				Contact      struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					FullName   string `json:"fullName"`
+				} `json:"contact"`
+				Coordinates struct {
+					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+				} `json:"coordinates"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
+				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+			} `json:"addressInfo"`
+			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
 		} `json:"startLocation"`
 		EndLocation struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
-			NodeInfo  struct {
+			AddressInfo struct {
+				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+				Contact      struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					FullName   string `json:"fullName"`
+				} `json:"contact"`
+				Coordinates struct {
+					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Ending point latitude"`
+					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
+				} `json:"coordinates"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
+				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+			} `json:"addressInfo"`
+			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
 		} `json:"endLocation"`
@@ -119,19 +157,47 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	for i, v := range r.Vehicles {
 		vehicles[i] = optimization.Vehicle{
 			Plate: v.Plate,
-			StartLocation: optimization.Location{
-				Latitude:  v.StartLocation.Latitude,
-				Longitude: v.StartLocation.Longitude,
-				NodeInfo: optimization.NodeInfo{
-					ReferenceID: v.StartLocation.NodeInfo.ReferenceID,
+			StartLocation: optimization.AddressInfo{
+				AddressLine1: v.StartLocation.AddressInfo.AddressLine1,
+				AddressLine2: v.StartLocation.AddressInfo.AddressLine2,
+				Contact: optimization.Contact{
+					Email:      v.StartLocation.AddressInfo.Contact.Email,
+					Phone:      v.StartLocation.AddressInfo.Contact.Phone,
+					NationalID: v.StartLocation.AddressInfo.Contact.NationalID,
+					FullName:   v.StartLocation.AddressInfo.Contact.FullName,
 				},
+				Coordinates: optimization.Coordinates{
+					Latitude:  v.StartLocation.AddressInfo.Coordinates.Latitude,
+					Longitude: v.StartLocation.AddressInfo.Coordinates.Longitude,
+				},
+				PoliticalArea: optimization.PoliticalArea{
+					Code:     v.StartLocation.AddressInfo.PoliticalArea.Code,
+					District: v.StartLocation.AddressInfo.PoliticalArea.District,
+					Province: v.StartLocation.AddressInfo.PoliticalArea.Province,
+					State:    v.StartLocation.AddressInfo.PoliticalArea.State,
+				},
+				ZipCode: v.StartLocation.AddressInfo.ZipCode,
 			},
-			EndLocation: optimization.Location{
-				Latitude:  v.EndLocation.Latitude,
-				Longitude: v.EndLocation.Longitude,
-				NodeInfo: optimization.NodeInfo{
-					ReferenceID: v.EndLocation.NodeInfo.ReferenceID,
+			EndLocation: optimization.AddressInfo{
+				AddressLine1: v.EndLocation.AddressInfo.AddressLine1,
+				AddressLine2: v.EndLocation.AddressInfo.AddressLine2,
+				Contact: optimization.Contact{
+					Email:      v.EndLocation.AddressInfo.Contact.Email,
+					Phone:      v.EndLocation.AddressInfo.Contact.Phone,
+					NationalID: v.EndLocation.AddressInfo.Contact.NationalID,
+					FullName:   v.EndLocation.AddressInfo.Contact.FullName,
 				},
+				Coordinates: optimization.Coordinates{
+					Latitude:  v.EndLocation.AddressInfo.Coordinates.Latitude,
+					Longitude: v.EndLocation.AddressInfo.Coordinates.Longitude,
+				},
+				PoliticalArea: optimization.PoliticalArea{
+					Code:     v.EndLocation.AddressInfo.PoliticalArea.Code,
+					District: v.EndLocation.AddressInfo.PoliticalArea.District,
+					Province: v.EndLocation.AddressInfo.PoliticalArea.Province,
+					State:    v.EndLocation.AddressInfo.PoliticalArea.State,
+				},
+				ZipCode: v.EndLocation.AddressInfo.ZipCode,
 			},
 			Skills: v.Skills,
 			TimeWindow: optimization.TimeWindow{

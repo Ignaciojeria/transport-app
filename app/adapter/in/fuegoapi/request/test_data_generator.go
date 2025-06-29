@@ -32,16 +32,54 @@ func GenerateMassiveTestData() OptimizeFleetRequest {
 func generateVehicles(baseLat, baseLon float64) []struct {
 	Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 	StartLocation struct {
-		Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
-		Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
-		NodeInfo  struct {
+		AddressInfo struct {
+			AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+			AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+			Contact      struct {
+				Email      string `json:"email"`
+				Phone      string `json:"phone"`
+				NationalID string `json:"nationalID"`
+				FullName   string `json:"fullName"`
+			} `json:"contact"`
+			Coordinates struct {
+				Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+				Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+			} `json:"coordinates"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
+			ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+		} `json:"addressInfo"`
+		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"nodeInfo"`
 	} `json:"startLocation"`
 	EndLocation struct {
-		Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
-		Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
-		NodeInfo  struct {
+		AddressInfo struct {
+			AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+			AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+			Contact      struct {
+				Email      string `json:"email"`
+				Phone      string `json:"phone"`
+				NationalID string `json:"nationalID"`
+				FullName   string `json:"fullName"`
+			} `json:"contact"`
+			Coordinates struct {
+				Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Ending point latitude"`
+				Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
+			} `json:"coordinates"`
+			PoliticalArea struct {
+				Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+				District string `json:"district" example:"la florida" description:"District name"`
+				Province string `json:"province" example:"santiago" description:"Province name"`
+				State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+			} `json:"politicalArea"`
+			ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+		} `json:"addressInfo"`
+		NodeInfo struct {
 			ReferenceID string `json:"referenceID"`
 		} `json:"nodeInfo"`
 	} `json:"endLocation"`
@@ -60,16 +98,54 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 	var vehicles []struct {
 		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 		StartLocation struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
-			NodeInfo  struct {
+			AddressInfo struct {
+				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+				Contact      struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					FullName   string `json:"fullName"`
+				} `json:"contact"`
+				Coordinates struct {
+					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+				} `json:"coordinates"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
+				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+			} `json:"addressInfo"`
+			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
 		} `json:"startLocation"`
 		EndLocation struct {
-			Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
-			Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
-			NodeInfo  struct {
+			AddressInfo struct {
+				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+				Contact      struct {
+					Email      string `json:"email"`
+					Phone      string `json:"phone"`
+					NationalID string `json:"nationalID"`
+					FullName   string `json:"fullName"`
+				} `json:"contact"`
+				Coordinates struct {
+					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Ending point latitude"`
+					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
+				} `json:"coordinates"`
+				PoliticalArea struct {
+					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					District string `json:"district" example:"la florida" description:"District name"`
+					Province string `json:"province" example:"santiago" description:"Province name"`
+					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+				} `json:"politicalArea"`
+				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+			} `json:"addressInfo"`
+			NodeInfo struct {
 				ReferenceID string `json:"referenceID"`
 			} `json:"nodeInfo"`
 		} `json:"endLocation"`
@@ -114,16 +190,54 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 		vehicle := struct {
 			Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
 			StartLocation struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
-				NodeInfo  struct {
+				AddressInfo struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				} `json:"addressInfo"`
+				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
 			} `json:"startLocation"`
 			EndLocation struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
-				NodeInfo  struct {
+				AddressInfo struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Ending point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				} `json:"addressInfo"`
+				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
 			} `json:"endLocation"`
@@ -141,14 +255,85 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 		}{
 			Plate: plate,
 			StartLocation: struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Starting point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Starting point longitude"`
-				NodeInfo  struct {
+				AddressInfo struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				} `json:"addressInfo"`
+				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
 			}{
-				Latitude:  startLocation.lat,
-				Longitude: startLocation.lon,
+				AddressInfo: struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				}{
+					AddressLine1: "Depósito Central",
+					AddressLine2: "Bodega Principal",
+					Contact: struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					}{
+						Email:      "depot@transport.com",
+						Phone:      "+56912345678",
+						NationalID: "12345678-9",
+						FullName:   "Depósito Central",
+					},
+					Coordinates: struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
+					}{
+						Latitude:  startLocation.lat,
+						Longitude: startLocation.lon,
+					},
+					PoliticalArea: struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					}{
+						Code:     "cl-rm-santiago-centro",
+						District: "santiago centro",
+						Province: "santiago",
+						State:    "region metropolitana de santiago",
+					},
+					ZipCode: "7500000",
+				},
 				NodeInfo: struct {
 					ReferenceID string `json:"referenceID"`
 				}{
@@ -157,9 +342,28 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 			},
 			// EndLocation se mantiene vacío (solo origen)
 			EndLocation: struct {
-				Latitude  float64 `json:"latitude" example:"-33.45" description:"Ending point latitude"`
-				Longitude float64 `json:"longitude" example:"-70.66" description:"Ending point longitude"`
-				NodeInfo  struct {
+				AddressInfo struct {
+					AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
+					AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
+					Contact      struct {
+						Email      string `json:"email"`
+						Phone      string `json:"phone"`
+						NationalID string `json:"nationalID"`
+						FullName   string `json:"fullName"`
+					} `json:"contact"`
+					Coordinates struct {
+						Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Ending point latitude"`
+						Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
+					} `json:"coordinates"`
+					PoliticalArea struct {
+						Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+						District string `json:"district" example:"la florida" description:"District name"`
+						Province string `json:"province" example:"santiago" description:"Province name"`
+						State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					} `json:"politicalArea"`
+					ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
+				} `json:"addressInfo"`
+				NodeInfo struct {
 					ReferenceID string `json:"referenceID"`
 				} `json:"nodeInfo"`
 			}{},

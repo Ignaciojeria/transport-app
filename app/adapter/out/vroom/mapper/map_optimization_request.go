@@ -96,18 +96,18 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		}
 
 		// Solo incluir Start si las coordenadas no son cero
-		if v.StartLocation.Longitude != 0 || v.StartLocation.Latitude != 0 {
+		if v.StartLocation.Coordinates.Longitude != 0 || v.StartLocation.Coordinates.Latitude != 0 {
 			vehicle.Start = &[2]float64{
-				v.StartLocation.Longitude,
-				v.StartLocation.Latitude,
+				v.StartLocation.Coordinates.Longitude,
+				v.StartLocation.Coordinates.Latitude,
 			}
 		}
 
 		// Solo incluir End si las coordenadas no son cero
-		if v.EndLocation.Longitude != 0 || v.EndLocation.Latitude != 0 {
+		if v.EndLocation.Coordinates.Longitude != 0 || v.EndLocation.Coordinates.Latitude != 0 {
 			vehicle.End = &[2]float64{
-				v.EndLocation.Longitude,
-				v.EndLocation.Latitude,
+				v.EndLocation.Coordinates.Longitude,
+				v.EndLocation.Coordinates.Latitude,
 			}
 		}
 

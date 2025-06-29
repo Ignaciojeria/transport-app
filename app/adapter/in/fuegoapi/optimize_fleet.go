@@ -112,5 +112,5 @@ func generateTestData(
 			return response.OptimizationResponse{
 				TraceID: span.SpanContext().TraceID().String(),
 			}, nil
-		}, option.Summary("generate test data for fleet optimization"), option.Tags("optimization", "testing"))
+		}, option.Summary("generate test data for fleet optimization"), option.Tags("testing"))
 }

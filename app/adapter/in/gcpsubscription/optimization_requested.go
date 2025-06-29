@@ -47,7 +47,7 @@ func newOptimizationRequested(
 			return http.StatusAccepted, err
 		}
 
-		_, err := optimize(ctx, input)
+		_, err := optimize(ctx, input.Map())
 
 		if err != nil {
 			m.Ack()

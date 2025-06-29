@@ -91,8 +91,8 @@ type Order struct {
 // Vehicle representa un vehículo
 type Vehicle struct {
 	Plate         string
-	StartLocation Location
-	EndLocation   Location
+	StartLocation AddressInfo
+	EndLocation   AddressInfo
 	Skills        []string
 	TimeWindow    TimeWindow
 	Capacity      Capacity

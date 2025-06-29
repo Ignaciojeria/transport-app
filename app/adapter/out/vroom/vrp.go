@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/vroom/mapper"
 	"transport-app/app/adapter/out/vroom/model"
 	"transport-app/app/domain"
+	"transport-app/app/domain/optimization"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/observability"
 
@@ -18,7 +18,7 @@ import (
 	"github.com/twpayne/go-polyline"
 )
 
-type Optimize func(ctx context.Context, request request.OptimizeFleetRequest) (domain.Plan, error)
+type Optimize func(ctx context.Context, request optimization.FleetOptimization) (domain.Plan, error)
 
 func init() {
 	ioc.Registry(
@@ -34,11 +34,8 @@ func NewOptimize(
 	restyClient *resty.Client,
 	conf configuration.Conf,
 ) Optimize {
-	return func(ctx context.Context, req request.OptimizeFleetRequest) (domain.Plan, error) {
-		// Convertir el request a la estructura del dominio de optimización
-		fleetOptimization := req.Map()
+	return func(ctx context.Context, fleetOptimization optimization.FleetOptimization) (domain.Plan, error) {
 
-		// Primera optimización - distribución general
 		vroomRequest, err := mapper.MapOptimizationRequest(ctx, fleetOptimization)
 		if err != nil {
 			return domain.Plan{}, err
