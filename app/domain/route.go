@@ -3,19 +3,11 @@ package domain
 import "context"
 
 type Route struct {
-	ReferenceID     string
-	PlanReferenceID string
-	TimeWindow      TimeWindow
-	Origin          NodeInfo
-	Destination     NodeInfo
-	Vehicle         Vehicle
-	Orders          []Order
-}
-
-// TimeWindow representa una ventana de tiempo
-type TimeWindow struct {
-	Start string
-	End   string
+	ReferenceID string
+	Origin      NodeInfo
+	Destination NodeInfo
+	Vehicle     Vehicle
+	Orders      []Order
 }
 
 func (s Route) DocID(ctx context.Context) DocumentID {

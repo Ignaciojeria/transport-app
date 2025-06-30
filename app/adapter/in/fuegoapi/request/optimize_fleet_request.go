@@ -65,7 +65,7 @@ type OptimizeFleetRequest struct {
 		} `json:"timeWindow"`
 		Capacity struct {
 			Insurance             int64 `json:"insurance" example:"100000" description:"Maximum insurance value the vehicle can carry (CLP,MXN,PEN)"`
-			Volume                int64 `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic centimeters (cm³)"`
+			Volume                int64 `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
 			Weight                int64 `json:"weight" example:"1000" description:"Maximum weight in grams"`
 			DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity" example:"50" description:"Maximum number of delivery units the vehicle can carry"`
 		} `json:"capacity"`
@@ -143,7 +143,7 @@ type OptimizeFleetRequest struct {
 					Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
 				} `json:"items"`
 				Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-				Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic centimeters (cm³)"`
+				Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
 				Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
 				Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
 			} `json:"deliveryUnits"`
