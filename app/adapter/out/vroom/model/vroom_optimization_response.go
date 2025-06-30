@@ -43,6 +43,13 @@ type Route struct {
 	Geometry    string  `json:"geometry,omitempty"`
 }
 
+// RouteGeometry represents the geometry structure from VROOM
+type RouteGeometry struct {
+	Encoding string `json:"encoding"`
+	Type     string `json:"type"`
+	Value    string `json:"value"`
+}
+
 // Step represents a single step in a route (pickup, delivery, or break)
 type Step struct {
 	Type           string         `json:"type"` // "start", "job", "pickup", "delivery", "break", "end"
