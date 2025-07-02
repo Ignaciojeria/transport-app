@@ -99,47 +99,15 @@ func NewOptimize(
 
 		fleetOptimizations, unassignedOrders := vroomResponse.MapOptimizationRequests(ctx, fleetOptimization)
 
-		// Mapear órdenes sin asignar
+		// Mapear órdenes sin asignar usando el método del dominio
+		var domainUnassignedOrders []domain.Order
 		for _, unassignedOrder := range unassignedOrders {
-			// Mapear las unidades de entrega con información completa
-			deliveryUnits := make(domain.DeliveryUnits, 0, len(unassignedOrder.DeliveryUnits))
-			for _, du := range unassignedOrder.DeliveryUnits {
-				// Mapear los items de cada unidad de entrega
-				items := make([]domain.Item, 0, len(du.Items))
-				for _, item := range du.Items {
-					items = append(items, domain.Item{
-						Sku: item.Sku,
-					})
-				}
-
-				// Crear la unidad de entrega del dominio con información completa
-				deliveryUnit := domain.DeliveryUnit{
-					Lpn:   du.Lpn,
-					Items: items,
-				}
-
-				// Solo asignar Weight si tiene valor válido
-				if du.Weight > 0 {
-					deliveryUnit.Weight = domain.Weight{Value: du.Weight, Unit: "g"}
-				}
-
-				// Solo asignar Insurance si tiene valor válido
-				if du.Insurance > 0 {
-					deliveryUnit.Insurance = domain.Insurance{UnitValue: du.Insurance, Currency: "CLP"}
-				}
-
-				deliveryUnits = append(deliveryUnits, deliveryUnit)
-			}
-
-			// Crear la orden del dominio con información completa
-			domainOrder := domain.Order{
-				ReferenceID:      domain.ReferenceID(unassignedOrder.ReferenceID),
-				DeliveryUnits:    deliveryUnits,
-				UnassignedReason: "No se pudo asignar a ningún vehículo disponible",
-			}
-
-			plan.UnassignedOrders = append(plan.UnassignedOrders, domainOrder)
+			domainOrder := createOrderFromOptimizationOrder(unassignedOrder)
+			domainUnassignedOrders = append(domainUnassignedOrders, domainOrder)
 		}
+
+		// Usar el método del dominio para agregar órdenes sin asignar
+		plan.AddUnassignedOrders(domainUnassignedOrders, "No se pudo asignar a ningún vehículo disponible")
 
 		// Segunda optimización - optimización individual por ruta
 		for optimizationIndex, individualFleetOptimization := range fleetOptimizations {
@@ -572,4 +540,43 @@ func decodePolyline(polylineStr string) [][]float64 {
 	}
 
 	return result
+}
+
+// createOrderFromOptimizationOrder crea una orden del dominio desde una orden de optimización
+func createOrderFromOptimizationOrder(optOrder optimization.Order) domain.Order {
+	// Mapear las unidades de entrega con información completa
+	deliveryUnits := make(domain.DeliveryUnits, 0, len(optOrder.DeliveryUnits))
+	for _, du := range optOrder.DeliveryUnits {
+		// Mapear los items de cada unidad de entrega
+		items := make([]domain.Item, 0, len(du.Items))
+		for _, item := range du.Items {
+			items = append(items, domain.Item{
+				Sku: item.Sku,
+			})
+		}
+
+		// Crear la unidad de entrega del dominio con información completa
+		deliveryUnit := domain.DeliveryUnit{
+			Lpn:   du.Lpn,
+			Items: items,
+		}
+
+		// Solo asignar Weight si tiene valor válido
+		if du.Weight > 0 {
+			deliveryUnit.Weight = domain.Weight{Value: du.Weight, Unit: "g"}
+		}
+
+		// Solo asignar Insurance si tiene valor válido
+		if du.Insurance > 0 {
+			deliveryUnit.Insurance = domain.Insurance{UnitValue: du.Insurance, Currency: "CLP"}
+		}
+
+		deliveryUnits = append(deliveryUnits, deliveryUnit)
+	}
+
+	// Crear la orden del dominio con información completa
+	return domain.Order{
+		ReferenceID:   domain.ReferenceID(optOrder.ReferenceID),
+		DeliveryUnits: deliveryUnits,
+	}
 }

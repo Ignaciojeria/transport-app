@@ -30,3 +30,23 @@ func (p Plan) UpdateIfChanged(newPlan Plan) (Plan, bool) {
 
 	return p, changed
 }
+
+// GetUnassignedRoute devuelve la ruta de órdenes no asignadas si existe
+func (p Plan) GetUnassignedRoute() (Route, bool) {
+	if len(p.UnassignedOrders) == 0 {
+		return Route{}, false
+	}
+	return Route{
+		ReferenceID: p.ReferenceID + "-unassigned",
+		Vehicle:     Vehicle{},
+		Orders:      p.UnassignedOrders,
+	}, true
+}
+
+// AddUnassignedOrders agrega órdenes sin asignar al plan con la razón especificada
+func (p *Plan) AddUnassignedOrders(orders []Order, reason string) {
+	for _, order := range orders {
+		order.UnassignedReason = reason
+		p.UnassignedOrders = append(p.UnassignedOrders, order)
+	}
+}

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
-	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/usecase/workers"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -22,14 +22,14 @@ func init() {
 		newOptimizationRequested,
 		subscriptionwrapper.NewSubscriptionManager,
 		configuration.NewConf,
-		vroom.NewOptimize,
+		workers.NewFleetOptimizer,
 		observability.NewObservability,
 	)
 }
 func newOptimizationRequested(
 	sm subscriptionwrapper.SubscriptionManager,
 	conf configuration.Conf,
-	optimize vroom.Optimize,
+	optimize workers.FleetOptimizer,
 	observability observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION
@@ -47,7 +47,7 @@ func newOptimizationRequested(
 			return http.StatusAccepted, err
 		}
 
-		_, err := optimize(ctx, input.Map())
+		err := optimize(ctx, input.Map())
 
 		if err != nil {
 			m.Ack()
