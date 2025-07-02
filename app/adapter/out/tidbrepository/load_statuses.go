@@ -61,10 +61,9 @@ func NewLoadStatuses(conn database.ConnectionFactory) LoadStatuses {
 			{ID: 7, Status: finished.Status, DocumentID: finished.DocID().String()},
 			{ID: 8, Status: pending.Status, DocumentID: pending.DocID().String()},
 		}
-
-		if err := conn.WithContext(context.Background()).Save(&records).Error; err != nil {
-			return err
+		if conn.Strategy == "disabled" {
+			return nil
 		}
-		return nil
+		return conn.WithContext(context.Background()).Save(&records).Error
 	}
 }

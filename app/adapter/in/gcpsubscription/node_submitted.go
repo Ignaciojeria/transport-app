@@ -7,6 +7,7 @@ import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
+	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/usecase"
 
 	"cloud.google.com/go/pubsub"
@@ -20,15 +21,26 @@ func init() {
 		newNodeSubmitted,
 		subscriptionwrapper.NewSubscriptionManager,
 		usecase.NewUpsertNode,
-		configuration.NewConf)
+		configuration.NewConf,
+		observability.NewObservability)
 }
 
 func newNodeSubmitted(
 	sm subscriptionwrapper.SubscriptionManager,
 	upsertNode usecase.UpsertNode,
 	conf configuration.Conf,
+	obs observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.NODE_SUBMITTED_SUBSCRIPTION
+
+	// Validación para verificar si el nombre de la suscripción está vacío
+	if subscriptionName == "" {
+		obs.Logger.Warn("Node submitted subscription name is empty, skipping message processor initialization")
+		return func(ctx context.Context, m *pubsub.Message) (int, error) {
+			return http.StatusAccepted, nil
+		}
+	}
+
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 10
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {

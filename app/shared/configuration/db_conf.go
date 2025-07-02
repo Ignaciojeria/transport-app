@@ -9,13 +9,13 @@ func init() {
 }
 
 type DBConfiguration struct {
-	DB_STRATEGY       string `env:"DB_STRATEGY,required"`
-	DB_HOSTNAME       string `env:"DB_HOSTNAME,required"`
-	DB_PORT           string `env:"DB_PORT,required"`
-	DB_SSL_MODE       string `env:"DB_SSL_MODE,required"`
-	DB_NAME           string `env:"DB_NAME,required"`
-	DB_USERNAME       string `env:"DB_USERNAME,required"`
-	DB_PASSWORD       string `env:"DB_PASSWORD,required"`
+	DB_STRATEGY       string `env:"DB_STRATEGY"`
+	DB_HOSTNAME       string `env:"DB_HOSTNAME"`
+	DB_PORT           string `env:"DB_PORT"`
+	DB_SSL_MODE       string `env:"DB_SSL_MODE"`
+	DB_NAME           string `env:"DB_NAME"`
+	DB_USERNAME       string `env:"DB_USERNAME"`
+	DB_PASSWORD       string `env:"DB_PASSWORD"`
 	DB_RUN_MIGRATIONS string `env:"DB_RUN_MIGRATIONS"`
 }
 

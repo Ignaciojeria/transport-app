@@ -7,6 +7,7 @@ import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
+	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/usecase"
 
 	"cloud.google.com/go/pubsub"
@@ -20,14 +21,25 @@ func init() {
 		newOrderCancellationSubmitted,
 		subscriptionwrapper.NewSubscriptionManager,
 		configuration.NewConf,
-		usecase.NewCancelOrder)
+		usecase.NewCancelOrder,
+		observability.NewObservability)
 }
 func newOrderCancellationSubmitted(
 	sm subscriptionwrapper.SubscriptionManager,
 	conf configuration.Conf,
 	cancelOrders usecase.CancelOrder,
+	obs observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION
+
+	// Validación para verificar si el nombre de la suscripción está vacío
+	if subscriptionName == "" {
+		obs.Logger.Warn("Order cancellation submitted subscription name is empty, skipping message processor initialization")
+		return func(ctx context.Context, m *pubsub.Message) (int, error) {
+			return http.StatusAccepted, nil
+		}
+	}
+
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 10
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {

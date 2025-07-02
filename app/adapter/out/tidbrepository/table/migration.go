@@ -21,7 +21,7 @@ func NewRunMigrations(
 	conn database.ConnectionFactory,
 	conf configuration.DBConfiguration) RunMigrations {
 	return func() error {
-		if conf.DB_RUN_MIGRATIONS != "true" {
+		if conf.DB_RUN_MIGRATIONS != "true" || conf.DB_STRATEGY == "disabled" {
 			log.Println("Migrations disabled, skipping...")
 			return nil
 		}

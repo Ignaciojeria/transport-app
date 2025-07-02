@@ -42,6 +42,12 @@ func NewConnectionFactory(
 		db, err = tidbStrategy()
 	case "postgresql":
 		db, err = postgresqlStrategy()
+	case "disabled":
+		// Retorna una conexión nula para deshabilitar la persistencia
+		return ConnectionFactory{
+			DB:       nil,
+			Strategy: "disabled",
+		}, nil
 	default:
 		return ConnectionFactory{}, fmt.Errorf("unknown DB_STRATEGY: %s", env.DB_STRATEGY)
 	}

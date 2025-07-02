@@ -8,6 +8,7 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
+	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/usecase"
 
 	"cloud.google.com/go/pubsub"
@@ -21,16 +22,28 @@ func init() {
 		newRegistrationSubmitted,
 		configuration.NewConf,
 		usecase.NewRegister,
-		subscriptionwrapper.NewSubscriptionManager)
+		subscriptionwrapper.NewSubscriptionManager,
+		observability.NewObservability)
 }
 func newRegistrationSubmitted(
 	conf configuration.Conf,
 	register usecase.Register,
 	sm subscriptionwrapper.SubscriptionManager,
+	obs observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.REGISTRATION_SUBMITTED_SUBSCRIPTION
+
+	// Validación para verificar si el nombre de la suscripción está vacío
+	if subscriptionName == "" {
+		obs.Logger.Warn("Registration submitted subscription name is empty, skipping message processor initialization")
+		return func(ctx context.Context, m *pubsub.Message) (int, error) {
+			return http.StatusAccepted, nil
+		}
+	}
+
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 10
+	obs.Logger.Warn("Registration submitted subscription started")
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
 		// Filtro defensivo para evitar procesamiento incorrecto
 		if m.Attributes["eventType"] != "registrationSubmitted" {

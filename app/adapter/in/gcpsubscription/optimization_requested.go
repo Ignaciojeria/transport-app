@@ -29,9 +29,18 @@ func newOptimizationRequested(
 	sm subscriptionwrapper.SubscriptionManager,
 	conf configuration.Conf,
 	optimize workers.FleetOptimizer,
-	observability observability.Observability,
+	obs observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION
+
+	// Validación para verificar si el nombre de la suscripción está vacío
+	if subscriptionName == "" {
+		obs.Logger.Warn("Optimization requested subscription name is empty, skipping message processor initialization")
+		return func(ctx context.Context, m *pubsub.Message) (int, error) {
+			return http.StatusAccepted, nil
+		}
+	}
+
 	subscriptionRef := sm.Subscription(subscriptionName)
 	subscriptionRef.ReceiveSettings.MaxOutstandingMessages = 15
 	messageProcessor := func(ctx context.Context, m *pubsub.Message) (int, error) {
