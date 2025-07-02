@@ -22,9 +22,9 @@ jobs:
 
       - name: Build and push OSRM image
         run: |
-          REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2)
+          REPO_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
           IMAGE_NAME="${REPO_NAME}-osrm"
-          IMAGE_TAG="ghcr.io/${{ github.repository }}/${IMAGE_NAME}:latest"
+          IMAGE_TAG="ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')/${IMAGE_NAME}:latest"
           
           echo "Building OSRM image: $IMAGE_TAG"
           
