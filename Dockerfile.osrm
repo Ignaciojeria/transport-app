@@ -1,0 +1,29 @@
+# Etapa 1: Construcción de los datos OSRM
+FROM ghcr.io/project-osrm/osrm-backend AS builder
+
+WORKDIR /data
+
+# Descargar el mapa de Chile (puedes cambiar el país si quieres)
+RUN curl -L -o chile-latest.osm.pbf https://download.geofabrik.de/south-america/chile-latest.osm.pbf
+
+# Ejecutar los pasos de preprocesamiento de OSRM
+RUN osrm-extract -p /opt/car.lua chile-latest.osm.pbf && \
+    osrm-partition chile-latest.osrm && \
+    osrm-customize chile-latest.osrm
+
+# Verificar que los archivos se crearon correctamente
+RUN ls -la *.osrm*
+
+# Etapa 2: Imagen final liviana solo con los datos y el binario
+FROM ghcr.io/project-osrm/osrm-backend
+
+WORKDIR /data
+
+# Copiar los datos procesados desde el builder
+COPY --from=builder /data /data
+
+# Exponer puerto
+EXPOSE 5000
+
+# Comando de inicio del contenedor
+CMD ["osrm-routed", "--algorithm", "mld", "--max-table-size", "10000", "--max-viaroute-size", "2000", "--max-trip-size", "2000", "/data/chile-latest.osrm"]
