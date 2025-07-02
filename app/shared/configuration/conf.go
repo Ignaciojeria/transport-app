@@ -31,7 +31,10 @@ type Conf struct {
 	ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION string `env:"ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION"`
 	ROUTE_STARTED_SUBMITTED_SUBSCRIPTION      string `env:"ROUTE_STARTED_SUBMITTED_SUBSCRIPTION"`
 	OPTIMIZATION_REQUESTED_SUBSCRIPTION       string `env:"OPTIMIZATION_REQUESTED_SUBSCRIPTION"`
-	VROOM_URL                                 string `env:"VROOM_URL"`
+	VROOM_OPTIMIZER_URL                       string `env:"VROOM_OPTIMIZER_URL"`
+	VROOM_PLANNER_URL                         string `env:"VROOM_PLANNER_URL"`
+	MASTER_NODE_URL                           string `env:"MASTER_NODE_URL"`
+	MASTER_NODE_API_KEY                       string `env:"MASTER_NODE_API_KEY"`
 }
 
 func NewConf() (Conf, error) {

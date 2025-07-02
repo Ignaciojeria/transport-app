@@ -1,6 +1,8 @@
 package fuegoapi
 
 import (
+	"fmt"
+	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/infrastructure/httpserver"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -13,8 +15,8 @@ func init() {
 }
 func upsertRoute(s httpserver.Server) {
 	fuego.Post(s.Manager, "/routes",
-		func(c fuego.ContextNoBody) (any, error) {
-
+		func(c fuego.ContextWithBody[request.UpsertRouteRequest]) (any, error) {
+			fmt.Println("upsert route controller call done! :D")
 			return "unimplemented", nil
 		},
 		option.Summary("upsert route"),

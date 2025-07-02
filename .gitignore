@@ -12,3 +12,5 @@ osrm
 access.log
 geojson.json
 polyline.json
+polyline*.json
+respaldo

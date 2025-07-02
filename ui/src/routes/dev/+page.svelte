@@ -28,6 +28,9 @@
 		showMarkers: true
 	};
 
+	let useAutoLoad = true; // Nueva opción para usar carga automática
+	let polylineBasePath = '/dev/'; // Ruta base para los archivos polyline
+
 	async function loadRouteData() {
 		if (!browser) return;
 		try {
@@ -80,7 +83,10 @@
 	}
 
 	onMount(() => {
-		loadRouteData();
+		// Solo cargar datos manuales si no se usa carga automática
+		if (!useAutoLoad) {
+			loadRouteData();
+		}
 	});
 </script>
 
@@ -91,14 +97,16 @@
 <div class="w-full h-screen">
 	{#if browser}
 		<Map 
-			multipleRoutes={multipleRoutes}
-			customMarkers={allMarkers}
+			multipleRoutes={useAutoLoad ? [] : multipleRoutes}
+			customMarkers={useAutoLoad ? [] : allMarkers}
 			center={mapConfig.center}
 			zoom={mapConfig.zoom}
 			height="100vh"
 			lineWeight={mapConfig.lineWeight}
 			lineOpacity={mapConfig.lineOpacity}
 			showMarkers={mapConfig.showMarkers}
+			autoLoadPolylines={useAutoLoad}
+			polylineBasePath={polylineBasePath}
 		/>
 	{:else}
 		<div class="w-full h-screen bg-gray-200 flex items-center justify-center">

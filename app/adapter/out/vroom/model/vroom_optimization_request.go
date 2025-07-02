@@ -1,10 +1,11 @@
 package model
 
+// VroomOptimizationRequest represents the complete request to VROOM API
 type VroomOptimizationRequest struct {
 	Vehicles  []VroomVehicle  `json:"vehicles"`
-	Jobs      []VroomJob      `json:"jobs,omitempty"`      // Para entregas simples
-	Shipments []VroomShipment `json:"shipments,omitempty"` // Para entregas con pickup + delivery
-	Options   *VroomOptions   `json:"options,omitempty"`
+	Jobs      []VroomJob      `json:"jobs,omitempty"`
+	Shipments []VroomShipment `json:"shipments,omitempty"`
+	Matrices  *VroomMatrices  `json:"matrices,omitempty"`
 }
 
 // --- Vehicles ---
@@ -47,11 +48,8 @@ type VroomStep struct {
 	TimeWindows [][]int     `json:"time_windows,omitempty"` // [[start, end]]
 }
 
-// --- Options ---
-type VroomOptions struct {
-	G                bool `json:"g,omitempty"`                      // Retornar geometría
-	Steps            bool `json:"steps,omitempty"`                  // Incluir pasos
-	Overview         bool `json:"overview,omitempty"`               // Ruta simplificada
-	Polygons         bool `json:"polygons,omitempty"`               // Polígonos de zonas
-	MinimizeVehicles bool `json:"minimize_vehicle_usage,omitempty"` // Usar menos vehículos
+// --- Matrices ---
+type VroomMatrices struct {
+	DistanceMatrix [][]float64 `json:"distance_matrix,omitempty"`
+	DurationMatrix [][]float64 `json:"duration_matrix,omitempty"`
 }

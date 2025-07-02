@@ -3,13 +3,12 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
-	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/gcppubsub/subscriptionwrapper"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/usecase/workers"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -22,14 +21,14 @@ func init() {
 		newOptimizationRequested,
 		subscriptionwrapper.NewSubscriptionManager,
 		configuration.NewConf,
-		vroom.NewOptimize,
+		workers.NewFleetOptimizer,
 		observability.NewObservability,
 	)
 }
 func newOptimizationRequested(
 	sm subscriptionwrapper.SubscriptionManager,
 	conf configuration.Conf,
-	optimize vroom.Optimize,
+	optimize workers.FleetOptimizer,
 	observability observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
 	subscriptionName := conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION
@@ -46,15 +45,15 @@ func newOptimizationRequested(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		res, err := optimize(ctx, input)
+
+		err := optimize(ctx, input.Map())
 
 		if err != nil {
 			m.Ack()
 			return http.StatusAccepted, err
 		}
 
-		observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
-		fmt.Println("works")
+		//observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
 		m.Ack()
 		return http.StatusOK, nil
 	}
