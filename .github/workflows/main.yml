@@ -80,7 +80,7 @@ jobs:
 
   build-osrm:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_osrm == 'true'
+    if: github.event.inputs.build_osrm == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
