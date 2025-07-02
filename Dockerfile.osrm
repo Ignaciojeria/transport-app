@@ -3,8 +3,8 @@ FROM ghcr.io/project-osrm/osrm-backend AS builder
 
 WORKDIR /data
 
-# Descargar el mapa de Chile (puedes cambiar el país si quieres)
-RUN curl -L -o chile-latest.osm.pbf https://download.geofabrik.de/south-america/chile-latest.osm.pbf
+# Descargar el mapa de Chile (wget es más ligero que curl)
+RUN wget -O chile-latest.osm.pbf https://download.geofabrik.de/south-america/chile-latest.osm.pbf
 
 # Ejecutar los pasos de preprocesamiento de OSRM
 RUN osrm-extract -p /opt/car.lua chile-latest.osm.pbf && \
