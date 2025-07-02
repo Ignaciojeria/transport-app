@@ -27,7 +27,7 @@ func init() {
 // TODO ver la manera de usar una entidad de dominio en vez de un request
 func NewPostUpsertRoute(c *resty.Client, conf configuration.Conf) PostUpsertRoute {
 	return func(ctx context.Context, e domain.Route) error {
-		host := conf.MASTER_NODE_HOST
+		host := conf.MASTER_NODE_URL
 		apiKey := conf.MASTER_NODE_API_KEY
 
 		url := fmt.Sprintf("%s/routes", host)
@@ -38,7 +38,7 @@ func NewPostUpsertRoute(c *resty.Client, conf configuration.Conf) PostUpsertRout
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").
 			SetHeader("channel", sharedcontext.ChannelFromContext(ctx)).
-			SetHeader("tenant", sharedcontext.TenantIDFromContext(ctx).String()).
+			SetHeader("tenant", sharedcontext.TenantIDFromContext(ctx).String()+"-"+sharedcontext.TenantCountryFromContext(ctx)).
 			SetHeader("Authorization", fmt.Sprintf("Bearer %s", apiKey)).
 			SetBody(req).
 			Post(url)

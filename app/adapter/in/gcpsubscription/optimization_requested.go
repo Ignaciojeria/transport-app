@@ -3,7 +3,6 @@ package gcpsubscription
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/configuration"
@@ -55,7 +54,6 @@ func newOptimizationRequested(
 		}
 
 		//observability.Logger.InfoContext(ctx, "Optimization requested", "res", res)
-		fmt.Println("works")
 		m.Ack()
 		return http.StatusOK, nil
 	}

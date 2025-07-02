@@ -817,6 +817,7 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, req o
 	}
 
 	// Convertir a JSON
+	/* INICIO DE EXPORTACIÓN.
 	jsonData, err := json.MarshalIndent(routesData, "", "  ")
 	if err != nil {
 		return fmt.Errorf("error serializando datos de ruta: %w", err)
@@ -833,9 +834,11 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, req o
 	if err != nil {
 		return fmt.Errorf("error escribiendo archivo: %w", err)
 	}
+	FIN DE EXPORTACIÓN.
+	*/
 
-	fmt.Printf("Datos de ruta exportados exitosamente a: %s\n", filename)
-	fmt.Printf("Total de rutas: %d\n", len(routesData))
+	//fmt.Printf("Datos de ruta exportados exitosamente a: %s\n", filename)
+	//fmt.Printf("Total de rutas: %d\n", len(routesData))
 
 	return nil
 }

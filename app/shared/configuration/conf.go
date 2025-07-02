@@ -33,7 +33,7 @@ type Conf struct {
 	OPTIMIZATION_REQUESTED_SUBSCRIPTION       string `env:"OPTIMIZATION_REQUESTED_SUBSCRIPTION"`
 	VROOM_OPTIMIZER_URL                       string `env:"VROOM_OPTIMIZER_URL"`
 	VROOM_PLANNER_URL                         string `env:"VROOM_PLANNER_URL"`
-	MASTER_NODE_HOST                          string `env:"MASTER_NODE_HOST"`
+	MASTER_NODE_URL                           string `env:"MASTER_NODE_URL"`
 	MASTER_NODE_API_KEY                       string `env:"MASTER_NODE_API_KEY"`
 }
 
