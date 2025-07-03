@@ -145,8 +145,9 @@ jobs:
           GCP_IMAGE_REF="$IMAGE_REF"
           IMAGE_NAME=$(echo $GCP_IMAGE_REF | sed 's|.*/||')
           
-          # Create GitHub Container Registry reference
-          GHCR_IMAGE_REF="ghcr.io/${{ github.repository }}/$IMAGE_NAME"
+          # Create GitHub Container Registry reference with lowercase repository name
+          REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          GHCR_IMAGE_REF="ghcr.io/$REPO_NAME/$IMAGE_NAME"
           
           # Tag the image for GitHub Container Registry
           docker tag "$GCP_IMAGE_REF" "$GHCR_IMAGE_REF"
