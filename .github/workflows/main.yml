@@ -141,8 +141,10 @@ jobs:
       -
         name: Build and push image with ko to GitHub Container Registry
         env:
-          KO_DOCKER_REPO: ghcr.io/${{ github.repository | lower }}
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
         run: |
+          REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          export KO_DOCKER_REPO="ghcr.io/$REPO_NAME"
           ko build .
 
       -
