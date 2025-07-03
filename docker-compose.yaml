@@ -2,11 +2,8 @@ version: "3.8"
 
 services:
   osrm:
-    image: ghcr.io/project-osrm/osrm-backend
+    image: ghcr.io/ignaciojeria/transport-app/transport-app-osrm:latest
     container_name: osrm
-    command: osrm-routed --algorithm mld --max-table-size 5000 --max-viaroute-size 2000 --max-trip-size 2000 /data/chile-latest.osrm
-    volumes:
-      - ./osrm:/data
     ports:
       - "5000:5000"
     networks:
