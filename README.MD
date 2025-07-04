@@ -36,7 +36,16 @@ Puedes cambiar el país o región desde: https://download.geofabrik.de/
 ## 🐳 Paso 2: Levantar los servicios
 
 ```bash
-docker compose up --build
+
+✅ Comandos para levantar cada entorno
+
+🔧 Solo backend (desarrollo, sin transport-app)
+docker-compose -f docker-compose.yml up
+
+🚀 Producción (con transport-app)
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+Aquí docker-compose.prod.yml agrega transport-app al conjunto de servicios, sin necesidad de duplicar el resto.
 ```
 
 Esto ejecutará:

@@ -38,6 +38,7 @@ func NewPostUpsertRoute(c *resty.Client, conf configuration.Conf) PostUpsertRout
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").
 			SetHeader("channel", sharedcontext.ChannelFromContext(ctx)).
+			SetHeader("X-Access-Token", "Bearer "+conf.MASTER_NODE_API_KEY).
 			SetHeader("tenant", sharedcontext.TenantIDFromContext(ctx).String()+"-"+sharedcontext.TenantCountryFromContext(ctx)).
 			SetHeader("Authorization", fmt.Sprintf("Bearer %s", apiKey)).
 			SetBody(req).

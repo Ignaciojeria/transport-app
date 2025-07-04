@@ -1,0 +1,36 @@
+services:
+  osrm:
+    image: ghcr.io/ignaciojeria/transport-app/transport-app-osrm:latest
+    container_name: osrm
+    ports:
+      - "5000:5000"
+    networks:
+      - vroom-network
+
+  optimizer:
+    image: ghcr.io/vroom-project/vroom-docker:v1.14.0
+    container_name: optimizer
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./conf/optimizer:/conf
+    depends_on:
+      - osrm
+    networks:
+      - vroom-network
+
+  planner:
+    image: ghcr.io/vroom-project/vroom-docker:v1.14.0
+    container_name: planner
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./conf/planner:/conf
+    depends_on:
+      - osrm
+    networks:
+      - vroom-network
+
+networks:
+  vroom-network:
+    driver: bridge
