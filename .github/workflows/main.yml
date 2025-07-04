@@ -159,6 +159,8 @@ jobs:
             --platform=managed \
             --allow-unauthenticated \
             --set-secrets="OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest,\
+            JWT_PRIVATE_KEY=JWT_PRIVATE_KEY:latest,\
+            JWT_PUBLIC_KEY=JWT_PUBLIC_KEY:latest,\
             OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
             OPENOBSERVE_HTTP_ENDPOINT=OPENOBSERVE_HTTP_ENDPOINT:latest,\
             OPENOBSERVE_STREAM_NAME=OPENOBSERVE_STREAM_NAME:latest,\

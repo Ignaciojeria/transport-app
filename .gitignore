@@ -14,3 +14,5 @@ geojson.json
 polyline.json
 polyline*.json
 respaldo
+private_key.pem
+public_key.pem
