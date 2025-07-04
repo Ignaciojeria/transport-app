@@ -430,6 +430,10 @@
         {
             "kind": "post-controller",
             "name": "picking"
+        },
+        {
+            "kind": "post-controller",
+            "name": "auth-token"
         }
     ]
 }

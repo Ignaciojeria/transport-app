@@ -48,6 +48,24 @@ docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 Aquí docker-compose.prod.yml agrega transport-app al conjunto de servicios, sin necesidad de duplicar el resto.
 ```
 
+
+# JWT Setup Guide - Transport App
+
+## 🔑 Generación de Claves RSA
+
+### **Requisitos previos:**
+- OpenSSL instalado en el sistema
+- Acceso a terminal/PowerShell
+
+### **Comandos para generar claves:**
+```bash
+# Generar clave privada PKCS#8
+openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
+
+# Extraer clave pública
+openssl rsa -pubout -in private_key.pem -out public_key.pem
+```
+
 Esto ejecutará:
 
 - **OSRM**: procesará `chile-latest.osm.pbf` (extract → partition → customize) y servirá en `http://localhost:5000`
