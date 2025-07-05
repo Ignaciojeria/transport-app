@@ -100,6 +100,7 @@ jobs:
             --memory=512Mi \
             --cpu=1 \
             --max-instances=10 \
+            --set-env-vars="DB_STRATEGY=disabled" \
             --set-secrets="JWT_PRIVATE_KEY=JWT_PRIVATE_KEY:latest,\
             JWT_PUBLIC_KEY=JWT_PUBLIC_KEY:latest,\
             OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
