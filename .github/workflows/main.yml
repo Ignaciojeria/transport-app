@@ -176,4 +176,15 @@ jobs:
             LOCATION_IQ_DNS=LOCATION_IQ_DNS:latest,\
             AI_PROVIDER_STRATEGY=AI_PROVIDER_STRATEGY:latest,\
             GEMINI_API_KEY=GEMINI_API_KEY:latest,\
-            FIREBASE_API_KEY=FIREBASE_API_KEY:latest"
+            FIREBASE_API_KEY=FIREBASE_API_KEY:latest" \
+            --set-env-vars="PUBLIC_ENDPOINTS=/.well-known/jwks.json,/health,/favicon.ico"
+      -
+        name: Configure IAM for public access to JWKS endpoint
+        run: |
+          SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
+          
+          # Permitir acceso público al servicio
+          gcloud run services add-iam-policy-binding "$SERVICE_NAME" \
+            --region=us-central1 \
+            --member="allUsers" \
+            --role="roles/run.invoker"
