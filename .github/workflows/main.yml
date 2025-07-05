@@ -157,7 +157,6 @@ jobs:
             --region=us-central1 \
             --service-account="transport-app-sa@einar-404623.iam.gserviceaccount.com" \
             --platform=managed \
-            --allow-unauthenticated \
             --set-secrets="OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest,\
             JWT_PRIVATE_KEY=JWT_PRIVATE_KEY:latest,\
             JWT_PUBLIC_KEY=JWT_PUBLIC_KEY:latest,\
@@ -176,15 +175,4 @@ jobs:
             LOCATION_IQ_DNS=LOCATION_IQ_DNS:latest,\
             AI_PROVIDER_STRATEGY=AI_PROVIDER_STRATEGY:latest,\
             GEMINI_API_KEY=GEMINI_API_KEY:latest,\
-            FIREBASE_API_KEY=FIREBASE_API_KEY:latest" \
-            --set-env-vars="PUBLIC_ENDPOINTS=/.well-known/jwks.json"
-      -
-        name: Configure IAM for public access to JWKS endpoint
-        run: |
-          SERVICE_NAME=$(echo $GITHUB_REPOSITORY | cut -d'/' -f2 | tr '.' '-' | tr '_' '-' | tr '[:upper:]' '[:lower:]')
-          
-          # Permitir acceso público al servicio
-          gcloud run services add-iam-policy-binding "$SERVICE_NAME" \
-            --region=us-central1 \
-            --member="allUsers" \
-            --role="roles/run.invoker"
+            FIREBASE_API_KEY=FIREBASE_API_KEY:latest"
