@@ -65,5 +65,5 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 		},
 		option.Header("tenant", "api tenant", param.Required()),
 		option.Summary("auth token"),
-		option.Tags("openid"))
+		option.Tags("jwt"))
 }
