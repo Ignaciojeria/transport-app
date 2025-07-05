@@ -109,7 +109,7 @@ func NewJWTServiceWithRSA(privateKeyPEM, publicKeyPEM, issuer string) (*JWTServi
 }
 
 // GenerateToken genera un nuevo token JWT
-func (j *JWTService) GenerateToken(sub string, scopes []string, context map[string]string, tenant string, expirationMinutes int) (string, int64, error) {
+func (j *JWTService) GenerateToken(sub string, scopes []string, context map[string]string, tenant string, audience string, expirationMinutes int) (string, int64, error) {
 	// Calcular tiempo de expiración
 	expirationTime := time.Now().Add(time.Duration(expirationMinutes) * time.Minute)
 	expiresAt := expirationTime.Unix()
@@ -126,11 +126,19 @@ func (j *JWTService) GenerateToken(sub string, scopes []string, context map[stri
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    j.issuer,
 			Subject:   sub,
+			Audience:  []string{audience},
 		},
 	}
 
 	// Crear token
 	token := jwt.NewWithClaims(j.signingMethod, claims)
+
+	// Agregar kid al header si es RSA
+	if j.signingMethod == jwt.SigningMethodRS256 && j.publicKey != nil {
+		// Generar el mismo kid que se usa en GetJWKS
+		kid := fmt.Sprintf("key-%x", j.publicKey.N.Bytes()[:8])
+		token.Header["kid"] = kid
+	}
 
 	// Firmar token
 	var tokenString string
@@ -274,6 +282,12 @@ func (j *JWTService) RefreshToken(tokenString string, expirationMinutes int) (st
 		return "", 0, fmt.Errorf("error validando token para refresh: %w", err)
 	}
 
+	// Obtener el audience del token original
+	var audience string
+	if len(claims.Audience) > 0 {
+		audience = claims.Audience[0]
+	}
+
 	// Generar nuevo token con los mismos claims pero nueva expiración
-	return j.GenerateToken(claims.Sub, claims.Scopes, claims.Context, claims.Tenant, expirationMinutes)
+	return j.GenerateToken(claims.Sub, claims.Scopes, claims.Context, claims.Tenant, audience, expirationMinutes)
 }

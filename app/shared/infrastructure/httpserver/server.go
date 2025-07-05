@@ -41,10 +41,25 @@ type Server struct {
 	conf    configuration.Conf
 }
 
+// Middleware para forzar headers JSON
+func NewJSONMiddleware() func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			r.Header.Set("Content-Type", "application/json")
+			r.Header.Set("Accept", "application/json")
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 func New(conf configuration.Conf) Server {
 	s := fuego.NewServer(
 		fuego.WithAddr(":"+conf.PORT),
-		fuego.WithGlobalMiddlewares(injectBaggageMiddleware))
+		fuego.WithGlobalMiddlewares(
+			injectBaggageMiddleware,
+			NewJSONMiddleware(),
+		),
+	)
 	server := Server{
 		Manager: s,
 		conf:    conf,
@@ -154,12 +169,13 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 
 func injectBaggageMiddleware(next http.Handler) http.Handler {
 	skipPaths := map[string]struct{}{
-		"/":            {},
-		"/login":       {},
-		"/register":    {},
-		"/health":      {},
-		"/favicon.ico": {},
-		"/tenants":     {},
+		"/":                      {},
+		"/login":                 {},
+		"/register":              {},
+		"/health":                {},
+		"/favicon.ico":           {},
+		"/tenants":               {},
+		"/.well-known/jwks.json": {},
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

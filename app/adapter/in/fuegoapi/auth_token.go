@@ -25,6 +25,15 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 				return response.GenerateTokenResponse{}, err
 			}
 
+			// Validar que el audience esté presente
+			if req.Audience == "" {
+				return response.GenerateTokenResponse{}, fuego.HTTPError{
+					Title:  "audience requerido",
+					Detail: "El campo 'aud' es obligatorio",
+					Status: 400,
+				}
+			}
+
 			// Obtener el tenant del header
 			tenant := c.Request().Header.Get("tenant")
 			if tenant == "" {
@@ -41,6 +50,7 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 				req.Scopes,
 				req.Context,
 				tenant,
+				req.Audience,
 				60, // 60 minutos de expiración
 			)
 			if err != nil {

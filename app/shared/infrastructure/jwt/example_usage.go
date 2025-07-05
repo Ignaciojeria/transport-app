@@ -21,8 +21,9 @@ func exampleUsage() {
 		"user123",
 		scopes,
 		context,
-		"tenant123", // tenant ID
-		60,          // 60 minutos
+		"tenant123",                     // tenant ID
+		"https://api.transport-app.com", // audience
+		60,                              // 60 minutos
 	)
 	if err != nil {
 		log.Fatal("Error generando token:", err)

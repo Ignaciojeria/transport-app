@@ -14,7 +14,7 @@ func TestJWTService_GenerateToken(t *testing.T) {
 		"user_type": "admin",
 	}
 
-	token, expiresAt, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", 60)
+	token, expiresAt, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", "https://api.test.com", 60)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}
@@ -64,7 +64,7 @@ func TestJWTService_ValidateToken_ExpiredToken(t *testing.T) {
 	jwtService := NewJWTService("test-secret-key", "test-issuer")
 
 	// Generar token con expiración muy corta
-	token, _, err := jwtService.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", 0)
+	token, _, err := jwtService.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", "https://api.test.com", 0)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}
@@ -82,7 +82,7 @@ func TestJWTService_RefreshToken(t *testing.T) {
 	jwtService := NewJWTService("test-secret-key", "test-issuer")
 
 	// Generar token original
-	originalToken, originalExpiresAt, err := jwtService.GenerateToken("user123", []string{"admin"}, map[string]string{"test": "value"}, "test-tenant", 60)
+	originalToken, originalExpiresAt, err := jwtService.GenerateToken("user123", []string{"admin"}, map[string]string{"test": "value"}, "test-tenant", "https://api.test.com", 60)
 	if err != nil {
 		t.Fatalf("Error generando token original: %v", err)
 	}
@@ -146,7 +146,7 @@ func TestJWTService_DifferentSecretKeys(t *testing.T) {
 	jwtService2 := NewJWTService("secret-key-2", "test-issuer")
 
 	// Generar token con el primer servicio
-	token, _, err := jwtService1.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", 60)
+	token, _, err := jwtService1.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", "https://api.test.com", 60)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}
@@ -155,5 +155,41 @@ func TestJWTService_DifferentSecretKeys(t *testing.T) {
 	_, err = jwtService2.ValidateToken(token)
 	if err == nil {
 		t.Error("Debería haber error al validar token con clave secreta diferente")
+	}
+}
+
+func TestJWTService_AudienceInToken(t *testing.T) {
+	jwtService := NewJWTService("test-secret-key", "test-issuer")
+
+	scopes := []string{"read:orders"}
+	context := map[string]string{"test": "value"}
+	expectedAudience := "https://api.transport-app.com"
+
+	token, _, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", expectedAudience, 60)
+	if err != nil {
+		t.Fatalf("Error generando token: %v", err)
+	}
+
+	// Validar el token y verificar que el audience está presente
+	claims, err := jwtService.ValidateToken(token)
+	if err != nil {
+		t.Fatalf("Error validando token: %v", err)
+	}
+
+	if len(claims.Audience) == 0 {
+		t.Error("El token debería tener un audience")
+	}
+
+	if claims.Audience[0] != expectedAudience {
+		t.Errorf("Audience esperado: %s, obtenido: %s", expectedAudience, claims.Audience[0])
+	}
+
+	// Verificar que el audience está en el token decodificado
+	if len(claims.RegisteredClaims.Audience) == 0 {
+		t.Error("El token debería tener un audience en RegisteredClaims")
+	}
+
+	if claims.RegisteredClaims.Audience[0] != expectedAudience {
+		t.Errorf("Audience en RegisteredClaims esperado: %s, obtenido: %s", expectedAudience, claims.RegisteredClaims.Audience[0])
 	}
 }
