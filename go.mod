@@ -15,6 +15,7 @@ require (
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/go-slog/otelslog v0.3.0
 	github.com/go-sql-driver/mysql v1.9.3
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/generative-ai-go v0.20.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
@@ -46,7 +47,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/sync v0.15.0
 	golang.org/x/text v0.26.0
-	google.golang.org/api v0.239.0
+	google.golang.org/api v0.240.0
 	google.golang.org/grpc v1.73.0
 	googlemaps.github.io/maps v1.7.0
 	gorm.io/driver/mysql v1.6.0
@@ -118,7 +119,6 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
