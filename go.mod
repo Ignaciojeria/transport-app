@@ -48,7 +48,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/sync v0.15.0
 	golang.org/x/text v0.26.0
-	google.golang.org/api v0.239.0
+	google.golang.org/api v0.240.0
 	google.golang.org/grpc v1.73.0
 	googlemaps.github.io/maps v1.7.0
 	gorm.io/driver/mysql v1.6.0
