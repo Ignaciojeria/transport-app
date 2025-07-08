@@ -90,16 +90,3 @@ func ChannelFromContext(ctx context.Context) string {
 	bag := baggage.FromContext(ctx)
 	return bag.Member(BaggageChannel).Value()
 }
-
-// GetEventTypeFromContext obtiene el eventType desde el contexto
-func GetEventTypeFromContext(ctx context.Context) (string, bool) {
-	bag := baggage.FromContext(ctx)
-	eventType := bag.Member(BaggageEventType).Value()
-	return eventType, eventType != ""
-}
-
-// EntityTypeFromContext obtiene el entityType desde el contexto
-func EntityTypeFromContext(ctx context.Context) string {
-	bag := baggage.FromContext(ctx)
-	return bag.Member(BaggageEntityType).Value()
-}

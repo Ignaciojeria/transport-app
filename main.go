@@ -30,7 +30,6 @@ import (
 	_ "transport-app/app/adapter/out/geocoding"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	_ "transport-app/app/adapter/in/natsconsumer"
 )
 
 //go:embed .version
