@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
-	"transport-app/app/adapter/out/gcppublisher"
+	"transport-app/app/adapter/out/natspublisher"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
@@ -22,13 +22,13 @@ func init() {
 	ioc.Registry(
 		cancelOrders,
 		httpserver.New,
-		gcppublisher.NewApplicationEvents,
+		natspublisher.NewApplicationEvents,
 		observability.NewObservability)
 }
 
 func cancelOrders(
 	s httpserver.Server,
-	publish gcppublisher.ApplicationEvents,
+	publish natspublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/orders/cancel",
 		func(c fuego.ContextWithBody[request.CancelOrdersRequest]) (response.CancelOrdersResponse, error) {

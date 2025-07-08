@@ -83,6 +83,10 @@ func NewApplicationEvents(
 			headers.Set("entityType", entityType)
 		}
 
+		if tenant == "" {
+			tenant = "no-tenant"
+		}
+
 		// Publicar el mensaje serializado a JetStream
 		_, err = js.PublishMsg(ctx, &nats.Msg{
 			Subject: conf.TRANSPORT_APP_TOPIC + "." + tenant + "." + eventType,

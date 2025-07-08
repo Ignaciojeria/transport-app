@@ -31,6 +31,9 @@ func newRouteStartedSubmitted(
 	conf configuration.Conf,
 	obs observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
+	return func(ctx context.Context, m *pubsub.Message) (int, error) {
+		return http.StatusAccepted, nil
+	}
 	subscriptionName := conf.ROUTE_STARTED_SUBMITTED_SUBSCRIPTION
 
 	// Validación para verificar si el nombre de la suscripción está vacío
