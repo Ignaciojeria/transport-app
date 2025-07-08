@@ -170,6 +170,7 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 func injectBaggageMiddleware(next http.Handler) http.Handler {
 	skipPaths := map[string]struct{}{
 		"/":                      {},
+		"/token":                 {},
 		"/login":                 {},
 		"/register":              {},
 		"/health":                {},

@@ -17,7 +17,7 @@ func exampleUsage() {
 		"user_type": "admin",
 	}
 
-	token, expiresAt, err := jwtService.GenerateToken(
+	token, err := jwtService.GenerateToken(
 		"user123",
 		scopes,
 		context,
@@ -30,7 +30,6 @@ func exampleUsage() {
 	}
 
 	fmt.Printf("Token generado: %s\n", token)
-	fmt.Printf("Expira en: %d\n", expiresAt)
 
 	// 3. Validar el token
 	claims, err := jwtService.ValidateToken(token)
@@ -41,15 +40,22 @@ func exampleUsage() {
 	fmt.Printf("Token válido para usuario: %s\n", claims.Sub)
 	fmt.Printf("Scopes: %v\n", claims.Scopes)
 	fmt.Printf("Context: %v\n", claims.Context)
+	fmt.Printf("Expira en: %d\n", claims.ExpiresAt.Unix())
 
 	// 4. Refrescar el token
-	newToken, newExpiresAt, err := jwtService.RefreshToken(token, 120) // 2 horas
+	newToken, err := jwtService.RefreshToken(token, 120) // 2 horas
 	if err != nil {
 		log.Fatal("Error refrescando token:", err)
 	}
 
 	fmt.Printf("Nuevo token: %s\n", newToken)
-	fmt.Printf("Nueva expiración: %d\n", newExpiresAt)
+
+	// Validar el nuevo token para obtener su expiración
+	newClaims, err := jwtService.ValidateToken(newToken)
+	if err != nil {
+		log.Fatal("Error validando nuevo token:", err)
+	}
+	fmt.Printf("Nueva expiración: %d\n", newClaims.ExpiresAt.Unix())
 
 	// 5. Generar una clave secreta aleatoria
 	secretKey, err := GenerateSecretKey(32)

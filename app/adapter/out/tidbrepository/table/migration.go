@@ -60,6 +60,7 @@ func NewRunMigrations(
 			&PoliticalArea{},
 			&Skill{},
 			&DeliveryUnitsSkills{},
+			&ClientCredential{},
 		}
 
 		// Crear las tablas nuevamente

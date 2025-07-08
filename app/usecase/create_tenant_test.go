@@ -6,6 +6,8 @@ import (
 	"strings"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
+	"transport-app/app/shared/configuration"
+	"transport-app/app/shared/infrastructure/jwt"
 
 	"github.com/biter777/countries"
 	goqu "github.com/doug-martin/goqu/v9"
@@ -126,7 +128,9 @@ func avoidJoin(table string) bool {
 
 func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 	email := "ignaciovl.j@gmail.com"
-	err := NewRegister(nil, tidbrepository.NewUpsertAccount(connection))(ctx, domain.UserCredentials{
+	conf, _ := configuration.NewConf()
+	jwtService, _ := jwt.NewJWTServiceFromConfig(conf)
+	err := NewRegister(nil, tidbrepository.NewUpsertAccount(connection), jwtService)(ctx, domain.UserCredentials{
 		Email: email,
 	})
 	if err != nil {
