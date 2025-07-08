@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
-	"transport-app/app/adapter/out/natspublisher"
+	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
@@ -20,19 +20,19 @@ import (
 func init() {
 	ioc.Registry(generateTestData,
 		httpserver.New,
-		natspublisher.NewApplicationEvents,
+		gcppublisher.NewApplicationEvents,
 		observability.NewObservability)
 
 	ioc.Registry(
 		optimizeFleet,
 		httpserver.New,
-		natspublisher.NewApplicationEvents,
+		gcppublisher.NewApplicationEvents,
 		observability.NewObservability)
 }
 
 func optimizeFleet(
 	s httpserver.Server,
-	publish natspublisher.ApplicationEvents,
+	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/optimize/fleet",
 		func(c fuego.ContextWithBody[request.OptimizeFleetRequest]) (response.OptimizationResponse, error) {
@@ -75,7 +75,7 @@ func optimizeFleet(
 // generateTestData crea un endpoint que genera datos de prueba masivos usando el test data generator
 func generateTestData(
 	s httpserver.Server,
-	publish natspublisher.ApplicationEvents,
+	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/optimize/fleet/test-data",
 		func(c fuego.ContextNoBody) (response.OptimizationResponse, error) {

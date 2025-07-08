@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
-	"transport-app/app/adapter/out/natspublisher"
+	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
@@ -22,13 +22,13 @@ func init() {
 	ioc.Registry(
 		register,
 		httpserver.New,
-		natspublisher.NewApplicationEvents,
+		gcppublisher.NewApplicationEvents,
 		observability.NewObservability,
 		usecase.NewRegister)
 }
 func register(
 	s httpserver.Server,
-	publish natspublisher.ApplicationEvents,
+	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability,
 	register usecase.Register) {
 	fuego.Post(s.Manager, "/register",

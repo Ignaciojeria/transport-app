@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
-	"transport-app/app/adapter/out/natspublisher"
+	"transport-app/app/adapter/out/gcppublisher"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -25,7 +25,7 @@ func init() {
 	ioc.Registry(
 		createTenant,
 		httpserver.New,
-		natspublisher.NewApplicationEvents,
+		gcppublisher.NewApplicationEvents,
 		observability.NewObservability,
 		usecase.NewCreateTenant,
 		tidbrepository.NewFindAccountByEmail,
@@ -34,7 +34,7 @@ func init() {
 
 func createTenant(
 	s httpserver.Server,
-	publish natspublisher.ApplicationEvents,
+	publish gcppublisher.ApplicationEvents,
 	obs observability.Observability,
 	createOrg usecase.CreateTenant,
 	findAccount tidbrepository.FindAccountByEmail,
