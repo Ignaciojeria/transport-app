@@ -109,10 +109,9 @@ func NewJWTServiceWithRSA(privateKeyPEM, publicKeyPEM, issuer string) (*JWTServi
 }
 
 // GenerateToken genera un nuevo token JWT
-func (j *JWTService) GenerateToken(sub string, scopes []string, context map[string]string, tenant string, audience string, expirationMinutes int) (string, int64, error) {
+func (j *JWTService) GenerateToken(sub string, scopes []string, context map[string]string, tenant string, audience string, expirationMinutes int) (string, error) {
 	// Calcular tiempo de expiración
 	expirationTime := time.Now().Add(time.Duration(expirationMinutes) * time.Minute)
-	expiresAt := expirationTime.Unix()
 
 	// Crear claims
 	claims := &Claims{
@@ -151,10 +150,10 @@ func (j *JWTService) GenerateToken(sub string, scopes []string, context map[stri
 	}
 
 	if err != nil {
-		return "", 0, fmt.Errorf("error firmando token: %w", err)
+		return "", fmt.Errorf("error firmando token: %w", err)
 	}
 
-	return tokenString, expiresAt, nil
+	return tokenString, nil
 }
 
 // ValidateToken valida y parsea un token JWT
@@ -275,11 +274,11 @@ func GenerateSecretKey(length int) (string, error) {
 }
 
 // RefreshToken genera un nuevo token basado en uno existente
-func (j *JWTService) RefreshToken(tokenString string, expirationMinutes int) (string, int64, error) {
+func (j *JWTService) RefreshToken(tokenString string, expirationMinutes int) (string, error) {
 	// Validar token existente
 	claims, err := j.ValidateToken(tokenString)
 	if err != nil {
-		return "", 0, fmt.Errorf("error validando token para refresh: %w", err)
+		return "", fmt.Errorf("error validando token para refresh: %w", err)
 	}
 
 	// Obtener el audience del token original

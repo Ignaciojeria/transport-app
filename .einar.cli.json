@@ -445,6 +445,10 @@
         {
             "kind": "nats-consumer",
             "name": "order-submitted"
+        },
+        {
+            "kind": "post-controller",
+            "name": "token"
         }
     ]
 }

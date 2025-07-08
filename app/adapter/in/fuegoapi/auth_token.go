@@ -45,7 +45,7 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 			}
 
 			// Generar token JWT
-			token, expiresAt, err := jwtService.GenerateToken(
+			token, err := jwtService.GenerateToken(
 				req.Sub,
 				req.Scopes,
 				req.Context,
@@ -57,9 +57,15 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 				return response.GenerateTokenResponse{}, err
 			}
 
+			// Extraer la expiración del token para la respuesta
+			claims, err := jwtService.ValidateToken(token)
+			if err != nil {
+				return response.GenerateTokenResponse{}, err
+			}
+
 			return response.GenerateTokenResponse{
 				Token:     token,
-				ExpiresAt: expiresAt,
+				ExpiresAt: claims.ExpiresAt.Unix(),
 				TokenType: "Bearer",
 			}, nil
 		},

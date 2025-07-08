@@ -14,17 +14,13 @@ func TestJWTService_GenerateToken(t *testing.T) {
 		"user_type": "admin",
 	}
 
-	token, expiresAt, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", "https://api.test.com", 60)
+	token, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", "https://api.test.com", 60)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}
 
 	if token == "" {
 		t.Error("Token no debería estar vacío")
-	}
-
-	if expiresAt <= time.Now().Unix() {
-		t.Error("ExpiresAt debería ser en el futuro")
 	}
 
 	// Verificar que el token se puede validar
@@ -48,6 +44,11 @@ func TestJWTService_GenerateToken(t *testing.T) {
 	if claims.Issuer != "test-issuer" {
 		t.Errorf("Issuer esperado: test-issuer, obtenido: %s", claims.Issuer)
 	}
+
+	// Verificar que la expiración está en el futuro
+	if claims.ExpiresAt.Unix() <= time.Now().Unix() {
+		t.Error("ExpiresAt debería ser en el futuro")
+	}
 }
 
 func TestJWTService_ValidateToken_InvalidToken(t *testing.T) {
@@ -64,7 +65,7 @@ func TestJWTService_ValidateToken_ExpiredToken(t *testing.T) {
 	jwtService := NewJWTService("test-secret-key", "test-issuer")
 
 	// Generar token con expiración muy corta
-	token, _, err := jwtService.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", "https://api.test.com", 0)
+	token, err := jwtService.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", "https://api.test.com", 0)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}
@@ -82,13 +83,20 @@ func TestJWTService_RefreshToken(t *testing.T) {
 	jwtService := NewJWTService("test-secret-key", "test-issuer")
 
 	// Generar token original
-	originalToken, originalExpiresAt, err := jwtService.GenerateToken("user123", []string{"admin"}, map[string]string{"test": "value"}, "test-tenant", "https://api.test.com", 60)
+	originalToken, err := jwtService.GenerateToken("user123", []string{"admin"}, map[string]string{"test": "value"}, "test-tenant", "https://api.test.com", 60)
 	if err != nil {
 		t.Fatalf("Error generando token original: %v", err)
 	}
 
+	// Obtener la expiración original
+	originalClaims, err := jwtService.ValidateToken(originalToken)
+	if err != nil {
+		t.Fatalf("Error validando token original: %v", err)
+	}
+	originalExpiresAt := originalClaims.ExpiresAt.Unix()
+
 	// Refrescar token
-	newToken, newExpiresAt, err := jwtService.RefreshToken(originalToken, 120)
+	newToken, err := jwtService.RefreshToken(originalToken, 120)
 	if err != nil {
 		t.Fatalf("Error refrescando token: %v", err)
 	}
@@ -97,26 +105,27 @@ func TestJWTService_RefreshToken(t *testing.T) {
 		t.Error("El nuevo token debería ser diferente al original")
 	}
 
+	// Obtener la nueva expiración
+	newClaims, err := jwtService.ValidateToken(newToken)
+	if err != nil {
+		t.Fatalf("Error validando token refrescado: %v", err)
+	}
+	newExpiresAt := newClaims.ExpiresAt.Unix()
+
 	if newExpiresAt <= originalExpiresAt {
 		t.Error("La nueva expiración debería ser mayor que la original")
 	}
 
-	// Verificar que el nuevo token es válido
-	claims, err := jwtService.ValidateToken(newToken)
-	if err != nil {
-		t.Fatalf("Error validando token refrescado: %v", err)
+	if newClaims.Sub != "user123" {
+		t.Errorf("Subject esperado: user123, obtenido: %s", newClaims.Sub)
 	}
 
-	if claims.Sub != "user123" {
-		t.Errorf("Subject esperado: user123, obtenido: %s", claims.Sub)
+	if newClaims.Scopes[0] != "admin" {
+		t.Errorf("Scope esperado: admin, obtenido: %s", newClaims.Scopes[0])
 	}
 
-	if claims.Scopes[0] != "admin" {
-		t.Errorf("Scope esperado: admin, obtenido: %s", claims.Scopes[0])
-	}
-
-	if claims.Context["test"] != "value" {
-		t.Errorf("Context esperado: value, obtenido: %s", claims.Context["test"])
+	if newClaims.Context["test"] != "value" {
+		t.Errorf("Context esperado: value, obtenido: %s", newClaims.Context["test"])
 	}
 }
 
@@ -146,7 +155,7 @@ func TestJWTService_DifferentSecretKeys(t *testing.T) {
 	jwtService2 := NewJWTService("secret-key-2", "test-issuer")
 
 	// Generar token con el primer servicio
-	token, _, err := jwtService1.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", "https://api.test.com", 60)
+	token, err := jwtService1.GenerateToken("user123", []string{}, map[string]string{}, "test-tenant", "https://api.test.com", 60)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}
@@ -165,7 +174,7 @@ func TestJWTService_AudienceInToken(t *testing.T) {
 	context := map[string]string{"test": "value"}
 	expectedAudience := "https://api.transport-app.com"
 
-	token, _, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", expectedAudience, 60)
+	token, err := jwtService.GenerateToken("user123", scopes, context, "test-tenant", expectedAudience, 60)
 	if err != nil {
 		t.Fatalf("Error generando token: %v", err)
 	}

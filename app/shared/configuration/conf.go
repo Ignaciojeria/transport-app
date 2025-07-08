@@ -38,6 +38,7 @@ type Conf struct {
 	JWT_ISSUER                                string `env:"JWT_ISSUER" envDefault:"transport-app"`
 	JWT_PRIVATE_KEY                           string `env:"JWT_PRIVATE_KEY"`
 	JWT_PUBLIC_KEY                            string `env:"JWT_PUBLIC_KEY"`
+	RESEND_API_KEY                            string `env:"RESEND_API_KEY"`
 }
 
 func NewConf() (Conf, error) {
