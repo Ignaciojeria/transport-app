@@ -54,7 +54,7 @@ func NewSendClientCredentialsEmail(resendClient *resend.Client) SendClientCreden
 
 		// Enviar el email
 		params := &resend.SendEmailRequest{
-			From:    "Transport App <onboarding@resend.dev>",
+			From:    "Transport App <onboarding@transport-app.com>",
 			To:      []string{email},
 			Html:    body.String(),
 			Subject: "🚚 Transport App - Tus Credenciales de Cliente",

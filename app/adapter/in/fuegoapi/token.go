@@ -148,5 +148,5 @@ func token(s httpserver.Server, jwtService *jwt.JWTService, findClientCredential
 				ExpiresIn:   int(claims.ExpiresAt.Unix() - time.Now().Unix()), // Calcular tiempo restante
 				Scope:       scope,
 			}, nil
-		}, option.Summary("token"), option.Tags("jwt"))
+		}, option.Summary("auth token"), option.Tags("jwt"))
 }
