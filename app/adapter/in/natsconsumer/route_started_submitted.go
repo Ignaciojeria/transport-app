@@ -32,6 +32,13 @@ func newRouteStartedSubmittedConsumer(
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
+	// Validación para verificar si el nombre de la suscripción está vacío
+	if conf.ROUTE_STARTED_SUBMITTED_SUBSCRIPTION == "" {
+		obs.Logger.Warn("Route started submitted subscription name is empty, skipping consumer initialization")
+		// Retornar nil para indicar que no hay consumidor activo
+		return nil, nil
+	}
+
 	ctx := context.Background()
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.ROUTE_STARTED_SUBMITTED_SUBSCRIPTION,

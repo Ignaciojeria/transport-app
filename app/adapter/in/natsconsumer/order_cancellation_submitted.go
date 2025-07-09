@@ -32,6 +32,13 @@ func newOrderCancellationSubmittedConsumer(
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
+	// Validación para verificar si el nombre de la suscripción está vacío
+	if conf.ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION == "" {
+		obs.Logger.Warn("Order cancellation submitted subscription name is empty, skipping consumer initialization")
+		// Retornar nil para indicar que no hay consumidor activo
+		return nil, nil
+	}
+
 	ctx := context.Background()
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION,
