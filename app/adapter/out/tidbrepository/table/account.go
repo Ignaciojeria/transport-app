@@ -11,7 +11,6 @@ type Account struct {
 	ID         int64  `gorm:"primaryKey"`
 	Email      string `gorm:"type:varchar(255);not null;unique"`
 	DocumentID string `gorm:"type:char(64);uniqueIndex"`
-	IsActive   bool   `gorm:"default:null"`
 }
 
 func (a Account) MapAccount() domain.Account {

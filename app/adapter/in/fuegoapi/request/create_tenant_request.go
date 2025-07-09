@@ -14,16 +14,18 @@ type CreateTenantRequest struct {
 	Country string `json:"country" validate:"required" example:"CL"`
 }
 
-func (r CreateTenantRequest) Map() domain.Tenant {
+func (r CreateTenantRequest) Map() domain.TenantAccount {
 	uid, _ := uuid.Parse(r.ID)
-	return domain.Tenant{
-		ID:      uid,
-		Name:    r.Name,
-		Country: countries.ByName(r.Country),
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: r.Email,
-			},
+	return domain.TenantAccount{
+		Tenant: domain.Tenant{
+			ID:      uid,
+			Name:    r.Name,
+			Country: countries.ByName(r.Country),
 		},
+		Account: domain.Account{
+			Email: r.Email,
+		},
+		Role:   "owner",
+		Status: "active",
 	}
 }

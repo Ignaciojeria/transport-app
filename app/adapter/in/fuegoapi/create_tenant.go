@@ -27,7 +27,7 @@ func init() {
 		httpserver.New,
 		natspublisher.NewApplicationEvents,
 		observability.NewObservability,
-		usecase.NewCreateTenant,
+		usecase.NewCreateTenantAccount,
 		tidbrepository.NewFindAccountByEmail,
 	)
 }
@@ -36,7 +36,7 @@ func createTenant(
 	s httpserver.Server,
 	publish natspublisher.ApplicationEvents,
 	obs observability.Observability,
-	createOrg usecase.CreateTenant,
+	createTenantAccount usecase.CreateTenantAccount,
 	findAccount tidbrepository.FindAccountByEmail,
 ) {
 	fuego.Post(s.Manager, "/tenants",

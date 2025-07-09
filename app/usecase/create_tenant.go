@@ -9,11 +9,11 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type CreateTenant func(ctx context.Context, org domain.Tenant) error
+type CreateTenantAccount func(ctx context.Context, org domain.TenantAccount) error
 
 func init() {
 	ioc.Registry(
-		NewCreateTenant,
+		NewCreateTenantAccount,
 		tidbrepository.NewUpsertOrderHeaders,
 		tidbrepository.NewUpsertContact,
 		tidbrepository.NewUpsertAddressInfo,
@@ -38,10 +38,11 @@ func init() {
 		tidbrepository.NewLoadStatuses,
 		tidbrepository.NewUpsertSizeCategory,
 		tidbrepository.NewUpsertSkill,
+		tidbrepository.NewSaveTenantAccount,
 	)
 }
 
-func NewCreateTenant(
+func NewCreateTenantAccount(
 	upsertOrderHeaders tidbrepository.UpsertOrderHeaders,
 	upsertContact tidbrepository.UpsertContact,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
@@ -66,9 +67,14 @@ func NewCreateTenant(
 	loadStatuses tidbrepository.LoadStatuses,
 	upsertSizeCategory tidbrepository.UpsertSizeCategory,
 	upsertSkill tidbrepository.UpsertSkill,
-) CreateTenant {
-	return func(ctx context.Context, org domain.Tenant) error {
-		_, err := saveTenant(ctx, org)
+	saveTenantAccount tidbrepository.SaveTenantAccount,
+) CreateTenantAccount {
+	return func(ctx context.Context, tenantAccount domain.TenantAccount) error {
+		_, err := saveTenant(ctx, tenantAccount.Tenant)
+		if err != nil {
+			return err
+		}
+		err = saveTenantAccount(ctx, tenantAccount)
 		if err != nil {
 			return err
 		}

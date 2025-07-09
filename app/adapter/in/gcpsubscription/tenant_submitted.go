@@ -20,13 +20,13 @@ func init() {
 	ioc.Registry(
 		newTenantSubmitted,
 		configuration.NewConf,
-		usecase.NewCreateTenant,
+		usecase.NewCreateTenantAccount,
 		subscriptionwrapper.NewSubscriptionManager,
 		observability.NewObservability)
 }
 func newTenantSubmitted(
 	conf configuration.Conf,
-	createTenant usecase.CreateTenant,
+	createTenantAccount usecase.CreateTenantAccount,
 	sm subscriptionwrapper.SubscriptionManager,
 	obs observability.Observability,
 ) subscriptionwrapper.MessageProcessor {
@@ -57,7 +57,7 @@ func newTenantSubmitted(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		err := createTenant(ctx, input.Map())
+		err := createTenantAccount(ctx, input.Map())
 		if err != nil {
 			m.Nack()
 			return http.StatusAccepted, err

@@ -12,6 +12,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -66,8 +67,14 @@ func newRegistrationSubmittedConsumer(
 		}
 
 		// Procesar el registro
-		if err := register(ctx, domain.UserCredentials{
-			Email: input.Email,
+		if err := register(ctx, domain.TenantAccount{
+			Tenant: domain.Tenant{
+				Country: countries.ByName(input.Country),
+			},
+			Account: domain.Account{
+				Email: input.Email,
+			},
+			Role: "owner",
 		}); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Ack()

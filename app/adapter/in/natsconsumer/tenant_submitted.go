@@ -20,7 +20,7 @@ func init() {
 	ioc.Registry(
 		newTenantSubmittedConsumer,
 		natsconn.NewJetStream,
-		usecase.NewCreateTenant,
+		usecase.NewCreateTenantAccount,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -28,7 +28,7 @@ func init() {
 
 func newTenantSubmittedConsumer(
 	js jetstream.JetStream,
-	createTenant usecase.CreateTenant,
+	createTenantAccount usecase.CreateTenantAccount,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -65,7 +65,7 @@ func newTenantSubmittedConsumer(
 		}
 
 		// Procesar el tenant
-		if err := createTenant(ctx, input.Map()); err != nil {
+		if err := createTenantAccount(ctx, input.Map()); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando tenant", "error", err)
 			msg.Ack()
 			return

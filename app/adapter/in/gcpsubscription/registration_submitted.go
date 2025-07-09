@@ -13,6 +13,7 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
 )
@@ -59,8 +60,14 @@ func newRegistrationSubmitted(
 			m.Ack()
 			return http.StatusAccepted, err
 		}
-		err := register(ctx, domain.UserCredentials{
-			Email: input.Email,
+		err := register(ctx, domain.TenantAccount{
+			Tenant: domain.Tenant{
+				Country: countries.ByName(input.Country),
+			},
+			Account: domain.Account{
+				Email: input.Email,
+			},
+			Role: "owner",
 		})
 		if err != nil {
 			m.Nack()
