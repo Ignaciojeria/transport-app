@@ -1,5 +1,6 @@
 package fuegoapi
 
+/*
 import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
@@ -73,3 +74,4 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 		option.Summary("auth token"),
 		option.Tags("jwt"))
 }
+*/
