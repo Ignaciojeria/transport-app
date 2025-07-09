@@ -13,6 +13,8 @@ type AccountTenant struct {
 	Role      string    `gorm:"type:varchar(50);default:null"`
 	Account   Account   `gorm:"foreignKey:AccountID;constraint:OnDelete:CASCADE"`
 	Status    string
+	Invited   bool      `gorm:"default:false"`
+	JoinedAt  time.Time `gorm:"default:CURRENT_TIMESTAMP"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

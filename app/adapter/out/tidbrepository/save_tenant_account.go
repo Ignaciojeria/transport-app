@@ -36,6 +36,8 @@ func NewSaveTenantAccount(conn database.ConnectionFactory) SaveTenantAccount {
 			Role:      tenantAccount.Role,
 			Status:    tenantAccount.Status,
 			TenantID:  tenantAccount.Tenant.ID,
+			Invited:   tenantAccount.Invited,
+			JoinedAt:  tenantAccount.JoinedAt,
 		}
 
 		if err := conn.DB.WithContext(ctx).Create(&link).Error; err != nil {
