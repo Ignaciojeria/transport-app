@@ -27,6 +27,7 @@ func NewFindClientCredentialsByClientID(conn database.ConnectionFactory, encrypt
 	return func(ctx context.Context, clientID string) (domain.ClientCredentials, error) {
 		var credentials table.ClientCredential
 		err := conn.DB.WithContext(ctx).
+			Preload("Tenant").
 			Table("client_credentials").
 			Where("client_id = ?", clientID).
 			First(&credentials).Error

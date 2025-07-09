@@ -98,7 +98,7 @@ func NewRegister(
 			"optimization:write",
 		}
 
-		clientCredentials, err := createClientCredentials(ctx, tenantID, scopes)
+		clientCredentials, err := createClientCredentials(ctx, tenantID, input.Tenant.Country, scopes)
 		if err != nil {
 			return err
 		}

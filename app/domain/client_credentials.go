@@ -3,12 +3,14 @@ package domain
 import (
 	"time"
 
+	"github.com/biter777/countries"
 	"github.com/google/uuid"
 )
 
 type ClientCredentials struct {
 	ID            uuid.UUID
 	TenantID      uuid.UUID
+	TenantCountry countries.CountryCode
 	ClientID      string
 	ClientSecret  string
 	AllowedScopes []string
@@ -20,6 +22,7 @@ type ClientCredentials struct {
 // NewClientCredentials crea una nueva instancia de ClientCredentials
 func NewClientCredentials(
 	tenantID uuid.UUID,
+	tenantCountry countries.CountryCode,
 	clientID string,
 	clientSecret string,
 	allowedScopes []string,
@@ -27,6 +30,7 @@ func NewClientCredentials(
 	return &ClientCredentials{
 		ID:            uuid.New(),
 		TenantID:      tenantID,
+		TenantCountry: tenantCountry,
 		ClientID:      clientID,
 		ClientSecret:  clientSecret,
 		AllowedScopes: allowedScopes,

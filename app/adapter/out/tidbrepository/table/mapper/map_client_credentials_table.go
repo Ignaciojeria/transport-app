@@ -4,6 +4,9 @@ import (
 	"transport-app/app/adapter/out/tidbrepository/table"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/encryption"
+
+	"github.com/biter777/countries"
+	"github.com/google/uuid"
 )
 
 func MapClientCredentialsTable(e domain.ClientCredentials, encryptionService *encryption.ClientCredentialsEncryption) (table.ClientCredential, error) {
@@ -32,9 +35,16 @@ func MapClientCredentialsDomain(t table.ClientCredential, encryptionService *enc
 		return domain.ClientCredentials{}, err
 	}
 
+	// Obtener el país del tenant desde el preload
+	tenantCountry := countries.Unknown
+	if t.Tenant.ID != uuid.Nil {
+		tenantCountry = t.Tenant.Map().Country
+	}
+
 	return domain.ClientCredentials{
 		ID:            t.ID,
 		TenantID:      t.TenantID,
+		TenantCountry: tenantCountry,
 		ClientID:      t.ClientID,
 		ClientSecret:  decryptedSecret,
 		AllowedScopes: t.AllowedScopes,

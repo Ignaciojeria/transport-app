@@ -5,6 +5,7 @@ import (
 	"testing"
 	"transport-app/app/domain"
 
+	"github.com/biter777/countries"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -26,6 +27,7 @@ func TestCreateClientCredentials(t *testing.T) {
 	createClientCredentials := NewCreateClientCredentials(mockRepo.UpsertClientCredentials)
 
 	tenantID := uuid.New()
+	tenantCountry := countries.CL
 	scopes := []string{"orders:read", "orders:write"}
 
 	// Configurar el mock para retornar las credenciales creadas
@@ -36,12 +38,13 @@ func TestCreateClientCredentials(t *testing.T) {
 		})
 
 	// Act
-	credentials, err := createClientCredentials(context.Background(), tenantID, scopes)
+	credentials, err := createClientCredentials(context.Background(), tenantID, tenantCountry, scopes)
 
 	// Assert
 	assert.NoError(t, err)
 	assert.NotEmpty(t, credentials.ID)
 	assert.Equal(t, tenantID, credentials.TenantID)
+	assert.Equal(t, tenantCountry, credentials.TenantCountry)
 	assert.NotEmpty(t, credentials.ClientID)
 	assert.NotEmpty(t, credentials.ClientSecret)
 	assert.Equal(t, scopes, credentials.AllowedScopes)
@@ -96,6 +99,7 @@ func TestCreateClientCredentialsWithError(t *testing.T) {
 	createClientCredentials := NewCreateClientCredentials(mockRepo.UpsertClientCredentials)
 
 	tenantID := uuid.New()
+	tenantCountry := countries.CL
 	scopes := []string{"orders:read"}
 
 	// Configurar el mock para retornar un error
@@ -103,7 +107,7 @@ func TestCreateClientCredentialsWithError(t *testing.T) {
 		Return(domain.ClientCredentials{}, assert.AnError)
 
 	// Act
-	credentials, err := createClientCredentials(context.Background(), tenantID, scopes)
+	credentials, err := createClientCredentials(context.Background(), tenantID, tenantCountry, scopes)
 
 	// Assert
 	assert.Error(t, err)

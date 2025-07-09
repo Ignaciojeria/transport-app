@@ -2,17 +2,16 @@ package usecase
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"fmt"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
 	"github.com/google/uuid"
 )
 
-type CreateClientCredentials func(ctx context.Context, tenantID uuid.UUID, scopes []string) (domain.ClientCredentials, error)
+type CreateClientCredentials func(ctx context.Context, tenantID uuid.UUID, tenantCountry countries.CountryCode, scopes []string) (domain.ClientCredentials, error)
 
 func init() {
 	ioc.Registry(
@@ -22,7 +21,7 @@ func init() {
 }
 
 func NewCreateClientCredentials(upsertClientCredentials tidbrepository.UpsertClientCredentials) CreateClientCredentials {
-	return func(ctx context.Context, tenantID uuid.UUID, scopes []string) (domain.ClientCredentials, error) {
+	return func(ctx context.Context, tenantID uuid.UUID, tenantCountry countries.CountryCode, scopes []string) (domain.ClientCredentials, error) {
 		// Generar ClientID único
 		clientID, err := generateClientID()
 		if err != nil {
@@ -38,6 +37,7 @@ func NewCreateClientCredentials(upsertClientCredentials tidbrepository.UpsertCli
 		// Crear las credenciales
 		credentials := domain.NewClientCredentials(
 			tenantID,
+			tenantCountry,
 			clientID,
 			clientSecret,
 			scopes,
@@ -53,36 +53,16 @@ func NewCreateClientCredentials(upsertClientCredentials tidbrepository.UpsertCli
 	}
 }
 
-// generateClientID genera un ClientID único
+// generateClientID genera un ClientID único usando UUID
 func generateClientID() (string, error) {
-	// Generar 16 bytes aleatorios
-	bytes := make([]byte, 16)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", err
-	}
-
-	// Codificar en base64 y limpiar caracteres especiales
-	clientID := base64.URLEncoding.EncodeToString(bytes)
-	// Remover padding y caracteres especiales para hacerlo más legible
-	clientID = clientID[:24] // Tomar solo 24 caracteres para hacerlo más corto
-
-	return clientID, nil
+	// Generar un UUID v4 para el client ID
+	clientID := uuid.New()
+	return clientID.String(), nil
 }
 
-// generateClientSecret genera un ClientSecret seguro
+// generateClientSecret genera un ClientSecret seguro usando UUID
 func generateClientSecret() (string, error) {
-	// Generar 32 bytes aleatorios para un secret fuerte
-	bytes := make([]byte, 32)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", err
-	}
-
-	// Codificar en base64
-	clientSecret := base64.URLEncoding.EncodeToString(bytes)
-	// Remover padding para hacerlo más legible
-	clientSecret = clientSecret[:43] // Tomar solo 43 caracteres
-
-	return clientSecret, nil
+	// Generar un UUID v4 para el client secret
+	clientSecret := uuid.New()
+	return clientSecret.String(), nil
 }
