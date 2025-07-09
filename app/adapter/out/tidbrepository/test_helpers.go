@@ -21,11 +21,6 @@ func CreateTestTenant(ctx context.Context, conn database.ConnectionFactory) (dom
 		ID:      tenantID,
 		Country: countries.CL,
 		Name:    "Test Tenant " + tenantID.String(),
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: "test-" + tenantID.String() + "@example.com",
-			},
-		},
 	}
 
 	// Create context with tenant information
@@ -35,19 +30,13 @@ func CreateTestTenant(ctx context.Context, conn database.ConnectionFactory) (dom
 	bag, _ := baggage.New(orgIDMember, countryMember, channelMember)
 	tenantCtx := baggage.ContextWithBaggage(ctx, bag)
 
-	// Create account first
-	account := domain.Account{
-		Email: tenant.Operator.Contact.PrimaryEmail,
-	}
-	upsertAccount := NewUpsertAccount(conn)
-	err := upsertAccount(tenantCtx, account)
-	if err != nil {
-		return domain.Tenant{}, nil, err
-	}
-
 	// Save tenant
 	saveTenant := NewSaveTenant(conn)
-	savedTenant, err := saveTenant(tenantCtx, tenant)
+	savedTenant, err := saveTenant(tenantCtx, domain.Tenant{
+		ID:      tenantID,
+		Name:    "Test Tenant " + tenantID.String(),
+		Country: tenant.Country,
+	})
 	if err != nil {
 		return domain.Tenant{}, nil, err
 	}

@@ -2,6 +2,7 @@ package domain
 
 type Account struct {
 	Email string
+	Role  string
 }
 
 func (a Account) DocID() DocumentID {

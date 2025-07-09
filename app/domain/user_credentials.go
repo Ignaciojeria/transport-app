@@ -1,7 +1,10 @@
 package domain
 
+import "github.com/biter777/countries"
+
 type UserCredentials struct {
 	Email    string
+	Country  countries.CountryCode
 	Password string
 }
 

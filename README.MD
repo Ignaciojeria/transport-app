@@ -57,13 +57,21 @@ Aquí docker-compose.prod.yml agrega transport-app al conjunto de servicios, sin
 - OpenSSL instalado en el sistema
 - Acceso a terminal/PowerShell
 
-### **Comandos para generar claves:**
+### **Comandos para generar claves JWT y exponer .well-known/jwks.json:**
+Estos comandos generan una clave privada y su clave pública correspondiente, necesarias para firmar tokens JWT y exponer tu endpoint .well-known/jwks.json como Authorization Server.
 ```bash
 # Generar clave privada PKCS#8
 openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
 
 # Extraer clave pública
 openssl rsa -pubout -in private_key.pem -out public_key.pem
+```
+
+## 🔐 Comando para generar clave de encriptación de Client Credentials (AES-256-GCM)
+Esta clave se utiliza para encriptar y desencriptar los client_secret antes de almacenarlos en la base de datos.
+```bash
+# Generar 32 bytes aleatorios en Base64 (clave de 256 bits)
+openssl rand -base64 32
 ```
 
 Esto ejecutará:

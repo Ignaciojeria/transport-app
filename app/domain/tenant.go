@@ -6,8 +6,7 @@ import (
 )
 
 type Tenant struct {
-	ID       uuid.UUID
-	Operator Operator
-	Country  countries.CountryCode `json:"country"`
-	Name     string                `json:"name"`
+	ID      uuid.UUID
+	Name    string
+	Country countries.CountryCode
 }

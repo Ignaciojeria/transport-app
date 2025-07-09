@@ -19,64 +19,38 @@ func init() {
 	)
 }
 
-type SaveTenant func(
-	context.Context,
-	domain.Tenant,
-) (domain.Tenant, error)
+type SaveTenant func(ctx context.Context, tenant domain.Tenant) (domain.Tenant, error)
 
 func NewSaveTenant(conn database.ConnectionFactory) SaveTenant {
-	return func(ctx context.Context, o domain.Tenant) (domain.Tenant, error) {
-		// Buscar si ya existe
+	return func(ctx context.Context, tenant domain.Tenant) (domain.Tenant, error) {
 		var existing table.Tenant
 		err := conn.DB.WithContext(ctx).
 			Table("tenants").
-			Where("id = ?", o.ID).
+			Where("id = ?", tenant.ID).
 			First(&existing).Error
 
-		// Si ya existe, retornar sin crear nuevamente
 		if err == nil {
 			return domain.Tenant{
 				ID:      existing.ID,
 				Name:    existing.Name,
-				Country: o.Country, // Country puede no estar en la tabla, si es así ajusta
+				Country: tenant.Country,
 			}, nil
 		}
-
-		// Solo retornar si error distinto de "not found"
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return domain.Tenant{}, err
 		}
 
-		// Mapear y crear nuevo tenant
-		tableOrg := mapper.MapTenantTable(ctx, o.Name)
-		tableOrg.ID = o.ID
+		tableTenant := mapper.MapTenantTable(ctx, tenant)
+		tableTenant.ID = tenant.ID
 
-		var account table.Account
-		err = conn.Where("email = ?", o.Operator.Contact.PrimaryEmail).Find(&account).Error
-		if err != nil {
-			return domain.Tenant{}, err
-		}
-
-		var accountOrg table.AccountTenant
-		err = conn.Transaction(func(tx *gorm.DB) error {
-			if err := conn.DB.Create(&tableOrg).Error; err != nil {
-				return errors.Wrap(ErrTenantDatabase, "failed to create organization")
-			}
-			accountOrg.AccountID = account.ID
-			accountOrg.TenantID = tableOrg.ID
-			if err := conn.DB.Create(&accountOrg).Error; err != nil {
-				return errors.Wrap(ErrTenantDatabase, "failed to link account to organization")
-			}
-			return nil
-		})
-		if err != nil {
-			return domain.Tenant{}, err
+		if err := conn.DB.Create(&tableTenant).Error; err != nil {
+			return domain.Tenant{}, errors.Wrap(ErrTenantDatabase, "failed to create tenant")
 		}
 
 		return domain.Tenant{
-			ID:      tableOrg.ID,
-			Name:    tableOrg.Name,
-			Country: o.Country,
+			ID:      tableTenant.ID,
+			Name:    tableTenant.Name,
+			Country: tenant.Country,
 		}, nil
 	}
 }
