@@ -3,14 +3,17 @@ package email
 import (
 	"bytes"
 	"context"
+	"embed"
 	"html/template"
-	"path/filepath"
 	"transport-app/app/domain"
 	resendcli "transport-app/app/shared/infrastructure/resendcli"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/resend/resend-go/v2"
 )
+
+//go:embed client_credentials_email.html
+var emailTemplates embed.FS
 
 type SendClientCredentialsEmail func(ctx context.Context, email string, credentials domain.ClientCredentials) error
 
@@ -29,9 +32,8 @@ type EmailData struct {
 
 func NewSendClientCredentialsEmail(resendClient *resend.Client) SendClientCredentialsEmail {
 	return func(ctx context.Context, email string, credentials domain.ClientCredentials) error {
-		// Cargar el template HTML
-		templatePath := filepath.Join("app", "shared", "infrastructure", "email", "templates", "client_credentials_email.html")
-		tmpl, err := template.ParseFiles(templatePath)
+		// Cargar el template HTML desde el embed
+		tmpl, err := template.ParseFS(emailTemplates, "client_credentials_email.html")
 		if err != nil {
 			return err
 		}
