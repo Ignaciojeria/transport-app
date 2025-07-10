@@ -3,7 +3,6 @@ package fuegoapi
 import (
 	"io"
 	"net/url"
-	"strings"
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
@@ -23,55 +22,31 @@ func init() {
 func token(s httpserver.Server, jwtService *jwt.JWTService, findClientCredentials tidbrepository.FindClientCredentialsByClientID) {
 	fuego.Post(s.Manager, "/token",
 		func(c fuego.ContextWithBody[request.TokenRequest]) (response.TokenResponse, error) {
-			// Detectar el Content-Type para determinar cómo procesar los datos
-			contentType := c.Request().Header.Get("Content-Type")
-
-			var grantType, clientID, clientSecret, scope string
-
-			if strings.Contains(contentType, "application/x-www-form-urlencoded") {
-				// Procesar datos del formulario
-				body, err := io.ReadAll(c.Request().Body)
-				if err != nil {
-					return response.TokenResponse{}, fuego.HTTPError{
-						Title:  "error leyendo body",
-						Detail: "Error al leer el body de la request",
-						Status: 400,
-					}
+			// Leer el body de la request
+			body, err := io.ReadAll(c.Request().Body)
+			if err != nil {
+				return response.TokenResponse{}, fuego.HTTPError{
+					Title:  "error leyendo body",
+					Detail: "Error al leer el body de la request",
+					Status: 400,
 				}
-
-				// Parsear los datos application/x-www-form-urlencoded
-				values, err := url.ParseQuery(string(body))
-				if err != nil {
-					return response.TokenResponse{}, fuego.HTTPError{
-						Title:  "error parseando formulario",
-						Detail: "Error al procesar los datos del formulario",
-						Status: 400,
-					}
-				}
-
-				// Obtener valores del formulario
-				grantType = values.Get("grant_type")
-				clientID = values.Get("client_id")
-				clientSecret = values.Get("client_secret")
-				scope = values.Get("scope")
-
-			} else {
-				// Procesar datos JSON del body usando el struct existente
-				req, err := c.Body()
-				if err != nil {
-					return response.TokenResponse{}, fuego.HTTPError{
-						Title:  "error leyendo JSON",
-						Detail: "Error al leer el JSON del body",
-						Status: 400,
-					}
-				}
-
-				// Extraer valores del JSON usando el struct existente
-				grantType = req.GrantType
-				clientID = req.ClientID
-				clientSecret = req.ClientSecret
-				scope = req.Scope
 			}
+
+			// Parsear los datos application/x-www-form-urlencoded
+			values, err := url.ParseQuery(string(body))
+			if err != nil {
+				return response.TokenResponse{}, fuego.HTTPError{
+					Title:  "error parseando formulario",
+					Detail: "Error al procesar los datos del formulario",
+					Status: 400,
+				}
+			}
+
+			// Obtener valores del formulario
+			grantType := values.Get("grant_type")
+			clientID := values.Get("client_id")
+			clientSecret := values.Get("client_secret")
+			scope := values.Get("scope")
 
 			// Validar que el client_id esté presente
 			if clientID == "" {
