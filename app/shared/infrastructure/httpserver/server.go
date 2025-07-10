@@ -55,7 +55,7 @@ func NewJSONMiddleware() func(next http.Handler) http.Handler {
 
 func New(conf configuration.Conf) Server {
 	s := fuego.NewServer(
-		fuego.WithAddr("localhost:"+conf.PORT),
+		fuego.WithAddr(":"+conf.PORT),
 		fuego.WithGlobalMiddlewares(
 			injectBaggageMiddleware,
 			NewJSONMiddleware(),
