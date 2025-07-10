@@ -45,7 +45,7 @@ func newRegistrationSubmittedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.REGISTRATION_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.REGISTRATION_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.registrationSubmitted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.registrationSubmitted",
 		MaxAckPending: 5,
 	})
 

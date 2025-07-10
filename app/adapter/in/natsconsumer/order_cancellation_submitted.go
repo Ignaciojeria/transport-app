@@ -43,7 +43,7 @@ func newOrderCancellationSubmittedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.ORDER_CANCELLATION_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.ordersCancellationSubmitted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.ordersCancellationSubmitted",
 		MaxAckPending: 5,
 	})
 

@@ -43,7 +43,7 @@ func newOptimizationRequestedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION,
 		Durable:       conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.optimizationRequested",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.optimizationRequested",
 		MaxAckPending: 5,
 	})
 

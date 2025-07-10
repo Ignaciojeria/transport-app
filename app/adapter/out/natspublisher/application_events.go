@@ -68,9 +68,10 @@ func NewApplicationEvents(
 		}
 
 		// Extraer TenantCountry del baggage
+		var country string
 		if tenantCountry := sharedcontext.TenantCountryFromContext(ctx); tenantCountry != "" {
-			tenant = tenant + "-" + tenantCountry
-			headers.Set("tenant", tenant)
+			country = tenantCountry
+			headers.Set("tenant", tenant+"-"+tenantCountry)
 		}
 
 		// Extraer Channel del baggage
@@ -87,9 +88,13 @@ func NewApplicationEvents(
 			tenant = "no-tenant"
 		}
 
+		if country == "" {
+			country = "no-country"
+		}
+
 		// Publicar el mensaje serializado a JetStream
 		_, err = js.PublishMsg(ctx, &nats.Msg{
-			Subject: conf.TRANSPORT_APP_TOPIC + "." + tenant + "." + eventType,
+			Subject: conf.TRANSPORT_APP_TOPIC + "." + tenant + "." + country + "." + eventType,
 			Header:  headers,
 			Data:    msgBytes,
 		})

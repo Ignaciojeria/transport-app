@@ -43,7 +43,7 @@ func newNodeSubmittedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.NODE_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.NODE_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.nodeSubmitted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.nodeSubmitted",
 		MaxAckPending: 5,
 	})
 

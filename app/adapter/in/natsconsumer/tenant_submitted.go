@@ -43,7 +43,7 @@ func newTenantSubmittedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.TENANT_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.TENANT_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.tenantSubmitted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.tenantSubmitted",
 		MaxAckPending: 5,
 	})
 

@@ -43,7 +43,7 @@ func newDeliveriesSubmittedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.DELIVERIES_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.DELIVERIES_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.deliveriesSubmitted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.deliveriesSubmitted",
 		MaxAckPending: 5,
 	})
 

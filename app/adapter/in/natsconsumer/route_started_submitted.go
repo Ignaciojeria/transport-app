@@ -43,7 +43,7 @@ func newRouteStartedSubmittedConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.ROUTE_STARTED_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.ROUTE_STARTED_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.routeStarted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.routeStarted",
 		MaxAckPending: 5,
 	})
 

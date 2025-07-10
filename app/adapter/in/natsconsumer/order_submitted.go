@@ -43,7 +43,7 @@ func newNatsConsumer(
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
 		Name:          conf.ORDER_SUBMITTED_SUBSCRIPTION,
 		Durable:       conf.ORDER_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.orderSubmitted",
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.orderSubmitted",
 		MaxAckPending: 5,
 	})
 
