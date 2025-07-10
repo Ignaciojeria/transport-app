@@ -71,11 +71,13 @@ func upsertOrder(
 				Message: "Order submitted successfully",
 				Status:  "pending",
 			}, err
-		}, option.Summary("upsert order"),
-		option.Header("tenant", "api tenant", param.Required()),
+		},
+		option.Summary("upsert order"),
+		option.Header("tenant", "api tenant (required only for local development)", param.Required()),
 		option.Header("consumer", "api consumer key", param.Required()),
 		option.Header("commerce", "api commerce key", param.Required()),
 		option.Header("channel", "api channel key", param.Required()),
+		option.Header("X-Access-Token", "api access token"),
 		option.Tags(tagOrders),
 	)
 }

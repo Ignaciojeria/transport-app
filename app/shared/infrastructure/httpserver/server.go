@@ -22,6 +22,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/biter777/countries"
+	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
@@ -60,6 +61,12 @@ func New(conf configuration.Conf) Server {
 			NewJSONMiddleware(),
 		),
 	)
+	s.OpenAPI.Description().Servers = []*openapi3.Server{
+		{
+			URL:         "https://einar-main-f0820bc.d2.zuplo.dev",
+			Description: "Production",
+		},
+	}
 	server := Server{
 		Manager: s,
 		conf:    conf,
@@ -132,8 +139,11 @@ func (s Server) healthCheck() error {
 			h.Register(health.Config{
 				Name: "vroom",
 				Check: func(ctx context.Context) error {
+					if s.conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
+						return nil
+					}
 					body := `{"jobs":[{"id":1,"location":[-70.6483,-33.4372]}],"vehicles":[{"id":1,"start":[-70.6483,-33.4372]}]}`
-					req, err := http.NewRequestWithContext(ctx, "POST", "http://localhost:3000/", strings.NewReader(body))
+					req, err := http.NewRequestWithContext(ctx, "POST", s.conf.VROOM_OPTIMIZER_URL, strings.NewReader(body))
 					if err != nil {
 						return fmt.Errorf("failed to create request: %w", err)
 					}

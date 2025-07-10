@@ -70,7 +70,8 @@ func authToken(s httpserver.Server, jwtService *jwt.JWTService) {
 				TokenType: "Bearer",
 			}, nil
 		},
-		option.Header("tenant", "api tenant", param.Required()),
+		option.Header("tenant", "api tenant (required only for local development)", param.Required()),
+		option.Header("X-Access-Token", "api access token"),
 		option.Summary("auth token"),
 		option.Tags("jwt"))
 }

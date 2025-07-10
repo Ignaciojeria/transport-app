@@ -67,7 +67,8 @@ func routeStarted(
 			}, nil
 		},
 		option.Summary("route start"),
-		option.Header("tenant", "api tenant", param.Required()),
+		option.Header("tenant", "api tenant (required only for local development)", param.Required()),
 		option.Header("channel", "api channel", param.Required()),
+		option.Header("X-Access-Token", "api access token"),
 		option.Tags(tagRoutes))
 }
