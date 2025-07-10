@@ -33,11 +33,12 @@ type AddressInfo struct {
 func (a AddressInfo) Map() domain.AddressInfo {
 	return domain.AddressInfo{
 		PoliticalArea: domain.PoliticalArea{
-			Code:     a.PoliticalArea.Code,
-			Province: a.PoliticalArea.Province,
-			State:    a.PoliticalArea.State,
-			District: a.PoliticalArea.District,
-			TimeZone: a.PoliticalArea.TimeZone,
+			Code:            a.PoliticalArea.Code,
+			AdminAreaLevel1: a.PoliticalArea.AdminAreaLevel1,
+			AdminAreaLevel2: a.PoliticalArea.AdminAreaLevel2,
+			AdminAreaLevel3: a.PoliticalArea.AdminAreaLevel3,
+			AdminAreaLevel4: a.PoliticalArea.AdminAreaLevel4,
+			TimeZone:        a.PoliticalArea.TimeZone,
 		},
 		AddressLine1: a.AddressLine1,
 		AddressLine2: a.AddressLine2,

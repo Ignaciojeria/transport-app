@@ -53,18 +53,18 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(tenantCount).To(Equal(int64(1)), "Tenant was not created properly")
 
 		politicalArea := domain.PoliticalArea{
-			State:    "CA",
-			Province: "CA",
-			District: "CA",
-			TimeZone: "America/Santiago",
+			AdminAreaLevel1: "CA",
+			AdminAreaLevel2: "CA",
+			AdminAreaLevel3: "CA",
+			TimeZone:        "America/Santiago",
 		}
 
 		destination := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    "CA",
-				Province: "CA",
-				District: "CA",
-				TimeZone: "America/Santiago",
+				AdminAreaLevel1: "CA",
+				AdminAreaLevel2: "CA",
+				AdminAreaLevel3: "CA",
+				TimeZone:        "America/Santiago",
 			},
 			AddressLine1: "123 Main St",
 			AddressLine2: "Apt 1",
@@ -175,15 +175,15 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.DestinationAddressInfo().String():                  "",
 				projection.PromisedDateServiceCategory().String():             "",
 				projection.DestinationAddressLine1().String():                 "",
-				projection.DestinationDistrict().String():                     "",
+				projection.DestinationAdminAreaLevel1().String():              "",
 				projection.DestinationCoordinatesLatitude().String():          "",
 				projection.DestinationCoordinatesLongitude().String():         "",
 				projection.DestinationCoordinatesSource().String():            "",
 				projection.DestinationCoordinatesConfidenceLevel().String():   "",
 				projection.DestinationCoordinatesConfidenceMessage().String(): "",
 				projection.DestinationCoordinatesConfidenceReason().String():  "",
-				projection.DestinationProvince().String():                     "",
-				projection.DestinationState().String():                        "",
+				projection.DestinationAdminAreaLevel2().String():              "",
+				projection.DestinationAdminAreaLevel3().String():              "",
 				projection.DestinationTimeZone().String():                     "",
 				projection.DestinationZipCode().String():                      "",
 				projection.DestinationPoliticalArea().String():                "",
@@ -209,15 +209,18 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Validaciones de Destination Address
 		Expect(results[0].DestinationAddressLine1).To(Equal("123 Main St"), "Unexpected address line 1")
 		Expect(results[0].DestinationAddressLine2).To(Equal("Apt 1"), "Unexpected address line 2")
-		Expect(results[0].DestinationDistrict).To(Equal("CA"), "Unexpected district")
 		Expect(results[0].DestinationCoordinatesLatitude).To(Equal(1.0), "Unexpected latitude")
 		Expect(results[0].DestinationCoordinatesLongitude).To(Equal(1.0), "Unexpected longitude")
 		Expect(results[0].DestinationCoordinatesSource).To(Equal("geocoding"), "Unexpected source")
 		Expect(results[0].DestinationCoordinatesConfidenceLevel).To(Equal(0.8), "Unexpected confidence level")
 		Expect(results[0].DestinationCoordinatesConfidenceMessage).To(Equal("High confidence"), "Unexpected confidence message")
 		Expect(results[0].DestinationCoordinatesConfidenceReason).To(Equal("Geocoding service"), "Unexpected confidence reason")
-		Expect(results[0].DestinationProvince).To(Equal("CA"), "Unexpected province")
-		Expect(results[0].DestinationState).To(Equal("CA"), "Unexpected state")
+		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"), "Unexpected timezone")
+		Expect(results[0].DestinationZipCode).To(Equal("12345"), "Unexpected zip code")
+
+		Expect(results[0].DestinationAdminAreaLevel1).To(Equal("CA"), "Unexpected admin area level 1")
+		Expect(results[0].DestinationAdminAreaLevel2).To(Equal("CA"), "Unexpected admin area level 2")
+		Expect(results[0].DestinationAdminAreaLevel3).To(Equal("CA"), "Unexpected admin area level 3")
 		Expect(results[0].DestinationTimeZone).To(Equal("America/Santiago"), "Unexpected timezone")
 		Expect(results[0].DestinationZipCode).To(Equal("12345"), "Unexpected zip code")
 
@@ -260,10 +263,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		destination := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    "CA",
-				Province: "CA",
-				District: "CA",
-				TimeZone: "America/Santiago",
+				AdminAreaLevel1: "CA",
+				AdminAreaLevel2: "CA",
+				AdminAreaLevel3: "CA",
+				TimeZone:        "America/Santiago",
 			},
 			AddressLine1: "123 Main St",
 			Coordinates: domain.Coordinates{
@@ -838,10 +841,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Crear dirección de origen
 		origin := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    "NY",
-				Province: "NY",
-				District: "Manhattan",
-				TimeZone: "America/New_York",
+				AdminAreaLevel1: "NY",
+				AdminAreaLevel2: "NY",
+				AdminAreaLevel3: "Manhattan",
+				TimeZone:        "America/New_York",
 			},
 			AddressLine1: "456 Park Ave",
 			AddressLine2: "Suite 100",
@@ -897,9 +900,9 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				projection.OriginAddressInfo().String():                  "",
 				projection.OriginAddressLine1().String():                 "",
 				projection.OriginAddressLine2().String():                 "",
-				projection.OriginDistrict().String():                     "",
-				projection.OriginProvince().String():                     "",
-				projection.OriginState().String():                        "",
+				projection.OriginAdminAreaLevel1().String():              "",
+				projection.OriginAdminAreaLevel2().String():              "",
+				projection.OriginAdminAreaLevel3().String():              "",
 				projection.OriginZipCode().String():                      "",
 				projection.OriginCoordinatesLatitude().String():          "",
 				projection.OriginCoordinatesLongitude().String():         "",
@@ -925,9 +928,6 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Validaciones de Origin Address
 		Expect(results[0].OriginAddressLine1).To(Equal("456 Park Ave"))
 		Expect(results[0].OriginAddressLine2).To(Equal("Suite 100"))
-		Expect(results[0].OriginDistrict).To(Equal("Manhattan"))
-		Expect(results[0].OriginProvince).To(Equal("NY"))
-		Expect(results[0].OriginState).To(Equal("NY"))
 		Expect(results[0].OriginZipCode).To(Equal("10022"))
 		Expect(results[0].OriginTimeZone).To(Equal("America/New_York"))
 
@@ -1541,10 +1541,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		destinations := []domain.AddressInfo{
 			{
 				PoliticalArea: domain.PoliticalArea{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "CA",
+					AdminAreaLevel2: "CA",
+					AdminAreaLevel3: "CA",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Address A",
 				AddressLine2: "Apt 1",
@@ -1561,10 +1561,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			{
 				PoliticalArea: domain.PoliticalArea{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "CA",
+					AdminAreaLevel2: "CA",
+					AdminAreaLevel3: "CA",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Address B",
 				AddressLine2: "Apt 2",
@@ -1581,10 +1581,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			{
 				PoliticalArea: domain.PoliticalArea{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "CA",
+					AdminAreaLevel2: "CA",
+					AdminAreaLevel3: "CA",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Address C",
 				AddressLine2: "Apt 3",
@@ -1601,10 +1601,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			{
 				PoliticalArea: domain.PoliticalArea{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "CA",
+					AdminAreaLevel2: "CA",
+					AdminAreaLevel3: "CA",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Address D",
 				AddressLine2: "Apt 4",
@@ -1621,10 +1621,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			{
 				PoliticalArea: domain.PoliticalArea{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "CA",
+					AdminAreaLevel2: "CA",
+					AdminAreaLevel3: "CA",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Address E",
 				AddressLine2: "Apt 5",
@@ -1641,10 +1641,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			{
 				PoliticalArea: domain.PoliticalArea{
-					State:    "CA",
-					Province: "CA",
-					District: "CA",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "CA",
+					AdminAreaLevel2: "CA",
+					AdminAreaLevel3: "CA",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Address F",
 				AddressLine2: "Apt 6",
@@ -2092,10 +2092,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
 					PoliticalArea: domain.PoliticalArea{
-						State:    "CA",
-						Province: "CA",
-						District: "CA",
-						TimeZone: "America/Santiago",
+						AdminAreaLevel1: "CA",
+						AdminAreaLevel2: "CA",
+						AdminAreaLevel3: "CA",
+						TimeZone:        "America/Santiago",
 					},
 					AddressLine1: "123 Main St",
 					AddressLine2: "Apt 1",
@@ -2142,10 +2142,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Destination: domain.NodeInfo{
 				AddressInfo: domain.AddressInfo{
 					PoliticalArea: domain.PoliticalArea{
-						State:    "CA",
-						Province: "CA",
-						District: "CA",
-						TimeZone: "America/Santiago",
+						AdminAreaLevel1: "CA",
+						AdminAreaLevel2: "CA",
+						AdminAreaLevel3: "CA",
+						TimeZone:        "America/Santiago",
 					},
 					AddressLine1: "123 Main St",
 					AddressLine2: "Apt 2",
@@ -2672,11 +2672,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Crear political area
 		politicalArea := domain.PoliticalArea{
-			Code:     "CA",
-			State:    "CA",
-			Province: "CA",
-			District: "CA",
-			TimeZone: "America/Santiago",
+			Code:            "CA",
+			AdminAreaLevel1: "CA",
+			AdminAreaLevel2: "CA",
+			AdminAreaLevel3: "CA",
+			TimeZone:        "America/Santiago",
 			Confidence: domain.CoordinatesConfidence{
 				Level:   0.8,
 				Message: "High confidence",

@@ -36,9 +36,10 @@ type AddressInfo {
 
 type PoliticalArea {
   code: String
-  province: String
-  state: String
-  district: String
+  adminAreaLevel1: String
+  adminAreaLevel2: String
+  adminAreaLevel3: String
+  adminAreaLevel4: String
   timeZone: String
   confidence: Confidence
 }
@@ -279,9 +280,10 @@ input GroupByFilter {
 input LocationFilter {
   nodeReferences: [String]              # nodeInfo.referenceID (opcional)
   addressLines: [String]                # addressLine1 y addressLine2
-  districts: [String]
-  provinces: [String]
-  states: [String]
+  adminAreaLevel1: [String]
+  adminAreaLevel2: [String]
+  adminAreaLevel3: [String]
+  adminAreaLevel4: [String]
   zipCodes: [String]
   coordinatesConfidence: CoordinatesConfidenceLevelFilter
 }

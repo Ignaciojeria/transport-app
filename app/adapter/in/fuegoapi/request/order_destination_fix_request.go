@@ -25,12 +25,13 @@ type OrderDestinationFixRequest struct {
 		} `json:"coordinates"`
 		ZipCode       string `json:"zipCode" example:"7500000"`
 		PoliticalArea struct {
-			Code       string `json:"id" example:"cl-rm-la-florida"`
-			Province   string `json:"province" example:"santiago"`
-			State      string `json:"state" example:"region metropolitana de santiago"`
-			District   string `json:"district" example:"la florida"`
-			TimeZone   string `json:"timeZone" example:"America/Santiago"`
-			Confidence struct {
+			Code            string `json:"id" example:"cl-rm-la-florida"`
+			AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago"`
+			AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago"`
+			AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida"`
+			AdminAreaLevel4 string `json:"adminAreaLevel4" example:""`
+			TimeZone        string `json:"timeZone" example:"America/Santiago"`
+			Confidence      struct {
 				Level   float64 `json:"level" example:"0.0"`
 				Message string  `json:"message" example:""`
 				Reason  string  `json:"reason" example:""`

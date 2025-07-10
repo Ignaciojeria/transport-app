@@ -170,33 +170,6 @@ func NewFindNodesProjectionResult(
 			ds = ds.SelectAppend(goqu.I(ai + ".address_line2").As("address_line2"))
 		}
 
-		// Join con districts solo si se solicita
-		if projection.District().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("districts").As(d),
-				goqu.On(goqu.I(d+".document_id").Eq(goqu.I(ai+".district_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(d + ".name").As("district"))
-		}
-
-		// Join con provinces solo si se solicita
-		if projection.Province().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("provinces").As(p),
-				goqu.On(goqu.I(p+".document_id").Eq(goqu.I(ai+".province_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(p + ".name").As("province"))
-		}
-
-		// Join con states solo si se solicita
-		if projection.State().Has(filters.RequestedFields) {
-			ds = ds.InnerJoin(
-				goqu.T("states").As(s),
-				goqu.On(goqu.I(s+".document_id").Eq(goqu.I(ai+".state_doc"))),
-			)
-			ds = ds.SelectAppend(goqu.I(s + ".name").As("state"))
-		}
-
 		if projection.ZipCode().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(ai + ".zip_code").As("zip_code"))
 		}

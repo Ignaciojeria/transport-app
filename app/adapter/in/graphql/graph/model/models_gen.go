@@ -225,9 +225,10 @@ type Location struct {
 type LocationFilter struct {
 	NodeReferences        []*string                         `json:"nodeReferences,omitempty"`
 	AddressLines          []*string                         `json:"addressLines,omitempty"`
-	Districts             []*string                         `json:"districts,omitempty"`
-	Provinces             []*string                         `json:"provinces,omitempty"`
-	States                []*string                         `json:"states,omitempty"`
+	AdminAreaLevel1       []*string                         `json:"adminAreaLevel1,omitempty"`
+	AdminAreaLevel2       []*string                         `json:"adminAreaLevel2,omitempty"`
+	AdminAreaLevel3       []*string                         `json:"adminAreaLevel3,omitempty"`
+	AdminAreaLevel4       []*string                         `json:"adminAreaLevel4,omitempty"`
 	ZipCodes              []*string                         `json:"zipCodes,omitempty"`
 	CoordinatesConfidence *CoordinatesConfidenceLevelFilter `json:"coordinatesConfidence,omitempty"`
 }
@@ -285,12 +286,13 @@ type PageInfo struct {
 }
 
 type PoliticalArea struct {
-	Code       *string     `json:"code,omitempty"`
-	Province   *string     `json:"province,omitempty"`
-	State      *string     `json:"state,omitempty"`
-	District   *string     `json:"district,omitempty"`
-	TimeZone   *string     `json:"timeZone,omitempty"`
-	Confidence *Confidence `json:"confidence,omitempty"`
+	Code            *string     `json:"code,omitempty"`
+	AdminAreaLevel1 *string     `json:"adminAreaLevel1,omitempty"`
+	AdminAreaLevel2 *string     `json:"adminAreaLevel2,omitempty"`
+	AdminAreaLevel3 *string     `json:"adminAreaLevel3,omitempty"`
+	AdminAreaLevel4 *string     `json:"adminAreaLevel4,omitempty"`
+	TimeZone        *string     `json:"timeZone,omitempty"`
+	Confidence      *Confidence `json:"confidence,omitempty"`
 }
 
 type PromisedDate struct {

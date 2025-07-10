@@ -42,10 +42,10 @@ var _ = Describe("NodeInfo", func() {
 				NodeType:    NodeType{Value: "WAREHOUSE"},
 				AddressInfo: AddressInfo{
 					PoliticalArea: PoliticalArea{
-						State:    "Metropolitana",
-						Province: "Santiago",
-						District: "Providencia",
-						TimeZone: "America/Santiago",
+						AdminAreaLevel1: "Metropolitana",
+						AdminAreaLevel2: "Santiago",
+						AdminAreaLevel3: "Providencia",
+						TimeZone:        "America/Santiago",
 					},
 					AddressLine1: "Av Providencia 1234",
 					Coordinates: Coordinates{
@@ -89,12 +89,12 @@ var _ = Describe("NodeInfo", func() {
 
 		It("should not update nested AddressInfo from domain logic", func() {
 			newNode := baseNode
-			newNode.AddressInfo.PoliticalArea.District = "Las Condes"
+			newNode.AddressInfo.PoliticalArea.AdminAreaLevel3 = "Las Condes"
 
 			updated, changed := baseNode.UpdateIfChanged(newNode)
 
 			Expect(changed).To(BeFalse())
-			Expect(updated.AddressInfo.PoliticalArea.District).To(Equal("Providencia"))
+			Expect(updated.AddressInfo.PoliticalArea.AdminAreaLevel3).To(Equal("Providencia"))
 		})
 
 		It("should update references", func() {

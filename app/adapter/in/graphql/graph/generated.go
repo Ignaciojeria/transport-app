@@ -260,12 +260,13 @@ type ComplexityRoot struct {
 	}
 
 	PoliticalArea struct {
-		Code       func(childComplexity int) int
-		Confidence func(childComplexity int) int
-		District   func(childComplexity int) int
-		Province   func(childComplexity int) int
-		State      func(childComplexity int) int
-		TimeZone   func(childComplexity int) int
+		AdminAreaLevel1 func(childComplexity int) int
+		AdminAreaLevel2 func(childComplexity int) int
+		AdminAreaLevel3 func(childComplexity int) int
+		AdminAreaLevel4 func(childComplexity int) int
+		Code            func(childComplexity int) int
+		Confidence      func(childComplexity int) int
+		TimeZone        func(childComplexity int) int
 	}
 
 	PromisedDate struct {
@@ -1153,6 +1154,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.PageInfo.StartCursor(childComplexity), true
 
+	case "PoliticalArea.adminAreaLevel1":
+		if e.complexity.PoliticalArea.AdminAreaLevel1 == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.AdminAreaLevel1(childComplexity), true
+
+	case "PoliticalArea.adminAreaLevel2":
+		if e.complexity.PoliticalArea.AdminAreaLevel2 == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.AdminAreaLevel2(childComplexity), true
+
+	case "PoliticalArea.adminAreaLevel3":
+		if e.complexity.PoliticalArea.AdminAreaLevel3 == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.AdminAreaLevel3(childComplexity), true
+
+	case "PoliticalArea.adminAreaLevel4":
+		if e.complexity.PoliticalArea.AdminAreaLevel4 == nil {
+			break
+		}
+
+		return e.complexity.PoliticalArea.AdminAreaLevel4(childComplexity), true
+
 	case "PoliticalArea.code":
 		if e.complexity.PoliticalArea.Code == nil {
 			break
@@ -1166,27 +1195,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PoliticalArea.Confidence(childComplexity), true
-
-	case "PoliticalArea.district":
-		if e.complexity.PoliticalArea.District == nil {
-			break
-		}
-
-		return e.complexity.PoliticalArea.District(childComplexity), true
-
-	case "PoliticalArea.province":
-		if e.complexity.PoliticalArea.Province == nil {
-			break
-		}
-
-		return e.complexity.PoliticalArea.Province(childComplexity), true
-
-	case "PoliticalArea.state":
-		if e.complexity.PoliticalArea.State == nil {
-			break
-		}
-
-		return e.complexity.PoliticalArea.State(childComplexity), true
 
 	case "PoliticalArea.timeZone":
 		if e.complexity.PoliticalArea.TimeZone == nil {
@@ -2103,12 +2111,14 @@ func (ec *executionContext) fieldContext_AddressInfo_politicalArea(_ context.Con
 			switch field.Name {
 			case "code":
 				return ec.fieldContext_PoliticalArea_code(ctx, field)
-			case "province":
-				return ec.fieldContext_PoliticalArea_province(ctx, field)
-			case "state":
-				return ec.fieldContext_PoliticalArea_state(ctx, field)
-			case "district":
-				return ec.fieldContext_PoliticalArea_district(ctx, field)
+			case "adminAreaLevel1":
+				return ec.fieldContext_PoliticalArea_adminAreaLevel1(ctx, field)
+			case "adminAreaLevel2":
+				return ec.fieldContext_PoliticalArea_adminAreaLevel2(ctx, field)
+			case "adminAreaLevel3":
+				return ec.fieldContext_PoliticalArea_adminAreaLevel3(ctx, field)
+			case "adminAreaLevel4":
+				return ec.fieldContext_PoliticalArea_adminAreaLevel4(ctx, field)
 			case "timeZone":
 				return ec.fieldContext_PoliticalArea_timeZone(ctx, field)
 			case "confidence":
@@ -7110,8 +7120,8 @@ func (ec *executionContext) fieldContext_PoliticalArea_code(_ context.Context, f
 	return fc, nil
 }
 
-func (ec *executionContext) _PoliticalArea_province(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PoliticalArea_province(ctx, field)
+func (ec *executionContext) _PoliticalArea_adminAreaLevel1(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_adminAreaLevel1(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7124,7 +7134,7 @@ func (ec *executionContext) _PoliticalArea_province(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Province, nil
+		return obj.AdminAreaLevel1, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7138,7 +7148,7 @@ func (ec *executionContext) _PoliticalArea_province(ctx context.Context, field g
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PoliticalArea_province(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PoliticalArea_adminAreaLevel1(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PoliticalArea",
 		Field:      field,
@@ -7151,8 +7161,8 @@ func (ec *executionContext) fieldContext_PoliticalArea_province(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _PoliticalArea_state(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PoliticalArea_state(ctx, field)
+func (ec *executionContext) _PoliticalArea_adminAreaLevel2(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_adminAreaLevel2(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7165,7 +7175,7 @@ func (ec *executionContext) _PoliticalArea_state(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.State, nil
+		return obj.AdminAreaLevel2, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7179,7 +7189,7 @@ func (ec *executionContext) _PoliticalArea_state(ctx context.Context, field grap
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PoliticalArea_state(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PoliticalArea_adminAreaLevel2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PoliticalArea",
 		Field:      field,
@@ -7192,8 +7202,8 @@ func (ec *executionContext) fieldContext_PoliticalArea_state(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _PoliticalArea_district(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_PoliticalArea_district(ctx, field)
+func (ec *executionContext) _PoliticalArea_adminAreaLevel3(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_adminAreaLevel3(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -7206,7 +7216,7 @@ func (ec *executionContext) _PoliticalArea_district(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.District, nil
+		return obj.AdminAreaLevel3, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7220,7 +7230,48 @@ func (ec *executionContext) _PoliticalArea_district(ctx context.Context, field g
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_PoliticalArea_district(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_PoliticalArea_adminAreaLevel3(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PoliticalArea",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PoliticalArea_adminAreaLevel4(ctx context.Context, field graphql.CollectedField, obj *model.PoliticalArea) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_PoliticalArea_adminAreaLevel4(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdminAreaLevel4, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_PoliticalArea_adminAreaLevel4(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "PoliticalArea",
 		Field:      field,
@@ -10441,7 +10492,7 @@ func (ec *executionContext) unmarshalInputLocationFilter(ctx context.Context, ob
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"nodeReferences", "addressLines", "districts", "provinces", "states", "zipCodes", "coordinatesConfidence"}
+	fieldsInOrder := [...]string{"nodeReferences", "addressLines", "adminAreaLevel1", "adminAreaLevel2", "adminAreaLevel3", "adminAreaLevel4", "zipCodes", "coordinatesConfidence"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -10462,27 +10513,34 @@ func (ec *executionContext) unmarshalInputLocationFilter(ctx context.Context, ob
 				return it, err
 			}
 			it.AddressLines = data
-		case "districts":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("districts"))
+		case "adminAreaLevel1":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adminAreaLevel1"))
 			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Districts = data
-		case "provinces":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("provinces"))
+			it.AdminAreaLevel1 = data
+		case "adminAreaLevel2":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adminAreaLevel2"))
 			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Provinces = data
-		case "states":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("states"))
+			it.AdminAreaLevel2 = data
+		case "adminAreaLevel3":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adminAreaLevel3"))
 			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.States = data
+			it.AdminAreaLevel3 = data
+		case "adminAreaLevel4":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("adminAreaLevel4"))
+			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AdminAreaLevel4 = data
 		case "zipCodes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("zipCodes"))
 			data, err := ec.unmarshalOString2ᚕᚖstring(ctx, v)
@@ -12119,12 +12177,14 @@ func (ec *executionContext) _PoliticalArea(ctx context.Context, sel ast.Selectio
 			out.Values[i] = graphql.MarshalString("PoliticalArea")
 		case "code":
 			out.Values[i] = ec._PoliticalArea_code(ctx, field, obj)
-		case "province":
-			out.Values[i] = ec._PoliticalArea_province(ctx, field, obj)
-		case "state":
-			out.Values[i] = ec._PoliticalArea_state(ctx, field, obj)
-		case "district":
-			out.Values[i] = ec._PoliticalArea_district(ctx, field, obj)
+		case "adminAreaLevel1":
+			out.Values[i] = ec._PoliticalArea_adminAreaLevel1(ctx, field, obj)
+		case "adminAreaLevel2":
+			out.Values[i] = ec._PoliticalArea_adminAreaLevel2(ctx, field, obj)
+		case "adminAreaLevel3":
+			out.Values[i] = ec._PoliticalArea_adminAreaLevel3(ctx, field, obj)
+		case "adminAreaLevel4":
+			out.Values[i] = ec._PoliticalArea_adminAreaLevel4(ctx, field, obj)
 		case "timeZone":
 			out.Values[i] = ec._PoliticalArea_timeZone(ctx, field, obj)
 		case "confidence":

@@ -1,5 +1,6 @@
 package request
 
+/*
 import (
 	"fmt"
 	"math/rand"
@@ -112,10 +113,11 @@ func generateVehicles(baseLat, baseLon float64) []struct {
 					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
 				} `json:"coordinates"`
 				PoliticalArea struct {
-					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					District string `json:"district" example:"la florida" description:"District name"`
-					Province string `json:"province" example:"santiago" description:"Province name"`
-					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
+					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
+					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
+					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
 				} `json:"politicalArea"`
 				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
 			} `json:"addressInfo"`
@@ -802,3 +804,4 @@ func generateVisits() []struct {
 
 	return visits
 }
+*/

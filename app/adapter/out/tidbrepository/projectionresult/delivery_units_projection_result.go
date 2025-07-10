@@ -84,9 +84,6 @@ type DeliveryUnitsProjectionResult struct {
 	// Origin Address Information
 	OriginAddressLine1 string `json:"origin_address_line1"`
 	OriginAddressLine2 string `json:"origin_address_line2"`
-	OriginDistrict     string `json:"origin_district"`
-	OriginProvince     string `json:"origin_province"`
-	OriginState        string `json:"origin_state"`
 	OriginTimeZone     string `json:"origin_time_zone"`
 	OriginZipCode      string `json:"origin_zip_code"`
 
@@ -115,9 +112,6 @@ type DeliveryUnitsProjectionResult struct {
 	// Destination Address Information
 	DestinationAddressLine1 string `json:"destination_address_line1"`
 	DestinationAddressLine2 string `json:"destination_address_line2"`
-	DestinationDistrict     string `json:"destination_district"`
-	DestinationProvince     string `json:"destination_province"`
-	DestinationState        string `json:"destination_state"`
 	DestinationTimeZone     string `json:"destination_time_zone"`
 	DestinationZipCode      string `json:"destination_zip_code"`
 
@@ -145,6 +139,15 @@ type DeliveryUnitsProjectionResult struct {
 
 	// Extra Fields and Group By
 	ExtraFields table.JSONMap `json:"extra_fields" gorm:"column:extra_fields;type:jsonb"`
+
+	DestinationAdminAreaLevel1 string `json:"destination_admin_area_level1" gorm:"column:destination_admin_area_level1"`
+	DestinationAdminAreaLevel2 string `json:"destination_admin_area_level2" gorm:"column:destination_admin_area_level2"`
+	DestinationAdminAreaLevel3 string `json:"destination_admin_area_level3" gorm:"column:destination_admin_area_level3"`
+	DestinationAdminAreaLevel4 string `json:"destination_admin_area_level4" gorm:"column:destination_admin_area_level4"`
+	OriginAdminAreaLevel1      string `json:"origin_admin_area_level1" gorm:"column:origin_admin_area_level1"`
+	OriginAdminAreaLevel2      string `json:"origin_admin_area_level2" gorm:"column:origin_admin_area_level2"`
+	OriginAdminAreaLevel3      string `json:"origin_admin_area_level3" gorm:"column:origin_admin_area_level3"`
+	OriginAdminAreaLevel4      string `json:"origin_admin_area_level4" gorm:"column:origin_admin_area_level4"`
 }
 
 type DeliveryUnitsProjectionResults []DeliveryUnitsProjectionResult

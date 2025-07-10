@@ -479,19 +479,24 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(dadi + ".political_area_reason").As("destination_political_area_confidence_reason"))
 		}
 
-		// Join con districts
-		if projection.DestinationDistrict().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("dpa.district").As("destination_district"))
+		// Join con admin area levels
+		if projection.DestinationAdminAreaLevel1().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("dpa.admin_area_level1").As("destination_admin_area_level1"))
 		}
 
-		// Join con provinces
-		if projection.DestinationProvince().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("dpa.province").As("destination_province"))
+		// Join con admin area levels
+		if projection.DestinationAdminAreaLevel2().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("dpa.admin_area_level2").As("destination_admin_area_level2"))
 		}
 
-		// Join con states
-		if projection.DestinationState().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("dpa.state").As("destination_state"))
+		// Join con admin area levels
+		if projection.DestinationAdminAreaLevel3().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("dpa.admin_area_level3").As("destination_admin_area_level3"))
+		}
+
+		// Join con admin area levels
+		if projection.DestinationAdminAreaLevel4().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("dpa.admin_area_level4").As("destination_admin_area_level4"))
 		}
 
 		if projection.DestinationZipCode().Has(filters.RequestedFields) {
@@ -592,19 +597,24 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I(oadi + ".political_area_reason").As("origin_political_area_confidence_reason"))
 		}
 
-		// Join con districts para origen
-		if projection.OriginDistrict().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("opa.district").As("origin_district"))
+		// Join con admin area levels para origen
+		if projection.OriginAdminAreaLevel1().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("opa.admin_area_level1").As("origin_admin_area_level1"))
 		}
 
-		// Join con provinces para origen
-		if projection.OriginProvince().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("opa.province").As("origin_province"))
+		// Join con admin area levels para origen
+		if projection.OriginAdminAreaLevel2().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("opa.admin_area_level2").As("origin_admin_area_level2"))
 		}
 
-		// Join con states para origen
-		if projection.OriginState().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I("opa.state").As("origin_state"))
+		// Join con admin area levels para origen
+		if projection.OriginAdminAreaLevel3().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("opa.admin_area_level3").As("origin_admin_area_level3"))
+		}
+
+		// Join con admin area levels para origen
+		if projection.OriginAdminAreaLevel4().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I("opa.admin_area_level4").As("origin_admin_area_level4"))
 		}
 
 		// Agregar campos de political area para origen

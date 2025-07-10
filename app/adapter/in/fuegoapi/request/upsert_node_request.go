@@ -23,12 +23,13 @@ type UpsertNodeRequest struct {
 			} `json:"confidence"`
 		} `json:"coordinates"`
 		PoliticalArea struct {
-			Code       string `json:"id" example:"cl-rm-la-florida"`
-			Province   string `json:"province" example:"santiago"`
-			State      string `json:"state" example:"region metropolitana de santiago"`
-			District   string `json:"district" example:"la florida"`
-			TimeZone   string `json:"timeZone" example:"America/Santiago"`
-			Confidence struct {
+			Code            string `json:"id" example:"cl-rm-la-florida"`
+			AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago"`
+			AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago"`
+			AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida"`
+			AdminAreaLevel4 string `json:"adminAreaLevel4" example:""`
+			TimeZone        string `json:"timeZone" example:"America/Santiago"`
+			Confidence      struct {
 				Level   float64 `json:"level" example:"0.0"`
 				Message string  `json:"message" example:""`
 				Reason  string  `json:"reason" example:""`
@@ -89,11 +90,12 @@ func (r UpsertNodeRequest) Map() domain.NodeInfo {
 				NationalID:   r.Contact.NationalID,
 			},
 			PoliticalArea: domain.PoliticalArea{
-				Code:     r.NodeAddress.PoliticalArea.Code,
-				State:    r.NodeAddress.PoliticalArea.State,
-				Province: r.NodeAddress.PoliticalArea.Province,
-				District: r.NodeAddress.PoliticalArea.District,
-				TimeZone: r.NodeAddress.PoliticalArea.TimeZone,
+				Code:            r.NodeAddress.PoliticalArea.Code,
+				AdminAreaLevel1: r.NodeAddress.PoliticalArea.AdminAreaLevel1,
+				AdminAreaLevel2: r.NodeAddress.PoliticalArea.AdminAreaLevel2,
+				AdminAreaLevel3: r.NodeAddress.PoliticalArea.AdminAreaLevel3,
+				AdminAreaLevel4: r.NodeAddress.PoliticalArea.AdminAreaLevel4,
+				TimeZone:        r.NodeAddress.PoliticalArea.TimeZone,
 			},
 			AddressLine1: r.NodeAddress.AddressLine1,
 			AddressLine2: r.NodeAddress.AddressLine2,

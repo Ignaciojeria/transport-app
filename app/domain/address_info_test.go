@@ -19,19 +19,19 @@ var _ = Describe("AddressInfo", func() {
 		It("should generate different reference IDs for different address lines", func() {
 			addr1 := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 			}
 			addr2 := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 5678", // distinto
 			}
@@ -42,10 +42,10 @@ var _ = Describe("AddressInfo", func() {
 		It("should generate same ReferenceID for same input", func() {
 			addr1 := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 			}
@@ -57,20 +57,20 @@ var _ = Describe("AddressInfo", func() {
 		It("should confirm hash only includes specified fields", func() {
 			addr1 := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 				ZipCode:      "7500000",
 			}
 			addr2 := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 				ZipCode:      "7550000", // No debería afectar el hash
@@ -86,10 +86,10 @@ var _ = Describe("AddressInfo", func() {
 		BeforeEach(func() {
 			original = AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 				ZipCode:      "7500000",
@@ -195,24 +195,24 @@ var _ = Describe("AddressInfo", func() {
 		})
 
 		It("should mark as changed when State is updated", func() {
-			input := AddressInfo{PoliticalArea: PoliticalArea{State: "Valparaíso"}}
+			input := AddressInfo{PoliticalArea: PoliticalArea{AdminAreaLevel1: "Valparaíso"}}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.PoliticalArea.State).To(Equal("Valparaíso"))
+			Expect(updated.PoliticalArea.AdminAreaLevel1).To(Equal("Valparaíso"))
 		})
 
 		It("should mark as changed when Province is updated", func() {
-			input := AddressInfo{PoliticalArea: PoliticalArea{Province: "Valparaíso"}}
+			input := AddressInfo{PoliticalArea: PoliticalArea{AdminAreaLevel2: "Valparaíso"}}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.PoliticalArea.Province).To(Equal("Valparaíso"))
+			Expect(updated.PoliticalArea.AdminAreaLevel2).To(Equal("Valparaíso"))
 		})
 
 		It("should mark as changed when District is updated", func() {
-			input := AddressInfo{PoliticalArea: PoliticalArea{District: "Las Condes"}}
+			input := AddressInfo{PoliticalArea: PoliticalArea{AdminAreaLevel3: "Las Condes"}}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
-			Expect(updated.PoliticalArea.District).To(Equal("Las Condes"))
+			Expect(updated.PoliticalArea.AdminAreaLevel3).To(Equal("Las Condes"))
 		})
 
 		It("should mark as changed when ZipCode is updated", func() {
@@ -257,19 +257,19 @@ var _ = Describe("AddressInfo", func() {
 			input := AddressInfo{
 				AddressLine1: "Av Las Condes 5678",
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Las Condes",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Las Condes",
+					TimeZone:        "America/Santiago",
 				},
 				ZipCode: "7550000",
 			}
 			updated, changed := original.UpdateIfChanged(input)
 			Expect(changed).To(BeTrue())
 			Expect(updated.AddressLine1).To(Equal("Av Las Condes 5678"))
-			Expect(updated.PoliticalArea.State).To(Equal("Metropolitana"))
-			Expect(updated.PoliticalArea.Province).To(Equal("Santiago"))
-			Expect(updated.PoliticalArea.District).To(Equal("Las Condes"))
+			Expect(updated.PoliticalArea.AdminAreaLevel1).To(Equal("Metropolitana"))
+			Expect(updated.PoliticalArea.AdminAreaLevel2).To(Equal("Santiago"))
+			Expect(updated.PoliticalArea.AdminAreaLevel3).To(Equal("Las Condes"))
 			Expect(updated.PoliticalArea.TimeZone).To(Equal("America/Santiago"))
 			Expect(updated.ZipCode).To(Equal("7550000"))
 		})
@@ -279,10 +279,10 @@ var _ = Describe("AddressInfo", func() {
 		It("should normalize casing and spacing", func() {
 			addr := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "   Metropolitana ",
-					Province: " SANTIAGO  ",
-					District: "PROVIDENCIA   ",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "   Metropolitana ",
+					AdminAreaLevel2: " SANTIAGO  ",
+					AdminAreaLevel3: "PROVIDENCIA   ",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "   AVENIDA   PROVIDENCIA   1234  ",
 			}
@@ -290,9 +290,9 @@ var _ = Describe("AddressInfo", func() {
 			addr.ToLowerAndRemovePunctuation()
 
 			Expect(addr.AddressLine1).To(Equal("avenida providencia 1234"))
-			Expect(addr.PoliticalArea.State).To(Equal("metropolitana"))
-			Expect(addr.PoliticalArea.Province).To(Equal("santiago"))
-			Expect(addr.PoliticalArea.District).To(Equal("providencia"))
+			Expect(addr.PoliticalArea.AdminAreaLevel1).To(Equal("metropolitana"))
+			Expect(addr.PoliticalArea.AdminAreaLevel2).To(Equal("santiago"))
+			Expect(addr.PoliticalArea.AdminAreaLevel3).To(Equal("providencia"))
 			Expect(addr.PoliticalArea.TimeZone).To(Equal("america/santiago"))
 		})
 	})
@@ -301,10 +301,10 @@ var _ = Describe("AddressInfo", func() {
 		It("should concatenate address fields correctly", func() {
 			addr := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 				ZipCode:      "7500000",
@@ -322,32 +322,32 @@ var _ = Describe("AddressInfo", func() {
 		It("should only include specified fields in the address format", func() {
 			addr := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 				ZipCode:      "7500000",
 			}
 
 			fullAddress := addr.FullAddress()
-			Expect(fullAddress).To(Equal("Av Providencia 1234, Providencia, Santiago, Metropolitana, 7500000"))
+			Expect(fullAddress).To(Equal("Av Providencia 1234, Metropolitana, Santiago, Providencia, 7500000"))
 		})
 
 		It("should correctly handle empty fields", func() {
 			addr := AddressInfo{
 				PoliticalArea: PoliticalArea{
-					State:    "Metropolitana",
-					Province: "Santiago",
-					District: "Providencia",
-					TimeZone: "America/Santiago",
+					AdminAreaLevel1: "Metropolitana",
+					AdminAreaLevel2: "Santiago",
+					AdminAreaLevel3: "Providencia",
+					TimeZone:        "America/Santiago",
 				},
 				AddressLine1: "Av Providencia 1234",
 			}
 
 			fullAddress := addr.FullAddress()
-			Expect(fullAddress).To(Equal("Av Providencia 1234, Providencia, Santiago, Metropolitana"))
+			Expect(fullAddress).To(Equal("Av Providencia 1234, Metropolitana, Santiago, Providencia"))
 		})
 
 		It("should return just AddressLine1 if other fields are empty", func() {

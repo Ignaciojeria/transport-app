@@ -54,10 +54,11 @@ type Coordinates struct {
 }
 
 type PoliticalArea struct {
-	Code     string `json:"code" example:"cl-rm-providencia"`
-	District string `json:"district" example:"providencia"`
-	Province string `json:"province" example:"santiago"`
-	State    string `json:"state" example:"region metropolitana de santiago"`
+	Code            string `json:"code" example:"cl-rm-providencia"`
+	AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago"`
+	AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago"`
+	AdminAreaLevel3 string `json:"adminAreaLevel3" example:"providencia"`
+	AdminAreaLevel4 string `json:"adminAreaLevel4" example:""`
 }
 
 type NodeInfo struct {

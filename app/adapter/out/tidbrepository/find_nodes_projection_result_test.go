@@ -107,10 +107,10 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		nodeType := domain.NodeType{Value: "STORE"}
 		addressInfo := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    "State",
-				Province: "Central",
-				District: "Downtown",
-				TimeZone: "America/Santiago",
+				AdminAreaLevel1: "State",
+				AdminAreaLevel2: "Central",
+				AdminAreaLevel3: "Downtown",
+				TimeZone:        "America/Santiago",
 			},
 			AddressLine1: "Store Address",
 			AddressLine2: "Suite 100",
@@ -280,10 +280,10 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		nodeType := domain.NodeType{Value: "STORE"}
 		addressInfo := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    "State",
-				Province: "Central",
-				District: "Downtown",
-				TimeZone: "America/Santiago",
+				AdminAreaLevel1: "State",
+				AdminAreaLevel2: "Central",
+				AdminAreaLevel3: "Downtown",
+				TimeZone:        "America/Santiago",
 			},
 			AddressLine1: "Store Address",
 			AddressLine2: "Suite 100",

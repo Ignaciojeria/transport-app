@@ -33,9 +33,10 @@ func (a AddressInfo) DocID(ctx context.Context) DocumentID {
 		ctx,
 		a.AddressLine1,
 		a.AddressLine2,
-		a.PoliticalArea.District,
-		a.PoliticalArea.Province,
-		a.PoliticalArea.State)
+		a.PoliticalArea.AdminAreaLevel1,
+		a.PoliticalArea.AdminAreaLevel2,
+		a.PoliticalArea.AdminAreaLevel3,
+		a.PoliticalArea.AdminAreaLevel4)
 }
 
 func (a *AddressInfo) UpdatePoint(point orb.Point) {
@@ -55,12 +56,13 @@ func (a *AddressInfo) NormalizeAndGeocode(
 	return nil
 }
 
-// Normalize limpia y formatea los valores de State, Province y District.
+// Normalize limpia y formatea los valores de AdminAreaLevel1, AdminAreaLevel2, AdminAreaLevel3 y AdminAreaLevel4.
 func (a *AddressInfo) ToLowerAndRemovePunctuation() {
 	a.AddressLine1 = utils.NormalizeText(a.AddressLine1)
-	a.PoliticalArea.State = utils.NormalizeText(a.PoliticalArea.State)
-	a.PoliticalArea.Province = utils.NormalizeText(a.PoliticalArea.Province)
-	a.PoliticalArea.District = utils.NormalizeText(a.PoliticalArea.District)
+	a.PoliticalArea.AdminAreaLevel1 = utils.NormalizeText(a.PoliticalArea.AdminAreaLevel1)
+	a.PoliticalArea.AdminAreaLevel2 = utils.NormalizeText(a.PoliticalArea.AdminAreaLevel2)
+	a.PoliticalArea.AdminAreaLevel3 = utils.NormalizeText(a.PoliticalArea.AdminAreaLevel3)
+	a.PoliticalArea.AdminAreaLevel4 = utils.NormalizeText(a.PoliticalArea.AdminAreaLevel4)
 	a.PoliticalArea.TimeZone = utils.NormalizeText(a.PoliticalArea.TimeZone)
 }
 
@@ -95,18 +97,23 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 		changed = true
 	}
 
-	if newAddress.PoliticalArea.State != "" && newAddress.PoliticalArea.State != a.PoliticalArea.State {
-		updated.PoliticalArea.State = newAddress.PoliticalArea.State
+	if newAddress.PoliticalArea.AdminAreaLevel1 != "" && newAddress.PoliticalArea.AdminAreaLevel1 != a.PoliticalArea.AdminAreaLevel1 {
+		updated.PoliticalArea.AdminAreaLevel1 = newAddress.PoliticalArea.AdminAreaLevel1
 		changed = true
 	}
 
-	if newAddress.PoliticalArea.Province != "" && newAddress.PoliticalArea.Province != a.PoliticalArea.Province {
-		updated.PoliticalArea.Province = newAddress.PoliticalArea.Province
+	if newAddress.PoliticalArea.AdminAreaLevel2 != "" && newAddress.PoliticalArea.AdminAreaLevel2 != a.PoliticalArea.AdminAreaLevel2 {
+		updated.PoliticalArea.AdminAreaLevel2 = newAddress.PoliticalArea.AdminAreaLevel2
 		changed = true
 	}
 
-	if newAddress.PoliticalArea.District != "" && newAddress.PoliticalArea.District != a.PoliticalArea.District {
-		updated.PoliticalArea.District = newAddress.PoliticalArea.District
+	if newAddress.PoliticalArea.AdminAreaLevel3 != "" && newAddress.PoliticalArea.AdminAreaLevel3 != a.PoliticalArea.AdminAreaLevel3 {
+		updated.PoliticalArea.AdminAreaLevel3 = newAddress.PoliticalArea.AdminAreaLevel3
+		changed = true
+	}
+
+	if newAddress.PoliticalArea.AdminAreaLevel4 != "" && newAddress.PoliticalArea.AdminAreaLevel4 != a.PoliticalArea.AdminAreaLevel4 {
+		updated.PoliticalArea.AdminAreaLevel4 = newAddress.PoliticalArea.AdminAreaLevel4
 		changed = true
 	}
 
@@ -139,9 +146,10 @@ func (a AddressInfo) UpdateIfChanged(newAddress AddressInfo) (AddressInfo, bool)
 func (a AddressInfo) FullAddress() string {
 	parts := []string{
 		a.AddressLine1,
-		a.PoliticalArea.District,
-		a.PoliticalArea.Province,
-		a.PoliticalArea.State,
+		a.PoliticalArea.AdminAreaLevel1,
+		a.PoliticalArea.AdminAreaLevel2,
+		a.PoliticalArea.AdminAreaLevel3,
+		a.PoliticalArea.AdminAreaLevel4,
 		a.ZipCode,
 	}
 	return concatenateWithCommas(parts...)

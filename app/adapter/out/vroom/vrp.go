@@ -397,10 +397,11 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 				},
 				// Información política/geográfica
 				PoliticalArea: domain.PoliticalArea{
-					Code:     visit.Delivery.AddressInfo.PoliticalArea.Code,
-					Province: visit.Delivery.AddressInfo.PoliticalArea.Province,
-					State:    visit.Delivery.AddressInfo.PoliticalArea.State,
-					District: visit.Delivery.AddressInfo.PoliticalArea.District,
+					Code:            visit.Delivery.AddressInfo.PoliticalArea.Code,
+					AdminAreaLevel1: visit.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel1,
+					AdminAreaLevel2: visit.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel2,
+					AdminAreaLevel3: visit.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel3,
+					AdminAreaLevel4: visit.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel4,
 				},
 				// Información de dirección
 				AddressLine1: visit.Delivery.AddressInfo.AddressLine1,
@@ -430,10 +431,11 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 					},
 					// Información política/geográfica
 					PoliticalArea: domain.PoliticalArea{
-						Code:     visit.Pickup.AddressInfo.PoliticalArea.Code,
-						Province: visit.Pickup.AddressInfo.PoliticalArea.Province,
-						State:    visit.Pickup.AddressInfo.PoliticalArea.State,
-						District: visit.Pickup.AddressInfo.PoliticalArea.District,
+						Code:            visit.Pickup.AddressInfo.PoliticalArea.Code,
+						AdminAreaLevel1: visit.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel1,
+						AdminAreaLevel2: visit.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel2,
+						AdminAreaLevel3: visit.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel3,
+						AdminAreaLevel4: visit.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel4,
 					},
 					// Información de dirección
 					AddressLine1: visit.Pickup.AddressInfo.AddressLine1,

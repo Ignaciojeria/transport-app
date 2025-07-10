@@ -27,11 +27,11 @@ var _ = Describe("UpsertPoliticalArea", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		err = upsert(ctx, politicalArea)
@@ -44,9 +44,9 @@ var _ = Describe("UpsertPoliticalArea", func() {
 			First(&dbPoliticalArea).Error
 		Expect(err).ToNot(HaveOccurred())
 		Expect(dbPoliticalArea.Code).To(Equal("cl-rm-la-florida"))
-		Expect(dbPoliticalArea.State).To(Equal("region metropolitana de santiago"))
-		Expect(dbPoliticalArea.Province).To(Equal("santiago"))
-		Expect(dbPoliticalArea.District).To(Equal("la florida"))
+		Expect(dbPoliticalArea.AdminAreaLevel1).To(Equal("region metropolitana de santiago"))
+		Expect(dbPoliticalArea.AdminAreaLevel2).To(Equal("santiago"))
+		Expect(dbPoliticalArea.AdminAreaLevel3).To(Equal("la florida"))
 		Expect(dbPoliticalArea.TimeZone).To(Equal("America/Santiago"))
 		Expect(dbPoliticalArea.TenantID.String()).To(Equal(tenant.ID.String()))
 	})
@@ -57,11 +57,11 @@ var _ = Describe("UpsertPoliticalArea", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		original := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		err = upsert(ctx, original)
@@ -79,11 +79,11 @@ var _ = Describe("UpsertPoliticalArea", func() {
 
 		// Try to update with different code but same timezone
 		modifiedCode := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida-new",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida-new",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		err = upsert(ctx, modifiedCode)
@@ -100,11 +100,11 @@ var _ = Describe("UpsertPoliticalArea", func() {
 
 		// Ahora actualizamos el timezone
 		modifiedTimeZone := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/New_York",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/New_York",
 		}
 
 		err = upsert(ctx, modifiedTimeZone)

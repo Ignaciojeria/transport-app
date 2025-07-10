@@ -125,34 +125,41 @@ func MapDeliveryUnitsFilter(filter *model.DeliveryUnitsReportFilterInput) *domai
 			originFilter.AddressLines = addressLines
 		}
 
-		if len(filter.Origin.Districts) > 0 {
-			districts := make([]string, len(filter.Origin.Districts))
-			for i, district := range filter.Origin.Districts {
-				if district != nil {
-					districts[i] = *district
+		if len(filter.Origin.AdminAreaLevel1) > 0 {
+			adminAreaLevel1 := make([]string, len(filter.Origin.AdminAreaLevel1))
+			for i, val := range filter.Origin.AdminAreaLevel1 {
+				if val != nil {
+					adminAreaLevel1[i] = *val
 				}
 			}
-			originFilter.Districts = districts
+			originFilter.AdminAreaLevel1 = adminAreaLevel1
 		}
-
-		if len(filter.Origin.Provinces) > 0 {
-			provinces := make([]string, len(filter.Origin.Provinces))
-			for i, province := range filter.Origin.Provinces {
-				if province != nil {
-					provinces[i] = *province
+		if len(filter.Origin.AdminAreaLevel2) > 0 {
+			adminAreaLevel2 := make([]string, len(filter.Origin.AdminAreaLevel2))
+			for i, val := range filter.Origin.AdminAreaLevel2 {
+				if val != nil {
+					adminAreaLevel2[i] = *val
 				}
 			}
-			originFilter.Provinces = provinces
+			originFilter.AdminAreaLevel2 = adminAreaLevel2
 		}
-
-		if len(filter.Origin.States) > 0 {
-			states := make([]string, len(filter.Origin.States))
-			for i, state := range filter.Origin.States {
-				if state != nil {
-					states[i] = *state
+		if len(filter.Origin.AdminAreaLevel3) > 0 {
+			adminAreaLevel3 := make([]string, len(filter.Origin.AdminAreaLevel3))
+			for i, val := range filter.Origin.AdminAreaLevel3 {
+				if val != nil {
+					adminAreaLevel3[i] = *val
 				}
 			}
-			originFilter.States = states
+			originFilter.AdminAreaLevel3 = adminAreaLevel3
+		}
+		if len(filter.Origin.AdminAreaLevel4) > 0 {
+			adminAreaLevel4 := make([]string, len(filter.Origin.AdminAreaLevel4))
+			for i, val := range filter.Origin.AdminAreaLevel4 {
+				if val != nil {
+					adminAreaLevel4[i] = *val
+				}
+			}
+			originFilter.AdminAreaLevel4 = adminAreaLevel4
 		}
 
 		if len(filter.Origin.ZipCodes) > 0 {
@@ -199,34 +206,41 @@ func MapDeliveryUnitsFilter(filter *model.DeliveryUnitsReportFilterInput) *domai
 			destinationFilter.AddressLines = addressLines
 		}
 
-		if len(filter.Destination.Districts) > 0 {
-			districts := make([]string, len(filter.Destination.Districts))
-			for i, district := range filter.Destination.Districts {
-				if district != nil {
-					districts[i] = *district
+		if len(filter.Destination.AdminAreaLevel1) > 0 {
+			adminAreaLevel1 := make([]string, len(filter.Destination.AdminAreaLevel1))
+			for i, val := range filter.Destination.AdminAreaLevel1 {
+				if val != nil {
+					adminAreaLevel1[i] = *val
 				}
 			}
-			destinationFilter.Districts = districts
+			destinationFilter.AdminAreaLevel1 = adminAreaLevel1
 		}
-
-		if len(filter.Destination.Provinces) > 0 {
-			provinces := make([]string, len(filter.Destination.Provinces))
-			for i, province := range filter.Destination.Provinces {
-				if province != nil {
-					provinces[i] = *province
+		if len(filter.Destination.AdminAreaLevel2) > 0 {
+			adminAreaLevel2 := make([]string, len(filter.Destination.AdminAreaLevel2))
+			for i, val := range filter.Destination.AdminAreaLevel2 {
+				if val != nil {
+					adminAreaLevel2[i] = *val
 				}
 			}
-			destinationFilter.Provinces = provinces
+			destinationFilter.AdminAreaLevel2 = adminAreaLevel2
 		}
-
-		if len(filter.Destination.States) > 0 {
-			states := make([]string, len(filter.Destination.States))
-			for i, state := range filter.Destination.States {
-				if state != nil {
-					states[i] = *state
+		if len(filter.Destination.AdminAreaLevel3) > 0 {
+			adminAreaLevel3 := make([]string, len(filter.Destination.AdminAreaLevel3))
+			for i, val := range filter.Destination.AdminAreaLevel3 {
+				if val != nil {
+					adminAreaLevel3[i] = *val
 				}
 			}
-			destinationFilter.States = states
+			destinationFilter.AdminAreaLevel3 = adminAreaLevel3
+		}
+		if len(filter.Destination.AdminAreaLevel4) > 0 {
+			adminAreaLevel4 := make([]string, len(filter.Destination.AdminAreaLevel4))
+			for i, val := range filter.Destination.AdminAreaLevel4 {
+				if val != nil {
+					adminAreaLevel4[i] = *val
+				}
+			}
+			destinationFilter.AdminAreaLevel4 = adminAreaLevel4
 		}
 
 		if len(filter.Destination.ZipCodes) > 0 {

@@ -42,10 +42,11 @@ type Contact struct {
 
 // PoliticalArea representa información política/geográfica
 type PoliticalArea struct {
-	Code     string
-	District string
-	Province string
-	State    string
+	Code            string
+	AdminAreaLevel1 string
+	AdminAreaLevel2 string
+	AdminAreaLevel3 string
+	AdminAreaLevel4 string
 }
 
 // AddressInfo representa información completa de dirección

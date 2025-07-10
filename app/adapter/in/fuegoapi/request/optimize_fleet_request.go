@@ -21,10 +21,11 @@ type OptimizeFleetRequest struct {
 					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
 				} `json:"coordinates"`
 				PoliticalArea struct {
-					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					District string `json:"district" example:"la florida" description:"District name"`
-					Province string `json:"province" example:"santiago" description:"Province name"`
-					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
+					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
+					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
+					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
 				} `json:"politicalArea"`
 				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
 			} `json:"addressInfo"`
@@ -47,10 +48,11 @@ type OptimizeFleetRequest struct {
 					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
 				} `json:"coordinates"`
 				PoliticalArea struct {
-					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					District string `json:"district" example:"la florida" description:"District name"`
-					Province string `json:"province" example:"santiago" description:"Province name"`
-					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
+					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
+					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
+					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
 				} `json:"politicalArea"`
 				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
 			} `json:"addressInfo"`
@@ -87,10 +89,11 @@ type OptimizeFleetRequest struct {
 					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Pickup point longitude"`
 				} `json:"coordinates"`
 				PoliticalArea struct {
-					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					District string `json:"district" example:"la florida" description:"District name"`
-					Province string `json:"province" example:"santiago" description:"Province name"`
-					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
+					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
+					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
+					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
 				} `json:"politicalArea"`
 				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
 			} `json:"addressInfo"`
@@ -120,10 +123,11 @@ type OptimizeFleetRequest struct {
 					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Delivery point longitude"`
 				} `json:"coordinates"`
 				PoliticalArea struct {
-					Code     string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					District string `json:"district" example:"la florida" description:"District name"`
-					Province string `json:"province" example:"santiago" description:"Province name"`
-					State    string `json:"state" example:"region metropolitana de santiago" description:"State name"`
+					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
+					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
+					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
+					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
+					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
 				} `json:"politicalArea"`
 				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
 			} `json:"addressInfo"`
@@ -171,10 +175,11 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					Longitude: v.StartLocation.AddressInfo.Coordinates.Longitude,
 				},
 				PoliticalArea: optimization.PoliticalArea{
-					Code:     v.StartLocation.AddressInfo.PoliticalArea.Code,
-					District: v.StartLocation.AddressInfo.PoliticalArea.District,
-					Province: v.StartLocation.AddressInfo.PoliticalArea.Province,
-					State:    v.StartLocation.AddressInfo.PoliticalArea.State,
+					Code:            v.StartLocation.AddressInfo.PoliticalArea.Code,
+					AdminAreaLevel1: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
+					AdminAreaLevel2: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
+					AdminAreaLevel3: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
+					AdminAreaLevel4: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
 				},
 				ZipCode: v.StartLocation.AddressInfo.ZipCode,
 			},
@@ -192,10 +197,11 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					Longitude: v.EndLocation.AddressInfo.Coordinates.Longitude,
 				},
 				PoliticalArea: optimization.PoliticalArea{
-					Code:     v.EndLocation.AddressInfo.PoliticalArea.Code,
-					District: v.EndLocation.AddressInfo.PoliticalArea.District,
-					Province: v.EndLocation.AddressInfo.PoliticalArea.Province,
-					State:    v.EndLocation.AddressInfo.PoliticalArea.State,
+					Code:            v.EndLocation.AddressInfo.PoliticalArea.Code,
+					AdminAreaLevel1: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
+					AdminAreaLevel2: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
+					AdminAreaLevel3: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
+					AdminAreaLevel4: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
 				},
 				ZipCode: v.EndLocation.AddressInfo.ZipCode,
 			},
@@ -232,10 +238,11 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					Longitude: v.Pickup.AddressInfo.Coordinates.Longitude,
 				},
 				PoliticalArea: optimization.PoliticalArea{
-					Code:     v.Pickup.AddressInfo.PoliticalArea.Code,
-					District: v.Pickup.AddressInfo.PoliticalArea.District,
-					Province: v.Pickup.AddressInfo.PoliticalArea.Province,
-					State:    v.Pickup.AddressInfo.PoliticalArea.State,
+					Code:            v.Pickup.AddressInfo.PoliticalArea.Code,
+					AdminAreaLevel1: v.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel1,
+					AdminAreaLevel2: v.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel2,
+					AdminAreaLevel3: v.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel3,
+					AdminAreaLevel4: v.Pickup.AddressInfo.PoliticalArea.AdminAreaLevel4,
 				},
 				ZipCode: v.Pickup.AddressInfo.ZipCode,
 			},
@@ -267,10 +274,11 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					Longitude: v.Delivery.AddressInfo.Coordinates.Longitude,
 				},
 				PoliticalArea: optimization.PoliticalArea{
-					Code:     v.Delivery.AddressInfo.PoliticalArea.Code,
-					District: v.Delivery.AddressInfo.PoliticalArea.District,
-					Province: v.Delivery.AddressInfo.PoliticalArea.Province,
-					State:    v.Delivery.AddressInfo.PoliticalArea.State,
+					Code:            v.Delivery.AddressInfo.PoliticalArea.Code,
+					AdminAreaLevel1: v.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel1,
+					AdminAreaLevel2: v.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel2,
+					AdminAreaLevel3: v.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel3,
+					AdminAreaLevel4: v.Delivery.AddressInfo.PoliticalArea.AdminAreaLevel4,
 				},
 				ZipCode: v.Delivery.AddressInfo.ZipCode,
 			},

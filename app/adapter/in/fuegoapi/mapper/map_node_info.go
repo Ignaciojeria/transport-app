@@ -36,12 +36,13 @@ func MapNodeInfoToDomain(nodeInfo struct {
 		} `json:"confidence"`
 	} `json:"coordinates"`
 	PoliticalArea struct {
-		Code       string `json:"code" example:"cl-rm-la-florida"`
-		Province   string `json:"province" example:"santiago"`
-		State      string `json:"state" example:"region metropolitana de santiago"`
-		District   string `json:"district" example:"la florida"`
-		TimeZone   string `json:"timeZone" example:"America/Santiago"`
-		Confidence struct {
+		Code            string `json:"code" example:"cl-rm-la-florida"`
+		AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago"`
+		AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago"`
+		AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida"`
+		AdminAreaLevel4 string `json:"adminAreaLevel4" example:""`
+		TimeZone        string `json:"timeZone" example:"America/Santiago"`
+		Confidence      struct {
 			Level   float64 `json:"level" example:"0.0"`
 			Message string  `json:"message" example:""`
 			Reason  string  `json:"reason" example:""`
@@ -61,11 +62,12 @@ func MapNodeInfoToDomain(nodeInfo struct {
 				AdditionalContactMethods: MapAdditionalContactMethodsToDomain(addressInfo.Contact.AdditionalContactMethods),
 			},
 			PoliticalArea: domain.PoliticalArea{
-				Code:     addressInfo.PoliticalArea.Code,
-				State:    addressInfo.PoliticalArea.State,
-				Province: addressInfo.PoliticalArea.Province,
-				District: addressInfo.PoliticalArea.District,
-				TimeZone: addressInfo.PoliticalArea.TimeZone,
+				Code:            addressInfo.PoliticalArea.Code,
+				AdminAreaLevel1: addressInfo.PoliticalArea.AdminAreaLevel1,
+				AdminAreaLevel2: addressInfo.PoliticalArea.AdminAreaLevel2,
+				AdminAreaLevel3: addressInfo.PoliticalArea.AdminAreaLevel3,
+				AdminAreaLevel4: addressInfo.PoliticalArea.AdminAreaLevel4,
+				TimeZone:        addressInfo.PoliticalArea.TimeZone,
 				Confidence: domain.CoordinatesConfidence{
 					Level:   addressInfo.PoliticalArea.Confidence.Level,
 					Message: addressInfo.PoliticalArea.Confidence.Message,

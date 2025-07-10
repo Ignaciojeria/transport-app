@@ -46,9 +46,10 @@ type DeliveryUnitFilter struct {
 type LocationFilter struct {
 	NodeReferences        []string
 	AddressLines          []string
-	Districts             []string
-	Provinces             []string
-	States                []string
+	AdminAreaLevel1       []string
+	AdminAreaLevel2       []string
+	AdminAreaLevel3       []string
+	AdminAreaLevel4       []string
 	ZipCodes              []string
 	CoordinatesConfidence *CoordinatesConfidenceLevelFilter
 }

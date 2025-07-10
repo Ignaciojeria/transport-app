@@ -29,10 +29,11 @@ type UpsertRouteRequest struct {
 				Longitude float64 `json:"longitude" example:"-70.6130425"`
 			} `json:"coordinates"`
 			PoliticalArea struct {
-				Code     string `json:"code" example:"cl-rm-providencia"`
-				District string `json:"district" example:"providencia"`
-				Province string `json:"province" example:"santiago"`
-				State    string `json:"state" example:"region metropolitana de santiago"`
+				Code            string `json:"code" example:"cl-rm-providencia"`
+				AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago"`
+				AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago"`
+				AdminAreaLevel3 string `json:"adminAreaLevel3" example:"providencia"`
+				AdminAreaLevel4 string `json:"adminAreaLevel4" example:""`
 			} `json:"politicalArea"`
 			ZipCode string `json:"zipCode" example:"7500000"`
 		} `json:"addressInfo"`

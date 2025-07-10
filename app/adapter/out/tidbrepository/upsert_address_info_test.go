@@ -28,20 +28,20 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		addressInfo := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				Code:     politicalArea.Code,
-				State:    politicalArea.State,
-				Province: politicalArea.Province,
-				District: politicalArea.District,
-				TimeZone: politicalArea.TimeZone,
+				Code:            politicalArea.Code,
+				AdminAreaLevel1: politicalArea.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea.AdminAreaLevel3,
+				TimeZone:        politicalArea.TimeZone,
 			},
 			AddressLine1: "Av Providencia 1234",
 			ZipCode:      "7500000",
@@ -69,9 +69,9 @@ var _ = Describe("UpsertAddressInfo", func() {
 			Where("document_id = ?", politicalArea.DocID(ctx)).
 			First(&dbPoliticalArea).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(dbPoliticalArea.State).To(Equal("region metropolitana de santiago"))
-		Expect(dbPoliticalArea.Province).To(Equal("santiago"))
-		Expect(dbPoliticalArea.District).To(Equal("la florida"))
+		Expect(dbPoliticalArea.AdminAreaLevel1).To(Equal("region metropolitana de santiago"))
+		Expect(dbPoliticalArea.AdminAreaLevel2).To(Equal("santiago"))
+		Expect(dbPoliticalArea.AdminAreaLevel3).To(Equal("la florida"))
 		Expect(dbPoliticalArea.TenantID.String()).To(Equal(tenant.ID.String()))
 
 		// Verify addressInfo was created with correct references
@@ -93,19 +93,19 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		original := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    politicalArea.State,
-				Province: politicalArea.Province,
-				District: politicalArea.District,
-				TimeZone: politicalArea.TimeZone,
+				AdminAreaLevel1: politicalArea.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea.AdminAreaLevel3,
+				TimeZone:        politicalArea.TimeZone,
 			},
 			AddressLine1: "Dirección Original",
 			ZipCode:      "7550000",
@@ -131,11 +131,11 @@ var _ = Describe("UpsertAddressInfo", func() {
 
 		modified := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				Code:     politicalArea.Code,
-				State:    politicalArea.State,
-				Province: politicalArea.Province,
-				District: politicalArea.District,
-				TimeZone: politicalArea.TimeZone,
+				Code:            politicalArea.Code,
+				AdminAreaLevel1: politicalArea.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea.AdminAreaLevel3,
+				TimeZone:        politicalArea.TimeZone,
 			},
 			AddressLine1: "Dirección Modificada",
 			ZipCode:      "7560000", // Cambiado
@@ -200,27 +200,27 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea1 := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		politicalArea2 := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		addressInfo1 := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    politicalArea1.State,
-				Province: politicalArea1.Province,
-				District: politicalArea1.District,
-				TimeZone: politicalArea1.TimeZone,
+				AdminAreaLevel1: politicalArea1.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea1.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea1.AdminAreaLevel3,
+				TimeZone:        politicalArea1.TimeZone,
 			},
 			AddressLine1: "Test Street",
 			Coordinates: domain.Coordinates{
@@ -236,10 +236,10 @@ var _ = Describe("UpsertAddressInfo", func() {
 
 		addressInfo2 := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    politicalArea2.State,
-				Province: politicalArea2.Province,
-				District: politicalArea2.District,
-				TimeZone: politicalArea2.TimeZone,
+				AdminAreaLevel1: politicalArea2.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea2.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea2.AdminAreaLevel3,
+				TimeZone:        politicalArea2.TimeZone,
 			},
 			AddressLine1: "Test Street",
 			Coordinates: domain.Coordinates{
@@ -294,19 +294,19 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		original := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    politicalArea.State,
-				Province: politicalArea.Province,
-				District: politicalArea.District,
-				TimeZone: politicalArea.TimeZone,
+				AdminAreaLevel1: politicalArea.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea.AdminAreaLevel3,
+				TimeZone:        politicalArea.TimeZone,
 			},
 			AddressLine1: "Dirección Original",
 			Coordinates: domain.Coordinates{
@@ -350,19 +350,19 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		addressInfo := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    politicalArea.State,
-				Province: politicalArea.Province,
-				District: politicalArea.District,
-				TimeZone: politicalArea.TimeZone,
+				AdminAreaLevel1: politicalArea.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea.AdminAreaLevel3,
+				TimeZone:        politicalArea.TimeZone,
 			},
 			AddressLine1: "Sin Coordenadas",
 		}
@@ -391,19 +391,19 @@ var _ = Describe("UpsertAddressInfo", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		politicalArea := domain.PoliticalArea{
-			Code:     "cl-rm-la-florida",
-			State:    "region metropolitana de santiago",
-			Province: "santiago",
-			District: "la florida",
-			TimeZone: "America/Santiago",
+			Code:            "cl-rm-la-florida",
+			AdminAreaLevel1: "region metropolitana de santiago",
+			AdminAreaLevel2: "santiago",
+			AdminAreaLevel3: "la florida",
+			TimeZone:        "America/Santiago",
 		}
 
 		addressInfo := domain.AddressInfo{
 			PoliticalArea: domain.PoliticalArea{
-				State:    politicalArea.State,
-				Province: politicalArea.Province,
-				District: politicalArea.District,
-				TimeZone: politicalArea.TimeZone,
+				AdminAreaLevel1: politicalArea.AdminAreaLevel1,
+				AdminAreaLevel2: politicalArea.AdminAreaLevel2,
+				AdminAreaLevel3: politicalArea.AdminAreaLevel3,
+				TimeZone:        politicalArea.TimeZone,
 			},
 			AddressLine1: "Error Esperado",
 		}

@@ -182,9 +182,10 @@ func mapCoordinatesToModel(coords domain.Coordinates) model.Coordinates {
 // mapPoliticalAreaToModel convierte PoliticalArea del dominio al modelo
 func mapPoliticalAreaToModel(pa domain.PoliticalArea) model.PoliticalArea {
 	return model.PoliticalArea{
-		Code:     pa.Code,
-		District: pa.District,
-		Province: pa.Province,
-		State:    pa.State,
+		Code:            pa.Code,
+		AdminAreaLevel1: pa.AdminAreaLevel1,
+		AdminAreaLevel2: pa.AdminAreaLevel2,
+		AdminAreaLevel3: pa.AdminAreaLevel3,
+		AdminAreaLevel4: pa.AdminAreaLevel4,
 	}
 }

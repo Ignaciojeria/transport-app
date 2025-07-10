@@ -18,11 +18,12 @@ import (
 )
 
 func init() {
-	ioc.Registry(generateTestData,
-		httpserver.New,
-		natspublisher.NewApplicationEvents,
-		observability.NewObservability)
-
+	/*
+		ioc.Registry(generateTestData,
+			httpserver.New,
+			natspublisher.NewApplicationEvents,
+			observability.NewObservability)
+	*/
 	ioc.Registry(
 		optimizeFleet,
 		httpserver.New,
@@ -72,6 +73,7 @@ func optimizeFleet(
 		}, option.Summary("optimize fleet"), option.Tags("optimization"))
 }
 
+/*
 // generateTestData crea un endpoint que genera datos de prueba masivos usando el test data generator
 func generateTestData(
 	s httpserver.Server,
@@ -114,3 +116,4 @@ func generateTestData(
 			}, nil
 		}, option.Summary("generate test data for fleet optimization"), option.Tags("testing"))
 }
+*/

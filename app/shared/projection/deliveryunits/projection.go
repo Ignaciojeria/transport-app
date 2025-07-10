@@ -123,16 +123,20 @@ func (p Projection) DestinationPoliticalAreaConfidenceReason() Field {
 	return Field{path: "destination.addressInfo.politicalArea.confidence.reason"}
 }
 
-func (p Projection) DestinationDistrict() Field {
-	return Field{path: "destination.addressInfo.politicalArea.district"}
+func (p Projection) DestinationAdminAreaLevel1() Field {
+	return Field{path: "destination.addressInfo.politicalArea.adminAreaLevel1"}
 }
 
-func (p Projection) DestinationProvince() Field {
-	return Field{path: "destination.addressInfo.politicalArea.province"}
+func (p Projection) DestinationAdminAreaLevel2() Field {
+	return Field{path: "destination.addressInfo.politicalArea.adminAreaLevel2"}
 }
 
-func (p Projection) DestinationState() Field {
-	return Field{path: "destination.addressInfo.politicalArea.state"}
+func (p Projection) DestinationAdminAreaLevel3() Field {
+	return Field{path: "destination.addressInfo.politicalArea.adminAreaLevel3"}
+}
+
+func (p Projection) DestinationAdminAreaLevel4() Field {
+	return Field{path: "destination.addressInfo.politicalArea.adminAreaLevel4"}
 }
 
 func (p Projection) DestinationTimeZone() Field {
@@ -241,16 +245,20 @@ func (p Projection) OriginPoliticalAreaConfidenceReason() Field {
 	return Field{path: "origin.addressInfo.politicalArea.confidence.reason"}
 }
 
-func (p Projection) OriginDistrict() Field {
-	return Field{path: "origin.addressInfo.politicalArea.district"}
+func (p Projection) OriginAdminAreaLevel1() Field {
+	return Field{path: "origin.addressInfo.politicalArea.adminAreaLevel1"}
 }
 
-func (p Projection) OriginProvince() Field {
-	return Field{path: "origin.addressInfo.politicalArea.province"}
+func (p Projection) OriginAdminAreaLevel2() Field {
+	return Field{path: "origin.addressInfo.politicalArea.adminAreaLevel2"}
 }
 
-func (p Projection) OriginState() Field {
-	return Field{path: "origin.addressInfo.politicalArea.state"}
+func (p Projection) OriginAdminAreaLevel3() Field {
+	return Field{path: "origin.addressInfo.politicalArea.adminAreaLevel3"}
+}
+
+func (p Projection) OriginAdminAreaLevel4() Field {
+	return Field{path: "origin.addressInfo.politicalArea.adminAreaLevel4"}
 }
 
 func (p Projection) OriginTimeZone() Field {
