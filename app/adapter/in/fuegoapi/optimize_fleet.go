@@ -70,7 +70,9 @@ func optimizeFleet(
 			return response.OptimizationResponse{
 				TraceID: span.SpanContext().TraceID().String(),
 			}, nil
-		}, option.Summary("optimize fleet"), option.Tags("optimization"))
+		}, option.Summary("optimize fleet"), option.Tags("optimization"),
+		option.Header("X-Access-Token", "api access token"),
+	)
 }
 
 /*
