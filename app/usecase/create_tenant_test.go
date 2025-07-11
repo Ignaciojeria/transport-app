@@ -6,8 +6,6 @@ import (
 	"strings"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
-	"transport-app/app/shared/configuration"
-	"transport-app/app/shared/infrastructure/jwt"
 
 	"github.com/biter777/countries"
 	goqu "github.com/doug-martin/goqu/v9"
@@ -128,15 +126,30 @@ func avoidJoin(table string) bool {
 
 func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 	email := "ignaciovl.j@gmail.com"
-	conf, _ := configuration.NewConf()
-	jwtService, _ := jwt.NewJWTServiceFromConfig(conf)
-	err := NewRegister(nil, tidbrepository.NewUpsertAccount(connection), jwtService)(ctx, domain.UserCredentials{
+
+	// Primero crear la cuenta
+	err := tidbrepository.NewUpsertAccount(connection)(ctx, domain.Account{
 		Email: email,
 	})
 	if err != nil {
 		return err
 	}
-	return NewCreateTenant(
+
+	// Crear tenant account usando NewCreateTenantAccount
+	tenantAccount := domain.TenantAccount{
+		Tenant: domain.Tenant{
+			ID:      tenantID,
+			Name:    "Test Tenant",
+			Country: countries.CL,
+		},
+		Account: domain.Account{
+			Email: email,
+		},
+		Role:   "owner",
+		Status: "active",
+	}
+
+	return NewCreateTenantAccount(
 		tidbrepository.NewUpsertOrderHeaders(connection),
 		tidbrepository.NewUpsertContact(connection),
 		tidbrepository.NewUpsertAddressInfo(connection),
@@ -161,13 +174,6 @@ func testCreateTenant(ctx context.Context, tenantID uuid.UUID) error {
 		tidbrepository.NewLoadStatuses(connection),
 		tidbrepository.NewUpsertSizeCategory(connection),
 		tidbrepository.NewUpsertSkill(connection),
-	)(ctx, domain.Tenant{
-		ID: tenantID,
-		Operator: domain.Operator{
-			Contact: domain.Contact{
-				PrimaryEmail: email,
-			},
-		},
-		Country: countries.CL,
-	})
+		tidbrepository.NewSaveTenantAccount(connection),
+	)(ctx, tenantAccount)
 }
