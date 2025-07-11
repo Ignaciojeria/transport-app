@@ -137,7 +137,7 @@ func main() {
 
 	// ✅ STEP 4: Transport App with bindings and variables
 	println("=== STEP 4: Configuring Transport App ===")
-	appService := client.Container().
+	appContainer := client.Container().
 		From("ghcr.io/ignaciojeria/transport-app/transport-app-d0a6ffdd2b5a22c2c0423e7b340b3900@sha256:e1ee7fd378916720caaa961352cf287bede6bfc117638cbf64e47dcd0876abed").
 		WithServiceBinding("planner", planner).
 		WithServiceBinding("optimizer", optimizer).
@@ -153,8 +153,9 @@ func main() {
 		WithEnvVariable("VROOM_OPTIMIZER_URL", "http://optimizer:3000").
 		WithEnvVariable("NATS_CONNECTION_URL", "connect.ngs.global").
 		WithSecretVariable("NATS_CONNECTION_CREDS_FILECONTENT", natsCreds).
-		WithExposedPort(8080).
-		AsService()
+		WithExposedPort(8080)
+
+	appService := appContainer.AsService()
 
 	// Validate Transport App + Workers immediately
 	appTester := client.Container().
@@ -227,5 +228,23 @@ func main() {
 	println("Transport App:", appOutput)
 
 	println("🎉 All services are operational!")
+
+	// ✅ Push Transport App to registry
+	println("=== PUSHING TRANSPORT APP TO REGISTRY ===")
+
+	// Get image tag from environment (default to latest if not set)
+	imageTag := os.Getenv("IMAGE_TAG")
+	if imageTag == "" {
+		imageTag = "latest"
+	}
+
+	// Push the Transport App container to registry
+	_, err = appContainer.Publish(ctx, "ghcr.io/ignaciojeria/transport-app/transport-app-optimizator:"+imageTag)
+	if err != nil {
+		panic(err)
+	}
+
+	println("✅ Successfully pushed Transport App to registry:")
+	println("   Image: ghcr.io/ignaciojeria/transport-app/transport-app-optimizator:" + imageTag)
 
 }
