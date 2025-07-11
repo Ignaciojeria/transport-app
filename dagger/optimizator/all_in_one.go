@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"dagger.io/dagger"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
@@ -235,7 +236,7 @@ func main() {
 	// Get image tag from environment (default to latest if not set)
 	imageTag := os.Getenv("IMAGE_TAG")
 	if imageTag == "" {
-		imageTag = "latest"
+		imageTag = uuid.New().String()
 	}
 
 	// Push the Transport App container to registry
