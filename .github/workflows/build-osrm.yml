@@ -18,4 +18,5 @@ jobs:
         go-version: '1.21'
 
     - name: Run Dagger OSRM build and publish
-      run: go run ./dagger/build_osrm.go
+      run: go run ./build_osrm.go
+      working-directory: ./dagger
