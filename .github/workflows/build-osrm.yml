@@ -1,7 +1,21 @@
-- name: Set up Go
-  uses: actions/setup-go@v4
-  with:
-    go-version: '1.21'
+name: Build OSRM with Dagger
 
-- name: Run Dagger OSRM build and publish
-  run: go run ./dagger/build_osrm.go
+# Solo ejecución manual
+on:
+  workflow_dispatch:
+
+jobs:
+  build-osrm:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Run Dagger OSRM build and publish
+      run: go run ./dagger/build_osrm.go
