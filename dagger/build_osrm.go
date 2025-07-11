@@ -37,7 +37,7 @@ func main() {
 			"osrm-customize", "chile-latest.osrm",
 		})
 
-	// También podrías componer la imagen final aquí si quieres:
+	// Imagen final
 	final := client.Container().
 		From("ghcr.io/project-osrm/osrm-backend").
 		WithDirectory("/data", osrm.Directory("/data")).
@@ -51,9 +51,9 @@ func main() {
 			"/data/chile-latest.osrm",
 		})
 
-	_, err = final.Publish(ctx, "ghcr.io/ignaciojeria/osrm-chile:latest")
+	// Publicar
+	_, err = final.Publish(ctx, "ghcr.io/ignaciojeria/transport-app/osrm-chile:latest")
 	if err != nil {
 		panic(err)
 	}
-
 }
