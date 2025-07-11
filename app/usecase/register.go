@@ -7,11 +7,9 @@ import (
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/jwt"
-	resendcli "transport-app/app/shared/infrastructure/resendcli"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/google/uuid"
-	"github.com/resend/resend-go/v2"
 )
 
 type Register func(context.Context, domain.TenantAccount) error
@@ -22,7 +20,6 @@ func init() {
 		firebaseauth.NewRegister,
 		tidbrepository.NewUpsertAccount,
 		jwt.NewJWTServiceFromConfig,
-		resendcli.NewClient,
 		NewCreateTenantAccount,
 		tidbrepository.NewFindDefaultTenantByEmail,
 		NewCreateClientCredentials,
@@ -32,7 +29,6 @@ func NewRegister(
 	register firebaseauth.Register,
 	upsertAccount tidbrepository.UpsertAccount,
 	jwtService *jwt.JWTService,
-	resendClient *resend.Client,
 	createTenantAccount CreateTenantAccount,
 	findDefaultTenantByEmail tidbrepository.FindDefaultTenantByEmail,
 	createClientCredentials CreateClientCredentials,

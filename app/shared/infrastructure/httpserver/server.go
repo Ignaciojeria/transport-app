@@ -13,6 +13,7 @@ import (
 	"time"
 	"transport-app/app/adapter/in/graphql/graph"
 	"transport-app/app/shared/configuration"
+	"transport-app/app/shared/infrastructure/resendcli"
 	"transport-app/app/shared/sharedcontext"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -33,13 +34,14 @@ import (
 )
 
 func init() {
-	ioc.Registry(New, configuration.NewConf)
+	ioc.Registry(New, configuration.NewConf, resendcli.NewClient)
 	ioc.RegistryAtEnd(startAtEnd, New, graph.NewResolver)
 }
 
 type Server struct {
 	Manager *fuego.Server
 	conf    configuration.Conf
+	resend  resendcli.ResendClient
 }
 
 // Middleware para forzar headers JSON
@@ -53,7 +55,9 @@ func NewJSONMiddleware() func(next http.Handler) http.Handler {
 	}
 }
 
-func New(conf configuration.Conf) Server {
+func New(
+	conf configuration.Conf,
+	resend resendcli.ResendClient) Server {
 	s := fuego.NewServer(
 		fuego.WithAddr(":"+conf.PORT),
 		fuego.WithGlobalMiddlewares(
@@ -71,7 +75,7 @@ func New(conf configuration.Conf) Server {
 		Manager: s,
 		conf:    conf,
 	}
-	server.healthCheck()
+	server.healthCheck(resend)
 	ctx, cancel := context.WithCancel(context.Background())
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -115,19 +119,13 @@ func startAtEnd(e Server, resolver *graph.Resolver) error {
 	return e.Manager.Run()
 }
 
-func (s Server) healthCheck() error {
+func (s Server) healthCheck(resend resendcli.ResendClient) error {
 	// Retryable client configurado
 	client := retryablehttp.NewClient()
 	client.RetryMax = 2
 	client.RetryWaitMin = 300 * time.Millisecond
 	client.RetryWaitMax = 1 * time.Second
 	client.HTTPClient.Timeout = 3 * time.Second
-
-	/*
-			Puedes ejecutar este curl aca?
-			$body = '{"jobs":[{"id":1,"location":[-70.6483,-33.4372]}],"vehicles":[{"id":1,"start":[-70.6483,-33.4372]}]}'
-		Invoke-RestMethod -Uri 'http://localhost:3000/' -Method Post -Body $body -ContentType 'application/json'
-	*/
 
 	h, err := health.New(
 		health.WithComponent(health.Component{
@@ -136,6 +134,14 @@ func (s Server) healthCheck() error {
 		}),
 		health.WithSystemInfo(),
 		func(h *health.Health) error {
+			h.Register(health.Config{
+				Name: "resend",
+				Check: func(ctx context.Context) error {
+					return resend.HealthCheck()
+				},
+				Timeout:   3 * time.Second,
+				SkipOnErr: false,
+			})
 			h.Register(health.Config{
 				Name: "vroom",
 				Check: func(ctx context.Context) error {
@@ -165,6 +171,7 @@ func (s Server) healthCheck() error {
 			})
 			return nil
 		})
+
 	if err != nil {
 		return err
 	}

@@ -30,7 +30,7 @@ type EmailData struct {
 	Scopes       []string
 }
 
-func NewSendClientCredentialsEmail(resendClient *resend.Client) SendClientCredentialsEmail {
+func NewSendClientCredentialsEmail(resendClient resendcli.ResendClient) SendClientCredentialsEmail {
 	return func(ctx context.Context, email string, credentials domain.ClientCredentials) error {
 		// Cargar el template HTML desde el embed
 		tmpl, err := template.ParseFS(emailTemplates, "client_credentials_email.html")

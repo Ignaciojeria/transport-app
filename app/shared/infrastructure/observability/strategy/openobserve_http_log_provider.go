@@ -25,6 +25,7 @@ func OpenObserveHTTPLogProvider(conf configuration.Conf) (*slog.Logger, error) {
 	exporter, err := otlploghttp.New(context.TODO(),
 		otlploghttp.WithEndpoint(endpoint.GetDNS()),
 		otlploghttp.WithURLPath(endpoint.GetPath()+"/v1/logs"),
+		otlploghttp.WithTimeout(5*time.Second),
 		otlploghttp.WithHeaders(map[string]string{
 			"Authorization": os.Getenv(OPENOBSERVE_AUTHORIZATION),
 			"stream-name":   os.Getenv(OPENOBSERVE_STREAM_NAME),

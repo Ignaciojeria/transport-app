@@ -26,6 +26,7 @@ func OpenObserveHTTPTraceProvider(conf configuration.Conf) (trace.Tracer, error)
 	otlpHTTPExporter, err := otlptracehttp.New(context.TODO(),
 		otlptracehttp.WithEndpoint(endpoint.GetDNS()),
 		otlptracehttp.WithURLPath(endpoint.GetPath()+"/v1/traces"),
+		otlptracehttp.WithTimeout(5*time.Second),
 		otlptracehttp.WithHeaders(map[string]string{
 			"Authorization": os.Getenv(OPENOBSERVE_AUTHORIZATION),
 			"stream-name":   os.Getenv(OPENOBSERVE_STREAM_NAME),

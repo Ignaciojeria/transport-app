@@ -16,6 +16,14 @@ type Observability struct {
 	Meter  otelmeter.Meter
 }
 
+// OpenObserveStatus representa el estado de OpenObserve
+type OpenObserveStatus struct {
+	TracesConnected bool
+	LogsConnected   bool
+	Endpoint        string
+	ErrorMessage    string
+}
+
 func init() {
 	ioc.Registry(
 		NewObservability,
@@ -23,6 +31,7 @@ func init() {
 		newLoggerProvider,
 		newMeterProvider)
 }
+
 func NewObservability(
 	tracer trace.Tracer,
 	logger *slog.Logger,
