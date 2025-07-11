@@ -50,7 +50,13 @@ func newOptimizationRequestedConsumer(
 	})
 
 	if err != nil {
-		return nil, err
+		obs.Logger.Warn("Consumer not found or inaccessible. Ensure it is pre-created and accessible with current permissions.", "error", err)
+
+		consumer, err = js.Consumer(ctx, conf.TRANSPORT_APP_TOPIC, fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION))
+		if err != nil {
+			obs.Logger.Warn("No se pudo obtener el consumidor preexistente", "error", err)
+			return nil, err
+		}
 	}
 
 	return consumer.Consume(func(msg jetstream.Msg) {

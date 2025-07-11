@@ -41,12 +41,12 @@ func NewOptimize(
 		if err != nil {
 			return domain.Plan{}, err
 		}
-
-		obs.Logger.InfoContext(ctx,
-			"VROOM_REQUEST",
-			"url", conf.VROOM_PLANNER_URL,
-			"payload", vroomRequest,
-		)
+		/*
+			obs.Logger.InfoContext(ctx,
+				"VROOM_REQUEST",
+				"url", conf.VROOM_PLANNER_URL,
+				"payload", vroomRequest,
+			)*/
 
 		res, err := restyClient.R().
 			SetContext(ctx).
@@ -116,12 +116,12 @@ func NewOptimize(
 				obs.Logger.ErrorContext(ctx, "Failed to map individual optimization request", "error", err)
 				continue
 			}
-
-			obs.Logger.InfoContext(ctx,
-				"INDIVIDUAL_VROOM_REQUEST",
-				"url", conf.VROOM_OPTIMIZER_URL,
-				"payload", individualVroomRequest,
-			)
+			/*
+				obs.Logger.InfoContext(ctx,
+					"INDIVIDUAL_VROOM_REQUEST",
+					"url", conf.VROOM_OPTIMIZER_URL,
+					"payload", individualVroomRequest,
+				)*/
 
 			res, err := restyClient.R().
 				SetContext(ctx).
@@ -314,14 +314,15 @@ func NewOptimize(
 
 				allRouteData = append(allRouteData, routeData)
 			}
-
-			obs.Logger.InfoContext(ctx,
-				"INDIVIDUAL_OPTIMIZATION_COMPLETED",
-				"optimization_index", optimizationIndex+1,
-				"routes", len(individualVroomResponse.Routes),
-				"unassigned", len(individualVroomResponse.Unassigned),
-				"polyline_file", polylineFilename,
-			)
+			/*
+				obs.Logger.InfoContext(ctx,
+					"INDIVIDUAL_OPTIMIZATION_COMPLETED",
+					"optimization_index", optimizationIndex+1,
+					"routes", len(individualVroomResponse.Routes),
+					"unassigned", len(individualVroomResponse.Unassigned),
+					"polyline_file", polylineFilename,
+				)
+			*/
 		}
 
 		return plan, nil

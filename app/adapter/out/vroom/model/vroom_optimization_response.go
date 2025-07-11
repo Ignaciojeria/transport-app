@@ -815,7 +815,7 @@ func (ret VroomOptimizationResponse) ExportToPolylineJSON(filename string, req o
 			}
 		}
 	}
-	fmt.Println("PROCESSING EXPORT TO POLYLINE JSON")
+	//fmt.Println("PROCESSING EXPORT TO POLYLINE JSON")
 	// Convertir a JSON
 	//* INICIO DE EXPORTACIÓN.
 	jsonData, err := json.MarshalIndent(routesData, "", "  ")

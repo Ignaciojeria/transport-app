@@ -34,7 +34,6 @@ func NewPostUpsertRoute(c *resty.Client, conf configuration.Conf) PostUpsertRout
 
 		req := mapper.MapUpsertRouteRequest(e)
 		accessToken, _ := sharedcontext.AccessTokenFromContext(ctx)
-		fmt.Println("accessTokenFROMPost: ", accessToken)
 		res, err := c.R().
 			SetContext(ctx).
 			SetHeader("Content-Type", "application/json").

@@ -144,22 +144,22 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		// Verificar si hay delivery válido (coordenadas no son cero)
 		hasValidDelivery := visit.Delivery.AddressInfo.Coordinates.Longitude != 0 || visit.Delivery.AddressInfo.Coordinates.Latitude != 0
 
-		// Log de depuración
+		/* Log de depuración
 		fmt.Printf("Visita %d: pickup=(%.6f, %.6f) delivery=(%.6f, %.6f) hasValidPickup=%v hasValidDelivery=%v\n",
 			i+1,
 			visit.Pickup.AddressInfo.Coordinates.Longitude, visit.Pickup.AddressInfo.Coordinates.Latitude,
 			visit.Delivery.AddressInfo.Coordinates.Longitude, visit.Delivery.AddressInfo.Coordinates.Latitude,
 			hasValidPickup, hasValidDelivery)
-
+		*/
 		// Si no hay delivery válido, omitir esta visita
 		if !hasValidDelivery {
-			fmt.Printf("Omitiendo visita %d: no hay delivery válido\n", i+1)
+			//fmt.Printf("Omitiendo visita %d: no hay delivery válido\n", i+1)
 			continue
 		}
 
 		// Si no hay pickup válido, crear un Job (entrega directa)
 		if !hasValidPickup {
-			fmt.Printf("Creando Job para visita %d (solo delivery)\n", i+1)
+			//fmt.Printf("Creando Job para visita %d (solo delivery)\n", i+1)
 			job := model.VroomJob{
 				ID: i + 1,
 				Location: [2]float64{
@@ -205,7 +205,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			jobs = append(jobs, job)
 		} else {
 			// Si hay pickup válido, crear un Shipment (pickup + delivery)
-			fmt.Printf("Creando Shipment para visita %d (pickup + delivery)\n", i+1)
+			//fmt.Printf("Creando Shipment para visita %d (pickup + delivery)\n", i+1)
 			pickupLocationKey := generateLocationKey(visit.Pickup.AddressInfo.Coordinates.Latitude, visit.Pickup.AddressInfo.Coordinates.Longitude)
 			pickupContactID := getContactID(ctx, visit.Pickup.AddressInfo.Contact)
 			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
@@ -293,7 +293,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 	}
 
 	// Log final
-	fmt.Printf("Total jobs creados: %d, Total shipments creados: %d\n", len(jobs), len(shipments))
+	//fmt.Printf("Total jobs creados: %d, Total shipments creados: %d\n", len(jobs), len(shipments))
 
 	return model.VroomOptimizationRequest{
 		Vehicles:  vehicles,
