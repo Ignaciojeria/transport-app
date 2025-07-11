@@ -5,6 +5,9 @@ import (
 	"os"
 
 	"dagger.io/dagger"
+	_ "go.opentelemetry.io/otel"
+	_ "go.opentelemetry.io/otel/sdk"
+	_ "go.opentelemetry.io/otel/trace"
 )
 
 func main() {
