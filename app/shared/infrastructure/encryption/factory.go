@@ -15,7 +15,8 @@ func init() {
 func NewClientCredentialsEncryptionFromConfig(conf configuration.Conf) (*ClientCredentialsEncryption, error) {
 	// Verificar que la clave de encriptación esté configurada
 	if conf.CLIENT_CREDENTIALS_ENCRYPTION_KEY == "" {
-		return nil, fmt.Errorf("CLIENT_CREDENTIALS_ENCRYPTION_KEY debe estar configurada")
+		fmt.Println("CLIENT_CREDENTIALS_ENCRYPTION_KEY is empty")
+		return nil, nil
 	}
 
 	return NewClientCredentialsEncryption(conf.CLIENT_CREDENTIALS_ENCRYPTION_KEY)
