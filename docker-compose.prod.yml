@@ -3,21 +3,14 @@ services:
     image: ghcr.io/ignaciojeria/transport-app/transport-app-d0a6ffdd2b5a22c2c0423e7b340b3900:latest
     container_name: transport-app
     environment:
-      - ENVIRONMENT=production
-      - GOOGLE_PROJECT_ID=${GOOGLE_PROJECT_ID}
-      - OBSERVABILITY_STRATEGY=${OBSERVABILITY_STRATEGY}
-      - OPENOBSERVE_AUTHORIZATION=${OPENOBSERVE_AUTHORIZATION}
-      - OPENOBSERVE_HTTP_ENDPOINT=${OPENOBSERVE_HTTP_ENDPOINT}
-      - OPENOBSERVE_STREAM_NAME=${OPENOBSERVE_STREAM_NAME}
+      - ENVIRONMENT=prod
       - DB_STRATEGY=disabled
-      - OPTIMIZATION_REQUESTED_SUBSCRIPTION=${OPTIMIZATION_REQUESTED_SUBSCRIPTION}
-      - MASTER_NODE_URL=${MASTER_NODE_URL}
-      - MASTER_NODE_API_KEY=${MASTER_NODE_API_KEY}
+      - OPTIMIZATION_REQUESTED_SUBSCRIPTION=transport-app-events-optimization-requested
+      - MASTER_NODE_URL=https://einar-main-f0820bc.d2.zuplo.dev
       - VROOM_PLANNER_URL=http://planner:3000
       - VROOM_OPTIMIZER_URL=http://optimizer:3000
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/key.json
-    volumes:
-      - ${GOOGLE_APPLICATION_CREDENTIALS}:/app/key.json
+      - NATS_CONNECTION_URL=connect.ngs.global
+      - NATS_CONNECTION_CREDS_FILECONTENT=${NATS_CONNECTION_CREDS_FILECONTENT}
     depends_on:
       - planner
       - optimizer

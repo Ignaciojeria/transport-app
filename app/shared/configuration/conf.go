@@ -14,7 +14,7 @@ type Conf struct {
 	ENVIRONMENT                               string `env:"ENVIRONMENT" envDefault:"development"`
 	CACHE_STRATEGY                            string `env:"CACHE_STRATEGY" envDefault:"redis"`
 	PROJECT_NAME                              string `env:"PROJECT_NAME" envDefault:"transport-app"`
-	GOOGLE_PROJECT_ID                         string `env:"GOOGLE_PROJECT_ID" envDefault:"einar-404623"`
+	GOOGLE_PROJECT_ID                         string `env:"GOOGLE_PROJECT_ID"`
 	TRANSPORT_APP_TOPIC                       string `env:"TRANSPORT_APP_TOPIC" envDefault:"transport-app-events"`
 	OPTIMIZATION_STRATEGY                     string `env:"OPTIMIZATION_STRATEGY" envDefault:"locationiq"`
 	GEOCODING_STRATEGY                        string `env:"GEOCODING_STRATEGY" envDefault:"locationiq"`

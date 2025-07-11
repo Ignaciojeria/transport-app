@@ -8,6 +8,7 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase/workers"
 
 	"cloud.google.com/go/pubsub"
@@ -53,6 +54,8 @@ func newOptimizationRequestedConsumer(
 	}
 
 	return consumer.Consume(func(msg jetstream.Msg) {
+		//accessToken :=
+
 		// Deserializar el mensaje como pubsub.Message
 		var pubsubMsg pubsub.Message
 		if err := json.Unmarshal(msg.Data(), &pubsubMsg); err != nil {
@@ -63,6 +66,7 @@ func newOptimizationRequestedConsumer(
 
 		// Extraer contexto de OpenTelemetry
 		ctx := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier(pubsubMsg.Attributes))
+		ctx = sharedcontext.WithAccessToken(ctx, msg.Headers().Get("X-Access-Token"))
 
 		// Deserializar el payload como OptimizeFleetRequest
 		var input request.OptimizeFleetRequest

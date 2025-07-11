@@ -2,7 +2,7 @@ package gcppubsub
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"transport-app/app/shared/configuration"
 
 	"cloud.google.com/go/pubsub"
@@ -14,10 +14,11 @@ func init() {
 }
 
 func NewClient(conf configuration.Conf) (*pubsub.Client, error) {
-	c, err := pubsub.NewClient(context.Background(), conf.GOOGLE_PROJECT_ID)
 	if conf.GOOGLE_PROJECT_ID == "" {
-		return &pubsub.Client{}, errors.New("GOOGLE_PROJECT_ID is not present")
+		fmt.Println("GOOGLE_PROJECT_ID is not present")
+		return &pubsub.Client{}, nil
 	}
+	c, err := pubsub.NewClient(context.Background(), conf.GOOGLE_PROJECT_ID)
 	if err != nil {
 		return &pubsub.Client{}, err
 	}

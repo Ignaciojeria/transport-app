@@ -40,6 +40,8 @@ func optimizeFleet(
 			spanCtx, span := obs.Tracer.Start(c.Context(), "optimization")
 			defer span.End()
 
+			spanCtx = sharedcontext.WithAccessToken(spanCtx, c.Header("X-Access-Token"))
+
 			requestBody, err := c.Body()
 			if err != nil {
 				return response.OptimizationResponse{}, err

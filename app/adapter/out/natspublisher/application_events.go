@@ -84,6 +84,10 @@ func NewApplicationEvents(
 			headers.Set("entityType", entityType)
 		}
 
+		if accessToken, exists := sharedcontext.AccessTokenFromContext(ctx); exists {
+			headers.Set("X-Access-Token", accessToken)
+		}
+
 		if tenant == "" {
 			tenant = "no-tenant"
 		}

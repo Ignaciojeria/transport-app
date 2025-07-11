@@ -103,3 +103,17 @@ func EntityTypeFromContext(ctx context.Context) string {
 	bag := baggage.FromContext(ctx)
 	return bag.Member(BaggageEntityType).Value()
 }
+
+const accessTokenKey string = "access.token"
+
+// WithAccessToken añade el token de acceso al contexto de forma segura
+func WithAccessToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, accessTokenKey, token)
+}
+
+// AccessTokenFromContext obtiene el token de acceso desde el contexto
+func AccessTokenFromContext(ctx context.Context) (string, bool) {
+	val := ctx.Value(accessTokenKey)
+	token, ok := val.(string)
+	return token, ok
+}
