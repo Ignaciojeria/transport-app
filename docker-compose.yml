@@ -1,6 +1,6 @@
 services:
   osrm:
-    image: ghcr.io/ignaciojeria/transport-app/transport-app-osrm:latest
+    image: ghcr.io/ignaciojeria/transport-app/osrm-chile:latest
     container_name: osrm
     ports:
       - "5000:5000"

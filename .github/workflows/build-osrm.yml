@@ -26,4 +26,4 @@ jobs:
 
     - name: Run Dagger OSRM build and publish
       run: go run ./build_osrm.go
-      working-directory: ./dagger
+      working-directory: ./dagger/osrm
