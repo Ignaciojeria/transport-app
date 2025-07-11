@@ -3,6 +3,7 @@ package natsconsumer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -41,9 +42,9 @@ func newOptimizationRequestedConsumer(
 
 	ctx := context.Background()
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
-		Name:          conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION,
-		Durable:       conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.optimizationRequested",
+		Name:          fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION),
+		Durable:       fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION),
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + "." + conf.ENVIRONMENT + ".*.*.optimizationRequested",
 		MaxAckPending: 5,
 	})
 

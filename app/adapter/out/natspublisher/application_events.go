@@ -94,7 +94,7 @@ func NewApplicationEvents(
 
 		// Publicar el mensaje serializado a JetStream
 		_, err = js.PublishMsg(ctx, &nats.Msg{
-			Subject: conf.TRANSPORT_APP_TOPIC + "." + tenant + "." + country + "." + eventType,
+			Subject: conf.TRANSPORT_APP_TOPIC + "." + conf.ENVIRONMENT + "." + tenant + "." + country + "." + eventType,
 			Header:  headers,
 			Data:    msgBytes,
 		})

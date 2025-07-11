@@ -3,6 +3,7 @@ package natsconsumer
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -41,9 +42,9 @@ func newDeliveriesSubmittedConsumer(
 
 	ctx := context.Background()
 	consumer, err := js.CreateOrUpdateConsumer(ctx, conf.TRANSPORT_APP_TOPIC, jetstream.ConsumerConfig{
-		Name:          conf.DELIVERIES_SUBMITTED_SUBSCRIPTION,
-		Durable:       conf.DELIVERIES_SUBMITTED_SUBSCRIPTION,
-		FilterSubject: conf.TRANSPORT_APP_TOPIC + ".*.*.deliveriesSubmitted",
+		Name:          fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.DELIVERIES_SUBMITTED_SUBSCRIPTION),
+		Durable:       fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.DELIVERIES_SUBMITTED_SUBSCRIPTION),
+		FilterSubject: conf.TRANSPORT_APP_TOPIC + "." + conf.ENVIRONMENT + ".*.*.deliveriesSubmitted",
 		MaxAckPending: 5,
 	})
 
