@@ -125,27 +125,10 @@ jobs:
           echo "KO_IMAGE_NAME: $KO_IMAGE_NAME"
 
       -
-        name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      -
         name: Build and push image with ko to GCP
         run: |
           IMAGE_REF=$(ko build .)
           echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
-
-      -
-        name: Build and push image with ko to GitHub Container Registry
-        env:
-          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
-        run: |
-          REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
-          export KO_DOCKER_REPO="ghcr.io/$REPO_NAME"
-          ko build .
 
       -
         name: Deploy to Cloud Run

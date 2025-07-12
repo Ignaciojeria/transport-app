@@ -1,12 +1,33 @@
 name: Build Optimizator Node with Dagger
 
-# Solo ejecución manual
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
+  check-version-change:
+    runs-on: ubuntu-latest
+    outputs:
+      version_changed: ${{ steps.filter.outputs.version }}
+    steps:
+      -
+        name: Checkout code
+        uses: actions/checkout@v4
+
+      -
+        name: Check if .version file changed
+        id: filter
+        uses: dorny/paths-filter@v2
+        with:
+          filters: |
+            version:
+              - '.version'
+
   build-optimizator-node:
     runs-on: ubuntu-latest
+    needs: check-version-change
+    if: needs.check-version-change.outputs.version_changed == 'true'
     
     steps:
     - name: Checkout code
@@ -25,8 +46,8 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Run Dagger Optimizator Node build, validate and publish
-      run: go run ./all_in_one.go
+      run: go run ./build_optimizator_node.go
       working-directory: ./dagger/optimizator
       env:
         NATS_CONNECTION_CREDS_FILECONTENT: ${{ secrets.NATS_CONNECTION_CREDS_FILECONTENT }}
-        IMAGE_TAG: ${{ github.sha }} 
+        IMAGE_TAG: ${{ github.sha }}
