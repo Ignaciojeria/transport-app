@@ -34,6 +34,7 @@ func main() {
 	}
 
 	// Build the Go application using the ko-built image as base
+	// Use the SHA as tag to get the specific image ko created
 	appContainer := client.Container().
 		From("ghcr.io/ignaciojeria/transport-app:"+imageTag).
 		WithEnvVariable("PORT", "8080").
