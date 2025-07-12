@@ -14,7 +14,10 @@ import (
 	"transport-app/app/shared/infrastructure/gcppubsub"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/joho/godotenv"
+	"github.com/nats-io/nats.go"
 	pubsubtc "github.com/testcontainers/testcontainers-go/modules/gcloud/pubsub"
+	tcnats "github.com/testcontainers/testcontainers-go/modules/nats"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -62,6 +65,7 @@ var connection database.ConnectionFactory
 var organization1 domain.Tenant
 var organization2 domain.Tenant
 var pubsubContainer *pubsubtc.Container
+var natsContainer *tcnats.NATSContainer
 
 const TRANSPORT_APP_TOPIC = "transport-app-events"
 const ORDER_SUBMITTED_SUBSCRIPTION = "transport-app-events-order-submitted"
@@ -75,6 +79,7 @@ var _ = Describe("TidbRepository", func() {
 	})
 })
 var _ = BeforeSuite(func() {
+	godotenv.Load()
 	ctx := context.Background()
 	dbName := "users"
 	dbUser := "user"
@@ -111,6 +116,19 @@ var _ = BeforeSuite(func() {
 
 	pubsubPort, err := pubsubContainer.MappedPort(ctx, "8085")
 	Expect(err).ToNot(HaveOccurred())
+
+	// Setup NATS Container usando el módulo oficial
+	natsContainer, err = tcnats.Run(ctx, "nats:2.9",
+		testcontainers.WithWaitStrategy(
+			wait.ForLog("Server is ready").
+				WithStartupTimeout(30*time.Second),
+		),
+	)
+	Expect(err).ToNot(HaveOccurred())
+
+	// Setup NATS JetStream for testing
+	setupNATSJetStream(ctx, natsContainer)
+
 	os.Setenv("JWT_PRIVATE_KEY", `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCd/4LVEzxXI+6o
 3PXlU0iF4cjwdp+C/5srH3uUh848cstha0vv5VaUC1+z6AJHiYWn6ZSOM/IyWTr7
@@ -157,6 +175,18 @@ QwIDAQAB
 
 	os.Setenv("TRANSPORT_APP_TOPIC", TRANSPORT_APP_TOPIC)
 
+	// Setup NATS connection usando el módulo oficial
+	connectionString, err := natsContainer.ConnectionString(ctx)
+	Expect(err).ToNot(HaveOccurred())
+	os.Setenv("NATS_CONNECTION_URL", connectionString)
+
+	// Setup encryption key for client credentials
+	os.Setenv("CLIENT_CREDENTIALS_ENCRYPTION_KEY", "GCG1vdz2DbgTwZ1Bdl0+F4ngbZ3nzL36LpHvqI4YqBg=")
+
+	// Setup NATS credentials for testing (empty for local testing)
+	os.Setenv("NATS_CONNECTION_CREDS_FILECONTENT", "")
+	os.Setenv("NATS_CONNECTION_CREDS_FILEPATH", "")
+
 	port, err := pgContainer.MappedPort(ctx, "5432")
 	Expect(err).ToNot(HaveOccurred())
 
@@ -169,6 +199,13 @@ QwIDAQAB
 	os.Setenv("DB_USERNAME", dbUser)
 	os.Setenv("DB_PASSWORD", dbPassword)
 	os.Setenv("DB_RUN_MIGRATIONS", "true")
+
+	// Additional environment variables for testing
+	os.Setenv("ENVIRONMENT", "testing")
+	os.Setenv("OBSERVABILITY_STRATEGY", "none")
+	os.Setenv("OPTIMIZATION_STRATEGY", "disabled")
+	os.Setenv("AI_PROVIDER_STRATEGY", "none")
+	os.Setenv("CACHE_STRATEGY", "none")
 
 	go func() {
 		if err := ioc.LoadDependencies(); err != nil {
@@ -199,6 +236,9 @@ var _ = AfterSuite(func() {
 	}
 	if pubsubContainer != nil {
 		_ = pubsubContainer.Terminate(ctx)
+	}
+	if natsContainer != nil {
+		_ = natsContainer.Terminate(ctx)
 	}
 	os.Exit(0)
 })
@@ -251,4 +291,49 @@ func SetupPubsubTestResources(client *pubsub.Client) error {
 	}
 
 	return nil
+}
+
+// =============================================================================
+// NATS JETSTREAM SETUP
+// =============================================================================
+
+func setupNATSJetStream(ctx context.Context, container *tcnats.NATSContainer) {
+	// Obtener connection string del módulo oficial
+	connectionString, err := container.ConnectionString(ctx)
+	if err != nil {
+		fmt.Printf("Warning: Could not get NATS connection string: %v\n", err)
+		return
+	}
+
+	// Conectar a NATS
+	nc, err := nats.Connect(connectionString)
+	if err != nil {
+		fmt.Printf("Warning: Could not connect to NATS: %v\n", err)
+		return
+	}
+	defer nc.Close()
+
+	// Crear JetStream context
+	js, err := nc.JetStream()
+	if err != nil {
+		fmt.Printf("Warning: Could not get JetStream context: %v\n", err)
+		return
+	}
+
+	// Crear el stream
+	stream, err := js.AddStream(&nats.StreamConfig{
+		Name:     "transport-app-events",
+		Subjects: []string{"transport-app-events"},
+		Storage:  nats.MemoryStorage,
+		MaxMsgs:  10000,
+		MaxBytes: 10485760, // 10MB
+		MaxAge:   1 * time.Hour,
+		Discard:  nats.DiscardOld,
+	})
+	if err != nil {
+		fmt.Printf("Warning: Could not create NATS stream: %v\n", err)
+		return
+	}
+
+	fmt.Printf("NATS Stream created successfully: %s\n", stream.Config.Name)
 }

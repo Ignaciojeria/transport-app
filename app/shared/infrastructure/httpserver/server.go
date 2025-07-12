@@ -137,6 +137,9 @@ func (s Server) healthCheck(resend resendcli.ResendClient) error {
 			h.Register(health.Config{
 				Name: "resend",
 				Check: func(ctx context.Context) error {
+					if s.conf.RESEND_API_KEY == "" {
+						return nil
+					}
 					return resend.HealthCheck()
 				},
 				Timeout:   3 * time.Second,

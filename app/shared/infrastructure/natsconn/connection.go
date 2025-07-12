@@ -13,9 +13,9 @@ func init() {
 }
 
 func NewConn(conf configuration.NatsConfiguration) (*nats.Conn, error) {
-	var credsPath string
+	var opts []nats.Option
 
-	// Si viene por ENV, lo escribimos a un temp file
+	// Si hay credenciales, las usamos
 	if conf.NATS_CONNECTION_CREDS_FILECONTENT != "" {
 		tmpFile, err := os.CreateTemp("", "nats-creds-*.creds")
 		if err != nil {
@@ -26,14 +26,12 @@ func NewConn(conf configuration.NatsConfiguration) (*nats.Conn, error) {
 		if _, err := tmpFile.WriteString(conf.NATS_CONNECTION_CREDS_FILECONTENT); err != nil {
 			return nil, err
 		}
-		credsPath = tmpFile.Name()
-	} else {
+		opts = append(opts, nats.UserCredentials(tmpFile.Name()))
+	} else if conf.NATS_CONNECTION_CREDS_FILEPATH != "" {
 		// Fallback a ruta de archivo
-		credsPath = conf.NATS_CONNECTION_CREDS_FILEPATH
+		opts = append(opts, nats.UserCredentials(conf.NATS_CONNECTION_CREDS_FILEPATH))
 	}
+	// Si no hay credenciales, conectamos sin autenticación (para testing)
 
-	return nats.Connect(
-		conf.NATS_CONNECTION_URL,
-		nats.UserCredentials(credsPath),
-	)
+	return nats.Connect(conf.NATS_CONNECTION_URL, opts...)
 }
