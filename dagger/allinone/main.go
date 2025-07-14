@@ -72,6 +72,75 @@ func main() {
 		panic(err)
 	}
 
+	// VROOM Optimizer - Crear binario estático en carpeta
+	println("Creando binarios estáticos de VROOM Optimizer...")
+	vroomOptimizer := client.Container().
+		From("ghcr.io/vroom-project/vroom-docker:v1.14.0").
+		WithExec([]string{"apt-get", "update"}).
+		WithExec([]string{"apt-get", "install", "-y", "python3", "python3-pip", "python3-venv", "binutils", "patchelf", "build-essential", "gcc", "g++", "make"}).
+		WithExec([]string{"python3", "-m", "venv", "/staticx-env"}).
+		WithExec([]string{"/staticx-env/bin/pip", "install", "setuptools"}).
+		WithExec([]string{"/staticx-env/bin/pip", "install", "staticx"}).
+		WithWorkdir("/usr/local/bin").
+		WithExec([]string{
+			"/staticx-env/bin/staticx", "--strip", "vroom", "vroom-optimizer-static",
+		})
+
+	// Crear directorio para VROOM Optimizer con solo el binario
+	vroomOptimizerDir := client.Directory().
+		WithFile("vroom-optimizer-static", vroomOptimizer.File("/usr/local/bin/vroom-optimizer-static"))
+
+	// Exportar directorio de VROOM Optimizer
+	_, err = vroomOptimizerDir.Export(ctx, "./vroom-optimizer")
+	if err != nil {
+		panic(err)
+	}
+
+	// VROOM Planner - Crear binario estático en carpeta
+	println("Creando binarios estáticos de VROOM Planner...")
+	vroomPlanner := client.Container().
+		From("ghcr.io/vroom-project/vroom-docker:v1.14.0").
+		WithExec([]string{"apt-get", "update"}).
+		WithExec([]string{"apt-get", "install", "-y", "python3", "python3-pip", "python3-venv", "binutils", "patchelf", "build-essential", "gcc", "g++", "make"}).
+		WithExec([]string{"python3", "-m", "venv", "/staticx-env"}).
+		WithExec([]string{"/staticx-env/bin/pip", "install", "setuptools"}).
+		WithExec([]string{"/staticx-env/bin/pip", "install", "staticx"}).
+		WithWorkdir("/usr/local/bin").
+		WithExec([]string{
+			"/staticx-env/bin/staticx", "--strip", "vroom", "vroom-planner-static",
+		})
+
+	// Crear directorio para VROOM Planner con solo el binario
+	vroomPlannerDir := client.Directory().
+		WithFile("vroom-planner-static", vroomPlanner.File("/usr/local/bin/vroom-planner-static"))
+
+	// Exportar directorio de VROOM Planner
+	_, err = vroomPlannerDir.Export(ctx, "./vroom-planner")
+	if err != nil {
+		panic(err)
+	}
+
+	// VROOM Express - Extraer desde el contenedor oficial
+	println("Extrayendo vroom-express...")
+	vroomExpress := client.Container().
+		From("ghcr.io/vroom-project/vroom-docker:v1.14.0").
+		WithExec([]string{"apt-get", "update"}).
+		WithExec([]string{"apt-get", "install", "-y", "git", "nodejs", "npm"}).
+		WithExec([]string{"rm", "-rf", "/vroom-express"}).
+		WithExec([]string{"git", "clone", "--branch", "master", "--single-branch", "https://github.com/VROOM-Project/vroom-express.git", "/vroom-express"}).
+		WithWorkdir("/vroom-express").
+		WithExec([]string{"npm", "config", "set", "loglevel", "error"}).
+		WithExec([]string{"npm", "config", "set", "ignore-scripts", "true"}).
+		WithExec([]string{"npm", "install", "--no-bin-links", "--ignore-scripts"}).
+		WithExec([]string{"rm", "-rf", ".git"})
+
+	// Extraer vroom-express completo (sin .git)
+	vroomExpressDir := vroomExpress.Directory("/vroom-express")
+	_, err = vroomExpressDir.Export(ctx, "./vroom-express")
+	if err != nil {
+		panic(err)
+	}
+
 	// Imagen final
 	final := client.Container().
 		From("ghcr.io/project-osrm/osrm-backend").
@@ -94,5 +163,8 @@ func main() {
 
 	println("Archivos OSRM extraídos a ./osrm-data")
 	println("Binarios estáticos OSRM extraídos a ./osrm-static")
+	println("VROOM Optimizer extraído a ./vroom-optimizer/")
+	println("VROOM Planner extraído a ./vroom-planner/")
+	println("VROOM Express extraído a ./vroom-express/")
 	println("Contenedor final sincronizado")
 }

@@ -6,6 +6,8 @@ services:
     container_name: osrm-test
     ports:
       - "5000:5000"  # OSRM API
+      - "3000:3000"  # VROOM Optimizer API
+      - "3001:3001"  # VROOM Planner API
       - "9001:9001"  # Supervisord web interface (opcional)
     volumes:
       # Opcional: montar logs para debugging
