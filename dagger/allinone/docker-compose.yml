@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  osrm-supervisord:
+    build: .
+    container_name: osrm-test
+    ports:
+      - "5000:5000"  # OSRM API
+      - "9001:9001"  # Supervisord web interface (opcional)
+    volumes:
+      # Opcional: montar logs para debugging
+      - ./logs:/var/log/supervisor
+    environment:
+      - TZ=America/Santiago
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/-70.6483,-33.4372;-70.6500,-33.4400?overview=false"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s 
