@@ -16,3 +16,8 @@ respaldo
 private_key.pem
 public_key.pem
 nats_credentials
+vroom-planner-static
+vroom-optimizer-static
+vroom-express
+osrm-data
+osrm-static
