@@ -227,8 +227,8 @@ func main() {
 		WithExposedPort(9001).
 		WithEntrypoint([]string{"supervisord", "-c", "/etc/supervisor/conf.d/osrm.conf"})
 
-	// Exportar la imagen final
-	_, err = finalImage.Export(ctx, "transport-app-allinone.tar")
+	// Publicar la imagen final
+	_, err = finalImage.Publish(ctx, "ghcr.io/ignaciojeria/transport-app/transport-app-allinone:latest")
 	if err != nil {
 		panic(err)
 	}
