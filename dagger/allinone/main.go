@@ -159,5 +159,19 @@ func main() {
 	}
 
 	println("Transport App extraída a ./transport-app/")
+
+	// Clonar vroom-express desde GitHub
+	println("Clonando vroom-express desde GitHub...")
+	vroomExpressRepo := client.Git("https://github.com/Ignaciojeria/vroom-express.git").
+		Branch("master").
+		Tree()
+
+	// Exportar el repositorio clonado a la carpeta vroom-express
+	_, err = vroomExpressRepo.Export(ctx, "./vroom-express")
+	if err != nil {
+		panic(err)
+	}
+
+	println("vroom-express clonado a ./vroom-express/")
 	println("Contenedor final sincronizado")
 }
