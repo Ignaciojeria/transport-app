@@ -1,4 +1,4 @@
-module dagger-osrm
+module allinone
 
 go 1.23.0
 

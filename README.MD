@@ -43,7 +43,8 @@ Puedes cambiar el país o región desde: https://download.geofabrik.de/
 docker-compose -f docker-compose.yml up
 
 🚀 Producción (con transport-app)
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker-compose -f docker-compose.prod.yml pull
+docker-compose -f docker-compose.prod.yml up 
 
 Aquí docker-compose.prod.yml agrega transport-app al conjunto de servicios, sin necesidad de duplicar el resto.
 ```

@@ -3,17 +3,17 @@ cliArgs:
   planmode: false # run vroom in plan mode (-c) if set to true
   threads: 16 # number of threads to use (-t)
   explore: 4 # exploration level to use (0..5) (-x)
-  limit: '100mb' # max request size
+  limit: '1mb' # max request size
   logdir: '/..' # the path for the logs relative to ./src
   logsize: '100M' # max log file size for rotation
-  maxlocations: 6000 # max number of jobs/shipments locations
-  maxvehicles: 50 # max number of vehicles
-  override: false # allow cli options override (-c, -g, -t and -x)
-  path: '' # VROOM path (if not in $PATH)
+  maxlocations: 1000 # max number of jobs/shipments locations
+  maxvehicles: 200 # max number of vehicles
+  override: true # allow cli options override (-c, -g, -l, -t, and -x)
+  path: '/vroom-optimizer-app/' # VROOM path (if not in $PATH)
   port: 3000 # expressjs port
-  router: 'osrm' # routing backend (osrm, libosrm or ors)
-  timeout: 600000 # milli-seconds
-  baseurl: '/' #base url for api
+  router: 'osrm' # routing backend (osrm, libosrm, ors, or valhalla)
+  timeout: 300000 # milli-seconds
+  baseurl: '/' # base url for api
 
 # Configuraciones adicionales para optimización
 optimization:
@@ -47,7 +47,7 @@ optimization:
 routingServers:
   osrm:
     car:
-      host: 'osrm'
+      host: '0.0.0.0'
       port: '5000'
       timeout: 5000 # 5 segundos timeout
       retries: 3 # Número de reintentos

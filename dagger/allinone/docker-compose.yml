@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  transport-all-in-one:
+    build: .
+    container_name: transport-all-in-one
+    ports:
+      - "5000:5000"  # OSRM API
+      - "3000:3000"  # VROOM Optimizer API
+      - "3001:3001"  # VROOM Planner API
+      - "8080:8080"  # Transport App API (asumiendo puerto 8080)
+      - "9001:9001"  # Supervisord web interface
+    volumes:
+      # Opcional: montar logs para debugging
+      - ./logs:/var/log/supervisor
+      # Opcional: montar configuraciones externas
+      - ./config:/app/config:ro
+    environment:
+      - TRANSPORT_APP_TOPIC=transport-app-events
+      - VERSION=1.4.0
+      - ENVIRONMENT=prod
+      - DB_STRATEGY=disabled
+      - OBSERVABILITY_STRATEGY=none
+      - OPTIMIZATION_REQUESTED_SUBSCRIPTION=transport-app-events-optimization-requested
+      - MASTER_NODE_URL=https://einar-main-f0820bc.d2.zuplo.dev
+      - VROOM_PLANNER_URL=http://planner:3000
+      - VROOM_OPTIMIZER_URL=http://optimizer:3000
+      - NATS_CONNECTION_URL=connect.ngs.global
+      - TRANSPORT_APP_PORT=8080
+      - VROOM_OPTIMIZER_PORT=3000
+      - VROOM_PLANNER_PORT=3001
+      - OSRM_PORT=5000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/route/v1/driving/-70.6483,-33.4372;-70.6500,-33.4400?overview=false"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G 
