@@ -1,18 +1,22 @@
 services:
   transport-app:
-    image: ghcr.io/ignaciojeria/transport-app/transport-app-d0a6ffdd2b5a22c2c0423e7b340b3900:latest
+    image:  ghcr.io/ignaciojeria/transport-app/transport-app-allinone:latest
     container_name: transport-app
     environment:
       - ENVIRONMENT=prod
       - DB_STRATEGY=disabled
       - OPTIMIZATION_REQUESTED_SUBSCRIPTION=transport-app-events-optimization-requested
       - MASTER_NODE_URL=https://einar-main-f0820bc.d2.zuplo.dev
-      - VROOM_PLANNER_URL=http://planner:3000
-      - VROOM_OPTIMIZER_URL=http://optimizer:3000
+      - VROOM_PLANNER_URL=http://localhost:3001
+      - VROOM_OPTIMIZER_URL=http://localhost:3000
       - NATS_CONNECTION_URL=connect.ngs.global
       - NATS_CONNECTION_CREDS_FILECONTENT=${NATS_CONNECTION_CREDS_FILECONTENT}
-    depends_on:
-      - planner
-      - optimizer
+    volumes:
+      - ./logs:/var/log/supervisor
+      - ./app-logs:/app/logs
     networks:
       - vroom-network
+
+networks:
+  vroom-network:
+    driver: bridge
