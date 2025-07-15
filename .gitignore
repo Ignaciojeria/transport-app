@@ -21,3 +21,5 @@ vroom-optimizer-static
 vroom-express
 osrm-data
 osrm-static
+transport-app
+logs

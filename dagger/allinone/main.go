@@ -120,27 +120,6 @@ func main() {
 		panic(err)
 	}
 
-	// VROOM Express - Extraer desde el contenedor oficial
-	println("Extrayendo vroom-express...")
-	vroomExpress := client.Container().
-		From("ghcr.io/vroom-project/vroom-docker:v1.14.0").
-		WithExec([]string{"apt-get", "update"}).
-		WithExec([]string{"apt-get", "install", "-y", "git", "nodejs", "npm"}).
-		WithExec([]string{"rm", "-rf", "/vroom-express"}).
-		WithExec([]string{"git", "clone", "--branch", "master", "--single-branch", "https://github.com/VROOM-Project/vroom-express.git", "/vroom-express"}).
-		WithWorkdir("/vroom-express").
-		WithExec([]string{"npm", "config", "set", "loglevel", "error"}).
-		WithExec([]string{"npm", "config", "set", "ignore-scripts", "true"}).
-		WithExec([]string{"npm", "install", "--no-bin-links", "--ignore-scripts"}).
-		WithExec([]string{"rm", "-rf", ".git"})
-
-	// Extraer vroom-express completo (sin .git)
-	vroomExpressDir := vroomExpress.Directory("/vroom-express")
-	_, err = vroomExpressDir.Export(ctx, "./vroom-express")
-	if err != nil {
-		panic(err)
-	}
-
 	// Imagen final
 	final := client.Container().
 		From("ghcr.io/project-osrm/osrm-backend").
@@ -165,6 +144,20 @@ func main() {
 	println("Binarios estáticos OSRM extraídos a ./osrm-static")
 	println("VROOM Optimizer extraído a ./vroom-optimizer/")
 	println("VROOM Planner extraído a ./vroom-planner/")
-	println("VROOM Express extraído a ./vroom-express/")
+	// Transport App - Extraer binario desde imagen de ko
+	println("Extrayendo binario de Transport App desde imagen de ko...")
+	koImage := client.Container().
+		From("ghcr.io/ignaciojeria/transport-app/transport-app-d0a6ffdd2b5a22c2c0423e7b340b3900:latest")
+
+	// Extraer todo el directorio /ko-app
+	koAppDir := koImage.Directory("/ko-app")
+
+	// Exportar directorio completo de Transport App
+	_, err = koAppDir.Export(ctx, "./transport-app")
+	if err != nil {
+		panic(err)
+	}
+
+	println("Transport App extraída a ./transport-app/")
 	println("Contenedor final sincronizado")
 }

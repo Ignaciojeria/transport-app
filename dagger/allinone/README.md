@@ -1,113 +1,173 @@
-# OSRM con Supervisord
+# Transport All-in-One
 
-Este directorio contiene los archivos necesarios para ejecutar OSRM con supervisord usando los binarios estáticos generados por Dagger.
+Este directorio contiene una solución completa "all-in-one" que integra todos los servicios necesarios para una aplicación de transporte:
 
-## Archivos generados por Dagger
+- **OSRM**: Servicio de enrutamiento y geocodificación
+- **VROOM Optimizer**: Optimización de flotas y rutas
+- **VROOM Planner**: Planificación de entregas
+- **Transport App**: Aplicación principal de transporte
 
-- `./osrm-data/` - Datos procesados de OSRM para Chile
-- `./osrm-static/` - Binarios estáticos de OSRM
+## 🚀 Inicio Rápido
 
-## Archivos de configuración
-
-- `supervisord.conf` - Configuración de supervisord para ejecutar OSRM
-- `Dockerfile` - Dockerfile para crear la imagen con supervisord
-
-## Cómo usar
-
-### 1. Generar los binarios y datos (si no existen)
+### Opción 1: Script automático (Recomendado)
 
 ```bash
 cd dagger/allinone
+chmod +x start.sh
+./start.sh
+```
+
+### Opción 2: Manual
+
+```bash
+cd dagger/allinone
+
+# 1. Generar los binarios y datos (si no existen)
 go run main.go
+
+# 2. Construir y ejecutar
+docker-compose up -d
+
+# 3. Verificar estado
+docker-compose exec transport-all-in-one supervisorctl status
 ```
 
-### 2. Construir la imagen Docker
+## 📋 Servicios Disponibles
 
+| Servicio | Puerto | Descripción |
+|----------|--------|-------------|
+| OSRM API | 5000 | Enrutamiento y geocodificación |
+| VROOM Optimizer | 3000 | Optimización de flotas |
+| VROOM Planner | 3001 | Planificación de entregas |
+| Transport App | 8080 | API principal de transporte |
+| Supervisord UI | 9001 | Interfaz web de monitoreo |
+
+## 🛠️ Comandos Útiles
+
+### Gestión de servicios
 ```bash
-docker build -t osrm-supervisord .
-```
+# Ver estado de todos los servicios
+docker-compose exec transport-all-in-one supervisorctl status
 
-### 3. Ejecutar el contenedor
-
-```bash
-docker run -d \
-  --name osrm-test \
-  -p 5000:5000 \
-  -p 9001:9001 \
-  osrm-supervisord
-```
-
-### 4. Verificar que OSRM esté funcionando
-
-```bash
-# Verificar el estado de supervisord
-docker exec osrm-test supervisorctl status
-
-# Ver logs de OSRM
-docker exec osrm-test tail -f /var/log/supervisor/osrm-routed.log
-
-# Probar OSRM
-curl "http://localhost:5000/route/v1/driving/-70.6483,-33.4372;-70.6500,-33.4400?overview=false"
-```
-
-### 5. Comandos útiles de supervisord
-
-```bash
-# Ver estado de todos los procesos
-docker exec osrm-test supervisorctl status
-
-# Reiniciar OSRM
-docker exec osrm-test supervisorctl restart osrm-routed
-
-# Parar OSRM
-docker exec osrm-test supervisorctl stop osrm-routed
-
-# Iniciar OSRM
-docker exec osrm-test supervisorctl start osrm-routed
+# Reiniciar un servicio específico
+docker-compose exec transport-all-in-one supervisorctl restart transport-app
 
 # Ver logs en tiempo real
-docker exec osrm-test supervisorctl tail osrm-routed
+docker-compose exec transport-all-in-one supervisorctl tail transport-app
+
+# Parar todos los servicios
+docker-compose down
+
+# Reiniciar todos los servicios
+docker-compose restart
 ```
 
-## Puertos
+### Logs y debugging
+```bash
+# Ver logs de todos los servicios
+docker-compose logs -f
 
-- **5000**: OSRM API
-- **9001**: Interfaz web de supervisord (opcional)
+# Ver logs de un servicio específico
+docker-compose logs -f transport-all-in-one
 
-## Características
+# Acceder al contenedor
+docker-compose exec transport-all-in-one bash
+```
 
-- **Reinicio automático**: Si OSRM se cae, supervisord lo reinicia automáticamente
-- **Logs rotativos**: Los logs se guardan con rotación automática
-- **Monitoreo**: Puedes monitorear el estado a través de supervisord
-- **Binarios estáticos**: No depende de librerías del sistema
+## 🔧 Configuración
 
-## Troubleshooting
+### Variables de entorno
+Puedes modificar las variables en `docker-compose.yml`:
 
-### Si OSRM no inicia
+```yaml
+environment:
+  - TZ=America/Santiago
+  - TRANSPORT_APP_PORT=8080
+  - VROOM_OPTIMIZER_PORT=3000
+  - VROOM_PLANNER_PORT=3001
+  - OSRM_PORT=5000
+```
 
+### Volúmenes montados
+- `./logs:/var/log/supervisor`: Logs de todos los servicios
+- `./config:/app/config:ro`: Configuraciones externas (solo lectura)
+
+## 📊 Monitoreo
+
+### Health Check
+El contenedor incluye health checks automáticos que verifican:
+- Disponibilidad de OSRM API
+- Estado de todos los servicios vía supervisord
+
+### Supervisord Web UI
+Accede a http://localhost:9001 para:
+- Ver estado de todos los servicios
+- Reiniciar servicios individuales
+- Ver logs en tiempo real
+
+## 🚨 Troubleshooting
+
+### Si un servicio no inicia
 ```bash
 # Ver logs detallados
-docker exec osrm-test cat /var/log/supervisor/osrm-routed.log
+docker-compose exec transport-all-in-one cat /var/log/supervisor/transport-app.log
 
 # Verificar que los binarios existen
-docker exec osrm-test ls -la /usr/local/bin/
+docker-compose exec transport-all-in-one ls -la /transport-app/
 
-# Verificar que los datos existen
-docker exec osrm-test ls -la /data/
+# Verificar permisos
+docker-compose exec transport-all-in-one ls -la /transport-app/transport-app
 ```
 
 ### Si necesitas regenerar los datos
-
 ```bash
-# Eliminar contenedor
-docker stop osrm-test && docker rm osrm-test
+# Parar servicios
+docker-compose down
 
 # Regenerar con Dagger
 go run main.go
 
-# Reconstruir imagen
-docker build -t osrm-supervisord .
+# Reconstruir y ejecutar
+docker-compose up -d --build
+```
 
-# Ejecutar nuevamente
-docker run -d --name osrm-test -p 5000:5000 -p 9001:9001 osrm-supervisord
-``` 
+### Problemas de memoria
+El contenedor está configurado con límites de memoria:
+- **Límite**: 4GB
+- **Reserva**: 2GB
+
+Si tienes problemas de rendimiento, considera aumentar estos valores en `docker-compose.yml`.
+
+## 🏗️ Arquitectura
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Transport All-in-One                    │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐         │
+│  │   OSRM      │ │   VROOM     │ │   VROOM     │         │
+│  │   API       │ │ Optimizer   │ │  Planner    │         │
+│  │  (5000)     │ │   (3000)    │ │   (3001)    │         │
+│  └─────────────┘ └─────────────┘ └─────────────┘         │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Transport App                         │   │
+│  │              (8080)                               │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                           │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Supervisord                          │   │
+│  │              (9001)                               │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 📝 Características
+
+- ✅ **Todo en uno**: Todos los servicios en un solo contenedor
+- ✅ **Auto-restart**: Servicios se reinician automáticamente si fallan
+- ✅ **Logs centralizados**: Todos los logs en `/var/log/supervisor`
+- ✅ **Monitoreo**: Health checks y UI web de supervisord
+- ✅ **Configuración flexible**: Variables de entorno y volúmenes
+- ✅ **Binarios estáticos**: Sin dependencias del sistema
+- ✅ **Docker Compose**: Fácil despliegue y gestión 
