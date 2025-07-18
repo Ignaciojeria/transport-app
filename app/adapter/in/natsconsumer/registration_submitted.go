@@ -13,7 +13,6 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/biter777/countries"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -23,7 +22,7 @@ func init() {
 	ioc.Registry(
 		newRegistrationSubmittedConsumer,
 		natsconn.NewJetStream,
-		usecase.NewRegister,
+		usecase.NewCreateAccountWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -31,7 +30,7 @@ func init() {
 
 func newRegistrationSubmittedConsumer(
 	js jetstream.JetStream,
-	register usecase.Register,
+	createAccountWorkflow usecase.CreateAccountWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -75,14 +74,8 @@ func newRegistrationSubmittedConsumer(
 		}
 
 		// Procesar el registro
-		if err := register(ctx, domain.TenantAccount{
-			Tenant: domain.Tenant{
-				Country: countries.ByName(input.Country),
-			},
-			Account: domain.Account{
-				Email: input.Email,
-			},
-			Role: "owner",
+		if err := createAccountWorkflow(ctx, domain.Account{
+			Email: input.Email,
 		}); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Ack()

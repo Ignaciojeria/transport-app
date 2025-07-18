@@ -41,20 +41,6 @@ func NewRegister(
 		if err != nil {
 			return err
 		}
-		/*
-			tenant := ""
-
-				token, err := jwtService.GenerateToken(
-					input.Account.Email,
-					[]string{"tenants:read"},
-					map[string]string{},
-					tenant,
-					"zuplo-gateway",
-					60)
-				if err != nil {
-					return err
-				}
-		*/
 
 		existingTenantAccount, err := findDefaultTenantByEmail(ctx, input.Account.Email)
 		if err != nil {

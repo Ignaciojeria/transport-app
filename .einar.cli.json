@@ -87,10 +87,6 @@
             "name": "create-account"
         },
         {
-            "kind": "usecase",
-            "name": "create-account"
-        },
-        {
             "kind": "get-controller",
             "name": "search-orders"
         },
@@ -449,6 +445,14 @@
         {
             "kind": "post-controller",
             "name": "token"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account-workflow"
         }
     ]
 }
