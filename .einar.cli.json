@@ -453,6 +453,22 @@
         {
             "kind": "usecase",
             "name": "create-account-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-tenant-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "associate-tenant-account-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-client-credentials-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-default-client-credentials-workflow"
         }
     ]
 }

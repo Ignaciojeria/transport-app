@@ -42,7 +42,6 @@ func NewCreateAccountWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to upsert account: %w", err)
 		}
-
 		return nil
 	}
 }

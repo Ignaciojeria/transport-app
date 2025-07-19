@@ -7,43 +7,57 @@ import (
 	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
+	"gorm.io/gorm"
 )
 
-type SaveTenantAccount func(ctx context.Context, tenantAccount domain.TenantAccount) error
+type SaveTenantAccount func(ctx context.Context, tenantAccount domain.TenantAccount, fsmState ...domain.FSMState) error
 
 func init() {
 	ioc.Registry(
 		NewSaveTenantAccount,
 		database.NewConnectionFactory,
+		NewSaveFSMTransition,
 	)
 }
 
-func NewSaveTenantAccount(conn database.ConnectionFactory) SaveTenantAccount {
-	return func(ctx context.Context, tenantAccount domain.TenantAccount) error {
-		var dbAccount table.Account
-		err := conn.
-			DB.
-			WithContext(ctx).
-			Where("email = ?", tenantAccount.Account.Email).
-			First(&dbAccount).Error
-		if err != nil {
-			return errors.Wrap(err, "account not found")
-		}
+func NewSaveTenantAccount(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) SaveTenantAccount {
+	return func(ctx context.Context, tenantAccount domain.TenantAccount, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var dbAccount table.Account
+			err := tx.
+				WithContext(ctx).
+				Where("email = ?", tenantAccount.Account.Email).
+				First(&dbAccount).Error
+			if err != nil {
+				return errors.Wrap(err, "account not found")
+			}
 
-		link := table.AccountTenant{
-			AccountID: dbAccount.ID,
-			Role:      tenantAccount.Role,
-			Status:    tenantAccount.Status,
-			TenantID:  tenantAccount.Tenant.ID,
-			Invited:   tenantAccount.Invited,
-			JoinedAt:  tenantAccount.JoinedAt,
-		}
+			link := table.AccountTenant{
+				AccountID: dbAccount.ID,
+				Role:      tenantAccount.Role,
+				Status:    tenantAccount.Status,
+				TenantID:  tenantAccount.Tenant.ID,
+				Invited:   tenantAccount.Invited,
+				JoinedAt:  tenantAccount.JoinedAt,
+			}
 
-		if err := conn.DB.WithContext(ctx).Create(&link).Error; err != nil {
-			return errors.Wrap(ErrTenantDatabase, "failed to link account to tenant")
-		}
+			// Upsert: actualizar si existe, crear si no existe
+			result := tx.WithContext(ctx).
+				Where("account_id = ? AND tenant_id = ?", dbAccount.ID, tenantAccount.Tenant.ID).
+				Assign(link).
+				FirstOrCreate(&link)
 
-		return nil
+			if result.Error != nil {
+				return errors.Wrap(ErrTenantDatabase, "failed to upsert account-tenant link")
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }

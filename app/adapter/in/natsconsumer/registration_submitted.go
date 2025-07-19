@@ -13,6 +13,8 @@ import (
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/biter777/countries"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -23,6 +25,9 @@ func init() {
 		newRegistrationSubmittedConsumer,
 		natsconn.NewJetStream,
 		usecase.NewCreateAccountWorkflow,
+		usecase.NewCreateTenantWorkflow,
+		usecase.NewAssociateTenantAccountWorkflow,
+		usecase.NewCreateDefaultClientCredentialsWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -31,6 +36,9 @@ func init() {
 func newRegistrationSubmittedConsumer(
 	js jetstream.JetStream,
 	createAccountWorkflow usecase.CreateAccountWorkflow,
+	createTenantWorkflow usecase.CreateTenantWorkflow,
+	associateTenantAccountWorkflow usecase.AssociateTenantAccountWorkflow,
+	createDefaultClientCredentialsWorkflow usecase.CreateDefaultClientCredentialsWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -74,9 +82,56 @@ func newRegistrationSubmittedConsumer(
 		}
 
 		// Procesar el registro
-		if err := createAccountWorkflow(ctx, domain.Account{
+		account := domain.Account{
 			Email: input.Email,
-		}); err != nil {
+		}
+		if err := createAccountWorkflow(ctx, account); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Ack()
+			return
+		}
+
+		tenant := domain.Tenant{
+			ID:      account.UUID(),
+			Name:    "default",
+			Country: countries.ByName(input.Country),
+		}
+		if err := createTenantWorkflow(ctx, tenant); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Ack()
+			return
+		}
+
+		tenantAccount := domain.TenantAccount{
+			Tenant:  tenant,
+			Account: account,
+			Role:    "owner",
+		}
+		if err := associateTenantAccountWorkflow(ctx, tenantAccount); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Ack()
+			return
+		}
+
+		clientCredentials := domain.ClientCredentials{
+			TenantID:      tenant.ID,
+			TenantCountry: tenant.Country,
+			ClientID:      account.UUID().String(),
+			ClientSecret:  uuid.New().String(),
+			AllowedScopes: []string{
+				"orders:read",
+				"orders:write",
+				"routes:read",
+				"routes:write",
+				"nodes:read",
+				"nodes:write",
+				"optimization:read",
+				"optimization:write",
+				"deliveries:read",
+				"deliveries:write",
+			},
+		}
+		if err := createDefaultClientCredentialsWorkflow(ctx, clientCredentials); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Ack()
 			return
