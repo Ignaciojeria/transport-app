@@ -469,6 +469,10 @@
         {
             "kind": "usecase",
             "name": "create-default-client-credentials-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "send-client-credentials-email-workflow"
         }
     ]
 }
