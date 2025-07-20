@@ -11,7 +11,6 @@ import (
 	"transport-app/app/shared/infrastructure/httpserver"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
-	"transport-app/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
@@ -23,14 +22,12 @@ func init() {
 		register,
 		httpserver.New,
 		natspublisher.NewApplicationEvents,
-		observability.NewObservability,
-		usecase.NewRegister)
+		observability.NewObservability)
 }
 func register(
 	s httpserver.Server,
 	publish natspublisher.ApplicationEvents,
-	obs observability.Observability,
-	register usecase.Register) {
+	obs observability.Observability) {
 	fuego.Post(s.Manager, "/register",
 		func(c fuego.ContextWithBody[request.RegisterRequest]) (response.RegisterResponse, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "register")
