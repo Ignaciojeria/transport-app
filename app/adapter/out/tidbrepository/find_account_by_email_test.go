@@ -27,7 +27,7 @@ var _ = Describe("FindAccountByEmail", func() {
 		account := domain.Account{
 			Email: "test@example.com",
 		}
-		err := NewUpsertAccount(connection)(ctx, account)
+		err := NewUpsertAccount(connection, NewSaveFSMTransition(connection))(ctx, account)
 		Expect(err).ToNot(HaveOccurred())
 
 		findAccount := NewFindAccountByEmail(connection)

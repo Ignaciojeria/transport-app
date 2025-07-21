@@ -87,10 +87,6 @@
             "name": "create-account"
         },
         {
-            "kind": "usecase",
-            "name": "create-account"
-        },
-        {
             "kind": "get-controller",
             "name": "search-orders"
         },
@@ -449,6 +445,34 @@
         {
             "kind": "post-controller",
             "name": "token"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-account-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-tenant-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "associate-tenant-account-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-client-credentials-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-default-client-credentials-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "send-client-credentials-email-workflow"
         }
     ]
 }

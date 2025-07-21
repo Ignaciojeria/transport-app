@@ -15,7 +15,6 @@ import (
 
 	_ "transport-app/app/usecase"
 
-	_ "transport-app/app/adapter/in/gcpsubscription"
 	_ "transport-app/app/adapter/out/fuegoapiclient"
 	_ "transport-app/app/adapter/out/gcppublisher"
 	_ "transport-app/app/adapter/out/restyclient/locationiq"
@@ -29,8 +28,9 @@ import (
 
 	_ "transport-app/app/adapter/out/geocoding"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	_ "transport-app/app/adapter/in/natsconsumer"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 //go:embed .version

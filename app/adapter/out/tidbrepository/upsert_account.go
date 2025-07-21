@@ -12,25 +12,42 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertAccount func(context.Context, domain.Account) error
+type UpsertAccount func(context.Context, domain.Account, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertAccount, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertAccount, database.NewConnectionFactory, NewSaveFSMTransition)
 }
-func NewUpsertAccount(conn database.ConnectionFactory) UpsertAccount {
-	return func(ctx context.Context, a domain.Account) error {
-		var accountTbl table.Account
-		err := conn.DB.WithContext(ctx).
-			Table("accounts").
-			Where("email = ?", a.Email).
-			First(&accountTbl).Error
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-		if err == nil {
+func NewUpsertAccount(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertAccount {
+	return func(ctx context.Context, a domain.Account, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var accountTbl table.Account
+			err := tx.WithContext(ctx).
+				Table("accounts").
+				Where("email = ?", a.Email).
+				First(&accountTbl).Error
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
+			if err == nil {
+				// La cuenta ya existe, solo persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
+
+			// La cuenta no existe, crearla
+			accountTbl = mapper.MapAccountTable(a)
+			if err := tx.Save(&accountTbl).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
 			return nil
-		}
-		accountTbl = mapper.MapAccountTable(a)
-		return conn.Save(&accountTbl).Error
+		})
 	}
 }

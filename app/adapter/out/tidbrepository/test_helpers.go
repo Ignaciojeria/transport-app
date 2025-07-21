@@ -31,7 +31,7 @@ func CreateTestTenant(ctx context.Context, conn database.ConnectionFactory) (dom
 	tenantCtx := baggage.ContextWithBaggage(ctx, bag)
 
 	// Save tenant
-	saveTenant := NewSaveTenant(conn)
+	saveTenant := NewSaveTenant(conn, NewSaveFSMTransition(conn))
 	savedTenant, err := saveTenant(tenantCtx, domain.Tenant{
 		ID:      tenantID,
 		Name:    "Test Tenant " + tenantID.String(),

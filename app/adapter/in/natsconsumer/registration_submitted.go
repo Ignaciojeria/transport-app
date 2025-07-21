@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
@@ -14,6 +15,7 @@ import (
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/biter777/countries"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -23,7 +25,11 @@ func init() {
 	ioc.Registry(
 		newRegistrationSubmittedConsumer,
 		natsconn.NewJetStream,
-		usecase.NewRegister,
+		usecase.NewCreateAccountWorkflow,
+		usecase.NewCreateTenantWorkflow,
+		usecase.NewAssociateTenantAccountWorkflow,
+		usecase.NewCreateDefaultClientCredentialsWorkflow,
+		usecase.NewSendClientCredentialsEmailWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -31,7 +37,11 @@ func init() {
 
 func newRegistrationSubmittedConsumer(
 	js jetstream.JetStream,
-	register usecase.Register,
+	createAccountWorkflow usecase.CreateAccountWorkflow,
+	createTenantWorkflow usecase.CreateTenantWorkflow,
+	associateTenantAccountWorkflow usecase.AssociateTenantAccountWorkflow,
+	createDefaultClientCredentialsWorkflow usecase.CreateDefaultClientCredentialsWorkflow,
+	sendClientCredentialsEmailWorkflow usecase.SendClientCredentialsEmailWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -48,6 +58,9 @@ func newRegistrationSubmittedConsumer(
 		Durable:       fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.REGISTRATION_SUBMITTED_SUBSCRIPTION),
 		FilterSubject: conf.TRANSPORT_APP_TOPIC + "." + conf.ENVIRONMENT + ".*.*.registrationSubmitted",
 		MaxAckPending: 5,
+		// Configuración de reintentos: 3 reintentos con intervalos de 2 segundos
+		MaxDeliver: 4, // 1 intento inicial + 3 reintentos = 4 total
+		BackOff:    []time.Duration{2 * time.Second, 2 * time.Second, 2 * time.Second},
 	})
 
 	if err != nil {
@@ -75,17 +88,65 @@ func newRegistrationSubmittedConsumer(
 		}
 
 		// Procesar el registro
-		if err := register(ctx, domain.TenantAccount{
-			Tenant: domain.Tenant{
-				Country: countries.ByName(input.Country),
-			},
-			Account: domain.Account{
-				Email: input.Email,
-			},
-			Role: "owner",
-		}); err != nil {
+		account := domain.Account{
+			Email: input.Email,
+		}
+		if err := createAccountWorkflow(ctx, account); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
-			msg.Ack()
+			msg.Nak() // Usar Nak para permitir reintentos
+			return
+		}
+
+		tenant := domain.Tenant{
+			ID:      account.UUID(),
+			Name:    "default",
+			Country: countries.ByName(input.Country),
+		}
+		if err := createTenantWorkflow(ctx, tenant); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Nak() // Usar Nak para permitir reintentos
+			return
+		}
+
+		tenantAccount := domain.TenantAccount{
+			Tenant:  tenant,
+			Account: account,
+			Role:    "owner",
+		}
+		if err := associateTenantAccountWorkflow(ctx, tenantAccount); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Nak() // Usar Nak para permitir reintentos
+			return
+		}
+
+		clientCredentials := domain.ClientCredentials{
+			ID:            uuid.New(),
+			TenantID:      tenant.ID,
+			TenantCountry: tenant.Country,
+			ClientID:      account.UUID().String(),
+			ClientSecret:  uuid.New().String(),
+			AllowedScopes: []string{
+				"orders:read",
+				"orders:write",
+				"routes:read",
+				"routes:write",
+				"nodes:read",
+				"nodes:write",
+				"optimization:read",
+				"optimization:write",
+				"deliveries:read",
+				"deliveries:write",
+			},
+		}
+		if err := createDefaultClientCredentialsWorkflow(ctx, clientCredentials); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Nak() // Usar Nak para permitir reintentos
+			return
+		}
+
+		if err := sendClientCredentialsEmailWorkflow(ctx, clientCredentials.ClientID, account.Email); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
+			msg.Nak() // Usar Nak para permitir reintentos
 			return
 		}
 
