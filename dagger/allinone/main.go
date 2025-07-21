@@ -147,7 +147,7 @@ func main() {
 	// Transport App - Extraer binario desde imagen de ko
 	println("Extrayendo binario de Transport App desde imagen de ko...")
 	koImage := client.Container().
-		From("ghcr.io/ignaciojeria/transport-app/transport-app-d0a6ffdd2b5a22c2c0423e7b340b3900@sha256:324982aa3e344d3fb36c62e31a88a213081c3c0216c38eb219adf4467bedc0fb")
+		From("ghcr.io/ignaciojeria/transport-app/transport-app-d0a6ffdd2b5a22c2c0423e7b340b3900:latest")
 
 	// Extraer todo el directorio /ko-app
 	koAppDir := koImage.Directory("/ko-app")
