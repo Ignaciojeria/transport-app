@@ -15,6 +15,7 @@ services:
       - ./logs:/var/log/supervisor
       # Opcional: montar configuraciones externas
       - ./config:/app/config:ro
+      - ./ui/static/dev:/transport-app/ui/static/dev
     environment:
       - TRANSPORT_APP_TOPIC=transport-app-events
       - VERSION=1.4.0
@@ -22,9 +23,10 @@ services:
       - DB_STRATEGY=disabled
       - OBSERVABILITY_STRATEGY=none
       - OPTIMIZATION_REQUESTED_SUBSCRIPTION=transport-app-events-optimization-requested
-      - MASTER_NODE_URL=https://einar-main-f0820bc.d2.zuplo.dev
-      - VROOM_PLANNER_URL=http://planner:3000
-      - VROOM_OPTIMIZER_URL=http://optimizer:3000
+      - MASTER_NODE_URL=http://localhost:8080
+      - VROOM_PLANNER_URL=http://localhost:3001
+      - VROOM_OPTIMIZER_URL=http://localhost:3000
+      - NATS_CONNECTION_CREDS_FILECONTENT=${NATS_CONNECTION_CREDS_FILECONTENT}
       - NATS_CONNECTION_URL=connect.ngs.global
       - TRANSPORT_APP_PORT=8080
       - VROOM_OPTIMIZER_PORT=3000
