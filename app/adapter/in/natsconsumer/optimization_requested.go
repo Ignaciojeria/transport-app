@@ -11,8 +11,11 @@ import (
 	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase/workers"
 
+	"transport-app/app/shared/chunker"
+
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -22,6 +25,7 @@ func init() {
 	ioc.Registry(
 		newOptimizationRequestedConsumer,
 		natsconn.NewJetStream,
+		natsconn.NewKeyValue,
 		workers.NewFleetOptimizer,
 		observability.NewObservability,
 		configuration.NewConf,
@@ -30,6 +34,7 @@ func init() {
 
 func newOptimizationRequestedConsumer(
 	js jetstream.JetStream,
+	kv jetstream.KeyValue,
 	optimize workers.FleetOptimizer,
 	obs observability.Observability,
 	conf configuration.Conf,
@@ -60,8 +65,6 @@ func newOptimizationRequestedConsumer(
 	}
 
 	return consumer.Consume(func(msg jetstream.Msg) {
-		//accessToken :=
-
 		// Deserializar el mensaje como pubsub.Message
 		var pubsubMsg pubsub.Message
 		if err := json.Unmarshal(msg.Data(), &pubsubMsg); err != nil {
@@ -74,7 +77,52 @@ func newOptimizationRequestedConsumer(
 		ctx := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier(pubsubMsg.Attributes))
 		ctx = sharedcontext.WithAccessToken(ctx, msg.Headers().Get("X-Access-Token"))
 
-		// Deserializar el payload como OptimizeFleetRequest
+		// Intentar deserializar el payload como arreglo de IDs de chunks
+		var chunkIDs []string
+		if err := json.Unmarshal(pubsubMsg.Data, &chunkIDs); err == nil && len(chunkIDs) > 0 {
+			// Es un mensaje chunked, reconstruir el mensaje original
+			var chunks []chunker.Chunk
+			for idx, id := range chunkIDs {
+				entry, err := kv.Get(ctx, id)
+				if err != nil {
+					obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del KV store", "chunkID", id, "error", err)
+					msg.Ack()
+					return
+				}
+				chunks = append(chunks, chunker.Chunk{
+					ID:   uuidMustParse(id),
+					Data: entry.Value(),
+					Idx:  idx,
+				})
+			}
+			// Ordenar los chunks por Idx por si acaso (aunque el orden del array debería ser correcto)
+			// Reconstruir el mensaje original
+			data, err := chunker.ReconstructBytes(chunks)
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error reconstruyendo mensaje desde chunks", "error", err)
+				msg.Ack()
+				return
+			}
+			// Deserializar el payload reconstruido como OptimizeFleetRequest
+			var input request.OptimizeFleetRequest
+			if err := json.Unmarshal(data, &input); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error deserializando payload de optimización (reconstruido)", "error", err)
+				msg.Ack()
+				return
+			}
+			// Procesar la optimización
+			if err := optimize(ctx, input.Map()); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando optimización (reconstruido)", "error", err)
+				msg.Ack()
+				return
+			}
+			obs.Logger.InfoContext(ctx, "Optimización procesada exitosamente desde NATS (reconstruido)",
+				"eventType", "optimizationRequested")
+			msg.Ack()
+			return
+		}
+
+		// Si no es chunked, intentar deserializar el payload como OptimizeFleetRequest (flujo original)
 		var input request.OptimizeFleetRequest
 		if err := json.Unmarshal(pubsubMsg.Data, &input); err != nil {
 			obs.Logger.Error("Error deserializando payload de optimización", "error", err)
@@ -93,4 +141,13 @@ func newOptimizationRequestedConsumer(
 			"eventType", "optimizationRequested")
 		msg.Ack()
 	})
+}
+
+// uuidMustParse es un helper para parsear UUID y hacer panic si falla (solo para uso interno seguro)
+func uuidMustParse(id string) uuid.UUID {
+	u, err := uuid.Parse(id)
+	if err != nil {
+		panic(err)
+	}
+	return u
 }

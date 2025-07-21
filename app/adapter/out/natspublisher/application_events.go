@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"transport-app/app/domain"
+	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/sharedcontext"
@@ -23,12 +24,16 @@ func init() {
 	ioc.Registry(
 		NewApplicationEvents,
 		natsconn.NewJetStream,
-		configuration.NewConf)
+		configuration.NewConf,
+		natsconn.NewKeyValue,
+	)
 }
 
 func NewApplicationEvents(
 	js jetstream.JetStream,
-	conf configuration.Conf) ApplicationEvents {
+	conf configuration.Conf,
+	kv jetstream.KeyValue,
+) ApplicationEvents {
 	return func(ctx context.Context, outbox domain.Outbox) error {
 		// Crear el mismo formato que Google Pub/Sub
 		msg := &pubsub.Message{
@@ -46,6 +51,27 @@ func NewApplicationEvents(
 		}
 
 		// Serializar el pubsub.Message a JSON
+		// Si el evento es optimizationRequested, chunkear solo el payload y poner los IDs en Data
+		eventType, eventTypeExists := sharedcontext.GetEventTypeFromContext(ctx)
+		if eventTypeExists && eventType == "optimizationRequested" {
+			chunks, err := chunker.SplitBytes(outbox.Payload)
+			if err != nil {
+				return err
+			}
+			var chunkIDs []string
+			for _, chunk := range chunks {
+				_, err = kv.Put(ctx, chunk.ID.String(), chunk.Data)
+				if err != nil {
+					return err
+				}
+				chunkIDs = append(chunkIDs, chunk.ID.String())
+			}
+			// El campo Data del pubsub.Message será el arreglo de IDs serializado
+			msg.Data, err = json.Marshal(chunkIDs)
+			if err != nil {
+				return err
+			}
+		}
 		msgBytes, err := json.Marshal(msg)
 		if err != nil {
 			return err
@@ -55,9 +81,7 @@ func NewApplicationEvents(
 		headers := nats.Header{}
 
 		// Extraer EventType del baggage
-		var eventType string
-		if value, exists := sharedcontext.GetEventTypeFromContext(ctx); exists {
-			eventType = value
+		if eventType, eventTypeExists := sharedcontext.GetEventTypeFromContext(ctx); eventTypeExists {
 			headers.Set("eventType", eventType)
 		}
 
@@ -95,7 +119,6 @@ func NewApplicationEvents(
 		if country == "" {
 			country = "no-country"
 		}
-
 		// Publicar el mensaje serializado a JetStream
 		_, err = js.PublishMsg(ctx, &nats.Msg{
 			Subject: conf.TRANSPORT_APP_TOPIC + "." + conf.ENVIRONMENT + "." + tenant + "." + country + "." + eventType,
