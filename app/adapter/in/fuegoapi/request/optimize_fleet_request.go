@@ -2,158 +2,103 @@ package request
 
 import "transport-app/app/domain/optimization"
 
+// Estructuras granulares para OptimizeFleetRequest
+
 type OptimizeFleetRequest struct {
-	PlanReferenceID string `json:"planReferenceID"`
-	Vehicles        []struct {
-		Plate         string `json:"plate" example:"SERV-80" description:"Vehicle license plate or internal code"`
-		StartLocation struct {
-			AddressInfo struct {
-				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
-				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
-				Contact      struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					FullName   string `json:"fullName"`
-				} `json:"contact"`
-				Coordinates struct {
-					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Starting point latitude"`
-					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Starting point longitude"`
-				} `json:"coordinates"`
-				PoliticalArea struct {
-					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
-					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
-					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
-					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
-				} `json:"politicalArea"`
-				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
-			} `json:"addressInfo"`
-			NodeInfo struct {
-				ReferenceID string `json:"referenceID"`
-			} `json:"nodeInfo"`
-		} `json:"startLocation"`
-		EndLocation struct {
-			AddressInfo struct {
-				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
-				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
-				Contact      struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					FullName   string `json:"fullName"`
-				} `json:"contact"`
-				Coordinates struct {
-					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Ending point latitude"`
-					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Ending point longitude"`
-				} `json:"coordinates"`
-				PoliticalArea struct {
-					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
-					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
-					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
-					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
-				} `json:"politicalArea"`
-				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
-			} `json:"addressInfo"`
-			NodeInfo struct {
-				ReferenceID string `json:"referenceID"`
-			} `json:"nodeInfo"`
-		} `json:"endLocation"`
-		Skills     []string `json:"skills" description:"Vehicle capabilities such as size or equipment requirements. eg: XL, heavy, etc"`
-		TimeWindow struct {
-			Start string `json:"start" example:"08:00" description:"Time window start (24h format)"`
-			End   string `json:"end" example:"18:00" description:"Time window end (24h format)"`
-		} `json:"timeWindow"`
-		Capacity struct {
-			Insurance             int64 `json:"insurance" example:"100000" description:"Maximum insurance value the vehicle can carry (CLP,MXN,PEN)"`
-			Volume                int64 `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-			Weight                int64 `json:"weight" example:"1000" description:"Maximum weight in grams"`
-			DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity" example:"50" description:"Maximum number of delivery units the vehicle can carry"`
-		} `json:"capacity"`
-	} `json:"vehicles"`
-	Visits []struct {
-		Pickup struct {
-			Instructions string `json:"instructions" example:"Recoger en recepción" description:"Instructions for pickup"`
-			AddressInfo  struct {
-				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
-				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
-				Contact      struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					FullName   string `json:"fullName"`
-				} `json:"contact"`
-				Coordinates struct {
-					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Pickup point latitude"`
-					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Pickup point longitude"`
-				} `json:"coordinates"`
-				PoliticalArea struct {
-					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
-					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
-					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
-					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
-				} `json:"politicalArea"`
-				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
-			} `json:"addressInfo"`
-			NodeInfo struct {
-				ReferenceID string `json:"referenceID"`
-			} `json:"nodeInfo"`
-			ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-			Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-			TimeWindow  struct {
-				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-			} `json:"timeWindow"`
-		} `json:"pickup"`
-		Delivery struct {
-			Instructions string `json:"instructions" example:"Entregar en recepción" description:"Instructions for delivery"`
-			AddressInfo  struct {
-				AddressLine1 string `json:"addressLine1" example:"Inglaterra 59" description:"Primary address line"`
-				AddressLine2 string `json:"addressLine2" example:"Piso 2214" description:"Secondary address line"`
-				Contact      struct {
-					Email      string `json:"email"`
-					Phone      string `json:"phone"`
-					NationalID string `json:"nationalID"`
-					FullName   string `json:"fullName"`
-				} `json:"contact"`
-				Coordinates struct {
-					Latitude  float64 `json:"latitude" example:"-33.5147889" description:"Delivery point latitude"`
-					Longitude float64 `json:"longitude" example:"-70.6130425" description:"Delivery point longitude"`
-				} `json:"coordinates"`
-				PoliticalArea struct {
-					Code            string `json:"code" example:"cl-rm-la-florida" description:"Political area code"`
-					AdminAreaLevel1 string `json:"adminAreaLevel1" example:"region metropolitana de santiago" description:"Administrative area level 1"`
-					AdminAreaLevel2 string `json:"adminAreaLevel2" example:"santiago" description:"Administrative area level 2"`
-					AdminAreaLevel3 string `json:"adminAreaLevel3" example:"la florida" description:"Administrative area level 3"`
-					AdminAreaLevel4 string `json:"adminAreaLevel4" example:"" description:"Administrative area level 4"`
-				} `json:"politicalArea"`
-				ZipCode string `json:"zipCode" example:"7500000" description:"ZIP code"`
-			} `json:"addressInfo"`
-			NodeInfo struct {
-				ReferenceID string `json:"referenceID"`
-			} `json:"nodeInfo"`
-			ServiceTime int64    `json:"serviceTime" example:"30" description:"Time in seconds required to complete the service at this location"`
-			Skills      []string `json:"skills" description:"Required vehicle capabilities for this visit"`
-			TimeWindow  struct {
-				Start string `json:"start" example:"09:00" description:"Visit time window start (24h format)"`
-				End   string `json:"end" example:"17:00" description:"Visit time window end (24h format)"`
-			} `json:"timeWindow"`
-		} `json:"delivery"`
-		Orders []struct {
-			DeliveryUnits []struct {
-				Items []struct {
-					Sku string `json:"sku" example:"SKU123" description:"Stock keeping unit identifier"`
-				} `json:"items"`
-				Insurance int64  `json:"insurance" example:"10000" description:"Insurance value of the delivery unit"`
-				Volume    int64  `json:"volume" example:"1000" description:"Volume of the delivery unit in cubic meters"`
-				Weight    int64  `json:"weight" example:"1000" description:"Weight of the delivery unit in grams"`
-				Lpn       string `json:"lpn" example:"LPN456" description:"License plate number of the delivery unit"`
-			} `json:"deliveryUnits"`
-			ReferenceID string `json:"referenceID" example:"ORD789" description:"Unique identifier for the order"`
-		} `json:"orders"`
-	} `json:"visits"`
+	PlanReferenceID string                 `json:"planReferenceID"`
+	Vehicles        []OptimizeFleetVehicle `json:"vehicles"`
+	Visits          []OptimizeFleetVisit   `json:"visits"`
+}
+
+type OptimizeFleetVehicle struct {
+	Plate         string                       `json:"plate"`
+	StartLocation OptimizeFleetVehicleLocation `json:"startLocation"`
+	EndLocation   OptimizeFleetVehicleLocation `json:"endLocation"`
+	Skills        []string                     `json:"skills"`
+	TimeWindow    OptimizeFleetTimeWindow      `json:"timeWindow"`
+	Capacity      OptimizeFleetVehicleCapacity `json:"capacity"`
+}
+
+type OptimizeFleetVehicleLocation struct {
+	AddressInfo OptimizeFleetAddressInfo `json:"addressInfo"`
+	NodeInfo    OptimizeFleetNodeInfo    `json:"nodeInfo"`
+}
+
+type OptimizeFleetAddressInfo struct {
+	AddressLine1  string                     `json:"addressLine1"`
+	AddressLine2  string                     `json:"addressLine2"`
+	Contact       OptimizeFleetContact       `json:"contact"`
+	Coordinates   OptimizeFleetCoordinates   `json:"coordinates"`
+	PoliticalArea OptimizeFleetPoliticalArea `json:"politicalArea"`
+	ZipCode       string                     `json:"zipCode"`
+}
+
+type OptimizeFleetContact struct {
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
+	NationalID string `json:"nationalID"`
+	FullName   string `json:"fullName"`
+}
+
+type OptimizeFleetCoordinates struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+type OptimizeFleetPoliticalArea struct {
+	Code            string `json:"code"`
+	AdminAreaLevel1 string `json:"adminAreaLevel1"`
+	AdminAreaLevel2 string `json:"adminAreaLevel2"`
+	AdminAreaLevel3 string `json:"adminAreaLevel3"`
+	AdminAreaLevel4 string `json:"adminAreaLevel4"`
+}
+
+type OptimizeFleetVehicleCapacity struct {
+	Insurance             int64 `json:"insurance"`
+	Volume                int64 `json:"volume"`
+	Weight                int64 `json:"weight"`
+	DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity"`
+}
+
+type OptimizeFleetTimeWindow struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type OptimizeFleetVisit struct {
+	Pickup   OptimizeFleetVisitLocation `json:"pickup"`
+	Delivery OptimizeFleetVisitLocation `json:"delivery"`
+	Orders   []OptimizeFleetOrder       `json:"orders"`
+}
+
+type OptimizeFleetVisitLocation struct {
+	Instructions string                   `json:"instructions"`
+	AddressInfo  OptimizeFleetAddressInfo `json:"addressInfo"`
+	NodeInfo     OptimizeFleetNodeInfo    `json:"nodeInfo"`
+	ServiceTime  int64                    `json:"serviceTime"`
+	Skills       []string                 `json:"skills"`
+	TimeWindow   OptimizeFleetTimeWindow  `json:"timeWindow"`
+}
+
+type OptimizeFleetNodeInfo struct {
+	ReferenceID string `json:"referenceID"`
+}
+
+type OptimizeFleetOrder struct {
+	DeliveryUnits []OptimizeFleetDeliveryUnit `json:"deliveryUnits"`
+	ReferenceID   string                      `json:"referenceID"`
+}
+
+type OptimizeFleetDeliveryUnit struct {
+	Items     []OptimizeFleetItem `json:"items"`
+	Insurance int64               `json:"insurance"`
+	Volume    int64               `json:"volume"`
+	Weight    int64               `json:"weight"`
+	Lpn       string              `json:"lpn"`
+}
+
+type OptimizeFleetItem struct {
+	Sku string `json:"sku"`
 }
 
 func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
@@ -221,7 +166,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 
 	visits := make([]optimization.Visit, len(r.Visits))
 	for i, v := range r.Visits {
-		// Mapear pickup
 		pickup := optimization.VisitLocation{
 			Instructions: v.Pickup.Instructions,
 			AddressInfo: optimization.AddressInfo{
@@ -257,7 +201,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 			},
 		}
 
-		// Mapear delivery
 		delivery := optimization.VisitLocation{
 			Instructions: v.Delivery.Instructions,
 			AddressInfo: optimization.AddressInfo{
@@ -293,7 +236,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 			},
 		}
 
-		// Mapear órdenes
 		orders := make([]optimization.Order, len(v.Orders))
 		for j, o := range v.Orders {
 			deliveryUnits := make([]optimization.DeliveryUnit, len(o.DeliveryUnits))
