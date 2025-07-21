@@ -39,7 +39,6 @@ import (
 
 	_ "transport-app/app/usecase"
 
-	_ "transport-app/app/adapter/in/gcpsubscription"
 	_ "transport-app/app/adapter/out/gcppublisher"
 	_ "transport-app/app/adapter/out/restyclient/locationiq"
 	_ "transport-app/app/onload"
