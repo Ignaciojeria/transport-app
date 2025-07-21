@@ -65,7 +65,6 @@ type VisitLocation struct {
 	AddressInfo  AddressInfo
 	NodeInfo     NodeInfo
 	ServiceTime  int64
-	Skills       []string
 	TimeWindow   TimeWindow
 }
 
@@ -81,6 +80,7 @@ type DeliveryUnit struct {
 	Volume    int64
 	Weight    int64
 	Lpn       string
+	Skills    []string
 }
 
 // Order representa una orden

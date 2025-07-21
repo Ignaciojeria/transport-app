@@ -85,6 +85,24 @@ func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliver
 	return
 }
 
+// collectVisitSkills recopila todas las skills de las unidades de entrega de una visita
+func collectVisitSkills(visit optimization.Visit) []string {
+	skillsMap := make(map[string]bool)
+	var skills []string
+	
+	for _, order := range visit.Orders {
+		for _, deliveryUnit := range order.DeliveryUnits {
+			for _, skill := range deliveryUnit.Skills {
+				if !skillsMap[skill] {
+					skillsMap[skill] = true
+					skills = append(skills, skill)
+				}
+			}
+		}
+	}
+	return skills
+}
+
 func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimization) (model.VroomOptimizationRequest, error) {
 	registry := newSkillRegistry()
 	locationRegistry := newLocationContactRegistry()
@@ -175,9 +193,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				totalInsurance,
 			}
 
-			// Solo incluir Skills si no está vacío
-			if len(visit.Delivery.Skills) > 0 {
-				job.Skills = mapSkills(visit.Delivery.Skills, registry)
+			// Solo incluir Skills si no está vacío (obtener de delivery units)
+			visitSkills := collectVisitSkills(visit)
+			if len(visitSkills) > 0 {
+				job.Skills = mapSkills(visitSkills, registry)
 			}
 
 			// Solo incluir Service si no es cero
@@ -253,16 +272,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				totalInsurance,
 			}
 
-			// Solo incluir Skills si no está vacío (usar skills de pickup o delivery)
-			var skills []string
-			if len(visit.Pickup.Skills) > 0 {
-				skills = append(skills, visit.Pickup.Skills...)
-			}
-			if len(visit.Delivery.Skills) > 0 {
-				skills = append(skills, visit.Delivery.Skills...)
-			}
-			if len(skills) > 0 {
-				shipment.Skills = mapSkills(skills, registry)
+			// Solo incluir Skills si no está vacío (obtener de delivery units)
+			visitSkills := collectVisitSkills(visit)
+			if len(visitSkills) > 0 {
+				shipment.Skills = mapSkills(visitSkills, registry)
 			}
 
 			// Solo incluir Service si no es cero
