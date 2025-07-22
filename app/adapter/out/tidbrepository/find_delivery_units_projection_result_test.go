@@ -369,21 +369,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Crear delivery unit
 		deliveryUnit := domain.DeliveryUnit{
-			Lpn: "LPN123",
-			Dimensions: domain.Dimensions{
-				Length: 10,
-				Width:  20,
-				Height: 30,
-				Unit:   "cm",
-			},
-			Weight: domain.Weight{
-				Value: 5500,
-				Unit:  "g",
-			},
-			Insurance: domain.Insurance{
-				Currency:  "USD",
-				UnitValue: 10000,
-			},
+			Lpn:       "LPN123",
+			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+			Weight:    5500, // 5500 g
+			Insurance: 10000, // 10000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "SKU123",
