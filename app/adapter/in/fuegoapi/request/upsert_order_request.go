@@ -120,18 +120,17 @@ type UpsertOrderRequest struct {
 		} `json:"nodeInfo"`
 	} `json:"origin"`
 	DeliveryUnits []struct {
-		SizeCategory string `json:"sizeCategory" example:"XL"`
-		Dimensions   struct {
-			Length int64  `json:"length" example:"100"`
-			Height int64  `json:"height" example:"100"`
-			Unit   string `json:"unit" example:"cm"`
-			Width  int64  `json:"width" example:"100"`
-		} `json:"dimensions"`
-		Insurance struct {
-			Currency  string `json:"currency" example:"CLP"`
-			UnitValue int64  `json:"unitValue" example:"10000"`
-		} `json:"insurance"`
+		Lpn       string `json:"lpn" example:"LPN456"`
+		Volume    int64  `json:"volume" example:"1000"`
+		Weight    int64  `json:"weight" example:"1000"`
+		Insurance int64  `json:"insurance" example:"10000"`
+		Skills    []string `json:"skills" example:"fragile"`
+		Labels    []struct {
+			Type  string `json:"type" example:"packageCode"`
+			Value string `json:"value" example:"uuid"`
+		} `json:"labels"`
 		Items []struct {
+			Sku         string `json:"sku" example:"SKU123"`
 			Description string `json:"description" example:"Cama 1 plaza"`
 			Dimensions  struct {
 				Length int64  `json:"length" example:"100"`
@@ -139,30 +138,19 @@ type UpsertOrderRequest struct {
 				Unit   string `json:"unit" example:"cm"`
 				Width  int64  `json:"width" example:"100"`
 			} `json:"dimensions"`
-			Insurance struct {
-				Currency  string `json:"currency" example:"CLP"`
-				UnitValue int64  `json:"unitValue" example:"10000"`
-			} `json:"insurance"`
-			Quantity struct {
-				QuantityNumber int    `json:"quantityNumber" example:"1"`
-				QuantityUnit   string `json:"quantityUnit" example:"unit"`
-			} `json:"quantity"`
-			Sku    string `json:"sku" example:"1234567890"`
 			Weight struct {
 				Unit  string `json:"unit" example:"g"`
 				Value int64  `json:"value" example:"1800"`
 			} `json:"weight"`
+			Quantity struct {
+				QuantityNumber int    `json:"quantityNumber" example:"1"`
+				QuantityUnit   string `json:"quantityUnit" example:"unit"`
+			} `json:"quantity"`
+			Insurance struct {
+				Currency  string `json:"currency" example:"CLP"`
+				UnitValue int64  `json:"unitValue" example:"10000"`
+			} `json:"insurance"`
 		} `json:"items"`
-		Lpn    string `json:"lpn" example:"1234567890"`
-		Labels []struct {
-			Type  string `json:"type" example:"packageCode"`
-			Value string `json:"value" example:"uuid"`
-		} `json:"labels"`
-		Skills []string `json:"skills"`
-		Weight struct {
-			Unit  string `json:"unit" example:"g"`
-			Value int64  `json:"value" example:"1800"`
-		} `json:"weight"`
 	} `json:"deliveryUnits"`
 	PromisedDate struct {
 		DateRange struct {

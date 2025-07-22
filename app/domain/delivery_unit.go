@@ -9,6 +9,7 @@ type DeliveryUnit struct {
 	SizeCategory    SizeCategory
 	Lpn             string
 	noLPNReference  string
+	Volume          int64 // Volume in cm³ (by convention)
 	Dimensions      Dimensions
 	Weight          Weight
 	Insurance       Insurance

@@ -138,6 +138,7 @@ func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.Deliv
 		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 		DocumentID: pkg.DocID(ctx).String(),
 		Lpn:        pkg.Lpn,
+		Volume:     pkg.Volume,
 		JSONDimensions: table.JSONDimensions{
 			Height: pkg.Dimensions.Height,
 			Width:  pkg.Dimensions.Width,
