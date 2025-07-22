@@ -112,22 +112,12 @@ func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []t
 	mapped := make([]table.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = table.DeliveryUnit{
-			TenantID: sharedcontext.TenantIDFromContext(ctx),
-			Lpn:      pkg.Lpn,
-			JSONDimensions: table.JSONDimensions{
-				Height: pkg.Dimensions.Height,
-				Width:  pkg.Dimensions.Width,
-				Length: pkg.Dimensions.Length,
-				Unit:   pkg.Dimensions.Unit,
-			},
-			JSONWeight: table.JSONWeight{
-				WeightValue: pkg.Weight.Value,
-				WeightUnit:  pkg.Weight.Unit,
-			},
-			JSONInsurance: table.JSONInsurance{
-				UnitValue: pkg.Insurance.UnitValue,
-				Currency:  pkg.Insurance.Currency,
-			},
+			TenantID:  sharedcontext.TenantIDFromContext(ctx),
+			Lpn:       pkg.Lpn,
+			Volume:    pkg.Volume,
+			Weight:    pkg.Weight,
+			Insurance: pkg.Insurance,
+			JSONItems: mapItemsToTable(pkg.Items),
 		}
 	}
 	return mapped
@@ -138,26 +128,10 @@ func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.Deliv
 		TenantID:   sharedcontext.TenantIDFromContext(ctx),
 		DocumentID: pkg.DocID(ctx).String(),
 		Lpn:        pkg.Lpn,
-		// Use simplified values
-		Volume:         pkg.GetVolume(),
-		WeightValue:    pkg.GetWeightValue(),
-		InsuranceValue: pkg.GetInsuranceValue(),
-		// Legacy fields for backward compatibility
-		JSONDimensions: table.JSONDimensions{
-			Height: pkg.Dimensions.Height,
-			Width:  pkg.Dimensions.Width,
-			Length: pkg.Dimensions.Length,
-			Unit:   pkg.Dimensions.Unit,
-		},
-		JSONWeight: table.JSONWeight{
-			WeightValue: pkg.Weight.Value,
-			WeightUnit:  pkg.Weight.Unit,
-		},
-		JSONInsurance: table.JSONInsurance{
-			UnitValue: pkg.Insurance.UnitValue,
-			Currency:  pkg.Insurance.Currency,
-		},
-		JSONItems:       mapItemsToTable(pkg.Items),
+		Volume:     pkg.Volume,
+		Weight:     pkg.Weight,
+		Insurance:  pkg.Insurance,
+		JSONItems:  mapItemsToTable(pkg.Items),
 		SizeCategoryDoc: pkg.SizeCategory.DocumentID(ctx).String(),
 	}
 }

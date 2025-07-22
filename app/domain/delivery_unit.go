@@ -12,12 +12,8 @@ type DeliveryUnit struct {
 	noLPNReference  string
 	// Simplified fields (matching optimization domain)
 	Volume          int64 // Volume in cm³ (by convention)
-	WeightValue     int64 // Weight in grams (by convention)
-	InsuranceValue  int64 // Insurance in CLP (by convention)
-	// Legacy complex fields (for backward compatibility)
-	Dimensions      Dimensions
-	Weight          Weight
-	Insurance       Insurance
+	Weight          int64 // Weight in grams (by convention)
+	Insurance       int64 // Insurance in CLP (by convention)
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -63,20 +59,20 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 		changed = true
 	}
 
-	// Actualizar dimensiones si no están vacías
-	if newPackage.Dimensions != (Dimensions{}) {
-		p.Dimensions = newPackage.Dimensions
+	// Actualizar volumen si no está vacío
+	if newPackage.Volume != 0 && newPackage.Volume != p.Volume {
+		p.Volume = newPackage.Volume
 		changed = true
 	}
 
 	// Actualizar peso si no está vacío
-	if newPackage.Weight != (Weight{}) {
+	if newPackage.Weight != 0 && newPackage.Weight != p.Weight {
 		p.Weight = newPackage.Weight
 		changed = true
 	}
 
 	// Actualizar seguro si no está vacío
-	if newPackage.Insurance != (Insurance{}) {
+	if newPackage.Insurance != 0 && newPackage.Insurance != p.Insurance {
 		p.Insurance = newPackage.Insurance
 		changed = true
 	}
@@ -102,40 +98,11 @@ func (p *DeliveryUnit) UpdateStatusBasedOnNonDelivery() {
 	}
 }
 
-// GetWeightValue returns the weight value, prioritizing WeightValue over Weight.Value
-func (p DeliveryUnit) GetWeightValue() int64 {
-	if p.WeightValue > 0 {
-		return p.WeightValue
-	}
-	return p.Weight.Value
-}
-
-// GetInsuranceValue returns the insurance value, prioritizing InsuranceValue over Insurance.UnitValue
-func (p DeliveryUnit) GetInsuranceValue() int64 {
-	if p.InsuranceValue > 0 {
-		return p.InsuranceValue
-	}
-	return p.Insurance.UnitValue
-}
-
-// GetVolume returns the volume value
-func (p DeliveryUnit) GetVolume() int64 {
-	return p.Volume
-}
-
-// SetSimpleValues sets the simplified values and syncs with legacy structures
-func (p *DeliveryUnit) SetSimpleValues(volume, weight, insurance int64) {
+// SetValues sets the simplified values directly
+func (p *DeliveryUnit) SetValues(volume, weight, insurance int64) {
 	p.Volume = volume
-	p.WeightValue = weight
-	p.InsuranceValue = insurance
-	
-	// Sync with legacy structures for backward compatibility
-	if weight > 0 {
-		p.Weight = Weight{Value: weight, Unit: "g"}
-	}
-	if insurance > 0 {
-		p.Insurance = Insurance{UnitValue: insurance, Currency: "CLP"}
-	}
+	p.Weight = weight
+	p.Insurance = insurance
 }
 
 // ToOptimizationDeliveryUnit converts this DeliveryUnit to the optimization domain structure
@@ -149,9 +116,9 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 	
 	return optimization.DeliveryUnit{
 		Items:     items,
-		Insurance: p.GetInsuranceValue(),
-		Volume:    p.GetVolume(),
-		Weight:    p.GetWeightValue(),
+		Insurance: p.Insurance,
+		Volume:    p.Volume,
+		Weight:    p.Weight,
 		Lpn:       p.Lpn,
 	}
 }
@@ -165,13 +132,11 @@ func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit 
 		}
 	}
 	
-	deliveryUnit := DeliveryUnit{
-		Lpn:   optDU.Lpn,
-		Items: items,
+	return DeliveryUnit{
+		Lpn:       optDU.Lpn,
+		Volume:    optDU.Volume,
+		Weight:    optDU.Weight,
+		Insurance: optDU.Insurance,
+		Items:     items,
 	}
-	
-	// Set simplified values
-	deliveryUnit.SetSimpleValues(optDU.Volume, optDU.Weight, optDU.Insurance)
-	
-	return deliveryUnit
 }

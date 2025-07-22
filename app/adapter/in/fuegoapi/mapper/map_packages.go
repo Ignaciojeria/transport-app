@@ -55,18 +55,16 @@ func MapPackagesToDomain(packages []struct {
 			}
 		}
 
-		deliveryUnit := domain.DeliveryUnit{
-			Lpn:    pkg.Lpn,
-			Status: domain.Status{Status: domain.StatusAvailable},
-			Items:  MapItemsToDomain(pkg.Items),
-			Labels: MapLabelsToDomain(pkg.Labels),
-			Skills: MapSkillsToDomain(pkg.Skills),
+		mapped[i] = domain.DeliveryUnit{
+			Lpn:       pkg.Lpn,
+			Volume:    volume,
+			Weight:    weight,
+			Insurance: pkg.Insurance,
+			Status:    domain.Status{Status: domain.StatusAvailable},
+			Items:     MapItemsToDomain(pkg.Items),
+			Labels:    MapLabelsToDomain(pkg.Labels),
+			Skills:    MapSkillsToDomain(pkg.Skills),
 		}
-		
-		// Set the simplified values using the new method
-		deliveryUnit.SetSimpleValues(volume, weight, pkg.Insurance)
-		
-		mapped[i] = deliveryUnit
 	}
 	return mapped
 }
