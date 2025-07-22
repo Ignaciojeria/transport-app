@@ -413,11 +413,10 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 		var deliveryUnits domain.DeliveryUnits
 		for _, duReq := range orderReq.DeliveryUnits {
 			deliveryUnit := domain.DeliveryUnit{
-				Lpn:       duReq.Lpn,
-				Volume:    duReq.Volume,
-				Weight:    domain.Weight{Value: duReq.Weight, Unit: "g"},
-				Insurance: domain.Insurance{UnitValue: duReq.Insurance, Currency: "CLP"},
+				Lpn: duReq.Lpn,
 			}
+			// Use simplified values
+			deliveryUnit.SetSimpleValues(duReq.Volume, duReq.Weight, duReq.Insurance)
 
 			// Mapear items
 			for _, itemReq := range duReq.Items {

@@ -55,29 +55,18 @@ func MapPackagesToDomain(packages []struct {
 			}
 		}
 
-		mapped[i] = domain.DeliveryUnit{
+		deliveryUnit := domain.DeliveryUnit{
 			Lpn:    pkg.Lpn,
-			Volume: volume,
 			Status: domain.Status{Status: domain.StatusAvailable},
-			// Create dimensions from volume (assuming cubic root for simplicity)
-			Dimensions: domain.Dimensions{
-				Height: 0, // Will be calculated from items if needed
-				Width:  0,
-				Length: 0,
-				Unit:   "cm",
-			},
-			Weight: domain.Weight{
-				Unit:  "g", // Standard unit as per convention
-				Value: weight,
-			},
-			Insurance: domain.Insurance{
-				Currency:  "CLP", // Default currency, could be made configurable
-				UnitValue: pkg.Insurance,
-			},
-			Labels: MapLabelsToDomain(pkg.Labels),
 			Items:  MapItemsToDomain(pkg.Items),
+			Labels: MapLabelsToDomain(pkg.Labels),
 			Skills: MapSkillsToDomain(pkg.Skills),
 		}
+		
+		// Set the simplified values using the new method
+		deliveryUnit.SetSimpleValues(volume, weight, pkg.Insurance)
+		
+		mapped[i] = deliveryUnit
 	}
 	return mapped
 }
