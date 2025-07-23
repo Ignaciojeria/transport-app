@@ -345,6 +345,42 @@ var _ = Describe("Package", func() {
 			Expect(len(updated.Items)).To(Equal(1))
 			Expect(updated.Items[0].Sku).To(Equal("NEW-SINGLE-ITEM"))
 		})
+
+		It("should update Volume to zero", func() {
+			basePackage := DeliveryUnit{
+				Volume: 1000,
+			}
+			newPackage := DeliveryUnit{
+				Volume: 0,
+			}
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Volume).To(Equal(int64(0)))
+		})
+
+		It("should update Weight to zero", func() {
+			basePackage := DeliveryUnit{
+				Weight: 500,
+			}
+			newPackage := DeliveryUnit{
+				Weight: 0,
+			}
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Weight).To(Equal(int64(0)))
+		})
+
+		It("should update Insurance to zero", func() {
+			basePackage := DeliveryUnit{
+				Insurance: 200,
+			}
+			newPackage := DeliveryUnit{
+				Insurance: 0,
+			}
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
+			Expect(changed).To(BeTrue())
+			Expect(updated.Insurance).To(Equal(int64(0)))
+		})
 	})
 
 	Describe("Integration scenarios", func() {

@@ -58,20 +58,20 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 		changed = true
 	}
 
-	// Actualizar volumen si no está vacío
-	if newPackage.Volume != 0 && newPackage.Volume != p.Volume {
+	// Actualizar volumen siempre que cambie
+	if newPackage.Volume != p.Volume {
 		p.Volume = newPackage.Volume
 		changed = true
 	}
 
-	// Actualizar peso si no está vacío
-	if newPackage.Weight != 0 && newPackage.Weight != p.Weight {
+	// Actualizar peso siempre que cambie
+	if newPackage.Weight != p.Weight {
 		p.Weight = newPackage.Weight
 		changed = true
 	}
 
-	// Actualizar seguro si no está vacío
-	if newPackage.Insurance != 0 && newPackage.Insurance != p.Insurance {
+	// Actualizar seguro siempre que cambie
+	if newPackage.Insurance != p.Insurance {
 		p.Insurance = newPackage.Insurance
 		changed = true
 	}
