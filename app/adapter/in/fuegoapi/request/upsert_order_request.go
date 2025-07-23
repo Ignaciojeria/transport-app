@@ -282,9 +282,9 @@ func (i UpsertOrderItem) Map() domain.Item {
 type UpsertOrderDeliveryUnit struct {
 	Lpn          string             `json:"lpn" example:"LPN456"`
 	SizeCategory string             `json:"sizeCategory" example:"SMALL"`
-	Volume       int64              `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
-	Weight       int64              `json:"weight" example:"1000" description:"Weight in grams (g)"`
-	Insurance    int64              `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
+	Volume       *int64             `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
+	Weight       *int64             `json:"weight" example:"1000" description:"Weight in grams (g)"`
+	Insurance    *int64             `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 	Skills       []string           `json:"skills"`
 	Labels       []UpsertOrderLabel `json:"labels"`
 	Items        []UpsertOrderItem  `json:"items"`
@@ -292,21 +292,25 @@ type UpsertOrderDeliveryUnit struct {
 
 // Map convierte a domain.DeliveryUnit
 func (d UpsertOrderDeliveryUnit) Map() domain.DeliveryUnit {
-	// Calculate volume from items if not provided
-	volume := d.Volume
-	if volume == 0 && len(d.Items) > 0 {
+	// Calcular volumen de items si no se provee
+	var volumePtr *int64 = d.Volume
+	if volumePtr == nil && len(d.Items) > 0 {
+		var v int64
 		for _, item := range d.Items {
 			itemVolume := item.Dimensions.Length * item.Dimensions.Width * item.Dimensions.Height
-			volume += itemVolume * int64(item.Quantity)
+			v += itemVolume * int64(item.Quantity)
 		}
+		volumePtr = &v
 	}
 
-	// Calculate weight from items if not provided
-	weight := d.Weight
-	if weight == 0 && len(d.Items) > 0 {
+	// Calcular peso de items si no se provee
+	var weightPtr *int64 = d.Weight
+	if weightPtr == nil && len(d.Items) > 0 {
+		var w int64
 		for _, item := range d.Items {
-			weight += item.Weight * int64(item.Quantity)
+			w += item.Weight * int64(item.Quantity)
 		}
+		weightPtr = &w
 	}
 
 	// Map skills
@@ -330,8 +334,8 @@ func (d UpsertOrderDeliveryUnit) Map() domain.DeliveryUnit {
 	return domain.DeliveryUnit{
 		Lpn:          d.Lpn,
 		SizeCategory: domain.SizeCategory{Code: d.SizeCategory},
-		Volume:       volume,
-		Weight:       weight,
+		Volume:       volumePtr,
+		Weight:       weightPtr,
 		Insurance:    d.Insurance,
 		Status:       domain.Status{Status: domain.StatusAvailable},
 		Skills:       skills,

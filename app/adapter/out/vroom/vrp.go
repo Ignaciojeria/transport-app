@@ -467,9 +467,9 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 			// Crear la unidad de entrega del dominio con información completa
 			deliveryUnit := domain.DeliveryUnit{
 				Lpn:       du.Lpn,
-				Volume:    du.Volume,
-				Weight:    du.Weight,
-				Insurance: du.Insurance,
+				Volume:    &du.Volume,
+				Weight:    &du.Weight,
+				Insurance: &du.Insurance,
 				Items:     items,
 			}
 
@@ -554,9 +554,9 @@ func createOrderFromOptimizationOrder(optOrder optimization.Order) domain.Order 
 		// Crear la unidad de entrega del dominio con información completa
 		deliveryUnit := domain.DeliveryUnit{
 			Lpn:       du.Lpn,
-			Volume:    du.Volume,
-			Weight:    du.Weight,
-			Insurance: du.Insurance,
+			Volume:    &du.Volume,
+			Weight:    &du.Weight,
+			Insurance: &du.Insurance,
 			Items:     items,
 		}
 

@@ -36,12 +36,15 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear paquetes para insertar
+		vol1 := int64(6000000)
+		wgt1 := int64(5000)
+		ins1 := int64(1000)
 		package1 := domain.DeliveryUnit{
 			Lpn:          "PKG001",
 			SizeCategory: domain.SizeCategory{Code: "SMALL"},
-			Volume:       6000000, // 1000 * 2000 * 3000 = 6000000 cm³
-			Weight:       5000,    // 5000 g
-			Insurance:    1000,    // 1000 CLP
+			Volume:       &vol1, // 1000 * 2000 * 3000 = 6000000 cm³
+			Weight:       &wgt1, // 5000 g
+			Insurance:    &ins1, // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM001",
@@ -52,12 +55,15 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			},
 		}
 
+		vol2 := int64(13125000)
+		wgt2 := int64(7500)
+		ins2 := int64(0)
 		package2 := domain.DeliveryUnit{
 			Lpn:          "PKG002",
 			SizeCategory: domain.SizeCategory{Code: "MEDIUM"},
-			Volume:       13125000, // 1500 * 2500 * 3500 = 13125000 cm³
-			Weight:       7500,     // 7500 g
-			Insurance:    0,        // Sin seguro
+			Volume:       &vol2, // 1500 * 2500 * 3500 = 13125000 cm³
+			Weight:       &wgt2, // 7500 g
+			Insurance:    &ins2, // Sin seguro
 		}
 
 		// Insertar los paquetes
@@ -105,11 +111,14 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear paquete inicial
+		vol3 := int64(6000000)
+		wgt3 := int64(5000)
+		ins3 := int64(0)
 		originalPackage := domain.DeliveryUnit{
 			Lpn:       "PKG003",
-			Volume:    6000000, // 1000 * 2000 * 3000 = 6000000 cm³
-			Weight:    5000,    // 5000 g
-			Insurance: 0,       // Sin seguro
+			Volume:    &vol3, // 1000 * 2000 * 3000 = 6000000 cm³
+			Weight:    &wgt3, // 5000 g
+			Insurance: &ins3, // Sin seguro
 		}
 
 		// Insertar el paquete original
@@ -118,9 +127,11 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Modificar el paquete
+		vol4 := int64(9000000)
+		wgt4 := int64(7500)
 		modifiedPackage := originalPackage
-		modifiedPackage.Volume = 9000000 // 1500 * 2000 * 3000 = 9000000 cm³
-		modifiedPackage.Weight = 7500    // 7500 g
+		modifiedPackage.Volume = &vol4 // 1500 * 2000 * 3000 = 9000000 cm³
+		modifiedPackage.Weight = &wgt4 // 7500 g
 
 		// Actualizar el paquete
 		err = upsert(ctx, []domain.DeliveryUnit{modifiedPackage})
@@ -146,18 +157,24 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		tenant2, ctx2, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		vol := int64(6000)
+		wgt := int64(0)
+		ins := int64(0)
 		package1 := domain.DeliveryUnit{
 			Lpn:       "PKG004",
-			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-			Weight:    0,    // Sin peso
-			Insurance: 0,    // Sin seguro
+			Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
+			Weight:    &wgt, // Sin peso
+			Insurance: &ins, // Sin seguro
 		}
 
+		vol2 := int64(6000)
+		wgt2 := int64(0)
+		ins2 := int64(0)
 		package2 := domain.DeliveryUnit{
 			Lpn:       "PKG004",
-			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-			Weight:    0,    // Sin peso
-			Insurance: 0,    // Sin seguro
+			Volume:    &vol2, // 10 * 20 * 30 = 6000 cm³
+			Weight:    &wgt2, // Sin peso
+			Insurance: &ins2, // Sin seguro
 		}
 
 		upsert := NewUpsertDeliveryUnits(conn)
@@ -198,11 +215,14 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
+		vol3 := int64(6000)
+		wgt3 := int64(1000)
+		ins3 := int64(0)
 		package1 := domain.DeliveryUnit{
 			Lpn:       "PKG005",
-			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-			Weight:    1000, // 1000 g
-			Insurance: 0,    // Sin seguro
+			Volume:    &vol3, // 10 * 20 * 30 = 6000 cm³
+			Weight:    &wgt3, // 1000 g
+			Insurance: &ins3, // Sin seguro
 		}
 
 		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
@@ -218,11 +238,14 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete inicial
+		vol4 := int64(6000)
+		wgt4 := int64(1000)
+		ins4 := int64(0)
 		existingPackage := domain.DeliveryUnit{
 			Lpn:       "PKG-EXISTING",
-			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-			Weight:    1000, // 1000 g
-			Insurance: 0,    // Sin seguro
+			Volume:    &vol4, // 10 * 20 * 30 = 6000 cm³
+			Weight:    &wgt4, // 1000 g
+			Insurance: &ins4, // Sin seguro
 		}
 
 		// Guardar el DocID del paquete existente
@@ -234,19 +257,25 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un nuevo paquete para inserción
+		newVol := int64(13125)
+		newWgt := int64(2000)
+		newIns := int64(500)
 		newPackage := domain.DeliveryUnit{
 			Lpn:       "PKG-NEW",
-			Volume:    13125, // 15 * 25 * 35 = 13125 cm³
-			Weight:    2000,  // 2000 g
-			Insurance: 500,   // 500 CLP
+			Volume:    &newVol, // 15 * 25 * 35 = 13125 cm³
+			Weight:    &newWgt, // 2000 g
+			Insurance: &newIns, // 500 CLP
 		}
 
 		// Crear versión actualizada del paquete existente
+		updatedVol := int64(13125)
+		updatedWgt := int64(2000)
+		updatedIns := int64(500)
 		updatedExistingPackage := domain.DeliveryUnit{
 			Lpn:       "PKG-EXISTING",
-			Volume:    13125, // 15 * 25 * 35 = 13125 cm³
-			Weight:    2000,  // 2000 g
-			Insurance: 500,   // 500 CLP
+			Volume:    &updatedVol, // 15 * 25 * 35 = 13125 cm³
+			Weight:    &updatedWgt, // 2000 g
+			Insurance: &updatedIns, // 500 CLP
 		}
 
 		// Verificar que el DocID del paquete actualizado coincide con el original
@@ -399,11 +428,14 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete completo
+		vol := int64(6000)
+		wgt := int64(5000)
+		ins := int64(1000)
 		initialPackage := domain.DeliveryUnit{
 			Lpn:       "PARTIAL-UPDATE-PKG",
-			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-			Weight:    5000, // 5000 g
-			Insurance: 1000, // 1000 CLP
+			Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
+			Weight:    &wgt, // 5000 g
+			Insurance: &ins, // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM-PARTIAL",
@@ -419,9 +451,10 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear un paquete con solo algunos campos actualizados
+		wgt2 := int64(10000)
 		partialUpdate := domain.DeliveryUnit{
 			Lpn:    "PARTIAL-UPDATE-PKG", // Mismo LPN
-			Weight: 10000,                // Solo actualizar peso
+			Weight: &wgt2,                // Solo actualizar peso
 			// Otros campos vacíos o con valores por defecto
 		}
 

@@ -153,11 +153,14 @@ var _ = Describe("Package", func() {
 		var basePackage DeliveryUnit
 
 		BeforeEach(func() {
+			vol := int64(6000)
+			wgt := int64(5000)
+			ins := int64(1000)
 			basePackage = DeliveryUnit{
 				Lpn:       "PKG-TEST",
-				Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-				Weight:    5000, // 5 kg = 5000 g
-				Insurance: 1000, // 1000 CLP (simplified)
+				Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
+				Weight:    &wgt, // 5 kg = 5000 g
+				Insurance: &ins, // 1000 CLP (simplified)
 				Items: []Item{
 					{
 						Sku:         "ITEM001",
@@ -192,8 +195,9 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Volume", func() {
+			vol := int64(13125)
 			newPackage := DeliveryUnit{
-				Volume: 13125, // 15 * 25 * 35 = 13125 cm³
+				Volume: &vol, // 15 * 25 * 35 = 13125 cm³
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
@@ -208,8 +212,9 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Weight", func() {
+			wgt := int64(7500)
 			newPackage := DeliveryUnit{
-				Weight: 7500, // 7500 g
+				Weight: &wgt, // 7500 g
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
@@ -224,8 +229,9 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Insurance", func() {
+			ins := int64(2000)
 			newPackage := DeliveryUnit{
-				Insurance: 2000, // 2000 CLP
+				Insurance: &ins, // 2000 CLP
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
@@ -282,9 +288,10 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update multiple fields at once", func() {
+			wgt := int64(8000)
 			newPackage := DeliveryUnit{
 				Lpn:    "PKG-MULTI-UPDATE",
-				Weight: 8000, // 8000 g
+				Weight: &wgt, // 8000 g
 				Items: []Item{
 					{
 						Sku:         "ITEM005",
@@ -347,39 +354,90 @@ var _ = Describe("Package", func() {
 		})
 
 		It("should update Volume to zero", func() {
+			baseVal := int64(1000)
+			zero := int64(0)
 			basePackage := DeliveryUnit{
-				Volume: 1000,
+				Volume: &baseVal,
 			}
 			newPackage := DeliveryUnit{
-				Volume: 0,
+				Volume: &zero,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Volume).To(Equal(int64(0)))
+			Expect(updated.Volume).ToNot(BeNil())
+			Expect(*updated.Volume).To(Equal(int64(0)))
+		})
+
+		It("should not update Volume if new value is nil", func() {
+			baseVal := int64(1000)
+			basePackage := DeliveryUnit{
+				Volume: &baseVal,
+			}
+			newPackage := DeliveryUnit{
+				Volume: nil,
+			}
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
+			Expect(changed).To(BeFalse())
+			Expect(updated.Volume).ToNot(BeNil())
+			Expect(*updated.Volume).To(Equal(int64(1000)))
 		})
 
 		It("should update Weight to zero", func() {
+			wgt := int64(500)
+			zero := int64(0)
 			basePackage := DeliveryUnit{
-				Weight: 500,
+				Weight: &wgt,
 			}
 			newPackage := DeliveryUnit{
-				Weight: 0,
+				Weight: &zero,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Weight).To(Equal(int64(0)))
+			Expect(updated.Weight).ToNot(BeNil())
+			Expect(*updated.Weight).To(Equal(int64(0)))
+		})
+
+		It("should not update Weight if new value is nil", func() {
+			wgt := int64(500)
+			basePackage := DeliveryUnit{
+				Weight: &wgt,
+			}
+			newPackage := DeliveryUnit{
+				Weight: nil,
+			}
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
+			Expect(changed).To(BeFalse())
+			Expect(updated.Weight).ToNot(BeNil())
+			Expect(*updated.Weight).To(Equal(int64(500)))
 		})
 
 		It("should update Insurance to zero", func() {
+			ins := int64(200)
+			zero := int64(0)
 			basePackage := DeliveryUnit{
-				Insurance: 200,
+				Insurance: &ins,
 			}
 			newPackage := DeliveryUnit{
-				Insurance: 0,
+				Insurance: &zero,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Insurance).To(Equal(int64(0)))
+			Expect(updated.Insurance).ToNot(BeNil())
+			Expect(*updated.Insurance).To(Equal(int64(0)))
+		})
+
+		It("should not update Insurance if new value is nil", func() {
+			ins := int64(200)
+			basePackage := DeliveryUnit{
+				Insurance: &ins,
+			}
+			newPackage := DeliveryUnit{
+				Insurance: nil,
+			}
+			updated, changed := basePackage.UpdateIfChanged(newPackage)
+			Expect(changed).To(BeFalse())
+			Expect(updated.Insurance).ToNot(BeNil())
+			Expect(*updated.Insurance).To(Equal(int64(200)))
 		})
 	})
 

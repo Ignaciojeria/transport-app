@@ -10,9 +10,9 @@ type DeliveryUnit struct {
 	SizeCategory    SizeCategory
 	Lpn             string
 	noLPNReference  string
-	Volume          int64
-	Weight          int64
-	Insurance       int64
+	Volume          *int64
+	Weight          *int64
+	Insurance       *int64
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -58,20 +58,18 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 		changed = true
 	}
 
-	// Actualizar volumen siempre que cambie
-	if newPackage.Volume != p.Volume {
+	// Actualizar volumen si el puntero no es nil y el valor es diferente
+	if newPackage.Volume != nil && (p.Volume == nil || *newPackage.Volume != *p.Volume) {
 		p.Volume = newPackage.Volume
 		changed = true
 	}
-
-	// Actualizar peso siempre que cambie
-	if newPackage.Weight != p.Weight {
+	// Actualizar peso si el puntero no es nil y el valor es diferente
+	if newPackage.Weight != nil && (p.Weight == nil || *newPackage.Weight != *p.Weight) {
 		p.Weight = newPackage.Weight
 		changed = true
 	}
-
-	// Actualizar seguro siempre que cambie
-	if newPackage.Insurance != p.Insurance {
+	// Actualizar seguro si el puntero no es nil y el valor es diferente
+	if newPackage.Insurance != nil && (p.Insurance == nil || *newPackage.Insurance != *p.Insurance) {
 		p.Insurance = newPackage.Insurance
 		changed = true
 	}
@@ -99,9 +97,9 @@ func (p *DeliveryUnit) UpdateStatusBasedOnNonDelivery() {
 
 // SetValues sets the simplified values directly
 func (p *DeliveryUnit) SetValues(volume, weight, insurance int64) {
-	p.Volume = volume
-	p.Weight = weight
-	p.Insurance = insurance
+	p.Volume = &volume
+	p.Weight = &weight
+	p.Insurance = &insurance
 }
 
 // ToOptimizationDeliveryUnit converts this DeliveryUnit to the optimization domain structure
@@ -115,9 +113,9 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 
 	return optimization.DeliveryUnit{
 		Items:     items,
-		Insurance: p.Insurance,
-		Volume:    p.Volume,
-		Weight:    p.Weight,
+		Insurance: *p.Insurance,
+		Volume:    *p.Volume,
+		Weight:    *p.Weight,
 		Lpn:       p.Lpn,
 	}
 }
@@ -133,9 +131,9 @@ func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit 
 
 	return DeliveryUnit{
 		Lpn:       optDU.Lpn,
-		Volume:    optDU.Volume,
-		Weight:    optDU.Weight,
-		Insurance: optDU.Insurance,
+		Volume:    &optDU.Volume,
+		Weight:    &optDU.Weight,
+		Insurance: &optDU.Insurance,
 		Items:     items,
 	}
 }

@@ -27,9 +27,9 @@ func (p DeliveryUnit) Map() domain.DeliveryUnit {
 	return domain.DeliveryUnit{
 		Lpn:          p.Lpn,
 		SizeCategory: p.SizeCategory.Map(),
-		Volume:       p.Volume,
-		Weight:       p.Weight,
-		Insurance:    p.Insurance,
+		Volume:       &p.Volume,
+		Weight:       &p.Weight,
+		Insurance:    &p.Insurance,
 		Items:        p.JSONItems.Map(),
 	}
 }

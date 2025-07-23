@@ -104,12 +104,22 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []table.DeliveryUnit {
 	mapped := make([]table.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
+		var vol, wgt, ins int64
+		if pkg.Volume != nil {
+			vol = *pkg.Volume
+		}
+		if pkg.Weight != nil {
+			wgt = *pkg.Weight
+		}
+		if pkg.Insurance != nil {
+			ins = *pkg.Insurance
+		}
 		mapped[i] = table.DeliveryUnit{
 			TenantID:  sharedcontext.TenantIDFromContext(ctx),
 			Lpn:       pkg.Lpn,
-			Volume:    pkg.Volume,
-			Weight:    pkg.Weight,
-			Insurance: pkg.Insurance,
+			Volume:    vol,
+			Weight:    wgt,
+			Insurance: ins,
 			JSONItems: mapItemsToTable(pkg.Items),
 		}
 	}
@@ -117,13 +127,23 @@ func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []t
 }
 
 func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.DeliveryUnit {
+	var vol, wgt, ins int64
+	if pkg.Volume != nil {
+		vol = *pkg.Volume
+	}
+	if pkg.Weight != nil {
+		wgt = *pkg.Weight
+	}
+	if pkg.Insurance != nil {
+		ins = *pkg.Insurance
+	}
 	return table.DeliveryUnit{
 		TenantID:        sharedcontext.TenantIDFromContext(ctx),
 		DocumentID:      pkg.DocID(ctx).String(),
 		Lpn:             pkg.Lpn,
-		Volume:          pkg.Volume,
-		Weight:          pkg.Weight,
-		Insurance:       pkg.Insurance,
+		Volume:          vol,
+		Weight:          wgt,
+		Insurance:       ins,
 		JSONItems:       mapItemsToTable(pkg.Items),
 		SizeCategoryDoc: pkg.SizeCategory.DocumentID(ctx).String(),
 	}

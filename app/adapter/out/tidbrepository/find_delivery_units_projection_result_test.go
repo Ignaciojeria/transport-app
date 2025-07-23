@@ -368,11 +368,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear delivery unit
+		vol := int64(6000)
+		wgt := int64(5500)
+		ins := int64(10000)
 		deliveryUnit := domain.DeliveryUnit{
 			Lpn:       "LPN123",
-			Volume:    6000,  // 10 * 20 * 30 = 6000 cm³
-			Weight:    5500,  // 5500 g
-			Insurance: 10000, // 10000 CLP
+			Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
+			Weight:    &wgt, // 5500 g
+			Insurance: &ins, // 10000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "SKU123",

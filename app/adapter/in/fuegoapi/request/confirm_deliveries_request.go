@@ -126,6 +126,7 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 			deliveryUnits = append(deliveryUnits, domain.DeliveryUnit{
 				Lpn:   du.Lpn,
 				Items: items,
+				// Volume, Weight, Insurance: nil (no presentes en este request)
 				ConfirmDelivery: domain.ConfirmDelivery{
 					ManualChange: domain.ManualChange{
 						PerformedBy: r.ManualChange.PerformedBy,

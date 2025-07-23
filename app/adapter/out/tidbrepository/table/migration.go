@@ -61,6 +61,7 @@ func NewRunMigrations(
 			&Skill{},
 			&DeliveryUnitsSkills{},
 			&ClientCredential{},
+			&FSMStateHistory{},
 		}
 
 		// Crear las tablas nuevamente

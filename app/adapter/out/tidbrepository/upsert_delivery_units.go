@@ -68,6 +68,16 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory) UpsertDeliveryUnits
 				updatedTablePkg.CreatedAt = existingPkg.CreatedAt
 				updatedTablePkg.DocumentID = existingPkg.DocumentID
 
+				if updatedDomainPkg.Volume != nil {
+					updatedTablePkg.Volume = *updatedDomainPkg.Volume
+				}
+				if updatedDomainPkg.Weight != nil {
+					updatedTablePkg.Weight = *updatedDomainPkg.Weight
+				}
+				if updatedDomainPkg.Insurance != nil {
+					updatedTablePkg.Insurance = *updatedDomainPkg.Insurance
+				}
+
 				DBpackagesToUpsert = append(DBpackagesToUpsert, updatedTablePkg)
 			} else {
 				newTablePkg := mapper.MapPackageToTable(ctx, domainPkg)
