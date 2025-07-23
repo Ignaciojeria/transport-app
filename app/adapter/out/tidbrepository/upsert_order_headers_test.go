@@ -18,7 +18,7 @@ var _ = Describe("UpsertOrderHeaders", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertOrderHeaders(conn)
+		upsert = NewUpsertOrderHeaders(conn, nil)
 	})
 
 	It("should insert headers if not exists", func() {
@@ -179,7 +179,7 @@ var _ = Describe("UpsertOrderHeaders", func() {
 			Channel:  "WEB",
 		}
 
-		upsert := NewUpsertOrderHeaders(noTablesContainerConnection)
+		upsert := NewUpsertOrderHeaders(noTablesContainerConnection, nil)
 		err = upsert(ctx, headers)
 
 		Expect(err).To(HaveOccurred())

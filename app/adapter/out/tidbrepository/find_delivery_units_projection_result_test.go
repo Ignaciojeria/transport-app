@@ -79,7 +79,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			ZipCode: "12345",
 		}
-		err = NewUpsertAddressInfo(conn)(ctx, destination)
+		err = NewUpsertAddressInfo(conn, nil)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred(), "Failed to upsert address info: %v", err)
 
 		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
@@ -281,7 +281,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			ZipCode: "12345",
 			Contact: contact,
 		}
-		err = NewUpsertAddressInfo(conn)(ctx, destination)
+		err = NewUpsertAddressInfo(conn, nil)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
 
 		fixedDate := time.Date(2025, 5, 26, 0, 0, 0, 0, time.UTC)
@@ -401,7 +401,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		err = NewUpsertOrder(conn)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertOrderHeaders(conn)(ctx, order.Headers)
+		err = NewUpsertOrderHeaders(conn, nil)(ctx, order.Headers)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
@@ -837,7 +837,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			ZipCode: "10022",
 			Contact: originContact,
 		}
-		err = NewUpsertAddressInfo(conn)(ctx, origin)
+		err = NewUpsertAddressInfo(conn, nil)(ctx, origin)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = NewUpsertPoliticalArea(conn)(ctx, origin.PoliticalArea)
@@ -1640,7 +1640,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Insertar direcciones
 		for _, dest := range destinations {
-			err = NewUpsertAddressInfo(conn)(ctx, dest)
+			err = NewUpsertAddressInfo(conn, nil)(ctx, dest)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
@@ -2679,7 +2679,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 			ZipCode: "12345",
 		}
-		err = NewUpsertAddressInfo(conn)(ctx, destination)
+		err = NewUpsertAddressInfo(conn, nil)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)

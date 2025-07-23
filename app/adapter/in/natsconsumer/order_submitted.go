@@ -24,6 +24,8 @@ func init() {
 		usecase.NewCreateOrder,
 		observability.NewObservability,
 		configuration.NewConf,
+		usecase.NewUpsertAddressInfoWorkflow,
+		usecase.NewUpsertOrderHeadersWorkflow,
 	)
 }
 
@@ -32,6 +34,8 @@ func newNatsConsumer(
 	createOrder usecase.CreateOrder,
 	obs observability.Observability,
 	conf configuration.Conf,
+	upsertAddressInfoWorkflow usecase.UpsertAddressInfoWorkflow,
+	upsertOrderHeadersWorkflow usecase.UpsertOrderHeadersWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.ORDER_SUBMITTED_SUBSCRIPTION == "" {
@@ -72,12 +76,37 @@ func newNatsConsumer(
 			return
 		}
 
-		// Procesar la orden
-		if err := createOrder(ctx, input.Map(ctx)); err != nil {
+		order := input.Map(ctx)
+
+		order.Origin.AddressInfo.ToLowerAndRemovePunctuation()
+		order.Destination.AddressInfo.ToLowerAndRemovePunctuation()
+		order.AssignIndexesIfNoLPN()
+
+		if err := upsertAddressInfoWorkflow(ctx, order.Origin.AddressInfo); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando orden", "error", err)
 			msg.Ack()
 			return
 		}
+
+		if err := upsertAddressInfoWorkflow(ctx, order.Destination.AddressInfo); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando orden", "error", err)
+			msg.Ack()
+			return
+		}
+
+		if err := upsertOrderHeadersWorkflow(ctx, order.Headers); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando orden", "error", err)
+			msg.Ack()
+			return
+		}
+
+		/*
+			if err := createOrder(ctx, input.Map(ctx)); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando orden", "error", err)
+				msg.Ack()
+				return
+			}
+		*/
 
 		obs.Logger.InfoContext(ctx, "Orden procesada exitosamente desde NATS",
 			"eventType", "orderSubmitted",

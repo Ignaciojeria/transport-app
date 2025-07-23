@@ -212,6 +212,7 @@ require (
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/clickhouse v0.7.0 // indirect
+	olympos.io/encoding/cjson v0.0.0-20191103175252-b41f647ea928 // indirect
 )
 
 replace github.com/ugorji/go => github.com/ugorji/go v1.2.12

@@ -77,7 +77,7 @@ func NewCreateOrder(
 		group, group2Ctx := errgroup.WithContext(ctx)
 
 		group.Go(func() error {
-			return upsertOrderHeaders(group2Ctx, inOrder.Headers)
+			return upsertOrderHeaders(group2Ctx, inOrder.Headers, domain.FSMState{})
 		})
 
 		group.Go(func() error {

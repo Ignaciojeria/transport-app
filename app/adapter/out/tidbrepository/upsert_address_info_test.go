@@ -19,7 +19,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertAddressInfo(conn)
+		upsert = NewUpsertAddressInfo(conn, nil)
 	})
 
 	It("should insert addressInfo and its related entities if not exists", func() {
@@ -408,7 +408,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 			AddressLine1: "Error Esperado",
 		}
 
-		upsert := NewUpsertAddressInfo(noTablesContainerConnection)
+		upsert := NewUpsertAddressInfo(noTablesContainerConnection, nil)
 		err = upsert(ctx, addressInfo)
 
 		Expect(err).To(HaveOccurred())

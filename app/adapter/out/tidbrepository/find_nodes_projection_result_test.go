@@ -69,7 +69,7 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -132,7 +132,7 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -184,7 +184,7 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -239,7 +239,7 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -305,7 +305,7 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
