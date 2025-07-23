@@ -3,15 +3,16 @@ package domain
 import (
 	"context"
 	"sort"
+	"transport-app/app/domain/optimization"
 )
 
 type DeliveryUnit struct {
 	SizeCategory    SizeCategory
 	Lpn             string
 	noLPNReference  string
-	Dimensions      Dimensions
-	Weight          Weight
-	Insurance       Insurance
+	Volume          int64
+	Weight          int64
+	Insurance       int64
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -57,20 +58,20 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 		changed = true
 	}
 
-	// Actualizar dimensiones si no están vacías
-	if newPackage.Dimensions != (Dimensions{}) {
-		p.Dimensions = newPackage.Dimensions
+	// Actualizar volumen si no está vacío
+	if newPackage.Volume != 0 && newPackage.Volume != p.Volume {
+		p.Volume = newPackage.Volume
 		changed = true
 	}
 
 	// Actualizar peso si no está vacío
-	if newPackage.Weight != (Weight{}) {
+	if newPackage.Weight != 0 && newPackage.Weight != p.Weight {
 		p.Weight = newPackage.Weight
 		changed = true
 	}
 
 	// Actualizar seguro si no está vacío
-	if newPackage.Insurance != (Insurance{}) {
+	if newPackage.Insurance != 0 && newPackage.Insurance != p.Insurance {
 		p.Insurance = newPackage.Insurance
 		changed = true
 	}
@@ -93,5 +94,48 @@ func (p *DeliveryUnit) UpdateStatusBasedOnNonDelivery() {
 		p.Status = Status{
 			Status: StatusPending,
 		}
+	}
+}
+
+// SetValues sets the simplified values directly
+func (p *DeliveryUnit) SetValues(volume, weight, insurance int64) {
+	p.Volume = volume
+	p.Weight = weight
+	p.Insurance = insurance
+}
+
+// ToOptimizationDeliveryUnit converts this DeliveryUnit to the optimization domain structure
+func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
+	items := make([]optimization.Item, len(p.Items))
+	for i, item := range p.Items {
+		items[i] = optimization.Item{
+			Sku: item.Sku,
+		}
+	}
+
+	return optimization.DeliveryUnit{
+		Items:     items,
+		Insurance: p.Insurance,
+		Volume:    p.Volume,
+		Weight:    p.Weight,
+		Lpn:       p.Lpn,
+	}
+}
+
+// FromOptimizationDeliveryUnit creates a DeliveryUnit from the optimization domain structure
+func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit {
+	items := make([]Item, len(optDU.Items))
+	for i, item := range optDU.Items {
+		items[i] = Item{
+			Sku: item.Sku,
+		}
+	}
+
+	return DeliveryUnit{
+		Lpn:       optDU.Lpn,
+		Volume:    optDU.Volume,
+		Weight:    optDU.Weight,
+		Insurance: optDU.Insurance,
+		Items:     items,
 	}
 }

@@ -84,13 +84,9 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 	for i, item := range items {
 
 		mapped[i] = table.Items{
-			Sku:            item.Sku,
-			QuantityNumber: item.Quantity.QuantityNumber,
-			QuantityUnit:   item.Quantity.QuantityUnit,
-			JSONInsurance: table.JSONInsurance{
-				UnitValue: item.Insurance.UnitValue,
-				Currency:  item.Insurance.Currency,
-			},
+			Sku:         item.Sku,
+			Quantity:    item.Quantity,
+			Insurance:   item.Insurance,
 			Description: item.Description,
 			JSONDimensions: table.JSONDimensions{
 				Height: item.Dimensions.Height,
@@ -98,10 +94,7 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 				Length: item.Dimensions.Length,
 				Unit:   item.Dimensions.Unit,
 			},
-			JSONWeight: table.JSONWeight{
-				WeightValue: item.Weight.Value,
-				WeightUnit:  item.Weight.Unit,
-			},
+			Weight: item.Weight,
 		}
 	}
 
@@ -112,22 +105,12 @@ func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []t
 	mapped := make([]table.DeliveryUnit, len(packages))
 	for i, pkg := range packages {
 		mapped[i] = table.DeliveryUnit{
-			TenantID: sharedcontext.TenantIDFromContext(ctx),
-			Lpn:      pkg.Lpn,
-			JSONDimensions: table.JSONDimensions{
-				Height: pkg.Dimensions.Height,
-				Width:  pkg.Dimensions.Width,
-				Length: pkg.Dimensions.Length,
-				Unit:   pkg.Dimensions.Unit,
-			},
-			JSONWeight: table.JSONWeight{
-				WeightValue: pkg.Weight.Value,
-				WeightUnit:  pkg.Weight.Unit,
-			},
-			JSONInsurance: table.JSONInsurance{
-				UnitValue: pkg.Insurance.UnitValue,
-				Currency:  pkg.Insurance.Currency,
-			},
+			TenantID:  sharedcontext.TenantIDFromContext(ctx),
+			Lpn:       pkg.Lpn,
+			Volume:    pkg.Volume,
+			Weight:    pkg.Weight,
+			Insurance: pkg.Insurance,
+			JSONItems: mapItemsToTable(pkg.Items),
 		}
 	}
 	return mapped
@@ -135,23 +118,12 @@ func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []t
 
 func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.DeliveryUnit {
 	return table.DeliveryUnit{
-		TenantID:   sharedcontext.TenantIDFromContext(ctx),
-		DocumentID: pkg.DocID(ctx).String(),
-		Lpn:        pkg.Lpn,
-		JSONDimensions: table.JSONDimensions{
-			Height: pkg.Dimensions.Height,
-			Width:  pkg.Dimensions.Width,
-			Length: pkg.Dimensions.Length,
-			Unit:   pkg.Dimensions.Unit,
-		},
-		JSONWeight: table.JSONWeight{
-			WeightValue: pkg.Weight.Value,
-			WeightUnit:  pkg.Weight.Unit,
-		},
-		JSONInsurance: table.JSONInsurance{
-			UnitValue: pkg.Insurance.UnitValue,
-			Currency:  pkg.Insurance.Currency,
-		},
+		TenantID:        sharedcontext.TenantIDFromContext(ctx),
+		DocumentID:      pkg.DocID(ctx).String(),
+		Lpn:             pkg.Lpn,
+		Volume:          pkg.Volume,
+		Weight:          pkg.Weight,
+		Insurance:       pkg.Insurance,
 		JSONItems:       mapItemsToTable(pkg.Items),
 		SizeCategoryDoc: pkg.SizeCategory.DocumentID(ctx).String(),
 	}

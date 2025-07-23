@@ -361,14 +361,14 @@ func NewFindDeliveryUnitsProjectionResult(
 			ds = ds.SelectAppend(goqu.I("sc.code").As("size_category"))
 		}
 
-		if projection.DeliveryUnitDimensions().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(du + ".json_dimensions").As("json_dimensions"))
+		if projection.DeliveryUnitVolume().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".volume").As("volume"))
 		}
 		if projection.DeliveryUnitWeight().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(du + ".json_weight").As("json_weight"))
+			ds = ds.SelectAppend(goqu.I(du + ".weight").As("weight"))
 		}
 		if projection.DeliveryUnitInsurance().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(du + ".json_insurance").As("json_insurance"))
+			ds = ds.SelectAppend(goqu.I(du + ".insurance").As("insurance"))
 		}
 		if projection.DeliveryUnitItems().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".json_items").As("json_items"))

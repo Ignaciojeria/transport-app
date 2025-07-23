@@ -154,39 +154,22 @@ var _ = Describe("Package", func() {
 
 		BeforeEach(func() {
 			basePackage = DeliveryUnit{
-				Lpn: "PKG-TEST",
-				Dimensions: Dimensions{
-					Length: 10.0,
-					Width:  20.0,
-					Height: 30.0,
-					Unit:   "cm",
-				},
-				Weight: Weight{
-					Value: 5.0,
-					Unit:  "kg",
-				},
-				Insurance: Insurance{
-					UnitValue: 1000.0,
-					Currency:  "USD",
-				},
+				Lpn:       "PKG-TEST",
+				Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+				Weight:    5000, // 5 kg = 5000 g
+				Insurance: 1000, // 1000 CLP (simplified)
 				Items: []Item{
 					{
 						Sku:         "ITEM001",
 						Description: "Item 1 Description",
-						Quantity:    Quantity{QuantityNumber: 2, QuantityUnit: "unit"},
-						Weight: Weight{
-							Value: 1.0,
-							Unit:  "kg",
-						},
+						Quantity:    2,
+						Weight:      1000,
 					},
 					{
 						Sku:         "ITEM002",
 						Description: "Item 2 Description",
-						Quantity:    Quantity{QuantityNumber: 1, QuantityUnit: "unit"},
-						Weight: Weight{
-							Value: 500,
-							Unit:  "g",
-						},
+						Quantity:    1,
+						Weight:      500,
 					},
 				},
 			}
@@ -202,26 +185,21 @@ var _ = Describe("Package", func() {
 			Expect(changed).To(BeTrue())
 			Expect(updated.Lpn).To(Equal("PKG-UPDATED"))
 			// Verificar que otros campos se mantienen igual
-			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
+			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
-		It("should update Dimensions", func() {
+		It("should update Volume", func() {
 			newPackage := DeliveryUnit{
-				Dimensions: Dimensions{
-					Length: 15.0,
-					Width:  25.0,
-					Height: 35.0,
-					Unit:   "mm",
-				},
+				Volume: 13125, // 15 * 25 * 35 = 13125 cm³
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
 			Expect(changed).To(BeTrue())
-			Expect(updated.Dimensions).To(Equal(newPackage.Dimensions))
+			Expect(updated.Volume).To(Equal(newPackage.Volume))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
@@ -231,10 +209,7 @@ var _ = Describe("Package", func() {
 
 		It("should update Weight", func() {
 			newPackage := DeliveryUnit{
-				Weight: Weight{
-					Value: 7500,
-					Unit:  "g",
-				},
+				Weight: 7500, // 7500 g
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
@@ -243,17 +218,14 @@ var _ = Describe("Package", func() {
 			Expect(updated.Weight).To(Equal(newPackage.Weight))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
+			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
 		It("should update Insurance", func() {
 			newPackage := DeliveryUnit{
-				Insurance: Insurance{
-					UnitValue: 2000.0,
-					Currency:  "EUR",
-				},
+				Insurance: 2000, // 2000 CLP
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
@@ -262,7 +234,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Insurance).To(Equal(newPackage.Insurance))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
+			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
@@ -273,20 +245,14 @@ var _ = Describe("Package", func() {
 					{
 						Sku:         "ITEM003",
 						Description: "New Item 3",
-						Quantity:    Quantity{QuantityNumber: 3, QuantityUnit: "unit"},
-						Weight: Weight{
-							Value: 1500,
-							Unit:  "g",
-						},
+						Quantity:    3,
+						Weight:      1500,
 					},
 					{
 						Sku:         "ITEM004",
 						Description: "New Item 4",
-						Quantity:    Quantity{QuantityNumber: 4, QuantityUnit: "box"},
-						Weight: Weight{
-							Value: 2.0,
-							Unit:  "kg",
-						},
+						Quantity:    4,
+						Weight:      2000,
 					},
 				},
 			}
@@ -297,7 +263,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Items).To(Equal(newPackage.Items))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
-			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
+			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 		})
@@ -317,20 +283,14 @@ var _ = Describe("Package", func() {
 
 		It("should update multiple fields at once", func() {
 			newPackage := DeliveryUnit{
-				Lpn: "PKG-MULTI-UPDATE",
-				Weight: Weight{
-					Value: 8.0,
-					Unit:  "oz",
-				},
+				Lpn:    "PKG-MULTI-UPDATE",
+				Weight: 8000, // 8000 g
 				Items: []Item{
 					{
 						Sku:         "ITEM005",
 						Description: "New Item for Multi-update",
-						Quantity:    Quantity{QuantityNumber: 5, QuantityUnit: "pallet"},
-						Weight: Weight{
-							Value: 3.0,
-							Unit:  "kg",
-						},
+						Quantity:    5,
+						Weight:      3000,
 					},
 				},
 			}
@@ -342,7 +302,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Weight).To(Equal(newPackage.Weight))
 			Expect(updated.Items).To(Equal(newPackage.Items))
 			// Estos campos no deberían cambiar
-			Expect(updated.Dimensions).To(Equal(basePackage.Dimensions))
+			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
 		})
 
@@ -373,7 +333,7 @@ var _ = Describe("Package", func() {
 					{
 						Sku:         "NEW-SINGLE-ITEM",
 						Description: "Single Item Update",
-						Quantity:    Quantity{QuantityNumber: 10, QuantityUnit: "unit"},
+						Quantity:    10,
 					},
 				},
 			}

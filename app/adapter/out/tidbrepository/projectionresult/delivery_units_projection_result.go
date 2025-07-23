@@ -72,12 +72,12 @@ type DeliveryUnitsProjectionResult struct {
 	OrderTypeDescription string `json:"order_type_description"`
 
 	// LPN and Package Information
-	LPN                string               `json:"lpn"`
-	JSONDimensions     table.JSONDimensions `json:"json_dimensions"`
-	JSONWeight         table.JSONWeight     `json:"json_weight"`
-	JSONInsurance      table.JSONInsurance  `json:"json_insurance"`
-	JSONItems          table.JSONItems      `json:"json_items"`
-	DeliveryUnitLabels table.JSONReference  `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
+	LPN                string              `json:"lpn"`
+	Volume             int64               `json:"volume"`
+	Weight             int64               `json:"weight"`
+	Insurance          int64               `json:"insurance"`
+	JSONItems          table.JSONItems     `json:"json_items"`
+	DeliveryUnitLabels table.JSONReference `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 
 	SizeCategory string `json:"size_category"`
 

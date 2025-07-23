@@ -97,10 +97,7 @@ var _ = Describe("UpsertOrder", func() {
 						{
 							Sku:         "SKU-001",
 							Description: "Producto de prueba",
-							Quantity: domain.Quantity{
-								QuantityNumber: 2,
-								QuantityUnit:   "unidades",
-							},
+							Quantity:    2,
 						},
 					},
 				},
@@ -231,10 +228,7 @@ var _ = Describe("UpsertOrder", func() {
 						{
 							Sku:         "SKU-001",
 							Description: "Producto inicial",
-							Quantity: domain.Quantity{
-								QuantityNumber: 1,
-								QuantityUnit:   "unidad",
-							},
+							Quantity:    1,
 						},
 					},
 				},
@@ -254,10 +248,7 @@ var _ = Describe("UpsertOrder", func() {
 					{
 						Sku:         "SKU-001",
 						Description: "Producto inicial",
-						Quantity: domain.Quantity{
-							QuantityNumber: 1,
-							QuantityUnit:   "unidad",
-						},
+						Quantity:    1,
 					},
 				},
 			},
@@ -267,10 +258,7 @@ var _ = Describe("UpsertOrder", func() {
 					{
 						Sku:         "SKU-002",
 						Description: "Producto adicional",
-						Quantity: domain.Quantity{
-							QuantityNumber: 3,
-							QuantityUnit:   "unidades",
-						},
+						Quantity:    3,
 					},
 				},
 			},

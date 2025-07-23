@@ -220,24 +220,16 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 					return skills
 				}(),
 				SizeCategory: &du.SizeCategory,
-				Dimensions: &model.Dimension{
-					Length: &du.JSONDimensions.Length,
-					Width:  &du.JSONDimensions.Width,
-					Height: &du.JSONDimensions.Height,
-					Unit:   &du.JSONDimensions.Unit,
-				},
-				Insurance: &model.Insurance{
-					UnitValue: &du.JSONInsurance.UnitValue,
-					Currency:  &du.JSONInsurance.Currency,
-				},
+				Volume:       &du.Volume,
+				Weight:       &du.Weight,
+				Insurance:    &du.Insurance,
 				Items: func() []*model.Item {
 					if du.JSONItems == nil {
 						return []*model.Item{}
 					}
 					if len(du.JSONItems) == 1 && du.JSONItems[0].Sku != "" &&
 						du.JSONItems[0].Description == "" &&
-						du.JSONItems[0].QuantityNumber == 0 &&
-						du.JSONItems[0].QuantityUnit == "" {
+						du.JSONItems[0].Quantity == 0 {
 						return []*model.Item{}
 					}
 					items := make([]*model.Item, len(du.JSONItems))
@@ -245,24 +237,15 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 						items[i] = &model.Item{
 							Sku:         &item.Sku,
 							Description: &item.Description,
-							Quantity: &model.Quantity{
-								QuantityNumber: &item.QuantityNumber,
-								QuantityUnit:   &item.QuantityUnit,
-							},
+							Quantity:    &item.Quantity,
 							Dimensions: &model.Dimension{
 								Length: &item.JSONDimensions.Length,
 								Width:  &item.JSONDimensions.Width,
 								Height: &item.JSONDimensions.Height,
 								Unit:   &item.JSONDimensions.Unit,
 							},
-							Insurance: &model.Insurance{
-								UnitValue: &item.JSONInsurance.UnitValue,
-								Currency:  &item.JSONInsurance.Currency,
-							},
-							Weight: &model.Weight{
-								Unit:  &item.JSONWeight.WeightUnit,
-								Value: &item.JSONWeight.WeightValue,
-							},
+							Insurance: &item.Insurance,
+							Weight:    &item.Weight,
 						}
 					}
 					return items

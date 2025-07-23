@@ -93,14 +93,14 @@ type DeliveryRecipient struct {
 }
 
 type DeliveryUnit struct {
-	SizeCategory *string    `json:"sizeCategory,omitempty"`
-	Dimensions   *Dimension `json:"dimensions,omitempty"`
-	Insurance    *Insurance `json:"insurance,omitempty"`
-	Items        []*Item    `json:"items,omitempty"`
-	Labels       []*Label   `json:"labels,omitempty"`
-	Skills       []*string  `json:"skills,omitempty"`
-	Lpn          *string    `json:"lpn,omitempty"`
-	Weight       *Weight    `json:"weight,omitempty"`
+	SizeCategory *string   `json:"sizeCategory,omitempty"`
+	Volume       *int64    `json:"volume,omitempty"`
+	Weight       *int64    `json:"weight,omitempty"`
+	Insurance    *int64    `json:"insurance,omitempty"`
+	Items        []*Item   `json:"items,omitempty"`
+	Labels       []*Label  `json:"labels,omitempty"`
+	Skills       []*string `json:"skills,omitempty"`
+	Lpn          *string   `json:"lpn,omitempty"`
 }
 
 type DeliveryUnitFilter struct {
@@ -188,18 +188,13 @@ type GroupByFilter struct {
 	Value *string `json:"value,omitempty"`
 }
 
-type Insurance struct {
-	Currency  *string `json:"currency,omitempty"`
-	UnitValue *int64  `json:"unitValue,omitempty"`
-}
-
 type Item struct {
 	Sku         *string    `json:"sku,omitempty"`
 	Description *string    `json:"description,omitempty"`
 	Dimensions  *Dimension `json:"dimensions,omitempty"`
-	Insurance   *Insurance `json:"insurance,omitempty"`
-	Quantity    *Quantity  `json:"quantity,omitempty"`
-	Weight      *Weight    `json:"weight,omitempty"`
+	Insurance   *int64     `json:"insurance,omitempty"`
+	Quantity    *int       `json:"quantity,omitempty"`
+	Weight      *int64     `json:"weight,omitempty"`
 }
 
 type KeyValuePair struct {
@@ -306,11 +301,6 @@ type PromisedDateFilter struct {
 	TimeRange *TimeRangeFilter `json:"timeRange,omitempty"`
 }
 
-type Quantity struct {
-	QuantityNumber *int    `json:"quantityNumber,omitempty"`
-	QuantityUnit   *string `json:"quantityUnit,omitempty"`
-}
-
 type Query struct {
 }
 
@@ -342,9 +332,4 @@ type TimeRangeFilter struct {
 
 type Vehicle struct {
 	Plate *string `json:"plate,omitempty"`
-}
-
-type Weight struct {
-	Unit  *string `json:"unit,omitempty"`
-	Value *int64  `json:"value,omitempty"`
 }

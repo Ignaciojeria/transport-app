@@ -37,49 +37,27 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Crear paquetes para insertar
 		package1 := domain.DeliveryUnit{
-			Lpn: "PKG001",
-			Dimensions: domain.Dimensions{
-				Length: 1000,
-				Width:  2000,
-				Height: 3000,
-				Unit:   "cm",
-			},
-			Weight: domain.Weight{
-				Value: 5000,
-				Unit:  "g",
-			},
-			Insurance: domain.Insurance{
-				UnitValue: 1000,
-				Currency:  "USD",
-			},
+			Lpn:          "PKG001",
+			SizeCategory: domain.SizeCategory{Code: "SMALL"},
+			Volume:       6000000, // 1000 * 2000 * 3000 = 6000000 cm³
+			Weight:       5000,    // 5000 g
+			Insurance:    1000,    // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM001",
 					Description: "Item de prueba",
-					Quantity: domain.Quantity{
-						QuantityNumber: 2,
-						QuantityUnit:   "unit",
-					},
-					Weight: domain.Weight{
-						Value: 1000,
-						Unit:  "g",
-					},
+					Quantity:    2,
+					Weight:      1000,
 				},
 			},
 		}
 
 		package2 := domain.DeliveryUnit{
-			Lpn: "PKG002",
-			Dimensions: domain.Dimensions{
-				Length: 1500,
-				Width:  2500,
-				Height: 3500,
-				Unit:   "cm",
-			},
-			Weight: domain.Weight{
-				Value: 7500,
-				Unit:  "g",
-			},
+			Lpn:          "PKG002",
+			SizeCategory: domain.SizeCategory{Code: "MEDIUM"},
+			Volume:       13125000, // 1500 * 2500 * 3500 = 13125000 cm³
+			Weight:       7500,     // 7500 g
+			Insurance:    0,        // Sin seguro
 		}
 
 		// Insertar los paquetes
@@ -107,32 +85,18 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(dbPackage1.Lpn).To(Equal("PKG001"))
 		Expect(dbPackage1.TenantID.String()).To(Equal(tenant.ID.String()))
 
-		// Verificar las dimensiones (que están en JSON)
-		dimensions := dbPackage1.JSONDimensions.Map()
-		Expect(dimensions.Length).To(Equal(int64(1000)))
-		Expect(dimensions.Width).To(Equal(int64(2000)))
-		Expect(dimensions.Height).To(Equal(int64(3000)))
-		Expect(dimensions.Unit).To(Equal("cm"))
-
-		// Verificar el peso (que está en JSON)
-		weight := dbPackage1.JSONWeight.Map()
-		Expect(weight.Value).To(Equal(int64(5000)))
-		Expect(weight.Unit).To(Equal("g"))
-
-		// Verificar el seguro (que está en JSON)
-		insurance := dbPackage1.JSONInsurance.Map()
-		Expect(insurance.UnitValue).To(Equal(int64(1000)))
-		Expect(insurance.Currency).To(Equal("USD"))
+		// Verificar los campos simplificados
+		Expect(dbPackage1.Volume).To(Equal(int64(6000000)))
+		Expect(dbPackage1.Weight).To(Equal(int64(5000)))
+		Expect(dbPackage1.Insurance).To(Equal(int64(1000)))
 
 		// Verificar items dentro del paquete
 		items := dbPackage1.JSONItems.Map()
 		Expect(items).To(HaveLen(1))
 		Expect(items[0].Sku).To(Equal("ITEM001"))
 		Expect(items[0].Description).To(Equal("Item de prueba"))
-		Expect(items[0].Quantity.QuantityNumber).To(Equal(2))
-		Expect(items[0].Quantity.QuantityUnit).To(Equal("unit"))
-		Expect(items[0].Weight.Value).To(Equal(int64(1000)))
-		Expect(items[0].Weight.Unit).To(Equal("g"))
+		Expect(items[0].Quantity).To(Equal(2))
+		Expect(items[0].Weight).To(Equal(int64(1000)))
 	})
 
 	It("should update existing packages", func() {
@@ -142,17 +106,10 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Crear paquete inicial
 		originalPackage := domain.DeliveryUnit{
-			Lpn: "PKG003",
-			Dimensions: domain.Dimensions{
-				Length: 1000,
-				Width:  2000,
-				Height: 3000,
-				Unit:   "cm",
-			},
-			Weight: domain.Weight{
-				Value: 5000,
-				Unit:  "g",
-			},
+			Lpn:       "PKG003",
+			Volume:    6000000, // 1000 * 2000 * 3000 = 6000000 cm³
+			Weight:    5000,    // 5000 g
+			Insurance: 0,       // Sin seguro
 		}
 
 		// Insertar el paquete original
@@ -162,8 +119,8 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Modificar el paquete
 		modifiedPackage := originalPackage
-		modifiedPackage.Dimensions.Length = 1500
-		modifiedPackage.Weight.Value = 7500
+		modifiedPackage.Volume = 9000000 // 1500 * 2000 * 3000 = 9000000 cm³
+		modifiedPackage.Weight = 7500    // 7500 g
 
 		// Actualizar el paquete
 		err = upsert(ctx, []domain.DeliveryUnit{modifiedPackage})
@@ -177,14 +134,9 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			First(&dbPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
-		dimensions := dbPackage.JSONDimensions.Map()
-		Expect(dimensions.Length).To(Equal(int64(1500)))
-		Expect(dimensions.Width).To(Equal(int64(2000)))
-		Expect(dimensions.Height).To(Equal(int64(3000)))
-
-		weight := dbPackage.JSONWeight.Map()
-		Expect(weight.Value).To(Equal(int64(7500)))
-		Expect(weight.Unit).To(Equal("g"))
+		// Verificar los campos simplificados
+		Expect(dbPackage.Volume).To(Equal(int64(9000000)))
+		Expect(dbPackage.Weight).To(Equal(int64(7500)))
 	})
 
 	It("should allow same packages for different tenants", func() {
@@ -195,23 +147,17 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		package1 := domain.DeliveryUnit{
-			Lpn: "PKG004",
-			Dimensions: domain.Dimensions{
-				Length: 10,
-				Width:  20,
-				Height: 30,
-				Unit:   "cm",
-			},
+			Lpn:       "PKG004",
+			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+			Weight:    0,    // Sin peso
+			Insurance: 0,    // Sin seguro
 		}
 
 		package2 := domain.DeliveryUnit{
-			Lpn: "PKG004",
-			Dimensions: domain.Dimensions{
-				Length: 10,
-				Width:  20,
-				Height: 30,
-				Unit:   "cm",
-			},
+			Lpn:       "PKG004",
+			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+			Weight:    0,    // Sin peso
+			Insurance: 0,    // Sin seguro
 		}
 
 		upsert := NewUpsertDeliveryUnits(conn)
@@ -253,13 +199,10 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		package1 := domain.DeliveryUnit{
-			Lpn: "PKG005",
-			Dimensions: domain.Dimensions{
-				Length: 10,
-				Width:  20,
-				Height: 30,
-				Unit:   "cm",
-			},
+			Lpn:       "PKG005",
+			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+			Weight:    1000, // 1000 g
+			Insurance: 0,    // Sin seguro
 		}
 
 		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
@@ -276,13 +219,10 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Crear un paquete inicial
 		existingPackage := domain.DeliveryUnit{
-			Lpn: "PKG-EXISTING",
-			Dimensions: domain.Dimensions{
-				Length: 10,
-				Width:  20,
-				Height: 30,
-				Unit:   "cm",
-			},
+			Lpn:       "PKG-EXISTING",
+			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+			Weight:    1000, // 1000 g
+			Insurance: 0,    // Sin seguro
 		}
 
 		// Guardar el DocID del paquete existente
@@ -295,24 +235,18 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Crear un nuevo paquete para inserción
 		newPackage := domain.DeliveryUnit{
-			Lpn: "PKG-NEW",
-			Dimensions: domain.Dimensions{
-				Length: 15,
-				Width:  25,
-				Height: 35,
-				Unit:   "cm",
-			},
+			Lpn:       "PKG-NEW",
+			Volume:    13125, // 15 * 25 * 35 = 13125 cm³
+			Weight:    2000,  // 2000 g
+			Insurance: 500,   // 500 CLP
 		}
 
 		// Crear versión actualizada del paquete existente
 		updatedExistingPackage := domain.DeliveryUnit{
-			Lpn: "PKG-EXISTING",
-			Dimensions: domain.Dimensions{
-				Length: 15,
-				Width:  25,
-				Height: 35,
-				Unit:   "mm",
-			},
+			Lpn:       "PKG-EXISTING",
+			Volume:    13125, // 15 * 25 * 35 = 13125 cm³
+			Weight:    2000,  // 2000 g
+			Insurance: 500,   // 500 CLP
 		}
 
 		// Verificar que el DocID del paquete actualizado coincide con el original
@@ -341,8 +275,10 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			First(&updatedDBPackage).Error
 		Expect(err).ToNot(HaveOccurred())
 
-		updatedDimensions := updatedDBPackage.JSONDimensions.Map()
-		Expect(updatedDimensions.Unit).To(Equal("mm"))
+		// Verificar que los campos se actualizaron correctamente
+		Expect(updatedDBPackage.Volume).To(Equal(int64(13125)))
+		Expect(updatedDBPackage.Weight).To(Equal(int64(2000)))
+		Expect(updatedDBPackage.Insurance).To(Equal(int64(500)))
 
 		// Verificar el nuevo paquete se insertó
 		var newDBPackage table.DeliveryUnit
@@ -366,10 +302,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 				{
 					Sku:         "NO-LPN-ITEM-001",
 					Description: "Item sin LPN",
-					Quantity: domain.Quantity{
-						QuantityNumber: 2,
-						QuantityUnit:   "unit",
-					},
+					Quantity:    2,
 				},
 			},
 		}
@@ -412,10 +345,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 				{
 					Sku:         "UPDATE-NO-LPN-001",
 					Description: "Item inicial sin LPN",
-					Quantity: domain.Quantity{
-						QuantityNumber: 1,
-						QuantityUnit:   "unit",
-					},
+					Quantity:    1,
 				},
 			},
 		}
@@ -436,10 +366,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 				{
 					Sku:         "UPDATE-NO-LPN-001",        // Mismo SKU
 					Description: "Item actualizado sin LPN", // Descripción cambiada
-					Quantity: domain.Quantity{
-						QuantityNumber: 3, // Cantidad cambiada
-						QuantityUnit:   "unit",
-					},
+					Quantity:    3,                          // Cantidad cambiada
 				},
 			},
 		}
@@ -463,7 +390,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Verificar que el paquete se actualizó correctamente
 		items := dbPackage.JSONItems.Map()
 		Expect(items[0].Description).To(Equal("Item actualizado sin LPN"))
-		Expect(items[0].Quantity.QuantityNumber).To(Equal(3))
+		Expect(items[0].Quantity).To(Equal(3))
 	})
 
 	It("should handle partial updates correctly", func() {
@@ -473,29 +400,15 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Crear un paquete completo
 		initialPackage := domain.DeliveryUnit{
-			Lpn: "PARTIAL-UPDATE-PKG",
-			Dimensions: domain.Dimensions{
-				Length: 10,
-				Width:  20,
-				Height: 30,
-				Unit:   "cm",
-			},
-			Weight: domain.Weight{
-				Value: 5,
-				Unit:  "kg",
-			},
-			Insurance: domain.Insurance{
-				UnitValue: 1000,
-				Currency:  "USD",
-			},
+			Lpn:       "PARTIAL-UPDATE-PKG",
+			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
+			Weight:    5000, // 5000 g
+			Insurance: 1000, // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM-PARTIAL",
 					Description: "Item original",
-					Quantity: domain.Quantity{
-						QuantityNumber: 1,
-						QuantityUnit:   "unit",
-					},
+					Quantity:    1,
 				},
 			},
 		}
@@ -507,11 +420,8 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Crear un paquete con solo algunos campos actualizados
 		partialUpdate := domain.DeliveryUnit{
-			Lpn: "PARTIAL-UPDATE-PKG", // Mismo LPN
-			Weight: domain.Weight{ // Solo actualizar peso
-				Value: 10,
-				Unit:  "kg",
-			},
+			Lpn:    "PARTIAL-UPDATE-PKG", // Mismo LPN
+			Weight: 10000,                // Solo actualizar peso
 			// Otros campos vacíos o con valores por defecto
 		}
 
@@ -528,16 +438,11 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar peso actualizado
-		weight := dbPackage.JSONWeight.Map()
-		Expect(weight.Value).To(Equal(int64(10)))
+		Expect(dbPackage.Weight).To(Equal(int64(10000)))
 
 		// Verificar que otros campos se mantuvieron igual
-		dimensions := dbPackage.JSONDimensions.Map()
-		Expect(dimensions.Length).To(Equal(int64(10)))
-		Expect(dimensions.Unit).To(Equal("cm"))
-
-		insurance := dbPackage.JSONInsurance.Map()
-		Expect(insurance.UnitValue).To(Equal(int64(1000)))
+		Expect(dbPackage.Volume).To(Equal(int64(6000)))
+		Expect(dbPackage.Insurance).To(Equal(int64(1000)))
 
 		items := dbPackage.JSONItems.Map()
 		Expect(items[0].Description).To(Equal("Item original"))
@@ -610,18 +515,12 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 				{
 					Sku:         "EXPLODE-ITEM-1",
 					Description: "Item 1",
-					Quantity: domain.Quantity{
-						QuantityNumber: 1,
-						QuantityUnit:   "unit",
-					},
+					Quantity:    1,
 				},
 				{
 					Sku:         "EXPLODE-ITEM-2",
 					Description: "Item 2",
-					Quantity: domain.Quantity{
-						QuantityNumber: 2,
-						QuantityUnit:   "unit",
-					},
+					Quantity:    2,
 				},
 			},
 		}
@@ -658,13 +557,11 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Verificar el primer item
 		Expect(items[0].Sku).To(Equal("EXPLODE-ITEM-1"))
 		Expect(items[0].Description).To(Equal("Item 1"))
-		Expect(items[0].Quantity.QuantityNumber).To(Equal(1))
-		Expect(items[0].Quantity.QuantityUnit).To(Equal("unit"))
+		Expect(items[0].Quantity).To(Equal(1))
 
 		// Verificar el segundo item
 		Expect(items[1].Sku).To(Equal("EXPLODE-ITEM-2"))
 		Expect(items[1].Description).To(Equal("Item 2"))
-		Expect(items[1].Quantity.QuantityNumber).To(Equal(2))
-		Expect(items[1].Quantity.QuantityUnit).To(Equal("unit"))
+		Expect(items[1].Quantity).To(Equal(2))
 	})
 })
