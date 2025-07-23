@@ -86,31 +86,13 @@ type Dimension {
   unit: String
 }
 
-type Insurance {
-  currency: String
-  unitValue: Long
-}
-
-
-
-# Quantity mejorado
-type Quantity {
-  quantityNumber: Int
-  quantityUnit: String
-}
-
-type Weight {
-  unit: String
-  value: Long
-}
-
 type Item {
   sku: String
   description: String
   dimensions: Dimension
-  insurance: Insurance
-  quantity: Quantity
-  weight: Weight
+  insurance: Long
+  quantity: Int
+  weight: Long
 }
 
 type Label {
@@ -120,13 +102,13 @@ type Label {
 
 type DeliveryUnit {
   sizeCategory: String
-  dimensions: Dimension
-  insurance: Insurance
+  volume: Long
+  weight: Long
+  insurance: Long
   items: [Item]
   labels: [Label]
   skills: [String]
   lpn: String
-  weight: Weight
 }
 
 type DateRange {

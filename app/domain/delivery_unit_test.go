@@ -162,20 +162,14 @@ var _ = Describe("Package", func() {
 					{
 						Sku:         "ITEM001",
 						Description: "Item 1 Description",
-						Quantity:    Quantity{QuantityNumber: 2, QuantityUnit: "unit"},
-						Weight: Weight{
-							Value: 1.0,
-							Unit:  "kg",
-						},
+						Quantity:    2,
+						Weight:      1000,
 					},
 					{
 						Sku:         "ITEM002",
 						Description: "Item 2 Description",
-						Quantity:    Quantity{QuantityNumber: 1, QuantityUnit: "unit"},
-						Weight: Weight{
-							Value: 500,
-							Unit:  "g",
-						},
+						Quantity:    1,
+						Weight:      500,
 					},
 				},
 			}
@@ -251,20 +245,14 @@ var _ = Describe("Package", func() {
 					{
 						Sku:         "ITEM003",
 						Description: "New Item 3",
-						Quantity:    Quantity{QuantityNumber: 3, QuantityUnit: "unit"},
-						Weight: Weight{
-							Value: 1500,
-							Unit:  "g",
-						},
+						Quantity:    3,
+						Weight:      1500,
 					},
 					{
 						Sku:         "ITEM004",
 						Description: "New Item 4",
-						Quantity:    Quantity{QuantityNumber: 4, QuantityUnit: "box"},
-						Weight: Weight{
-							Value: 2.0,
-							Unit:  "kg",
-						},
+						Quantity:    4,
+						Weight:      2000,
 					},
 				},
 			}
@@ -301,11 +289,8 @@ var _ = Describe("Package", func() {
 					{
 						Sku:         "ITEM005",
 						Description: "New Item for Multi-update",
-						Quantity:    Quantity{QuantityNumber: 5, QuantityUnit: "pallet"},
-						Weight: Weight{
-							Value: 3.0,
-							Unit:  "kg",
-						},
+						Quantity:    5,
+						Weight:      3000,
 					},
 				},
 			}
@@ -348,7 +333,7 @@ var _ = Describe("Package", func() {
 					{
 						Sku:         "NEW-SINGLE-ITEM",
 						Description: "Single Item Update",
-						Quantity:    Quantity{QuantityNumber: 10, QuantityUnit: "unit"},
+						Quantity:    10,
 					},
 				},
 			}

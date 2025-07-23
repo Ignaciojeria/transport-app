@@ -10,10 +10,9 @@ type DeliveryUnit struct {
 	SizeCategory    SizeCategory
 	Lpn             string
 	noLPNReference  string
-	// Simplified fields (matching optimization domain)
-	Volume          int64 // Volume in cm³ (by convention)
-	Weight          int64 // Weight in grams (by convention)
-	Insurance       int64 // Insurance in CLP (by convention)
+	Volume          int64
+	Weight          int64
+	Insurance       int64
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -113,7 +112,7 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 			Sku: item.Sku,
 		}
 	}
-	
+
 	return optimization.DeliveryUnit{
 		Items:     items,
 		Insurance: p.Insurance,
@@ -131,7 +130,7 @@ func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit 
 			Sku: item.Sku,
 		}
 	}
-	
+
 	return DeliveryUnit{
 		Lpn:       optDU.Lpn,
 		Volume:    optDU.Volume,

@@ -2,16 +2,16 @@ package domain
 
 type Item struct {
 	Sku         string
-	Quantity    Quantity
-	Insurance   Insurance
+	Quantity    int
+	Insurance   int64
 	Description string
 	Dimensions  Dimensions
-	Weight      Weight
+	Weight      int64
 }
 
 type ItemReference struct {
 	Sku      string
-	Quantity Quantity
+	Quantity int
 }
 
 // Función auxiliar para comparar arreglos de referencias de ítems

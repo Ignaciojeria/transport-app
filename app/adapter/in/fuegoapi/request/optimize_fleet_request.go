@@ -54,9 +54,9 @@ type OptimizeFleetPoliticalArea struct {
 }
 
 type OptimizeFleetVehicleCapacity struct {
-	Insurance             int64 `json:"insurance"`
-	Volume                int64 `json:"volume"`
-	Weight                int64 `json:"weight"`
+	Volume                int64 `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
+	Weight                int64 `json:"weight" example:"1000" description:"Weight in grams (g)"`
+	Insurance             int64 `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 	DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity"`
 }
 
@@ -91,9 +91,9 @@ type OptimizeFleetOrder struct {
 
 type OptimizeFleetDeliveryUnit struct {
 	Items     []OptimizeFleetItem `json:"items"`
-	Insurance int64               `json:"insurance"`
-	Volume    int64               `json:"volume"`
-	Weight    int64               `json:"weight"`
+	Volume    int64               `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
+	Weight    int64               `json:"weight" example:"1000" description:"Weight in grams (g)"`
+	Insurance int64               `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 	Lpn       string              `json:"lpn"`
 }
 

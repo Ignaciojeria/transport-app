@@ -370,17 +370,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		// Crear delivery unit
 		deliveryUnit := domain.DeliveryUnit{
 			Lpn:       "LPN123",
-			Volume:    6000, // 10 * 20 * 30 = 6000 cm³
-			Weight:    5500, // 5500 g
+			Volume:    6000,  // 10 * 20 * 30 = 6000 cm³
+			Weight:    5500,  // 5500 g
 			Insurance: 10000, // 10000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "SKU123",
 					Description: "Test Item",
-					Quantity: domain.Quantity{
-						QuantityNumber: 2,
-						QuantityUnit:   "pcs",
-					},
+					Quantity:    2,
 				},
 			},
 		}
@@ -422,14 +419,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			deliveryunits.NewProjection())
 		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
-				projection.DeliveryUnit().String():           "",
-				projection.DeliveryUnitLPN().String():        "",
-				projection.DeliveryUnitDimensions().String(): "",
-				projection.DeliveryUnitWeight().String():     "",
-				projection.DeliveryUnitInsurance().String():  "",
-				projection.DeliveryUnitItems().String():      "",
-				projection.Commerce().String():               "",
-				projection.Consumer().String():               "",
+				projection.DeliveryUnit().String():          "",
+				projection.DeliveryUnitLPN().String():       "",
+				projection.DeliveryUnitVolume().String():    "",
+				projection.DeliveryUnitWeight().String():    "",
+				projection.DeliveryUnitInsurance().String(): "",
+				projection.DeliveryUnitItems().String():     "",
+				projection.Commerce().String():              "",
+				projection.Consumer().String():              "",
 			},
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -438,28 +435,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Validaciones de Delivery Unit
 		Expect(results[0].LPN).To(Equal("LPN123"), "LPN incorrecto")
-		Expect(results[0].JSONDimensions).To(Equal(table.JSONDimensions{
-			Height: 30,
-			Width:  20,
-			Length: 10,
-			Unit:   "cm",
-		}), "Dimensiones incorrectas")
-		Expect(results[0].JSONWeight).To(Equal(table.JSONWeight{
-			WeightValue: 5500,
-			WeightUnit:  "g",
-		}), "Peso incorrecto")
-		Expect(results[0].JSONInsurance).To(Equal(table.JSONInsurance{
-			Currency:  "USD",
-			UnitValue: 10000,
-		}), "Seguro incorrecto")
+		Expect(results[0].Volume).To(Equal(int64(6000)), "Volume incorrecto") // 10 * 20 * 30 = 6000 cm³
+		Expect(results[0].Weight).To(Equal(int64(5500)), "Weight incorrecto")
+		Expect(results[0].Insurance).To(Equal(int64(10000)), "Insurance incorrecto")
 
 		// Validaciones de Items
 		Expect(results[0].JSONItems).To(HaveLen(1), "Debería tener un item")
 		Expect(results[0].JSONItems[0]).To(Equal(table.Items{
-			Sku:            "SKU123",
-			Description:    "Test Item",
-			QuantityNumber: 2,
-			QuantityUnit:   "pcs",
+			Sku:         "SKU123",
+			Description: "Test Item",
+			Quantity:    2,
 		}), "Item incorrecto")
 
 		// Validaciones de Commerce y Consumer

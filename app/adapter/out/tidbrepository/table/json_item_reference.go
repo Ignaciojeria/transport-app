@@ -8,9 +8,8 @@ import (
 )
 
 type ItemReference struct {
-	Sku            string `json:"sku"`
-	QuantityNumber int    `json:"quantity_number"`
-	QuantityUnit   string `json:"quantity_unit"`
+	Sku      string `json:"sku"`
+	Quantity int    `json:"quantity"`
 }
 
 type JSONItemReferences []ItemReference
@@ -19,11 +18,8 @@ func (j JSONItemReferences) Map() []domain.ItemReference {
 	mappedReferences := make([]domain.ItemReference, len(j))
 	for i, ref := range j {
 		mappedReferences[i] = domain.ItemReference{
-			Sku: ref.Sku,
-			Quantity: domain.Quantity{
-				QuantityNumber: ref.QuantityNumber,
-				QuantityUnit:   ref.QuantityUnit,
-			},
+			Sku:      ref.Sku,
+			Quantity: ref.Quantity,
 		}
 	}
 	return mappedReferences
