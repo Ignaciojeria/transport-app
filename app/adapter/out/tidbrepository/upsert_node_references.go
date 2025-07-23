@@ -11,16 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertNodeReferences func(context.Context, domain.NodeInfo) error
+type UpsertNodeReferences func(context.Context, domain.NodeInfo, ...domain.FSMState) error
 
 func init() {
 	ioc.Registry(
 		NewUpsertNodeReferences,
-		database.NewConnectionFactory)
+		database.NewConnectionFactory,
+		NewSaveFSMTransition)
 }
 
-func NewUpsertNodeReferences(conn database.ConnectionFactory) UpsertNodeReferences {
-	return func(ctx context.Context, node domain.NodeInfo) error {
+func NewUpsertNodeReferences(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertNodeReferences {
+	return func(ctx context.Context, node domain.NodeInfo, fsmState ...domain.FSMState) error {
 		nodeDocID := node.DocID(ctx)
 		nodeReferences := mapper.MapNodeReferences(ctx, node)
 
@@ -41,6 +42,12 @@ func NewUpsertNodeReferences(conn database.ConnectionFactory) UpsertNodeReferenc
 					return err
 				}
 			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
 			return nil
 		})
 	}

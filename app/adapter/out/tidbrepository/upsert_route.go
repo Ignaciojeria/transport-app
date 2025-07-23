@@ -13,36 +13,55 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertRoute func(context.Context, domain.Route, string) error
+type UpsertRoute func(context.Context, domain.Route, string, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertRoute, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertRoute, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertRoute(conn database.ConnectionFactory) UpsertRoute {
-	return func(ctx context.Context, r domain.Route, planDoc string) error {
-		var existing table.Route
+func NewUpsertRoute(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertRoute {
+	return func(ctx context.Context, r domain.Route, planDoc string, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.Route
 
-		err := conn.DB.WithContext(ctx).
-			Table("routes").
-			Where("document_id = ?", r.DocID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("routes").
+				Where("document_id = ?", r.DocID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newRoute := mapper.MapRouteTable(ctx, r, planDoc)
-			return conn.Create(&newRoute).Error
-		}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newRoute := mapper.MapRouteTable(ctx, r, planDoc)
+				if err := tx.Create(&newRoute).Error; err != nil {
+					return err
+				}
 
-		// Ya existe → update
-		updateData := mapper.MapRouteTable(ctx, r, planDoc)
-		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-		updateData.CreatedAt = existing.CreatedAt
+				// Persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		return conn.Save(&updateData).Error
+			// Ya existe → update
+			updateData := mapper.MapRouteTable(ctx, r, planDoc)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			if err := tx.Save(&updateData).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }

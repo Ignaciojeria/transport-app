@@ -18,7 +18,7 @@ var _ = Describe("UpsertNodeInfoHeaders", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertNodeInfoHeaders(conn)
+		upsert = NewUpsertNodeInfoHeaders(conn, nil)
 	})
 
 	It("should insert new headers when they don't exist", func() {

@@ -13,41 +13,64 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertVehicleHeaders func(context.Context, domain.Headers) error
+type UpsertVehicleHeaders func(context.Context, domain.Headers, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertVehicleHeaders, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertVehicleHeaders, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertVehicleHeaders(conn database.ConnectionFactory) UpsertVehicleHeaders {
-	return func(ctx context.Context, h domain.Headers) error {
-		var existing table.VehicleHeaders
+func NewUpsertVehicleHeaders(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertVehicleHeaders {
+	return func(ctx context.Context, h domain.Headers, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.VehicleHeaders
 
-		err := conn.DB.WithContext(ctx).
-			Table("vehicle_headers").
-			Where("document_id = ?", h.DocID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("vehicle_headers").
+				Where("document_id = ?", h.DocID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newHeaders := mapper.MapVehicleHeaders(ctx, h)
-			return conn.Omit("Tenant").Create(&newHeaders).Error
-		}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newHeaders := mapper.MapVehicleHeaders(ctx, h)
+				if err := tx.Omit("Tenant").Create(&newHeaders).Error; err != nil {
+					return err
+				}
 
-		// Ya existe → update solo si cambió algo
-		updated, changed := existing.Map().UpdateIfChanged(h)
-		if !changed {
-			return nil // No hay cambios, no hacemos nada
-		}
+				// Persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		updateData := mapper.MapVehicleHeaders(ctx, updated)
-		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-		updateData.CreatedAt = existing.CreatedAt
+			// Ya existe → update solo si cambió algo
+			updated, changed := existing.Map().UpdateIfChanged(h)
+			if !changed {
+				// No hay cambios, solo persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		return conn.Omit("Tenant").Save(&updateData).Error
+			updateData := mapper.MapVehicleHeaders(ctx, updated)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			if err := tx.Omit("Tenant").Save(&updateData).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }

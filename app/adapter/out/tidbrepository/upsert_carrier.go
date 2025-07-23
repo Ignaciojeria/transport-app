@@ -13,41 +13,64 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertCarrier func(context.Context, domain.Carrier) error
+type UpsertCarrier func(context.Context, domain.Carrier, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertCarrier, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertCarrier, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertCarrier(conn database.ConnectionFactory) UpsertCarrier {
-	return func(ctx context.Context, c domain.Carrier) error {
-		var existing table.Carrier
+func NewUpsertCarrier(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertCarrier {
+	return func(ctx context.Context, c domain.Carrier, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.Carrier
 
-		err := conn.DB.WithContext(ctx).
-			Table("carriers").
-			Where("document_id = ?", c.DocID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("carriers").
+				Where("document_id = ?", c.DocID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newCarrier := mapper.MapCarrier(ctx, c)
-			return conn.Omit("Tenant").Create(&newCarrier).Error
-		}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newCarrier := mapper.MapCarrier(ctx, c)
+				if err := tx.Omit("Tenant").Create(&newCarrier).Error; err != nil {
+					return err
+				}
 
-		// Ya existe → update solo si cambió algo
-		updated, changed := existing.Map().UpdateIfChanged(c)
-		if !changed {
-			return nil // No hay cambios, no hacemos nada
-		}
+				// Persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		updateData := mapper.MapCarrier(ctx, updated)
-		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-		updateData.CreatedAt = existing.CreatedAt
+			// Ya existe → update solo si cambió algo
+			updated, changed := existing.Map().UpdateIfChanged(c)
+			if !changed {
+				// No hay cambios, solo persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		return conn.Omit("Tenant").Save(&updateData).Error
+			updateData := mapper.MapCarrier(ctx, updated)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			if err := tx.Omit("Tenant").Save(&updateData).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }

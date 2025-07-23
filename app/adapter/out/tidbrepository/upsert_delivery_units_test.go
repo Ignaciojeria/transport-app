@@ -25,7 +25,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{})
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -68,7 +68,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar los paquetes
 		packages := []domain.DeliveryUnit{package1, package2}
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, packages)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -122,7 +122,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		// Insertar el paquete original
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{originalPackage})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -177,7 +177,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Insurance: &ins2, // Sin seguro
 		}
 
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx1, []domain.DeliveryUnit{package1})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -225,7 +225,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Insurance: &ins3, // Sin seguro
 		}
 
-		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection)
+		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{package1})
 
 		Expect(err).To(HaveOccurred())
@@ -252,7 +252,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		existingDocID := existingPackage.DocID(ctx)
 
 		// Insertar el paquete inicial
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{existingPackage})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -338,7 +338,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar el paquete
 		//	orderRef := "ORDER-REF-001"
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{package1})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -381,7 +381,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Insertar el paquete
 		//	orderRef := "ORDER-REF-002"
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{initialPackage})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -446,7 +446,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		// Insertar el paquete
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{initialPackage})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -501,7 +501,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		// Insertar con el primer tenant
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx1, []domain.DeliveryUnit{package1})
 		Expect(err).ToNot(HaveOccurred())
 
@@ -559,7 +559,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		}
 
 		//orderRef := "ORDER-EXPLODE"
-		upsert := NewUpsertDeliveryUnits(conn)
+		upsert := NewUpsertDeliveryUnits(conn, nil)
 		err = upsert(ctx, []domain.DeliveryUnit{original})
 		Expect(err).ToNot(HaveOccurred())
 

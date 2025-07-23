@@ -12,36 +12,51 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertSkill func(context.Context, domain.Skill) error
+type UpsertSkill func(context.Context, domain.Skill, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertSkill, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertSkill, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertSkill(conn database.ConnectionFactory) UpsertSkill {
-	return func(ctx context.Context, skill domain.Skill) error {
-		var existing table.Skill
+func NewUpsertSkill(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertSkill {
+	return func(ctx context.Context, skill domain.Skill, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.Skill
 
-		err := conn.DB.WithContext(ctx).
-			Table("skills").
-			Where("document_id = ?", skill.DocumentID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("skills").
+				Where("document_id = ?", skill.DocumentID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if err == nil {
-			// Ya existe → no hacer nada
+			if err == nil {
+				// Ya existe → solo persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
+
+			// No existe → insert
+			newSkill := table.Skill{
+				Name:       string(skill),
+				DocumentID: string(skill.DocumentID(ctx)),
+				TenantID:   sharedcontext.TenantIDFromContext(ctx),
+			}
+			
+			if err := tx.Create(&newSkill).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
 			return nil
-		}
-
-		// No existe → insert
-		newSkill := table.Skill{
-			Name:       string(skill),
-			DocumentID: string(skill.DocumentID(ctx)),
-			TenantID:   sharedcontext.TenantIDFromContext(ctx),
-		}
-		return conn.Create(&newSkill).Error
+		})
 	}
 }

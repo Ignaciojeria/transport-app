@@ -11,16 +11,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertDeliveryUnitsSkills func(context.Context, domain.Order) error
+type UpsertDeliveryUnitsSkills func(context.Context, domain.Order, ...domain.FSMState) error
 
 func init() {
 	ioc.Registry(
 		NewUpsertDeliveryUnitsSkills,
-		database.NewConnectionFactory)
+		database.NewConnectionFactory,
+		NewSaveFSMTransition)
 }
 
-func NewUpsertDeliveryUnitsSkills(conn database.ConnectionFactory) UpsertDeliveryUnitsSkills {
-	return func(ctx context.Context, order domain.Order) error {
+func NewUpsertDeliveryUnitsSkills(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertDeliveryUnitsSkills {
+	return func(ctx context.Context, order domain.Order, fsmState ...domain.FSMState) error {
 		deliveryUnitDocs := make([]string, 0, len(order.DeliveryUnits))
 		for _, deliveryUnit := range order.DeliveryUnits {
 			deliveryUnitDocs = append(deliveryUnitDocs, deliveryUnit.DocID(ctx).String())
@@ -37,6 +38,12 @@ func NewUpsertDeliveryUnitsSkills(conn database.ConnectionFactory) UpsertDeliver
 					return err
 				}
 			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
 			return nil
 		})
 	}

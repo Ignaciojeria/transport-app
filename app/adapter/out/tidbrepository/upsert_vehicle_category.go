@@ -13,41 +13,64 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertVehicleCategory func(context.Context, domain.VehicleCategory) error
+type UpsertVehicleCategory func(context.Context, domain.VehicleCategory, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertVehicleCategory, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertVehicleCategory, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertVehicleCategory(conn database.ConnectionFactory) UpsertVehicleCategory {
-	return func(ctx context.Context, vc domain.VehicleCategory) error {
-		var existing table.VehicleCategory
+func NewUpsertVehicleCategory(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertVehicleCategory {
+	return func(ctx context.Context, vc domain.VehicleCategory, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.VehicleCategory
 
-		err := conn.DB.WithContext(ctx).
-			Table("vehicle_categories").
-			Where("document_id = ?", vc.DocID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("vehicle_categories").
+				Where("document_id = ?", vc.DocID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newVehicleCategory := mapper.MapVehicleCategory(ctx, vc)
-			return conn.Omit("Tenant").Create(&newVehicleCategory).Error
-		}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newVehicleCategory := mapper.MapVehicleCategory(ctx, vc)
+				if err := tx.Omit("Tenant").Create(&newVehicleCategory).Error; err != nil {
+					return err
+				}
 
-		// Ya existe → update solo si cambió algo
-		updated, changed := existing.Map().UpdateIfChanged(vc)
-		if !changed {
-			return nil // No hay cambios, no hacemos nada
-		}
+				// Persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		updateData := mapper.MapVehicleCategory(ctx, updated)
-		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-		updateData.CreatedAt = existing.CreatedAt
+			// Ya existe → update solo si cambió algo
+			updated, changed := existing.Map().UpdateIfChanged(vc)
+			if !changed {
+				// No hay cambios, solo persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		return conn.Omit("Tenant").Save(&updateData).Error
+			updateData := mapper.MapVehicleCategory(ctx, updated)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			if err := tx.Omit("Tenant").Save(&updateData).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }

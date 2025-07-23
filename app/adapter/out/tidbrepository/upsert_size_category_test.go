@@ -28,7 +28,7 @@ var _ = Describe("UpsertSizeCategory", func() {
 			Code: "SMALL",
 		}
 
-		upsert := NewUpsertSizeCategory(conn)
+		upsert := NewUpsertSizeCategory(conn, nil)
 		err = upsert(ctx, sizeCategory)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -52,7 +52,7 @@ var _ = Describe("UpsertSizeCategory", func() {
 			Code: "MEDIUM",
 		}
 
-		upsert := NewUpsertSizeCategory(conn)
+		upsert := NewUpsertSizeCategory(conn, nil)
 		err = upsert(ctx, sizeCategory)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -92,7 +92,7 @@ var _ = Describe("UpsertSizeCategory", func() {
 			Code: "LARGE",
 		}
 
-		upsert := NewUpsertSizeCategory(conn)
+		upsert := NewUpsertSizeCategory(conn, nil)
 
 		// Insert for first tenant
 		err = upsert(ctx1, sizeCategory)
@@ -131,7 +131,7 @@ var _ = Describe("UpsertSizeCategory", func() {
 			Code: "ERROR",
 		}
 
-		upsert := NewUpsertSizeCategory(noTablesContainerConnection)
+		upsert := NewUpsertSizeCategory(noTablesContainerConnection, nil)
 		err = upsert(ctx, sizeCategory)
 
 		Expect(err).To(HaveOccurred())

@@ -12,41 +12,64 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertPoliticalArea func(context.Context, domain.PoliticalArea) error
+type UpsertPoliticalArea func(context.Context, domain.PoliticalArea, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertPoliticalArea, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertPoliticalArea, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertPoliticalArea(conn database.ConnectionFactory) UpsertPoliticalArea {
-	return func(ctx context.Context, pa domain.PoliticalArea) error {
-		var existing table.PoliticalArea
+func NewUpsertPoliticalArea(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertPoliticalArea {
+	return func(ctx context.Context, pa domain.PoliticalArea, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.PoliticalArea
 
-		err := conn.DB.WithContext(ctx).
-			Table("political_areas").
-			Where("document_id = ?", pa.DocID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("political_areas").
+				Where("document_id = ?", pa.DocID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// No existe → insert
-			newRecord := mapper.MapPoliticalArea(ctx, pa)
-			return conn.Omit("Tenant").Create(&newRecord).Error
-		}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newRecord := mapper.MapPoliticalArea(ctx, pa)
+				if err := tx.Omit("Tenant").Create(&newRecord).Error; err != nil {
+					return err
+				}
 
-		// Ya existe → update solo si cambió algo
-		updated, changed := existing.Map().UpdateIfChanged(pa)
-		if !changed {
-			return nil // No hay cambios, no hacemos nada
-		}
+				// Persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		updateData := mapper.MapPoliticalArea(ctx, updated)
-		updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-		updateData.CreatedAt = existing.CreatedAt
+			// Ya existe → update solo si cambió algo
+			updated, changed := existing.Map().UpdateIfChanged(pa)
+			if !changed {
+				// No hay cambios, solo persistir FSMState si está presente
+				if len(fsmState) > 0 {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		return conn.Omit("Tenant").Save(&updateData).Error
+			updateData := mapper.MapPoliticalArea(ctx, updated)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			if err := tx.Omit("Tenant").Save(&updateData).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }
