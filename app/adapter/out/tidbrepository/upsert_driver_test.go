@@ -18,7 +18,7 @@ var _ = Describe("UpsertDriver", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertDriver(conn)
+		upsert = NewUpsertDriver(conn, nil)
 	})
 
 	It("should insert driver if not exists", func() {
@@ -191,7 +191,7 @@ var _ = Describe("UpsertDriver", func() {
 			NationalID: "44444444-4",
 		}
 
-		upsert := NewUpsertDriver(noTablesContainerConnection)
+		upsert := NewUpsertDriver(noTablesContainerConnection, nil)
 		err = upsert(ctx, driver)
 
 		Expect(err).To(HaveOccurred())

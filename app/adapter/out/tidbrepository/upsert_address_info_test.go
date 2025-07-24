@@ -59,7 +59,7 @@ var _ = Describe("UpsertAddressInfo", func() {
 		err = upsert(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		err = NewUpsertPoliticalArea(conn, nil)(ctx, politicalArea)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verify political area was created

@@ -83,7 +83,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			},
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err := upsert(ctx1, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -115,7 +115,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 
 		err := upsert(ctx1, original)
 		Expect(err).ToNot(HaveOccurred())
@@ -151,7 +151,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 
 		err := upsert(ctx1, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
@@ -195,7 +195,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Name: "Multi Org Node",
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err = upsert(ctx1, nodeInfo1)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -234,7 +234,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err := upsert(ctx1, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -266,7 +266,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			AddressInfo: addressInfo1, // Contains contact1
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err := upsert(ctx1, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -298,7 +298,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err := upsert(ctx1, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -332,7 +332,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			},
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err := upsert(ctx1, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -403,7 +403,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			AddressInfo: addressInfo1, // Contact is inside addressInfo
 		}
 
-		upsert := NewUpsertNodeInfo(noTablesContainerConnection)
+		upsert := NewUpsertNodeInfo(noTablesContainerConnection, nil)
 		err := upsert(ctx1, nodeInfo)
 
 		Expect(err).To(HaveOccurred())
@@ -420,7 +420,7 @@ var _ = Describe("UpsertNodeInfo", func() {
 			Headers:     domain.Headers{}, // Empty headers
 		}
 
-		upsert := NewUpsertNodeInfo(connection)
+		upsert := NewUpsertNodeInfo(connection, nil)
 		err := upsert(ctx1, node)
 		Expect(err).ToNot(HaveOccurred())
 

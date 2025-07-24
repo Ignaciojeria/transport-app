@@ -18,7 +18,7 @@ var _ = Describe("UpsertCarrier", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertCarrier(conn)
+		upsert = NewUpsertCarrier(conn, nil)
 	})
 
 	It("should insert carrier if not exists", func() {
@@ -166,7 +166,7 @@ var _ = Describe("UpsertCarrier", func() {
 			NationalID: "44444444-4",
 		}
 
-		upsert := NewUpsertCarrier(noTablesContainerConnection)
+		upsert := NewUpsertCarrier(noTablesContainerConnection, nil)
 		err = upsert(ctx, carrier)
 
 		Expect(err).To(HaveOccurred())

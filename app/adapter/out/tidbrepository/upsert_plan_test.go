@@ -19,7 +19,7 @@ var _ = Describe("UpsertPlan", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertPlan(conn)
+		upsert = NewUpsertPlan(conn, nil)
 	})
 
 	It("should insert plan if not exists", func() {
@@ -136,7 +136,7 @@ var _ = Describe("UpsertPlan", func() {
 			PlannedDate: time.Now(),
 		}
 
-		upsert := NewUpsertPlan(noTablesContainerConnection)
+		upsert := NewUpsertPlan(noTablesContainerConnection, nil)
 		err = upsert(ctx, plan)
 
 		Expect(err).To(HaveOccurred())

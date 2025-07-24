@@ -13,36 +13,47 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertNodeType func(context.Context, domain.NodeType) error
+type UpsertNodeType func(context.Context, domain.NodeType, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertNodeType, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertNodeType, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertNodeType(conn database.ConnectionFactory) UpsertNodeType {
-	return func(ctx context.Context, nt domain.NodeType) error {
-		var existing table.NodeType
+func NewUpsertNodeType(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertNodeType {
+	return func(ctx context.Context, nt domain.NodeType, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.NodeType
 
-		err := conn.DB.WithContext(ctx).
-			Table("node_types").
-			Where("document_id = ?", nt.DocID(ctx)).
-			First(&existing).Error
+			err := tx.WithContext(ctx).
+				Table("node_types").
+				Where("document_id = ?", nt.DocID(ctx)).
+				First(&existing).Error
 
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return err
+			}
 
-		if err == nil {
-			// Ya existe → no hacer nada
+			if err == nil {
+				// Ya existe → solo persistir FSMState si está presente
+				if len(fsmState) > 0 && saveFSMTransition != nil {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
+			
+			newRecord := mapper.MapNodeType(ctx, nt)
+
+			err = tx.Omit("Tenant").Create(&newRecord).Error
+			if err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 && saveFSMTransition != nil {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
 			return nil
-		}
-		newRecord := mapper.MapNodeType(ctx, nt)
-
-		err = conn.Omit("Tenant").Create(&newRecord).Error
-		if err != nil {
-			return err
-		}
-
-		return nil
+		})
 	}
 }

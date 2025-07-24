@@ -18,7 +18,7 @@ var _ = Describe("UpsertPoliticalArea", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertPoliticalArea(conn)
+		upsert = NewUpsertPoliticalArea(conn, nil)
 	})
 
 	It("should insert political area if not exists", func() {

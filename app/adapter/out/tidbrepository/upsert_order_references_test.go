@@ -35,7 +35,7 @@ var _ = Describe("UpsertOrderReferences", func() {
 			},
 		}
 
-		uor := NewUpsertOrderReferences(conn)
+		uor := NewUpsertOrderReferences(conn, nil)
 		err = uor(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -61,7 +61,7 @@ var _ = Describe("UpsertOrderReferences", func() {
 			},
 		}
 
-		uor := NewUpsertOrderReferences(conn)
+		uor := NewUpsertOrderReferences(conn, nil)
 		err = uor(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -92,7 +92,7 @@ var _ = Describe("UpsertOrderReferences", func() {
 			References:  []domain.Reference{},
 		}
 
-		uor := NewUpsertOrderReferences(conn)
+		uor := NewUpsertOrderReferences(conn, nil)
 		err = uor(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -102,7 +102,7 @@ var _ = Describe("UpsertOrderReferences", func() {
 		_, ctx, err := CreateTestTenant(context.Background(), conn)
 		Expect(err).ToNot(HaveOccurred())
 
-		uor := NewUpsertOrderReferences(noTablesContainerConnection)
+		uor := NewUpsertOrderReferences(noTablesContainerConnection, nil)
 		order := domain.Order{
 			ReferenceID: "ORD-REF-ERR",
 			References: []domain.Reference{
@@ -125,7 +125,7 @@ var _ = Describe("UpsertOrderReferences", func() {
 			References:  []domain.Reference{},
 		}
 
-		uor := NewUpsertOrderReferences(conn)
+		uor := NewUpsertOrderReferences(conn, nil)
 		err = uor(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 

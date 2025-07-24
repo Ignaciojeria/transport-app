@@ -82,7 +82,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		err = NewUpsertAddressInfo(conn, nil)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred(), "Failed to upsert address info: %v", err)
 
-		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		err = NewUpsertPoliticalArea(conn, nil)(ctx, politicalArea)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verify address was created
@@ -123,7 +123,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				ServiceCategory: "STANDARD",
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred(), "Failed to upsert order: %v", err)
 
 		// Verify order was created
@@ -136,7 +136,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(orderCount).To(Equal(int64(1)), "Order was not created properly")
 
 		// Create delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -258,7 +258,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				},
 			},
 		}
-		err = NewUpsertContact(conn)(ctx, contact)
+		err = NewUpsertContact(conn, nil)(ctx, contact)
 		Expect(err).ToNot(HaveOccurred())
 
 		destination := domain.AddressInfo{
@@ -312,10 +312,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				ServiceCategory: "STANDARD",
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -385,7 +385,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 		}
 
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit})
+		err = NewUpsertDeliveryUnits(conn, nil)(ctx, []domain.DeliveryUnit{deliveryUnit})
 		Expect(err).ToNot(HaveOccurred())
 
 		order := domain.Order{
@@ -398,13 +398,13 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				deliveryUnit,
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		err = NewUpsertOrderHeaders(conn, nil)(ctx, order.Headers)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -472,10 +472,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -518,7 +518,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Type:        "EXPRESS",
 			Description: "Entrega express",
 		}
-		err = NewUpsertOrderType(conn)(ctx, orderType)
+		err = NewUpsertOrderType(conn, nil)(ctx, orderType)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear order con order type
@@ -529,10 +529,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -583,11 +583,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear delivery units history con status
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -657,10 +657,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertOrderReferences(conn)(ctx, order)
+		err = NewUpsertOrderReferences(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que las referencias se crearon
@@ -672,7 +672,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(refCount).To(Equal(int64(3)), "Order references were not created properly")
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -728,10 +728,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			},
 		}
 
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit})
+		err = NewUpsertDeliveryUnits(conn, nil)(ctx, []domain.DeliveryUnit{deliveryUnit})
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsLabels(conn)(ctx, order)
+		err = NewUpsertDeliveryUnitsLabels(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Verificar que las etiquetas se crearon correctamente
@@ -743,10 +743,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(createdLabels).To(HaveLen(3))
 
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -812,7 +812,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				},
 			},
 		}
-		err = NewUpsertContact(conn)(ctx, originContact)
+		err = NewUpsertContact(conn, nil)(ctx, originContact)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear dirección de origen
@@ -840,7 +840,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		err = NewUpsertAddressInfo(conn, nil)(ctx, origin)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertPoliticalArea(conn)(ctx, origin.PoliticalArea)
+		err = NewUpsertPoliticalArea(conn, nil)(ctx, origin.PoliticalArea)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear order con información de origen
@@ -853,10 +853,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -960,12 +960,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Insertar los orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -1054,7 +1054,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Create another order with different references
@@ -1068,16 +1068,16 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order2)
+		err = NewUpsertOrder(conn, nil)(ctx, order2)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertOrderReferences(conn)(ctx, order)
+		err = NewUpsertOrderReferences(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
-		err = NewUpsertOrderReferences(conn)(ctx, order2)
+		err = NewUpsertOrderReferences(conn, nil)(ctx, order2)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Create delivery units history for both orders
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{order, order2},
@@ -1172,12 +1172,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Insert orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Create delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -1294,23 +1294,23 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		}
 
 		// Insertar delivery units
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
+		err = NewUpsertDeliveryUnits(conn, nil)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Insertar orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Insertar labels
 		for _, order := range orders {
-			err = NewUpsertDeliveryUnitsLabels(conn)(ctx, order)
+			err = NewUpsertDeliveryUnitsLabels(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -1432,17 +1432,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		}
 
 		// Insertar delivery units
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
+		err = NewUpsertDeliveryUnits(conn, nil)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Insertar orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -1660,12 +1660,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Insertar orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -1896,7 +1896,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		originNode := domain.NodeInfo{
 			ReferenceID: "NODE-001",
 		}
-		err = NewUpsertNodeInfo(conn)(ctx, originNode)
+		err = NewUpsertNodeInfo(conn, nil)(ctx, originNode)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear orden con el nodo de origen
@@ -1907,14 +1907,14 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear otra orden con un nodo de origen diferente
 		otherOriginNode := domain.NodeInfo{
 			ReferenceID: "NODE-002",
 		}
-		err = NewUpsertNodeInfo(conn)(ctx, otherOriginNode)
+		err = NewUpsertNodeInfo(conn, nil)(ctx, otherOriginNode)
 		Expect(err).ToNot(HaveOccurred())
 
 		otherOrder := domain.Order{
@@ -1924,11 +1924,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, otherOrder)
+		err = NewUpsertOrder(conn, nil)(ctx, otherOrder)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear historial de unidades de entrega
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{order, otherOrder},
@@ -1994,11 +1994,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear múltiples estados para la misma unidad de entrega
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2010,7 +2010,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear otro estado para la misma unidad
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2110,7 +2110,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				ServiceCategory: "STANDARD",
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order1)
+		err = NewUpsertOrder(conn, nil)(ctx, order1)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Segunda orden
@@ -2160,11 +2160,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				ServiceCategory: "STANDARD",
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order2)
+		err = NewUpsertOrder(conn, nil)(ctx, order2)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear historial de unidades de entrega
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{order1, order2},
@@ -2273,17 +2273,17 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		}
 
 		// Insertar delivery units
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
+		err = NewUpsertDeliveryUnits(conn, nil)(ctx, []domain.DeliveryUnit{deliveryUnit1, deliveryUnit2, deliveryUnit3})
 		Expect(err).ToNot(HaveOccurred())
 
 		// Insertar orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -2389,12 +2389,12 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 
 		// Insertar orders
 		for _, order := range orders {
-			err = NewUpsertOrder(conn)(ctx, order)
+			err = NewUpsertOrder(conn, nil)(ctx, order)
 			Expect(err).ToNot(HaveOccurred())
 		}
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: orders,
@@ -2480,10 +2480,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2537,11 +2537,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2603,11 +2603,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2660,7 +2660,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				Reason:  "Geocoding service",
 			},
 		}
-		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		err = NewUpsertPoliticalArea(conn, nil)(ctx, politicalArea)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear address info con political area
@@ -2682,7 +2682,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		err = NewUpsertAddressInfo(conn, nil)(ctx, destination)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertPoliticalArea(conn)(ctx, politicalArea)
+		err = NewUpsertPoliticalArea(conn, nil)(ctx, politicalArea)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear order con el address info
@@ -2695,11 +2695,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				{},
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Crear delivery units history
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2745,7 +2745,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		skill2 := domain.Skill("REFRIGERATED")
 
 		// Use the repository to persist skills
-		upsertSkill := NewUpsertSkill(conn)
+		upsertSkill := NewUpsertSkill(conn, nil)
 		err = upsertSkill(ctx, skill1)
 		Expect(err).ToNot(HaveOccurred())
 		err = upsertSkill(ctx, skill2)
@@ -2755,7 +2755,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		deliveryUnit := domain.DeliveryUnit{
 			Skills: []domain.Skill{skill1, skill2},
 		}
-		err = NewUpsertDeliveryUnits(conn)(ctx, []domain.DeliveryUnit{
+		err = NewUpsertDeliveryUnits(conn, nil)(ctx, []domain.DeliveryUnit{
 			deliveryUnit,
 		})
 		Expect(err).ToNot(HaveOccurred())
@@ -2767,10 +2767,10 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 				deliveryUnit,
 			},
 		}
-		err = NewUpsertOrder(conn)(ctx, order)
+		err = NewUpsertOrder(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsHistory(conn)(ctx, domain.Plan{
+		err = NewUpsertDeliveryUnitsHistory(conn, nil)(ctx, domain.Plan{
 			Routes: []domain.Route{
 				{
 					Orders: []domain.Order{
@@ -2781,7 +2781,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		})
 		Expect(err).ToNot(HaveOccurred())
 
-		err = NewUpsertDeliveryUnitsSkills(conn)(ctx, order)
+		err = NewUpsertDeliveryUnitsSkills(conn, nil)(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Query for delivery units with skills

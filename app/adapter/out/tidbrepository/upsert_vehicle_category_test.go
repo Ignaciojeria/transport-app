@@ -29,7 +29,7 @@ var _ = Describe("UpsertVehicleCategory", func() {
 			MaxPackagesQuantity: 100,
 		}
 
-		upsert := NewUpsertVehicleCategory(conn)
+		upsert := NewUpsertVehicleCategory(conn, nil)
 		err = upsert(ctx, vehicleCategory)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -55,7 +55,7 @@ var _ = Describe("UpsertVehicleCategory", func() {
 			MaxPackagesQuantity: 50,
 		}
 
-		upsert := NewUpsertVehicleCategory(conn)
+		upsert := NewUpsertVehicleCategory(conn, nil)
 		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -89,7 +89,7 @@ var _ = Describe("UpsertVehicleCategory", func() {
 			MaxPackagesQuantity: 100,
 		}
 
-		upsert := NewUpsertVehicleCategory(conn)
+		upsert := NewUpsertVehicleCategory(conn, nil)
 		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 

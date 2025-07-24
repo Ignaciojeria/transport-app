@@ -104,7 +104,7 @@ var _ = Describe("UpsertOrder", func() {
 			},
 		}
 
-		upsert := NewUpsertOrder(connection)
+		upsert := NewUpsertOrder(connection, nil)
 		err := upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -132,7 +132,7 @@ var _ = Describe("UpsertOrder", func() {
 			DeliveryInstructions: "Instrucciones originales",
 		}
 
-		upsert := NewUpsertOrder(connection)
+		upsert := NewUpsertOrder(connection, nil)
 		err := upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -178,7 +178,7 @@ var _ = Describe("UpsertOrder", func() {
 			},
 		}
 
-		upsert := NewUpsertOrder(connection)
+		upsert := NewUpsertOrder(connection, nil)
 		err := upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -235,7 +235,7 @@ var _ = Describe("UpsertOrder", func() {
 			},
 		}
 
-		upsert := NewUpsertOrder(connection)
+		upsert := NewUpsertOrder(connection, nil)
 		err := upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -287,7 +287,7 @@ var _ = Describe("UpsertOrder", func() {
 			Destination: destNode,
 		}
 
-		upsert := NewUpsertOrder(noTablesContainerConnection)
+		upsert := NewUpsertOrder(noTablesContainerConnection, nil)
 		err := upsert(ctx, order)
 
 		Expect(err).To(HaveOccurred())
@@ -308,7 +308,7 @@ var _ = Describe("UpsertOrder", func() {
 			Destination: destNode,
 		}
 
-		upsert := NewUpsertOrder(connection)
+		upsert := NewUpsertOrder(connection, nil)
 		err := upsert(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
