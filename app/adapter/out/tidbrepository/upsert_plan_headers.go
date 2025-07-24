@@ -41,7 +41,7 @@ func NewUpsertPlanHeaders(conn database.ConnectionFactory, saveFSMTransition Sav
 				}
 
 				// Persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -51,7 +51,7 @@ func NewUpsertPlanHeaders(conn database.ConnectionFactory, saveFSMTransition Sav
 			updated, changed := existing.Map().UpdateIfChanged(h)
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -66,7 +66,7 @@ func NewUpsertPlanHeaders(conn database.ConnectionFactory, saveFSMTransition Sav
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 

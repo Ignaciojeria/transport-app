@@ -43,7 +43,7 @@ func NewUpsertOrderReferences(conn database.ConnectionFactory, saveFSMTransition
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 

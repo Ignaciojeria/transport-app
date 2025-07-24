@@ -41,7 +41,7 @@ func NewUpsertDriver(conn database.ConnectionFactory, saveFSMTransition SaveFSMT
 				}
 
 				// Persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -51,7 +51,7 @@ func NewUpsertDriver(conn database.ConnectionFactory, saveFSMTransition SaveFSMT
 			updated, changed := existing.Map().UpdateIfChanged(d)
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -66,7 +66,7 @@ func NewUpsertDriver(conn database.ConnectionFactory, saveFSMTransition SaveFSMT
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 

@@ -57,7 +57,7 @@ func NewUpsertAddressInfo(conn database.ConnectionFactory, saveFSMTransition Sav
 			}
 
 			// Guardar FSMState si se provee
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 			return nil

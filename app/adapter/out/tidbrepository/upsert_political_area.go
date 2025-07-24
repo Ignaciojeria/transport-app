@@ -40,7 +40,7 @@ func NewUpsertPoliticalArea(conn database.ConnectionFactory, saveFSMTransition S
 				}
 
 				// Persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -50,7 +50,7 @@ func NewUpsertPoliticalArea(conn database.ConnectionFactory, saveFSMTransition S
 			updated, changed := existing.Map().UpdateIfChanged(pa)
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -65,7 +65,7 @@ func NewUpsertPoliticalArea(conn database.ConnectionFactory, saveFSMTransition S
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 
