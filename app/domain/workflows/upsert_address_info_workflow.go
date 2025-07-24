@@ -69,10 +69,6 @@ func (w UpsertAddressInfoWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertAddressInfoWorkflow) TransitionToAddressInfoUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.AddressInfoUpserted())
-}
-
 func (w UpsertAddressInfoWorkflow) CanTransitionToAddressInfoUpserted() bool {
 	return w.fsm.Can(w.AddressInfoUpserted())
 }

@@ -69,10 +69,6 @@ func (w UpsertSizeCategoryWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertSizeCategoryWorkflow) TransitionToSizeCategoryUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.SizeCategoryUpserted())
-}
-
 func (w UpsertSizeCategoryWorkflow) CanTransitionToSizeCategoryUpserted() bool {
 	return w.fsm.Can(w.SizeCategoryUpserted())
 }

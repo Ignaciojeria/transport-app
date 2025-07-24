@@ -69,10 +69,6 @@ func (w UpsertDriverWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertDriverWorkflow) TransitionToDriverUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.DriverUpserted())
-}
-
 func (w UpsertDriverWorkflow) CanTransitionToDriverUpserted() bool {
 	return w.fsm.Can(w.DriverUpserted())
 }

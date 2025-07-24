@@ -69,10 +69,6 @@ func (w UpsertNodeTypeWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertNodeTypeWorkflow) TransitionToNodeTypeUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.NodeTypeUpserted())
-}
-
 func (w UpsertNodeTypeWorkflow) CanTransitionToNodeTypeUpserted() bool {
 	return w.fsm.Can(w.NodeTypeUpserted())
 }

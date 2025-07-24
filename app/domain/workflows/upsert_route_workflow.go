@@ -69,10 +69,6 @@ func (w UpsertRouteWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertRouteWorkflow) TransitionToRouteUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.RouteUpserted())
-}
-
 func (w UpsertRouteWorkflow) CanTransitionToRouteUpserted() bool {
 	return w.fsm.Can(w.RouteUpserted())
 }

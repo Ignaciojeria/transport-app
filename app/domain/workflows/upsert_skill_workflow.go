@@ -69,10 +69,6 @@ func (w UpsertSkillWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertSkillWorkflow) TransitionToSkillUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.SkillUpserted())
-}
-
 func (w UpsertSkillWorkflow) CanTransitionToSkillUpserted() bool {
 	return w.fsm.Can(w.SkillUpserted())
 }

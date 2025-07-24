@@ -69,10 +69,6 @@ func (w UpsertAccountWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertAccountWorkflow) TransitionToAccountUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.AccountUpserted())
-}
-
 func (w UpsertAccountWorkflow) CanTransitionToAccountUpserted() bool {
 	return w.fsm.Can(w.AccountUpserted())
 }

@@ -69,10 +69,6 @@ func (w UpsertNonDeliveryReasonWorkflow) Map(ctx context.Context) domain.FSMStat
 	}
 }
 
-func (w UpsertNonDeliveryReasonWorkflow) TransitionToNonDeliveryReasonUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.NonDeliveryReasonUpserted())
-}
-
 func (w UpsertNonDeliveryReasonWorkflow) CanTransitionToNonDeliveryReasonUpserted() bool {
 	return w.fsm.Can(w.NonDeliveryReasonUpserted())
 }

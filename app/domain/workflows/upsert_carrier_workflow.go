@@ -69,10 +69,6 @@ func (w UpsertCarrierWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertCarrierWorkflow) TransitionToCarrierUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.CarrierUpserted())
-}
-
 func (w UpsertCarrierWorkflow) CanTransitionToCarrierUpserted() bool {
 	return w.fsm.Can(w.CarrierUpserted())
 }

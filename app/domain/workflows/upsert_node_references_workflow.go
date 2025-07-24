@@ -69,10 +69,6 @@ func (w UpsertNodeReferencesWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertNodeReferencesWorkflow) TransitionToNodeReferencesUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.NodeReferencesUpserted())
-}
-
 func (w UpsertNodeReferencesWorkflow) CanTransitionToNodeReferencesUpserted() bool {
 	return w.fsm.Can(w.NodeReferencesUpserted())
 }

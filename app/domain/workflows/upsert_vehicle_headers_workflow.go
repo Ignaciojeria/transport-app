@@ -69,10 +69,6 @@ func (w UpsertVehicleHeadersWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertVehicleHeadersWorkflow) TransitionToVehicleHeadersUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.VehicleHeadersUpserted())
-}
-
 func (w UpsertVehicleHeadersWorkflow) CanTransitionToVehicleHeadersUpserted() bool {
 	return w.fsm.Can(w.VehicleHeadersUpserted())
 }

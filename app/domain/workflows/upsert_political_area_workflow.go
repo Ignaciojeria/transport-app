@@ -69,10 +69,6 @@ func (w UpsertPoliticalAreaWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertPoliticalAreaWorkflow) TransitionToPoliticalAreaUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.PoliticalAreaUpserted())
-}
-
 func (w UpsertPoliticalAreaWorkflow) CanTransitionToPoliticalAreaUpserted() bool {
 	return w.fsm.Can(w.PoliticalAreaUpserted())
 }
