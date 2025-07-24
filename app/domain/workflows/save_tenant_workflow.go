@@ -69,10 +69,6 @@ func (w SaveTenantWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w SaveTenantWorkflow) TransitionToTenantSaved(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.TenantSaved())
-}
-
 func (w SaveTenantWorkflow) CanTransitionToTenantSaved() bool {
 	return w.fsm.Can(w.TenantSaved())
 }
