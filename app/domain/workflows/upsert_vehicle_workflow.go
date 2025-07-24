@@ -69,10 +69,6 @@ func (w UpsertVehicleWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertVehicleWorkflow) TransitionToVehicleUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.VehicleUpserted())
-}
-
 func (w UpsertVehicleWorkflow) CanTransitionToVehicleUpserted() bool {
 	return w.fsm.Can(w.VehicleUpserted())
 }

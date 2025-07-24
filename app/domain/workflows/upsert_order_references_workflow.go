@@ -69,10 +69,6 @@ func (w UpsertOrderReferencesWorkflow) Map(ctx context.Context) domain.FSMState 
 	}
 }
 
-func (w UpsertOrderReferencesWorkflow) TransitionToOrderReferencesUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.OrderReferencesUpserted())
-}
-
 func (w UpsertOrderReferencesWorkflow) CanTransitionToOrderReferencesUpserted() bool {
 	return w.fsm.Can(w.OrderReferencesUpserted())
 }

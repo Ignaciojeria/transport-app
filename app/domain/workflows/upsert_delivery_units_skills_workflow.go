@@ -69,10 +69,6 @@ func (w UpsertDeliveryUnitsSkillsWorkflow) Map(ctx context.Context) domain.FSMSt
 	}
 }
 
-func (w UpsertDeliveryUnitsSkillsWorkflow) TransitionToDeliveryUnitsSkillsUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.DeliveryUnitsSkillsUpserted())
-}
-
 func (w UpsertDeliveryUnitsSkillsWorkflow) CanTransitionToDeliveryUnitsSkillsUpserted() bool {
 	return w.fsm.Can(w.DeliveryUnitsSkillsUpserted())
 }

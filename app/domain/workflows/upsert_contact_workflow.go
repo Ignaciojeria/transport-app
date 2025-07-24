@@ -69,10 +69,6 @@ func (w UpsertContactWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertContactWorkflow) TransitionToContactUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.ContactUpserted())
-}
-
 func (w UpsertContactWorkflow) CanTransitionToContactUpserted() bool {
 	return w.fsm.Can(w.ContactUpserted())
 }

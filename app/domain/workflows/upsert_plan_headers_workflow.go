@@ -69,10 +69,6 @@ func (w UpsertPlanHeadersWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertPlanHeadersWorkflow) TransitionToPlanHeadersUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.PlanHeadersUpserted())
-}
-
 func (w UpsertPlanHeadersWorkflow) CanTransitionToPlanHeadersUpserted() bool {
 	return w.fsm.Can(w.PlanHeadersUpserted())
 }

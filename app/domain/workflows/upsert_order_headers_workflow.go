@@ -69,10 +69,6 @@ func (w UpsertOrderHeadersWorkflow) Map(ctx context.Context) domain.FSMState {
 	}
 }
 
-func (w UpsertOrderHeadersWorkflow) TransitionToOrderHeadersUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.OrderHeadersUpserted())
-}
-
 func (w UpsertOrderHeadersWorkflow) CanTransitionToOrderHeadersUpserted() bool {
 	return w.fsm.Can(w.OrderHeadersUpserted())
 }

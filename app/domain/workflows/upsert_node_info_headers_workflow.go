@@ -69,10 +69,6 @@ func (w UpsertNodeInfoHeadersWorkflow) Map(ctx context.Context) domain.FSMState 
 	}
 }
 
-func (w UpsertNodeInfoHeadersWorkflow) TransitionToNodeInfoHeadersUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.NodeInfoHeadersUpserted())
-}
-
 func (w UpsertNodeInfoHeadersWorkflow) CanTransitionToNodeInfoHeadersUpserted() bool {
 	return w.fsm.Can(w.NodeInfoHeadersUpserted())
 }

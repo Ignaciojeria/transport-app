@@ -69,10 +69,6 @@ func (w UpsertClientCredentialsWorkflow) Map(ctx context.Context) domain.FSMStat
 	}
 }
 
-func (w UpsertClientCredentialsWorkflow) TransitionToClientCredentialsUpserted(ctx context.Context) error {
-	return w.fsm.Event(ctx, w.ClientCredentialsUpserted())
-}
-
 func (w UpsertClientCredentialsWorkflow) CanTransitionToClientCredentialsUpserted() bool {
 	return w.fsm.Can(w.ClientCredentialsUpserted())
 }
