@@ -155,8 +155,8 @@ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/gabriel-vasile/mimetype v1.4.8 h1:FfZ3gj38NjllZIeJAmMhr+qKL8Wu+nOoI3GqacKw1NM=
 github.com/gabriel-vasile/mimetype v1.4.8/go.mod h1:ByKUIKGjh1ODkGM1asKUbQZOLGrPjydw3hYPU2YU9t8=
-github.com/getkin/kin-openapi v0.131.0 h1:NO2UeHnFKRYhZ8wg6Nyh5Cq7dHk4suQQr72a4pMrDxE=
-github.com/getkin/kin-openapi v0.131.0/go.mod h1:3OlG51PCYNsPByuiMB0t4fjnNlIDnaEDsjiKUV8nL58=
+github.com/getkin/kin-openapi v0.132.0 h1:3ISeLMsQzcb5v26yeJrBcdTCEQTag36ZjaGk7MIRUwk=
+github.com/getkin/kin-openapi v0.132.0/go.mod h1:3OlG51PCYNsPByuiMB0t4fjnNlIDnaEDsjiKUV8nL58=
 github.com/getsentry/sentry-go v0.27.0 h1:Pv98CIbtB3LkMWmXi4Joa5OOcwbmnX88sF5qbK3r3Ps=
 github.com/getsentry/sentry-go v0.27.0/go.mod h1:lc76E2QywIyW8WuBnwl8Lc4bkmQH4+w1gwTf25trprY=
 github.com/go-errors/errors v1.4.2 h1:J6MZopCL4uSllY1OfXM374weqZFFItUbrImctkmUxIA=
@@ -431,8 +431,8 @@ github.com/testcontainers/testcontainers-go v0.38.0 h1:d7uEapLcv2P8AvH8ahLqDMMxd
 github.com/testcontainers/testcontainers-go v0.38.0/go.mod h1:C52c9MoHpWO+C4aqmgSU+hxlR5jlEayWtgYrb8Pzz1w=
 github.com/testcontainers/testcontainers-go/modules/gcloud v0.38.0 h1:viNpRx98HEisJGQqDfkO6zfu24hxwjQfUMVXYyy0InY=
 github.com/testcontainers/testcontainers-go/modules/gcloud v0.38.0/go.mod h1:QoU984nFTb0N6SrDiYOdk4WE+ZHcVEaJBbTPJZvDn74=
-github.com/testcontainers/testcontainers-go/modules/nats v0.37.0 h1:W0CuaYbJZBeao2B0/AgjdRbDjnQFPu9gWpnxylNevts=
-github.com/testcontainers/testcontainers-go/modules/nats v0.37.0/go.mod h1:yPPcc9JrIF6i/lhBdvcSWjVG/LcEdX04VB8Z0zePBgg=
+github.com/testcontainers/testcontainers-go/modules/nats v0.38.0 h1:TKSximMPnslF4MuqOFAQyC8EWEIbTklSMDyEcRWxTSc=
+github.com/testcontainers/testcontainers-go/modules/nats v0.38.0/go.mod h1:zxGn/qHEPcy/lBBKp71JdOCZxauAOV6rdHF5i0zeiik=
 github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0 h1:KFdx9A0yF94K70T6ibSuvgkQQeX1xKlZVF3hEagXEtY=
 github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0/go.mod h1:T/QRECND6N6tAKMxF1Za+G2tpwnGEHcODzHRsgIpw9M=
 github.com/thejerf/slogassert v0.3.4 h1:VoTsXixRbXMrRSSxDjYTiEDCM4VWbsYPW5rB/hX24kM=

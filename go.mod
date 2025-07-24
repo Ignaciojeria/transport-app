@@ -11,7 +11,7 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cockroachdb/errors v1.12.0
 	github.com/doug-martin/goqu/v9 v9.19.0
-	github.com/getkin/kin-openapi v0.131.0
+	github.com/getkin/kin-openapi v0.132.0
 	github.com/go-fuego/fuego v0.18.8
 	github.com/go-resty/resty/v2 v2.16.5
 	github.com/go-slog/otelslog v0.3.0
@@ -33,7 +33,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/gcloud v0.38.0
-	github.com/testcontainers/testcontainers-go/modules/nats v0.37.0
+	github.com/testcontainers/testcontainers-go/modules/nats v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.38.0
 	github.com/twpayne/go-polyline v1.1.1
 	github.com/valkey-io/valkey-go v1.0.63
