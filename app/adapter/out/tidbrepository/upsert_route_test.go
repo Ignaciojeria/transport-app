@@ -26,7 +26,7 @@ var _ = Describe("UpsertRoute", func() {
 		Expect(err).ToNot(HaveOccurred())
 
 		conn = connection
-		upsert = NewUpsertRoute(conn)
+		upsert = NewUpsertRoute(conn, nil)
 
 		// Setup test data
 		testRoute = domain.Route{

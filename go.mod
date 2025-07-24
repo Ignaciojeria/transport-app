@@ -60,6 +60,7 @@ require (
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.0
 	gorm.io/plugin/opentelemetry v0.1.16
+	olympos.io/encoding/cjson v0.0.0-20191103175252-b41f647ea928
 )
 
 require (

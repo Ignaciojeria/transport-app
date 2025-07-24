@@ -28,7 +28,7 @@ var _ = Describe("UpsertNodeType", func() {
 			Value: "pickup",
 		}
 
-		upsert := NewUpsertNodeType(conn)
+		upsert := NewUpsertNodeType(conn, nil)
 		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -51,7 +51,7 @@ var _ = Describe("UpsertNodeType", func() {
 			Value: "original",
 		}
 
-		upsert := NewUpsertNodeType(conn)
+		upsert := NewUpsertNodeType(conn, nil)
 		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -91,7 +91,7 @@ var _ = Describe("UpsertNodeType", func() {
 			Value: "no-change",
 		}
 
-		upsert := NewUpsertNodeType(conn)
+		upsert := NewUpsertNodeType(conn, nil)
 		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -133,7 +133,7 @@ var _ = Describe("UpsertNodeType", func() {
 			Value: "multi-org",
 		}
 
-		upsert := NewUpsertNodeType(conn)
+		upsert := NewUpsertNodeType(conn, nil)
 
 		err = upsert(ctx1, nodeType1)
 		Expect(err).ToNot(HaveOccurred())
@@ -174,7 +174,7 @@ var _ = Describe("UpsertNodeType", func() {
 			Value: "",
 		}
 
-		upsert := NewUpsertNodeType(conn)
+		upsert := NewUpsertNodeType(conn, nil)
 		err = upsert(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -197,7 +197,7 @@ var _ = Describe("UpsertNodeType", func() {
 			Value: "error-case",
 		}
 
-		upsert := NewUpsertNodeType(noTablesContainerConnection)
+		upsert := NewUpsertNodeType(noTablesContainerConnection, nil)
 		err = upsert(ctx, nodeType)
 
 		Expect(err).To(HaveOccurred())

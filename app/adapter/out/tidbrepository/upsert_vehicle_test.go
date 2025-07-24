@@ -18,7 +18,7 @@ var _ = Describe("UpsertVehicle", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertVehicle(conn)
+		upsert = NewUpsertVehicle(conn, nil)
 	})
 
 	It("should insert vehicle if not exists", func() {
@@ -164,7 +164,7 @@ var _ = Describe("UpsertVehicle", func() {
 			},
 		}
 
-		upsert := NewUpsertVehicle(noTablesContainerConnection)
+		upsert := NewUpsertVehicle(noTablesContainerConnection, nil)
 		err = upsert(ctx, vehicle)
 
 		Expect(err).To(HaveOccurred())

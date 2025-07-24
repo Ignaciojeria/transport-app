@@ -61,15 +61,15 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		}
 
 		// Insert test data
-		upsert := NewUpsertNodeInfo(conn)
+		upsert := NewUpsertNodeInfo(conn, nil)
 		err = upsert(ctx, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertNodeType := NewUpsertNodeType(conn)
+		upsertNodeType := NewUpsertNodeType(conn, nil)
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -124,15 +124,15 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		}
 
 		// Insert test data
-		upsert := NewUpsertNodeInfo(conn)
+		upsert := NewUpsertNodeInfo(conn, nil)
 		err = upsert(ctx, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertNodeType := NewUpsertNodeType(conn)
+		upsertNodeType := NewUpsertNodeType(conn, nil)
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -176,15 +176,15 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		}
 
 		// Insert test data
-		upsert := NewUpsertNodeInfo(conn)
+		upsert := NewUpsertNodeInfo(conn, nil)
 		err = upsert(ctx, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertNodeType := NewUpsertNodeType(conn)
+		upsertNodeType := NewUpsertNodeType(conn, nil)
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -231,19 +231,19 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		}
 
 		// Insert test data
-		upsert := NewUpsertNodeInfo(conn)
+		upsert := NewUpsertNodeInfo(conn, nil)
 		err = upsert(ctx, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertNodeType := NewUpsertNodeType(conn)
+		upsertNodeType := NewUpsertNodeType(conn, nil)
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertNodeReferences := NewUpsertNodeReferences(conn)
+		upsertNodeReferences := NewUpsertNodeReferences(conn, nil)
 		err = upsertNodeReferences(ctx, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -297,15 +297,15 @@ var _ = Describe("FindNodesProjectionResult", func() {
 		}
 
 		// Insert test data
-		upsert := NewUpsertNodeInfo(conn)
+		upsert := NewUpsertNodeInfo(conn, nil)
 		err = upsert(ctx, nodeInfo)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertNodeType := NewUpsertNodeType(conn)
+		upsertNodeType := NewUpsertNodeType(conn, nil)
 		err = upsertNodeType(ctx, nodeType)
 		Expect(err).ToNot(HaveOccurred())
 
-		upsertAddressInfo := NewUpsertAddressInfo(conn)
+		upsertAddressInfo := NewUpsertAddressInfo(conn, nil)
 		err = upsertAddressInfo(ctx, addressInfo)
 		Expect(err).ToNot(HaveOccurred())
 

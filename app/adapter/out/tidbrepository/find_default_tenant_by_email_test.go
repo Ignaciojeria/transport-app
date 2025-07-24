@@ -30,7 +30,7 @@ var _ = Describe("FindDefaultTenantByEmail", func() {
 		account := domain.Account{
 			Email: "test@example.com",
 		}
-		err = NewUpsertAccount(connection, NewSaveFSMTransition(connection))(ctx, account)
+		err = NewUpsertAccount(connection, nil)(ctx, account)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Create tenant account link (not invited)
@@ -41,7 +41,7 @@ var _ = Describe("FindDefaultTenantByEmail", func() {
 			Status:  "active",
 			Invited: false,
 		}
-		err = NewSaveTenantAccount(connection, NewSaveFSMTransition(connection))(tenantCtx, tenantAccount)
+		err = NewSaveTenantAccount(connection, nil)(tenantCtx, tenantAccount)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Test find function
@@ -66,7 +66,7 @@ var _ = Describe("FindDefaultTenantByEmail", func() {
 		account := domain.Account{
 			Email: "invited@example.com",
 		}
-		err = NewUpsertAccount(connection, NewSaveFSMTransition(connection))(ctx, account)
+		err = NewUpsertAccount(connection, nil)(ctx, account)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Create tenant account link (invited)
@@ -77,7 +77,7 @@ var _ = Describe("FindDefaultTenantByEmail", func() {
 			Status:  "pending",
 			Invited: true,
 		}
-		err = NewSaveTenantAccount(connection, NewSaveFSMTransition(connection))(tenantCtx, tenantAccount)
+		err = NewSaveTenantAccount(connection, nil)(tenantCtx, tenantAccount)
 		Expect(err).ToNot(HaveOccurred())
 
 		// Test find function - should not find invited account

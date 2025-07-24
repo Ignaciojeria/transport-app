@@ -15,7 +15,7 @@ var _ = Describe("UpsertOrderType", func() {
 	)
 
 	BeforeEach(func() {
-		upsert = NewUpsertOrderType(connection)
+		upsert = NewUpsertOrderType(connection, nil)
 	})
 
 	It("should insert order type if not exists", func() {
@@ -182,7 +182,7 @@ var _ = Describe("UpsertOrderType", func() {
 			Description: "Test Order Type",
 		}
 
-		upsert := NewUpsertOrderType(noTablesContainerConnection)
+		upsert := NewUpsertOrderType(noTablesContainerConnection, nil)
 		err = upsert(ctx, orderType)
 
 		Expect(err).To(HaveOccurred())

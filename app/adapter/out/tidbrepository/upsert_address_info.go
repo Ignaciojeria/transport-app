@@ -12,14 +12,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertAddressInfo func(context.Context, domain.AddressInfo) error
+type UpsertAddressInfo func(context.Context, domain.AddressInfo, ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertAddressInfo, database.NewConnectionFactory)
+	ioc.Registry(NewUpsertAddressInfo, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
-func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
-	return func(ctx context.Context, ai domain.AddressInfo) error {
+func NewUpsertAddressInfo(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertAddressInfo {
+	return func(ctx context.Context, ai domain.AddressInfo, fsmState ...domain.FSMState) error {
 		return conn.DB.Transaction(func(tx *gorm.DB) error {
 			// Upsert PoliticalArea
 			if err := upsertPoliticalArea(ctx, tx, ai.PoliticalArea); err != nil {
@@ -39,21 +39,28 @@ func NewUpsertAddressInfo(conn database.ConnectionFactory) UpsertAddressInfo {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// No existe → insert
 				newAddressInfo := mapper.MapAddressInfoTable(ctx, ai)
-				return tx.Omit("Tenant").Create(&newAddressInfo).Error
+				if err := tx.Omit("Tenant").Create(&newAddressInfo).Error; err != nil {
+					return err
+				}
+			} else {
+				// Ya existe → update solo si cambió algo
+				updated, changed := existing.Map().UpdateIfChanged(ai)
+				if changed {
+					updateData := mapper.MapAddressInfoTable(ctx, updated)
+					updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+					updateData.CreatedAt = existing.CreatedAt
+					updateData.PoliticalAreaDoc = ai.PoliticalArea.DocID(ctx).String()
+					if err := tx.Omit("Tenant").Save(&updateData).Error; err != nil {
+						return err
+					}
+				}
 			}
 
-			// Ya existe → update solo si cambió algo
-			updated, changed := existing.Map().UpdateIfChanged(ai)
-			if !changed {
-				return nil // No hay cambios, no hacemos nada
+			// Guardar FSMState si se provee
+			if len(fsmState) > 0 && saveFSMTransition != nil {
+				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
-
-			updateData := mapper.MapAddressInfoTable(ctx, updated)
-			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
-			updateData.CreatedAt = existing.CreatedAt
-			updateData.PoliticalAreaDoc = ai.PoliticalArea.DocID(ctx).String()
-
-			return tx.Omit("Tenant").Save(&updateData).Error
+			return nil
 		})
 	}
 }

@@ -473,6 +473,14 @@
         {
             "kind": "usecase",
             "name": "send-client-credentials-email-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-address-info-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-order-headers-workflow"
         }
     ]
 }

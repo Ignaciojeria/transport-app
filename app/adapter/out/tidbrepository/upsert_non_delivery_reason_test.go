@@ -30,7 +30,7 @@ var _ = Describe("UpsertNonDeliveryReason", func() {
 			Details:     "Cliente no estaba presente",
 		}
 
-		upsert := NewUpsertNonDeliveryReason(conn)
+		upsert := NewUpsertNonDeliveryReason(conn, nil)
 		err = upsert(ctx, reason)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -54,7 +54,7 @@ var _ = Describe("UpsertNonDeliveryReason", func() {
 			Reason:      "BAD_ADDRESS",
 			Details:     "Dirección no existe",
 		}
-		upsert := NewUpsertNonDeliveryReason(conn)
+		upsert := NewUpsertNonDeliveryReason(conn, nil)
 		err = upsert(ctx, original)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -96,7 +96,7 @@ var _ = Describe("UpsertNonDeliveryReason", func() {
 			Reason:      "INCOMPLETE_ADDRESS",
 		}
 
-		upsert := NewUpsertNonDeliveryReason(conn)
+		upsert := NewUpsertNonDeliveryReason(conn, nil)
 		err = upsert(ctx, reason)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -140,7 +140,7 @@ var _ = Describe("UpsertNonDeliveryReason", func() {
 			Details:     "Same reason for different tenants",
 		}
 
-		upsert := NewUpsertNonDeliveryReason(conn)
+		upsert := NewUpsertNonDeliveryReason(conn, nil)
 
 		err = upsert(ctx1, reason1)
 		Expect(err).ToNot(HaveOccurred())
@@ -181,7 +181,7 @@ var _ = Describe("UpsertNonDeliveryReason", func() {
 			ReferenceID: "REF-999",
 			Reason:      "DATABASE_MISSING",
 		}
-		upsert := NewUpsertNonDeliveryReason(noTablesContainerConnection)
+		upsert := NewUpsertNonDeliveryReason(noTablesContainerConnection, nil)
 		err = upsert(ctx, reason)
 
 		Expect(err).To(HaveOccurred())

@@ -18,7 +18,7 @@ var _ = Describe("UpsertContact", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertContact(conn)
+		upsert = NewUpsertContact(conn, nil)
 	})
 
 	It("should insert contact if not exists", func() {
@@ -218,7 +218,7 @@ var _ = Describe("UpsertContact", func() {
 			PrimaryEmail: "fail@example.com",
 		}
 
-		upsert := NewUpsertContact(noTablesContainerConnection)
+		upsert := NewUpsertContact(noTablesContainerConnection, nil)
 		err = upsert(ctx, contact)
 
 		Expect(err).To(HaveOccurred())

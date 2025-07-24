@@ -18,7 +18,7 @@ var _ = Describe("UpsertDeliveryUnitsLabels", func() {
 
 	BeforeEach(func() {
 		conn = connection
-		upsert = NewUpsertDeliveryUnitsLabels(conn)
+		upsert = NewUpsertDeliveryUnitsLabels(conn, nil)
 	})
 
 	It("should insert delivery unit labels correctly", func() {

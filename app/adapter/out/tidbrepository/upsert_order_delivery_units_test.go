@@ -37,7 +37,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			},
 		}
 
-		uop := NewUpsertOrderDeliveryUnits(conn)
+		uop := NewUpsertOrderDeliveryUnits(conn, nil)
 		err = uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -63,7 +63,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			},
 		}
 
-		uop := NewUpsertOrderDeliveryUnits(conn)
+		uop := NewUpsertOrderDeliveryUnits(conn, nil)
 		err = uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -94,7 +94,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			DeliveryUnits: []domain.DeliveryUnit{},
 		}
 
-		uop := NewUpsertOrderDeliveryUnits(conn)
+		uop := NewUpsertOrderDeliveryUnits(conn, nil)
 		err = uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -111,7 +111,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			},
 		}
 
-		uop := NewUpsertOrderDeliveryUnits(noTablesContainerConnection)
+		uop := NewUpsertOrderDeliveryUnits(noTablesContainerConnection, nil)
 		err = uop(ctx, order)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("order_delivery_units"))
@@ -128,7 +128,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			DeliveryUnits: []domain.DeliveryUnit{}, // no paquetes
 		}
 
-		uop := NewUpsertOrderDeliveryUnits(conn)
+		uop := NewUpsertOrderDeliveryUnits(conn, nil)
 		err = uop(ctx, order)
 		Expect(err).ToNot(HaveOccurred())
 
