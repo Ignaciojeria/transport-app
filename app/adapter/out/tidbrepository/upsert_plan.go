@@ -39,7 +39,7 @@ func NewUpsertPlan(conn database.ConnectionFactory, saveFSMTransition SaveFSMTra
 				}
 
 				// Persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -49,7 +49,7 @@ func NewUpsertPlan(conn database.ConnectionFactory, saveFSMTransition SaveFSMTra
 			updated, changed := existing.Map().UpdateIfChanged(p)
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -64,7 +64,7 @@ func NewUpsertPlan(conn database.ConnectionFactory, saveFSMTransition SaveFSMTra
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 

@@ -46,7 +46,7 @@ func NewUpsertNodeInfo(conn database.ConnectionFactory, saveFSMTransition SaveFS
 				}
 
 				// Persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -84,7 +84,7 @@ func NewUpsertNodeInfo(conn database.ConnectionFactory, saveFSMTransition SaveFS
 
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -102,7 +102,7 @@ func NewUpsertNodeInfo(conn database.ConnectionFactory, saveFSMTransition SaveFS
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 

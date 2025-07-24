@@ -41,7 +41,7 @@ func NewUpsertOrderType(conn database.ConnectionFactory, saveFSMTransition SaveF
 				}
 
 				// Persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -51,7 +51,7 @@ func NewUpsertOrderType(conn database.ConnectionFactory, saveFSMTransition SaveF
 			updated, changed := existing.Map().UpdateIfChanged(ot)
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -66,7 +66,7 @@ func NewUpsertOrderType(conn database.ConnectionFactory, saveFSMTransition SaveF
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 

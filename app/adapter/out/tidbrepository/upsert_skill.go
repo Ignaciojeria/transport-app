@@ -34,7 +34,7 @@ func NewUpsertSkill(conn database.ConnectionFactory, saveFSMTransition SaveFSMTr
 
 			if err == nil {
 				// Ya existe → solo persistir FSMState si está presente
-				if len(fsmState) > 0 {
+				if len(fsmState) > 0 && saveFSMTransition != nil {
 					return saveFSMTransition(ctx, fsmState[0], tx)
 				}
 				return nil
@@ -52,7 +52,7 @@ func NewUpsertSkill(conn database.ConnectionFactory, saveFSMTransition SaveFSMTr
 			}
 
 			// Persistir FSMState si está presente
-			if len(fsmState) > 0 {
+			if len(fsmState) > 0 && saveFSMTransition != nil {
 				return saveFSMTransition(ctx, fsmState[0], tx)
 			}
 
