@@ -111,12 +111,18 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 		}
 	}
 
+	skills := make([]string, len(p.Skills))
+	for i, skill := range p.Skills {
+		skills[i] = string(skill)
+	}
+
 	return optimization.DeliveryUnit{
 		Items:     items,
 		Insurance: *p.Insurance,
 		Volume:    *p.Volume,
 		Weight:    *p.Weight,
 		Lpn:       p.Lpn,
+		Skills:    skills,
 	}
 }
 
@@ -129,11 +135,17 @@ func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit 
 		}
 	}
 
+	skills := make([]Skill, len(optDU.Skills))
+	for i, skill := range optDU.Skills {
+		skills[i] = Skill(skill)
+	}
+
 	return DeliveryUnit{
 		Lpn:       optDU.Lpn,
 		Volume:    &optDU.Volume,
 		Weight:    &optDU.Weight,
 		Insurance: &optDU.Insurance,
 		Items:     items,
+		Skills:    skills,
 	}
 }

@@ -175,9 +175,18 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				totalInsurance,
 			}
 
+			// Recopilar skills de delivery units
+			var jobSkills []string
+			for _, order := range visit.Orders {
+				for _, deliveryUnit := range order.DeliveryUnits {
+					if len(deliveryUnit.Skills) > 0 {
+						jobSkills = append(jobSkills, deliveryUnit.Skills...)
+					}
+				}
+			}
 			// Solo incluir Skills si no está vacío
-			if len(visit.Delivery.Skills) > 0 {
-				job.Skills = mapSkills(visit.Delivery.Skills, registry)
+			if len(jobSkills) > 0 {
+				job.Skills = mapSkills(jobSkills, registry)
 			}
 
 			// Solo incluir Service si no es cero
@@ -253,16 +262,18 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				totalInsurance,
 			}
 
-			// Solo incluir Skills si no está vacío (usar skills de pickup o delivery)
-			var skills []string
-			if len(visit.Pickup.Skills) > 0 {
-				skills = append(skills, visit.Pickup.Skills...)
+			// Recopilar skills de delivery units
+			var shipmentSkills []string
+			for _, order := range visit.Orders {
+				for _, deliveryUnit := range order.DeliveryUnits {
+					if len(deliveryUnit.Skills) > 0 {
+						shipmentSkills = append(shipmentSkills, deliveryUnit.Skills...)
+					}
+				}
 			}
-			if len(visit.Delivery.Skills) > 0 {
-				skills = append(skills, visit.Delivery.Skills...)
-			}
-			if len(skills) > 0 {
-				shipment.Skills = mapSkills(skills, registry)
+			// Solo incluir Skills si no está vacío
+			if len(shipmentSkills) > 0 {
+				shipment.Skills = mapSkills(shipmentSkills, registry)
 			}
 
 			// Solo incluir Service si no es cero

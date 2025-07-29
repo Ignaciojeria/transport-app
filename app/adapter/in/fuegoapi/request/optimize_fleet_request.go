@@ -76,7 +76,6 @@ type OptimizeFleetVisitLocation struct {
 	AddressInfo  OptimizeFleetAddressInfo `json:"addressInfo"`
 	NodeInfo     OptimizeFleetNodeInfo    `json:"nodeInfo"`
 	ServiceTime  int64                    `json:"serviceTime"`
-	Skills       []string                 `json:"skills"`
 	TimeWindow   OptimizeFleetTimeWindow  `json:"timeWindow"`
 }
 
@@ -95,6 +94,7 @@ type OptimizeFleetDeliveryUnit struct {
 	Weight    int64               `json:"weight" example:"1000" description:"Weight in grams (g)"`
 	Insurance int64               `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 	Lpn       string              `json:"lpn"`
+	Skills    []string            `json:"skills"`
 }
 
 type OptimizeFleetItem struct {
@@ -194,7 +194,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				ReferenceID: v.Pickup.NodeInfo.ReferenceID,
 			},
 			ServiceTime: v.Pickup.ServiceTime,
-			Skills:      v.Pickup.Skills,
 			TimeWindow: optimization.TimeWindow{
 				Start: v.Pickup.TimeWindow.Start,
 				End:   v.Pickup.TimeWindow.End,
@@ -229,7 +228,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				ReferenceID: v.Delivery.NodeInfo.ReferenceID,
 			},
 			ServiceTime: v.Delivery.ServiceTime,
-			Skills:      v.Delivery.Skills,
 			TimeWindow: optimization.TimeWindow{
 				Start: v.Delivery.TimeWindow.Start,
 				End:   v.Delivery.TimeWindow.End,
@@ -252,6 +250,7 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					Volume:    du.Volume,
 					Weight:    du.Weight,
 					Lpn:       du.Lpn,
+					Skills:    du.Skills,
 				}
 			}
 			orders[j] = optimization.Order{

@@ -222,7 +222,6 @@ func generateVisits() []OptimizeFleetVisit {
 				AddressInfo:  addressInfo,
 				NodeInfo:     OptimizeFleetNodeInfo{ReferenceID: fmt.Sprintf("delivery-%s-%04d", zoneName, i+1)},
 				ServiceTime:  30,
-				Skills:       []string{"delivery"},
 				TimeWindow: OptimizeFleetTimeWindow{
 					Start: "08:00",
 					End:   "23:00",
@@ -239,6 +238,7 @@ func generateVisits() []OptimizeFleetVisit {
 							Volume:    (9000 + rand.Int63n(12000)) / 10, // Proporcional al insurance
 							Weight:    (9000 + rand.Int63n(12000)) / 10, // Mismo valor que volume
 							Lpn:       fmt.Sprintf("LPN%04d", i+1),
+							Skills:    []string{"delivery"},
 						},
 					},
 					ReferenceID: fmt.Sprintf("ORD%04d", i+1),
