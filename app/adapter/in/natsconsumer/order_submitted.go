@@ -9,9 +9,11 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase"
 
 	"transport-app/app/domain"
+	canonicaljson "transport-app/app/shared/caonincaljson"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -109,7 +111,14 @@ func newNatsConsumer(
 		order.AssignIndexesIfNoLPN()
 
 		// Orquestación usando workflows
-		if err := upsertOrderHeadersWorkflow(ctx, order.Headers); err != nil {
+		key, err := canonicaljson.HashKey(ctx, "order_headers", order.Headers)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error procesando headers de orden", "error", err)
+			msg.Ack()
+			return
+		}
+		upsertHeadersCtx := sharedcontext.WithIdempotencyKey(ctx, key)
+		if err := upsertOrderHeadersWorkflow(upsertHeadersCtx, order.Headers); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando headers de orden", "error", err)
 			msg.Nak()
 			return
