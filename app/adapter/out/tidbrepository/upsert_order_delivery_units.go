@@ -23,10 +23,7 @@ func NewUpsertOrderDeliveryUnits(conn database.ConnectionFactory, saveFSMTransit
 	return func(ctx context.Context, order domain.Order, fsmState ...domain.FSMState) error {
 		orderPackages := mapper.MapOrderDeliveryUnits(ctx, order)
 		return conn.Transaction(func(tx *gorm.DB) error {
-			if err := tx.Where("order_doc = ?", order.DocID(ctx)).
-				Delete(&table.OrderDeliveryUnit{}).Error; err != nil {
-				return err
-			}
+
 			if len(orderPackages) > 0 {
 				if err := tx.Save(&orderPackages).Error; err != nil {
 					return err

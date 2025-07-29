@@ -306,19 +306,31 @@ func newNatsConsumer(
 			}
 		}
 
-		// Delivery Units History
-		plan := domain.Plan{Routes: []domain.Route{{Orders: []domain.Order{order}}}}
-		deliveryUnitsHistoryKey, err := canonicaljson.HashKey(ctx, "delivery_units_history", plan)
-		if err != nil {
-			obs.Logger.ErrorContext(ctx, "Error generando key para historial de unidades de entrega", "error", err)
-			msg.Nak()
-			return
-		}
-		deliveryUnitsHistoryCtx := sharedcontext.WithIdempotencyKey(ctx, deliveryUnitsHistoryKey)
-		if err := upsertDeliveryUnitsHistoryWorkflow(deliveryUnitsHistoryCtx, plan); err != nil {
-			obs.Logger.ErrorContext(ctx, "Error procesando historial de unidades de entrega", "error", err)
-			msg.Nak()
-			return
+		// Delivery Units History - iterar por cada delivery unit
+		for _, du := range order.DeliveryUnits {
+			// Generar hash key específico por delivery unit usando LPN + referenceId
+			deliveryUnitHistoryKey, err := canonicaljson.HashKey(ctx, "delivery_units_history", map[string]string{
+				"lpn":         du.Lpn,
+				"referenceId": order.ReferenceID.String(),
+			})
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error generando key para historial de unidad de entrega", "error", err)
+				msg.Nak()
+				return
+			}
+			deliveryUnitHistoryCtx := sharedcontext.WithIdempotencyKey(ctx, deliveryUnitHistoryKey)
+
+			// Crear orden con solo el delivery unit correspondiente a la iteración
+			orderWithSingleDU := order
+			orderWithSingleDU.DeliveryUnits = []domain.DeliveryUnit{du}
+
+			// Crear plan con orden que contiene solo el delivery unit específico
+			plan := domain.Plan{Routes: []domain.Route{{Orders: []domain.Order{orderWithSingleDU}}}}
+			if err := upsertDeliveryUnitsHistoryWorkflow(deliveryUnitHistoryCtx, plan); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando historial de unidad de entrega", "error", err)
+				msg.Nak()
+				return
+			}
 		}
 
 		obs.Logger.InfoContext(ctx, "Orden procesada exitosamente desde NATS",

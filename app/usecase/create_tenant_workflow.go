@@ -7,6 +7,7 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/domain/workflows"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -27,7 +28,12 @@ func NewCreateTenantWorkflow(
 	saveTenant tidbrepository.SaveTenant,
 	obs observability.Observability) CreateTenantWorkflow {
 	return func(ctx context.Context, input domain.Tenant) error {
-		workflow, err := createTenantWorkflow.Restore(ctx, input.ID.String())
+		// Obtener el idempotency key desde el contexto
+		key, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
+		if !ok {
+			return fmt.Errorf("idempotency key not found in context")
+		}
+		workflow, err := createTenantWorkflow.Restore(ctx, key)
 		if err != nil {
 			return fmt.Errorf("failed to restore workflow: %w", err)
 		}
