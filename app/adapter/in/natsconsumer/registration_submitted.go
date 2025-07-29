@@ -10,7 +10,10 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase"
+
+	canonicaljson "transport-app/app/shared/caonincaljson"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -87,11 +90,20 @@ func newRegistrationSubmittedConsumer(
 			return
 		}
 
-		// Procesar el registro
+		// Generar idempotency key único basado en el email para todo el proceso de registro
+		registrationKey, err := canonicaljson.HashKey(ctx, "registration", input.Email)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para registro", "error", err)
+			msg.Nak()
+			return
+		}
+		registrationCtx := sharedcontext.WithIdempotencyKey(ctx, registrationKey)
+
+		// Procesar el registro con idempotency key único
 		account := domain.Account{
 			Email: input.Email,
 		}
-		if err := createAccountWorkflow(ctx, account); err != nil {
+		if err := createAccountWorkflow(registrationCtx, account); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Nak() // Usar Nak para permitir reintentos
 			return
@@ -102,7 +114,7 @@ func newRegistrationSubmittedConsumer(
 			Name:    "default",
 			Country: countries.ByName(input.Country),
 		}
-		if err := createTenantWorkflow(ctx, tenant); err != nil {
+		if err := createTenantWorkflow(registrationCtx, tenant); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Nak() // Usar Nak para permitir reintentos
 			return
@@ -113,7 +125,7 @@ func newRegistrationSubmittedConsumer(
 			Account: account,
 			Role:    "owner",
 		}
-		if err := associateTenantAccountWorkflow(ctx, tenantAccount); err != nil {
+		if err := associateTenantAccountWorkflow(registrationCtx, tenantAccount); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Nak() // Usar Nak para permitir reintentos
 			return
@@ -138,13 +150,13 @@ func newRegistrationSubmittedConsumer(
 				"deliveries:write",
 			},
 		}
-		if err := createDefaultClientCredentialsWorkflow(ctx, clientCredentials); err != nil {
+		if err := createDefaultClientCredentialsWorkflow(registrationCtx, clientCredentials); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Nak() // Usar Nak para permitir reintentos
 			return
 		}
 
-		if err := sendClientCredentialsEmailWorkflow(ctx, clientCredentials.ClientID, account.Email); err != nil {
+		if err := sendClientCredentialsEmailWorkflow(registrationCtx, clientCredentials.ClientID, account.Email); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Nak() // Usar Nak para permitir reintentos
 			return

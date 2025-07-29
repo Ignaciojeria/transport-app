@@ -123,80 +123,214 @@ func newNatsConsumer(
 			msg.Nak()
 			return
 		}
-		if err := upsertContactWorkflow(ctx, order.Origin.AddressInfo.Contact); err != nil {
+
+		// Contactos
+		originContactKey, err := canonicaljson.HashKey(ctx, "contact", order.Origin.AddressInfo.Contact)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para contacto origen", "error", err)
+			msg.Nak()
+			return
+		}
+		originContactCtx := sharedcontext.WithIdempotencyKey(ctx, originContactKey)
+		if err := upsertContactWorkflow(originContactCtx, order.Origin.AddressInfo.Contact); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando contacto origen", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertContactWorkflow(ctx, order.Destination.AddressInfo.Contact); err != nil {
+
+		destContactKey, err := canonicaljson.HashKey(ctx, "contact", order.Destination.AddressInfo.Contact)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para contacto destino", "error", err)
+			msg.Nak()
+			return
+		}
+		destContactCtx := sharedcontext.WithIdempotencyKey(ctx, destContactKey)
+		if err := upsertContactWorkflow(destContactCtx, order.Destination.AddressInfo.Contact); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando contacto destino", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertAddressInfoWorkflow(ctx, order.Origin.AddressInfo); err != nil {
+
+		// Address Info
+		originAddressKey, err := canonicaljson.HashKey(ctx, "address_info", order.Origin.AddressInfo)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para dirección origen", "error", err)
+			msg.Nak()
+			return
+		}
+		originAddressCtx := sharedcontext.WithIdempotencyKey(ctx, originAddressKey)
+		if err := upsertAddressInfoWorkflow(originAddressCtx, order.Origin.AddressInfo); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando dirección origen", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertAddressInfoWorkflow(ctx, order.Destination.AddressInfo); err != nil {
+
+		destAddressKey, err := canonicaljson.HashKey(ctx, "address_info", order.Destination.AddressInfo)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para dirección destino", "error", err)
+			msg.Nak()
+			return
+		}
+		destAddressCtx := sharedcontext.WithIdempotencyKey(ctx, destAddressKey)
+		if err := upsertAddressInfoWorkflow(destAddressCtx, order.Destination.AddressInfo); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando dirección destino", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertOrderTypeWorkflow(ctx, order.OrderType); err != nil {
+
+		// Order Type
+		orderTypeKey, err := canonicaljson.HashKey(ctx, "order_type", order.OrderType)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para tipo de orden", "error", err)
+			msg.Nak()
+			return
+		}
+		orderTypeCtx := sharedcontext.WithIdempotencyKey(ctx, orderTypeKey)
+		if err := upsertOrderTypeWorkflow(orderTypeCtx, order.OrderType); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando tipo de orden", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertDeliveryUnitsWorkflow(ctx, order.DeliveryUnits); err != nil {
+
+		// Delivery Units
+		deliveryUnitsKey, err := canonicaljson.HashKey(ctx, "delivery_units", order.DeliveryUnits)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para unidades de entrega", "error", err)
+			msg.Nak()
+			return
+		}
+		deliveryUnitsCtx := sharedcontext.WithIdempotencyKey(ctx, deliveryUnitsKey)
+		if err := upsertDeliveryUnitsWorkflow(deliveryUnitsCtx, order.DeliveryUnits); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando unidades de entrega", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertOrderReferencesWorkflow(ctx, order); err != nil {
+
+		// Order References
+		orderReferencesKey, err := canonicaljson.HashKey(ctx, "order_references", order)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para referencias de orden", "error", err)
+			msg.Nak()
+			return
+		}
+		orderReferencesCtx := sharedcontext.WithIdempotencyKey(ctx, orderReferencesKey)
+		if err := upsertOrderReferencesWorkflow(orderReferencesCtx, order); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando referencias de orden", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertOrderDeliveryUnitsWorkflow(ctx, order); err != nil {
+
+		// Order Delivery Units
+		orderDeliveryUnitsKey, err := canonicaljson.HashKey(ctx, "order_delivery_units", order)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para relación orden-unidades", "error", err)
+			msg.Nak()
+			return
+		}
+		orderDeliveryUnitsCtx := sharedcontext.WithIdempotencyKey(ctx, orderDeliveryUnitsKey)
+		if err := upsertOrderDeliveryUnitsWorkflow(orderDeliveryUnitsCtx, order); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando relación orden-unidades", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertOrderWorkflow(ctx, order); err != nil {
+
+		// Order
+		orderKey, err := canonicaljson.HashKey(ctx, "order", order)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para orden", "error", err)
+			msg.Nak()
+			return
+		}
+		orderCtx := sharedcontext.WithIdempotencyKey(ctx, orderKey)
+		if err := upsertOrderWorkflow(orderCtx, order); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando upsert de orden", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertDeliveryUnitsLabelsWorkflow(ctx, order); err != nil {
+
+		// Delivery Units Labels
+		deliveryUnitsLabelsKey, err := canonicaljson.HashKey(ctx, "delivery_units_labels", order)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para labels de unidades de entrega", "error", err)
+			msg.Nak()
+			return
+		}
+		deliveryUnitsLabelsCtx := sharedcontext.WithIdempotencyKey(ctx, deliveryUnitsLabelsKey)
+		if err := upsertDeliveryUnitsLabelsWorkflow(deliveryUnitsLabelsCtx, order); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando labels de unidades de entrega", "error", err)
 			msg.Nak()
 			return
 		}
-		if err := upsertDeliveryUnitsSkillsWorkflow(ctx, order); err != nil {
+
+		// Delivery Units Skills
+		deliveryUnitsSkillsKey, err := canonicaljson.HashKey(ctx, "delivery_units_skills", order)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para skills de unidades de entrega", "error", err)
+			msg.Nak()
+			return
+		}
+		deliveryUnitsSkillsCtx := sharedcontext.WithIdempotencyKey(ctx, deliveryUnitsSkillsKey)
+		if err := upsertDeliveryUnitsSkillsWorkflow(deliveryUnitsSkillsCtx, order); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error procesando skills de unidades de entrega", "error", err)
 			msg.Nak()
 			return
 		}
+
+		// Size Categories y Skills
 		for _, du := range order.DeliveryUnits {
-			if err := upsertSizeCategoryWorkflow(ctx, du.SizeCategory); err != nil {
+			sizeCategoryKey, err := canonicaljson.HashKey(ctx, "size_category", du.SizeCategory)
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error generando key para size category", "error", err)
+				msg.Nak()
+				return
+			}
+			sizeCategoryCtx := sharedcontext.WithIdempotencyKey(ctx, sizeCategoryKey)
+			if err := upsertSizeCategoryWorkflow(sizeCategoryCtx, du.SizeCategory); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error procesando size category", "error", err)
 				msg.Nak()
 				return
 			}
 			for _, skill := range du.Skills {
-				if err := upsertSkillWorkflow(ctx, skill); err != nil {
+				skillKey, err := canonicaljson.HashKey(ctx, "skill", skill)
+				if err != nil {
+					obs.Logger.ErrorContext(ctx, "Error generando key para skill", "error", err)
+					msg.Nak()
+					return
+				}
+				skillCtx := sharedcontext.WithIdempotencyKey(ctx, skillKey)
+				if err := upsertSkillWorkflow(skillCtx, skill); err != nil {
 					obs.Logger.ErrorContext(ctx, "Error procesando skill", "error", err)
 					msg.Nak()
 					return
 				}
 			}
 		}
-		plan := domain.Plan{Routes: []domain.Route{{Orders: []domain.Order{order}}}}
-		if err := upsertDeliveryUnitsHistoryWorkflow(ctx, plan); err != nil {
-			obs.Logger.ErrorContext(ctx, "Error procesando historial de unidades de entrega", "error", err)
-			msg.Nak()
-			return
+
+		// Delivery Units History - iterar por cada delivery unit
+		for _, du := range order.DeliveryUnits {
+			// Generar hash key específico por delivery unit usando LPN + referenceId
+			deliveryUnitHistoryKey, err := canonicaljson.HashKey(ctx, "delivery_units_history", map[string]string{
+				"lpn":         du.Lpn,
+				"referenceId": order.ReferenceID.String(),
+			})
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error generando key para historial de unidad de entrega", "error", err)
+				msg.Nak()
+				return
+			}
+			deliveryUnitHistoryCtx := sharedcontext.WithIdempotencyKey(ctx, deliveryUnitHistoryKey)
+
+			// Crear orden con solo el delivery unit correspondiente a la iteración
+			orderWithSingleDU := order
+			orderWithSingleDU.DeliveryUnits = []domain.DeliveryUnit{du}
+
+			// Crear plan con orden que contiene solo el delivery unit específico
+			plan := domain.Plan{Routes: []domain.Route{{Orders: []domain.Order{orderWithSingleDU}}}}
+			if err := upsertDeliveryUnitsHistoryWorkflow(deliveryUnitHistoryCtx, plan); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando historial de unidad de entrega", "error", err)
+				msg.Nak()
+				return
+			}
 		}
 
 		obs.Logger.InfoContext(ctx, "Orden procesada exitosamente desde NATS",
