@@ -6,8 +6,8 @@ import (
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/domain/workflows"
-	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -28,9 +28,10 @@ func NewUpsertDeliveryUnitsHistoryWorkflow(
 	obs observability.Observability,
 ) UpsertDeliveryUnitsHistoryWorkflow {
 	return func(ctx context.Context, plan domain.Plan) error {
-		key, err := canonicaljson.HashKey(ctx, "delivery_units_history", plan)
-		if err != nil {
-			return fmt.Errorf("failed to hash key: %w", err)
+		// Usar el idempotency key desde el contexto
+		key, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
+		if !ok {
+			return fmt.Errorf("idempotency key not found in context")
 		}
 		workflow, err := domainWorkflow.Restore(ctx, key)
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 	"transport-app/app/domain"
 	"transport-app/app/domain/workflows"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
@@ -27,7 +28,11 @@ func NewUpsertContactWorkflow(
 	obs observability.Observability,
 ) UpsertContactWorkflow {
 	return func(ctx context.Context, contact domain.Contact) error {
-		key := contact.DocID(ctx).String()
+		// Usar el idempotency key desde el contexto
+		key, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
+		if !ok {
+			return fmt.Errorf("idempotency key not found in context")
+		}
 		workflow, err := domainWorkflow.Restore(ctx, key)
 		if err != nil {
 			return fmt.Errorf("failed to restore workflow: %w", err)
