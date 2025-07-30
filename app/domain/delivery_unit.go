@@ -116,11 +116,23 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 		skills[i] = string(skill)
 	}
 
+	// Use default values if pointers are nil
+	var insurance, volume, weight int64
+	if p.Insurance != nil {
+		insurance = *p.Insurance
+	}
+	if p.Volume != nil {
+		volume = *p.Volume
+	}
+	if p.Weight != nil {
+		weight = *p.Weight
+	}
+
 	return optimization.DeliveryUnit{
 		Items:     items,
-		Insurance: *p.Insurance,
-		Volume:    *p.Volume,
-		Weight:    *p.Weight,
+		Insurance: insurance,
+		Volume:    volume,
+		Weight:    weight,
 		Lpn:       p.Lpn,
 		Skills:    skills,
 	}

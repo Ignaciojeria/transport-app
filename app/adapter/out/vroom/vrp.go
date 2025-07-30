@@ -1026,14 +1026,19 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 				})
 			}
 
-			// Crear la unidad de entrega del dominio con información completa
-			deliveryUnit := domain.DeliveryUnit{
-				Lpn:       du.Lpn,
-				Volume:    &du.Volume,
-				Weight:    &du.Weight,
-				Insurance: &du.Insurance,
-				Items:     items,
-			}
+					// Crear la unidad de entrega del dominio con información completa
+		// Create copies of the values to ensure we have valid pointers
+		volume := du.Volume
+		weight := du.Weight
+		insurance := du.Insurance
+		
+		deliveryUnit := domain.DeliveryUnit{
+			Lpn:       du.Lpn,
+			Volume:    &volume,
+			Weight:    &weight,
+			Insurance: &insurance,
+			Items:     items,
+		}
 
 			deliveryUnits = append(deliveryUnits, deliveryUnit)
 		}
@@ -1114,11 +1119,16 @@ func createOrderFromOptimizationOrder(optOrder optimization.Order) domain.Order 
 		}
 
 		// Crear la unidad de entrega del dominio con información completa
+		// Create copies of the values to ensure we have valid pointers
+		volume := du.Volume
+		weight := du.Weight
+		insurance := du.Insurance
+		
 		deliveryUnit := domain.DeliveryUnit{
 			Lpn:       du.Lpn,
-			Volume:    &du.Volume,
-			Weight:    &du.Weight,
-			Insurance: &du.Insurance,
+			Volume:    &volume,
+			Weight:    &weight,
+			Insurance: &insurance,
 			Items:     items,
 			// Skills se mapean desde la optimización
 		}
