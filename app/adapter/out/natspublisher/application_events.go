@@ -60,11 +60,12 @@ func NewApplicationEvents(
 			}
 			var chunkIDs []string
 			for _, chunk := range chunks {
-				_, err = kv.Put(ctx, chunk.ID.String(), chunk.Data)
+				chunkKey := chunk.ID.String()
+				_, err = kv.Put(ctx, chunkKey, chunk.Data)
 				if err != nil {
 					return err
 				}
-				chunkIDs = append(chunkIDs, chunk.ID.String())
+				chunkIDs = append(chunkIDs, chunkKey)
 			}
 			// El campo Data del pubsub.Message será el arreglo de IDs serializado
 			msg.Data, err = json.Marshal(chunkIDs)

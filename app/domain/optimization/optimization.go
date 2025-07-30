@@ -65,7 +65,6 @@ type VisitLocation struct {
 	AddressInfo  AddressInfo
 	NodeInfo     NodeInfo
 	ServiceTime  int64
-	Skills       []string
 	TimeWindow   TimeWindow
 }
 
@@ -81,6 +80,7 @@ type DeliveryUnit struct {
 	Volume    int64
 	Weight    int64
 	Lpn       string
+	Skills    []string
 }
 
 // Order representa una orden
@@ -92,11 +92,17 @@ type Order struct {
 // Vehicle representa un vehículo
 type Vehicle struct {
 	Plate         string
-	StartLocation AddressInfo
-	EndLocation   AddressInfo
+	StartLocation VehicleLocation
+	EndLocation   VehicleLocation
 	Skills        []string
 	TimeWindow    TimeWindow
 	Capacity      Capacity
+}
+
+// VehicleLocation representa una ubicación del vehículo
+type VehicleLocation struct {
+	AddressInfo AddressInfo
+	NodeInfo    NodeInfo
 }
 
 // Visit representa una visita con pickup, delivery y órdenes

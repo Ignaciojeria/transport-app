@@ -1,6 +1,7 @@
 package natsconn
 
 import (
+	"fmt"
 	"os"
 	"transport-app/app/shared/configuration"
 
@@ -15,7 +16,6 @@ func init() {
 func NewConn(conf configuration.NatsConfiguration) (*nats.Conn, error) {
 	var opts []nats.Option
 
-	// Si hay credenciales, las usamos
 	if conf.NATS_CONNECTION_CREDS_FILECONTENT != "" {
 		tmpFile, err := os.CreateTemp("", "nats-creds-*.creds")
 		if err != nil {
@@ -28,10 +28,13 @@ func NewConn(conf configuration.NatsConfiguration) (*nats.Conn, error) {
 		}
 		opts = append(opts, nats.UserCredentials(tmpFile.Name()))
 	} else if conf.NATS_CONNECTION_CREDS_FILEPATH != "" {
-		// Fallback a ruta de archivo
 		opts = append(opts, nats.UserCredentials(conf.NATS_CONNECTION_CREDS_FILEPATH))
 	}
-	// Si no hay credenciales, conectamos sin autenticación (para testing)
 
-	return nats.Connect(conf.NATS_CONNECTION_URL, opts...)
+	nc, err := nats.Connect(conf.NATS_CONNECTION_URL, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("error conectando a NATS: %w", err)
+	}
+
+	return nc, nil
 }

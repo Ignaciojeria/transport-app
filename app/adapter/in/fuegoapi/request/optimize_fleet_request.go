@@ -76,7 +76,6 @@ type OptimizeFleetVisitLocation struct {
 	AddressInfo  OptimizeFleetAddressInfo `json:"addressInfo"`
 	NodeInfo     OptimizeFleetNodeInfo    `json:"nodeInfo"`
 	ServiceTime  int64                    `json:"serviceTime"`
-	Skills       []string                 `json:"skills"`
 	TimeWindow   OptimizeFleetTimeWindow  `json:"timeWindow"`
 }
 
@@ -95,6 +94,7 @@ type OptimizeFleetDeliveryUnit struct {
 	Weight    int64               `json:"weight" example:"1000" description:"Weight in grams (g)"`
 	Insurance int64               `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 	Lpn       string              `json:"lpn"`
+	Skills    []string            `json:"skills"`
 }
 
 type OptimizeFleetItem struct {
@@ -106,49 +106,59 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	for i, v := range r.Vehicles {
 		vehicles[i] = optimization.Vehicle{
 			Plate: v.Plate,
-			StartLocation: optimization.AddressInfo{
-				AddressLine1: v.StartLocation.AddressInfo.AddressLine1,
-				AddressLine2: v.StartLocation.AddressInfo.AddressLine2,
-				Contact: optimization.Contact{
-					Email:      v.StartLocation.AddressInfo.Contact.Email,
-					Phone:      v.StartLocation.AddressInfo.Contact.Phone,
-					NationalID: v.StartLocation.AddressInfo.Contact.NationalID,
-					FullName:   v.StartLocation.AddressInfo.Contact.FullName,
+			StartLocation: optimization.VehicleLocation{
+				AddressInfo: optimization.AddressInfo{
+					AddressLine1: v.StartLocation.AddressInfo.AddressLine1,
+					AddressLine2: v.StartLocation.AddressInfo.AddressLine2,
+					Contact: optimization.Contact{
+						Email:      v.StartLocation.AddressInfo.Contact.Email,
+						Phone:      v.StartLocation.AddressInfo.Contact.Phone,
+						NationalID: v.StartLocation.AddressInfo.Contact.NationalID,
+						FullName:   v.StartLocation.AddressInfo.Contact.FullName,
+					},
+					Coordinates: optimization.Coordinates{
+						Latitude:  v.StartLocation.AddressInfo.Coordinates.Latitude,
+						Longitude: v.StartLocation.AddressInfo.Coordinates.Longitude,
+					},
+					PoliticalArea: optimization.PoliticalArea{
+						Code:            v.StartLocation.AddressInfo.PoliticalArea.Code,
+						AdminAreaLevel1: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
+						AdminAreaLevel2: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
+						AdminAreaLevel3: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
+						AdminAreaLevel4: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
+					},
+					ZipCode: v.StartLocation.AddressInfo.ZipCode,
 				},
-				Coordinates: optimization.Coordinates{
-					Latitude:  v.StartLocation.AddressInfo.Coordinates.Latitude,
-					Longitude: v.StartLocation.AddressInfo.Coordinates.Longitude,
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.StartLocation.NodeInfo.ReferenceID,
 				},
-				PoliticalArea: optimization.PoliticalArea{
-					Code:            v.StartLocation.AddressInfo.PoliticalArea.Code,
-					AdminAreaLevel1: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
-					AdminAreaLevel2: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
-					AdminAreaLevel3: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
-					AdminAreaLevel4: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
-				},
-				ZipCode: v.StartLocation.AddressInfo.ZipCode,
 			},
-			EndLocation: optimization.AddressInfo{
-				AddressLine1: v.EndLocation.AddressInfo.AddressLine1,
-				AddressLine2: v.EndLocation.AddressInfo.AddressLine2,
-				Contact: optimization.Contact{
-					Email:      v.EndLocation.AddressInfo.Contact.Email,
-					Phone:      v.EndLocation.AddressInfo.Contact.Phone,
-					NationalID: v.EndLocation.AddressInfo.Contact.NationalID,
-					FullName:   v.EndLocation.AddressInfo.Contact.FullName,
+			EndLocation: optimization.VehicleLocation{
+				AddressInfo: optimization.AddressInfo{
+					AddressLine1: v.EndLocation.AddressInfo.AddressLine1,
+					AddressLine2: v.EndLocation.AddressInfo.AddressLine2,
+					Contact: optimization.Contact{
+						Email:      v.EndLocation.AddressInfo.Contact.Email,
+						Phone:      v.EndLocation.AddressInfo.Contact.Phone,
+						NationalID: v.EndLocation.AddressInfo.Contact.NationalID,
+						FullName:   v.EndLocation.AddressInfo.Contact.FullName,
+					},
+					Coordinates: optimization.Coordinates{
+						Latitude:  v.EndLocation.AddressInfo.Coordinates.Latitude,
+						Longitude: v.EndLocation.AddressInfo.Coordinates.Longitude,
+					},
+					PoliticalArea: optimization.PoliticalArea{
+						Code:            v.EndLocation.AddressInfo.PoliticalArea.Code,
+						AdminAreaLevel1: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
+						AdminAreaLevel2: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
+						AdminAreaLevel3: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
+						AdminAreaLevel4: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
+					},
+					ZipCode: v.EndLocation.AddressInfo.ZipCode,
 				},
-				Coordinates: optimization.Coordinates{
-					Latitude:  v.EndLocation.AddressInfo.Coordinates.Latitude,
-					Longitude: v.EndLocation.AddressInfo.Coordinates.Longitude,
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.EndLocation.NodeInfo.ReferenceID,
 				},
-				PoliticalArea: optimization.PoliticalArea{
-					Code:            v.EndLocation.AddressInfo.PoliticalArea.Code,
-					AdminAreaLevel1: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
-					AdminAreaLevel2: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
-					AdminAreaLevel3: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
-					AdminAreaLevel4: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
-				},
-				ZipCode: v.EndLocation.AddressInfo.ZipCode,
 			},
 			Skills: v.Skills,
 			TimeWindow: optimization.TimeWindow{
@@ -194,7 +204,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				ReferenceID: v.Pickup.NodeInfo.ReferenceID,
 			},
 			ServiceTime: v.Pickup.ServiceTime,
-			Skills:      v.Pickup.Skills,
 			TimeWindow: optimization.TimeWindow{
 				Start: v.Pickup.TimeWindow.Start,
 				End:   v.Pickup.TimeWindow.End,
@@ -229,7 +238,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				ReferenceID: v.Delivery.NodeInfo.ReferenceID,
 			},
 			ServiceTime: v.Delivery.ServiceTime,
-			Skills:      v.Delivery.Skills,
 			TimeWindow: optimization.TimeWindow{
 				Start: v.Delivery.TimeWindow.Start,
 				End:   v.Delivery.TimeWindow.End,
@@ -252,6 +260,7 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					Volume:    du.Volume,
 					Weight:    du.Weight,
 					Lpn:       du.Lpn,
+					Skills:    du.Skills,
 				}
 			}
 			orders[j] = optimization.Order{
