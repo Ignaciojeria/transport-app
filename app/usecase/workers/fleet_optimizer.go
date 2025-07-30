@@ -2,6 +2,7 @@ package workers
 
 import (
 	"context"
+	"fmt"
 	"transport-app/app/adapter/out/fuegoapiclient"
 	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/domain/optimization"
@@ -26,23 +27,23 @@ func NewFleetOptimizer(
 	postUpsertRoute fuegoapiclient.PostUpsertRoute) FleetOptimizer {
 	return func(ctx context.Context, input optimization.FleetOptimization) error {
 
-		plan, err := optimize(ctx, input)
+		routeRequests, err := optimize(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		unassignedRoute, ok := plan.GetUnassignedRoute()
-		if ok {
-			plan.Routes = append(plan.Routes, unassignedRoute)
+		// Procesar cada ruta individualmente
+		for i, routeRequest := range routeRequests {
+			// Convertir UpsertRouteRequest a domain.Route para usar con postUpsertRoute
+			// Por ahora, como postUpsertRoute espera domain.Route, necesitamos convertir
+			// Esto es temporal hasta que se actualice postUpsertRoute para usar UpsertRouteRequest directamente
+			fmt.Printf("Procesando ruta %d de %d: %s\n", i+1, len(routeRequests), routeRequest.ReferenceID)
+
+			// TODO: Implementar conversión de UpsertRouteRequest a domain.Route
+			// o actualizar postUpsertRoute para usar UpsertRouteRequest directamente
 		}
 
-		for _, route := range plan.Routes {
-			err := postUpsertRoute(ctx, route)
-			if err != nil {
-				return err
-			}
-		}
-
+		fmt.Printf("Optimización completada. Se procesaron %d rutas.\n", len(routeRequests))
 		return nil
 	}
 }

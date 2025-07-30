@@ -176,9 +176,9 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 			}
 		}
 
-		// Mapear vehículo si existe en la solicitud
-		if vroomRoute.Vehicle < int64(len(req.Vehicles)) {
-			vehicle := req.Vehicles[vroomRoute.Vehicle]
+		// Mapear vehículo completo si existe en la solicitud
+		if vroomRoute.Vehicle > 0 && int(vroomRoute.Vehicle) <= len(req.Vehicles) {
+			vehicle := req.Vehicles[vroomRoute.Vehicle-1]
 			route.Vehicle = domain.Vehicle{
 				Plate: vehicle.Plate,
 				Weight: struct {
@@ -186,7 +186,7 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 					UnitOfMeasure string
 				}{
 					Value:         int(vehicle.Capacity.Weight),
-					UnitOfMeasure: "g", // El modelo usa gramos
+					UnitOfMeasure: "g",
 				},
 				Insurance: struct {
 					PolicyStartDate      string
@@ -202,25 +202,35 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 						Currency string
 					}{
 						Amount:   float64(vehicle.Capacity.Insurance),
-						Currency: "CLP", // Asumiendo pesos chilenos por defecto
+						Currency: "CLP",
 					},
 				},
 			}
 		}
 
-		// Mapear origen y destino basado en los steps
+		// Mapear origen y destino completos basado en los steps
 		if len(vroomRoute.Steps) > 0 {
 			// Origen: primer step con location
 			for _, step := range vroomRoute.Steps {
 				if step.Type == "start" && len(step.Location) == 2 {
-					route.Origin = domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(uuid.New().String()),
-						Name:        "Origen",
-						AddressInfo: domain.AddressInfo{
-							Coordinates: domain.Coordinates{
-								Point: orb.Point{step.Location[0], step.Location[1]},
+					// Buscar el vehículo original para obtener la información completa del origen
+					if vroomRoute.Vehicle > 0 && int(vroomRoute.Vehicle) <= len(req.Vehicles) {
+						vehicle := req.Vehicles[vroomRoute.Vehicle-1]
+						route.Origin = domain.NodeInfo{
+							ReferenceID: domain.ReferenceID(uuid.New().String()),
+							Name:        "Origen",
+							AddressInfo: mapOptimizationAddressInfoToDomain(vehicle.StartLocation.AddressInfo),
+						}
+					} else {
+						route.Origin = domain.NodeInfo{
+							ReferenceID: domain.ReferenceID(uuid.New().String()),
+							Name:        "Origen",
+							AddressInfo: domain.AddressInfo{
+								Coordinates: domain.Coordinates{
+									Point: orb.Point{step.Location[0], step.Location[1]},
+								},
 							},
-						},
+						}
 					}
 					break
 				}
@@ -230,102 +240,75 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 			for i := len(vroomRoute.Steps) - 1; i >= 0; i-- {
 				step := vroomRoute.Steps[i]
 				if step.Type == "end" && len(step.Location) == 2 {
-					route.Destination = domain.NodeInfo{
-						ReferenceID: domain.ReferenceID(uuid.New().String()),
-						Name:        "Destino",
-						AddressInfo: domain.AddressInfo{
-							Coordinates: domain.Coordinates{
-								Point: orb.Point{step.Location[0], step.Location[1]},
+					// Buscar el vehículo original para obtener la información completa del destino
+					if vroomRoute.Vehicle > 0 && int(vroomRoute.Vehicle) <= len(req.Vehicles) {
+						vehicle := req.Vehicles[vroomRoute.Vehicle-1]
+						route.Destination = domain.NodeInfo{
+							ReferenceID: domain.ReferenceID(uuid.New().String()),
+							Name:        "Destino",
+							AddressInfo: mapOptimizationAddressInfoToDomain(vehicle.EndLocation.AddressInfo),
+						}
+					} else {
+						route.Destination = domain.NodeInfo{
+							ReferenceID: domain.ReferenceID(uuid.New().String()),
+							Name:        "Destino",
+							AddressInfo: domain.AddressInfo{
+								Coordinates: domain.Coordinates{
+									Point: orb.Point{step.Location[0], step.Location[1]},
+								},
 							},
-						},
+						}
 					}
 					break
 				}
 			}
 		}
 
-		// Mapear órdenes basadas en los jobs y shipments de los steps
-		// Agrupar órdenes por coordenadas para evitar duplicados
-		orderMap := make(map[string][]domain.Order) // clave: coordenadas, valor: órdenes
+		// Mapear órdenes basadas en los jobs y shipments de los steps, manteniendo el orden
+		var orders []domain.Order
+		processedVisits := make(map[int]bool) // Para evitar duplicados
 
 		for _, step := range vroomRoute.Steps {
-			var stepOrders []domain.Order
-
 			// Manejar jobs (solo delivery)
 			if step.Job > 0 {
 				visit := findVisitByJobID(step.Job, req.Visits)
-				if visit != nil {
-					stepOrders = append(stepOrders, createOrdersFromVisit(visit, false)...)
+				if visit != nil && !processedVisits[int(step.Job)] {
+					visitOrders := createOrdersFromVisitComplete(visit, false)
+					orders = append(orders, visitOrders...)
+					processedVisits[int(step.Job)] = true
 				}
 			}
 
 			// Manejar shipments (pickup y delivery)
 			if step.Shipment > 0 {
 				visit := findVisitByShipmentID(step.Shipment, req.Visits)
-				if visit != nil {
-					stepOrders = append(stepOrders, createOrdersFromVisit(visit, true)...)
+				if visit != nil && !processedVisits[int(step.Shipment)] {
+					visitOrders := createOrdersFromVisitComplete(visit, true)
+					orders = append(orders, visitOrders...)
+					processedVisits[int(step.Shipment)] = true
 				}
-			}
-
-			// Agrupar órdenes por coordenadas si el step tiene ubicación
-			if len(step.Location) == 2 && len(stepOrders) > 0 {
-				lat := roundCoordinate(step.Location[1], 6) // lat
-				lon := roundCoordinate(step.Location[0], 6) // lon
-				coordKey := fmt.Sprintf("%.6f,%.6f", lat, lon)
-
-				if existingOrders, exists := orderMap[coordKey]; exists {
-					// Combinar órdenes existentes con las nuevas, evitando duplicados por ReferenceID
-					combinedOrders := append(existingOrders, stepOrders...)
-					orderMap[coordKey] = removeDuplicateOrders(combinedOrders)
-				} else {
-					orderMap[coordKey] = stepOrders
-				}
-			} else if len(stepOrders) > 0 {
-				// Para steps sin ubicación, agregar a una clave especial
-				orderMap["no-location"] = append(orderMap["no-location"], stepOrders...)
 			}
 		}
 
-		// Convertir el mapa de órdenes agrupadas a una lista plana
-		var orders []domain.Order
-		for _, orderGroup := range orderMap {
-			orders = append(orders, orderGroup...)
-		}
 		route.Orders = orders
-
 		plan.Routes = append(plan.Routes, route)
 	}
 
 	// Mapear trabajos no asignados
 	for _, unassigned := range ret.Unassigned {
-		// Primero intentar encontrar como job
-		visit := findVisitByJobID(unassigned.ID, req.Visits)
-		if visit != nil {
-			unassignedOrders := createOrdersFromVisit(visit, false)
-			// Marcar como no asignadas
-			for i := range unassignedOrders {
-				unassignedOrders[i].UnassignedReason = unassigned.Reason
-			}
-			plan.UnassignedOrders = append(plan.UnassignedOrders, unassignedOrders...)
-		} else {
-			// Si no se encuentra como job, intentar como shipment
-			visit = findVisitByShipmentID(unassigned.ID, req.Visits)
-			if visit != nil {
-				unassignedOrders := createOrdersFromVisit(visit, true)
-				// Marcar como no asignadas
-				for i := range unassignedOrders {
-					unassignedOrders[i].UnassignedReason = unassigned.Reason
-				}
-				plan.UnassignedOrders = append(plan.UnassignedOrders, unassignedOrders...)
-			} else {
-				// Si no se encuentra ni como job ni como shipment, loggear el problema
-				fmt.Printf("No se pudo encontrar la visita para el trabajo no asignado ID %d\n", unassigned.ID)
+		// Buscar la visita correspondiente
+		var unassignedVisit *optimization.Visit
+		for i, visit := range req.Visits {
+			if int64(i+1) == unassigned.ID {
+				unassignedVisit = &visit
+				break
 			}
 		}
-	}
 
-	if err := ret.ExportToPolylineJSON("ui/static/dev/polyline.json", req); err != nil {
-		fmt.Printf("error exportando datos de ruta: %v\n", err)
+		if unassignedVisit != nil {
+			unassignedOrders := createOrdersFromVisitComplete(unassignedVisit, false)
+			plan.AddUnassignedOrders(unassignedOrders, "No se pudo asignar a ningún vehículo disponible")
+		}
 	}
 
 	return plan
@@ -420,6 +403,105 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 			}
 
 			// Mapear items
+			for _, itemReq := range duReq.Items {
+				item := domain.Item{
+					Sku: itemReq.Sku,
+				}
+				deliveryUnit.Items = append(deliveryUnit.Items, item)
+			}
+
+			deliveryUnits = append(deliveryUnits, deliveryUnit)
+		}
+		order.DeliveryUnits = deliveryUnits
+
+		orders = append(orders, order)
+	}
+
+	return orders
+}
+
+// mapOptimizationAddressInfoToDomain mapea AddressInfo de optimization a domain
+func mapOptimizationAddressInfoToDomain(addrInfo optimization.AddressInfo) domain.AddressInfo {
+	return domain.AddressInfo{
+		AddressLine1:  addrInfo.AddressLine1,
+		AddressLine2:  addrInfo.AddressLine2,
+		ZipCode:       addrInfo.ZipCode,
+		Contact:       mapOptimizationContactToDomain(addrInfo.Contact),
+		Coordinates:   mapOptimizationCoordinatesToDomain(addrInfo.Coordinates),
+		PoliticalArea: mapOptimizationPoliticalAreaToDomain(addrInfo.PoliticalArea),
+	}
+}
+
+// mapOptimizationContactToDomain mapea Contact de optimization a domain
+func mapOptimizationContactToDomain(contact optimization.Contact) domain.Contact {
+	return domain.Contact{
+		FullName:     contact.FullName,
+		PrimaryEmail: contact.Email,
+		PrimaryPhone: contact.Phone,
+		NationalID:   contact.NationalID,
+	}
+}
+
+// mapOptimizationCoordinatesToDomain mapea Coordinates de optimization a domain
+func mapOptimizationCoordinatesToDomain(coords optimization.Coordinates) domain.Coordinates {
+	return domain.Coordinates{
+		Point: orb.Point{coords.Longitude, coords.Latitude},
+	}
+}
+
+// mapOptimizationPoliticalAreaToDomain mapea PoliticalArea de optimization a domain
+func mapOptimizationPoliticalAreaToDomain(pa optimization.PoliticalArea) domain.PoliticalArea {
+	return domain.PoliticalArea{
+		Code:            pa.Code,
+		AdminAreaLevel1: pa.AdminAreaLevel1,
+		AdminAreaLevel2: pa.AdminAreaLevel2,
+		AdminAreaLevel3: pa.AdminAreaLevel3,
+		AdminAreaLevel4: pa.AdminAreaLevel4,
+	}
+}
+
+// createOrdersFromVisitComplete crea órdenes completas preservando toda la información
+func createOrdersFromVisitComplete(visit *optimization.Visit, hasPickup bool) []domain.Order {
+	var orders []domain.Order
+
+	// Crear orden para cada order en la visita
+	for _, orderReq := range visit.Orders {
+		order := domain.Order{
+			ReferenceID: domain.ReferenceID(orderReq.ReferenceID),
+			Destination: domain.NodeInfo{
+				ReferenceID: domain.ReferenceID(uuid.New().String()),
+				Name:        "Destino de entrega",
+				AddressInfo: mapOptimizationAddressInfoToDomain(visit.Delivery.AddressInfo),
+			},
+		}
+
+		// Para shipments (pickup + delivery), incluir origen completo
+		if hasPickup {
+			order.Origin = domain.NodeInfo{
+				ReferenceID: domain.ReferenceID(uuid.New().String()),
+				Name:        "Origen de recogida",
+				AddressInfo: mapOptimizationAddressInfoToDomain(visit.Pickup.AddressInfo),
+			}
+		}
+
+		// Mapear delivery units completos
+		var deliveryUnits domain.DeliveryUnits
+		for _, duReq := range orderReq.DeliveryUnits {
+			deliveryUnit := domain.DeliveryUnit{
+				Lpn:       duReq.Lpn,
+				Volume:    &duReq.Volume,
+				Weight:    &duReq.Weight,
+				Insurance: &duReq.Insurance,
+			}
+
+			// Mapear skills
+			if len(duReq.Skills) > 0 {
+				for _, skill := range duReq.Skills {
+					deliveryUnit.Skills = append(deliveryUnit.Skills, domain.Skill(skill))
+				}
+			}
+
+			// Mapear items completos
 			for _, itemReq := range duReq.Items {
 				item := domain.Item{
 					Sku: itemReq.Sku,

@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/usecase"
 	"transport-app/app/usecase/workers"
 
 	"transport-app/app/shared/chunker"
@@ -27,6 +29,7 @@ func init() {
 		natsconn.NewJetStream,
 		natsconn.NewKeyValue,
 		workers.NewFleetOptimizer,
+		usecase.NewOptimizeFleetWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -36,6 +39,7 @@ func newOptimizationRequestedConsumer(
 	js jetstream.JetStream,
 	kv jetstream.KeyValue,
 	optimize workers.FleetOptimizer,
+	optimizeFleetWorkflow usecase.OptimizeFleetWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -81,7 +85,7 @@ func newOptimizationRequestedConsumer(
 		var chunkIDs []string
 		if err := json.Unmarshal(pubsubMsg.Data, &chunkIDs); err == nil && len(chunkIDs) > 0 {
 			// Es un mensaje chunked, reconstruir el mensaje original
-			var chunks []chunker.Chunk
+			var chunks []chunker.Chunk //a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d -a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d
 			for idx, id := range chunkIDs {
 				entry, err := kv.Get(ctx, id)
 				if err != nil {
@@ -105,40 +109,41 @@ func newOptimizationRequestedConsumer(
 			}
 			// Deserializar el payload reconstruido como OptimizeFleetRequest
 			var input request.OptimizeFleetRequest
+
 			if err := json.Unmarshal(data, &input); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error deserializando payload de optimización (reconstruido)", "error", err)
 				msg.Ack()
 				return
 			}
-			// Procesar la optimización
-			if err := optimize(ctx, input.Map()); err != nil {
-				obs.Logger.ErrorContext(ctx, "Error procesando optimización (reconstruido)", "error", err)
+
+			// Orquestación usando workflows
+			key, err := canonicaljson.HashKey(ctx, "order_headers", input)
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando headers de orden", "error", err)
 				msg.Ack()
 				return
 			}
+			optimizeFleetWorkflowCtx := sharedcontext.WithIdempotencyKey(ctx, key)
+
+			if err := optimizeFleetWorkflow(optimizeFleetWorkflowCtx, input.Map()); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando optimización", "error", err)
+				msg.Ack()
+				return
+			}
+
+			/* Procesar la optimización
+			if err := optimize(ctx, input.Map()); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error procesando optimización (reconstruido)", "error", err)
+				msg.Ack()
+				return*
+			}
+			*/
 			obs.Logger.InfoContext(ctx, "Optimización procesada exitosamente desde NATS (reconstruido)",
 				"eventType", "optimizationRequested")
 			msg.Ack()
 			return
 		}
 
-		// Si no es chunked, intentar deserializar el payload como OptimizeFleetRequest (flujo original)
-		var input request.OptimizeFleetRequest
-		if err := json.Unmarshal(pubsubMsg.Data, &input); err != nil {
-			obs.Logger.Error("Error deserializando payload de optimización", "error", err)
-			msg.Ack()
-			return
-		}
-
-		// Procesar la optimización
-		if err := optimize(ctx, input.Map()); err != nil {
-			obs.Logger.ErrorContext(ctx, "Error procesando optimización", "error", err)
-			msg.Ack()
-			return
-		}
-
-		obs.Logger.InfoContext(ctx, "Optimización procesada exitosamente desde NATS",
-			"eventType", "optimizationRequested")
 		msg.Ack()
 	})
 }

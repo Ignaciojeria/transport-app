@@ -481,6 +481,10 @@
         {
             "kind": "usecase",
             "name": "upsert-order-headers-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "optimize-plan-workflow"
         }
     ]
 }

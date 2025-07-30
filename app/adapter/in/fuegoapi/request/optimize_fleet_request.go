@@ -106,49 +106,59 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 	for i, v := range r.Vehicles {
 		vehicles[i] = optimization.Vehicle{
 			Plate: v.Plate,
-			StartLocation: optimization.AddressInfo{
-				AddressLine1: v.StartLocation.AddressInfo.AddressLine1,
-				AddressLine2: v.StartLocation.AddressInfo.AddressLine2,
-				Contact: optimization.Contact{
-					Email:      v.StartLocation.AddressInfo.Contact.Email,
-					Phone:      v.StartLocation.AddressInfo.Contact.Phone,
-					NationalID: v.StartLocation.AddressInfo.Contact.NationalID,
-					FullName:   v.StartLocation.AddressInfo.Contact.FullName,
+			StartLocation: optimization.VehicleLocation{
+				AddressInfo: optimization.AddressInfo{
+					AddressLine1: v.StartLocation.AddressInfo.AddressLine1,
+					AddressLine2: v.StartLocation.AddressInfo.AddressLine2,
+					Contact: optimization.Contact{
+						Email:      v.StartLocation.AddressInfo.Contact.Email,
+						Phone:      v.StartLocation.AddressInfo.Contact.Phone,
+						NationalID: v.StartLocation.AddressInfo.Contact.NationalID,
+						FullName:   v.StartLocation.AddressInfo.Contact.FullName,
+					},
+					Coordinates: optimization.Coordinates{
+						Latitude:  v.StartLocation.AddressInfo.Coordinates.Latitude,
+						Longitude: v.StartLocation.AddressInfo.Coordinates.Longitude,
+					},
+					PoliticalArea: optimization.PoliticalArea{
+						Code:            v.StartLocation.AddressInfo.PoliticalArea.Code,
+						AdminAreaLevel1: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
+						AdminAreaLevel2: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
+						AdminAreaLevel3: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
+						AdminAreaLevel4: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
+					},
+					ZipCode: v.StartLocation.AddressInfo.ZipCode,
 				},
-				Coordinates: optimization.Coordinates{
-					Latitude:  v.StartLocation.AddressInfo.Coordinates.Latitude,
-					Longitude: v.StartLocation.AddressInfo.Coordinates.Longitude,
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.StartLocation.NodeInfo.ReferenceID,
 				},
-				PoliticalArea: optimization.PoliticalArea{
-					Code:            v.StartLocation.AddressInfo.PoliticalArea.Code,
-					AdminAreaLevel1: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
-					AdminAreaLevel2: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
-					AdminAreaLevel3: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
-					AdminAreaLevel4: v.StartLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
-				},
-				ZipCode: v.StartLocation.AddressInfo.ZipCode,
 			},
-			EndLocation: optimization.AddressInfo{
-				AddressLine1: v.EndLocation.AddressInfo.AddressLine1,
-				AddressLine2: v.EndLocation.AddressInfo.AddressLine2,
-				Contact: optimization.Contact{
-					Email:      v.EndLocation.AddressInfo.Contact.Email,
-					Phone:      v.EndLocation.AddressInfo.Contact.Phone,
-					NationalID: v.EndLocation.AddressInfo.Contact.NationalID,
-					FullName:   v.EndLocation.AddressInfo.Contact.FullName,
+			EndLocation: optimization.VehicleLocation{
+				AddressInfo: optimization.AddressInfo{
+					AddressLine1: v.EndLocation.AddressInfo.AddressLine1,
+					AddressLine2: v.EndLocation.AddressInfo.AddressLine2,
+					Contact: optimization.Contact{
+						Email:      v.EndLocation.AddressInfo.Contact.Email,
+						Phone:      v.EndLocation.AddressInfo.Contact.Phone,
+						NationalID: v.EndLocation.AddressInfo.Contact.NationalID,
+						FullName:   v.EndLocation.AddressInfo.Contact.FullName,
+					},
+					Coordinates: optimization.Coordinates{
+						Latitude:  v.EndLocation.AddressInfo.Coordinates.Latitude,
+						Longitude: v.EndLocation.AddressInfo.Coordinates.Longitude,
+					},
+					PoliticalArea: optimization.PoliticalArea{
+						Code:            v.EndLocation.AddressInfo.PoliticalArea.Code,
+						AdminAreaLevel1: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
+						AdminAreaLevel2: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
+						AdminAreaLevel3: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
+						AdminAreaLevel4: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
+					},
+					ZipCode: v.EndLocation.AddressInfo.ZipCode,
 				},
-				Coordinates: optimization.Coordinates{
-					Latitude:  v.EndLocation.AddressInfo.Coordinates.Latitude,
-					Longitude: v.EndLocation.AddressInfo.Coordinates.Longitude,
+				NodeInfo: optimization.NodeInfo{
+					ReferenceID: v.EndLocation.NodeInfo.ReferenceID,
 				},
-				PoliticalArea: optimization.PoliticalArea{
-					Code:            v.EndLocation.AddressInfo.PoliticalArea.Code,
-					AdminAreaLevel1: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel1,
-					AdminAreaLevel2: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel2,
-					AdminAreaLevel3: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel3,
-					AdminAreaLevel4: v.EndLocation.AddressInfo.PoliticalArea.AdminAreaLevel4,
-				},
-				ZipCode: v.EndLocation.AddressInfo.ZipCode,
 			},
 			Skills: v.Skills,
 			TimeWindow: optimization.TimeWindow{

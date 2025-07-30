@@ -4,16 +4,17 @@ import (
 	"context"
 	"fmt"
 	"sort"
-	"transport-app/app/adapter/out/fuegoapiclient/model"
+	"time"
+	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/domain"
 )
 
-func MapUpsertRouteRequest(r domain.Route) model.UpsertRouteRequest {
+func MapUpsertRouteRequest(r domain.Route) request.UpsertRouteRequest {
 	// Agrupar órdenes por secuencia, dirección y contacto
 	visitGroups := groupOrdersByVisit(r.Orders)
 
 	// Convertir grupos a visitas
-	visits := make([]model.Visit, 0, len(visitGroups))
+	visits := make([]request.UpsertRouteVisit, 0, len(visitGroups))
 	for _, group := range visitGroups {
 		visit := mapOrderGroupToVisit(group)
 		visits = append(visits, visit)
@@ -24,21 +25,17 @@ func MapUpsertRouteRequest(r domain.Route) model.UpsertRouteRequest {
 		return visits[i].SequenceNumber < visits[j].SequenceNumber
 	})
 
-	return model.UpsertRouteRequest{
-		ReferenceID: r.ReferenceID,
-		Plan: model.Plan{
-			ReferenceID: r.ReferenceID,
-		},
-		Vehicle: model.Vehicle{
-			Plate: r.Vehicle.Plate,
-		},
-		Geometry: model.Geometry{
-			Encoding: "polyline",
-			Type:     "linestring",
-			Value:    "", // TODO: Implementar cálculo de geometría
+	return request.UpsertRouteRequest{
+		ReferenceID:     r.ReferenceID,
+		PlanReferenceID: r.ReferenceID, // Usar el mismo ID como referencia del plan
+		Vehicle:         mapVehicleToRequest(r.Vehicle),
+		Geometry: request.UpsertRouteGeometry{
+			Encoding: r.Geometry.Encoding,
+			Type:     r.Geometry.Type,
+			Value:    r.Geometry.Value,
 		},
 		Visits:    visits,
-		CreatedAt: "", // TODO: Implementar timestamp de creación
+		CreatedAt: time.Now().UTC().Format(time.RFC3339),
 	}
 }
 
@@ -99,71 +96,125 @@ func groupOrdersByVisit(orders []domain.Order) []OrderGroup {
 }
 
 // mapOrderGroupToVisit convierte un grupo de órdenes a una visita
-func mapOrderGroupToVisit(group OrderGroup) model.Visit {
+func mapOrderGroupToVisit(group OrderGroup) request.UpsertRouteVisit {
 	// Mapear órdenes del grupo
-	orders := make([]model.Order, 0, len(group.Orders))
+	orders := make([]request.UpsertRouteOrder, 0, len(group.Orders))
 	for _, order := range group.Orders {
-		modelOrder := mapOrderToModel(order)
+		modelOrder := mapOrderToRequest(order)
 		orders = append(orders, modelOrder)
 	}
 
-	return model.Visit{
-		Type:        "delivery",
-		AddressInfo: mapAddressInfoToModel(group.AddressInfo),
-		NodeInfo: model.NodeInfo{
-			ReferenceID: "", // TODO: Implementar si es necesario
-		},
+	return request.UpsertRouteVisit{
+		Type:                 "delivery",
+		Instructions:         "", // TODO: Implementar si es necesario
+		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:             mapNodeInfoToRequest(group.AddressInfo),
 		DeliveryInstructions: group.DeliveryInstructions,
 		SequenceNumber:       group.SequenceNumber,
-		Orders:               orders,
+		ServiceTime:          0, // TODO: Implementar si es necesario
+		TimeWindow: request.UpsertRouteTimeWindow{
+			Start: "", // TODO: Implementar si es necesario
+			End:   "", // TODO: Implementar si es necesario
+		},
+		Orders: orders,
 	}
 }
 
-// mapOrderToModel convierte una orden del dominio al modelo
-func mapOrderToModel(order domain.Order) model.Order {
-	deliveryUnits := make([]model.DeliveryUnit, 0, len(order.DeliveryUnits))
+// mapOrderToRequest convierte una orden del dominio al request
+func mapOrderToRequest(order domain.Order) request.UpsertRouteOrder {
+	deliveryUnits := make([]request.UpsertRouteDeliveryUnit, 0, len(order.DeliveryUnits))
 	for _, du := range order.DeliveryUnits {
-		modelDU := mapDeliveryUnitToModel(du)
+		modelDU := mapDeliveryUnitToRequest(du)
 		deliveryUnits = append(deliveryUnits, modelDU)
 	}
 
-	return model.Order{
-		ReferenceID:   string(order.ReferenceID),
+	return request.UpsertRouteOrder{
+		ReferenceID:   order.ReferenceID.String(),
 		DeliveryUnits: deliveryUnits,
 	}
 }
 
-// mapDeliveryUnitToModel convierte una unidad de entrega del dominio al modelo
-func mapDeliveryUnitToModel(du domain.DeliveryUnit) model.DeliveryUnit {
-	items := make([]model.Item, 0, len(du.Items))
+// mapDeliveryUnitToRequest convierte una unidad de entrega del dominio al request
+func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliveryUnit {
+	items := make([]request.UpsertRouteItem, 0, len(du.Items))
 	for _, item := range du.Items {
-		modelItem := model.Item{
+		modelItem := request.UpsertRouteItem{
 			Sku: item.Sku,
 		}
 		items = append(items, modelItem)
 	}
 
-	return model.DeliveryUnit{
-		Lpn:   du.Lpn,
-		Items: items,
+	// Manejar punteros para Volume, Weight, Insurance
+	var volume, weight, insurance int64
+	if du.Volume != nil {
+		volume = *du.Volume
+	}
+	if du.Weight != nil {
+		weight = *du.Weight
+	}
+	if du.Insurance != nil {
+		insurance = *du.Insurance
+	}
+
+	// Convertir Skills de domain.Skill a string
+	skills := make([]string, 0, len(du.Skills))
+	for _, skill := range du.Skills {
+		skills = append(skills, string(skill)) // Skill es un tipo string
+	}
+
+	return request.UpsertRouteDeliveryUnit{
+		Items:     items,
+		Volume:    volume,
+		Weight:    weight,
+		Insurance: insurance,
+		Lpn:       du.Lpn,
+		Skills:    skills,
 	}
 }
 
-// mapAddressInfoToModel convierte AddressInfo del dominio al modelo
-func mapAddressInfoToModel(addr domain.AddressInfo) model.AddressInfo {
-	return model.AddressInfo{
+// mapVehicleToRequest convierte el vehículo del dominio al request
+func mapVehicleToRequest(vehicle domain.Vehicle) request.UpsertRouteVehicle {
+	// Como el dominio Vehicle no tiene StartLocation, EndLocation, Skills, etc.
+	// Usamos valores por defecto o vacíos
+	return request.UpsertRouteVehicle{
+		Plate: vehicle.Plate,
+		StartLocation: request.UpsertRouteVehicleLocation{
+			AddressInfo: request.UpsertRouteAddressInfo{}, // Vacío por defecto
+			NodeInfo:    request.UpsertRouteNodeInfo{},    // Vacío por defecto
+		},
+		EndLocation: request.UpsertRouteVehicleLocation{
+			AddressInfo: request.UpsertRouteAddressInfo{}, // Vacío por defecto
+			NodeInfo:    request.UpsertRouteNodeInfo{},    // Vacío por defecto
+		},
+		Skills: []string{}, // Vacío por defecto
+		TimeWindow: request.UpsertRouteTimeWindow{
+			Start: "", // TODO: Implementar si es necesario
+			End:   "", // TODO: Implementar si es necesario
+		},
+		Capacity: request.UpsertRouteVehicleCapacity{
+			Volume:                int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
+			Weight:                int64(vehicle.Weight.Value),
+			Insurance:             int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
+			DeliveryUnitsQuantity: 0, // TODO: Implementar si es necesario
+		},
+	}
+}
+
+// mapAddressInfoToRequest convierte AddressInfo del dominio al request
+func mapAddressInfoToRequest(addr domain.AddressInfo) request.UpsertRouteAddressInfo {
+	return request.UpsertRouteAddressInfo{
 		AddressLine1:  addr.AddressLine1,
 		AddressLine2:  addr.AddressLine2,
-		Contact:       mapContactToModel(addr.Contact),
-		Coordinates:   mapCoordinatesToModel(addr.Coordinates),
-		PoliticalArea: mapPoliticalAreaToModel(addr.PoliticalArea),
+		Contact:       mapContactToRequest(addr.Contact),
+		Coordinates:   mapCoordinatesToRequest(addr.Coordinates),
+		PoliticalArea: mapPoliticalAreaToRequest(addr.PoliticalArea),
 		ZipCode:       addr.ZipCode,
 	}
 }
 
-// mapContactToModel convierte Contact del dominio al modelo
-func mapContactToModel(contact domain.Contact) model.Contact {
-	return model.Contact{
+// mapContactToRequest convierte Contact del dominio al request
+func mapContactToRequest(contact domain.Contact) request.UpsertRouteContact {
+	return request.UpsertRouteContact{
 		Email:      contact.PrimaryEmail,
 		FullName:   contact.FullName,
 		NationalID: contact.NationalID,
@@ -171,21 +222,29 @@ func mapContactToModel(contact domain.Contact) model.Contact {
 	}
 }
 
-// mapCoordinatesToModel convierte Coordinates del dominio al modelo
-func mapCoordinatesToModel(coords domain.Coordinates) model.Coordinates {
-	return model.Coordinates{
+// mapCoordinatesToRequest convierte Coordinates del dominio al request
+func mapCoordinatesToRequest(coords domain.Coordinates) request.UpsertRouteCoordinates {
+	return request.UpsertRouteCoordinates{
 		Latitude:  coords.Point[1], // orb.Point es [longitude, latitude]
 		Longitude: coords.Point[0],
 	}
 }
 
-// mapPoliticalAreaToModel convierte PoliticalArea del dominio al modelo
-func mapPoliticalAreaToModel(pa domain.PoliticalArea) model.PoliticalArea {
-	return model.PoliticalArea{
+// mapPoliticalAreaToRequest convierte PoliticalArea del dominio al request
+func mapPoliticalAreaToRequest(pa domain.PoliticalArea) request.UpsertRoutePoliticalArea {
+	return request.UpsertRoutePoliticalArea{
 		Code:            pa.Code,
 		AdminAreaLevel1: pa.AdminAreaLevel1,
 		AdminAreaLevel2: pa.AdminAreaLevel2,
 		AdminAreaLevel3: pa.AdminAreaLevel3,
 		AdminAreaLevel4: pa.AdminAreaLevel4,
+	}
+}
+
+// mapNodeInfoToRequest convierte la información del nodo del dominio al request
+func mapNodeInfoToRequest(addr domain.AddressInfo) request.UpsertRouteNodeInfo {
+	// Por ahora usar un ID vacío, se puede implementar lógica específica si es necesario
+	return request.UpsertRouteNodeInfo{
+		ReferenceID: "", // TODO: Implementar si es necesario
 	}
 }
