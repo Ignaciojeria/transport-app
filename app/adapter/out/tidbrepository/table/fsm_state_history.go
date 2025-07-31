@@ -10,4 +10,5 @@ type FSMStateHistory struct {
 	IdempotencyKey string `gorm:"type:text"`
 	Workflow       string `gorm:"type:text;not null;uniqueIndex:fsm_unique_transition"`
 	State          string `gorm:"type:text;not null;uniqueIndex:fsm_unique_transition"`
+	NextInput      []byte `gorm:"type:longblob"`
 }
