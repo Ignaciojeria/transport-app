@@ -8,6 +8,7 @@ import (
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/storjbucket"
+	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/domain/optimization"
 	"transport-app/app/domain/workflows"
@@ -23,13 +24,16 @@ func init() {
 		NewOptimizeFleetWorkflow,
 		workflows.NewOptimizeFleetWorkflow,
 		vroom.NewOptimize,
-		storjbucket.NewTransportAppBucket)
+		storjbucket.NewTransportAppBucket,
+		tidbrepository.NewSaveFSMTransition,
+	)
 }
 
 func NewOptimizeFleetWorkflow(
 	domainWorkflow workflows.OptimizeFleetWorkflow,
 	optimize vroom.Optimize,
 	storjBucket *storjbucket.TransportAppBucket,
+	saveFSMTransition tidbrepository.SaveFSMTransition,
 ) OptimizeFleetWorkflow {
 	return func(ctx context.Context, input optimization.FleetOptimization) error {
 		// Usar el idempotency key desde el contexto
@@ -58,14 +62,16 @@ func NewOptimizeFleetWorkflow(
 			if err != nil {
 				return fmt.Errorf("error marshaling route request: %w", err)
 			}
-			storjBucket.UploadWithToken(ctx, token, v.ReferenceID, routeBytes)
+			err = storjBucket.UploadWithToken(ctx, token, v.ReferenceID, routeBytes)
+			if err != nil {
+				return fmt.Errorf("error uploading route request: %w", err)
+			}
 		}
-
-		// Generar archivo con las rutas para ver cómo se generarán las rutas
-		/*if err := saveRouteRequestsToFile(routeRequests, input); err != nil {
-			return fmt.Errorf("failed to save route requests to file: %w", err)
-		}*/
-
+		fsmState := workflow.Map(ctx)
+		err = saveFSMTransition(ctx, fsmState)
+		if err != nil {
+			return fmt.Errorf("failed to save FSM transition: %w", err)
+		}
 		fmt.Printf("Optimización completada. Se generaron %d rutas.\n", len(routeRequests))
 		return nil
 	}
