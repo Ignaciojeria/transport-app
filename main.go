@@ -31,6 +31,8 @@ import (
 	_ "transport-app/app/adapter/in/natsconsumer"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	_ "transport-app/app/shared/infrastructure/storj"
+	_ "transport-app/app/adapter/out/storjbucket"
 )
 
 //go:embed .version

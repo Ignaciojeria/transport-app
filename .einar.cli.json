@@ -59,6 +59,13 @@
             "libraries": [
                 "github.com/nats-io/nats.go"
             ]
+        },
+        {
+            "name": "storj",
+            "unique": "",
+            "libraries": [
+                "storj.io/uplink"
+            ]
         }
     ],
     "components": [
@@ -485,6 +492,10 @@
         {
             "kind": "usecase",
             "name": "optimize-plan-workflow"
+        },
+        {
+            "kind": "storj-bucket",
+            "name": "transport-app-bucket"
         }
     ]
 }
