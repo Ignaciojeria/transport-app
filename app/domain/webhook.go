@@ -4,26 +4,31 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Webhook struct {
-	Type        string             `json:"type"`
-	URL         string             `json:"url"`
-	Headers     map[string]string  `json:"headers"`
-	RetryPolicy WebhookRetryPolicy `json:"retryPolicy"`
-	CreatedAt   time.Time          `json:"createdAt"`
-	UpdatedAt   time.Time          `json:"updatedAt"`
+	ID          uuid.UUID         `json:"id"`
+	Type        string            `json:"type"`
+	URL         string            `json:"url"`
+	Headers     map[string]string `json:"headers"`
+	RetryPolicy RetryPolicy       `json:"retryPolicy"`
+	CreatedAt   time.Time         `json:"createdAt"`
+	UpdatedAt   time.Time         `json:"updatedAt"`
 }
 
-type WebhookRetryPolicy struct {
+type RetryPolicy struct {
 	MaxRetries     int `json:"maxRetries"`
 	BackoffSeconds int `json:"backoffSeconds"`
 }
 
+// DocID genera un identificador único para el webhook basado en el contexto y tipo
 func (w Webhook) DocID(ctx context.Context) DocumentID {
 	return HashByTenant(ctx, w.Type)
 }
 
+// Validate valida los campos obligatorios del webhook
 func (w Webhook) Validate() error {
 	if w.Type == "" {
 		return fmt.Errorf("webhook type is required")
@@ -40,7 +45,7 @@ func (w Webhook) Validate() error {
 	return nil
 }
 
+// UpdateIfChanged reemplaza el webhook por uno nuevo
 func (w Webhook) UpdateIfChanged(newWebhook Webhook) (Webhook, bool) {
-	// Para webhooks, siempre actualizar con el nuevo valor
 	return newWebhook, true
 }
