@@ -33,7 +33,10 @@ func NewUpsertWebhook(conn database.ConnectionFactory, saveFSMTransition SaveFSM
 
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// No existe → insert
-				newWebhook := mapper.MapWebhookToTable(ctx, webhook)
+				newWebhook, err := mapper.MapWebhookToTable(ctx, webhook)
+				if err != nil {
+					return err
+				}
 				if err := tx.Omit("Tenant").Create(&newWebhook).Error; err != nil {
 					return err
 				}
@@ -46,7 +49,12 @@ func NewUpsertWebhook(conn database.ConnectionFactory, saveFSMTransition SaveFSM
 			}
 
 			// Ya existe → update solo si cambió algo
-			updated, changed := existing.Map().UpdateIfChanged(webhook)
+			existingDomainWebhook, err := existing.Map()
+			if err != nil {
+				return err
+			}
+			
+			updated, changed := existingDomainWebhook.UpdateIfChanged(webhook)
 			if !changed {
 				// No hay cambios, solo persistir FSMState si está presente
 				if len(fsmState) > 0 && saveFSMTransition != nil {
@@ -55,7 +63,10 @@ func NewUpsertWebhook(conn database.ConnectionFactory, saveFSMTransition SaveFSM
 				return nil
 			}
 
-			updateData := mapper.MapWebhookToTable(ctx, updated)
+			updateData, err := mapper.MapWebhookToTable(ctx, updated)
+			if err != nil {
+				return err
+			}
 			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 			updateData.CreatedAt = existing.CreatedAt
 
