@@ -12,6 +12,7 @@ import (
 	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 	"storj.io/uplink"
 	"storj.io/uplink/edge"
 )
@@ -135,7 +136,18 @@ func (b TransportAppBucket) UploadWithToken(ctx context.Context, token string, o
 	}
 	defer project.Close()
 
-	upload, err := project.UploadObject(ctx, b.bucketName, objectKey, nil)
+	// Asegurar que el objectKey use el prefijo del tenant
+	tenantID := sharedcontext.TenantIDFromContext(ctx)
+	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
+
+	var prefixedKey string
+	if tenantID != uuid.Nil && tenantCountry != "" {
+		prefixedKey = fmt.Sprintf("%s-%s/%s", tenantID.String(), tenantCountry, objectKey)
+	} else {
+		prefixedKey = fmt.Sprintf("default/%s", objectKey)
+	}
+
+	upload, err := project.UploadObject(ctx, b.bucketName, prefixedKey, nil)
 	if err != nil {
 		return fmt.Errorf("could not initiate upload: %v", err)
 	}
@@ -156,7 +168,18 @@ func (b TransportAppBucket) DownloadWithToken(ctx context.Context, token string,
 	}
 	defer project.Close()
 
-	download, err := project.DownloadObject(ctx, b.bucketName, objectKey, nil)
+	// Asegurar que el objectKey use el prefijo del tenant
+	tenantID := sharedcontext.TenantIDFromContext(ctx)
+	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
+
+	var prefixedKey string
+	if tenantID != uuid.Nil && tenantCountry != "" {
+		prefixedKey = fmt.Sprintf("%s-%s/%s", tenantID.String(), tenantCountry, objectKey)
+	} else {
+		prefixedKey = fmt.Sprintf("default/%s", objectKey)
+	}
+
+	download, err := project.DownloadObject(ctx, b.bucketName, prefixedKey, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not initiate download with token: %w", err)
 	}
@@ -171,9 +194,25 @@ func (b TransportAppBucket) DownloadWithToken(ctx context.Context, token string,
 	return data.Bytes(), nil
 }
 
+func (b TransportAppBucket) HasAccessGrant() bool {
+	return b.upLink.Access != nil
+}
+
 func (b TransportAppBucket) GenerateEphemeralToken(ctx context.Context, ttl time.Duration, perm uplink.Permission) (string, error) {
-	prefix := fmt.Sprintf("%s-%s",
-		sharedcontext.TenantIDFromContext(ctx),
-		sharedcontext.TenantCountryFromContext(ctx))
-	return b.upLink.GenerateEphemeralToken(b.bucketName, prefix, ttl, perm)
+	// Crear prefijo específico por tenant para organización y seguridad
+	tenantID := sharedcontext.TenantIDFromContext(ctx)
+	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
+
+	var prefix string
+	if tenantID != uuid.Nil && tenantCountry != "" {
+		prefix = fmt.Sprintf("%s-%s/", tenantID.String(), tenantCountry)
+	} else {
+		prefix = "default/"
+	}
+
+	return b.upLink.GenerateEphemeralToken(b.bucketName, prefix, ttl, uplink.Permission{
+		AllowDownload: true,
+		AllowUpload:   true,
+		NotAfter:      time.Now().Add(ttl),
+	})
 }

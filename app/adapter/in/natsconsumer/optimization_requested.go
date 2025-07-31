@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/out/storjbucket"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -28,6 +29,7 @@ func init() {
 		newOptimizationRequestedConsumer,
 		natsconn.NewJetStream,
 		natsconn.NewKeyValue,
+		storjbucket.NewTransportAppBucket,
 		workers.NewFleetOptimizer,
 		usecase.NewOptimizeFleetWorkflow,
 		observability.NewObservability,
@@ -38,6 +40,7 @@ func init() {
 func newOptimizationRequestedConsumer(
 	js jetstream.JetStream,
 	kv jetstream.KeyValue,
+	storjBucket *storjbucket.TransportAppBucket,
 	optimize workers.FleetOptimizer,
 	optimizeFleetWorkflow usecase.OptimizeFleetWorkflow,
 	obs observability.Observability,
@@ -87,15 +90,16 @@ func newOptimizationRequestedConsumer(
 			// Es un mensaje chunked, reconstruir el mensaje original
 			var chunks []chunker.Chunk //a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d -a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d
 			for idx, id := range chunkIDs {
-				entry, err := kv.Get(ctx, id)
+				token := msg.Headers().Get("X-Bucket-Token")
+				entry, err := storjBucket.DownloadWithToken(ctx, token, id)
 				if err != nil {
-					obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del KV store", "chunkID", id, "error", err)
+					obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del bucket", "chunkID", id, "error", err)
 					msg.Ack()
 					return
 				}
 				chunks = append(chunks, chunker.Chunk{
 					ID:   uuidMustParse(id),
-					Data: entry.Value(),
+					Data: entry,
 					Idx:  idx,
 				})
 			}

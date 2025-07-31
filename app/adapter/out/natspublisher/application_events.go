@@ -3,6 +3,8 @@ package natspublisher
 import (
 	"context"
 	"encoding/json"
+	"time"
+	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
@@ -16,6 +18,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"storj.io/uplink"
 )
 
 type ApplicationEvents func(ctx context.Context, outbox domain.Outbox) error
@@ -26,6 +29,7 @@ func init() {
 		natsconn.NewJetStream,
 		configuration.NewConf,
 		natsconn.NewKeyValue,
+		storjbucket.NewTransportAppBucket,
 	)
 }
 
@@ -33,6 +37,7 @@ func NewApplicationEvents(
 	js jetstream.JetStream,
 	conf configuration.Conf,
 	kv jetstream.KeyValue,
+	storjBucket *storjbucket.TransportAppBucket,
 ) ApplicationEvents {
 	return func(ctx context.Context, outbox domain.Outbox) error {
 		// Crear el mismo formato que Google Pub/Sub
@@ -50,6 +55,9 @@ func NewApplicationEvents(
 			msg.Attributes[k] = v
 		}
 
+		// Crear headers de NATS para filtrado adicional usando el baggage
+		headers := nats.Header{}
+
 		// Serializar el pubsub.Message a JSON
 		// Si el evento es optimizationRequested, chunkear solo el payload y poner los IDs en Data
 		eventType, eventTypeExists := sharedcontext.GetEventTypeFromContext(ctx)
@@ -59,9 +67,20 @@ func NewApplicationEvents(
 				return err
 			}
 			var chunkIDs []string
+			token, err := storjBucket.GenerateEphemeralToken(ctx, time.Hour*24, uplink.Permission{
+				AllowDownload: true,
+				AllowUpload:   true,
+			})
+			headers.Set("X-Bucket-Token", token)
+			if err != nil {
+				return err
+			}
 			for _, chunk := range chunks {
 				chunkKey := chunk.ID.String()
-				_, err = kv.Put(ctx, chunkKey, chunk.Data)
+				if err != nil {
+					return err
+				}
+				err = storjBucket.UploadWithToken(ctx, token, chunkKey, chunk.Data)
 				if err != nil {
 					return err
 				}
@@ -77,9 +96,6 @@ func NewApplicationEvents(
 		if err != nil {
 			return err
 		}
-
-		// Crear headers de NATS para filtrado adicional usando el baggage
-		headers := nats.Header{}
 
 		// Extraer EventType del baggage
 		if eventType, eventTypeExists := sharedcontext.GetEventTypeFromContext(ctx); eventTypeExists {
