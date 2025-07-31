@@ -12,6 +12,7 @@ type FSMState struct {
 	IdempotencyKey string
 	Workflow       string
 	State          string
+	NextInput      []byte
 	CreatedAt      time.Time
 }
 

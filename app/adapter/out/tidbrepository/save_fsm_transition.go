@@ -25,6 +25,7 @@ func NewSaveFSMTransition(conn database.ConnectionFactory) SaveFSMTransition {
 			IdempotencyKey: fsmState.IdempotencyKey,
 			Workflow:       fsmState.Workflow,
 			State:          fsmState.State,
+			NextInput:      fsmState.NextInput,
 		}
 		// Determinar qué conexión usar
 		var db *gorm.DB

@@ -35,10 +35,12 @@ func NewGetFSMTransitionHistory(conn database.ConnectionFactory) GetFSMTransitio
 		domainHistory := make([]domain.FSMState, len(history))
 		for i, transition := range history {
 			domainHistory[i] = domain.FSMState{
-				TraceID:   transition.TraceID,
-				Workflow:  transition.Workflow,
-				State:     transition.State,
-				CreatedAt: transition.CreatedAt,
+				TraceID:        transition.TraceID,
+				IdempotencyKey: transition.IdempotencyKey,
+				Workflow:       transition.Workflow,
+				State:          transition.State,
+				NextInput:      transition.NextInput,
+				CreatedAt:      transition.CreatedAt,
 			}
 		}
 

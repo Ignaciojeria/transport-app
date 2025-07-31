@@ -37,10 +37,12 @@ func NewGetLastFSMTransition(conn database.ConnectionFactory) GetLastFSMTransiti
 		}
 
 		fsmState := domain.FSMState{
-			TraceID:   lastTransition.TraceID,
-			Workflow:  lastTransition.Workflow,
-			State:     lastTransition.State,
-			CreatedAt: lastTransition.CreatedAt,
+			TraceID:        lastTransition.TraceID,
+			IdempotencyKey: lastTransition.IdempotencyKey,
+			Workflow:       lastTransition.Workflow,
+			State:          lastTransition.State,
+			NextInput:      lastTransition.NextInput,
+			CreatedAt:      lastTransition.CreatedAt,
 		}
 
 		return fsmState, nil
