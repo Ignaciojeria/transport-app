@@ -2,21 +2,17 @@ package domain
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"time"
-
-	"go.opentelemetry.io/otel/trace"
 )
 
 type Webhook struct {
-	Type        string            `json:"type"`
-	URL         string            `json:"url"`
-	Headers     map[string]string `json:"headers"`
+	Type        string             `json:"type"`
+	URL         string             `json:"url"`
+	Headers     map[string]string  `json:"headers"`
 	RetryPolicy WebhookRetryPolicy `json:"retryPolicy"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
+	CreatedAt   time.Time          `json:"createdAt"`
+	UpdatedAt   time.Time          `json:"updatedAt"`
 }
 
 type WebhookRetryPolicy struct {
@@ -25,11 +21,7 @@ type WebhookRetryPolicy struct {
 }
 
 func (w Webhook) DocID(ctx context.Context) DocumentID {
-	traceID := trace.SpanContextFromContext(ctx).TraceID().String()
-	hash := sha256.Sum256([]byte(fmt.Sprintf("%s%s%s", w.Type, w.URL, traceID)))
-	return DocumentID{
-		Value: hex.EncodeToString(hash[:]),
-	}
+	return HashByTenant(ctx, w.Type)
 }
 
 func (w Webhook) Validate() error {
@@ -46,4 +38,9 @@ func (w Webhook) Validate() error {
 		return fmt.Errorf("backoff seconds cannot be negative")
 	}
 	return nil
+}
+
+func (w Webhook) UpdateIfChanged(newWebhook Webhook) (Webhook, bool) {
+	// Para webhooks, siempre actualizar con el nuevo valor
+	return newWebhook, true
 }

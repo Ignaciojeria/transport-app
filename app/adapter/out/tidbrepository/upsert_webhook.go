@@ -2,80 +2,73 @@ package tidbrepository
 
 import (
 	"context"
-	"encoding/json"
-	"time"
+	"errors"
+	"transport-app/app/adapter/out/tidbrepository/table"
+	"transport-app/app/adapter/out/tidbrepository/table/mapper"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/database"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"gorm.io/gorm"
 )
 
-type UpsertWebhook func(ctx context.Context, webhook domain.Webhook, fsmState domain.FSMState) error
+type UpsertWebhook func(ctx context.Context, webhook domain.Webhook, fsmState ...domain.FSMState) error
 
 func init() {
 	ioc.Registry(NewUpsertWebhook, database.NewConnectionFactory, NewSaveFSMTransition)
 }
 
 func NewUpsertWebhook(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertWebhook {
-	return func(ctx context.Context, webhook domain.Webhook, fsmState domain.FSMState) error {
-		db, err := conn()
-		if err != nil {
-			return err
-		}
-		tx, err := db.Begin()
-		if err != nil {
-			return err
-		}
-		defer tx.Rollback()
+	return func(ctx context.Context, webhook domain.Webhook, fsmState ...domain.FSMState) error {
+		return conn.Transaction(func(tx *gorm.DB) error {
+			var existing table.Webhook
+			err := tx.WithContext(ctx).
+				Table("webhooks").
+				Where("document_id = ?", webhook.DocID(ctx)).
+				First(&existing).Error
 
-		now := time.Now()
-		webhook.CreatedAt = now
-		webhook.UpdatedAt = now
-
-		// Upsert webhook
-		query := `
-		INSERT INTO webhooks (
-			doc_id, type, url, headers, max_retries, backoff_seconds,
-			created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		ON DUPLICATE KEY UPDATE
-			type = VALUES(type),
-			url = VALUES(url),
-			headers = VALUES(headers),
-			max_retries = VALUES(max_retries),
-			backoff_seconds = VALUES(backoff_seconds),
-			updated_at = VALUES(updated_at)
-		`
-
-		headersJSON := "{}"
-		if len(webhook.Headers) > 0 {
-			headersBytes, err := json.Marshal(webhook.Headers)
-			if err != nil {
+			if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return err
 			}
-			headersJSON = string(headersBytes)
-		}
 
-		_, err = tx.ExecContext(ctx, query,
-			webhook.DocID(ctx).String(),
-			webhook.Type,
-			webhook.URL,
-			headersJSON,
-			webhook.RetryPolicy.MaxRetries,
-			webhook.RetryPolicy.BackoffSeconds,
-			webhook.CreatedAt,
-			webhook.UpdatedAt,
-		)
-		if err != nil {
-			return err
-		}
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// No existe → insert
+				newWebhook := mapper.MapWebhookToTable(ctx, webhook)
+				if err := tx.Omit("Tenant").Create(&newWebhook).Error; err != nil {
+					return err
+				}
 
-		// Save FSM transition
-		if err := saveFSMTransition(ctx, tx, fsmState); err != nil {
-			return err
-		}
+				// Persistir FSMState si está presente
+				if len(fsmState) > 0 && saveFSMTransition != nil {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
 
-		return tx.Commit()
+			// Ya existe → update solo si cambió algo
+			updated, changed := existing.Map().UpdateIfChanged(webhook)
+			if !changed {
+				// No hay cambios, solo persistir FSMState si está presente
+				if len(fsmState) > 0 && saveFSMTransition != nil {
+					return saveFSMTransition(ctx, fsmState[0], tx)
+				}
+				return nil
+			}
+
+			updateData := mapper.MapWebhookToTable(ctx, updated)
+			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
+			updateData.CreatedAt = existing.CreatedAt
+
+			if err := tx.Omit("Tenant").Save(&updateData).Error; err != nil {
+				return err
+			}
+
+			// Persistir FSMState si está presente
+			if len(fsmState) > 0 && saveFSMTransition != nil {
+				return saveFSMTransition(ctx, fsmState[0], tx)
+			}
+
+			return nil
+		})
 	}
 }
-
