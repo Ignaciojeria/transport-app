@@ -2,33 +2,49 @@ package table
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
 	"transport-app/app/domain"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
+// JSONMap permite representar un JSON flexible como map[string]string
+type JSONMap map[string]string
+
 type Webhook struct {
 	gorm.Model
-	ID      uuid.UUID `gorm:"type:char(36);primaryKey"`
-	Payload string    `gorm:"type:text"`
+	ID         int64     `gorm:"primaryKey"`
+	DocumentID string    `gorm:"type:char(64);uniqueIndex"`
+	TenantID   uuid.UUID `gorm:"not null"`
+	Tenant     Tenant    `gorm:"foreignKey:TenantID"`
+	Payload    JSONMap   `gorm:"type:json"`
 }
 
-// Map converts the table Webhook to domain.Webhook by deserializing the Payload field
-func (w Webhook) Map() domain.Webhook {
-	var domainWebhook domain.Webhook
-	
-	if w.Payload != "" {
-		if err := json.Unmarshal([]byte(w.Payload), &domainWebhook); err != nil {
-			log.Printf("Error unmarshaling webhook payload: %v", err)
-			// Return empty struct on unmarshal error, but log the error
-			return domain.Webhook{}
+// Map convierte el Webhook desde la capa de persistencia a la entidad de dominio.
+func (w Webhook) Map() (domain.Webhook, error) {
+	var webhook domain.Webhook
+
+	// Reconstruye el mapa original a partir del JSONMap
+	reconstructedMap := make(map[string]interface{})
+	for key, valueStr := range w.Payload {
+		var value interface{}
+		if err := json.Unmarshal([]byte(valueStr), &value); err != nil {
+			return domain.Webhook{}, fmt.Errorf("failed to unmarshal field %s: %w", key, err)
 		}
+		reconstructedMap[key] = value
 	}
-	
-	// Set the ID from the table field
-	domainWebhook.ID = w.ID
-	
-	return domainWebhook
+
+	// Marshal el mapa reconstruido a bytes
+	reconstructedBytes, err := json.Marshal(reconstructedMap)
+	if err != nil {
+		return domain.Webhook{}, fmt.Errorf("failed to marshal reconstructed webhook: %w", err)
+	}
+
+	// Unmarshal final al struct del dominio
+	if err := json.Unmarshal(reconstructedBytes, &webhook); err != nil {
+		return domain.Webhook{}, fmt.Errorf("failed to unmarshal to domain.Webhook: %w", err)
+	}
+
+	return webhook, nil
 }

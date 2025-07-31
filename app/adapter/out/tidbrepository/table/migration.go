@@ -62,6 +62,7 @@ func NewRunMigrations(
 			&DeliveryUnitsSkills{},
 			&ClientCredential{},
 			&FSMStateHistory{},
+			&Webhook{},
 		}
 
 		// Crear las tablas nuevamente
