@@ -18,9 +18,8 @@ type UplinkManager interface {
 }
 
 type Uplink struct {
-	Access  *uplink.Access
-	Project *uplink.Project
-	Config  edge.Config
+	Access *uplink.Access
+	Config edge.Config
 }
 
 func init() {
@@ -28,13 +27,11 @@ func init() {
 }
 
 func NewUplink(env configuration.StorjConfiguration) (*Uplink, error) {
-	ctx := context.Background()
 
 	// Modo Edge (sin access grant)
 	if env.STORJ_ACCESS_GRANT == "" {
 		return &Uplink{
-			Access:  nil,
-			Project: nil,
+			Access: nil,
 			Config: edge.Config{
 				AuthServiceAddress: "auth.storjshare.io:7777",
 			},
@@ -47,14 +44,8 @@ func NewUplink(env configuration.StorjConfiguration) (*Uplink, error) {
 		return nil, fmt.Errorf("invalid STORJ_ACCESS_GRANT: %w", err)
 	}
 
-	project, err := uplink.OpenProject(ctx, access)
-	if err != nil {
-		return nil, fmt.Errorf("could not open project: %v", err)
-	}
-
 	return &Uplink{
-		Access:  access,
-		Project: project,
+		Access: access,
 		Config: edge.Config{
 			AuthServiceAddress: "auth.storjshare.io:7777",
 		},

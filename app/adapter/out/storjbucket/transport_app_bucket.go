@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 	"transport-app/app/shared/infrastructure/storj"
 	"transport-app/app/shared/sharedcontext"
@@ -32,45 +33,51 @@ func NewTransportAppBucket(ul *storj.Uplink) (storj.UplinkManager, error) {
 	ctx := context.Background()
 	bucketName := "transport-app-bucket"
 
-	// 🚫 Modo Edge: no puedes hacer share ni manipular buckets directamente
-	if ul.Access == nil || ul.Project == nil {
+	// 🚫 Modo Edge: sin access grant, no se puede manipular bucket ni generar credenciales
+	if ul.Access == nil {
 		return &TransportAppBucket{
 			upLink:     ul,
 			bucketName: bucketName,
 		}, nil
 	}
 
-	// ✅ Modo Centralizado
-	sharedLinkExpiration := 10 * time.Minute
-	bucketFolderName := ""
+	// ✅ Modo Centralizado: abrir project de forma efímera
+	project, err := uplink.OpenProject(ctx, ul.Access)
+	if err != nil {
+		return nil, fmt.Errorf("could not open project: %w", err)
+	}
+	defer project.Close()
 
-	sharedLinkRestrictedAccess, err := ul.Access.Share(
+	// Crear y asegurar bucket
+	_, err = project.CreateBucket(ctx, bucketName)
+	if err != nil && !errors.Is(err, uplink.ErrBucketAlreadyExists) {
+		return nil, fmt.Errorf("error creating bucket: %w", err)
+	}
+	_, err = project.EnsureBucket(ctx, bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("could not ensure bucket: %v", err)
+	}
+
+	// Crear credenciales para linksharing
+	sharedLinkExpiration := 10 * time.Minute
+	sharedAccess, err := ul.Access.Share(
 		uplink.Permission{
 			AllowDownload: true,
 			NotAfter:      time.Now().Add(sharedLinkExpiration),
 		},
 		uplink.SharePrefix{
 			Bucket: bucketName,
-			Prefix: bucketFolderName,
+			Prefix: "",
 		},
 	)
 	if err != nil {
 		return nil, fmt.Errorf("could not restrict access grant: %w", err)
 	}
 
-	credentials, err := ul.Config.RegisterAccess(ctx, sharedLinkRestrictedAccess, &edge.RegisterAccessOptions{Public: false})
+	// 🔁 Reintento de RegisterAccess
+	credentials, err := retryRegisterAccess(ctx, ul.Config, sharedAccess, &edge.RegisterAccessOptions{Public: false}, 3)
 	if err != nil {
 		return nil, fmt.Errorf("could not register access: %w", err)
-	}
-
-	_, err = ul.Project.CreateBucket(ctx, bucketName)
-	if err != nil && !errors.Is(err, uplink.ErrBucketAlreadyExists) {
-		return nil, fmt.Errorf("error creating bucket: %w", err)
-	}
-
-	_, err = ul.Project.EnsureBucket(ctx, bucketName)
-	if err != nil {
-		return nil, fmt.Errorf("could not ensure bucket: %v", err)
 	}
 
 	return &TransportAppBucket{
@@ -78,6 +85,36 @@ func NewTransportAppBucket(ul *storj.Uplink) (storj.UplinkManager, error) {
 		bucketName:      bucketName,
 		upLink:          ul,
 	}, nil
+}
+
+func retryRegisterAccess(ctx context.Context, cfg edge.Config, access *uplink.Access, opts *edge.RegisterAccessOptions, maxRetries int) (*edge.Credentials, error) {
+	var creds *edge.Credentials
+	var err error
+	delay := time.Second
+
+	for i := 0; i < maxRetries; i++ {
+		creds, err = cfg.RegisterAccess(ctx, access, opts)
+		if err == nil {
+			return creds, nil
+		}
+
+		// Solo reintentar errores de red
+		if !isNetworkError(err) {
+			break
+		}
+
+		time.Sleep(delay)
+		delay *= 2
+	}
+	return nil, err
+}
+
+func isNetworkError(err error) bool {
+	return errors.Is(err, context.DeadlineExceeded) ||
+		errors.Is(err, context.Canceled) ||
+		strings.Contains(err.Error(), "connection") ||
+		strings.Contains(err.Error(), "wsarecv") ||
+		strings.Contains(err.Error(), "EOF")
 }
 
 func (b TransportAppBucket) CreatePublicSharedLink(ctx context.Context, objectKey string) (string, error) {
