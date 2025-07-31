@@ -107,11 +107,17 @@ func EntityTypeFromContext(ctx context.Context) string {
 const (
 	accessTokenKey    string = "access.token"
 	idempotencyKeyKey string = "idempotency.key"
+	bucketTokenKey    string = "bucket.token"
 )
 
 // WithAccessToken añade el token de acceso al contexto de forma segura
 func WithAccessToken(ctx context.Context, token string) context.Context {
 	return context.WithValue(ctx, accessTokenKey, token)
+}
+
+// WithBucketToken añade el token del bucket al contexto de forma segura
+func WithBucketToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, bucketTokenKey, token)
 }
 
 func WithIdempotencyKey(ctx context.Context, idempotencyKey string) context.Context {
@@ -121,6 +127,13 @@ func WithIdempotencyKey(ctx context.Context, idempotencyKey string) context.Cont
 // AccessTokenFromContext obtiene el token de acceso desde el contexto
 func AccessTokenFromContext(ctx context.Context) (string, bool) {
 	val := ctx.Value(accessTokenKey)
+	token, ok := val.(string)
+	return token, ok
+}
+
+// BucketTokenFromContext obtiene el token del bucket desde el contexto
+func BucketTokenFromContext(ctx context.Context) (string, bool) {
+	val := ctx.Value(bucketTokenKey)
 	token, ok := val.(string)
 	return token, ok
 }

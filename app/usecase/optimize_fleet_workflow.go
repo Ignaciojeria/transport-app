@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/domain/optimization"
 	"transport-app/app/domain/workflows"
@@ -21,12 +22,14 @@ func init() {
 	ioc.Registry(
 		NewOptimizeFleetWorkflow,
 		workflows.NewOptimizeFleetWorkflow,
-		vroom.NewOptimize)
+		vroom.NewOptimize,
+		storjbucket.NewTransportAppBucket)
 }
 
 func NewOptimizeFleetWorkflow(
 	domainWorkflow workflows.OptimizeFleetWorkflow,
 	optimize vroom.Optimize,
+	storjBucket *storjbucket.TransportAppBucket,
 ) OptimizeFleetWorkflow {
 	return func(ctx context.Context, input optimization.FleetOptimization) error {
 		// Usar el idempotency key desde el contexto
@@ -45,11 +48,23 @@ func NewOptimizeFleetWorkflow(
 		if err != nil {
 			return err
 		}
+		token, ok := sharedcontext.BucketTokenFromContext(ctx)
+		if !ok {
+			return fmt.Errorf("bucket token not found in context")
+		}
+
+		for _, v := range routeRequests {
+			routeBytes, err := json.Marshal(v)
+			if err != nil {
+				return fmt.Errorf("error marshaling route request: %w", err)
+			}
+			storjBucket.UploadWithToken(ctx, token, v.ReferenceID, routeBytes)
+		}
 
 		// Generar archivo con las rutas para ver cómo se generarán las rutas
-		if err := saveRouteRequestsToFile(routeRequests, input); err != nil {
+		/*if err := saveRouteRequestsToFile(routeRequests, input); err != nil {
 			return fmt.Errorf("failed to save route requests to file: %w", err)
-		}
+		}*/
 
 		fmt.Printf("Optimización completada. Se generaron %d rutas.\n", len(routeRequests))
 		return nil
