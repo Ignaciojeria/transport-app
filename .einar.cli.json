@@ -496,6 +496,10 @@
         {
             "kind": "storj-bucket",
             "name": "transport-app-bucket"
+        },
+        {
+            "kind": "post-controller",
+            "name": "upsert-webhook"
         }
     ]
 }
