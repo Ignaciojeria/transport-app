@@ -4,12 +4,9 @@ import (
 	"context"
 	"fmt"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Webhook struct {
-	ID          uuid.UUID         `json:"id"`
 	Type        string            `json:"type"`
 	URL         string            `json:"url"`
 	Headers     map[string]string `json:"headers"`

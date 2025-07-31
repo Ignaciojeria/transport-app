@@ -78,8 +78,6 @@ type Order struct {
 	ServiceCategory                   string     `gorm:"default:null"`
 }
 
-type JSONMap map[string]string
-
 func (m JSONMap) Value() (driver.Value, error) {
 	return json.Marshal(m)
 }

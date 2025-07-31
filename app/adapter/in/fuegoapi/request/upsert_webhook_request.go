@@ -22,7 +22,7 @@ func (req UpsertWebhookRequest) Map(ctx context.Context) domain.Webhook {
 		Type:    req.Type,
 		URL:     req.URL,
 		Headers: req.Headers,
-		RetryPolicy: domain.WebhookRetryPolicy{
+		RetryPolicy: domain.RetryPolicy{
 			MaxRetries:     req.RetryPolicy.MaxRetries,
 			BackoffSeconds: req.RetryPolicy.BackoffSeconds,
 		},
