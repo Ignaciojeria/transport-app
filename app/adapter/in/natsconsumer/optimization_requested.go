@@ -162,7 +162,20 @@ func newOptimizationRequestedConsumer(
 			webhookKey, err := canonicaljson.HashKey(ctx, "publish_webhook", input)
 			publishWebhookWorkflowCtx := sharedcontext.WithAccessToken(ctx, msg.Headers().Get("X-Access-Token"))
 			publishWebhookWorkflowCtx = sharedcontext.WithIdempotencyKey(ctx, webhookKey)
-			if err := publishWebhookWorkflow(publishWebhookWorkflowCtx, "fleet_optimized"); err != nil {
+			type fleetOptimizedWebhook struct {
+				Plan   string   `json:"plan"`
+				Routes []string `json:"routes"`
+			}
+			var webhookBody fleetOptimizedWebhook
+
+			for _, routeRequest := range routeRequests {
+				webhookBody.Routes = append(webhookBody.Routes, routeRequest.ReferenceID)
+			}
+			if len(routeRequests) > 0 {
+				webhookBody.Plan = routeRequests[0].PlanReferenceID
+			}
+
+			if err := publishWebhookWorkflow(publishWebhookWorkflowCtx, webhookBody, "fleet-optimized"); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error publicando webhook", "error", err)
 				msg.Ack()
 				return

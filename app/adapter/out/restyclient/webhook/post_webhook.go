@@ -3,7 +3,6 @@ package webhook
 import (
 	"context"
 	"fmt"
-	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/httpresty"
 	"transport-app/app/shared/sharedcontext"
@@ -12,18 +11,14 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type PostWebhook func(ctx context.Context, input domain.Webhook) error
+type PostWebhook func(ctx context.Context, input interface{}, webhookType string) error
 
 func init() {
 	ioc.Registry(NewPostWebhook, httpresty.NewClient, configuration.NewConf)
 }
 
 func NewPostWebhook(c *resty.Client, config configuration.Conf) PostWebhook {
-	return func(ctx context.Context, webhook domain.Webhook) error {
-		// Validar el webhook antes de enviarlo
-		if err := webhook.Validate(); err != nil {
-			return err
-		}
+	return func(ctx context.Context, input interface{}, webhookType string) error {
 		accessToken, ok := sharedcontext.AccessTokenFromContext(ctx)
 		if !ok {
 			return fmt.Errorf("access token not found in context")
@@ -36,8 +31,8 @@ func NewPostWebhook(c *resty.Client, config configuration.Conf) PostWebhook {
 				"X-Access-Token": accessToken,
 				"tenant":         sharedcontext.TenantIDFromContext(ctx).String() + "-" + sharedcontext.TenantCountryFromContext(ctx),
 			}).
-			SetBody(webhook).
-			Post(config.MASTER_NODE_WEBHOOKS_URL)
+			SetBody(input).
+			Post(config.MASTER_NODE_WEBHOOKS_URL + webhookType)
 
 		if err != nil {
 			return err

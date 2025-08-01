@@ -2,14 +2,16 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
 	"transport-app/app/domain/workflows"
+	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
-	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/nats-io/nats.go/jetstream"
 )
 
 type UpsertWebhookWorkflow func(ctx context.Context, w domain.Webhook) error
@@ -19,37 +21,22 @@ func init() {
 		NewUpsertWebhookWorkflow,
 		workflows.NewUpsertWebhookWorkflow,
 		tidbrepository.NewUpsertWebhook,
-		observability.NewObservability)
+		observability.NewObservability,
+		natsconn.NewKeyValue)
 }
 
 func NewUpsertWebhookWorkflow(
 	domainWorkflow workflows.UpsertWebhookWorkflow,
 	upsertWebhook tidbrepository.UpsertWebhook,
 	obs observability.Observability,
+	kv jetstream.KeyValue,
 ) UpsertWebhookWorkflow {
 	return func(ctx context.Context, w domain.Webhook) error {
-		// Usar el idempotency key desde el contexto
-		key, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
-		if !ok {
-			return fmt.Errorf("idempotency key not found in context")
-		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		bytes, err := json.Marshal(w)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to marshal webhook: %w", err)
 		}
-
-		if err := workflow.SetWebhookUpsertedTransition(ctx); err != nil {
-			obs.Logger.WarnContext(ctx,
-				err.Error(),
-				"webhook_doc_id", w.DocID(ctx).String())
-			return nil
-		}
-		fsmState := workflow.Map(ctx)
-
-		err = upsertWebhook(ctx, w, fsmState)
-		if err != nil {
-			return fmt.Errorf("failed to upsert webhook: %w", err)
-		}
+		kv.Put(ctx, w.DocID(ctx).String(), bytes)
 		return nil
 	}
 }

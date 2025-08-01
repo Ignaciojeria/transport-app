@@ -7,13 +7,12 @@ import (
 )
 
 type Webhook struct {
-	Type        string            `json:"type"`
-	URL         string            `json:"url"`
-	Headers     map[string]string `json:"headers"`
-	Body        interface{}       `json:"body"`
-	RetryPolicy RetryPolicy       `json:"retryPolicy"`
-	CreatedAt   time.Time         `json:"createdAt"`
-	UpdatedAt   time.Time         `json:"updatedAt"`
+	Type      string            `json:"type"`
+	URL       string            `json:"url"`
+	Headers   map[string]string `json:"headers"`
+	Body      interface{}       `json:"body"`
+	CreatedAt time.Time         `json:"createdAt"`
+	UpdatedAt time.Time         `json:"updatedAt"`
 }
 
 type RetryPolicy struct {
@@ -33,12 +32,6 @@ func (w Webhook) Validate() error {
 	}
 	if w.URL == "" {
 		return fmt.Errorf("webhook URL is required")
-	}
-	if w.RetryPolicy.MaxRetries < 0 {
-		return fmt.Errorf("max retries cannot be negative")
-	}
-	if w.RetryPolicy.BackoffSeconds < 0 {
-		return fmt.Errorf("backoff seconds cannot be negative")
 	}
 	return nil
 }

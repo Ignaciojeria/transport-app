@@ -23,6 +23,7 @@ type Conf struct {
 	LOCATION_IQ_DNS                           string `env:"LOCATION_IQ_DNS"`
 	CACHE_URL                                 string `env:"CACHE_URL"`
 	FIREBASE_API_KEY                          string `env:"FIREBASE_API_KEY"`
+	FLEET_OPTIMIZED_WEBHOOK_SUBSCRIPTION      string `env:"FLEET_OPTIMIZED_WEBHOOK_SUBSCRIPTION"`
 	ORDER_SUBMITTED_SUBSCRIPTION              string `env:"ORDER_SUBMITTED_SUBSCRIPTION"`
 	NODE_SUBMITTED_SUBSCRIPTION               string `env:"NODE_SUBMITTED_SUBSCRIPTION"`
 	TENANT_SUBMITTED_SUBSCRIPTION             string `env:"TENANT_SUBMITTED_SUBSCRIPTION"`

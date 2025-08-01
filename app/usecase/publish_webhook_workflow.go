@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"transport-app/app/adapter/out/restyclient/webhook"
 	"transport-app/app/adapter/out/tidbrepository"
-	"transport-app/app/domain"
 	"transport-app/app/domain/workflows"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
@@ -13,7 +12,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type PublishWebhookWorkflow func(ctx context.Context, webhookType string) error
+type PublishWebhookWorkflow func(ctx context.Context, body interface{}, webhookType string) error
 
 func init() {
 	ioc.Registry(
@@ -32,7 +31,7 @@ func NewPublishWebhookWorkflow(
 	obs observability.Observability,
 	findWebhookByDocumentID tidbrepository.FindWebhookByDocumentID,
 ) PublishWebhookWorkflow {
-	return func(ctx context.Context, webhookType string) error {
+	return func(ctx context.Context, body interface{}, webhookType string) error {
 		// Obtener el idempotency key desde el contexto
 		key, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
 		if !ok {
@@ -46,18 +45,12 @@ func NewPublishWebhookWorkflow(
 
 		// Intentar transición a webhook publicado
 		if err := workflowInstance.SetWebhookPublishedTransition(ctx); err != nil {
-			obs.Logger.WarnContext(ctx,
-				err.Error(),
-				"webhook_type", webhookType)
+			obs.Logger.WarnContext(ctx, err.Error())
 			return nil
 		}
 
-		webhook, err := findWebhookByDocumentID(ctx, domain.Webhook{Type: webhookType}.DocID(ctx))
-		if err != nil {
-			return fmt.Errorf("failed to find webhook by document ID: %w", err)
-		}
 		// Intentar publicar el webhook
-		err = postWebhook(ctx, webhook)
+		err = postWebhook(ctx, body, webhookType)
 		if err != nil {
 			return fmt.Errorf("failed to publish webhook: %w", err)
 		}
