@@ -37,6 +37,7 @@ func NewUpsertWebhookWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to restore workflow: %w", err)
 		}
+
 		if err := workflow.SetWebhookUpsertedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
@@ -44,6 +45,7 @@ func NewUpsertWebhookWorkflow(
 			return nil
 		}
 		fsmState := workflow.Map(ctx)
+
 		err = upsertWebhook(ctx, w, fsmState)
 		if err != nil {
 			return fmt.Errorf("failed to upsert webhook: %w", err)

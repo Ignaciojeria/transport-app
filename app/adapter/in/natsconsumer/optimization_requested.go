@@ -34,6 +34,7 @@ func init() {
 		usecase.NewOptimizeFleetWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
+		usecase.NewStoreDataInBucketWorkflow,
 	)
 }
 
@@ -45,6 +46,7 @@ func newOptimizationRequestedConsumer(
 	optimizeFleetWorkflow usecase.OptimizeFleetWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
+	storeDataInBucketWorkflow usecase.StoreDataInBucketWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -121,19 +123,38 @@ func newOptimizationRequestedConsumer(
 			}
 
 			// Orquestación usando workflows
-			key, err := canonicaljson.HashKey(ctx, "order_headers", input)
+			key, err := canonicaljson.HashKey(ctx, "optimize_fleet", input)
 			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error procesando headers de orden", "error", err)
 				msg.Ack()
 				return
 			}
 			optimizeFleetWorkflowCtx := sharedcontext.WithIdempotencyKey(ctx, key)
-			optimizeFleetWorkflowCtx = sharedcontext.WithBucketToken(optimizeFleetWorkflowCtx, msg.Headers().Get("X-Bucket-Token"))
 			optimizeFleetWorkflowCtx = sharedcontext.WithAccessToken(optimizeFleetWorkflowCtx, msg.Headers().Get("X-Access-Token"))
-			if err := optimizeFleetWorkflow(optimizeFleetWorkflowCtx, input.Map()); err != nil {
+
+			routeRequests, err := optimizeFleetWorkflow(optimizeFleetWorkflowCtx, input.Map())
+			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error procesando optimización", "error", err)
 				msg.Ack()
 				return
+			}
+
+			for _, routeRequest := range routeRequests {
+				routeRequestBytes, err := json.Marshal(routeRequest)
+				if err != nil {
+					obs.Logger.ErrorContext(ctx, "Error serializando ruta de optimización", "error", err)
+					msg.Ack()
+					return
+				}
+				routeKey, err := canonicaljson.HashKey(ctx, "store_route_in_bucket", routeRequest.ReferenceID)
+				storeDataInBucketWorkflowCtx := sharedcontext.WithIdempotencyKey(ctx, routeKey)
+				storeDataInBucketWorkflowCtx = sharedcontext.WithBucketToken(storeDataInBucketWorkflowCtx, msg.Headers().Get("X-Bucket-Token"))
+				err = storeDataInBucketWorkflow(storeDataInBucketWorkflowCtx, routeRequest.ReferenceID, routeRequestBytes)
+				if err != nil {
+					obs.Logger.ErrorContext(ctx, "Error almacenando ruta de optimización en bucket", "error", err)
+					msg.Ack()
+					return
+				}
 			}
 
 			/* Procesar la optimización

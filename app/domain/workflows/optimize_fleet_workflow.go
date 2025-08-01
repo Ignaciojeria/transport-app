@@ -12,6 +12,7 @@ import (
 
 type OptimizeFleetWorkflow struct {
 	IdempotencyKey       string
+	NextInput            []byte
 	getLastFSMTransition tidbrepository.GetLastFSMTransitionByIdempotencyKey
 	fsm                  *fsm.FSM
 }
@@ -45,6 +46,7 @@ func (w OptimizeFleetWorkflow) Restore(ctx context.Context, idempotencyKey strin
 		},
 		fsm.Callbacks{},
 	)
+	w.NextInput = lastTransition.NextInput
 	return w, nil
 }
 
@@ -65,6 +67,7 @@ func (w OptimizeFleetWorkflow) Map(ctx context.Context) domain.FSMState {
 		Workflow:       w.WorkflowName(),
 		TraceID:        trace.SpanContextFromContext(ctx).TraceID().String(),
 		IdempotencyKey: w.IdempotencyKey,
+		NextInput:      w.NextInput,
 		State:          w.fsm.Current(),
 	}
 }

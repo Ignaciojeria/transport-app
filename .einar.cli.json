@@ -500,6 +500,10 @@
         {
             "kind": "post-controller",
             "name": "upsert-webhook"
+        },
+        {
+            "kind": "usecase",
+            "name": "store-data-in-bucket-workflow"
         }
     ]
 }
