@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/storjbucket"
+	"transport-app/app/domain"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -35,6 +36,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		usecase.NewStoreDataInBucketWorkflow,
+		usecase.NewPublishWebhookWorkflow,
 	)
 }
 
@@ -47,6 +49,7 @@ func newOptimizationRequestedConsumer(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storeDataInBucketWorkflow usecase.StoreDataInBucketWorkflow,
+	publishWebhookWorkflow usecase.PublishWebhookWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -157,13 +160,24 @@ func newOptimizationRequestedConsumer(
 				}
 			}
 
-			/* Procesar la optimización
-			if err := optimize(ctx, input.Map()); err != nil {
-				obs.Logger.ErrorContext(ctx, "Error procesando optimización (reconstruido)", "error", err)
-				msg.Ack()
-				return*
+			tenantID := sharedcontext.TenantIDFromContext(ctx)
+			countryCode := sharedcontext.TenantCountryFromContext(ctx)
+
+			webhook := domain.Webhook{
+				Type: "fleet_optimized",
+				Headers: map[string]string{
+					"Content-Type":   "application/json",
+					"X-Access-Token": msg.Headers().Get("X-Access-Token"),
+					"tenant":         tenantID.String() + "-" + countryCode,
+				},
+				Body: routeRequests,
 			}
-			*/
+			if err := publishWebhookWorkflow(ctx, webhook); err != nil {
+				obs.Logger.ErrorContext(ctx, "Error publicando webhook", "error", err)
+				msg.Ack()
+				return
+			}
+
 			obs.Logger.InfoContext(ctx, "Optimización procesada exitosamente desde NATS (reconstruido)",
 				"eventType", "optimizationRequested")
 			msg.Ack()

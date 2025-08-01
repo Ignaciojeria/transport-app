@@ -2,8 +2,10 @@ package fuegoapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/fuegoapi/response"
 	"transport-app/app/adapter/out/natspublisher"
@@ -38,6 +40,16 @@ func upsertWebhook(
 			if err != nil {
 				return response.UpsertWebhookResponse{}, err
 			}
+
+			// Validar cabeceras reservadas
+			if err := validateReservedHeaders(requestBody.Headers); err != nil {
+				return response.UpsertWebhookResponse{}, fuego.HTTPError{
+					Title:  "error creating webhook",
+					Detail: err.Error(),
+					Status: http.StatusBadRequest,
+				}
+			}
+
 			mappedTO := requestBody.Map(spanCtx)
 
 			if err := mappedTO.Validate(); err != nil {
@@ -80,4 +92,19 @@ func upsertWebhook(
 		option.Header("channel", "api channel key", param.Required()),
 		option.Header("X-Access-Token", "api access token"),
 		option.Tags("webhooks"))
+}
+
+// validateReservedHeaders checks that reserved headers are not used in the webhook body
+func validateReservedHeaders(headers map[string]string) error {
+	reservedHeaders := []string{"Content-Type", "X-Access-Token", "tenant"}
+
+	for _, reserved := range reservedHeaders {
+		for headerKey := range headers {
+			if strings.EqualFold(headerKey, reserved) {
+				return fmt.Errorf("reserved header '%s' is not allowed in webhook body", reserved)
+			}
+		}
+	}
+
+	return nil
 }
