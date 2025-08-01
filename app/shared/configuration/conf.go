@@ -35,6 +35,7 @@ type Conf struct {
 	VROOM_OPTIMIZER_URL                       string `env:"VROOM_OPTIMIZER_URL"`
 	VROOM_PLANNER_URL                         string `env:"VROOM_PLANNER_URL"`
 	MASTER_NODE_URL                           string `env:"MASTER_NODE_URL"`
+	MASTER_NODE_WEBHOOKS_URL                  string `env:"MASTER_NODE_WEBHOOKS_URL"`
 	MASTER_NODE_API_KEY                       string `env:"MASTER_NODE_API_KEY"`
 	JWT_ISSUER                                string `env:"JWT_ISSUER" envDefault:"transport-app"`
 	JWT_PRIVATE_KEY                           string `env:"JWT_PRIVATE_KEY"`

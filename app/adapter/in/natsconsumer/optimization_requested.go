@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/storjbucket"
-	"transport-app/app/domain"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -160,19 +159,10 @@ func newOptimizationRequestedConsumer(
 				}
 			}
 
-			tenantID := sharedcontext.TenantIDFromContext(ctx)
-			countryCode := sharedcontext.TenantCountryFromContext(ctx)
-
-			webhook := domain.Webhook{
-				Type: "fleet_optimized",
-				Headers: map[string]string{
-					"Content-Type":   "application/json",
-					"X-Access-Token": msg.Headers().Get("X-Access-Token"),
-					"tenant":         tenantID.String() + "-" + countryCode,
-				},
-				Body: routeRequests,
-			}
-			if err := publishWebhookWorkflow(ctx, webhook); err != nil {
+			webhookKey, err := canonicaljson.HashKey(ctx, "publish_webhook", input)
+			publishWebhookWorkflowCtx := sharedcontext.WithAccessToken(ctx, msg.Headers().Get("X-Access-Token"))
+			publishWebhookWorkflowCtx = sharedcontext.WithIdempotencyKey(ctx, webhookKey)
+			if err := publishWebhookWorkflow(publishWebhookWorkflowCtx, "fleet_optimized"); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error publicando webhook", "error", err)
 				msg.Ack()
 				return
