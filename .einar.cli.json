@@ -504,6 +504,10 @@
         {
             "kind": "usecase",
             "name": "store-data-in-bucket-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "send-webhook-workflow"
         }
     ]
 }

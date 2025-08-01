@@ -10,6 +10,7 @@ type Webhook struct {
 	Type        string            `json:"type"`
 	URL         string            `json:"url"`
 	Headers     map[string]string `json:"headers"`
+	Body        interface{}       `json:"body"`
 	RetryPolicy RetryPolicy       `json:"retryPolicy"`
 	CreatedAt   time.Time         `json:"createdAt"`
 	UpdatedAt   time.Time         `json:"updatedAt"`

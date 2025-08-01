@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/adapter/out/tidbrepository"
@@ -79,39 +77,4 @@ func NewOptimizeFleetWorkflow(
 		fmt.Printf("Optimización completada. Se generaron %d rutas.\n", len(routeRequests))
 		return routeRequests, nil
 	}
-}
-
-// saveRouteRequestsToFile guarda las rutas y el input de optimización en un archivo JSON
-func saveRouteRequestsToFile(routeRequests []request.UpsertRouteRequest, input optimization.FleetOptimization) error {
-	// Crear estructura con rutas y input para análisis
-	optimizationResult := struct {
-		Timestamp     string                         `json:"timestamp"`
-		Input         optimization.FleetOptimization `json:"input"`
-		RouteRequests []request.UpsertRouteRequest   `json:"routeRequests"`
-		RouteCount    int                            `json:"routeCount"`
-	}{
-		Timestamp:     time.Now().UTC().Format(time.RFC3339),
-		Input:         input,
-		RouteRequests: routeRequests,
-		RouteCount:    len(routeRequests),
-	}
-
-	// Convertir a JSON formateado
-	jsonData, err := json.MarshalIndent(optimizationResult, "", "  ")
-	if err != nil {
-		return fmt.Errorf("error marshaling JSON: %w", err)
-	}
-
-	// Crear nombre de archivo con timestamp
-	timestamp := time.Now().Format("2006-01-02_15-04-05")
-	filename := fmt.Sprintf("fleet_optimization_routes_%s.json", timestamp)
-
-	// Escribir el JSON en el archivo
-	err = os.WriteFile(filename, jsonData, 0644)
-	if err != nil {
-		return fmt.Errorf("error writing file: %w", err)
-	}
-
-	fmt.Printf("Rutas de optimización guardadas en: %s\n", filename)
-	return nil
 }
