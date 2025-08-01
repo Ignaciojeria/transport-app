@@ -101,7 +101,7 @@ jobs:
             --cpu=1 \
             --max-instances=10 \
             --set-env-vars="DB_STRATEGY=disabled" \
-            --set-secrets=NATS_CONNECTION_URL=NATS_CONNECTION_URL:latest,\
+            --set-secrets="NATS_CONNECTION_URL=NATS_CONNECTION_URL:latest,\
             ENVIRONMENT=ENVIRONMENT:latest,\
             FLEET_OPTIMIZED_WEBHOOK_SUBSCRIPTION=FLEET_OPTIMIZED_WEBHOOK_SUBSCRIPTION:latest,\
             NATS_CONNECTION_CREDS_FILECONTENT=NATS_CONNECTION_CREDS_FILECONTENT:latest,\
