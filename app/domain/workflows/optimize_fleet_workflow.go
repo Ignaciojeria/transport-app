@@ -2,8 +2,11 @@ package workflows
 
 import (
 	"context"
-	"transport-app/app/adapter/out/tidbrepository"
+	"encoding/json"
+	"errors"
+	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/looplab/fsm"
@@ -11,34 +14,61 @@ import (
 )
 
 type OptimizeFleetWorkflow struct {
-	IdempotencyKey       string
-	NextInput            []byte
-	getLastFSMTransition tidbrepository.GetLastFSMTransitionByIdempotencyKey
-	fsm                  *fsm.FSM
+	IdempotencyKey string
+	NextInput      []byte
+	storjBucket    *storjbucket.TransportAppBucket
+	fsm            *fsm.FSM
 }
 
 func init() {
-	ioc.Registry(NewOptimizeFleetWorkflow,
-		tidbrepository.NewGetLastFSMTransitionByIdempotencyKey)
+	ioc.Registry(
+		NewOptimizeFleetWorkflow,
+		storjbucket.NewTransportAppBucket,
+	)
 }
 
 func NewOptimizeFleetWorkflow(
-	getLastFSMTransition tidbrepository.GetLastFSMTransitionByIdempotencyKey) (OptimizeFleetWorkflow, error) {
+	storjBucket *storjbucket.TransportAppBucket,
+) (OptimizeFleetWorkflow, error) {
 	return OptimizeFleetWorkflow{
-		getLastFSMTransition: getLastFSMTransition,
+		storjBucket: storjBucket,
 	}, nil
 }
 
 func (w OptimizeFleetWorkflow) Restore(ctx context.Context, idempotencyKey string) (OptimizeFleetWorkflow, error) {
-	lastTransition, err := w.getLastFSMTransition(ctx, idempotencyKey, w.WorkflowName())
 	w.IdempotencyKey = idempotencyKey
-	if err != nil {
-		return w, err
+
+	// Obtener token desde el contexto
+	token, ok := sharedcontext.BucketTokenFromContext(ctx)
+	if !ok {
+		return w, errors.New("token del bucket no encontrado en el contexto")
 	}
-	transition := lastTransition.State
+
+	// Intentar recuperar el estado desde StorJ bucket
+	data, err := w.storjBucket.DownloadWithToken(ctx, token, idempotencyKey)
+
+	var transition string
+	var nextInput []byte
+
+	if err != nil {
+		// Si no existe el estado, usar el estado inicial
+		transition = w.OptimizationStarted()
+		nextInput = nil
+	} else {
+		// Deserializar el estado guardado
+		var fsmState domain.FSMState
+		if err := json.Unmarshal(data, &fsmState); err != nil {
+			return w, err
+		}
+		transition = fsmState.State
+		nextInput = fsmState.NextInput
+	}
+
+	// Si no hay estado guardado, usar el estado inicial
 	if transition == "" {
 		transition = w.OptimizationStarted()
 	}
+
 	w.fsm = fsm.NewFSM(
 		transition,
 		fsm.Events{
@@ -46,7 +76,7 @@ func (w OptimizeFleetWorkflow) Restore(ctx context.Context, idempotencyKey strin
 		},
 		fsm.Callbacks{},
 	)
-	w.NextInput = lastTransition.NextInput
+	w.NextInput = nextInput
 	return w, nil
 }
 
@@ -60,6 +90,24 @@ func (w OptimizeFleetWorkflow) OptimizationCompleted() string {
 
 func (w OptimizeFleetWorkflow) OptimizationStarted() string {
 	return "optimization_started"
+}
+
+func (w OptimizeFleetWorkflow) SaveState(ctx context.Context) error {
+	// Obtener token desde el contexto
+	token, ok := sharedcontext.BucketTokenFromContext(ctx)
+	if !ok {
+		return errors.New("token del bucket no encontrado en el contexto")
+	}
+
+	// Serializar el estado actual
+	fsmState := w.Map(ctx)
+	data, err := json.Marshal(fsmState)
+	if err != nil {
+		return err
+	}
+
+	// Guardar en StorJ bucket usando el mismo patrón que en el publisher
+	return w.storjBucket.UploadWithToken(ctx, token, w.IdempotencyKey, data)
 }
 
 func (w OptimizeFleetWorkflow) Map(ctx context.Context) domain.FSMState {

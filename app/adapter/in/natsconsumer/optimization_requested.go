@@ -133,7 +133,7 @@ func newOptimizationRequestedConsumer(
 			}
 			optimizeFleetWorkflowCtx := sharedcontext.WithIdempotencyKey(ctx, key)
 			optimizeFleetWorkflowCtx = sharedcontext.WithAccessToken(optimizeFleetWorkflowCtx, msg.Headers().Get("X-Access-Token"))
-
+			optimizeFleetWorkflowCtx = sharedcontext.WithBucketToken(optimizeFleetWorkflowCtx, msg.Headers().Get("X-Bucket-Token"))
 			routeRequests, err := optimizeFleetWorkflow(optimizeFleetWorkflowCtx, input.Map())
 			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error procesando optimización", "error", err)
