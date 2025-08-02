@@ -47,7 +47,7 @@ optimization:
 routingServers:
   osrm:
     car:
-      host: '0.0.0.0'
+      host: 'localhost'
       port: '5000'
       timeout: 5000 # 5 segundos timeout
       retries: 3 # Número de reintentos
