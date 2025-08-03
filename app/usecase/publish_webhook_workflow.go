@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"transport-app/app/adapter/out/restyclient/webhook"
-	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain/workflows"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
@@ -19,17 +18,14 @@ func init() {
 		NewPublishWebhookWorkflow,
 		workflows.NewPublishWebhookWorkflow,
 		webhook.NewPostWebhook,
-		tidbrepository.NewSaveFSMTransition,
 		observability.NewObservability,
-		tidbrepository.NewFindWebhookByDocumentID)
+	)
 }
 
 func NewPublishWebhookWorkflow(
 	workflow workflows.PublishWebhookWorkflow,
 	postWebhook webhook.PostWebhook,
-	saveFSMTransition tidbrepository.SaveFSMTransition,
 	obs observability.Observability,
-	findWebhookByDocumentID tidbrepository.FindWebhookByDocumentID,
 ) PublishWebhookWorkflow {
 	return func(ctx context.Context, body interface{}, webhookType string) error {
 		// Obtener el idempotency key desde el contexto
@@ -55,10 +51,10 @@ func NewPublishWebhookWorkflow(
 			return fmt.Errorf("failed to publish webhook: %w", err)
 		}
 
-		fsmState := workflowInstance.Map(ctx)
-		err = saveFSMTransition(ctx, fsmState)
+		// Guardar el estado usando el nuevo patrón
+		err = workflowInstance.SaveState(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to save FSM transition: %w", err)
+			return fmt.Errorf("failed to save workflow state: %w", err)
 		}
 
 		return nil

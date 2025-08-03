@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"transport-app/app/adapter/out/storjbucket"
-	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain/workflows"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
@@ -18,7 +17,6 @@ func init() {
 	ioc.Registry(NewStoreDataInBucketWorkflow,
 		workflows.NewStoreDataInBucketWorkflow,
 		storjbucket.NewTransportAppBucket,
-		tidbrepository.NewSaveFSMTransition,
 		observability.NewObservability,
 	)
 }
@@ -26,15 +24,14 @@ func init() {
 func NewStoreDataInBucketWorkflow(
 	domainWorkflow workflows.StoreDataInBucketWorkflow,
 	storjBucket *storjbucket.TransportAppBucket,
-	saveFSMTransition tidbrepository.SaveFSMTransition,
 	obs observability.Observability,
 ) StoreDataInBucketWorkflow {
 	return func(ctx context.Context, key string, value []byte) error {
-		key, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
+		idempotencyKey, ok := sharedcontext.IdempotencyKeyFromContext(ctx)
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		workflow, err := domainWorkflow.Restore(ctx, idempotencyKey)
 		if err != nil {
 			return err
 		}
@@ -51,10 +48,11 @@ func NewStoreDataInBucketWorkflow(
 		if err != nil {
 			return fmt.Errorf("error uploading route request: %w", err)
 		}
-		fsmState := workflow.Map(ctx)
-		err = saveFSMTransition(ctx, fsmState)
+
+		// Guardar el estado usando el nuevo patrón
+		err = workflow.SaveState(ctx)
 		if err != nil {
-			return fmt.Errorf("failed to save FSM transition: %w", err)
+			return fmt.Errorf("failed to save workflow state: %w", err)
 		}
 		return nil
 	}

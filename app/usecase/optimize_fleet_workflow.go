@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/storjbucket"
-	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/adapter/out/vroom"
 	"transport-app/app/domain/optimization"
 	"transport-app/app/domain/workflows"
@@ -24,7 +23,6 @@ func init() {
 		workflows.NewOptimizeFleetWorkflow,
 		vroom.NewOptimize,
 		storjbucket.NewTransportAppBucket,
-		tidbrepository.NewSaveFSMTransition,
 		observability.NewObservability,
 	)
 }
@@ -33,7 +31,6 @@ func NewOptimizeFleetWorkflow(
 	domainWorkflow workflows.OptimizeFleetWorkflow,
 	optimize vroom.Optimize,
 	storjBucket *storjbucket.TransportAppBucket,
-	saveFSMTransition tidbrepository.SaveFSMTransition,
 	obs observability.Observability,
 ) OptimizeFleetWorkflow {
 	return func(ctx context.Context, input optimization.FleetOptimization) ([]request.UpsertRouteRequest, error) {
@@ -49,9 +46,8 @@ func NewOptimizeFleetWorkflow(
 		if err := workflow.SetOptimizationCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error())
-			fsmState := workflow.Map(ctx)
 			var optimizeFleetWorkflowNextInput []request.UpsertRouteRequest
-			if err := json.Unmarshal(fsmState.NextInput, &optimizeFleetWorkflowNextInput); err != nil {
+			if err := json.Unmarshal(workflow.NextInput, &optimizeFleetWorkflowNextInput); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error deserializando payload de optimización (reconstruido)", "error", err)
 				return nil, fmt.Errorf("error deserializing optimization payload: %w", err)
 			}
@@ -68,11 +64,13 @@ func NewOptimizeFleetWorkflow(
 			return nil, fmt.Errorf("error marshaling route requests: %w", err)
 		}
 
-		fsmState := workflow.Map(ctx)
-		fsmState.NextInput = routeRequestsJSON
-		err = saveFSMTransition(ctx, fsmState)
+		// Actualizar NextInput en el workflow
+		workflow.NextInput = routeRequestsJSON
+
+		// Guardar el estado usando el nuevo patrón
+		err = workflow.SaveState(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to save FSM transition: %w", err)
+			return nil, fmt.Errorf("failed to save workflow state: %w", err)
 		}
 		fmt.Printf("Optimización completada. Se generaron %d rutas.\n", len(routeRequests))
 		return routeRequests, nil

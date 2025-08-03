@@ -161,7 +161,8 @@ func newOptimizationRequestedConsumer(
 
 			webhookKey, err := canonicaljson.HashKey(ctx, "publish_webhook", input)
 			publishWebhookWorkflowCtx := sharedcontext.WithAccessToken(ctx, msg.Headers().Get("X-Access-Token"))
-			publishWebhookWorkflowCtx = sharedcontext.WithIdempotencyKey(ctx, webhookKey)
+			publishWebhookWorkflowCtx = sharedcontext.WithBucketToken(publishWebhookWorkflowCtx, msg.Headers().Get("X-Bucket-Token"))
+			publishWebhookWorkflowCtx = sharedcontext.WithIdempotencyKey(publishWebhookWorkflowCtx, webhookKey)
 			type fleetOptimizedWebhook struct {
 				Plan   string   `json:"plan"`
 				Routes []string `json:"routes"`
