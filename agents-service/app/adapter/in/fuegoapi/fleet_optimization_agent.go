@@ -23,9 +23,9 @@ func init() {
 		observability.NewObservability)
 }
 func fleetOptimizationAgent(s httpserver.Server, publish natspublisher.ApplicationEvents, obs observability.Observability) {
-	fuego.Post(s.Manager, "/agents/fleet-optimization",
+	fuego.Post(s.Manager, "/agents/optimize/fleet",
 		func(c fuego.ContextNoBody) (any, error) {
-			spanCtx, span := obs.Tracer.Start(c.Context(), "optimization")
+			spanCtx, span := obs.Tracer.Start(c.Context(), "agentOptimization")
 			defer span.End()
 
 			spanCtx = sharedcontext.WithAccessToken(spanCtx, c.Header("X-Access-Token"))
@@ -43,7 +43,7 @@ func fleetOptimizationAgent(s httpserver.Server, publish natspublisher.Applicati
 
 			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
 				sharedcontext.EventContext{
-					EntityType: "optimization",
+					EntityType: "agentOptimization",
 					EventType:  "agentOptimizationRequested",
 				})
 
@@ -51,16 +51,16 @@ func fleetOptimizationAgent(s httpserver.Server, publish natspublisher.Applicati
 				Payload: eventPayload,
 			}); err != nil {
 				return nil, fuego.HTTPError{
-					Title:  "error requesting optimization",
+					Title:  "error requesting agent optimization",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
 
 			obs.Logger.InfoContext(spanCtx,
-				"OPTIMIZATION_REQUEST_SUBMITTED",
+				"AGENT_OPTIMIZATION_REQUEST_SUBMITTED",
 				slog.Any("payload", requestBody))
 
-			return "unimplemented", nil
+			return "ok", nil
 		}, option.Summary("fleetOptimizationAgent"))
 }

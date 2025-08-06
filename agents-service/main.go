@@ -10,6 +10,8 @@ import (
 
 	_ "transport-app/app/shared/infrastructure/httpserver"
 
+	_ "agents/app/adapter/in/natsconsumer"
+
 	_ "agents/app/adapter/in/fuegoapi"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
