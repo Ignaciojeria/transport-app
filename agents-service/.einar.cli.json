@@ -1,0 +1,20 @@
+{
+    "project": "agents",
+    "template": {
+        "tag": "v2.9.6",
+        "url": "https://github.com/Ignaciojeria/einar-cli-fuego-template"
+    },
+    "installations": [
+        {
+            "name": "fuego",
+            "unique": "http-server",
+            "libraries": null
+        }
+    ],
+    "components": [
+        {
+            "kind": "post-controller",
+            "name": "fleet-optimization-agent"
+        }
+    ]
+}

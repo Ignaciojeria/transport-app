@@ -61,7 +61,7 @@ func NewApplicationEvents(
 		// Serializar el pubsub.Message a JSON
 		// Si el evento es optimizationRequested, chunkear solo el payload y poner los IDs en Data
 		eventType, eventTypeExists := sharedcontext.GetEventTypeFromContext(ctx)
-		if eventTypeExists && eventType == "optimizationRequested" {
+		if eventTypeExists && eventType == "optimizationRequested" || eventType == "agentOptimizationRequested" {
 			chunks, err := chunker.SplitBytes(outbox.Payload)
 			if err != nil {
 				return err
