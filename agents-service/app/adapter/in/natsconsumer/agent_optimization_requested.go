@@ -1,6 +1,7 @@
 package natsconsumer
 
 import (
+	"agents/infrastructure/ai"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,7 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"google.golang.org/genai"
 )
 
 func init() {
@@ -27,6 +29,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
+		ai.NewClient,
 	)
 }
 
@@ -35,6 +38,7 @@ func newAgentOptimizationRequested(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
+	aiClient *genai.Client,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
