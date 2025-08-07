@@ -38,7 +38,7 @@ func newAgentOptimizationRequested(
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
-		obs.Logger.Warn("Webhook submitted subscription name is empty, skipping consumer initialization")
+		obs.Logger.Warn("Agent optimization requested subscription name is empty, skipping consumer initialization")
 		// Retornar nil para indicar que no hay consumidor activo
 		return nil, nil
 	}
