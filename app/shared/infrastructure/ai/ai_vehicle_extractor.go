@@ -24,7 +24,7 @@ func NewAIOptimizeFleetRequestVehiclesExtractor(client *genai.Client, s httpserv
 		fleetsSchema, ok := s.Manager.OpenAPI.Description().Components.Schemas["OptimizeFleetRequest"]
 
 		if !ok {
-			panic("optimize fleet request schema not found")
+			return nil, fmt.Errorf("optimize fleet request schema not found")
 		}
 
 		// Transforma el esquema de OpenAPI a un esquema de GenAI una sola vez
@@ -32,7 +32,7 @@ func NewAIOptimizeFleetRequestVehiclesExtractor(client *genai.Client, s httpserv
 
 		// Verifica que el esquema se haya generado correctamente
 		if genaiVehiclesSchema == nil {
-			panic("Failed to transform OpenAPI schema to GenAI schema")
+			return nil, fmt.Errorf("failed to transform OpenAPI schema to GenAI schema")
 		}
 
 		// Log del esquema generado para debug
