@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
@@ -28,6 +29,7 @@ func init() {
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
 		ai.NewAIOptimizeFleetRequestVehiclesExtractor,
+		ai.NewAIOptimizeFleetRequestVisitsExtractor,
 	)
 }
 
@@ -37,6 +39,7 @@ func newAgentOptimizationRequested(
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
 	extractFleets ai.AIOptimizeFleetRequestVehiclesExtractor,
+	extractVisits ai.AIOptimizeFleetRequestVisitsExtractor,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -50,7 +53,8 @@ func newAgentOptimizationRequested(
 		Name:          fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION),
 		Durable:       fmt.Sprintf("%s-%s", conf.ENVIRONMENT, conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION),
 		FilterSubject: conf.TRANSPORT_APP_TOPIC + "." + conf.ENVIRONMENT + ".*.*.agentOptimizationRequested",
-		MaxAckPending: 5,
+		MaxAckPending: 100,
+		AckWait:       5 * time.Minute, // 5 minutos para procesamiento de IA
 		// Configuración de reintentos: 3 reintentos con intervalos de 2 segundos
 		MaxDeliver: 4, // 1 intento inicial + 3 reintentos = 4 total
 		BackOff:    []time.Duration{2 * time.Second, 2 * time.Second, 2 * time.Second},
@@ -61,8 +65,10 @@ func newAgentOptimizationRequested(
 	}
 
 	return consumer.Consume(func(msg jetstream.Msg) {
-		// Deserializar el mensaje como pubsub.Message
+
 		var pubsubMsg pubsub.Message
+
+		msg.Ack()
 		if err := json.Unmarshal(msg.Data(), &pubsubMsg); err != nil {
 			obs.Logger.Error("Error deserializando mensaje NATS", "error", err)
 			msg.Ack()
@@ -101,25 +107,55 @@ func newAgentOptimizationRequested(
 			}
 
 			// Deserializar el payload reconstruido como OptimizeFleetRequest
-			var input interface{}
+			var request request.AgentOptimizationRequest
 
-			if err := json.Unmarshal(data, &input); err != nil {
+			if err := json.Unmarshal(data, &request); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error deserializando payload de agent optimization request", "error", err)
 				msg.Ack()
 				return
 			}
 
-			extractedFleets, err := extractFleets(input)
+			extractedFleets, err := extractFleets(request.Fleet)
 			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error extrayendo vehículos de la solicitud de optimización de flota", "error", err)
-				msg.Ack()
+				msg.Nak()
 				return
 			}
 
-			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", input)
-			obs.Logger.InfoContext(ctx, "Agent optimization request received", "extractedFleets", extractedFleets)
-		}
+			// Procesar en lotes de 50 visitas
 
+			// Procesar en lotes de 50 visitas
+			consolidatedVisits := []map[string]interface{}{}
+			err = request.IterateVisitsInBatches(200, func(batch []map[string]interface{}) error {
+				// Procesar cada lote
+				for _, visit := range batch {
+					// Lógica de procesamiento
+					//fmt.Println(visit)
+					extractedVisits, err := extractVisits(visit)
+					if err != nil {
+						obs.Logger.ErrorContext(ctx, "Error extrayendo visitas de la solicitud de optimización de flota", "error", err)
+						msg.Nak()
+						return err
+					}
+					// Si extractedVisits es un arreglo, iterar sobre cada elemento
+					if visitsArray, ok := extractedVisits.([]map[string]interface{}); ok {
+						consolidatedVisits = append(consolidatedVisits, visitsArray...)
+					} else if singleVisit, ok := extractedVisits.(map[string]interface{}); ok {
+						consolidatedVisits = append(consolidatedVisits, singleVisit)
+					}
+				}
+				return nil
+			})
+
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error consolidando visitas", "error", err)
+				msg.Nak()
+			}
+
+			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
+			obs.Logger.InfoContext(ctx, "Agent optimization request received", "extractedFleets", extractedFleets)
+			obs.Logger.InfoContext(ctx, "Agent optimization request received", "consolidatedVisits", consolidatedVisits)
+		}
 		msg.Ack()
 	})
 }

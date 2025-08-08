@@ -7,7 +7,6 @@ import (
 	"transport-app/app/shared/infrastructure/httpserver"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/getkin/kin-openapi/openapi3"
 
 	// Usar la librería oficial de Google para Vertex AI
 	"google.golang.org/genai"
@@ -21,14 +20,8 @@ func init() {
 
 func NewAIOptimizeFleetRequestVehiclesExtractor(client *genai.Client, s httpserver.Server) AIOptimizeFleetRequestVehiclesExtractor {
 	return func(input interface{}) (any, error) {
-		fleetsSchema, ok := s.Manager.OpenAPI.Description().Components.Schemas["OptimizeFleetRequest"]
-
-		if !ok {
-			return nil, fmt.Errorf("optimize fleet request schema not found")
-		}
-
-		// Transforma el esquema de OpenAPI a un esquema de GenAI una sola vez
-		genaiVehiclesSchema := createVehiclesSchemaFromOpenAPI(fleetsSchema.Value)
+		// Crear el esquema GenAI directamente para vehículos
+		genaiVehiclesSchema := createVehiclesSchema()
 
 		// Verifica que el esquema se haya generado correctamente
 		if genaiVehiclesSchema == nil {
@@ -61,6 +54,13 @@ Instructions:
 4. If a field is not available in the input, use empty values.
 5. Respond with a JSON object containing a "vehicles" key with the array of vehicles.
 6. Example format: {"vehicles": [...]}
+
+CRITICAL DATA TYPE REQUIREMENTS:
+- ALL numeric fields MUST be integers - this is MANDATORY for API compatibility
+- Convert ALL string numbers to integers: "8000" becomes 8000, "12" becomes 12
+- Volume, weight, insurance, serviceTime, and quantity MUST be integers, never strings
+- If a numeric field is missing, use 0 as default integer value
+- NEVER leave numeric fields as strings - always convert to integers
 
 IMPORTANT PLATE EXTRACTION RULES:
 - If you find a "plate" or "license_plate" or "patent" or "patente" field, use it as the vehicle's plate.
@@ -116,68 +116,56 @@ IMPORTANT: Always return a JSON object with a "vehicles" key, even if the array 
 	}
 }
 
-// createVehiclesSchemaFromOpenAPI crea un esquema GenAI basado en el esquema OpenAPI.
-func createVehiclesSchemaFromOpenAPI(openAPISchema *openapi3.Schema) *genai.Schema {
-	if openAPISchema == nil {
-		fmt.Printf("OpenAPI schema es nil\n")
-		return nil
+// createVehiclesSchema crea un esquema GenAI específico para vehículos.
+func createVehiclesSchema() *genai.Schema {
+	// Crear un esquema específico para vehículos basado en el schema real
+	vehicleSchema := &genai.Schema{
+		Type: genai.TypeObject,
+		Properties: map[string]*genai.Schema{
+			"plate": {
+				Type:        genai.TypeString,
+				Description: "Vehicle license plate or identifier",
+			},
+			"capacity": {
+				Type: genai.TypeObject,
+				Properties: map[string]*genai.Schema{
+					"volume": {
+						Type:        genai.TypeNumber,
+						Description: "Volume capacity in cubic centimeters",
+					},
+					"weight": {
+						Type:        genai.TypeNumber,
+						Description: "Weight capacity in grams",
+					},
+					"deliveryUnitsQuantity": {
+						Type:        genai.TypeInteger,
+						Description: "Number of delivery units the vehicle can carry",
+					},
+					"insurance": {
+						Type:        genai.TypeInteger,
+						Description: "Insurance value in currency units",
+					},
+				},
+			},
+			"skills": {
+				Type:        genai.TypeArray,
+				Items:       &genai.Schema{Type: genai.TypeString},
+				Description: "Skills required for the vehicle",
+			},
+		},
 	}
 
-	fmt.Printf("Procesando esquema OpenAPI: %+v\n", openAPISchema)
-
-	genaiSchema := &genai.Schema{}
-
-	// Convertir el tipo de OpenAPI al tipo de GenAI
-	// Maneja el caso en que el tipo es un slice de strings (multi-tipo)
-	var openAPIType string
-	// Corrected: Check if the pointer is not nil before dereferencing and getting the length
-	if openAPISchema.Type != nil && len(*openAPISchema.Type) > 0 {
-		openAPIType = (*openAPISchema.Type)[0]
+	// Crear el esquema de respuesta final (array de vehículos)
+	responseSchema := &genai.Schema{
+		Type: genai.TypeObject,
+		Properties: map[string]*genai.Schema{
+			"vehicles": {
+				Type:  genai.TypeArray,
+				Items: vehicleSchema,
+			},
+		},
 	}
 
-	fmt.Printf("Tipo OpenAPI detectado: %s\n", openAPIType)
-
-	switch openAPIType {
-	case "object":
-		genaiSchema.Type = genai.TypeObject
-		genaiSchema.Properties = make(map[string]*genai.Schema)
-		for propName, propSchema := range openAPISchema.Properties {
-			genaiSchema.Properties[propName] = createVehiclesSchemaFromOpenAPI(propSchema.Value)
-		}
-	case "array":
-		genaiSchema.Type = genai.TypeArray
-		if openAPISchema.Items != nil {
-			genaiSchema.Items = createVehiclesSchemaFromOpenAPI(openAPISchema.Items.Value)
-		}
-	case "string":
-		genaiSchema.Type = genai.TypeString
-	case "number":
-		genaiSchema.Type = genai.TypeNumber
-	case "integer":
-		genaiSchema.Type = genai.TypeInteger
-	case "boolean":
-		genaiSchema.Type = genai.TypeBoolean
-	default:
-		// Manejar tipos no soportados o desconocidos
-		fmt.Printf("Unsupported OpenAPI type: %s\n", openAPIType)
-		return nil
-	}
-
-	// Extraer y convertir el sub-esquema de "vehicles"
-	if openAPISchema.Properties != nil {
-		if vehiclesProp, ok := openAPISchema.Properties["vehicles"]; ok && vehiclesProp != nil {
-			fmt.Printf("Encontrada propiedad 'vehicles' en el esquema\n")
-			// El esquema de respuesta final debe ser el array de vehículos, no el objeto completo
-			return createVehiclesSchemaFromOpenAPI(vehiclesProp.Value)
-		}
-	}
-
-	// Considerar el caso donde el esquema del array está definido en el nivel raíz
-	if genaiSchema.Type == genai.TypeArray && openAPISchema.Items != nil {
-		fmt.Printf("Esquema de array detectado en nivel raíz\n")
-		return genaiSchema
-	}
-
-	fmt.Printf("Esquema final generado: %+v\n", genaiSchema)
-	return genaiSchema
+	fmt.Printf("Esquema final generado para vehículos: %+v\n", responseSchema)
+	return responseSchema
 }
