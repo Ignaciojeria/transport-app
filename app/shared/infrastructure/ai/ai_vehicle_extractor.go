@@ -63,7 +63,7 @@ Instructions:
 6. Example format: {"vehicles": [...]}
 
 IMPORTANT PLATE EXTRACTION RULES:
-- If you find a "plate" or "license_plate" or "patent" field, use it as the vehicle's plate.
+- If you find a "plate" or "license_plate" or "patent" or "patente" field, use it as the vehicle's plate.
 - If no plate field is found, look for an "id" field that could be a plate (alphanumeric codes, typically 6-8 characters).
 - If you find an "id" field that looks like a vehicle identifier (alphanumeric, not purely numeric), consider it as the plate.
 - Look for fields like "vehicle_id", "car_id", "plate", "registration", "number" that might contain patent information.
