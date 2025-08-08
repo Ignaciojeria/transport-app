@@ -9,10 +9,10 @@ import (
 	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
-	"transport-app/app/shared/infrastructure/ai"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/usecase"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -28,8 +28,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
-		ai.NewAIOptimizeFleetRequestVehiclesExtractor,
-		ai.NewAIOptimizeFleetRequestVisitsExtractor,
+		usecase.NewVisitsInputKeyNormalizationWorkflow,
 	)
 }
 
@@ -38,8 +37,8 @@ func newAgentOptimizationRequested(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
-	extractFleets ai.AIOptimizeFleetRequestVehiclesExtractor,
-	extractVisits ai.AIOptimizeFleetRequestVisitsExtractor,
+	visitFieldNamesNormalizer usecase.VisitsInputKeyNormalizationWorkflow,
+
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -114,47 +113,14 @@ func newAgentOptimizationRequested(
 				msg.Ack()
 				return
 			}
-
-			extractedFleets, err := extractFleets(request.Fleet)
-			if err != nil {
-				obs.Logger.ErrorContext(ctx, "Error extrayendo vehículos de la solicitud de optimización de flota", "error", err)
-				msg.Nak()
-				return
-			}
-
-			// Procesar en lotes de 50 visitas
-
-			// Procesar en lotes de 50 visitas
-			consolidatedVisits := []map[string]interface{}{}
-			err = request.IterateVisitsInBatches(200, func(batch []map[string]interface{}) error {
-				// Procesar cada lote
-				for _, visit := range batch {
-					// Lógica de procesamiento
-					//fmt.Println(visit)
-					extractedVisits, err := extractVisits(visit)
-					if err != nil {
-						obs.Logger.ErrorContext(ctx, "Error extrayendo visitas de la solicitud de optimización de flota", "error", err)
-						msg.Nak()
-						return err
-					}
-					// Si extractedVisits es un arreglo, iterar sobre cada elemento
-					if visitsArray, ok := extractedVisits.([]map[string]interface{}); ok {
-						consolidatedVisits = append(consolidatedVisits, visitsArray...)
-					} else if singleVisit, ok := extractedVisits.(map[string]interface{}); ok {
-						consolidatedVisits = append(consolidatedVisits, singleVisit)
-					}
-				}
-				return nil
-			})
-
+			visits := request.Visits[0]
+			normalizedVisits, err := visitFieldNamesNormalizer(ctx, visits)
 			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error consolidando visitas", "error", err)
 				msg.Nak()
 			}
-
 			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
-			obs.Logger.InfoContext(ctx, "Agent optimization request received", "extractedFleets", extractedFleets)
-			obs.Logger.InfoContext(ctx, "Agent optimization request received", "consolidatedVisits", consolidatedVisits)
+			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", normalizedVisits)
 		}
 		msg.Ack()
 	})

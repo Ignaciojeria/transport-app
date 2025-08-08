@@ -508,6 +508,10 @@
         {
             "kind": "usecase",
             "name": "send-webhook-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "visits-input-key-normalization-workflow"
         }
     ]
 }
