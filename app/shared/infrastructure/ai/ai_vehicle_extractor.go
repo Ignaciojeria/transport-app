@@ -62,10 +62,10 @@ Instructions:
 5. Respond with a JSON object containing a "vehicles" key with the array of vehicles.
 6. Example format: {"vehicles": [...]}
 
-IMPORTANT PATENT EXTRACTION RULES:
-- If you find a "patent" or "license_plate" field, use it as the vehicle's patent.
-- If no patent field is found, look for an "id" field that could be a patent (alphanumeric codes, typically 6-8 characters).
-- If you find an "id" field that looks like a vehicle identifier (alphanumeric, not purely numeric), consider it as the patent.
+IMPORTANT PLATE EXTRACTION RULES:
+- If you find a "plate" or "license_plate" or "patent" field, use it as the vehicle's plate.
+- If no plate field is found, look for an "id" field that could be a plate (alphanumeric codes, typically 6-8 characters).
+- If you find an "id" field that looks like a vehicle identifier (alphanumeric, not purely numeric), consider it as the plate.
 - Look for fields like "vehicle_id", "car_id", "plate", "registration", "number" that might contain patent information.
 - If multiple candidates exist, prioritize fields that look more like a patent (alphanumeric, reasonable length).
 - Always ensure the patent field is populated with the most appropriate identifier found.
