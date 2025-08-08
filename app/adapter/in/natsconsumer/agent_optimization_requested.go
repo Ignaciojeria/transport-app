@@ -1,7 +1,6 @@
 package natsconsumer
 
 import (
-	"agents/infrastructure/ai"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,17 +8,16 @@ import (
 	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
+	"transport-app/app/shared/infrastructure/ai"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
-	"google.golang.org/genai"
 )
 
 func init() {
@@ -29,7 +27,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
-		ai.NewClient,
+		ai.NewAIOptimizeFleetRequestVehiclesExtractor,
 	)
 }
 
@@ -38,7 +36,7 @@ func newAgentOptimizationRequested(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
-	aiClient *genai.Client,
+	extractFleets ai.AIOptimizeFleetRequestVehiclesExtractor,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -111,18 +109,17 @@ func newAgentOptimizationRequested(
 				return
 			}
 
+			extractedFleets, err := extractFleets(input)
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error extrayendo vehículos de la solicitud de optimización de flota", "error", err)
+				msg.Ack()
+				return
+			}
+
 			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", input)
+			obs.Logger.InfoContext(ctx, "Agent optimization request received", "extractedFleets", extractedFleets)
 		}
 
 		msg.Ack()
 	})
-}
-
-// uuidMustParse es un helper para parsear UUID y hacer panic si falla (solo para uso interno seguro)
-func uuidMustParse(id string) uuid.UUID {
-	u, err := uuid.Parse(id)
-	if err != nil {
-		panic(err)
-	}
-	return u
 }

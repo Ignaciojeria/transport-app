@@ -1,6 +1,8 @@
 package request
 
-import "transport-app/app/domain/optimization"
+import (
+	"transport-app/app/domain/optimization"
+)
 
 // Estructuras granulares para OptimizeFleetRequest
 
