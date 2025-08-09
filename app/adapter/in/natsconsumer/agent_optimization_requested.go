@@ -29,6 +29,7 @@ func init() {
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
 		usecase.NewVisitsInputKeyNormalizationWorkflow,
+		usecase.NewKeyNormalizationWorkflow,
 	)
 }
 
@@ -38,7 +39,7 @@ func newAgentOptimizationRequested(
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
 	visitFieldNamesNormalizer usecase.VisitsInputKeyNormalizationWorkflow,
-
+	keyNormalizationWorkflow usecase.KeyNormalizationWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.AGENT_OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -64,9 +65,7 @@ func newAgentOptimizationRequested(
 	}
 
 	return consumer.Consume(func(msg jetstream.Msg) {
-
 		var pubsubMsg pubsub.Message
-
 		msg.Ack()
 		if err := json.Unmarshal(msg.Data(), &pubsubMsg); err != nil {
 			obs.Logger.Error("Error deserializando mensaje NATS", "error", err)
@@ -78,50 +77,69 @@ func newAgentOptimizationRequested(
 		ctx := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier(pubsubMsg.Attributes))
 		ctx = sharedcontext.WithAccessToken(ctx, msg.Headers().Get("X-Access-Token"))
 
+		var request request.AgentOptimizationRequest
+
 		// Intentar deserializar el payload como arreglo de IDs de chunks
 		var chunkIDs []string
-		if err := json.Unmarshal(pubsubMsg.Data, &chunkIDs); err == nil && len(chunkIDs) > 0 {
-			// Es un mensaje chunked, reconstruir el mensaje original
-			var chunks []chunker.Chunk //a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d -a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d
-			for idx, id := range chunkIDs {
-				token := msg.Headers().Get("X-Bucket-Token")
-				entry, err := storjBucket.DownloadWithToken(ctx, token, id)
-				if err != nil {
-					obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del bucket", "chunkID", id, "error", err)
-					msg.Ack()
-					return
-				}
-				chunks = append(chunks, chunker.Chunk{
-					ID:   uuidMustParse(id),
-					Data: entry,
-					Idx:  idx,
-				})
-			}
-
-			data, err := chunker.ReconstructBytes(chunks)
-			if err != nil {
-				obs.Logger.ErrorContext(ctx, "Error reconstruyendo mensaje desde chunks", "error", err)
-				msg.Ack()
-				return
-			}
-
-			// Deserializar el payload reconstruido como OptimizeFleetRequest
-			var request request.AgentOptimizationRequest
-
-			if err := json.Unmarshal(data, &request); err != nil {
-				obs.Logger.ErrorContext(ctx, "Error deserializando payload de agent optimization request", "error", err)
-				msg.Ack()
-				return
-			}
-			visits := request.Visits[0]
-			normalizedVisits, err := visitFieldNamesNormalizer(ctx, visits)
-			if err != nil {
-				obs.Logger.ErrorContext(ctx, "Error consolidando visitas", "error", err)
-				msg.Nak()
-			}
-			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
-			obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", normalizedVisits)
+		err := json.Unmarshal(pubsubMsg.Data, &chunkIDs)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error deserializando mensaje NATS", "error", err)
+			msg.Ack()
+			return
 		}
+
+		var chunks []chunker.Chunk
+		for idx, id := range chunkIDs {
+			token := msg.Headers().Get("X-Bucket-Token")
+			entry, err := storjBucket.DownloadWithToken(ctx, token, id)
+			if err != nil {
+				obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del bucket", "chunkID", id, "error", err)
+				msg.Ack()
+				return
+			}
+			chunks = append(chunks, chunker.Chunk{
+				ID:   uuidMustParse(id),
+				Data: entry,
+				Idx:  idx,
+			})
+		}
+
+		data, err := chunker.ReconstructBytes(chunks)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error reconstruyendo mensaje desde chunks", "error", err)
+			msg.Ack()
+			return
+		}
+
+		// Deserializar el payload reconstruido
+		if err := json.Unmarshal(data, &request); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error deserializando payload de agent optimization request", "error", err)
+			msg.Ack()
+			return
+		}
+
+		// Obtener el mapeo de claves usando la primera visita como ejemplo
+		keyMapping, err := visitFieldNamesNormalizer(ctx, request.Visits[0])
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error obteniendo mapeo de claves", "error", err)
+			msg.Nak()
+			return
+		}
+
+		obs.Logger.InfoContext(ctx, "Mapeo de claves obtenido", "keyMapping", keyMapping)
+
+		// Usar el workflow genérico para normalizar las visitas
+		normalizedVisits, err := keyNormalizationWorkflow(ctx, keyMapping, request.Visits)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error normalizando visitas", "error", err)
+			msg.Nak()
+			return
+		}
+
+		// Reemplazar las visitas originales con las normalizadas
+		request.Visits = normalizedVisits
+
+		obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
 		msg.Ack()
 	})
 }

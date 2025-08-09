@@ -512,6 +512,10 @@
         {
             "kind": "usecase",
             "name": "visits-input-key-normalization-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "key-normalization-workflow"
         }
     ]
 }
