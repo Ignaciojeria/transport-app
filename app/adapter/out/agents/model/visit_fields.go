@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"transport-app/app/shared/projection/deliveryunits"
+
 	"google.golang.org/genai"
 )
 
@@ -16,44 +18,50 @@ type VisitFieldMappingSchema struct {
 }
 
 func NewVisitFieldMappingSchema() *VisitFieldMappingSchema {
+	projection := deliveryunits.NewProjection()
+
 	props := map[string]*genai.Schema{
-		VisitKeyTitle:       {Type: genai.TypeString},
-		VisitKeyReferenceID: {Type: genai.TypeString},
-		VisitKeyFullName:    {Type: genai.TypeString},
-		VisitKeyPhone:       {Type: genai.TypeString},
-		VisitKeyAddress:     {Type: genai.TypeString},
-		VisitKeyLatitude:    {Type: genai.TypeString},
-		VisitKeyLongitude:   {Type: genai.TypeString},
-		VisitKeyVolume:      {Type: genai.TypeString},
-		VisitKeyWeight:      {Type: genai.TypeString},
-		VisitKeyPrice:       {Type: genai.TypeString},
+		VisitKeyTitle:                                         {Type: genai.TypeString},
+		projection.ReferenceID().String():                     {Type: genai.TypeString},
+		projection.DestinationContactFullName().String():      {Type: genai.TypeString},
+		projection.DestinationContactPhone().String():         {Type: genai.TypeString},
+		projection.DestinationAddressLine1().String():         {Type: genai.TypeString},
+		projection.DestinationCoordinatesLatitude().String():  {Type: genai.TypeString},
+		projection.DestinationCoordinatesLongitude().String(): {Type: genai.TypeString},
+		projection.DeliveryUnitVolume().String():              {Type: genai.TypeString},
+		projection.DeliveryUnitWeight().String():              {Type: genai.TypeString},
+		VisitKeyPrice:                                         {Type: genai.TypeString},
 	}
 
 	schema := &genai.Schema{
 		Type:       genai.TypeObject,
 		Properties: props,
 		Required: []string{
-			VisitKeyTitle, VisitKeyReferenceID, VisitKeyFullName, VisitKeyPhone, VisitKeyAddress,
-			VisitKeyLatitude, VisitKeyLongitude, VisitKeyVolume, VisitKeyWeight, VisitKeyPrice,
+			VisitKeyTitle, projection.ReferenceID().String(), projection.DestinationContactFullName().String(),
+			projection.DestinationContactPhone().String(), projection.DestinationAddressLine1().String(),
+			projection.DestinationCoordinatesLatitude().String(), projection.DestinationCoordinatesLongitude().String(),
+			projection.DeliveryUnitVolume().String(), projection.DeliveryUnitWeight().String(), VisitKeyPrice,
 		},
 	}
 
 	synonyms := map[string][]string{
-		VisitKeyTitle:       {"título", "titulo", "title", "heading", "nombre pedido", "nombre_orden", "order_title", "desc", "descripción", "descripcion"},
-		VisitKeyReferenceID: {"id", "order_id", "reference_id", "reference", "ref", "folio", "numero", "nro", "num", "id_pedido", "id_orden"},
-		VisitKeyFullName:    {"apodo", "alias", "nickname", "nombre cliente", "nombre_cliente", "cliente", "nombre", "name", "full_name", "fullname", "contact_name", "customer_name", "razon social", "razón social", "business_name"},
-		VisitKeyPhone:       {"telf", "teléfono", "telefono", "fono", "celular", "móvil", "movil", "whatsapp", "phone", "phone_number", "contact_phone", "customer_phone"},
-		VisitKeyAddress:     {"direccion", "dirección", "address", "street", "calle", "domicilio", "address_line", "address1", "address_1"},
-		VisitKeyLatitude:    {"lat", "latitude", "latitud"},
-		VisitKeyLongitude:   {"lon", "lng", "long", "longitude", "longitud"},
-		VisitKeyVolume:      {"total volume (cm3)", "total_volume_cm3", "volume_cm3", "volumen_cm3", "volumen", "volume", "cm3", "cubic_cm", "cubic_centimeters"},
-		VisitKeyWeight:      {"total weight (grams)", "weight_g", "weight_grams", "peso_gramos", "grams", "gramos", "weight", "peso"},
-		VisitKeyPrice:       {"price", "precio", "amount", "monto", "cost", "costo"},
+		VisitKeyTitle:                                         {"título", "titulo", "title", "heading", "nombre pedido", "nombre_orden", "order_title", "desc", "descripción", "descripcion"},
+		projection.ReferenceID().String():                     {"id", "order_id", "reference_id", "reference", "ref", "folio", "numero", "nro", "num", "id_pedido", "id_orden"},
+		projection.DestinationContactFullName().String():      {"apodo", "alias", "nickname", "nombre cliente", "nombre_cliente", "cliente", "nombre", "name", "full_name", "fullname", "contact_name", "customer_name", "razon social", "razón social", "business_name"},
+		projection.DestinationContactPhone().String():         {"telf", "teléfono", "telefono", "fono", "celular", "móvil", "movil", "whatsapp", "phone", "phone_number", "contact_phone", "customer_phone"},
+		projection.DestinationAddressLine1().String():         {"direccion", "dirección", "address", "street", "calle", "domicilio", "address_line", "address1", "address_1"},
+		projection.DestinationCoordinatesLatitude().String():  {"lat", "latitude", "latitud"},
+		projection.DestinationCoordinatesLongitude().String(): {"lon", "lng", "long", "longitude", "longitud"},
+		projection.DeliveryUnitVolume().String():              {"total volume (cm3)", "total_volume_cm3", "volume_cm3", "volumen_cm3", "volumen", "volume", "cm3", "cubic_cm", "cubic_centimeters"},
+		projection.DeliveryUnitWeight().String():              {"total weight (grams)", "weight_g", "weight_grams", "peso_gramos", "grams", "gramos", "weight", "peso"},
+		VisitKeyPrice:                                         {"price", "precio", "amount", "monto", "cost", "costo"},
 	}
 
 	ordered := []string{
-		VisitKeyTitle, VisitKeyReferenceID, VisitKeyFullName, VisitKeyPhone, VisitKeyAddress,
-		VisitKeyLatitude, VisitKeyLongitude, VisitKeyVolume, VisitKeyWeight, VisitKeyPrice,
+		VisitKeyTitle, projection.ReferenceID().String(), projection.DestinationContactFullName().String(),
+		projection.DestinationContactPhone().String(), projection.DestinationAddressLine1().String(),
+		projection.DestinationCoordinatesLatitude().String(), projection.DestinationCoordinatesLongitude().String(),
+		projection.DeliveryUnitVolume().String(), projection.DeliveryUnitWeight().String(), VisitKeyPrice,
 	}
 
 	return &VisitFieldMappingSchema{
@@ -140,39 +148,35 @@ func (v *VisitFieldMappingSchema) renderSynonymsSection() string {
 
 // ===== 1) Constantes (fuente de verdad) =====
 const (
-	VisitKeyTitle       = "title"
-	VisitKeyReferenceID = "referenceID"
-	VisitKeyFullName    = "fullName"
-	VisitKeyPhone       = "phone"
-	VisitKeyAddress     = "address"
-	VisitKeyLatitude    = "latitude"
-	VisitKeyLongitude   = "longitude"
-	VisitKeyVolume      = "volume"
-	VisitKeyWeight      = "weight"
-	VisitKeyPrice       = "price"
+	VisitKeyTitle = "title"
+	VisitKeyPrice = "price"
 )
 
 // SchemaForFieldMapping devuelve un schema para mapeo de claves
 func SchemaForFieldMapping() *genai.Schema {
+	projection := deliveryunits.NewProjection()
+
 	props := map[string]*genai.Schema{
-		VisitKeyTitle:       {Type: genai.TypeString},
-		VisitKeyReferenceID: {Type: genai.TypeString},
-		VisitKeyFullName:    {Type: genai.TypeString},
-		VisitKeyPhone:       {Type: genai.TypeString},
-		VisitKeyAddress:     {Type: genai.TypeString},
-		VisitKeyLatitude:    {Type: genai.TypeString},
-		VisitKeyLongitude:   {Type: genai.TypeString},
-		VisitKeyVolume:      {Type: genai.TypeString},
-		VisitKeyWeight:      {Type: genai.TypeString},
-		VisitKeyPrice:       {Type: genai.TypeString},
+		VisitKeyTitle:                                         {Type: genai.TypeString},
+		projection.ReferenceID().String():                     {Type: genai.TypeString},
+		projection.DestinationContactFullName().String():      {Type: genai.TypeString},
+		projection.DestinationContactPhone().String():         {Type: genai.TypeString},
+		projection.DestinationAddressLine1().String():         {Type: genai.TypeString},
+		projection.DestinationCoordinatesLatitude().String():  {Type: genai.TypeString},
+		projection.DestinationCoordinatesLongitude().String(): {Type: genai.TypeString},
+		projection.DeliveryUnitVolume().String():              {Type: genai.TypeString},
+		projection.DeliveryUnitWeight().String():              {Type: genai.TypeString},
+		VisitKeyPrice:                                         {Type: genai.TypeString},
 	}
 
 	return &genai.Schema{
 		Type:       genai.TypeObject,
 		Properties: props,
 		Required: []string{
-			VisitKeyTitle, VisitKeyReferenceID, VisitKeyFullName, VisitKeyPhone, VisitKeyAddress,
-			VisitKeyLatitude, VisitKeyLongitude, VisitKeyVolume, VisitKeyWeight, VisitKeyPrice,
+			VisitKeyTitle, projection.ReferenceID().String(), projection.DestinationContactFullName().String(),
+			projection.DestinationContactPhone().String(), projection.DestinationAddressLine1().String(),
+			projection.DestinationCoordinatesLatitude().String(), projection.DestinationCoordinatesLongitude().String(),
+			projection.DeliveryUnitVolume().String(), projection.DeliveryUnitWeight().String(), VisitKeyPrice,
 		},
 	}
 }
