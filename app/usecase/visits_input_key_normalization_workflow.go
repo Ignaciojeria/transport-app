@@ -17,6 +17,6 @@ func init() {
 func NewVisitsInputKeyNormalizationWorkflow(
 	visitFieldNamesNormalizer agents.VisitFieldNamesNormalizer) VisitsInputKeyNormalizationWorkflow {
 	return func(ctx context.Context, input interface{}) (map[string]string, error) {
-		return visitFieldNamesNormalizer(input)
+		return visitFieldNamesNormalizer(ctx, input)
 	}
 }

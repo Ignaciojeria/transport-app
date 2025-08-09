@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"transport-app/app/adapter/out/agents/model"
 	"transport-app/app/shared/infrastructure/ai"
@@ -13,7 +12,7 @@ import (
 	"google.golang.org/genai"
 )
 
-type VisitFieldNamesNormalizer func(input interface{}) (map[string]string, error)
+type VisitFieldNamesNormalizer func(ctx context.Context, input interface{}) (map[string]string, error)
 
 func init() {
 	ioc.Registry(NewVisitFieldNamesNormalizer, ai.NewClient)
@@ -24,13 +23,9 @@ func NewVisitFieldNamesNormalizer(client *genai.Client) VisitFieldNamesNormalize
 
 	const modelName = "gemini-2.0-flash"
 
-	return func(input interface{}) (map[string]string, error) {
+	return func(ctx context.Context, input interface{}) (map[string]string, error) {
 		// 1) Prompt generado por VisitFieldMappingSchema
 		prompt := vs.Prompt(input)
-
-		// 2) Llamada a Gemini con schema para mapeo de claves
-		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-		defer cancel()
 
 		resp, err := client.Models.GenerateContent(
 			ctx,
