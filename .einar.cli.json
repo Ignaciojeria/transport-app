@@ -516,6 +516,10 @@
         {
             "kind": "usecase",
             "name": "key-normalization-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "vehicles-input-key-normalization-workflow"
         }
     ]
 }

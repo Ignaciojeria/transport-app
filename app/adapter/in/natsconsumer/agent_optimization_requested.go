@@ -29,6 +29,7 @@ func init() {
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
 		usecase.NewVisitsInputKeyNormalizationWorkflow,
+		usecase.NewVehiclesInputKeyNormalizationWorkflow,
 		usecase.NewKeyNormalizationWorkflow,
 	)
 }
@@ -39,6 +40,7 @@ func newAgentOptimizationRequested(
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
 	visitFieldNamesNormalizerWorkflow usecase.VisitsInputKeyNormalizationWorkflow,
+	vehicleFieldNamesNormalizerWorkflow usecase.VehiclesInputKeyNormalizationWorkflow,
 	keyNormalizationWorkflow usecase.KeyNormalizationWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
@@ -136,9 +138,23 @@ func newAgentOptimizationRequested(
 			return
 		}
 
+		vehicleKeyMapping, err := vehicleFieldNamesNormalizerWorkflow(ctx, request.Fleet[0])
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error obteniendo mapeo de claves", "error", err)
+			msg.Nak()
+			return
+		}
+
+		normalizedVehicles, err := keyNormalizationWorkflow(ctx, vehicleKeyMapping, request.Fleet)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error normalizando vehículos", "error", err)
+			msg.Nak()
+			return
+		}
+
 		// Reemplazar las visitas originales con las normalizadas
 		request.Visits = normalizedVisits
-
+		request.Fleet = normalizedVehicles
 		obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
 		msg.Ack()
 	})
