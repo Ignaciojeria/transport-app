@@ -38,7 +38,7 @@ func newAgentOptimizationRequested(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
-	visitFieldNamesNormalizer usecase.VisitsInputKeyNormalizationWorkflow,
+	visitFieldNamesNormalizerWorkflow usecase.VisitsInputKeyNormalizationWorkflow,
 	keyNormalizationWorkflow usecase.KeyNormalizationWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
@@ -119,7 +119,7 @@ func newAgentOptimizationRequested(
 		}
 
 		// Obtener el mapeo de claves usando la primera visita como ejemplo
-		keyMapping, err := visitFieldNamesNormalizer(ctx, request.Visits[0])
+		keyMapping, err := visitFieldNamesNormalizerWorkflow(ctx, request.Visits[0])
 		if err != nil {
 			obs.Logger.ErrorContext(ctx, "Error obteniendo mapeo de claves", "error", err)
 			msg.Nak()
