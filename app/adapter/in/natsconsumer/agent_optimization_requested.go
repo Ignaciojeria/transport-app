@@ -155,6 +155,11 @@ func newAgentOptimizationRequested(
 		// Reemplazar las visitas originales con las normalizadas
 		request.Visits = normalizedVisits
 		request.Fleet = normalizedVehicles
+
+		optimizeFleetRequest := request.ToOptimizeFleetRequest()
+
+		obs.Logger.InfoContext(ctx, "Optimize fleet request", "input", optimizeFleetRequest)
+
 		obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
 		msg.Ack()
 	})
