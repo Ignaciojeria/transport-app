@@ -124,6 +124,15 @@ func newAgentOptimizationRequested(
 			return
 		}
 
+		// Validar que haya visitas y flota para procesar
+		if len(request.Visits) == 0 || len(request.Fleet) == 0 {
+			obs.Logger.WarnContext(ctx, "Skipping optimization request - no visits or fleet to process",
+				"visitsCount", len(request.Visits),
+				"fleetCount", len(request.Fleet))
+			msg.Ack()
+			return
+		}
+
 		// Obtener el mapeo de claves usando la primera visita como ejemplo
 		keyMapping, err := visitFieldNamesNormalizerWorkflow(ctx, request.Visits[0])
 		if err != nil {
