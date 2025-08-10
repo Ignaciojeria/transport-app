@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/natspublisher"
 	"transport-app/app/domain"
 	"transport-app/app/shared/infrastructure/httpserver"
@@ -24,7 +25,7 @@ func init() {
 }
 func fleetOptimizationAgent(s httpserver.Server, publish natspublisher.ApplicationEvents, obs observability.Observability) {
 	fuego.Post(s.Manager, "/agents/optimize/fleet",
-		func(c fuego.ContextNoBody) (any, error) {
+		func(c fuego.ContextWithBody[request.AgentOptimizationRequest]) (any, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "agentOptimization")
 			defer span.End()
 
