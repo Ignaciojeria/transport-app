@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/out/natspublisher"
 	"transport-app/app/adapter/out/storjbucket"
+	"transport-app/app/domain"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -28,6 +30,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
+		natspublisher.NewApplicationEvents,
 		usecase.NewVisitsInputKeyNormalizationWorkflow,
 		usecase.NewVehiclesInputKeyNormalizationWorkflow,
 		usecase.NewKeyNormalizationWorkflow,
@@ -39,6 +42,7 @@ func newAgentOptimizationRequested(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
+	publish natspublisher.ApplicationEvents,
 	visitFieldNamesNormalizerWorkflow usecase.VisitsInputKeyNormalizationWorkflow,
 	vehicleFieldNamesNormalizerWorkflow usecase.VehiclesInputKeyNormalizationWorkflow,
 	keyNormalizationWorkflow usecase.KeyNormalizationWorkflow,
@@ -159,6 +163,28 @@ func newAgentOptimizationRequested(
 		optimizeFleetRequest := request.ToOptimizeFleetRequest()
 
 		obs.Logger.InfoContext(ctx, "Optimize fleet request", "input", optimizeFleetRequest)
+
+		// Publicar el evento de optimización de flota
+		eventPayload, _ := json.Marshal(optimizeFleetRequest)
+
+		eventCtx := sharedcontext.AddEventContextToBaggage(ctx,
+			sharedcontext.EventContext{
+				EntityType: "optimization",
+				EventType:  "optimizationRequested",
+			})
+
+		if err := publish(eventCtx, domain.Outbox{
+			Payload: eventPayload,
+		}); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error publicando evento de optimización", "error", err)
+			msg.Nak()
+			return
+		}
+
+		obs.Logger.InfoContext(ctx, "OPTIMIZATION_REQUEST_PUBLISHED",
+			"planReferenceID", optimizeFleetRequest.PlanReferenceID,
+			"vehiclesCount", len(optimizeFleetRequest.Vehicles),
+			"visitsCount", len(optimizeFleetRequest.Visits))
 
 		obs.Logger.InfoContext(ctx, "Agent optimization request received", "input", request)
 		msg.Ack()
