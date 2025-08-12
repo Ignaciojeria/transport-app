@@ -19,7 +19,7 @@ type DeliveryUnit struct {
 	// Simplified fields (matching optimization domain)
 	Volume    int64     `gorm:"type:bigint;default:0;"`
 	Weight    int64     `gorm:"type:bigint;default:0;"`
-	Insurance int64     `gorm:"type:bigint;default:0;"`
+	UnitPrice int64     `gorm:"type:bigint;default:0;"`
 	JSONItems JSONItems `gorm:"type:json"`
 }
 
@@ -29,7 +29,7 @@ func (p DeliveryUnit) Map() domain.DeliveryUnit {
 		SizeCategory: p.SizeCategory.Map(),
 		Volume:       &p.Volume,
 		Weight:       &p.Weight,
-		Insurance:    &p.Insurance,
+		UnitPrice:    &p.UnitPrice,
 		Items:        p.JSONItems.Map(),
 	}
 }

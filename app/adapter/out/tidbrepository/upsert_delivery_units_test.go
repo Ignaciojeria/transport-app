@@ -38,13 +38,13 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Crear paquetes para insertar
 		vol1 := int64(6000000)
 		wgt1 := int64(5000)
-		ins1 := int64(1000)
+		unitPrice1 := int64(1000)
 		package1 := domain.DeliveryUnit{
 			Lpn:          "PKG001",
 			SizeCategory: domain.SizeCategory{Code: "SMALL"},
 			Volume:       &vol1, // 1000 * 2000 * 3000 = 6000000 cm³
 			Weight:       &wgt1, // 5000 g
-			Insurance:    &ins1, // 1000 CLP
+			UnitPrice:    &unitPrice1, // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM001",
@@ -57,13 +57,13 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		vol2 := int64(13125000)
 		wgt2 := int64(7500)
-		ins2 := int64(0)
+		unitPrice2 := int64(0)
 		package2 := domain.DeliveryUnit{
 			Lpn:          "PKG002",
 			SizeCategory: domain.SizeCategory{Code: "MEDIUM"},
 			Volume:       &vol2, // 1500 * 2500 * 3500 = 13125000 cm³
 			Weight:       &wgt2, // 7500 g
-			Insurance:    &ins2, // Sin seguro
+			UnitPrice:    &unitPrice2, // Sin precio unitario
 		}
 
 		// Insertar los paquetes
@@ -94,7 +94,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Verificar los campos simplificados
 		Expect(dbPackage1.Volume).To(Equal(int64(6000000)))
 		Expect(dbPackage1.Weight).To(Equal(int64(5000)))
-		Expect(dbPackage1.Insurance).To(Equal(int64(1000)))
+		Expect(dbPackage1.UnitPrice).To(Equal(int64(1000)))
 
 		// Verificar items dentro del paquete
 		items := dbPackage1.JSONItems.Map()
@@ -307,7 +307,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Verificar que los campos se actualizaron correctamente
 		Expect(updatedDBPackage.Volume).To(Equal(int64(13125)))
 		Expect(updatedDBPackage.Weight).To(Equal(int64(2000)))
-		Expect(updatedDBPackage.Insurance).To(Equal(int64(500)))
+		Expect(updatedDBPackage.UnitPrice).To(Equal(int64(500)))
 
 		// Verificar el nuevo paquete se insertó
 		var newDBPackage table.DeliveryUnit
@@ -475,7 +475,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Verificar que otros campos se mantuvieron igual
 		Expect(dbPackage.Volume).To(Equal(int64(6000)))
-		Expect(dbPackage.Insurance).To(Equal(int64(1000)))
+		Expect(dbPackage.UnitPrice).To(Equal(int64(1000)))
 
 		items := dbPackage.JSONItems.Map()
 		Expect(items[0].Description).To(Equal("Item original"))

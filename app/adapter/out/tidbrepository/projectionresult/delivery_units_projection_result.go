@@ -75,7 +75,7 @@ type DeliveryUnitsProjectionResult struct {
 	LPN                string              `json:"lpn"`
 	Volume             int64               `json:"volume"`
 	Weight             int64               `json:"weight"`
-	Insurance          int64               `json:"insurance"`
+	Insurance          int64               `json:"insurance"` // Kept as insurance for DB compatibility, maps to UnitPrice in domain
 	JSONItems          table.JSONItems     `json:"json_items"`
 	DeliveryUnitLabels table.JSONReference `json:"delivery_unit_labels" gorm:"column:delivery_unit_labels;type:jsonb"`
 

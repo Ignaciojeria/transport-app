@@ -155,12 +155,12 @@ var _ = Describe("Package", func() {
 		BeforeEach(func() {
 			vol := int64(6000)
 			wgt := int64(5000)
-			ins := int64(1000)
+			unitPrice := int64(1000)
 			basePackage = DeliveryUnit{
 				Lpn:       "PKG-TEST",
 				Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
 				Weight:    &wgt, // 5 kg = 5000 g
-				Insurance: &ins, // 1000 CLP (simplified)
+				UnitPrice: &unitPrice, // 1000 CLP (simplified)
 				Items: []Item{
 					{
 						Sku:         "ITEM001",
@@ -190,7 +190,7 @@ var _ = Describe("Package", func() {
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.UnitPrice).To(Equal(basePackage.UnitPrice))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
@@ -207,7 +207,7 @@ var _ = Describe("Package", func() {
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.UnitPrice).To(Equal(basePackage.UnitPrice))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
@@ -224,20 +224,20 @@ var _ = Describe("Package", func() {
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.UnitPrice).To(Equal(basePackage.UnitPrice))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
-		It("should update Insurance", func() {
-			ins := int64(2000)
+		It("should update UnitPrice", func() {
+			unitPrice := int64(2000)
 			newPackage := DeliveryUnit{
-				Insurance: &ins, // 2000 CLP
+				UnitPrice: &unitPrice, // 2000 CLP
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
 			Expect(changed).To(BeTrue())
-			Expect(updated.Insurance).To(Equal(newPackage.Insurance))
+			Expect(updated.UnitPrice).To(Equal(newPackage.UnitPrice))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
@@ -271,7 +271,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.UnitPrice).To(Equal(basePackage.UnitPrice))
 		})
 
 		It("should not update fields when new values are empty", func() {
@@ -310,7 +310,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Items).To(Equal(newPackage.Items))
 			// Estos campos no deberían cambiar
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.UnitPrice).To(Equal(basePackage.UnitPrice))
 		})
 
 		It("should handle empty Items array", func() {
@@ -411,33 +411,33 @@ var _ = Describe("Package", func() {
 			Expect(*updated.Weight).To(Equal(int64(500)))
 		})
 
-		It("should update Insurance to zero", func() {
-			ins := int64(200)
+		It("should update UnitPrice to zero", func() {
+			unitPrice := int64(200)
 			zero := int64(0)
 			basePackage := DeliveryUnit{
-				Insurance: &ins,
+				UnitPrice: &unitPrice,
 			}
 			newPackage := DeliveryUnit{
-				Insurance: &zero,
+				UnitPrice: &zero,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Insurance).ToNot(BeNil())
-			Expect(*updated.Insurance).To(Equal(int64(0)))
+			Expect(updated.UnitPrice).ToNot(BeNil())
+			Expect(*updated.UnitPrice).To(Equal(int64(0)))
 		})
 
-		It("should not update Insurance if new value is nil", func() {
-			ins := int64(200)
+		It("should not update UnitPrice if new value is nil", func() {
+			unitPrice := int64(200)
 			basePackage := DeliveryUnit{
-				Insurance: &ins,
+				UnitPrice: &unitPrice,
 			}
 			newPackage := DeliveryUnit{
-				Insurance: nil,
+				UnitPrice: nil,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeFalse())
-			Expect(updated.Insurance).ToNot(BeNil())
-			Expect(*updated.Insurance).To(Equal(int64(200)))
+			Expect(updated.UnitPrice).ToNot(BeNil())
+			Expect(*updated.UnitPrice).To(Equal(int64(200)))
 		})
 	})
 

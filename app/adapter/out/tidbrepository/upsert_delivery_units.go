@@ -75,8 +75,8 @@ func NewUpsertDeliveryUnits(conn database.ConnectionFactory, saveFSMTransition S
 					if updatedDomainPkg.Weight != nil {
 						updatedTablePkg.Weight = *updatedDomainPkg.Weight
 					}
-					if updatedDomainPkg.Insurance != nil {
-						updatedTablePkg.Insurance = *updatedDomainPkg.Insurance
+					if updatedDomainPkg.UnitPrice != nil {
+						updatedTablePkg.UnitPrice = *updatedDomainPkg.UnitPrice
 					}
 
 					DBpackagesToUpsert = append(DBpackagesToUpsert, updatedTablePkg)

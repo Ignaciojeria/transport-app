@@ -104,7 +104,7 @@ type DeliveryUnit {
   sizeCategory: String
   volume: Long
   weight: Long
-  insurance: Long
+  unitPrice: Long
   items: [Item]
   labels: [Label]
   skills: [String]

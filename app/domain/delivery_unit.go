@@ -12,7 +12,7 @@ type DeliveryUnit struct {
 	noLPNReference  string
 	Volume          *int64
 	Weight          *int64
-	Insurance       *int64
+	UnitPrice       *int64
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -68,9 +68,9 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 		p.Weight = newPackage.Weight
 		changed = true
 	}
-	// Actualizar seguro si el puntero no es nil y el valor es diferente
-	if newPackage.Insurance != nil && (p.Insurance == nil || *newPackage.Insurance != *p.Insurance) {
-		p.Insurance = newPackage.Insurance
+	// Actualizar precio unitario si el puntero no es nil y el valor es diferente
+	if newPackage.UnitPrice != nil && (p.UnitPrice == nil || *newPackage.UnitPrice != *p.UnitPrice) {
+		p.UnitPrice = newPackage.UnitPrice
 		changed = true
 	}
 
@@ -96,10 +96,10 @@ func (p *DeliveryUnit) UpdateStatusBasedOnNonDelivery() {
 }
 
 // SetValues sets the simplified values directly
-func (p *DeliveryUnit) SetValues(volume, weight, insurance int64) {
+func (p *DeliveryUnit) SetValues(volume, weight, unitPrice int64) {
 	p.Volume = &volume
 	p.Weight = &weight
-	p.Insurance = &insurance
+	p.UnitPrice = &unitPrice
 }
 
 // ToOptimizationDeliveryUnit converts this DeliveryUnit to the optimization domain structure
@@ -117,9 +117,9 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 	}
 
 	// Use default values if pointers are nil
-	var insurance, volume, weight int64
-	if p.Insurance != nil {
-		insurance = *p.Insurance
+	var unitPrice, volume, weight int64
+	if p.UnitPrice != nil {
+		unitPrice = *p.UnitPrice
 	}
 	if p.Volume != nil {
 		volume = *p.Volume
@@ -130,7 +130,7 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 
 	return optimization.DeliveryUnit{
 		Items:     items,
-		Insurance: insurance,
+		UnitPrice: unitPrice,
 		Volume:    volume,
 		Weight:    weight,
 		Lpn:       p.Lpn,
@@ -156,7 +156,7 @@ func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit 
 		Lpn:       optDU.Lpn,
 		Volume:    &optDU.Volume,
 		Weight:    &optDU.Weight,
-		Insurance: &optDU.Insurance,
+		UnitPrice: &optDU.UnitPrice,
 		Items:     items,
 		Skills:    skills,
 	}

@@ -440,7 +440,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].LPN).To(Equal("LPN123"), "LPN incorrecto")
 		Expect(results[0].Volume).To(Equal(int64(6000)), "Volume incorrecto") // 10 * 20 * 30 = 6000 cm³
 		Expect(results[0].Weight).To(Equal(int64(5500)), "Weight incorrecto")
-		Expect(results[0].Insurance).To(Equal(int64(10000)), "Insurance incorrecto")
+		Expect(results[0].Insurance).To(Equal(int64(10000)), "Insurance incorrecto") // DB field still named insurance
 
 		// Validaciones de Items
 		Expect(results[0].JSONItems).To(HaveLen(1), "Debería tener un item")

@@ -111,15 +111,15 @@ func MapPackagesToTable(ctx context.Context, packages []domain.DeliveryUnit) []t
 		if pkg.Weight != nil {
 			wgt = *pkg.Weight
 		}
-		if pkg.Insurance != nil {
-			ins = *pkg.Insurance
+		if pkg.UnitPrice != nil {
+			ins = *pkg.UnitPrice
 		}
 		mapped[i] = table.DeliveryUnit{
 			TenantID:  sharedcontext.TenantIDFromContext(ctx),
 			Lpn:       pkg.Lpn,
 			Volume:    vol,
 			Weight:    wgt,
-			Insurance: ins,
+			UnitPrice: ins,
 			JSONItems: mapItemsToTable(pkg.Items),
 		}
 	}
@@ -134,8 +134,8 @@ func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.Deliv
 	if pkg.Weight != nil {
 		wgt = *pkg.Weight
 	}
-	if pkg.Insurance != nil {
-		ins = *pkg.Insurance
+	if pkg.UnitPrice != nil {
+		ins = *pkg.UnitPrice
 	}
 	return table.DeliveryUnit{
 		TenantID:        sharedcontext.TenantIDFromContext(ctx),
@@ -143,7 +143,7 @@ func MapPackageToTable(ctx context.Context, pkg domain.DeliveryUnit) table.Deliv
 		Lpn:             pkg.Lpn,
 		Volume:          vol,
 		Weight:          wgt,
-		Insurance:       ins,
+		UnitPrice:       ins,
 		JSONItems:       mapItemsToTable(pkg.Items),
 		SizeCategoryDoc: pkg.SizeCategory.DocumentID(ctx).String(),
 	}
