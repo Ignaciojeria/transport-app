@@ -33,8 +33,8 @@ type PickingVisitConfirmedRequest struct {
 	} `json:"visit"`
 	Orders []struct {
 		DeliveryUnits []struct {
-			Insurance int `json:"insurance"`
-			Items     []struct {
+			Price int `json:"price"`
+			Items []struct {
 				Sku string `json:"sku"`
 			} `json:"items"`
 			Lpn    string `json:"lpn"`

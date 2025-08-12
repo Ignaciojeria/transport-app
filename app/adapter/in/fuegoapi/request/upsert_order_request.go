@@ -284,7 +284,7 @@ type UpsertOrderDeliveryUnit struct {
 	SizeCategory string             `json:"sizeCategory" example:"SMALL"`
 	Volume       *int64             `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
 	Weight       *int64             `json:"weight" example:"1000" description:"Weight in grams (g)"`
-	Insurance    *int64             `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
+	Price        *int64             `json:"price" example:"10000" description:"Price value in currency units (CLP, MXN, PEN, etc.) - only integer values accepted"`
 	Skills       []string           `json:"skills"`
 	Labels       []UpsertOrderLabel `json:"labels"`
 	Items        []UpsertOrderItem  `json:"items"`
@@ -336,7 +336,7 @@ func (d UpsertOrderDeliveryUnit) Map() domain.DeliveryUnit {
 		SizeCategory: domain.SizeCategory{Code: d.SizeCategory},
 		Volume:       volumePtr,
 		Weight:       weightPtr,
-		Price:        d.Insurance,
+		Price:        d.Price,
 		Status:       domain.Status{Status: domain.StatusAvailable},
 		Skills:       skills,
 		Labels:       labels,
