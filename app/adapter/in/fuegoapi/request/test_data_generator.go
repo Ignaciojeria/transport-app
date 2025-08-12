@@ -234,11 +234,11 @@ func generateVisits() []OptimizeFleetVisit {
 							Items: []OptimizeFleetItem{
 								{Sku: fmt.Sprintf("SKU%04d", i+1)},
 							},
-							Insurance: 9000 + rand.Int63n(12000),        // Entre 9000 y 21000
-							Volume:    (9000 + rand.Int63n(12000)) / 10, // Proporcional al insurance
-							Weight:    (9000 + rand.Int63n(12000)) / 10, // Mismo valor que volume
-							Lpn:       fmt.Sprintf("LPN%04d", i+1),
-							Skills:    []string{"delivery"},
+							Price:  9000 + rand.Int63n(12000),        // Entre 9000 y 21000
+							Volume: (9000 + rand.Int63n(12000)) / 10, // Proporcional al insurance
+							Weight: (9000 + rand.Int63n(12000)) / 10, // Mismo valor que volume
+							Lpn:    fmt.Sprintf("LPN%04d", i+1),
+							Skills: []string{"delivery"},
 						},
 					},
 					ReferenceID: fmt.Sprintf("ORD%04d", i+1),

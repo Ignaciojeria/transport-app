@@ -75,12 +75,12 @@ type Item struct {
 
 // DeliveryUnit representa una unidad de entrega
 type DeliveryUnit struct {
-	Items     []Item
-	Insurance int64
-	Volume    int64
-	Weight    int64
-	Lpn       string
-	Skills    []string
+	Items  []Item
+	Price  int64
+	Volume int64
+	Weight int64
+	Lpn    string
+	Skills []string
 }
 
 // Order representa una orden

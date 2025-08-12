@@ -96,7 +96,7 @@ type DeliveryUnit struct {
 	SizeCategory *string   `json:"sizeCategory,omitempty"`
 	Volume       *int64    `json:"volume,omitempty"`
 	Weight       *int64    `json:"weight,omitempty"`
-	Insurance    *int64    `json:"insurance,omitempty"`
+	Price        *int64    `json:"price,omitempty"`
 	Items        []*Item   `json:"items,omitempty"`
 	Labels       []*Label  `json:"labels,omitempty"`
 	Skills       []*string `json:"skills,omitempty"`
@@ -192,7 +192,7 @@ type Item struct {
 	Sku         *string    `json:"sku,omitempty"`
 	Description *string    `json:"description,omitempty"`
 	Dimensions  *Dimension `json:"dimensions,omitempty"`
-	Insurance   *int64     `json:"insurance,omitempty"`
+	Price       *int64     `json:"price,omitempty"`
 	Quantity    *int       `json:"quantity,omitempty"`
 	Weight      *int64     `json:"weight,omitempty"`
 }

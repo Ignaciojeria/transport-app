@@ -222,7 +222,7 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 				SizeCategory: &du.SizeCategory,
 				Volume:       &du.Volume,
 				Weight:       &du.Weight,
-				Insurance:    &du.Insurance,
+				Price:        &du.Price,
 				Items: func() []*model.Item {
 					if du.JSONItems == nil {
 						return []*model.Item{}
@@ -244,8 +244,8 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 								Height: &item.JSONDimensions.Height,
 								Unit:   &item.JSONDimensions.Unit,
 							},
-							Insurance: &item.Insurance,
-							Weight:    &item.Weight,
+							Price:  &item.Price,
+							Weight: &item.Weight,
 						}
 					}
 					return items

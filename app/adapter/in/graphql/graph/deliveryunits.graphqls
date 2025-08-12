@@ -90,7 +90,7 @@ type Item {
   sku: String
   description: String
   dimensions: Dimension
-  insurance: Long
+  price: Long
   quantity: Int
   weight: Long
 }
@@ -104,7 +104,7 @@ type DeliveryUnit {
   sizeCategory: String
   volume: Long
   weight: Long
-  insurance: Long
+  price: Long
   items: [Item]
   labels: [Label]
   skills: [String]

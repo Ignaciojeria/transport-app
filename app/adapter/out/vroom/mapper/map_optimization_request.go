@@ -78,7 +78,7 @@ func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliver
 	for _, order := range visit.Orders {
 		for _, deliveryUnit := range order.DeliveryUnits {
 			totalWeight += deliveryUnit.Weight
-			totalInsurance += deliveryUnit.Insurance
+			totalInsurance += deliveryUnit.Price
 			totalDeliveryUnits++
 		}
 	}

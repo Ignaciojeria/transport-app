@@ -152,8 +152,8 @@ func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliver
 	if du.Weight != nil {
 		weight = *du.Weight
 	}
-	if du.Insurance != nil {
-		insurance = *du.Insurance
+	if du.Price != nil {
+		insurance = *du.Price
 	}
 
 	// Convertir Skills de domain.Skill a string
@@ -163,12 +163,12 @@ func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliver
 	}
 
 	return request.UpsertRouteDeliveryUnit{
-		Items:     items,
-		Volume:    volume,
-		Weight:    weight,
-		Insurance: insurance,
-		Lpn:       du.Lpn,
-		Skills:    skills,
+		Items:  items,
+		Volume: volume,
+		Weight: weight,
+		Price:  insurance,
+		Lpn:    du.Lpn,
+		Skills: skills,
 	}
 }
 

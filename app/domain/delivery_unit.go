@@ -12,7 +12,7 @@ type DeliveryUnit struct {
 	noLPNReference  string
 	Volume          *int64
 	Weight          *int64
-	Insurance       *int64
+	Price           *int64
 	Status          Status
 	ConfirmDelivery ConfirmDelivery
 	Items           []Item
@@ -69,8 +69,8 @@ func (p DeliveryUnit) UpdateIfChanged(newPackage DeliveryUnit) (DeliveryUnit, bo
 		changed = true
 	}
 	// Actualizar seguro si el puntero no es nil y el valor es diferente
-	if newPackage.Insurance != nil && (p.Insurance == nil || *newPackage.Insurance != *p.Insurance) {
-		p.Insurance = newPackage.Insurance
+	if newPackage.Price != nil && (p.Price == nil || *newPackage.Price != *p.Price) {
+		p.Price = newPackage.Price
 		changed = true
 	}
 
@@ -99,7 +99,7 @@ func (p *DeliveryUnit) UpdateStatusBasedOnNonDelivery() {
 func (p *DeliveryUnit) SetValues(volume, weight, insurance int64) {
 	p.Volume = &volume
 	p.Weight = &weight
-	p.Insurance = &insurance
+	p.Price = &insurance
 }
 
 // ToOptimizationDeliveryUnit converts this DeliveryUnit to the optimization domain structure
@@ -118,8 +118,8 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 
 	// Use default values if pointers are nil
 	var insurance, volume, weight int64
-	if p.Insurance != nil {
-		insurance = *p.Insurance
+	if p.Price != nil {
+		insurance = *p.Price
 	}
 	if p.Volume != nil {
 		volume = *p.Volume
@@ -129,12 +129,12 @@ func (p DeliveryUnit) ToOptimizationDeliveryUnit() optimization.DeliveryUnit {
 	}
 
 	return optimization.DeliveryUnit{
-		Items:     items,
-		Insurance: insurance,
-		Volume:    volume,
-		Weight:    weight,
-		Lpn:       p.Lpn,
-		Skills:    skills,
+		Items:  items,
+		Price:  insurance,
+		Volume: volume,
+		Weight: weight,
+		Lpn:    p.Lpn,
+		Skills: skills,
 	}
 }
 
@@ -153,11 +153,11 @@ func FromOptimizationDeliveryUnit(optDU optimization.DeliveryUnit) DeliveryUnit 
 	}
 
 	return DeliveryUnit{
-		Lpn:       optDU.Lpn,
-		Volume:    &optDU.Volume,
-		Weight:    &optDU.Weight,
-		Insurance: &optDU.Insurance,
-		Items:     items,
-		Skills:    skills,
+		Lpn:    optDU.Lpn,
+		Volume: &optDU.Volume,
+		Weight: &optDU.Weight,
+		Price:  &optDU.Price,
+		Items:  items,
+		Skills: skills,
 	}
 }

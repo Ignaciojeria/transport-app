@@ -93,12 +93,12 @@ type OptimizeFleetOrder struct {
 }
 
 type OptimizeFleetDeliveryUnit struct {
-	Items     []OptimizeFleetItem `json:"items"`
-	Volume    int64               `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
-	Weight    int64               `json:"weight" example:"1000" description:"Weight in grams (g)"`
-	Insurance int64               `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
-	Lpn       string              `json:"lpn"`
-	Skills    []string            `json:"skills"`
+	Items  []OptimizeFleetItem `json:"items"`
+	Volume int64               `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
+	Weight int64               `json:"weight" example:"1000" description:"Weight in grams (g)"`
+	Price  int64               `json:"price" example:"10000" description:"Price value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
+	Lpn    string              `json:"lpn"`
+	Skills []string            `json:"skills"`
 }
 
 type OptimizeFleetItem struct {
@@ -259,12 +259,12 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					}
 				}
 				deliveryUnits[k] = optimization.DeliveryUnit{
-					Items:     items,
-					Insurance: du.Insurance,
-					Volume:    du.Volume,
-					Weight:    du.Weight,
-					Lpn:       du.Lpn,
-					Skills:    du.Skills,
+					Items:  items,
+					Price:  du.Price,
+					Volume: du.Volume,
+					Weight: du.Weight,
+					Lpn:    du.Lpn,
+					Skills: du.Skills,
 				}
 			}
 			orders[j] = optimization.Order{
