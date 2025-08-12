@@ -244,7 +244,7 @@ func MapDeliveryUnits(ctx context.Context, deliveryUnits []projectionresult.Deli
 								Height: &item.JSONDimensions.Height,
 								Unit:   &item.JSONDimensions.Unit,
 							},
-							Insurance: &item.Insurance,
+							Price: &item.Insurance,
 							Weight:    &item.Weight,
 						}
 					}

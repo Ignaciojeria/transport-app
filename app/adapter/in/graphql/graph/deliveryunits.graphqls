@@ -90,7 +90,7 @@ type Item {
   sku: String
   description: String
   dimensions: Dimension
-  insurance: Long
+  price: Long
   quantity: Int
   weight: Long
 }

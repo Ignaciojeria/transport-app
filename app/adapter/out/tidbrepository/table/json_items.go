@@ -20,7 +20,7 @@ func (i Items) Map() domain.Item {
 	return domain.Item{
 		Sku:         i.Sku,
 		Quantity:    i.Quantity,
-		Insurance:   i.Insurance,
+		Price:       i.Insurance,
 		Description: i.Description,
 		Dimensions:  i.JSONDimensions.Map(),
 		Weight:      i.Weight,

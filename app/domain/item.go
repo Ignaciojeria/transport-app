@@ -3,7 +3,7 @@ package domain
 type Item struct {
 	Sku         string
 	Quantity    int
-	Insurance   int64
+	Price       int64
 	Description string
 	Dimensions  Dimensions
 	Weight      int64

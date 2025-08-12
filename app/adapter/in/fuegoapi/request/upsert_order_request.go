@@ -263,7 +263,7 @@ type UpsertOrderItem struct {
 	Dimensions  UpsertOrderDimensions `json:"dimensions"`
 	Weight      int64                 `json:"weight" example:"1000" description:"Weight in grams (g)"`
 	Quantity    int                   `json:"quantity" example:"1" description:"Quantity in units"`
-	Insurance   int64                 `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, etc.) - only integer values accepted"`
+	Price       int64                 `json:"price" example:"10000" description:"Price value in currency units (CLP, MXN, PEN, etc.) - only integer values accepted"`
 }
 
 // Map convierte a domain.Item
@@ -274,7 +274,7 @@ func (i UpsertOrderItem) Map() domain.Item {
 		Dimensions:  i.Dimensions.Map(),
 		Weight:      i.Weight,
 		Quantity:    i.Quantity,
-		Insurance:   i.Insurance,
+		Price:       i.Price,
 	}
 }
 

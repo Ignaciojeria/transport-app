@@ -17,7 +17,6 @@ require (
 	github.com/go-slog/otelslog v0.3.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.2.3
-	github.com/google/generative-ai-go v0.20.1
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hellofresh/health-go/v5 v5.5.5
@@ -53,7 +52,6 @@ require (
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/sync v0.16.0
 	golang.org/x/text v0.27.0
-	google.golang.org/api v0.243.0
 	google.golang.org/genai v1.19.0
 	google.golang.org/grpc v1.74.2
 	googlemaps.github.io/maps v1.7.0
@@ -68,7 +66,6 @@ require (
 require (
 	cel.dev/expr v0.24.0 // indirect
 	cloud.google.com/go v0.121.0 // indirect
-	cloud.google.com/go/ai v0.8.0 // indirect
 	cloud.google.com/go/auth v0.16.3 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.7.0 // indirect
@@ -215,6 +212,7 @@ require (
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
+	google.golang.org/api v0.243.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 // indirect

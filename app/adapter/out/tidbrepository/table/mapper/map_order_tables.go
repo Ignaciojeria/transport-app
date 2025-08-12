@@ -86,7 +86,7 @@ func mapItemsToTable(items []domain.Item) table.JSONItems {
 		mapped[i] = table.Items{
 			Sku:         item.Sku,
 			Quantity:    item.Quantity,
-			Insurance:   item.Insurance,
+			Insurance:   item.Price,
 			Description: item.Description,
 			JSONDimensions: table.JSONDimensions{
 				Height: item.Dimensions.Height,
