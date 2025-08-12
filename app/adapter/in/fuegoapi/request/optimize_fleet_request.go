@@ -102,7 +102,9 @@ type OptimizeFleetDeliveryUnit struct {
 }
 
 type OptimizeFleetItem struct {
-	Sku string `json:"sku"`
+	Sku         string `json:"sku"`
+	Description string `json:"description"`
+	Quantity    int64  `json:"quantity"`
 }
 
 func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
@@ -255,7 +257,9 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				items := make([]optimization.Item, len(du.Items))
 				for l, item := range du.Items {
 					items[l] = optimization.Item{
-						Sku: item.Sku,
+						Sku:         item.Sku,
+						Description: item.Description,
+						Quantity:    item.Quantity,
 					}
 				}
 				deliveryUnits[k] = optimization.DeliveryUnit{

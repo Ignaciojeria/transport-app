@@ -117,7 +117,9 @@ type UpsertRouteDeliveryUnit struct {
 }
 
 type UpsertRouteItem struct {
-	Sku string `json:"sku,omitempty" example:"SKU-123456"`
+	Sku         string `json:"sku,omitempty" example:"SKU-123456"`
+	Description string `json:"description,omitempty" example:"Descripción del artículo"`
+	Quantity    int64  `json:"quantity,omitempty" example:"1"`
 }
 
 // FlattenForExcel convierte la respuesta anidada en una estructura plana para Excel

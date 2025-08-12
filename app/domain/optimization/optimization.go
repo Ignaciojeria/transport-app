@@ -70,7 +70,9 @@ type VisitLocation struct {
 
 // Item representa un artículo
 type Item struct {
-	Sku string
+	Sku         string
+	Description string
+	Quantity    int64
 }
 
 // DeliveryUnit representa una unidad de entrega
