@@ -45,6 +45,9 @@ func getRoute(s httpserver.Server, storjBucket *storjbucket.TransportAppBucket) 
 			}
 
 			fmt.Println("get route controller call done! :D")
+			if c.Header("X-View-Mode") == "sheet-map" {
+				return routeRequest.FlattenForExcel(), nil
+			}
 			return routeRequest, nil
 		},
 		option.Summary("get route"),

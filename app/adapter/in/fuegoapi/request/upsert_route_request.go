@@ -1,5 +1,7 @@
 package request
 
+import "transport-app/app/shared/projection/deliveryunits"
+
 type UpsertRouteRequest struct {
 	// Información básica de la ruta
 	VisitKeyMapping   map[string]string
@@ -116,4 +118,62 @@ type UpsertRouteDeliveryUnit struct {
 
 type UpsertRouteItem struct {
 	Sku string `json:"sku,omitempty" example:"SKU-123456"`
+}
+
+// FlattenForExcel convierte la respuesta anidada en una estructura plana para Excel
+// usando los mappings para convertir las constantes del dominio a nombres de columnas
+func (r *UpsertRouteRequest) FlattenForExcel() []map[string]interface{} {
+	proj := deliveryunits.NewProjection()
+	var rows []map[string]interface{}
+
+	// Procesar visitas usando round robin (cada delivery unit genera una fila)
+	for _, visit := range r.Visits {
+		for _, order := range visit.Orders {
+			for _, deliveryUnit := range order.DeliveryUnits {
+				visitRow := make(map[string]interface{})
+
+				// Mapear campos de la visita usando VisitKeyMapping
+				for domainKey, excelColumn := range r.VisitKeyMapping {
+					if excelColumn != "" {
+						switch domainKey {
+						case proj.ReferenceID().String():
+							visitRow[excelColumn] = order.ReferenceID
+						case proj.DestinationContactFullName().String():
+							visitRow[excelColumn] = visit.AddressInfo.Contact.FullName
+						case proj.DestinationContactPhone().String():
+							visitRow[excelColumn] = visit.AddressInfo.Contact.Phone
+						case proj.DestinationAddressLine1().String():
+							visitRow[excelColumn] = visit.AddressInfo.AddressLine1
+						case proj.DestinationCoordinatesLatitude().String():
+							visitRow[excelColumn] = visit.AddressInfo.Coordinates.Latitude
+						case proj.DestinationCoordinatesLongitude().String():
+							visitRow[excelColumn] = visit.AddressInfo.Coordinates.Longitude
+						case proj.DeliveryUnitVolume().String():
+							visitRow[excelColumn] = deliveryUnit.Volume
+						case proj.DeliveryUnitWeight().String():
+							visitRow[excelColumn] = deliveryUnit.Weight
+						case "price":
+							visitRow[excelColumn] = 0.0 // Valor por defecto
+						}
+					}
+				}
+
+				// Agregar la patente/ID del vehículo a cada fila de visita
+				if r.Vehicle.Plate != "" {
+					for domainKey, excelColumn := range r.VehicleKeyMapping {
+						if excelColumn != "" && (domainKey == "id" || domainKey == "plate") {
+							visitRow[excelColumn] = r.Vehicle.Plate
+							break // Solo necesitamos agregar la patente una vez
+						}
+					}
+				}
+
+				if len(visitRow) > 0 {
+					rows = append(rows, visitRow)
+				}
+			}
+		}
+	}
+
+	return rows
 }
