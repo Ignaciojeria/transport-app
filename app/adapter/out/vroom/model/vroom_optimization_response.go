@@ -201,7 +201,7 @@ func (ret VroomOptimizationResponse) Map(ctx context.Context, req optimization.F
 						Amount   float64
 						Currency string
 					}{
-						Amount:   float64(vehicle.Capacity.Insurance),
+						Amount:   float64(vehicle.Capacity.Price),
 						Currency: "CLP",
 					},
 				},
@@ -397,9 +397,9 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 		for _, duReq := range orderReq.DeliveryUnits {
 			deliveryUnit := domain.DeliveryUnit{
 				Lpn:       duReq.Lpn,
-				Volume:    &duReq.Volume,
-				Weight:    &duReq.Weight,
-				Insurance: &duReq.Insurance,
+				Volume: &duReq.Volume,
+				Weight: &duReq.Weight,
+				Price:  &duReq.Price,
 			}
 
 			// Mapear items
@@ -488,10 +488,10 @@ func createOrdersFromVisitComplete(visit *optimization.Visit, hasPickup bool) []
 		var deliveryUnits domain.DeliveryUnits
 		for _, duReq := range orderReq.DeliveryUnits {
 			deliveryUnit := domain.DeliveryUnit{
-				Lpn:       duReq.Lpn,
-				Volume:    &duReq.Volume,
-				Weight:    &duReq.Weight,
-				Insurance: &duReq.Insurance,
+				Lpn:    duReq.Lpn,
+				Volume: &duReq.Volume,
+				Weight: &duReq.Weight,
+				Price:  &duReq.Price,
 			}
 
 			// Mapear skills

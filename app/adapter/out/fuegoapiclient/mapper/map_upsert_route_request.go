@@ -144,16 +144,16 @@ func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliver
 		items = append(items, modelItem)
 	}
 
-	// Manejar punteros para Volume, Weight, Insurance
-	var volume, weight, insurance int64
+	// Manejar punteros para Volume, Weight, Price
+	var volume, weight, price int64
 	if du.Volume != nil {
 		volume = *du.Volume
 	}
 	if du.Weight != nil {
 		weight = *du.Weight
 	}
-	if du.Insurance != nil {
-		insurance = *du.Insurance
+	if du.Price != nil {
+		price = *du.Price
 	}
 
 	// Convertir Skills de domain.Skill a string
@@ -163,12 +163,12 @@ func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliver
 	}
 
 	return request.UpsertRouteDeliveryUnit{
-		Items:     items,
-		Volume:    volume,
-		Weight:    weight,
-		Insurance: insurance,
-		Lpn:       du.Lpn,
-		Skills:    skills,
+		Items:  items,
+		Volume: volume,
+		Weight: weight,
+		Price:  price,
+		Lpn:    du.Lpn,
+		Skills: skills,
 	}
 }
 

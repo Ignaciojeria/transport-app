@@ -108,12 +108,12 @@ type UpsertRouteOrder struct {
 }
 
 type UpsertRouteDeliveryUnit struct {
-	Items     []UpsertRouteItem `json:"items,omitempty"`
-	Volume    int64             `json:"volume,omitempty" example:"1000"`
-	Weight    int64             `json:"weight,omitempty" example:"1000"`
-	Insurance int64             `json:"insurance,omitempty" example:"10000"`
-	Lpn       string            `json:"lpn,omitempty" example:"LPN-789012"`
-	Skills    []string          `json:"skills,omitempty"`
+	Items  []UpsertRouteItem `json:"items,omitempty"`
+	Volume int64             `json:"volume,omitempty" example:"1000"`
+	Weight int64             `json:"weight,omitempty" example:"1000"`
+	Price  int64             `json:"price,omitempty" example:"10000"`
+	Lpn    string            `json:"lpn,omitempty" example:"LPN-789012"`
+	Skills []string          `json:"skills,omitempty"`
 }
 
 type UpsertRouteItem struct {

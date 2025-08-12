@@ -336,7 +336,7 @@ func (d UpsertOrderDeliveryUnit) Map() domain.DeliveryUnit {
 		SizeCategory: domain.SizeCategory{Code: d.SizeCategory},
 		Volume:       volumePtr,
 		Weight:       weightPtr,
-		Insurance:    d.Insurance,
+		Price:        d.Insurance,
 		Status:       domain.Status{Status: domain.StatusAvailable},
 		Skills:       skills,
 		Labels:       labels,

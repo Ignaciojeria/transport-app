@@ -44,7 +44,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			SizeCategory: domain.SizeCategory{Code: "SMALL"},
 			Volume:       &vol1, // 1000 * 2000 * 3000 = 6000000 cm³
 			Weight:       &wgt1, // 5000 g
-			Insurance:    &ins1, // 1000 CLP
+			Price:        &ins1, // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM001",
@@ -63,7 +63,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			SizeCategory: domain.SizeCategory{Code: "MEDIUM"},
 			Volume:       &vol2, // 1500 * 2500 * 3500 = 13125000 cm³
 			Weight:       &wgt2, // 7500 g
-			Insurance:    &ins2, // Sin seguro
+			Price:        &ins2, // Sin seguro
 		}
 
 		// Insertar los paquetes
@@ -94,7 +94,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Verificar los campos simplificados
 		Expect(dbPackage1.Volume).To(Equal(int64(6000000)))
 		Expect(dbPackage1.Weight).To(Equal(int64(5000)))
-		Expect(dbPackage1.Insurance).To(Equal(int64(1000)))
+		Expect(dbPackage1.Price).To(Equal(int64(1000)))
 
 		// Verificar items dentro del paquete
 		items := dbPackage1.JSONItems.Map()
@@ -117,8 +117,8 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		originalPackage := domain.DeliveryUnit{
 			Lpn:       "PKG003",
 			Volume:    &vol3, // 1000 * 2000 * 3000 = 6000000 cm³
-			Weight:    &wgt3, // 5000 g
-			Insurance: &ins3, // Sin seguro
+			Weight: &wgt3, // 5000 g
+			Price:  &ins3, // Sin seguro
 		}
 
 		// Insertar el paquete original
@@ -164,7 +164,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PKG004",
 			Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
 			Weight:    &wgt, // Sin peso
-			Insurance: &ins, // Sin seguro
+			Price:     &ins, // Sin seguro
 		}
 
 		vol2 := int64(6000)
@@ -174,7 +174,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PKG004",
 			Volume:    &vol2, // 10 * 20 * 30 = 6000 cm³
 			Weight:    &wgt2, // Sin peso
-			Insurance: &ins2, // Sin seguro
+			Price:     &ins2, // Sin seguro
 		}
 
 		upsert := NewUpsertDeliveryUnits(conn, nil)
@@ -222,7 +222,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PKG005",
 			Volume:    &vol3, // 10 * 20 * 30 = 6000 cm³
 			Weight:    &wgt3, // 1000 g
-			Insurance: &ins3, // Sin seguro
+			Price:     &ins3, // Sin seguro
 		}
 
 		upsert := NewUpsertDeliveryUnits(noTablesContainerConnection, nil)
@@ -245,7 +245,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PKG-EXISTING",
 			Volume:    &vol4, // 10 * 20 * 30 = 6000 cm³
 			Weight:    &wgt4, // 1000 g
-			Insurance: &ins4, // Sin seguro
+			Price:     &ins4, // Sin seguro
 		}
 
 		// Guardar el DocID del paquete existente
@@ -264,7 +264,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PKG-NEW",
 			Volume:    &newVol, // 15 * 25 * 35 = 13125 cm³
 			Weight:    &newWgt, // 2000 g
-			Insurance: &newIns, // 500 CLP
+			Price:     &newIns, // 500 CLP
 		}
 
 		// Crear versión actualizada del paquete existente
@@ -275,7 +275,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PKG-EXISTING",
 			Volume:    &updatedVol, // 15 * 25 * 35 = 13125 cm³
 			Weight:    &updatedWgt, // 2000 g
-			Insurance: &updatedIns, // 500 CLP
+			Price:     &updatedIns, // 500 CLP
 		}
 
 		// Verificar que el DocID del paquete actualizado coincide con el original
@@ -307,7 +307,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 		// Verificar que los campos se actualizaron correctamente
 		Expect(updatedDBPackage.Volume).To(Equal(int64(13125)))
 		Expect(updatedDBPackage.Weight).To(Equal(int64(2000)))
-		Expect(updatedDBPackage.Insurance).To(Equal(int64(500)))
+		Expect(updatedDBPackage.Price).To(Equal(int64(500)))
 
 		// Verificar el nuevo paquete se insertó
 		var newDBPackage table.DeliveryUnit
@@ -435,7 +435,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 			Lpn:       "PARTIAL-UPDATE-PKG",
 			Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
 			Weight:    &wgt, // 5000 g
-			Insurance: &ins, // 1000 CLP
+			Price:     &ins, // 1000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "ITEM-PARTIAL",
@@ -475,7 +475,7 @@ var _ = Describe("UpsertDeliveryUnits", func() {
 
 		// Verificar que otros campos se mantuvieron igual
 		Expect(dbPackage.Volume).To(Equal(int64(6000)))
-		Expect(dbPackage.Insurance).To(Equal(int64(1000)))
+		Expect(dbPackage.Price).To(Equal(int64(1000)))
 
 		items := dbPackage.JSONItems.Map()
 		Expect(items[0].Description).To(Equal("Item original"))

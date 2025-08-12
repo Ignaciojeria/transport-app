@@ -122,10 +122,10 @@ type ComplexityRoot struct {
 	}
 
 	DeliveryUnit struct {
-		Insurance    func(childComplexity int) int
 		Items        func(childComplexity int) int
 		Labels       func(childComplexity int) int
 		Lpn          func(childComplexity int) int
+		Price        func(childComplexity int) int
 		SizeCategory func(childComplexity int) int
 		Skills       func(childComplexity int) int
 		Volume       func(childComplexity int) int
@@ -593,13 +593,6 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.complexity.DeliveryRecipient.NationalID(childComplexity), true
 
-	case "DeliveryUnit.insurance":
-		if e.complexity.DeliveryUnit.Insurance == nil {
-			break
-		}
-
-		return e.complexity.DeliveryUnit.Insurance(childComplexity), true
-
 	case "DeliveryUnit.items":
 		if e.complexity.DeliveryUnit.Items == nil {
 			break
@@ -620,6 +613,13 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.DeliveryUnit.Lpn(childComplexity), true
+
+	case "DeliveryUnit.price":
+		if e.complexity.DeliveryUnit.Price == nil {
+			break
+		}
+
+		return e.complexity.DeliveryUnit.Price(childComplexity), true
 
 	case "DeliveryUnit.sizeCategory":
 		if e.complexity.DeliveryUnit.SizeCategory == nil {
@@ -3340,8 +3340,8 @@ func (ec *executionContext) fieldContext_DeliveryUnit_weight(_ context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _DeliveryUnit_insurance(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_DeliveryUnit_insurance(ctx, field)
+func (ec *executionContext) _DeliveryUnit_price(ctx context.Context, field graphql.CollectedField, obj *model.DeliveryUnit) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_DeliveryUnit_price(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -3354,7 +3354,7 @@ func (ec *executionContext) _DeliveryUnit_insurance(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (any, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Insurance, nil
+		return obj.Price, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3368,7 +3368,7 @@ func (ec *executionContext) _DeliveryUnit_insurance(ctx context.Context, field g
 	return ec.marshalOLong2ᚖint64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_DeliveryUnit_insurance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_DeliveryUnit_price(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "DeliveryUnit",
 		Field:      field,
@@ -4135,8 +4135,8 @@ func (ec *executionContext) fieldContext_DeliveryUnitsReport_deliveryUnit(_ cont
 				return ec.fieldContext_DeliveryUnit_volume(ctx, field)
 			case "weight":
 				return ec.fieldContext_DeliveryUnit_weight(ctx, field)
-			case "insurance":
-				return ec.fieldContext_DeliveryUnit_insurance(ctx, field)
+			case "price":
+				return ec.fieldContext_DeliveryUnit_price(ctx, field)
 			case "items":
 				return ec.fieldContext_DeliveryUnit_items(ctx, field)
 			case "labels":
@@ -10691,8 +10691,8 @@ func (ec *executionContext) _DeliveryUnit(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._DeliveryUnit_volume(ctx, field, obj)
 		case "weight":
 			out.Values[i] = ec._DeliveryUnit_weight(ctx, field, obj)
-		case "insurance":
-			out.Values[i] = ec._DeliveryUnit_insurance(ctx, field, obj)
+		case "price":
+			out.Values[i] = ec._DeliveryUnit_price(ctx, field, obj)
 		case "items":
 			out.Values[i] = ec._DeliveryUnit_items(ctx, field, obj)
 		case "labels":
