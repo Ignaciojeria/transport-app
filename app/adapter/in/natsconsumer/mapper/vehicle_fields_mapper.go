@@ -28,7 +28,7 @@ func NewVehicleFieldMapper() *VehicleFieldMapper {
 		VehicleKeyStartLocationLongitude: {"start location (lat,lon)", "start_location_lon", "start_longitude", "origen_lon", "origin_lon", "start_lon", "start_coordinates_lon", "longitud_origen", "longitud_inicial"},
 		VehicleKeyVolume:                 {"volume (cm3)", "volume", "volumen", "volume_cm3", "volumen_cm3", "cm3", "cubic_cm", "cubic_centimeters", "capacidad", "espacio"},
 		VehicleKeyWeight:                 {"weight (grams)", "weight", "peso", "weight_grams", "peso_gramos", "grams", "gramos", "carga_maxima", "peso_maximo"},
-		VehicleMaxPackageQuantity:        {"max package quantity", "max_package_quantity", "max_paquetes", "max_paquete", "max_paquetes_maximo", "max_paquete_maximo", "max_paquetes_maximo", "max_paquete_maximo"},
+		VehicleMaxPackageQuantity:        {"max package quantity", "maxPackageQuantity", "max_package_quantity", "max_paquetes", "max_paquete", "max_paquetes_maximo", "max_paquete_maximo", "max_paquetes_maximo", "max_paquete_maximo"},
 	}
 
 	ordered := []string{

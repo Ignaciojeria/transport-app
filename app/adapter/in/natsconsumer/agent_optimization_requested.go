@@ -170,6 +170,8 @@ func newAgentOptimizationRequested(
 		request.Fleet = normalizedVehicles
 
 		optimizeFleetRequest := request.ToOptimizeFleetRequest()
+		optimizeFleetRequest.VehicleKeyMapping = vehicleKeyMapping
+		optimizeFleetRequest.VisitKeyMapping = keyMapping
 
 		obs.Logger.InfoContext(ctx, "Optimize fleet request", "input", optimizeFleetRequest)
 

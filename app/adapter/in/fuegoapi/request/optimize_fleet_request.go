@@ -7,9 +7,11 @@ import (
 // Estructuras granulares para OptimizeFleetRequest
 
 type OptimizeFleetRequest struct {
-	PlanReferenceID string                 `json:"planReferenceID"`
-	Vehicles        []OptimizeFleetVehicle `json:"vehicles"`
-	Visits          []OptimizeFleetVisit   `json:"visits"`
+	VehicleKeyMapping map[string]string
+	VisitKeyMapping   map[string]string
+	PlanReferenceID   string                 `json:"planReferenceID"`
+	Vehicles          []OptimizeFleetVehicle `json:"vehicles"`
+	Visits            []OptimizeFleetVisit   `json:"visits"`
 }
 
 type OptimizeFleetVehicle struct {
@@ -60,7 +62,6 @@ type OptimizeFleetVehicleCapacity struct {
 	Weight                int64 `json:"weight" example:"1000" description:"Weight in grams (g)"`
 	Insurance             int64 `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 	DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity"`
-	MaxPackageQuantity    int   `json:"maxPackageQuantity" example:"10" description:"Maximum number of packages that can be carried"`
 }
 
 type OptimizeFleetTimeWindow struct {
@@ -173,7 +174,6 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				Volume:                v.Capacity.Volume,
 				Weight:                v.Capacity.Weight,
 				DeliveryUnitsQuantity: v.Capacity.DeliveryUnitsQuantity,
-				MaxPackageQuantity:    v.Capacity.MaxPackageQuantity,
 			},
 		}
 	}

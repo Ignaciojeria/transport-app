@@ -142,6 +142,8 @@ func newOptimizationRequestedConsumer(
 			}
 
 			for _, routeRequest := range routeRequests {
+				routeRequest.VisitKeyMapping = input.VisitKeyMapping
+				routeRequest.VehicleKeyMapping = input.VehicleKeyMapping
 				routeRequestBytes, err := json.Marshal(routeRequest)
 				if err != nil {
 					obs.Logger.ErrorContext(ctx, "Error serializando ruta de optimización", "error", err)

@@ -60,10 +60,10 @@ func (r *AgentOptimizationRequest) mapVehicle(vehicle map[string]interface{}) Op
 			},
 		},
 		Capacity: OptimizeFleetVehicleCapacity{
-			Weight:             int64(r.getFloatValue(vehicle, mapper.VehicleKeyWeight)),
-			Volume:             int64(r.getFloatValue(vehicle, mapper.VehicleKeyVolume)),
-			Insurance:          int64(r.getFloatValue(vehicle, mapper.VehicleKeyInsurance)),
-			MaxPackageQuantity: r.getIntValue(vehicle, mapper.VehicleMaxPackageQuantity),
+			Weight:                int64(r.getFloatValue(vehicle, mapper.VehicleKeyWeight)),
+			Volume:                int64(r.getFloatValue(vehicle, mapper.VehicleKeyVolume)),
+			Insurance:             int64(r.getFloatValue(vehicle, mapper.VehicleKeyInsurance)),
+			DeliveryUnitsQuantity: int64(r.getIntValue(vehicle, mapper.VehicleMaxPackageQuantity)),
 		},
 	}
 }
