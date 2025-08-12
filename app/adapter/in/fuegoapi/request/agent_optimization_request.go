@@ -3,7 +3,7 @@ package request
 import (
 	"strconv"
 	"strings"
-	"transport-app/app/adapter/out/agents/model"
+	"transport-app/app/adapter/in/natsconsumer/mapper"
 	"transport-app/app/shared/projection/deliveryunits"
 
 	"github.com/google/uuid"
@@ -35,29 +35,35 @@ func (r *AgentOptimizationRequest) ToOptimizeFleetRequest() OptimizeFleetRequest
 }
 
 func (r *AgentOptimizationRequest) mapVehicle(vehicle map[string]interface{}) OptimizeFleetVehicle {
+	startLat := r.getFloatValue(vehicle, mapper.VehicleKeyStartLocationLatitude)
+	startLon := r.getFloatValue(vehicle, mapper.VehicleKeyStartLocationLongitude)
+	endLat := r.getFloatValue(vehicle, mapper.VehicleKeyEndLocationLatitude)
+	endLon := r.getFloatValue(vehicle, mapper.VehicleKeyEndLocationLongitude)
+
 	// Usar las constantes de VehicleFieldMappingSchema
 	return OptimizeFleetVehicle{
-		Plate: r.getStringValue(vehicle, model.VehicleKeyID),
+		Plate: r.getStringValue(vehicle, mapper.VehicleKeyID),
 		StartLocation: OptimizeFleetVehicleLocation{
 			AddressInfo: OptimizeFleetAddressInfo{
 				Coordinates: OptimizeFleetCoordinates{
-					Latitude:  r.getFloatValue(vehicle, model.VehicleKeyStartLocationLatitude),
-					Longitude: r.getFloatValue(vehicle, model.VehicleKeyStartLocationLongitude),
+					Latitude:  startLat,
+					Longitude: startLon,
 				},
 			},
 		},
 		EndLocation: OptimizeFleetVehicleLocation{
 			AddressInfo: OptimizeFleetAddressInfo{
 				Coordinates: OptimizeFleetCoordinates{
-					Latitude:  r.getFloatValue(vehicle, model.VehicleKeyEndLocationLatitude),
-					Longitude: r.getFloatValue(vehicle, model.VehicleKeyEndLocationLongitude),
+					Latitude:  endLat,
+					Longitude: endLon,
 				},
 			},
 		},
 		Capacity: OptimizeFleetVehicleCapacity{
-			Weight:    int64(r.getFloatValue(vehicle, model.VehicleKeyWeight)),
-			Volume:    int64(r.getFloatValue(vehicle, model.VehicleKeyVolume)),
-			Insurance: int64(r.getFloatValue(vehicle, model.VehicleKeyInsurance)),
+			Weight:             int64(r.getFloatValue(vehicle, mapper.VehicleKeyWeight)),
+			Volume:             int64(r.getFloatValue(vehicle, mapper.VehicleKeyVolume)),
+			Insurance:          int64(r.getFloatValue(vehicle, mapper.VehicleKeyInsurance)),
+			MaxPackageQuantity: r.getIntValue(vehicle, mapper.VehicleMaxPackageQuantity),
 		},
 	}
 }
@@ -121,6 +127,26 @@ func (r *AgentOptimizationRequest) getFloatValue(data map[string]interface{}, ke
 		}
 	}
 	return 0.0
+}
+
+func (r *AgentOptimizationRequest) getIntValue(data map[string]interface{}, key string) int {
+	if value, exists := data[key]; exists && value != nil {
+		switch v := value.(type) {
+		case int:
+			return v
+		case int64:
+			return int(v)
+		case float64:
+			return int(v)
+		case string:
+			if str := strings.TrimSpace(v); str != "" {
+				if i, err := strconv.Atoi(str); err == nil {
+					return i
+				}
+			}
+		}
+	}
+	return 0
 }
 
 // IterateVisitsInBatches itera sobre las visitas en lotes del tamaño especificado

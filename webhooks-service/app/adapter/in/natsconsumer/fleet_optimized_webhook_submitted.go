@@ -95,10 +95,11 @@ func newFleetOptimizedWebhookSubmitted(
 			msg.Ack()
 			return
 		}
-		accessToken := msg.Headers().Get("X-Access-Token")
+
 		webhook.Body = input
-		webhook.Headers["X-Access-Token"] = accessToken
-		webhook.Headers["tenant"] = msg.Headers().Get("tenant")
+		//accessToken := msg.Headers().Get("X-Access-Token")
+		//webhook.Headers["X-Access-Token"] = accessToken
+		//webhook.Headers["tenant"] = msg.Headers().Get("tenant")
 
 		if err := postWebhook(ctx, webhook); err != nil {
 			obs.Logger.Error("Error posteando webhook", "error", err)

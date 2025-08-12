@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/natsconsumer/mapper"
 	"transport-app/app/adapter/out/natspublisher"
 	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
@@ -31,8 +32,6 @@ func init() {
 		configuration.NewConf,
 		storjbucket.NewTransportAppBucket,
 		natspublisher.NewApplicationEvents,
-		usecase.NewVisitsInputKeyNormalizationWorkflow,
-		usecase.NewVehiclesInputKeyNormalizationWorkflow,
 		usecase.NewKeyNormalizationWorkflow,
 	)
 }
@@ -43,8 +42,6 @@ func newAgentOptimizationRequested(
 	conf configuration.Conf,
 	storjBucket *storjbucket.TransportAppBucket,
 	publish natspublisher.ApplicationEvents,
-	visitFieldNamesNormalizerWorkflow usecase.VisitsInputKeyNormalizationWorkflow,
-	vehicleFieldNamesNormalizerWorkflow usecase.VehiclesInputKeyNormalizationWorkflow,
 	keyNormalizationWorkflow usecase.KeyNormalizationWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
@@ -69,6 +66,9 @@ func newAgentOptimizationRequested(
 	if err != nil {
 		return nil, err
 	}
+
+	visitFieldMapper := mapper.NewVisitFieldMapper()
+	vehicleFieldMapper := mapper.NewVehicleFieldMapper()
 
 	return consumer.Consume(func(msg jetstream.Msg) {
 		var pubsubMsg pubsub.Message
@@ -134,7 +134,7 @@ func newAgentOptimizationRequested(
 		}
 
 		// Obtener el mapeo de claves usando la primera visita como ejemplo
-		keyMapping, err := visitFieldNamesNormalizerWorkflow(ctx, request.Visits[0])
+		keyMapping := visitFieldMapper.Map(request.Visits[0]) //visitFieldNamesNormalizerWorkflow(ctx, request.Visits[0])
 		if err != nil {
 			obs.Logger.ErrorContext(ctx, "Error obteniendo mapeo de claves", "error", err)
 			msg.Nak()
@@ -151,7 +151,7 @@ func newAgentOptimizationRequested(
 			return
 		}
 
-		vehicleKeyMapping, err := vehicleFieldNamesNormalizerWorkflow(ctx, request.Fleet[0])
+		vehicleKeyMapping := vehicleFieldMapper.Map(request.Fleet[0])
 		if err != nil {
 			obs.Logger.ErrorContext(ctx, "Error obteniendo mapeo de claves", "error", err)
 			msg.Nak()

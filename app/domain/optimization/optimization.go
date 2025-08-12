@@ -30,6 +30,7 @@ type Capacity struct {
 	Volume                int64
 	Weight                int64
 	DeliveryUnitsQuantity int64
+	MaxPackageQuantity    int
 }
 
 // Contact representa información de contacto
