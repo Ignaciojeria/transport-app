@@ -225,7 +225,7 @@ func NewOptimize(
 								Amount   float64
 								Currency string
 							}{
-								Amount:   float64(vehicle.Capacity.Insurance),
+								Amount:   float64(vehicle.Capacity.Price),
 								Currency: "CLP",
 							},
 						},
@@ -596,12 +596,12 @@ func mapDeliveryUnitToRequestFromOptimization(du optimization.DeliveryUnit) requ
 	}
 
 	return request.UpsertRouteDeliveryUnit{
-		Items:     items,
-		Volume:    du.Volume,
-		Weight:    du.Weight,
-		Insurance: du.Insurance,
-		Lpn:       du.Lpn,
-		Skills:    du.Skills, // Incluir skills desde la optimización
+		Items:  items,
+		Volume: du.Volume,
+		Weight: du.Weight,
+		Price:  du.Price,
+		Lpn:    du.Lpn,
+		Skills: du.Skills, // Incluir skills desde la optimización
 	}
 }
 
@@ -619,12 +619,12 @@ func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliver
 	skills := make([]string, 0)
 
 	return request.UpsertRouteDeliveryUnit{
-		Items:     items,
-		Volume:    int64(*du.Volume),
-		Weight:    int64(*du.Weight),
-		Insurance: int64(*du.Insurance),
-		Lpn:       du.Lpn,
-		Skills:    skills,
+		Items:  items,
+		Volume: int64(*du.Volume),
+		Weight: int64(*du.Weight),
+		Price:  int64(*du.Price),
+		Lpn:    du.Lpn,
+		Skills: skills,
 	}
 }
 
@@ -661,7 +661,7 @@ func mapVehicleToRequestFromOptimization(vehicle optimization.Vehicle) request.U
 		Capacity: request.UpsertRouteVehicleCapacity{
 			Volume:                vehicle.Capacity.Volume,
 			Weight:                vehicle.Capacity.Weight,
-			Insurance:             vehicle.Capacity.Insurance,
+			Insurance:             vehicle.Capacity.Price,
 			DeliveryUnitsQuantity: vehicle.Capacity.DeliveryUnitsQuantity,
 		},
 	}
@@ -1030,14 +1030,14 @@ func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.O
 		// Create copies of the values to ensure we have valid pointers
 		volume := du.Volume
 		weight := du.Weight
-		insurance := du.Insurance
+		price := du.Price
 		
 		deliveryUnit := domain.DeliveryUnit{
-			Lpn:       du.Lpn,
-			Volume:    &volume,
-			Weight:    &weight,
-			Insurance: &insurance,
-			Items:     items,
+			Lpn:    du.Lpn,
+			Volume: &volume,
+			Weight: &weight,
+			Price:  &price,
+			Items:  items,
 		}
 
 			deliveryUnits = append(deliveryUnits, deliveryUnit)
@@ -1122,14 +1122,14 @@ func createOrderFromOptimizationOrder(optOrder optimization.Order) domain.Order 
 		// Create copies of the values to ensure we have valid pointers
 		volume := du.Volume
 		weight := du.Weight
-		insurance := du.Insurance
+		price := du.Price
 		
 		deliveryUnit := domain.DeliveryUnit{
-			Lpn:       du.Lpn,
-			Volume:    &volume,
-			Weight:    &weight,
-			Insurance: &insurance,
-			Items:     items,
+			Lpn:    du.Lpn,
+			Volume: &volume,
+			Weight: &weight,
+			Price:  &price,
+			Items:  items,
 			// Skills se mapean desde la optimización
 		}
 

@@ -74,11 +74,11 @@ func getContactID(ctx context.Context, contact optimization.Contact) string {
 }
 
 // calculateVisitCapacity calcula la capacidad total de una visita basada en sus orders
-func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliveryUnits, totalInsurance int64) {
+func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliveryUnits, totalPrice int64) {
 	for _, order := range visit.Orders {
 		for _, deliveryUnit := range order.DeliveryUnits {
 			totalWeight += deliveryUnit.Weight
-			totalInsurance += deliveryUnit.Insurance
+			totalPrice += deliveryUnit.Price
 			totalDeliveryUnits++
 		}
 	}
@@ -115,7 +115,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		vehicle.Capacity = []int64{
 			v.Capacity.Weight,
 			v.Capacity.DeliveryUnitsQuantity,
-			v.Capacity.Insurance,
+			v.Capacity.Price,
 		}
 
 		// Solo incluir Skills si no está vacío
@@ -136,7 +136,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 
 	for i, visit := range req.Visits {
 		// Calcular capacidad de la visita
-		totalWeight, totalDeliveryUnits, totalInsurance := calculateVisitCapacity(visit)
+		totalWeight, totalDeliveryUnits, totalPrice := calculateVisitCapacity(visit)
 
 		// Verificar si hay pickup válido (coordenadas no son cero)
 		hasValidPickup := visit.Pickup.AddressInfo.Coordinates.Longitude != 0 || visit.Pickup.AddressInfo.Coordinates.Latitude != 0
@@ -168,11 +168,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				},
 			}
 
-			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, price]
 			job.Amount = []int64{
 				totalWeight,
 				totalDeliveryUnits,
-				totalInsurance,
+				totalPrice,
 			}
 
 			// Recopilar skills de delivery units
@@ -255,11 +255,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				Delivery: delivery,
 			}
 
-			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, price]
 			shipment.Amount = []int64{
 				totalWeight,
 				totalDeliveryUnits,
-				totalInsurance,
+				totalPrice,
 			}
 
 			// Recopilar skills de delivery units

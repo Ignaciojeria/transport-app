@@ -375,7 +375,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 			Lpn:       "LPN123",
 			Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
 			Weight:    &wgt, // 5500 g
-			Insurance: &ins, // 10000 CLP
+			Price:     &ins, // 10000 CLP
 			Items: []domain.Item{
 				{
 					Sku:         "SKU123",
@@ -423,11 +423,11 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		results, hasMore, err := findDeliveryUnits(ctx, domain.DeliveryUnitsFilter{
 			RequestedFields: map[string]any{
 				projection.DeliveryUnit().String():          "",
-				projection.DeliveryUnitLPN().String():       "",
-				projection.DeliveryUnitVolume().String():    "",
-				projection.DeliveryUnitWeight().String():    "",
-				projection.DeliveryUnitInsurance().String(): "",
-				projection.DeliveryUnitItems().String():     "",
+				projection.DeliveryUnitLPN().String():     "",
+				projection.DeliveryUnitVolume().String():  "",
+				projection.DeliveryUnitWeight().String():  "",
+				projection.DeliveryUnitPrice().String():   "",
+				projection.DeliveryUnitItems().String():   "",
 				projection.Commerce().String():              "",
 				projection.Consumer().String():              "",
 			},
@@ -440,7 +440,7 @@ var _ = Describe("FindDeliveryUnitsProjectionResult", func() {
 		Expect(results[0].LPN).To(Equal("LPN123"), "LPN incorrecto")
 		Expect(results[0].Volume).To(Equal(int64(6000)), "Volume incorrecto") // 10 * 20 * 30 = 6000 cm³
 		Expect(results[0].Weight).To(Equal(int64(5500)), "Weight incorrecto")
-		Expect(results[0].Insurance).To(Equal(int64(10000)), "Insurance incorrecto")
+		Expect(results[0].Price).To(Equal(int64(10000)), "Price incorrecto")
 
 		// Validaciones de Items
 		Expect(results[0].JSONItems).To(HaveLen(1), "Debería tener un item")

@@ -170,7 +170,7 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				End:   v.TimeWindow.End,
 			},
 			Capacity: optimization.Capacity{
-				Insurance:             v.Capacity.Insurance,
+				Price:                 v.Capacity.Insurance,
 				Volume:                v.Capacity.Volume,
 				Weight:                v.Capacity.Weight,
 				DeliveryUnitsQuantity: v.Capacity.DeliveryUnitsQuantity,
@@ -259,12 +259,12 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 					}
 				}
 				deliveryUnits[k] = optimization.DeliveryUnit{
-					Items:     items,
-					Insurance: du.Insurance,
-					Volume:    du.Volume,
-					Weight:    du.Weight,
-					Lpn:       du.Lpn,
-					Skills:    du.Skills,
+					Items:  items,
+					Price:  du.Insurance,
+					Volume: du.Volume,
+					Weight: du.Weight,
+					Lpn:    du.Lpn,
+					Skills: du.Skills,
 				}
 			}
 			orders[j] = optimization.Order{
