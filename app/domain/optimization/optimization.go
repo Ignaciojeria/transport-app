@@ -72,7 +72,7 @@ type VisitLocation struct {
 type Item struct {
 	Sku         string
 	Description string
-	Quantity    int64
+	Quantity    int
 }
 
 // DeliveryUnit representa una unidad de entrega

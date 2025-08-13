@@ -21,9 +21,11 @@ func NewVisitFieldMapper() *VisitFieldMapper {
 		proj.DestinationAddressLine1().String():         {"direccion", "dirección", "address", "street", "calle", "domicilio", "address_line", "address1", "address_1"},
 		proj.DestinationCoordinatesLatitude().String():  {"lat", "latitude", "latitud"},
 		proj.DestinationCoordinatesLongitude().String(): {"lon", "lng", "long", "longitude", "longitud"},
+		proj.DeliveryUnitItemsDescription().String():    {"description", "descripcion", "description", "descripción"},
+		proj.DeliveryUnitItemsQuantity().String():       {"quantity", "cantidad", "quantity", "cantidad"},
 		proj.DeliveryUnitVolume().String():              {"total volume (cm3)", "total_volume_cm3", "volume_cm3", "volumen_cm3", "volumen", "volume", "cm3", "cubic_cm", "cubic_centimeters"},
 		proj.DeliveryUnitWeight().String():              {"total weight (grams)", "weight_g", "weight_grams", "peso_gramos", "grams", "gramos", "weight", "peso"},
-		"price":                                         {"price", "precio", "amount", "monto", "cost", "costo"},
+		proj.DeliveryUnitPrice().String():               {"total price", "price", "precio", "amount", "monto", "cost", "costo"},
 	}
 
 	ordered := []string{
@@ -36,7 +38,7 @@ func NewVisitFieldMapper() *VisitFieldMapper {
 		proj.DestinationCoordinatesLongitude().String(),
 		proj.DeliveryUnitVolume().String(),
 		proj.DeliveryUnitWeight().String(),
-		"price",
+		proj.DeliveryUnitPrice().String(),
 	}
 
 	idx := buildIndex(syn)

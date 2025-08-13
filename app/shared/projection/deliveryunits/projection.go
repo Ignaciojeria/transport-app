@@ -351,8 +351,8 @@ func (p Projection) DeliveryUnitVolume() Field {
 	return Field{path: "deliveryUnit.volume"}
 }
 
-func (p Projection) DeliveryUnitInsurance() Field {
-	return Field{path: "deliveryUnit.insurance"}
+func (p Projection) DeliveryUnitPrice() Field {
+	return Field{path: "deliveryUnit.price"}
 }
 
 // Métodos para campos de Label en Package
@@ -379,6 +379,10 @@ func (p Projection) DeliveryUnitItemsSKU() Field {
 
 func (p Projection) DeliveryUnitItemsDescription() Field {
 	return Field{path: "deliveryUnit.items.description"}
+}
+
+func (p Projection) DeliveryUnitItemsQuantity() Field {
+	return Field{path: "deliveryUnit.items.quantity"}
 }
 
 // Métodos para campos de Dimensions en Item

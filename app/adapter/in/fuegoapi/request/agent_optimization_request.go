@@ -90,8 +90,16 @@ func (r *AgentOptimizationRequest) mapVisit(visit map[string]interface{}) Optimi
 				ReferenceID: r.getStringValue(visit, projection.ReferenceID().String()),
 				DeliveryUnits: []OptimizeFleetDeliveryUnit{
 					{
+						Items: []OptimizeFleetItem{
+							{
+								Sku:         r.getStringValue(visit, projection.DeliveryUnitItemsSKU().String()),
+								Description: r.getStringValue(visit, projection.DeliveryUnitItemsDescription().String()),
+								Quantity:    r.getIntValue(visit, projection.DeliveryUnitItemsQuantity().String()),
+							},
+						},
 						Volume: int64(r.getFloatValue(visit, projection.DeliveryUnitVolume().String())),
 						Weight: int64(r.getFloatValue(visit, projection.DeliveryUnitWeight().String())),
+						Price:  int64(r.getFloatValue(visit, projection.DeliveryUnitPrice().String())),
 					},
 				},
 			},

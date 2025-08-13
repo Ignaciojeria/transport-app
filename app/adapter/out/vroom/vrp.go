@@ -613,7 +613,9 @@ func mapDeliveryUnitToRequest(du domain.DeliveryUnit) request.UpsertRouteDeliver
 	items := make([]request.UpsertRouteItem, 0, len(du.Items))
 	for _, item := range du.Items {
 		items = append(items, request.UpsertRouteItem{
-			Sku: item.Sku,
+			Sku:         item.Sku,
+			Description: item.Description,
+			Quantity:    item.Quantity,
 		})
 	}
 

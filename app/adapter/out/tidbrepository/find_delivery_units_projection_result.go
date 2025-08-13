@@ -367,8 +367,8 @@ func NewFindDeliveryUnitsProjectionResult(
 		if projection.DeliveryUnitWeight().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".weight").As("weight"))
 		}
-		if projection.DeliveryUnitInsurance().Has(filters.RequestedFields) {
-			ds = ds.SelectAppend(goqu.I(du + ".insurance").As("insurance"))
+		if projection.DeliveryUnitPrice().Has(filters.RequestedFields) {
+			ds = ds.SelectAppend(goqu.I(du + ".price").As("price"))
 		}
 		if projection.DeliveryUnitItems().Has(filters.RequestedFields) {
 			ds = ds.SelectAppend(goqu.I(du + ".json_items").As("json_items"))

@@ -104,7 +104,7 @@ type OptimizeFleetDeliveryUnit struct {
 type OptimizeFleetItem struct {
 	Sku         string `json:"sku"`
 	Description string `json:"description"`
-	Quantity    int64  `json:"quantity"`
+	Quantity    int    `json:"quantity"`
 }
 
 func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
