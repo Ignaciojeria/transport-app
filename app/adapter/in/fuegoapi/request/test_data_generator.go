@@ -1,11 +1,19 @@
 package request
 
 import (
+	"encoding/csv"
 	"fmt"
 	"math/rand"
+	"os"
 	"strings"
 	"time"
 )
+
+// formatDecimalForGoogleSheets convierte un float64 a string con formato compatible con Google Sheets
+func formatDecimalForGoogleSheets(value float64) string {
+	// Usar coma como separador decimal para compatibilidad con Google Sheets
+	return strings.Replace(fmt.Sprintf("%.7f", value), ".", ",", -1)
+}
 
 // GenerateMassiveTestData genera datos de prueba masivos para testing de rendimiento
 func GenerateMassiveTestData() OptimizeFleetRequest {
@@ -250,4 +258,217 @@ func generateVisits() []OptimizeFleetVisit {
 	}
 
 	return visits
+}
+
+// GenerateFleetAndVisitsCSV genera dos archivos CSV: uno para fleet y otro para visits
+func GenerateFleetAndVisitsCSV() error {
+	// Generar datos de prueba
+	fleetData := generateFleetData()
+	visitsData := generateVisitsData()
+
+	// Generar CSV de fleet
+	if err := generateFleetCSV(fleetData); err != nil {
+		return fmt.Errorf("error generando CSV de fleet: %w", err)
+	}
+
+	// Generar CSV de visits
+	if err := generateVisitsCSV(visitsData); err != nil {
+		return fmt.Errorf("error generando CSV de visits: %w", err)
+	}
+
+	return nil
+}
+
+// FleetData representa la estructura de datos para el CSV de fleet
+type FleetData struct {
+	ID                     string `json:"id"`
+	Insurance              string `json:"insurance"`
+	StartLocationLatitude  string `json:"startLocationLatitude"`
+	StartLocationLongitude string `json:"startLocationLongitude"`
+	Volume                 string `json:"volume"`
+	Weight                 string `json:"weight"`
+	MaxPackageQuantity     string `json:"maxPackageQuantity"`
+}
+
+// VisitData representa la estructura de datos para el CSV de visits
+type VisitData struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Phone       string `json:"phone"`
+	Address     string `json:"address"`
+	Latitude    string `json:"latitude"`
+	Longitude   string `json:"longitude"`
+	Description string `json:"description"`
+	Price       string `json:"price"`
+	Quantity    string `json:"quantity"`
+	Volume      string `json:"volume"`
+	Weight      string `json:"weight"`
+}
+
+// generateFleetData genera datos de fleet para el CSV
+func generateFleetData() []FleetData {
+	var fleet []FleetData
+
+	// Coordenadas base del depósito
+	baseLat := -33.4505803
+	baseLon := -70.7857318
+
+	// Generar 10 vehículos
+	for i := 0; i < 10; i++ {
+		fleet = append(fleet, FleetData{
+			ID:                     fmt.Sprintf("vehicle_%d", i+1),
+			Insurance:              "100000",
+			StartLocationLatitude:  formatDecimalForGoogleSheets(baseLat),
+			StartLocationLongitude: formatDecimalForGoogleSheets(baseLon),
+			Volume:                 "10000",
+			Weight:                 "10000",
+			MaxPackageQuantity:     "1000",
+		})
+	}
+
+	return fleet
+}
+
+// generateVisitsData genera datos de visits para el CSV
+func generateVisitsData() []VisitData {
+	var visits []VisitData
+
+	// Nombres para generar datos realistas
+	names := []string{
+		"Ignacio Jeriaa", "Juan Gonzalez", "Maria Perez", "Ana Rodriguez", "Carlos Morales",
+		"Lucia Herrera", "Roberto Silva", "Patricia Vargas", "Fernando Castro", "Gabriela Torres",
+	}
+
+	// Coordenadas base de las tres zonas
+	laFloridaBase := struct{ lat, lon float64 }{-33.5225, -70.575}
+	santiagoCentroBase := struct{ lat, lon float64 }{-33.4489, -70.6693}
+	lasCondesBase := struct{ lat, lon float64 }{-33.4167, -70.5833}
+
+	// Generar 1000 visitas
+	for i := 0; i < 1000; i++ {
+		var deliveryLat, deliveryLon float64
+		var zoneName string
+
+		// Distribuir visitas en las tres zonas
+		if i < 300 {
+			// 300 visitas en La Florida
+			latOffset := (rand.Float64() - 0.5) * 0.05
+			lonOffset := (rand.Float64() - 0.5) * 0.05
+			deliveryLat = laFloridaBase.lat + latOffset
+			deliveryLon = laFloridaBase.lon + lonOffset
+			zoneName = "la-florida"
+		} else if i < 600 {
+			// 300 visitas en Santiago Centro
+			latOffset := (rand.Float64() - 0.5) * 0.03
+			lonOffset := (rand.Float64() - 0.5) * 0.03
+			deliveryLat = santiagoCentroBase.lat + latOffset
+			deliveryLon = santiagoCentroBase.lon + lonOffset
+			zoneName = "santiago-centro"
+		} else {
+			// 400 visitas en Las Condes
+			latOffset := (rand.Float64() - 0.5) * 0.04
+			lonOffset := (rand.Float64() - 0.5) * 0.04
+			deliveryLat = lasCondesBase.lat + latOffset
+			deliveryLon = lasCondesBase.lon + lonOffset
+			zoneName = "las-condes"
+		}
+
+		// Generar ID único para la visita
+		visitID := fmt.Sprintf("%d%s", 100+i, strings.ToUpper(zoneName[:2]))
+
+		// Generar dirección realista
+		address := fmt.Sprintf("Calle %d, Piso %d, %s", 1000+i, (i%20)+1, zoneName)
+
+		visits = append(visits, VisitData{
+			ID:          visitID,
+			Name:        names[i%len(names)],
+			Phone:       fmt.Sprintf("569%08d", 80000000+i),
+			Address:     address,
+			Latitude:    formatDecimalForGoogleSheets(deliveryLat),
+			Longitude:   formatDecimalForGoogleSheets(deliveryLon),
+			Description: "bebida 350ml",
+			Price:       "100",
+			Quantity:    "13",
+			Volume:      "2",
+			Weight:      "12",
+		})
+	}
+
+	return visits
+}
+
+// generateFleetCSV genera el archivo CSV de fleet
+func generateFleetCSV(fleet []FleetData) error {
+	file, err := os.Create("fleet.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Escribir encabezados
+	headers := []string{"id", "insurance", "startLocationLatitude", "startLocationLongitude", "volume", "weight", "maxPackageQuantity"}
+	if err := writer.Write(headers); err != nil {
+		return err
+	}
+
+	// Escribir datos
+	for _, f := range fleet {
+		row := []string{
+			f.ID,
+			f.Insurance,
+			f.StartLocationLatitude,
+			f.StartLocationLongitude,
+			f.Volume,
+			f.Weight,
+			f.MaxPackageQuantity,
+		}
+		if err := writer.Write(row); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// generateVisitsCSV genera el archivo CSV de visits
+func generateVisitsCSV(visits []VisitData) error {
+	file, err := os.Create("visits.csv")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Escribir encabezados
+	headers := []string{"id", "name", "phone", "address", "latitude", "longitude", "description", "price", "quantity", "volume", "weight"}
+	if err := writer.Write(headers); err != nil {
+		return err
+	}
+
+	// Escribir datos
+	for _, v := range visits {
+		row := []string{
+			v.ID,
+			v.Name,
+			v.Phone,
+			v.Address,
+			v.Latitude,
+			v.Longitude,
+			v.Description,
+			v.Price,
+			v.Quantity,
+			v.Volume,
+			v.Weight,
+		}
+		if err := writer.Write(row); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

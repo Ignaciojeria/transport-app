@@ -82,35 +82,38 @@ func generateTestData(
 	obs observability.Observability) {
 	fuego.Post(s.Manager, "/optimize/fleet/test-data",
 		func(c fuego.ContextNoBody) (response.OptimizationResponse, error) {
-			spanCtx, span := obs.Tracer.Start(c.Context(), "generate-test-data")
+			_, span := obs.Tracer.Start(c.Context(), "generate-test-data")
 			defer span.End()
 
-			// Generar datos de prueba masivos usando el test data generator
-			testData := request.GenerateMassiveTestData()
+			request.GenerateFleetAndVisitsCSV()
 
-			eventPayload, _ := json.Marshal(testData)
+			/*
+				// Generar datos de prueba masivos usando el test data generator
+				testData := request.GenerateMassiveTestData()
 
-			eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
-				sharedcontext.EventContext{
-					EntityType: "optimization",
-					EventType:  "optimizationRequested",
-				})
+				eventPayload, _ := json.Marshal(testData)
 
-			if err := publish(eventCtx, domain.Outbox{
-				Payload: eventPayload,
-			}); err != nil {
-				return response.OptimizationResponse{}, fuego.HTTPError{
-					Title:  "error requesting optimization with test data",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
+				eventCtx := sharedcontext.AddEventContextToBaggage(spanCtx,
+					sharedcontext.EventContext{
+						EntityType: "optimization",
+						EventType:  "optimizationRequested",
+					})
+
+				if err := publish(eventCtx, domain.Outbox{
+					Payload: eventPayload,
+				}); err != nil {
+					return response.OptimizationResponse{}, fuego.HTTPError{
+						Title:  "error requesting optimization with test data",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
 				}
-			}
 
-			obs.Logger.InfoContext(spanCtx,
-				"TEST_DATA_OPTIMIZATION_REQUEST_SUBMITTED",
-				slog.String("planReferenceID", testData.PlanReferenceID),
-				slog.Int("vehiclesCount", len(testData.Vehicles)),
-				slog.Int("visitsCount", len(testData.Visits)))
+				obs.Logger.InfoContext(spanCtx,
+					"TEST_DATA_OPTIMIZATION_REQUEST_SUBMITTED",
+					slog.String("planReferenceID", testData.PlanReferenceID),
+					slog.Int("vehiclesCount", len(testData.Vehicles)),
+					slog.Int("visitsCount", len(testData.Visits)))*/
 
 			return response.OptimizationResponse{
 				TraceID: span.SpanContext().TraceID().String(),

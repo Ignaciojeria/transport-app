@@ -1,10 +1,6 @@
 package request
 
 type UpsertRouteRequest struct {
-	// Información básica de la ruta
-	VisitKeyMapping   map[string]string
-	VehicleKeyMapping map[string]string
-
 	ReferenceID string `json:"referenceID,omitempty" example:"ROUTE-001"`
 	CreatedAt   string `json:"createdAt,omitempty" example:"2025-01-15T10:30:00Z"`
 
