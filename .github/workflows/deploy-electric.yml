@@ -1,0 +1,52 @@
+name: Deploy Electric App to Firebase Hosting
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'electric/**'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'electric/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: electric/package-lock.json
+        
+    - name: Install dependencies
+      working-directory: ./electric
+      run: npm ci
+      
+    - name: Run linting
+      working-directory: ./electric
+      run: npm run lint
+      
+    - name: Build application
+      working-directory: ./electric
+      run: npm run build
+      
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+    - name: Deploy to Firebase Hosting
+      uses: FirebaseExtended/action-hosting-deploy@v0
+      with:
+        repoToken: '${{ secrets.GITHUB_TOKEN }}'
+        projectId: '${{ vars.GOOGLE_PROJECT_ID }}'
+        channelId: live
+        projectPath: ./electric
