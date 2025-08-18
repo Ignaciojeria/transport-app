@@ -59,7 +59,7 @@ func NewUpsertOrder(conn database.ConnectionFactory, saveFSMTransition SaveFSMTr
 			DBOrderToUpdate.OriginAddressInfoDoc = order.OriginAddressInfoDoc
 			DBOrderToUpdate.DestinationAddressInfoDoc = order.DestinationAddressInfoDoc
 			DBOrderToUpdate.CreatedAt = order.CreatedAt
-			DBOrderToUpdate.RouteDoc = order.RouteDoc
+			//DBOrderToUpdate.RouteDoc = order.RouteDoc
 
 			// Actualizar IDs de documento si han cambiado
 			if o.Headers.DocID(ctx).ShouldUpdate(order.OrderHeadersDoc) {

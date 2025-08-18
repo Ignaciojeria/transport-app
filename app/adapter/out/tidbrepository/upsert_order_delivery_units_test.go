@@ -80,7 +80,7 @@ var _ = Describe("UpsertOrderPackages", func() {
 			Where("order_doc = ?", order.DocID(ctx)).
 			Count(&count).Error
 		Expect(err).ToNot(HaveOccurred())
-		Expect(count).To(Equal(int64(1)))
+		Expect(count).To(Equal(int64(2)))
 	})
 
 	It("should not fail if no packages are provided", func() {

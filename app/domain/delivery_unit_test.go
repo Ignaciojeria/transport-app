@@ -157,10 +157,10 @@ var _ = Describe("Package", func() {
 			wgt := int64(5000)
 			ins := int64(1000)
 			basePackage = DeliveryUnit{
-				Lpn:       "PKG-TEST",
-				Volume:    &vol, // 10 * 20 * 30 = 6000 cm³
-				Weight:    &wgt, // 5 kg = 5000 g
-				Insurance: &ins, // 1000 CLP (simplified)
+				Lpn:    "PKG-TEST",
+				Volume: &vol, // 10 * 20 * 30 = 6000 cm³
+				Weight: &wgt, // 5 kg = 5000 g
+				Price:  &ins, // 1000 CLP (simplified)
 				Items: []Item{
 					{
 						Sku:         "ITEM001",
@@ -190,7 +190,7 @@ var _ = Describe("Package", func() {
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.Price).To(Equal(basePackage.Price))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
@@ -207,7 +207,7 @@ var _ = Describe("Package", func() {
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.Price).To(Equal(basePackage.Price))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
@@ -224,20 +224,20 @@ var _ = Describe("Package", func() {
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.Price).To(Equal(basePackage.Price))
 			Expect(updated.Items).To(Equal(basePackage.Items))
 		})
 
 		It("should update Insurance", func() {
 			ins := int64(2000)
 			newPackage := DeliveryUnit{
-				Insurance: &ins, // 2000 CLP
+				Price: &ins, // 2000 CLP
 			}
 
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 
 			Expect(changed).To(BeTrue())
-			Expect(updated.Insurance).To(Equal(newPackage.Insurance))
+			Expect(updated.Price).To(Equal(newPackage.Price))
 			// Verificar que otros campos se mantienen igual
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
@@ -271,7 +271,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Lpn).To(Equal(basePackage.Lpn))
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
 			Expect(updated.Weight).To(Equal(basePackage.Weight))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.Price).To(Equal(basePackage.Price))
 		})
 
 		It("should not update fields when new values are empty", func() {
@@ -310,7 +310,7 @@ var _ = Describe("Package", func() {
 			Expect(updated.Items).To(Equal(newPackage.Items))
 			// Estos campos no deberían cambiar
 			Expect(updated.Volume).To(Equal(basePackage.Volume))
-			Expect(updated.Insurance).To(Equal(basePackage.Insurance))
+			Expect(updated.Price).To(Equal(basePackage.Price))
 		})
 
 		It("should handle empty Items array", func() {
@@ -415,29 +415,29 @@ var _ = Describe("Package", func() {
 			ins := int64(200)
 			zero := int64(0)
 			basePackage := DeliveryUnit{
-				Insurance: &ins,
+				Price: &ins,
 			}
 			newPackage := DeliveryUnit{
-				Insurance: &zero,
+				Price: &zero,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeTrue())
-			Expect(updated.Insurance).ToNot(BeNil())
-			Expect(*updated.Insurance).To(Equal(int64(0)))
+			Expect(updated.Price).ToNot(BeNil())
+			Expect(*updated.Price).To(Equal(int64(0)))
 		})
 
 		It("should not update Insurance if new value is nil", func() {
 			ins := int64(200)
 			basePackage := DeliveryUnit{
-				Insurance: &ins,
+				Price: &ins,
 			}
 			newPackage := DeliveryUnit{
-				Insurance: nil,
+				Price: nil,
 			}
 			updated, changed := basePackage.UpdateIfChanged(newPackage)
 			Expect(changed).To(BeFalse())
-			Expect(updated.Insurance).ToNot(BeNil())
-			Expect(*updated.Insurance).To(Equal(int64(200)))
+			Expect(updated.Price).ToNot(BeNil())
+			Expect(*updated.Price).To(Equal(int64(200)))
 		})
 	})
 

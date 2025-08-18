@@ -31,9 +31,6 @@ type Order struct {
 	GroupByType  string `gorm:"default:null"`
 	GroupByValue string `gorm:"default:null"`
 
-	RouteDoc string `gorm:"type:char(64);index"`
-	Route    Route  `gorm:"-"`
-
 	OrderReferences []OrderReferences `gorm:"-"`
 
 	DeliveryInstructions string `gorm:"type:text"`
