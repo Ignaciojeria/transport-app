@@ -27,8 +27,8 @@ require (
 	github.com/onsi/ginkgo/v2 v2.23.4
 	github.com/onsi/gomega v1.38.0
 	github.com/paulmach/orb v0.11.1
-	github.com/redis/go-redis/v9 v9.12.0
-	github.com/resend/resend-go/v2 v2.22.0
+	github.com/redis/go-redis/v9 v9.12.1
+	github.com/resend/resend-go/v2 v2.23.0
 	github.com/stretchr/testify v1.10.0
 	github.com/testcontainers/testcontainers-go v0.38.0
 	github.com/testcontainers/testcontainers-go/modules/gcloud v0.38.0
@@ -52,7 +52,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.37.0
 	golang.org/x/sync v0.16.0
 	golang.org/x/text v0.28.0
-	google.golang.org/genai v1.19.0
+	google.golang.org/genai v1.20.0
 	google.golang.org/grpc v1.74.2
 	googlemaps.github.io/maps v1.7.0
 	gorm.io/driver/mysql v1.6.0
