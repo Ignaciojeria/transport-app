@@ -14,7 +14,7 @@ function Component() {
   })
 
   return (
-    <pre>{JSON.stringify(data, (key, value) => 
+    <pre>{JSON.stringify(data, (_key, value) => 
       typeof value === 'bigint' ? value.toString() : value, 2)}</pre>
   )
 }
