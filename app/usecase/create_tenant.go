@@ -140,7 +140,7 @@ func NewCreateTenantAccount(
 			return upsertPlanHeaders(groupCtx, domain.Headers{})
 		})
 		group.Go(func() error {
-			return upsertRoute(groupCtx, domain.Route{}, "")
+			return upsertRoute(groupCtx, domain.Route{}, "", "")
 		})
 		group.Go(func() error {
 			return upsertNodeInfoHeaders(groupCtx, domain.Headers{})

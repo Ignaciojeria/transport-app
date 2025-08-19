@@ -13,14 +13,22 @@ import (
 	"gorm.io/gorm"
 )
 
-type UpsertRoute func(context.Context, domain.Route, string, ...domain.FSMState) error
+type UpsertRoute func(
+	ctx context.Context,
+	r domain.Route,
+	contract interface{},
+	planDoc string,
+	fsmState ...domain.FSMState) error
 
 func init() {
-	ioc.Registry(NewUpsertRoute, database.NewConnectionFactory, NewSaveFSMTransition)
+	ioc.Registry(
+		NewUpsertRoute,
+		database.NewConnectionFactory,
+		NewSaveFSMTransition)
 }
 
 func NewUpsertRoute(conn database.ConnectionFactory, saveFSMTransition SaveFSMTransition) UpsertRoute {
-	return func(ctx context.Context, r domain.Route, planDoc string, fsmState ...domain.FSMState) error {
+	return func(ctx context.Context, r domain.Route, contract interface{}, planDoc string, fsmState ...domain.FSMState) error {
 		return conn.Transaction(func(tx *gorm.DB) error {
 			var existing table.Route
 
@@ -35,7 +43,7 @@ func NewUpsertRoute(conn database.ConnectionFactory, saveFSMTransition SaveFSMTr
 
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// No existe → insert
-				newRoute := mapper.MapRouteTable(ctx, r, planDoc)
+				newRoute := mapper.MapRouteTable(ctx, r, contract, planDoc)
 				if err := tx.Create(&newRoute).Error; err != nil {
 					return err
 				}
@@ -48,7 +56,7 @@ func NewUpsertRoute(conn database.ConnectionFactory, saveFSMTransition SaveFSMTr
 			}
 
 			// Ya existe → update
-			updateData := mapper.MapRouteTable(ctx, r, planDoc)
+			updateData := mapper.MapRouteTable(ctx, r, contract, planDoc)
 			updateData.ID = existing.ID // necesario para que GORM haga UPDATE
 			updateData.CreatedAt = existing.CreatedAt
 

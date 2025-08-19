@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/out/fuegoapiclient"
 	"transport-app/app/adapter/out/storjbucket"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
@@ -35,7 +36,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		usecase.NewStoreDataInBucketWorkflow,
-		usecase.NewPublishWebhookWorkflow,
+		fuegoapiclient.NewPostWebhook,
 	)
 }
 
@@ -48,7 +49,7 @@ func newOptimizationRequestedConsumer(
 	obs observability.Observability,
 	conf configuration.Conf,
 	storeDataInBucketWorkflow usecase.StoreDataInBucketWorkflow,
-	publishWebhookWorkflow usecase.PublishWebhookWorkflow,
+	postWebhook fuegoapiclient.PostWebhook,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.OPTIMIZATION_REQUESTED_SUBSCRIPTION == "" {
@@ -176,7 +177,7 @@ func newOptimizationRequestedConsumer(
 				webhookBody.Plan = routeRequests[0].PlanReferenceID
 			}
 
-			if err := publishWebhookWorkflow(publishWebhookWorkflowCtx, webhookBody, "fleet-optimized"); err != nil {
+			if err := postWebhook(publishWebhookWorkflowCtx, webhookBody, "fleet-optimized"); err != nil {
 				obs.Logger.ErrorContext(ctx, "Error publicando webhook", "error", err)
 				msg.Ack()
 				return

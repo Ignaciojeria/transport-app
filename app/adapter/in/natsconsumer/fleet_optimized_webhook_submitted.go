@@ -5,18 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+	"transport-app/app/adapter/in/fuegoapi/request"
+	"transport-app/app/adapter/in/natsconsumer/model"
+	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
+	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
-	"webhooks/app/adapter/in/fuegoapi/model"
-	"webhooks/app/client"
+	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/usecase"
+
+	client "transport-app/app/adapter/out/restyclient/webhook"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
+	"storj.io/uplink"
 )
 
 func init() {
@@ -25,8 +32,10 @@ func init() {
 		natsconn.NewJetStream,
 		observability.NewObservability,
 		configuration.NewConf,
-		client.NewPostWebhook,
 		natsconn.NewKeyValue,
+		storjbucket.NewTransportAppBucket,
+		client.NewPostWebhook,
+		usecase.NewUpsertElectricRouteWorkflow,
 	)
 }
 
@@ -34,8 +43,10 @@ func newFleetOptimizedWebhookSubmitted(
 	js jetstream.JetStream,
 	obs observability.Observability,
 	conf configuration.Conf,
-	postWebhook client.PostWebhook,
 	kv jetstream.KeyValue,
+	storjBucket *storjbucket.TransportAppBucket,
+	publishCustomerWebhook client.PostWebhook,
+	upsertElectricRoute usecase.UpsertElectricRouteWorkflow,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.FLEET_OPTIMIZED_WEBHOOK_SUBSCRIPTION == "" {
@@ -82,7 +93,16 @@ func newFleetOptimizedWebhookSubmitted(
 
 		ctx := otel.GetTextMapPropagator().Extract(context.Background(), propagation.MapCarrier(pubsubMsg.Attributes))
 
-		bytes, err := kv.Get(ctx, wh.DocID(ctx).String())
+		// Generar idempotency key para el webhook
+		webhookKey, err := canonicaljson.HashKey(ctx, "fleet_optimized_webhook", input)
+		if err != nil {
+			obs.Logger.ErrorContext(ctx, "Error generando key para webhook", "error", err)
+			msg.Nak()
+			return
+		}
+		webhookCtx := sharedcontext.WithIdempotencyKey(ctx, webhookKey)
+
+		bytes, err := kv.Get(webhookCtx, wh.DocID(webhookCtx).String())
 		if err != nil {
 			obs.Logger.Error("Error obteniendo webhook", "error", err)
 			msg.Ack()
@@ -101,13 +121,69 @@ func newFleetOptimizedWebhookSubmitted(
 		//webhook.Headers["X-Access-Token"] = accessToken
 		//webhook.Headers["tenant"] = msg.Headers().Get("tenant")
 
-		if err := postWebhook(ctx, webhook); err != nil {
-			obs.Logger.Error("Error posteando webhook", "error", err)
+		// Generar token de acceso para Storj
+		token, err := storjBucket.GenerateEphemeralToken(webhookCtx, 10*time.Minute, uplink.Permission{
+			AllowDownload: true,
+		})
+		if err != nil {
+			obs.Logger.Error("Error generando token de acceso", "error", err)
 			msg.Ack()
 			return
 		}
 
-		obs.Logger.InfoContext(ctx, "Webhook procesado exitosamente desde NATS")
+		for _, routeID := range input.Routes {
+			data, err := storjBucket.DownloadWithToken(webhookCtx, token, routeID)
+			if err != nil {
+				obs.Logger.Error("Error descargando ruta desde Storj", "error", err)
+				msg.Ack()
+				return
+			}
+			var routeRequest request.UpsertRouteRequest
+			if err := json.Unmarshal(data, &routeRequest); err != nil {
+				obs.Logger.Error("Error deserializando datos de ruta", "error", err)
+				msg.Ack()
+				return
+			}
+
+			route, err := routeRequest.Map()
+			if err != nil {
+				obs.Logger.Error("Error mappeando datos de ruta", "error", err)
+				msg.Ack()
+				return
+			}
+
+			plan := domain.Plan{
+				ReferenceID: input.Plan,
+			}
+
+			// Generar idempotency key para la inserción de ruta
+			routeKey, err := canonicaljson.HashKey(webhookCtx, "upsert_electric_route", map[string]interface{}{
+				"routeID": routeID,
+				"plan":    input.Plan,
+			})
+			if err != nil {
+				obs.Logger.ErrorContext(webhookCtx, "Error generando key para inserción de ruta", "error", err)
+				msg.Nak()
+				return
+			}
+			routeCtx := sharedcontext.WithIdempotencyKey(webhookCtx, routeKey)
+
+			err = upsertElectricRoute(routeCtx, route, plan.DocID(routeCtx).String(), routeRequest)
+			if err != nil {
+				obs.Logger.Error("Error insertando ruta", "error", err)
+				msg.Nak()
+				return
+			}
+
+		}
+
+		if err := publishCustomerWebhook(webhookCtx, webhook); err != nil {
+			obs.Logger.Error("Error posteando webhook", "error", err)
+			msg.Nak()
+			return
+		}
+
+		obs.Logger.InfoContext(webhookCtx, "Webhook procesado exitosamente desde NATS")
 		msg.Ack()
 	})
 }

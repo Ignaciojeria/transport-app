@@ -1,5 +1,10 @@
 package request
 
+import (
+	"errors"
+	"transport-app/app/domain"
+)
+
 type UpsertRouteRequest struct {
 	ReferenceID string `json:"referenceID,omitempty" example:"ROUTE-001"`
 	CreatedAt   string `json:"createdAt,omitempty" example:"2025-01-15T10:30:00Z"`
@@ -140,4 +145,48 @@ func (r *UpsertRouteRequest) FlattenForExcel() []map[string]interface{} {
 	}
 
 	return rows
+}
+
+// Map convierte la request a entidades del dominio
+func (r *UpsertRouteRequest) Map() (domain.Route, error) {
+	if r == nil {
+		return domain.Route{}, errors.New("request cannot be nil")
+	}
+
+	// Mapear vehículo (solo campos básicos que coinciden)
+	vehicle := domain.Vehicle{
+		Plate: r.Vehicle.Plate,
+	}
+
+	// Mapear geometría
+	geometry := domain.RouteGeometry{
+		Encoding: r.Geometry.Encoding,
+		Type:     r.Geometry.Type,
+		Value:    r.Geometry.Value,
+	}
+
+	// Mapear órdenes desde las visitas
+	var orders []domain.Order
+	for _, v := range r.Visits {
+		for _, o := range v.Orders {
+			order := domain.Order{
+				ReferenceID: domain.ReferenceID(o.ReferenceID),
+			}
+			orders = append(orders, order)
+		}
+	}
+
+	// Crear ruta con la estructura del dominio
+	route := domain.Route{
+		ReferenceID: r.ReferenceID,
+		Vehicle:     vehicle,
+		Orders:      orders,
+		Geometry:    geometry,
+		TimeWindow: domain.TimeWindow{
+			Start: r.Vehicle.TimeWindow.Start,
+			End:   r.Vehicle.TimeWindow.End,
+		},
+	}
+
+	return route, nil
 }

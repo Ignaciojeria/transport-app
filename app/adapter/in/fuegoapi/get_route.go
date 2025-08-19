@@ -15,7 +15,10 @@ import (
 )
 
 func init() {
-	ioc.Registry(getRoute, httpserver.New, storjbucket.NewTransportAppBucket)
+	ioc.Registry(
+		getRoute,
+		httpserver.New,
+		storjbucket.NewTransportAppBucket)
 }
 
 func getRoute(s httpserver.Server, storjBucket *storjbucket.TransportAppBucket) {

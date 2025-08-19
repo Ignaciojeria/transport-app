@@ -1,6 +1,7 @@
 package table
 
 import (
+	"encoding/json"
 	"transport-app/app/domain"
 
 	"github.com/google/uuid"
@@ -10,6 +11,7 @@ import (
 type Route struct {
 	gorm.Model
 	ID                int64                `gorm:"primaryKey"`
+	Raw               json.RawMessage      `gorm:"type:jsonb;default:null"`
 	ReferenceID       string               `gorm:"type:varchar(255);not null"`
 	DocumentID        string               `gorm:"type:char(64);uniqueIndex"`
 	TenantID          uuid.UUID            `gorm:"not null"`

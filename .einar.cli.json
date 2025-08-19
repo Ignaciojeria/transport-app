@@ -520,6 +520,18 @@
         {
             "kind": "usecase",
             "name": "vehicles-input-key-normalization-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "get-route-from-storage"
+        },
+        {
+            "kind": "usecase",
+            "name": "get-route-from-storage-workflow"
+        },
+        {
+            "kind": "usecase",
+            "name": "upsert-electric-route"
         }
     ]
 }
