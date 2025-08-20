@@ -51,16 +51,3 @@ export function RouteComponent() {
     </div>
   )
 }
-
-// Componente principal que decide qué mostrar basado en la ruta
-function App() {
-  const pathname = window.location.pathname
-  
-  if (pathname.startsWith('/driver/routes/')) {
-    return <RouteComponent />
-  }
-  
-  return <HomeComponent />
-}
-
-export default App
