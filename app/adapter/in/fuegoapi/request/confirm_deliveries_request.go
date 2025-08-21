@@ -13,56 +13,73 @@ type ConfirmDeliveriesRequest struct {
 		PerformedBy string `json:"performedBy" example:"juan@example.com"`
 		Reason      string `json:"reason" example:"Corrección tras reclamo de transporte"`
 	} `json:"manualChange"`
+
 	Carrier struct {
 		Name       string `json:"name" example:"Transportes ABC"`
 		NationalID string `json:"nationalID" example:"1234567890"`
 	} `json:"carrier"`
+
 	Driver struct {
 		Email      string `json:"email" example:"juan@example.com"`
 		NationalID string `json:"nationalID" example:"1234567890"`
 	} `json:"driver"`
-	Route struct {
-		Orders []struct {
-			BusinessIdentifiers struct {
-				Commerce string `json:"commerce"`
-				Consumer string `json:"consumer"`
-			} `json:"businessIdentifiers"`
-			Delivery struct {
-				Failure struct {
-					Detail      string `json:"detail" example:"no quiso recibir producto porque la caja estaba dañada"`
-					Reason      string `json:"reason" example:"CLIENTE_RECHAZA_ENTREGA"`
-					ReferenceID string `json:"referenceID" example:"1021"`
-				} `json:"failure"`
-				HandledAt string `json:"handledAt" example:"2025-06-06T14:30:00Z"`
-				Location  struct {
-					Latitude  float64 `json:"latitude" example:"19.432607"`
-					Longitude float64 `json:"longitude" example:"-99.133209"`
-				} `json:"location"`
-			} `json:"delivery"`
-			EvidencePhotos []struct {
-				TakenAt string `json:"takenAt" example:"2025-06-06T14:30:00Z"`
-				Type    string `json:"type" example:"HOUSE_PHOTO"`
-				URL     string `json:"url" example:"https://ignaciojeria.github.io/"`
-			} `json:"evidencePhotos"`
-			DeliveryUnits []struct {
-				Items []struct {
-					Sku       string `json:"sku" example:"SKU123"`
-					Expected  int    `json:"expected" example:"1"`
-					Delivered int    `json:"delivered" example:"1"`
-				} `json:"items"`
-				Lpn string `json:"lpn" example:"ABC123"`
-			} `json:"deliveryUnits"`
-			Recipient struct {
-				FullName   string `json:"fullName" example:"Juan Perez"`
-				NationalID string `json:"nationalID" example:"1234567890"`
-			} `json:"recipient"`
-			ReferenceID string `json:"referenceID"`
-		} `json:"orders"`
-		ReferenceID string `json:"referenceID"`
-	} `json:"route"`
+
 	Vehicle struct {
 		Plate string `json:"plate" example:"ABC123"`
 	} `json:"vehicle"`
+
+	Route struct {
+		ReferenceID    string `json:"referenceID" example:"ROUTE001"`
+		SequenceNumber int    `json:"sequenceNumber" example:"1"`
+	} `json:"route"`
+
+	// Ahora cada DeliveryUnit tiene su propio estado de entrega
+	DeliveryUnits []struct {
+		// Identificadores de la orden padre
+		OrderReferenceID string `json:"orderReferenceID" example:"ORD001"`
+
+		BusinessIdentifiers struct {
+			Commerce string `json:"commerce" example:"COMMERCE001"`
+			Consumer string `json:"consumer" example:"CONSUMER001"`
+		} `json:"businessIdentifiers"`
+
+		Recipient struct {
+			FullName   string `json:"fullName" example:"Juan Perez"`
+			NationalID string `json:"nationalID" example:"1234567890"`
+		} `json:"recipient"`
+
+		// Cada unidad tiene su propio estado de entrega
+		Delivery struct {
+			HandledAt string `json:"handledAt" example:"2025-06-06T14:30:00Z"`
+			Status    string `json:"status" example:"DELIVERED"` // DELIVERED, FAILED, PARTIAL
+			Location  struct {
+				Latitude  float64 `json:"latitude" example:"19.432607"`
+				Longitude float64 `json:"longitude" example:"-99.133209"`
+			} `json:"location"`
+			Failure *struct {
+				Detail      string `json:"detail" example:"no quiso recibir producto porque la caja estaba dañada"`
+				Reason      string `json:"reason" example:"CLIENTE_RECHAZA_ENTREGA"`
+				ReferenceID string `json:"referenceID" example:"1021"`
+			} `json:"failure,omitempty"`
+		} `json:"delivery"`
+
+		// Fotos específicas para esta unidad de entrega
+		EvidencePhotos []struct {
+			TakenAt string `json:"takenAt" example:"2025-06-06T14:30:00Z"`
+			Type    string `json:"type" example:"PACKAGE_PHOTO"`
+			URL     string `json:"url" example:"https://ignaciojeria.github.io/"`
+		} `json:"evidencePhotos"`
+
+		// Información de la unidad de entrega
+		Lpn   string `json:"lpn" example:"ABC123"`
+		Items []struct {
+			Sku         string `json:"sku" example:"SKU123"`
+			Description string `json:"description" example:"Descripción del producto"`
+			Quantity    int    `json:"quantity" example:"2"`
+			// Para entregas parciales de items
+			DeliveredQuantity int `json:"deliveredQuantity" example:"1"`
+		} `json:"items"`
+	} `json:"deliveryUnits"`
 }
 
 func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
@@ -82,86 +99,98 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 		},
 	}
 
-	// Mapear órdenes
-	orders := make([]domain.Order, 0, len(r.Route.Orders))
-	for _, order := range r.Route.Orders {
-		domainOrder := domain.Order{
-			Headers: domain.Headers{
-				Consumer: order.BusinessIdentifiers.Consumer,
-				Commerce: order.BusinessIdentifiers.Commerce,
-				Channel:  sharedcontext.ChannelFromContext(ctx),
-			},
-			ReferenceID: domain.ReferenceID(order.ReferenceID),
-			Destination: domain.NodeInfo{
-				AddressInfo: domain.AddressInfo{
-					Contact: domain.Contact{
-						FullName:   order.Recipient.FullName,
-						NationalID: order.Recipient.NationalID,
+	// Crear un mapa para agrupar las unidades de entrega por orden
+	ordersMap := make(map[string]*domain.Order)
+
+	// Procesar cada unidad de entrega
+	for _, du := range r.DeliveryUnits {
+		orderRefID := du.OrderReferenceID
+
+		// Crear o obtener la orden existente
+		domainOrder, exists := ordersMap[orderRefID]
+		if !exists {
+			domainOrder = &domain.Order{
+				Headers: domain.Headers{
+					Consumer: du.BusinessIdentifiers.Consumer,
+					Commerce: du.BusinessIdentifiers.Commerce,
+					Channel:  sharedcontext.ChannelFromContext(ctx),
+				},
+				ReferenceID: domain.ReferenceID(du.OrderReferenceID),
+				Destination: domain.NodeInfo{
+					AddressInfo: domain.AddressInfo{
+						Contact: domain.Contact{
+							FullName:   du.Recipient.FullName,
+							NationalID: du.Recipient.NationalID,
+						},
 					},
 				},
-			},
-		}
-
-		// Mapear unidades de entrega
-		deliveryUnits := make(domain.DeliveryUnits, 0, len(order.DeliveryUnits))
-		if len(order.DeliveryUnits) == 0 {
-			order.DeliveryUnits = append(order.DeliveryUnits, struct {
-				Items []struct {
-					Sku       string `json:"sku" example:"SKU123"`
-					Expected  int    `json:"expected" example:"1"`
-					Delivered int    `json:"delivered" example:"1"`
-				} `json:"items"`
-				Lpn string `json:"lpn" example:"ABC123"`
-			}{})
-		}
-
-		for _, du := range order.DeliveryUnits {
-			items := make([]domain.Item, 0, len(du.Items))
-			for _, item := range du.Items {
-				items = append(items, domain.Item{
-					Sku: item.Sku,
-				})
+				DeliveryUnits: make(domain.DeliveryUnits, 0),
 			}
-			t, _ := time.Parse(time.RFC3339, order.Delivery.HandledAt)
-			deliveryUnits = append(deliveryUnits, domain.DeliveryUnit{
-				Lpn:   du.Lpn,
-				Items: items,
-				// Volume, Weight, Insurance: nil (no presentes en este request)
-				ConfirmDelivery: domain.ConfirmDelivery{
-					ManualChange: domain.ManualChange{
-						PerformedBy: r.ManualChange.PerformedBy,
-						Reason:      r.ManualChange.Reason,
-					},
-					HandledAt: t,
-					Latitude:  order.Delivery.Location.Latitude,
-					Longitude: order.Delivery.Location.Longitude,
-					EvidencePhotos: func() []domain.EvidencePhoto {
-						photos := make([]domain.EvidencePhoto, 0, len(order.EvidencePhotos))
-						for _, photo := range order.EvidencePhotos {
-							takenAt, _ := time.Parse(time.RFC3339, photo.TakenAt)
-							photos = append(photos, domain.EvidencePhoto{
-								TakenAt: takenAt,
-								Type:    photo.Type,
-								URL:     photo.URL,
-							})
-						}
-						return photos
-					}(),
-					NonDeliveryReason: domain.NonDeliveryReason{
-						Reason:      order.Delivery.Failure.Reason,
-						Details:     order.Delivery.Failure.Detail,
-						ReferenceID: order.Delivery.Failure.ReferenceID,
-					},
-					Recipient: domain.Recipient{
-						FullName:   order.Recipient.FullName,
-						NationalID: order.Recipient.NationalID,
-					},
-				},
+			ordersMap[orderRefID] = domainOrder
+		}
+
+		// Crear los items de la unidad de entrega
+		items := make([]domain.Item, 0, len(du.Items))
+		for _, item := range du.Items {
+			items = append(items, domain.Item{
+				Sku: item.Sku,
 			})
 		}
 
-		domainOrder.DeliveryUnits = deliveryUnits
-		orders = append(orders, domainOrder)
+		// Parsear la fecha de manejo
+		var handledAt time.Time
+		if du.Delivery.HandledAt != "" {
+			handledAt, _ = time.Parse(time.RFC3339, du.Delivery.HandledAt)
+		}
+
+		// Crear la unidad de entrega del dominio
+		domainDeliveryUnit := domain.DeliveryUnit{
+			Lpn:   du.Lpn,
+			Items: items,
+			ConfirmDelivery: domain.ConfirmDelivery{
+				ManualChange: domain.ManualChange{
+					PerformedBy: r.ManualChange.PerformedBy,
+					Reason:      r.ManualChange.Reason,
+				},
+				HandledAt: handledAt,
+				Latitude:  du.Delivery.Location.Latitude,
+				Longitude: du.Delivery.Location.Longitude,
+				EvidencePhotos: func() []domain.EvidencePhoto {
+					photos := make([]domain.EvidencePhoto, 0, len(du.EvidencePhotos))
+					for _, photo := range du.EvidencePhotos {
+						takenAt, _ := time.Parse(time.RFC3339, photo.TakenAt)
+						photos = append(photos, domain.EvidencePhoto{
+							TakenAt: takenAt,
+							Type:    photo.Type,
+							URL:     photo.URL,
+						})
+					}
+					return photos
+				}(),
+				Recipient: domain.Recipient{
+					FullName:   du.Recipient.FullName,
+					NationalID: du.Recipient.NationalID,
+				},
+			},
+		}
+
+		// Agregar información de fallo si existe
+		if du.Delivery.Failure != nil {
+			domainDeliveryUnit.ConfirmDelivery.NonDeliveryReason = domain.NonDeliveryReason{
+				Reason:      du.Delivery.Failure.Reason,
+				Details:     du.Delivery.Failure.Detail,
+				ReferenceID: du.Delivery.Failure.ReferenceID,
+			}
+		}
+
+		// Agregar la unidad de entrega a la orden
+		domainOrder.DeliveryUnits = append(domainOrder.DeliveryUnits, domainDeliveryUnit)
+	}
+
+	// Convertir el mapa a slice de órdenes
+	orders := make([]domain.Order, 0, len(ordersMap))
+	for _, order := range ordersMap {
+		orders = append(orders, *order)
 	}
 
 	route.Orders = orders
@@ -170,12 +199,20 @@ func (r ConfirmDeliveriesRequest) Map(ctx context.Context) domain.Route {
 }
 
 func (r ConfirmDeliveriesRequest) Validate() error {
-	for _, order := range r.Route.Orders {
-		for _, du := range order.DeliveryUnits {
-			// Si no hay LPN ni SKUs, retornar error
-			if du.Lpn == "" && len(du.Items) == 0 {
-				return errors.New("delivery unit must have either LPN or SKUs")
-			}
+	for _, du := range r.DeliveryUnits {
+		// Si no hay LPN ni SKUs, retornar error
+		if du.Lpn == "" && len(du.Items) == 0 {
+			return errors.New("delivery unit must have either LPN or SKUs")
+		}
+
+		// Validar que cada unidad tenga un OrderReferenceID
+		if du.OrderReferenceID == "" {
+			return errors.New("delivery unit must have an orderReferenceID")
+		}
+
+		// Validar que tenga información de entrega
+		if du.Delivery.HandledAt == "" {
+			return errors.New("delivery unit must have a handledAt timestamp")
 		}
 	}
 	return nil
