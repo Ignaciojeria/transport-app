@@ -6,6 +6,7 @@ import (
 )
 
 type UpsertRouteRequest struct {
+	DocumentID  string `json:"documentID"`
 	ReferenceID string `json:"referenceID,omitempty" example:"ROUTE-001"`
 	CreatedAt   string `json:"createdAt,omitempty" example:"2025-01-15T10:30:00Z"`
 
@@ -103,16 +104,18 @@ type UpsertRouteNodeInfo struct {
 
 type UpsertRouteOrder struct {
 	ReferenceID   string                    `json:"referenceID,omitempty" example:"ORDER-001"`
+	DocumentID    string                    `json:"documentID"`
 	DeliveryUnits []UpsertRouteDeliveryUnit `json:"deliveryUnits,omitempty"`
 }
 
 type UpsertRouteDeliveryUnit struct {
-	Items  []UpsertRouteItem `json:"items,omitempty"`
-	Volume int64             `json:"volume,omitempty" example:"1000"`
-	Weight int64             `json:"weight,omitempty" example:"1000"`
-	Price  int64             `json:"price,omitempty" example:"10000"`
-	Lpn    string            `json:"lpn,omitempty" example:"LPN-789012"`
-	Skills []string          `json:"skills,omitempty"`
+	DocumentID string            `json:"documentID"`
+	Items      []UpsertRouteItem `json:"items,omitempty"`
+	Volume     int64             `json:"volume,omitempty" example:"1000"`
+	Weight     int64             `json:"weight,omitempty" example:"1000"`
+	Price      int64             `json:"price,omitempty" example:"10000"`
+	Lpn        string            `json:"lpn,omitempty" example:"LPN-789012"`
+	Skills     []string          `json:"skills,omitempty"`
 }
 
 type UpsertRouteItem struct {
