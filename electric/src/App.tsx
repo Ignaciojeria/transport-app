@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
