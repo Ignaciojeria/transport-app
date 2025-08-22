@@ -1,15 +1,11 @@
-import { createRoute, createRootRoute, createRouter, Outlet } from '@tanstack/react-router'
-import { HomeComponent, RouteComponent } from './App'
+import { createRoute, createRootRoute, createRouter, Outlet, Navigate } from '@tanstack/react-router'
+import { RouteComponent } from './App'
 
 // Ruta raíz
 const rootRoute = createRootRoute({
   component: () => (
     <>
-      <div className="p-2 flex gap-2">
-        <a href="/" className="font-bold">Home</a>
-        <a href="/driver/routes/123#access_token=test" className="font-bold">Ejemplo Ruta</a>
-      </div>
-      <hr />
+
       <Outlet />
     </>
   ),
@@ -19,7 +15,13 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: HomeComponent,
+  component: () => (
+    <Navigate
+      to="/driver/routes/$routeId"
+      params={{ routeId: '123' }}
+      hash="access_token=test"
+    />
+  ),
 })
 
 // Ruta para rutas específicas del driver
