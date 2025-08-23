@@ -282,6 +282,37 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
       try { mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 }) } catch {}
     }
   }
+
+  const openNextNavigation = (provider: 'google' | 'waze' | 'geo' = 'google') => {
+    const nextIdx = getNextPendingVisitIndex()
+    if (typeof nextIdx !== 'number') return
+    const visit = (visits as any)[nextIdx]
+    const c = visit?.addressInfo?.coordinates
+    const name = visit?.addressInfo?.contact?.fullName || 'Destino'
+    const address = visit?.addressInfo?.addressLine1
+    const latlng = Array.isArray(c?.point)
+      ? [c.point[1] as number, c.point[0] as number]
+      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
+          ? [c.latitude as number, c.longitude as number]
+          : null)
+    let url = ''
+    if (provider === 'waze' && latlng) {
+      url = `https://waze.com/ul?ll=${latlng[0]},${latlng[1]}&navigate=yes`
+    } else if (provider === 'geo' && latlng) {
+      const label = encodeURIComponent(name)
+      url = `geo:${latlng[0]},${latlng[1]}?q=${latlng[0]},${latlng[1]}(${label})`
+    } else {
+      // Google Maps por defecto
+      if (latlng) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${latlng[0]},${latlng[1]}&travelmode=driving`
+      } else if (typeof address === 'string' && address.length > 0) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}&travelmode=driving`
+      }
+    }
+    if (url) {
+      try { window.open(url, '_blank', 'noopener,noreferrer') } catch {}
+    }
+  }
   
   // Construir una lista plana de unidades de entrega para agrupar por estado
   type MappedUnit = {
@@ -389,6 +420,24 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
             >
               <Crosshair className="w-5 h-5" />
             </button>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => openNextNavigation('google')}
+                className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-blue-600 hover:bg-gray-50 hover:shadow-xl transition-all"
+                aria-label="Navegar con Google Maps"
+                title="Google Maps"
+              >
+                G
+              </button>
+              <button
+                onClick={() => openNextNavigation('waze')}
+                className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-indigo-600 hover:bg-gray-50 hover:shadow-xl transition-all"
+                aria-label="Navegar con Waze"
+                title="Waze"
+              >
+                W
+              </button>
+            </div>
           </div>
         </div>
       </div>
