@@ -2,8 +2,8 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
-import { useMemo, useState } from 'react'
-import { CheckCircle, XCircle, Play, Package, User, MapPin } from 'lucide-react'
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { CheckCircle, XCircle, Play, Package, User, MapPin, Maximize2, Minimize2, Crosshair } from 'lucide-react'
 
 
 // Componente para rutas específicas del driver
@@ -34,14 +34,20 @@ export function RouteComponent() {
 }
 
 type DeliveryRouteRaw = {
-  vehicle?: { plate?: string }
+  vehicle?: { plate?: string; startLocation?: { addressInfo?: any } }
   visits?: Array<any>
+  geometry?: { encoding?: string; type?: string; value?: string }
 }
 
 function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
   const [routeStarted, setRouteStarted] = useState(false)
   const [deliveryStates, setDeliveryStates] = useState<Record<string, 'delivered' | 'not-delivered' | undefined>>({})
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [mapFullscreen, setMapFullscreen] = useState(false)
+  const mapRef = useRef<HTMLDivElement | null>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const [mapReady, setMapReady] = useState(false)
 
   const handleStartRoute = () => {
     setRouteStarted(true)
@@ -87,6 +93,195 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
   }
 
   const visits = routeData?.visits ?? []
+  
+  // Siguiente visita pendiente (primera con unidades sin estado)
+  const getNextPendingVisitIndex = (): number | null => {
+    for (let vIdx = 0; vIdx < (visits || []).length; vIdx++) {
+      const visit: any = (visits as any)[vIdx]
+      const hasPending = (visit?.orders || []).some((order: any, oIdx: number) =>
+        (order?.deliveryUnits || []).some((_u: any, uIdx: number) => getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined)
+      )
+      if (hasPending) return vIdx
+    }
+    return (visits || []).length > 0 ? 0 : null
+  }
+  
+  // Inicialización dinámica de Leaflet y render del mapa con visitas
+  const initializeLeafletMap = () => {
+    if (typeof window === 'undefined') return
+    const L = (window as any).L
+    if (!L || !mapRef.current) return
+    if (mapInstanceRef.current) {
+      try { mapInstanceRef.current.remove() } catch {}
+      mapInstanceRef.current = null
+    }
+
+    // Helper: obtener [lat, lng] desde addressInfo (acepta point [lng,lat] o {latitude,longitude})
+    const getLatLngFromAddressInfo = (addr: any): [number, number] | null => {
+      const c = addr?.coordinates
+      if (!c) return null
+      if (Array.isArray(c?.point) && c.point.length >= 2 && typeof c.point[0] === 'number' && typeof c.point[1] === 'number') {
+        return [c.point[1] as number, c.point[0] as number]
+      }
+      if (typeof c.latitude === 'number' && typeof c.longitude === 'number') {
+        return [c.latitude as number, c.longitude as number]
+      }
+      return null
+    }
+
+    // Extraer waypoints desde startLocation y visitas
+    const startLatLng = getLatLngFromAddressInfo(routeData?.vehicle?.startLocation?.addressInfo)
+    const points: Array<[number, number]> = [
+      ...((visits || [])
+        .map((v: any) => getLatLngFromAddressInfo(v?.addressInfo))
+        .filter((p: any): p is [number, number] => Array.isArray(p))),
+    ]
+    const nextIdx = getNextPendingVisitIndex()
+
+    const defaultCenter: [number, number] = points[0] ?? [-33.45, -70.66] // Santiago fallback
+    const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 14 : 12)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map)
+
+    // Icono numerado para visitas
+    const createNumberedIcon = (number: number, color = '#4F46E5') =>
+      L.divIcon({
+        html: `\n          <div style="\n            background: linear-gradient(135deg, ${color}, #7C3AED);\n            color: white;\n            width: 28px;\n            height: 28px;\n            border-radius: 50%;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            font-weight: 700;\n            font-size: 12px;\n            box-shadow: 0 4px 8px rgba(0,0,0,0.25);\n            border: 2px solid white;\n          ">${number}</div>\n        `,
+        className: 'custom-div-icon',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      })
+
+    // Marcador de inicio (opcional)
+    if (startLatLng) {
+      L.marker(startLatLng as any, { icon: createNumberedIcon(0, '#10B981') }).addTo(map)
+    }
+
+    // Marcadores de visitas
+    points.forEach((latlng, idx) => {
+      const isNext = typeof nextIdx === 'number' && idx === nextIdx
+      L.marker(latlng as any, { icon: createNumberedIcon(idx + 1, isNext ? '#EF4444' : '#4F46E5') }).addTo(map)
+    })
+
+    // Ruta (polyline)
+    // Decodificador de polylines (Google Encoded Polyline Algorithm Format)
+    const decodePolyline = (encoded: string): Array<[number, number]> => {
+      let index = 0
+      const len = encoded.length
+      let lat = 0
+      let lng = 0
+      const coordinates: Array<[number, number]> = []
+      while (index < len) {
+        let b = 0
+        let shift = 0
+        let result = 0
+        do {
+          b = encoded.charCodeAt(index++) - 63
+          result |= (b & 0x1f) << shift
+          shift += 5
+        } while (b >= 0x20)
+        const dlat = (result & 1) ? ~(result >> 1) : (result >> 1)
+        lat += dlat
+
+        shift = 0
+        result = 0
+        do {
+          b = encoded.charCodeAt(index++) - 63
+          result |= (b & 0x1f) << shift
+          shift += 5
+        } while (b >= 0x20)
+        const dlng = (result & 1) ? ~(result >> 1) : (result >> 1)
+        lng += dlng
+
+        coordinates.push([lat * 1e-5, lng * 1e-5])
+      }
+      return coordinates
+    }
+
+    const encoded = (routeData as any)?.geometry?.encoding === 'polyline' ? (routeData as any)?.geometry?.value : undefined
+    let routeLatLngs: Array<[number, number]> | null = null
+    if (typeof encoded === 'string' && encoded.length > 0) {
+      try {
+        const decoded = decodePolyline(encoded)
+        if (decoded.length >= 2) {
+          routeLatLngs = decoded
+        }
+      } catch {}
+    }
+
+    const linePoints = routeLatLngs ?? (points.length >= 2 ? points : null)
+    if (linePoints) {
+      const line = L.polyline(linePoints as any, {
+        color: '#4F46E5',
+        weight: 4,
+        opacity: 0.85,
+        dashArray: '10,5',
+      }).addTo(map)
+      // Si hay siguiente, centramos ahí; si no, ajustamos a la ruta
+      if (typeof nextIdx === 'number' && points[nextIdx]) {
+        map.setView(points[nextIdx] as any, 16)
+      } else {
+        map.fitBounds(line.getBounds(), { padding: [24, 24] })
+      }
+    } else if (points.length > 0 || startLatLng) {
+      const group = L.featureGroup([
+        ...points.map((p) => L.marker(p as any)),
+        ...(startLatLng ? [L.marker(startLatLng as any)] : []),
+      ])
+      map.fitBounds(group.getBounds(), { padding: [24, 24] })
+    }
+
+    mapInstanceRef.current = map
+    setMapReady(true)
+  }
+
+  useEffect(() => {
+    // Cargar Leaflet dinámicamente y luego inicializar
+    if (typeof window === 'undefined') return
+    if (viewMode !== 'map') return
+    if (!(window as any).L) {
+      setMapReady(false)
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+      document.head.appendChild(link)
+
+      const script = document.createElement('script')
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+      script.onload = () => setTimeout(initializeLeafletMap, 50)
+      document.body.appendChild(script)
+    } else {
+      setMapReady(false)
+      setTimeout(initializeLeafletMap, 0)
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        try { mapInstanceRef.current.remove() } catch {}
+        mapInstanceRef.current = null
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, JSON.stringify((visits || []).map((v: any) => v?.addressInfo?.coordinates?.point))])
+
+  const centerOnNext = () => {
+    const L = (window as any)?.L
+    if (!L || !mapInstanceRef.current) return
+    const nextIdx = getNextPendingVisitIndex()
+    if (typeof nextIdx !== 'number') return
+    // Obtener latlng de la visita
+    const visit = (visits as any)[nextIdx]
+    const c = visit?.addressInfo?.coordinates
+    const latlng = Array.isArray(c?.point)
+      ? [c.point[1] as number, c.point[0] as number]
+      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
+          ? [c.latitude as number, c.longitude as number]
+          : null)
+    if (latlng) {
+      try { mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 }) } catch {}
+    }
+  }
   
   // Construir una lista plana de unidades de entrega para agrupar por estado
   type MappedUnit = {
@@ -134,6 +329,14 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
               </p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setViewMode((m) => (m === 'list' ? 'map' : 'list'))}
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95"
+              aria-label="Alternar mapa/lista"
+            >
+              {viewMode === 'list' ? 'Mapa' : 'Lista'}
+            </button>
           {!routeStarted ? (
             <button
               onClick={handleStartRoute}
@@ -148,10 +351,51 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
               <span>Ruta Iniciada</span>
             </div>
           )}
+          </div>
         </div>
       </div>
 
-      {/* Tabs sticky: En ruta | Entregados | No entregados */}
+      {/* Vista de mapa (solo cuando viewMode === 'map') */}
+      {viewMode === 'map' && (
+      <div className="px-4 pt-4">
+        <div className="relative">
+          <div
+            ref={mapRef}
+            className={`${mapFullscreen ? 'h-[70vh]' : 'h-72'} w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
+            style={{ zIndex: 1 }}
+          >
+            {!mapReady && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mx-auto mb-3"></div>
+                  <p className="text-indigo-600 text-sm font-medium">Cargando mapa…</p>
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Controles flotantes del mapa */}
+          <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
+            <button
+              onClick={() => setMapFullscreen((f) => !f)}
+              className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+              aria-label="Pantalla completa"
+            >
+              {mapFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={centerOnNext}
+              className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+              aria-label="Centrar en siguiente"
+            >
+              <Crosshair className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* Tabs sticky: En ruta | Entregados | No entregados (ocultas en modo mapa) */}
+      {viewMode === 'list' && (
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b">
         <div className="flex">
           <button
@@ -216,7 +460,9 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
           </button>
         </div>
       </div>
+      )}
 
+      {viewMode === 'list' && (
       <div className="p-4 space-y-4">
         {visits.map((visit: any, visitIndex: number) => {
           const matchesForTab: number = (visit?.orders || []).reduce(
@@ -340,6 +586,109 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
           )
         })}
       </div>
+      )}
+
+      {/* En modo mapa: mostrar sólo la siguiente visita debajo del mapa (si no está en pantalla completa) */}
+      {viewMode === 'map' && !mapFullscreen && (() => {
+        const nextIdx = getNextPendingVisitIndex()
+        if (typeof nextIdx !== 'number') return null
+        const visit: any = (visits as any)[nextIdx]
+        return (
+          <div className="p-4 space-y-4">
+            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100">
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
+                    {visit.sequenceNumber}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                      <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                      <span className="truncate">{visit.addressInfo?.contact?.fullName}</span>
+                    </h3>
+                    <p className="text-xs text-gray-600 flex items-start mb-2">
+                      <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
+                      <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
+                  <Package size={18} />
+                  <span className="ml-2">Unidades de Entrega:</span>
+                </h4>
+                {(visit.orders || []).map((order: any, orderIndex: number) => (
+                  <div key={orderIndex} className="mb-4">
+                    <div className="mb-2">
+                      <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                        {order.referenceID}
+                      </span>
+                    </div>
+                    {(order.deliveryUnits || [])
+                      .map((unit: any, uIdx: number): { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined } => ({
+                        unit,
+                        uIdx,
+                        status: getDeliveryUnitStatus(nextIdx, orderIndex, uIdx),
+                      }))
+                      .map(({ unit, uIdx, status }: { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined }) => (
+                        <div key={uIdx} className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}>
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex-1 min-w-0">
+                              <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">Unidad de Entrega {uIdx + 1}</h5>
+                              {Array.isArray(unit.items) && unit.items.length > 0 && (
+                                <div className="flex items-center space-x-1 mb-2">
+                                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                                  <span className="text-xs text-gray-700 truncate">{unit.items[0]?.description}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center space-x-3 text-xs text-gray-600">
+                                <span className="flex items-center">
+                                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
+                                  {typeof unit.weight === 'number' ? `${unit.weight}kg` : unit.weight}
+                                </span>
+                                <span className="flex items-center">
+                                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>
+                                  {typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="text-right ml-3">
+                              <span className="text-xs text-gray-500 block">Cant.</span>
+                              <span className="text-xl font-bold text-indigo-600">{(unit.items || []).reduce((a: number, it: any) => a + (Number(it?.quantity) || 0), 0)}</span>
+                            </div>
+                          </div>
+                          {routeStarted && (
+                            <div className="flex space-x-2 mt-3">
+                              <button
+                                onClick={() => markDeliveryUnit(nextIdx, orderIndex, uIdx, 'delivered')}
+                                className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
+                                  status === 'delivered' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                }`}
+                              >
+                                <CheckCircle size={16} />
+                                <span>entregado</span>
+                              </button>
+                              <button
+                                onClick={() => markDeliveryUnit(nextIdx, orderIndex, uIdx, 'not-delivered')}
+                                className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
+                                  status === 'not-delivered' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                }`}
+                              >
+                                <XCircle size={16} />
+                                <span>no entregado</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
       
 
       

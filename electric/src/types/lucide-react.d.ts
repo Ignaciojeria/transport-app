@@ -12,6 +12,9 @@ declare module 'lucide-react' {
   export const Phone: React.FC<IconProps>
   export const User: React.FC<IconProps>
   export const MapPin: React.FC<IconProps>
+  export const Maximize2: React.FC<IconProps>
+  export const Minimize2: React.FC<IconProps>
+  export const Crosshair: React.FC<IconProps>
 }
 
 
