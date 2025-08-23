@@ -24,7 +24,7 @@ export function RouteComponent() {
           ? d.route[0]?.raw
           : d?.route?.raw ?? (Array.isArray(d) ? d[0]?.raw : d?.raw)
         return raw ? (
-          <DeliveryRouteView routeData={raw} />
+          <DeliveryRouteView routeId={routeId} routeData={raw} />
         ) : (
           <pre>{JSON.stringify(data, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), 2)}</pre>
         )
@@ -39,7 +39,7 @@ type DeliveryRouteRaw = {
   geometry?: { encoding?: string; type?: string; value?: string }
 }
 
-function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
+function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData: DeliveryRouteRaw }) {
   const [routeStarted, setRouteStarted] = useState(false)
   const [deliveryStates, setDeliveryStates] = useState<Record<string, 'delivered' | 'not-delivered' | undefined>>({})
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
@@ -50,6 +50,29 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
+
+  // Persistencia local por ruta
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storageKey = `deliveryStates:${routeId}`
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed === 'object') {
+          setDeliveryStates(parsed as Record<string, 'delivered' | 'not-delivered' | undefined>)
+        }
+      }
+    } catch {}
+  }, [routeId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storageKey = `deliveryStates:${routeId}`
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(deliveryStates))
+    } catch {}
+  }, [routeId, deliveryStates])
 
   const handleStartRoute = () => {
     setRouteStarted(true)
@@ -105,7 +128,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
       )
       if (hasPending) return vIdx
     }
-    return (visits || []).length > 0 ? 0 : null
+    return null
   }
 
   // Mantener sincronizado el índice de "siguiente por entregar"
@@ -144,7 +167,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
         .map((v: any) => getLatLngFromAddressInfo(v?.addressInfo))
         .filter((p: any): p is [number, number] => Array.isArray(p))),
     ]
-    const nextIdx = nextVisitIndex
+    const nextIdx = getNextPendingVisitIndex()
 
     const defaultCenter: [number, number] = points[0] ?? [-33.45, -70.66] // Santiago fallback
     const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 14 : 12)
@@ -284,7 +307,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
   const centerOnNext = () => {
     const L = (window as any)?.L
     if (!L || !mapInstanceRef.current) return
-    const nextIdx = nextVisitIndex
+    const nextIdx = getNextPendingVisitIndex()
     if (typeof nextIdx !== 'number') return
     // Obtener latlng de la visita
     const visit = (visits as any)[nextIdx]
@@ -403,55 +426,71 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
       </div>
 
       {/* Vista de mapa (solo cuando viewMode === 'map') */}
-      {viewMode === 'map' && (
-      <div className="px-4 pt-4">
-        <div className="relative">
-          <div
-            ref={mapRef}
-            className={`${mapFullscreen ? 'h-[70vh]' : 'h-72'} w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
-            style={{ zIndex: 1 }}
-            onClick={() => setMapFullscreen((f) => !f)}
-          >
-            {!mapReady && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mx-auto mb-3"></div>
-                  <p className="text-indigo-600 text-sm font-medium">Cargando mapa…</p>
-                </div>
+      {viewMode === 'map' && (() => {
+      const nextIdxForMap = getNextPendingVisitIndex()
+      if (nextIdxForMap === null) {
+        return (
+          <div className="px-4 pt-10">
+            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
+              <div className="flex items-center justify-center mb-2">
+                <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
-            )}
+              <h2 className="text-base font-semibold text-gray-800">Ruta terminada</h2>
+              <p className="text-sm text-gray-600 mt-1">Todas las entregas fueron gestionadas.</p>
+            </div>
           </div>
-          {/* Controles flotantes del mapa */}
-          <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
-            <button
-              onClick={centerOnNext}
-              className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
-              aria-label="Centrar en siguiente"
+        )
+      }
+      return (
+        <div className="px-4 pt-4">
+          <div className="relative">
+            <div
+              ref={mapRef}
+              className={`${mapFullscreen ? 'h-[70vh]' : 'h-72'} w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
+              style={{ zIndex: 1 }}
+              onClick={() => setMapFullscreen((f) => !f)}
             >
-              <Crosshair className="w-5 h-5" />
-            </button>
-            <div className="flex flex-col gap-2">
+              {!mapReady && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mx-auto mb-3"></div>
+                    <p className="text-indigo-600 text-sm font-medium">Cargando mapa…</p>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Controles flotantes del mapa */}
+            <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
               <button
-                onClick={() => openNextNavigation('google')}
-                className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-blue-600 hover:bg-gray-50 hover:shadow-xl transition-all"
-                aria-label="Navegar con Google Maps"
-                title="Google Maps"
+                onClick={centerOnNext}
+                className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
+                aria-label="Centrar en siguiente"
               >
-                G
+                <Crosshair className="w-5 h-5" />
               </button>
-              <button
-                onClick={() => openNextNavigation('waze')}
-                className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-indigo-600 hover:bg-gray-50 hover:shadow-xl transition-all"
-                aria-label="Navegar con Waze"
-                title="Waze"
-              >
-                W
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={() => openNextNavigation('google')}
+                  className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-blue-600 hover:bg-gray-50 hover:shadow-xl transition-all"
+                  aria-label="Navegar con Google Maps"
+                  title="Google Maps"
+                >
+                  G
+                </button>
+                <button
+                  onClick={() => openNextNavigation('waze')}
+                  className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-indigo-600 hover:bg-gray-50 hover:shadow-xl transition-all"
+                  aria-label="Navegar con Waze"
+                  title="Waze"
+                >
+                  W
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      )}
+      )
+      })()}
 
       {/* Tabs sticky: En ruta | Entregados | No entregados (ocultas en modo mapa) */}
       {viewMode === 'list' && (
@@ -649,7 +688,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
 
       {/* En modo mapa: mostrar sólo la siguiente visita debajo del mapa (si no está en pantalla completa) */}
       {viewMode === 'map' && !mapFullscreen && (() => {
-        const nextIdx = nextVisitIndex
+        const nextIdx = getNextPendingVisitIndex()
         if (typeof nextIdx !== 'number') return null
         const visit: any = (visits as any)[nextIdx]
         return (
