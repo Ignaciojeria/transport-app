@@ -1,5 +1,6 @@
 package usecase
 
+/*
 import (
 	"context"
 	"fmt"
@@ -57,3 +58,4 @@ func NewStoreDataInBucketWorkflow(
 		return nil
 	}
 }
+*/

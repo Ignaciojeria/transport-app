@@ -46,16 +46,12 @@ func NewNormalizeVisitsWorkflow(
 					normalizedVisit[officialKey] = value
 				} else {
 					// Mantener la clave original si no hay mapeo o está vacía
-					normalizedVisit[originalKey] = value
-					obs.Logger.InfoContext(ctx, "Clave mantenida", "originalKey", originalKey, "value", value)
+					normalizedVisit[originalKey] = value			
 				}
 			}
-
 			normalizedVisits[i] = normalizedVisit
-			obs.Logger.InfoContext(ctx, "Visita normalizada", "index", i, "normalizedVisit", normalizedVisit)
 		}
 
-		obs.Logger.InfoContext(ctx, "Visitas normalizadas completadas", "totalVisits", len(normalizedVisits))
 		return normalizedVisits, nil
 	}
 }

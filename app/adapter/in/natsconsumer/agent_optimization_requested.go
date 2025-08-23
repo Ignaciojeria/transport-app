@@ -8,7 +8,6 @@ import (
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/natsconsumer/mapper"
 	"transport-app/app/adapter/out/natspublisher"
-	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
@@ -30,7 +29,7 @@ func init() {
 		natsconn.NewJetStream,
 		observability.NewObservability,
 		configuration.NewConf,
-		storjbucket.NewTransportAppBucket,
+		usecase.NewGetDataFromRedisWorkflow,
 		natspublisher.NewApplicationEvents,
 		usecase.NewKeyNormalizationWorkflow,
 	)
@@ -40,7 +39,7 @@ func newAgentOptimizationRequested(
 	js jetstream.JetStream,
 	obs observability.Observability,
 	conf configuration.Conf,
-	storjBucket *storjbucket.TransportAppBucket,
+	getDataFromRedisWorkflow usecase.GetDataFromRedisWorkflow,
 	publish natspublisher.ApplicationEvents,
 	keyNormalizationWorkflow usecase.KeyNormalizationWorkflow,
 ) (jetstream.ConsumeContext, error) {
@@ -96,8 +95,7 @@ func newAgentOptimizationRequested(
 
 		var chunks []chunker.Chunk
 		for idx, id := range chunkIDs {
-			token := msg.Headers().Get("X-Bucket-Token")
-			entry, err := storjBucket.DownloadWithToken(ctx, token, id)
+			entry, err := getDataFromRedisWorkflow(ctx, id)
 			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del bucket", "chunkID", id, "error", err)
 				msg.Ack()

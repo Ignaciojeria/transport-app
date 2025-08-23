@@ -532,6 +532,10 @@
         {
             "kind": "usecase",
             "name": "upsert-electric-route"
+        },
+        {
+            "kind": "usecase",
+            "name": "store-data-in-redis-workflow"
         }
     ]
 }

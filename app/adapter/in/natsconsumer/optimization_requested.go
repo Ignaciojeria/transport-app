@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/out/fuegoapiclient"
-	"transport-app/app/adapter/out/storjbucket"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
@@ -30,12 +29,12 @@ func init() {
 		newOptimizationRequestedConsumer,
 		natsconn.NewJetStream,
 		natsconn.NewKeyValue,
-		storjbucket.NewTransportAppBucket,
+		usecase.NewGetDataFromRedisWorkflow,
 		workers.NewFleetOptimizer,
 		usecase.NewOptimizeFleetWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
-		usecase.NewStoreDataInBucketWorkflow,
+		usecase.NewStoreDataInRedisWorkflow,
 		fuegoapiclient.NewPostWebhook,
 	)
 }
@@ -43,12 +42,12 @@ func init() {
 func newOptimizationRequestedConsumer(
 	js jetstream.JetStream,
 	kv jetstream.KeyValue,
-	storjBucket *storjbucket.TransportAppBucket,
+	getDataFromRedisWorkflow usecase.GetDataFromRedisWorkflow,
 	optimize workers.FleetOptimizer,
 	optimizeFleetWorkflow usecase.OptimizeFleetWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
-	storeDataInBucketWorkflow usecase.StoreDataInBucketWorkflow,
+	storeDataInBucketWorkflow usecase.StoreDataInRedisWorkflow,
 	postWebhook fuegoapiclient.PostWebhook,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
@@ -95,8 +94,7 @@ func newOptimizationRequestedConsumer(
 			// Es un mensaje chunked, reconstruir el mensaje original
 			var chunks []chunker.Chunk //a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d -a4c36c63-4c6e-4b0b-9bc7-3b452e76fa9d
 			for idx, id := range chunkIDs {
-				token := msg.Headers().Get("X-Bucket-Token")
-				entry, err := storjBucket.DownloadWithToken(ctx, token, id)
+				entry, err := getDataFromRedisWorkflow(ctx, id)
 				if err != nil {
 					obs.Logger.ErrorContext(ctx, "Error obteniendo chunk del bucket", "chunkID", id, "error", err)
 					msg.Ack()
@@ -134,7 +132,6 @@ func newOptimizationRequestedConsumer(
 			}
 			optimizeFleetWorkflowCtx := sharedcontext.WithIdempotencyKey(ctx, key)
 			optimizeFleetWorkflowCtx = sharedcontext.WithAccessToken(optimizeFleetWorkflowCtx, msg.Headers().Get("X-Access-Token"))
-			optimizeFleetWorkflowCtx = sharedcontext.WithBucketToken(optimizeFleetWorkflowCtx, msg.Headers().Get("X-Bucket-Token"))
 			routeRequests, err := optimizeFleetWorkflow(optimizeFleetWorkflowCtx, input.Map())
 			if err != nil {
 				obs.Logger.ErrorContext(ctx, "Error procesando optimización", "error", err)

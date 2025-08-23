@@ -3,13 +3,12 @@ package natspublisher
 import (
 	"context"
 	"encoding/json"
-	"time"
-	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
 	"transport-app/app/shared/chunker"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/sharedcontext"
+	"transport-app/app/usecase"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -18,7 +17,6 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
-	"storj.io/uplink"
 )
 
 type ApplicationEvents func(ctx context.Context, outbox domain.Outbox) error
@@ -29,7 +27,7 @@ func init() {
 		natsconn.NewJetStream,
 		configuration.NewConf,
 		natsconn.NewKeyValue,
-		storjbucket.NewTransportAppBucket,
+		usecase.NewStoreDataInRedisWorkflow,
 	)
 }
 
@@ -37,7 +35,7 @@ func NewApplicationEvents(
 	js jetstream.JetStream,
 	conf configuration.Conf,
 	kv jetstream.KeyValue,
-	storjBucket *storjbucket.TransportAppBucket,
+	storeDataInRedisWorkflow usecase.StoreDataInRedisWorkflow,
 ) ApplicationEvents {
 	return func(ctx context.Context, outbox domain.Outbox) error {
 		// Crear el mismo formato que Google Pub/Sub
@@ -67,20 +65,13 @@ func NewApplicationEvents(
 				return err
 			}
 			var chunkIDs []string
-			token, err := storjBucket.GenerateEphemeralToken(ctx, time.Hour*24, uplink.Permission{
-				AllowDownload: true,
-				AllowUpload:   true,
-			})
-			headers.Set("X-Bucket-Token", token)
-			if err != nil {
-				return err
-			}
+
 			for _, chunk := range chunks {
 				chunkKey := chunk.ID.String()
 				if err != nil {
 					return err
 				}
-				err = storjBucket.UploadWithToken(ctx, token, chunkKey, chunk.Data)
+				err = storeDataInRedisWorkflow(ctx, chunkKey, chunk.Data)
 				if err != nil {
 					return err
 				}

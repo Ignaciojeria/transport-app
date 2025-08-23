@@ -7,7 +7,6 @@ import (
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/natsconsumer/model"
-	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
@@ -23,7 +22,6 @@ import (
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
-	"storj.io/uplink"
 )
 
 func init() {
@@ -33,7 +31,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		natsconn.NewKeyValue,
-		storjbucket.NewTransportAppBucket,
+		usecase.NewGetDataFromRedisWorkflow,
 		client.NewPostWebhook,
 		usecase.NewUpsertElectricRouteWorkflow,
 	)
@@ -44,7 +42,7 @@ func newFleetOptimizedWebhookSubmitted(
 	obs observability.Observability,
 	conf configuration.Conf,
 	kv jetstream.KeyValue,
-	storjBucket *storjbucket.TransportAppBucket,
+	getDataFromRedisWorkflow usecase.GetDataFromRedisWorkflow,
 	publishCustomerWebhook client.PostWebhook,
 	upsertElectricRoute usecase.UpsertElectricRouteWorkflow,
 ) (jetstream.ConsumeContext, error) {
@@ -117,22 +115,9 @@ func newFleetOptimizedWebhookSubmitted(
 		}
 
 		webhook.Body = input
-		//accessToken := msg.Headers().Get("X-Access-Token")
-		//webhook.Headers["X-Access-Token"] = accessToken
-		//webhook.Headers["tenant"] = msg.Headers().Get("tenant")
-
-		// Generar token de acceso para Storj
-		token, err := storjBucket.GenerateEphemeralToken(webhookCtx, 10*time.Minute, uplink.Permission{
-			AllowDownload: true,
-		})
-		if err != nil {
-			obs.Logger.Error("Error generando token de acceso", "error", err)
-			msg.Ack()
-			return
-		}
 
 		for _, routeID := range input.Routes {
-			data, err := storjBucket.DownloadWithToken(webhookCtx, token, routeID)
+			data, err := getDataFromRedisWorkflow(webhookCtx, routeID)
 			if err != nil {
 				obs.Logger.Error("Error descargando ruta desde Storj", "error", err)
 				msg.Ack()
