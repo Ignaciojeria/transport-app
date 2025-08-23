@@ -44,7 +44,6 @@ func NewNormalizeVisitsWorkflow(
 				if officialKey, exists := keyMapping[originalKey]; exists && officialKey != "" {
 					// Usar la clave oficial si existe en el mapeo y no está vacía
 					normalizedVisit[officialKey] = value
-					obs.Logger.InfoContext(ctx, "Clave renombrada", "originalKey", originalKey, "officialKey", officialKey, "value", value)
 				} else {
 					// Mantener la clave original si no hay mapeo o está vacía
 					normalizedVisit[originalKey] = value

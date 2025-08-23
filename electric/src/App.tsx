@@ -119,7 +119,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-40">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-8">
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
@@ -417,21 +417,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
         </div>
       </div>
 
-      {routeStarted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg">
-          <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">Progreso de la ruta</div>
-            <div className="flex space-x-4 text-sm">
-              <span className="text-green-600 font-medium">
-                ✓ {Object.values(deliveryStates).filter((s) => s === 'delivered').length} Entregadas
-              </span>
-              <span className="text-red-600 font-medium">
-                ✗ {Object.values(deliveryStates).filter((s) => s === 'not-delivered').length} No Entregadas
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Barra inferior de progreso eliminada por redundancia con la barra superior */}
     </div>
   )
 }
