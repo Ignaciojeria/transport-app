@@ -74,6 +74,29 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     } catch {}
   }, [routeId, deliveryStates])
 
+  // Persistencia de estado de inicio de ruta por ruta
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storageKey = `routeStarted:${routeId}`
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (typeof parsed === 'boolean') {
+          setRouteStarted(parsed)
+        }
+      }
+    } catch {}
+  }, [routeId])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storageKey = `routeStarted:${routeId}`
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(routeStarted))
+    } catch {}
+  }, [routeId, routeStarted])
+
   const handleStartRoute = () => {
     setRouteStarted(true)
   }
