@@ -340,82 +340,9 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
           )
         })}
       </div>
+      
 
-      {/* Secciones inferiores: En ruta, Entregados, No entregados */}
-      <div className="p-4 space-y-6">
-        <div>
-          <h4 className="text-sm font-semibold text-gray-700 mb-2">En ruta ({inRouteUnits.length})</h4>
-          <div className="flex flex-wrap gap-2">
-            {inRouteUnits.length === 0 ? (
-              <span className="text-xs text-gray-500">Sin unidades pendientes.</span>
-            ) : (
-              inRouteUnits.map((x, idx) => (
-                <span
-                  key={`inroute-${idx}`}
-                  className="text-xs border border-gray-300 bg-white text-gray-700 rounded-full px-2 py-1"
-                  title={`${x.visit?.addressInfo?.contact?.fullName || ''}`}
-                >
-                  {(x.visit?.sequenceNumber ?? '—')} • {(x.order?.referenceID ?? '—')} • U{(x.uIdx + 1)}
-                </span>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-semibold text-green-700 mb-2">Entregados ({deliveredUnits.length})</h4>
-          <div className="flex flex-wrap gap-2">
-            {deliveredUnits.length === 0 ? (
-              <span className="text-xs text-green-700/60">Sin unidades entregadas.</span>
-            ) : (
-              deliveredUnits.map((x, idx) => (
-                <span
-                  key={`deliv-${idx}`}
-                  className="text-xs border border-green-200 bg-green-50 text-green-700 rounded-full px-2 py-1"
-                  title={`${x.visit?.addressInfo?.contact?.fullName || ''}`}
-                >
-                  {(x.visit?.sequenceNumber ?? '—')} • {(x.order?.referenceID ?? '—')} • U{(x.uIdx + 1)}
-                </span>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="mb-8">
-          <h4 className="text-sm font-semibold text-red-700 mb-2">No entregados ({notDeliveredUnits.length})</h4>
-          <div className="flex flex-wrap gap-2">
-            {notDeliveredUnits.length === 0 ? (
-              <span className="text-xs text-red-700/60">Sin unidades no entregadas.</span>
-            ) : (
-              notDeliveredUnits.map((x, idx) => (
-                <span
-                  key={`notdeliv-${idx}`}
-                  className="text-xs border border-red-200 bg-red-50 text-red-700 rounded-full px-2 py-1"
-                  title={`${x.visit?.addressInfo?.contact?.fullName || ''}`}
-                >
-                  {(x.visit?.sequenceNumber ?? '—')} • {(x.order?.referenceID ?? '—')} • U{(x.uIdx + 1)}
-                </span>
-              ))
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Resumen de la Ruta */}
-      <div className="p-4">
-        <div className="mt-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl p-4 shadow-lg">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="text-sm font-bold mb-1">Resumen de la Ruta</h3>
-              <p className="text-indigo-100 text-xs">Total entregas programadas</p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold">{allUnits.length}</div>
-              <div className="text-indigo-200 text-xs">entregas</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Barra inferior de progreso eliminada por redundancia con la barra superior */}
     </div>

@@ -141,8 +141,6 @@ func newAgentOptimizationRequested(
 			return
 		}
 
-		obs.Logger.InfoContext(ctx, "Mapeo de claves obtenido", "keyMapping", keyMapping)
-
 		// Usar el workflow genérico para normalizar las visitas
 		normalizedVisits, err := keyNormalizationWorkflow(ctx, keyMapping, request.Visits)
 		if err != nil {
