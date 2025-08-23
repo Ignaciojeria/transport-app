@@ -3,7 +3,7 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { CheckCircle, XCircle, Play, Package, User, MapPin, Maximize2, Minimize2, Crosshair } from 'lucide-react'
+import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair } from 'lucide-react'
 
 
 // Componente para rutas específicas del driver
@@ -44,7 +44,9 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
   const [deliveryStates, setDeliveryStates] = useState<Record<string, 'delivered' | 'not-delivered' | undefined>>({})
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  // fullscreen por tap en el mapa (sin botón explícito)
   const [mapFullscreen, setMapFullscreen] = useState(false)
+  const [nextVisitIndex, setNextVisitIndex] = useState<number | null>(null)
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
@@ -105,6 +107,12 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
     }
     return (visits || []).length > 0 ? 0 : null
   }
+
+  // Mantener sincronizado el índice de "siguiente por entregar"
+  useEffect(() => {
+    setNextVisitIndex(getNextPendingVisitIndex())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(deliveryStates), JSON.stringify((visits || []).map((v: any) => v?.orders?.length))])
   
   // Inicialización dinámica de Leaflet y render del mapa con visitas
   const initializeLeafletMap = () => {
@@ -136,7 +144,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
         .map((v: any) => getLatLngFromAddressInfo(v?.addressInfo))
         .filter((p: any): p is [number, number] => Array.isArray(p))),
     ]
-    const nextIdx = getNextPendingVisitIndex()
+    const nextIdx = nextVisitIndex
 
     const defaultCenter: [number, number] = points[0] ?? [-33.45, -70.66] // Santiago fallback
     const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 14 : 12)
@@ -263,12 +271,20 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, JSON.stringify((visits || []).map((v: any) => v?.addressInfo?.coordinates?.point))])
+  }, [viewMode, nextVisitIndex, JSON.stringify((visits || []).map((v: any) => v?.addressInfo?.coordinates?.point))])
+
+  // Re-render del mapa cuando cambian los estados de entrega para recalcular "siguiente"
+  useEffect(() => {
+    if (viewMode !== 'map') return
+    setMapReady(false)
+    setTimeout(initializeLeafletMap, 0)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, JSON.stringify(deliveryStates)])
 
   const centerOnNext = () => {
     const L = (window as any)?.L
     if (!L || !mapInstanceRef.current) return
-    const nextIdx = getNextPendingVisitIndex()
+    const nextIdx = nextVisitIndex
     if (typeof nextIdx !== 'number') return
     // Obtener latlng de la visita
     const visit = (visits as any)[nextIdx]
@@ -394,6 +410,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
             ref={mapRef}
             className={`${mapFullscreen ? 'h-[70vh]' : 'h-72'} w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
             style={{ zIndex: 1 }}
+            onClick={() => setMapFullscreen((f) => !f)}
           >
             {!mapReady && (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
@@ -406,13 +423,6 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
           </div>
           {/* Controles flotantes del mapa */}
           <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
-            <button
-              onClick={() => setMapFullscreen((f) => !f)}
-              className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
-              aria-label="Pantalla completa"
-            >
-              {mapFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-            </button>
             <button
               onClick={centerOnNext}
               className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
@@ -639,7 +649,7 @@ function DeliveryRouteView({ routeData }: { routeData: DeliveryRouteRaw }) {
 
       {/* En modo mapa: mostrar sólo la siguiente visita debajo del mapa (si no está en pantalla completa) */}
       {viewMode === 'map' && !mapFullscreen && (() => {
-        const nextIdx = getNextPendingVisitIndex()
+        const nextIdx = nextVisitIndex
         if (typeof nextIdx !== 'number') return null
         const visit: any = (visits as any)[nextIdx]
         return (
