@@ -60,6 +60,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [usingCamera, setUsingCamera] = useState(false)
   const [flashActive, setFlashActive] = useState(false)
+  const nameInputRef = useRef<HTMLInputElement | null>(null)
+  const rutInputRef = useRef<HTMLInputElement | null>(null)
 
   // Estado local reactivo via LocalStorageCollection
   const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
@@ -116,6 +118,16 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
         setFlashActive(true)
         setTimeout(() => setFlashActive(false), 140)
         stopWebcam()
+        // Enfocar el primer campo faltante y hacer scroll si corresponde
+        const needsName = !recipientName.trim()
+        const needsRut = !recipientRut.trim()
+        const target = needsName ? nameInputRef.current : (needsRut ? rutInputRef.current : null)
+        if (target) {
+          setTimeout(() => {
+            try { target.focus({ preventScroll: false } as any) } catch {}
+            try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
+          }, 60)
+        }
       }
     } catch (e) {
       setCameraError('No se pudo capturar la imagen.')
@@ -858,6 +870,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                 type="text"
                 value={recipientName}
                 onChange={(e) => setRecipientName((e as any).target.value)}
+                ref={nameInputRef}
                 className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="Nombre completo"
               />
@@ -868,6 +881,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                 type="text"
                 value={recipientRut}
                 onChange={(e) => setRecipientRut((e as any).target.value)}
+                ref={rutInputRef}
                 className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="12.345.678-9"
               />
@@ -890,7 +904,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                 ) : (
                   <div>
                     <div
-                      className="relative w-full h-48 sm:h-64 rounded-md overflow-hidden border bg-black cursor-pointer select-none"
+                      className="relative w-full h-[60vh] sm:h-96 rounded-md overflow-hidden border bg-black cursor-pointer select-none"
                       onClick={captureFromWebcam}
                       title="Toca para capturar"
                     >
