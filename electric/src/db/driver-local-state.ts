@@ -10,6 +10,13 @@ const DeliveryEvidence = z.object({
   takenAt: z.number(),
 })
 
+const NonDeliveryEvidence = z.object({
+  reason: z.string().min(1),
+  observations: z.string().optional().default(''),
+  photoDataUrl: z.string().min(10),
+  takenAt: z.number(),
+})
+
 const DriverState = z.object({
   key: z.string(),
   value: z
@@ -19,6 +26,7 @@ const DriverState = z.object({
       z.literal('true'),
       z.literal('false'),
       DeliveryEvidence,
+      NonDeliveryEvidence,
       z.null(),
     ])
     .nullable(),
@@ -26,6 +34,7 @@ const DriverState = z.object({
 
 export type DriverState = z.infer<typeof DriverState>
 export type DeliveryEvidence = z.infer<typeof DeliveryEvidence>
+export type NonDeliveryEvidence = z.infer<typeof NonDeliveryEvidence>
 
 export const driverLocalState = createCollection(
   localStorageCollectionOptions<DriverState>({
@@ -41,6 +50,8 @@ export const deliveryKey = (routeId: string, vIdx: number, oIdx: number, uIdx: n
   `delivery:${routeId}:${vIdx}-${oIdx}-${uIdx}`
 export const evidenceKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
   `evidence:${routeId}:${vIdx}-${oIdx}-${uIdx}`
+export const ndEvidenceKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
+  `nd-evidence:${routeId}:${vIdx}-${oIdx}-${uIdx}`
 
 // Mutadores
 export function setRouteStarted(routeId: string, started: boolean) {
@@ -110,6 +121,37 @@ export function getDeliveryEvidence(
   const item = driverLocalState.get(evidenceKey(routeId, visitIndex, orderIndex, unitIndex))
   if (item && item.value && typeof item.value === 'object' && !Array.isArray(item.value)) {
     return item.value as DeliveryEvidence
+  }
+  return undefined
+}
+
+export function setNonDeliveryEvidence(
+  routeId: string,
+  visitIndex: number,
+  orderIndex: number,
+  unitIndex: number,
+  evidence: NonDeliveryEvidence
+) {
+  const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
+  const existing = driverLocalState.get(key)
+  if (existing) {
+    driverLocalState.update(key, (d) => {
+      d.value = evidence
+    })
+  } else {
+    driverLocalState.insert({ key, value: evidence })
+  }
+}
+
+export function getNonDeliveryEvidence(
+  routeId: string,
+  visitIndex: number,
+  orderIndex: number,
+  unitIndex: number
+): NonDeliveryEvidence | undefined {
+  const item = driverLocalState.get(ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex))
+  if (item && item.value && typeof item.value === 'object' && !Array.isArray(item.value)) {
+    return item.value as NonDeliveryEvidence
   }
   return undefined
 }
