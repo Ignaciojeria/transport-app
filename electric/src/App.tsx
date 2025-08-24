@@ -849,7 +849,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     {evidenceModal.open && (
       <div className="fixed inset-0 z-50 flex items-center justify-center">
         <div className="absolute inset-0 bg-black/40" onClick={closeEvidenceModal}></div>
-        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4">
+        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4 max-h-[85vh] overflow-y-auto">
           <h3 className="text-base font-semibold text-gray-800 mb-3">Evidencia de entrega</h3>
           <div className="space-y-3">
             <div>
@@ -890,7 +890,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                 ) : (
                   <div>
                     <div
-                      className="relative w-full rounded-md overflow-hidden border bg-black cursor-pointer select-none"
+                      className="relative w-full h-48 sm:h-64 rounded-md overflow-hidden border bg-black cursor-pointer select-none"
                       onClick={captureFromWebcam}
                       title="Toca para capturar"
                     >
@@ -898,6 +898,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                         ref={webcamRef}
                         audio={false}
                         screenshotFormat="image/jpeg"
+                        className="w-full h-full object-cover"
                         videoConstraints={{
                           facingMode: { ideal: 'environment' },
                           width: { ideal: 1280 },
@@ -917,8 +918,9 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                 )}
               </div>
               {photoDataUrl && (
-                <div className="mt-2">
-                  <img src={photoDataUrl} alt="Evidencia" className="w-full rounded-md border" />
+                <div className="mt-2 flex items-center gap-3">
+                  <img src={photoDataUrl} alt="Evidencia" className="w-24 h-24 object-cover rounded-md border" />
+                  <button type="button" onClick={() => { setUsingCamera(true); setCameraError(null) }} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cambiar foto</button>
                 </div>
               )}
             </div>
