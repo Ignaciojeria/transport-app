@@ -19,6 +19,7 @@
     "lucide-react": "^0.540.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-webcam": "^7.2.0",
     "zod": "^4.0.17"
   },
   "devDependencies": {
@@ -26,6 +27,7 @@
     "@tailwindcss/postcss": "^4.1.12",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
+    "@types/react-webcam": "^1.1.0",
     "@vitejs/plugin-react": "^5.0.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.33.0",

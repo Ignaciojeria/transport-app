@@ -5,6 +5,7 @@ import { createRoutesCollection } from './db/create-routes-collection'
 import { driverLocalState, routeStartedKey, setRouteStarted as setRouteStartedLocal, setDeliveryStatus, getDeliveryStatus, setDeliveryEvidence } from './db/driver-local-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair } from 'lucide-react'
+import Webcam from 'react-webcam'
 
 
 // Componente para rutas específicas del driver
@@ -55,10 +56,9 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [recipientRut, setRecipientRut] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const [usingCamera, setUsingCamera] = useState(false)
+  const webcamRef = useRef<any>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [usingCamera, setUsingCamera] = useState(false)
 
   // Estado local reactivo via LocalStorageCollection
   const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
@@ -96,64 +96,27 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
   
 
-  const startCamera = async () => {
+  const stopWebcam = () => {
     try {
-      setCameraError(null)
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        try { await videoRef.current.play() } catch {}
-      }
-      setUsingCamera(true)
-    } catch (err: any) {
-      setCameraError('No se pudo acceder a la cámara. Revisa permisos.')
-      setUsingCamera(false)
-    }
-  }
-
-  const stopCamera = () => {
-    try {
-      const s = streamRef.current
-      if (s) {
-        s.getTracks().forEach((t) => t.stop())
+      const stream: MediaStream | undefined = (webcamRef.current as any)?.stream
+      if (stream) {
+        stream.getTracks().forEach((t) => t.stop())
       }
     } catch {}
-    streamRef.current = null
-    if (videoRef.current) {
-      try { (videoRef.current as any).srcObject = null } catch {}
-    }
     setUsingCamera(false)
   }
 
-  const captureFromCamera = () => {
-    const video = videoRef.current
-    if (!video) return
-    const width = video.videoWidth || 640
-    const height = video.videoHeight || 480
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    ctx.drawImage(video, 0, 0, width, height)
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
-    setPhotoDataUrl(dataUrl)
-    stopCamera()
+  const captureFromWebcam = () => {
+    try {
+      const imgSrc = webcamRef.current?.getScreenshot?.()
+      if (imgSrc) {
+        setPhotoDataUrl(imgSrc)
+        stopWebcam()
+      }
+    } catch (e) {
+      setCameraError('No se pudo capturar la imagen.')
+    }
   }
-
-  useEffect(() => {
-    // Abrir cámara al abrir el modal; liberar al cerrar o desmontar
-    if (evidenceModal.open) {
-      startCamera()
-    } else {
-      stopCamera()
-    }
-    return () => {
-      stopCamera()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [evidenceModal.open])
 
   const submitEvidence = async () => {
     if (!evidenceModal.open || evidenceModal.vIdx === null || evidenceModal.oIdx === null || evidenceModal.uIdx === null) return
@@ -907,29 +870,42 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             </div>
             <div>
               <label className="block text-xs text-gray-600 mb-1">Foto de evidencia</label>
-              {/* Cámara */}
-              {!usingCamera ? (
-                <div className="mb-2">
-                  <button
-                    type="button"
-                    onClick={startCamera}
-                    className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-                  >
-                    Usar cámara
-                  </button>
-                  {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
-                </div>
-              ) : (
-                <div className="mb-2">
-                  <div className="w-full rounded-md overflow-hidden border bg-black">
-                    <video ref={videoRef} playsInline muted className="w-full h-auto" />
+              {/* Cámara con react-webcam: activar bajo demanda */}
+              <div className="mb-2">
+                {!usingCamera ? (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => { setCameraError(null); setUsingCamera(true) }}
+                      className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
+                    >
+                      Activar cámara
+                    </button>
+                    {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
                   </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <button type="button" onClick={captureFromCamera} className="px-3 py-2 text-sm rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Capturar</button>
-                    <button type="button" onClick={stopCamera} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cerrar cámara</button>
+                ) : (
+                  <div>
+                    <div className="w-full rounded-md overflow-hidden border bg-black">
+                      <Webcam
+                        ref={webcamRef}
+                        audio={false}
+                        screenshotFormat="image/jpeg"
+                        videoConstraints={{
+                          facingMode: { ideal: 'environment' },
+                          width: { ideal: 1280 },
+                          height: { ideal: 720 },
+                        }}
+                        onUserMediaError={() => setCameraError('No se pudo acceder a la cámara. Revisa permisos.')}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <button type="button" onClick={captureFromWebcam} className="px-3 py-2 text-sm rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Capturar</button>
+                      <button type="button" onClick={stopWebcam} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cerrar cámara</button>
+                    </div>
+                    {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
               {photoDataUrl && (
                 <div className="mt-2">
                   <img src={photoDataUrl} alt="Evidencia" className="w-full rounded-md border" />
