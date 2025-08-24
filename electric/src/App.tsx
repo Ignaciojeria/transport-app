@@ -1,10 +1,57 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery, createCollection } from '@tanstack/react-db'
+import { queryCollectionOptions } from '@tanstack/query-db-collection'
+import { QueryClient } from '@tanstack/query-core'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair } from 'lucide-react'
 
+
+// Helpers mínimos para IndexedDB (persistencia offline real)
+const IDB_DB_NAME = 'transport-app'
+const IDB_STORE = 'driver-progress'
+function openIDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_DB_NAME, 1)
+    req.onupgradeneeded = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE)
+    }
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+  })
+}
+async function idbGet<T = unknown>(key: string): Promise<T | undefined> {
+  const db = await openIDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readonly')
+    const store = tx.objectStore(IDB_STORE)
+    const r = store.get(key)
+    r.onsuccess = () => resolve(r.result as T | undefined)
+    r.onerror = () => reject(r.error)
+  })
+}
+async function idbSet<T = unknown>(key: string, value: T): Promise<void> {
+  const db = await openIDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite')
+    const store = tx.objectStore(IDB_STORE)
+    const r = store.put(value as any, key)
+    r.onsuccess = () => resolve()
+    r.onerror = () => reject(r.error)
+  })
+}
+async function idbDel(key: string): Promise<void> {
+  const db = await openIDB()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite')
+    const store = tx.objectStore(IDB_STORE)
+    const r = store.delete(key)
+    r.onsuccess = () => resolve()
+    r.onerror = () => reject(r.error)
+  })
+}
 
 // Componente para rutas específicas del driver
 export function RouteComponent() {
@@ -51,54 +98,86 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
 
-  // Persistencia local por ruta
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `deliveryStates:${routeId}`
-    try {
-      const raw = window.localStorage.getItem(storageKey)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed && typeof parsed === 'object') {
-          setDeliveryStates(parsed as Record<string, 'delivered' | 'not-delivered' | undefined>)
-        }
-      }
-    } catch {}
+  // TanStack DB: colección local de progreso (persistimos en localStorage por simplicidad)
+  const queryClientRef = useRef<QueryClient | null>(null)
+  if (!queryClientRef.current) queryClientRef.current = new QueryClient()
+  const progressCollection = useMemo(() => {
+    const storageKey = `driver_progress:${routeId}`
+    return createCollection(
+      queryCollectionOptions<{ id: string; routeStarted: boolean; deliveryStates: Record<string, 'delivered' | 'not-delivered'>; updatedAt?: string }>({
+        id: `driver_progress:${routeId}`,
+        queryKey: ['driver_progress', routeId],
+        queryClient: queryClientRef.current!,
+        getKey: (item) => item.id,
+        // Carga desde IndexedDB
+        queryFn: async () => {
+          try {
+            const stored = await idbGet(storageKey)
+            if (!stored) return []
+            if (stored && typeof stored === 'object') return [stored as any]
+          } catch {}
+          return []
+        },
+        // Persistencia en IndexedDB sin refetch automático
+        async onInsert({ transaction }) {
+          for (const m of transaction.mutations) {
+            try { await idbSet(storageKey, m.modified) } catch {}
+          }
+          return { refetch: false }
+        },
+        async onUpdate({ transaction }) {
+          for (const m of transaction.mutations) {
+            const current = (await idbGet(storageKey)) || {}
+            const next = { ...current as any, ...(m.modified ?? {}), ...(m.changes ?? {}), updatedAt: new Date().toISOString() }
+            try { await idbSet(storageKey, next) } catch {}
+          }
+          return { refetch: false }
+        },
+        async onDelete({ transaction }) {
+          for (const _m of transaction.mutations) {
+            try { await idbDel(storageKey) } catch {}
+          }
+          return { refetch: false }
+        },
+      })
+    )
   }, [routeId])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `deliveryStates:${routeId}`
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(deliveryStates))
-    } catch {}
-  }, [routeId, deliveryStates])
+  const { data: progressData } = useLiveQuery((query) => query.from({ progress: progressCollection }))
+  const progressItem: any = useMemo(() => {
+    const d: any = progressData as any
+    return Array.isArray(d?.progress) ? d.progress[0] : d?.progress ?? (Array.isArray(d) ? d[0] : d)
+  }, [progressData])
 
-  // Persistencia de estado de inicio de ruta por ruta
+  // Hidratar estado local desde la colección
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `routeStarted:${routeId}`
+    if (!progressItem) return
+    if (typeof progressItem.routeStarted === 'boolean') setRouteStarted(progressItem.routeStarted)
+    if (progressItem.deliveryStates && typeof progressItem.deliveryStates === 'object') {
+      setDeliveryStates(progressItem.deliveryStates as Record<string, 'delivered' | 'not-delivered' | undefined>)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(progressItem)])
+
+  const persistProgress = (partial: { routeStarted?: boolean; deliveryStates?: Record<string, 'delivered' | 'not-delivered' | undefined> }) => {
+    const next = {
+      id: routeId,
+      routeStarted: partial.routeStarted ?? routeStarted,
+      deliveryStates: (partial.deliveryStates as any) ?? deliveryStates,
+      updatedAt: new Date().toISOString(),
+    }
     try {
-      const raw = window.localStorage.getItem(storageKey)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (typeof parsed === 'boolean') {
-          setRouteStarted(parsed)
-        }
+      if (progressItem && progressItem.id) {
+        ;(progressCollection as any).update(routeId, next)
+      } else {
+        ;(progressCollection as any).insert(next)
       }
     } catch {}
-  }, [routeId])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `routeStarted:${routeId}`
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(routeStarted))
-    } catch {}
-  }, [routeId, routeStarted])
+  }
 
   const handleStartRoute = () => {
     setRouteStarted(true)
+    persistProgress({ routeStarted: true })
   }
 
   const markDeliveryUnit = (
@@ -108,7 +187,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     status: 'delivered' | 'not-delivered'
   ) => {
     const key = `${visitIndex}-${orderIndex}-${unitIndex}`
-    setDeliveryStates((prev) => ({ ...prev, [key]: status }))
+    setDeliveryStates((prev) => {
+      const updated = { ...prev, [key]: status }
+      persistProgress({ deliveryStates: updated })
+      return updated
+    })
   }
 
   const getDeliveryUnitStatus = (visitIndex: number, orderIndex: number, unitIndex: number) => {
