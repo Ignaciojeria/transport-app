@@ -2,6 +2,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
+import { driverLocalState, routeStartedKey, setRouteStarted as setRouteStartedLocal, setDeliveryStatus, getDeliveryStatus } from './db/driver-local-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair } from 'lucide-react'
 
@@ -40,8 +41,6 @@ type DeliveryRouteRaw = {
 }
 
 function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData: DeliveryRouteRaw }) {
-  const [routeStarted, setRouteStarted] = useState(false)
-  const [deliveryStates, setDeliveryStates] = useState<Record<string, 'delivered' | 'not-delivered' | undefined>>({})
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen por tap en el mapa (sin botón explícito)
@@ -51,54 +50,13 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
 
-  // Persistencia local por ruta
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `deliveryStates:${routeId}`
-    try {
-      const raw = window.localStorage.getItem(storageKey)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (parsed && typeof parsed === 'object') {
-          setDeliveryStates(parsed as Record<string, 'delivered' | 'not-delivered' | undefined>)
-        }
-      }
-    } catch {}
-  }, [routeId])
+  // Estado local reactivo via LocalStorageCollection
+  const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `deliveryStates:${routeId}`
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(deliveryStates))
-    } catch {}
-  }, [routeId, deliveryStates])
-
-  // Persistencia de estado de inicio de ruta por ruta
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `routeStarted:${routeId}`
-    try {
-      const raw = window.localStorage.getItem(storageKey)
-      if (raw) {
-        const parsed = JSON.parse(raw)
-        if (typeof parsed === 'boolean') {
-          setRouteStarted(parsed)
-        }
-      }
-    } catch {}
-  }, [routeId])
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const storageKey = `routeStarted:${routeId}`
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(routeStarted))
-    } catch {}
-  }, [routeId, routeStarted])
+  const routeStarted = ((driverLocalState.get(routeStartedKey(routeId))?.value as any) === 'true')
 
   const handleStartRoute = () => {
-    setRouteStarted(true)
+    setRouteStartedLocal(routeId, true)
   }
 
   const markDeliveryUnit = (
@@ -107,13 +65,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     unitIndex: number,
     status: 'delivered' | 'not-delivered'
   ) => {
-    const key = `${visitIndex}-${orderIndex}-${unitIndex}`
-    setDeliveryStates((prev) => ({ ...prev, [key]: status }))
+    setDeliveryStatus(routeId, visitIndex, orderIndex, unitIndex, status)
   }
 
   const getDeliveryUnitStatus = (visitIndex: number, orderIndex: number, unitIndex: number) => {
-    const key = `${visitIndex}-${orderIndex}-${unitIndex}`
-    return deliveryStates[key]
+    return getDeliveryStatus(routeId, visitIndex, orderIndex, unitIndex)
   }
 
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
@@ -158,7 +114,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   useEffect(() => {
     setNextVisitIndex(getNextPendingVisitIndex())
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(deliveryStates), JSON.stringify((visits || []).map((v: any) => v?.orders?.length))])
+  }, [JSON.stringify(localState), JSON.stringify((visits || []).map((v: any) => v?.orders?.length))])
   
   // Inicialización dinámica de Leaflet y render del mapa con visitas
   const initializeLeafletMap = () => {
@@ -325,7 +281,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     setMapReady(false)
     setTimeout(initializeLeafletMap, 0)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, JSON.stringify(deliveryStates)])
+  }, [viewMode, JSON.stringify(localState)])
 
   const centerOnNext = () => {
     const L = (window as any)?.L
