@@ -2,7 +2,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
-import { driverLocalState, routeStartedKey, setRouteStarted as setRouteStartedLocal, setDeliveryStatus, getDeliveryStatus } from './db/driver-local-state'
+import { driverLocalState, routeStartedKey, setRouteStarted as setRouteStartedLocal, setDeliveryStatus, getDeliveryStatus, setDeliveryEvidence } from './db/driver-local-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair } from 'lucide-react'
 
@@ -49,6 +49,17 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
 
+  // Modal de evidencia
+  const [evidenceModal, setEvidenceModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
+  const [recipientName, setRecipientName] = useState('')
+  const [recipientRut, setRecipientRut] = useState('')
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+  const [submittingEvidence, setSubmittingEvidence] = useState(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const [usingCamera, setUsingCamera] = useState(false)
+  const [cameraError, setCameraError] = useState<string | null>(null)
+
   // Estado local reactivo via LocalStorageCollection
   const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
 
@@ -69,6 +80,99 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
   const getDeliveryUnitStatus = (visitIndex: number, orderIndex: number, unitIndex: number) => {
     return getDeliveryStatus(routeId, visitIndex, orderIndex, unitIndex)
+  }
+
+  const openEvidenceFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
+    setEvidenceModal({ open: true, vIdx: visitIndex, oIdx: orderIndex, uIdx: unitIndex })
+    setRecipientName('')
+    setRecipientRut('')
+    setPhotoDataUrl(null)
+  }
+
+  const closeEvidenceModal = () => {
+    setEvidenceModal({ open: false, vIdx: null, oIdx: null, uIdx: null })
+    setSubmittingEvidence(false)
+  }
+
+  
+
+  const startCamera = async () => {
+    try {
+      setCameraError(null)
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        try { await videoRef.current.play() } catch {}
+      }
+      setUsingCamera(true)
+    } catch (err: any) {
+      setCameraError('No se pudo acceder a la cámara. Revisa permisos.')
+      setUsingCamera(false)
+    }
+  }
+
+  const stopCamera = () => {
+    try {
+      const s = streamRef.current
+      if (s) {
+        s.getTracks().forEach((t) => t.stop())
+      }
+    } catch {}
+    streamRef.current = null
+    if (videoRef.current) {
+      try { (videoRef.current as any).srcObject = null } catch {}
+    }
+    setUsingCamera(false)
+  }
+
+  const captureFromCamera = () => {
+    const video = videoRef.current
+    if (!video) return
+    const width = video.videoWidth || 640
+    const height = video.videoHeight || 480
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    ctx.drawImage(video, 0, 0, width, height)
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7)
+    setPhotoDataUrl(dataUrl)
+    stopCamera()
+  }
+
+  useEffect(() => {
+    // Abrir cámara al abrir el modal; liberar al cerrar o desmontar
+    if (evidenceModal.open) {
+      startCamera()
+    } else {
+      stopCamera()
+    }
+    return () => {
+      stopCamera()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evidenceModal.open])
+
+  const submitEvidence = async () => {
+    if (!evidenceModal.open || evidenceModal.vIdx === null || evidenceModal.oIdx === null || evidenceModal.uIdx === null) return
+    const trimmedName = recipientName.trim()
+    const trimmedRut = recipientRut.trim()
+    if (!trimmedName || !trimmedRut || !photoDataUrl) return
+    try {
+      setSubmittingEvidence(true)
+      setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
+        recipientName: trimmedName,
+        recipientRut: trimmedRut,
+        photoDataUrl,
+        takenAt: Date.now(),
+      } as any)
+      setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
+      closeEvidenceModal()
+    } finally {
+      setSubmittingEvidence(false)
+    }
   }
 
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
@@ -618,6 +722,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                                 {typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}
                               </span>
                             </div>
+                            {status === 'delivered' && (
+                              <div className="mt-2 inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+                                <CheckCircle className="w-3 h-3 mr-1" /> Evidencia registrada
+                              </div>
+                            )}
                           </div>
                           <div className="text-right ml-3">
                             <span className="text-xs text-gray-500 block">Cant.</span>
@@ -628,7 +737,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                         {routeStarted && (
                           <div className="flex space-x-2 mt-3">
                             <button
-                              onClick={() => markDeliveryUnit(visitIndex, orderIndex, uIdx, 'delivered')}
+                              onClick={() => openEvidenceFor(visitIndex, orderIndex, uIdx)}
                               className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
                                 status === 'delivered'
                                   ? 'bg-green-600 text-white'
@@ -636,7 +745,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                               }`}
                             >
                               <CheckCircle size={16} />
-                              <span>entregado</span>
+                              <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
                             </button>
                             <button
                               onClick={() => markDeliveryUnit(visitIndex, orderIndex, uIdx, 'not-delivered')}
@@ -736,13 +845,13 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                           {routeStarted && (
                             <div className="flex space-x-2 mt-3">
                               <button
-                                onClick={() => markDeliveryUnit(nextIdx, orderIndex, uIdx, 'delivered')}
+                                onClick={() => openEvidenceFor(nextIdx, orderIndex, uIdx)}
                                 className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
                                   status === 'delivered' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'
                                 }`}
                               >
                                 <CheckCircle size={16} />
-                                <span>entregado</span>
+                                <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
                               </button>
                               <button
                                 onClick={() => markDeliveryUnit(nextIdx, orderIndex, uIdx, 'not-delivered')}
@@ -769,6 +878,84 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       
 
       {/* Barra inferior de progreso eliminada por redundancia con la barra superior */}
+    {/* Modal de evidencia */}
+    {evidenceModal.open && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/40" onClick={closeEvidenceModal}></div>
+        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4">
+          <h3 className="text-base font-semibold text-gray-800 mb-3">Evidencia de entrega</h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Nombre de quien recibe</label>
+              <input
+                type="text"
+                value={recipientName}
+                onChange={(e) => setRecipientName((e as any).target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Nombre completo"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">RUT / Documento</label>
+              <input
+                type="text"
+                value={recipientRut}
+                onChange={(e) => setRecipientRut((e as any).target.value)}
+                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="12.345.678-9"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-gray-600 mb-1">Foto de evidencia</label>
+              {/* Cámara */}
+              {!usingCamera ? (
+                <div className="mb-2">
+                  <button
+                    type="button"
+                    onClick={startCamera}
+                    className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
+                  >
+                    Usar cámara
+                  </button>
+                  {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
+                </div>
+              ) : (
+                <div className="mb-2">
+                  <div className="w-full rounded-md overflow-hidden border bg-black">
+                    <video ref={videoRef} playsInline muted className="w-full h-auto" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <button type="button" onClick={captureFromCamera} className="px-3 py-2 text-sm rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Capturar</button>
+                    <button type="button" onClick={stopCamera} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cerrar cámara</button>
+                  </div>
+                </div>
+              )}
+              {photoDataUrl && (
+                <div className="mt-2">
+                  <img src={photoDataUrl} alt="Evidencia" className="w-full rounded-md border" />
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <button
+              onClick={closeEvidenceModal}
+              className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
+              disabled={submittingEvidence}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={submitEvidence}
+              disabled={submittingEvidence || !recipientName.trim() || !recipientRut.trim() || !photoDataUrl}
+              className={`px-3 py-2 text-sm rounded-md text-white ${submittingEvidence || !recipientName.trim() || !recipientRut.trim() || !photoDataUrl ? 'bg-green-300' : 'bg-green-600 hover:bg-green-700'}`}
+            >
+              Confirmar entrega
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   )
 }
