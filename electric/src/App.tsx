@@ -43,8 +43,7 @@ type DeliveryRouteRaw = {
 function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData: DeliveryRouteRaw }) {
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
-  // fullscreen por tap en el mapa (sin botón explícito)
-  const [mapFullscreen, setMapFullscreen] = useState(false)
+  // fullscreen deshabilitado para evitar cambios por clic en el mapa
   const [nextVisitIndex, setNextVisitIndex] = useState<number | null>(null)
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
@@ -425,9 +424,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
           <div className="relative">
             <div
               ref={mapRef}
-              className={`${mapFullscreen ? 'h-[70vh]' : 'h-72'} w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
+              className={`h-72 w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
               style={{ zIndex: 1 }}
-              onClick={() => setMapFullscreen((f) => !f)}
             >
               {!mapReady && (
                 <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
@@ -666,7 +664,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       )}
 
       {/* En modo mapa: mostrar sólo la siguiente visita debajo del mapa (si no está en pantalla completa) */}
-      {viewMode === 'map' && !mapFullscreen && (() => {
+      {viewMode === 'map' && (() => {
         const nextIdx = getNextPendingVisitIndex()
         if (typeof nextIdx !== 'number') return null
         const visit: any = (visits as any)[nextIdx]
