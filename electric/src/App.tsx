@@ -59,6 +59,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const webcamRef = useRef<any>(null)
   const [cameraError, setCameraError] = useState<string | null>(null)
   const [usingCamera, setUsingCamera] = useState(false)
+  const [flashActive, setFlashActive] = useState(false)
 
   // Estado local reactivo via LocalStorageCollection
   const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
@@ -111,6 +112,9 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       const imgSrc = webcamRef.current?.getScreenshot?.()
       if (imgSrc) {
         setPhotoDataUrl(imgSrc)
+        try { (navigator as any)?.vibrate?.(60) } catch {}
+        setFlashActive(true)
+        setTimeout(() => setFlashActive(false), 140)
         stopWebcam()
       }
     } catch (e) {
@@ -885,7 +889,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                   </div>
                 ) : (
                   <div>
-                    <div className="w-full rounded-md overflow-hidden border bg-black">
+                    <div
+                      className="relative w-full rounded-md overflow-hidden border bg-black cursor-pointer select-none"
+                      onClick={captureFromWebcam}
+                      title="Toca para capturar"
+                    >
                       <Webcam
                         ref={webcamRef}
                         audio={false}
@@ -897,9 +905,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                         }}
                         onUserMediaError={() => setCameraError('No se pudo acceder a la cámara. Revisa permisos.')}
                       />
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-xs text-center py-1">
+                        Toca para capturar
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-2">
-                      <button type="button" onClick={captureFromWebcam} className="px-3 py-2 text-sm rounded-md text-white bg-indigo-600 hover:bg-indigo-700">Capturar</button>
                       <button type="button" onClick={stopWebcam} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cerrar cámara</button>
                     </div>
                     {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
@@ -931,6 +941,9 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
           </div>
         </div>
       </div>
+    )}
+    {flashActive && (
+      <div className="fixed inset-0 z-[100000] pointer-events-none bg-white opacity-70"></div>
     )}
     </div>
   )
