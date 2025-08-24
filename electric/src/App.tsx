@@ -62,6 +62,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [flashActive, setFlashActive] = useState(false)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const rutInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Estado local reactivo via LocalStorageCollection
   const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
@@ -153,6 +154,15 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       setSubmittingEvidence(false)
     }
   }
+
+  useEffect(() => {
+    // Cuando se activa la cámara, desplazar el modal para centrar la vista de cámara
+    if (usingCamera) {
+      setTimeout(() => {
+        try { cameraContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
+      }, 80)
+    }
+  }, [usingCamera])
 
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
     switch (status) {
@@ -894,7 +904,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                   <div>
                     <button
                       type="button"
-                      onClick={() => { setCameraError(null); setUsingCamera(true) }}
+                      onClick={() => { try { (document.activeElement as any)?.blur?.() } catch {}; setCameraError(null); setUsingCamera(true) }}
                       className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
                     >
                       Activar cámara
@@ -905,6 +915,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                   <div>
                     <div
                       className="relative w-full h-[60vh] sm:h-96 rounded-md overflow-hidden border bg-black cursor-pointer select-none"
+                      ref={cameraContainerRef}
                       onClick={captureFromWebcam}
                       title="Toca para capturar"
                     >
