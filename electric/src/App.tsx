@@ -315,6 +315,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
     const defaultCenter: [number, number] = points[0] ?? [-33.45, -70.66] // Santiago fallback
     const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 14 : 12)
+    map.attributionControl.setPrefix(false)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(map)
