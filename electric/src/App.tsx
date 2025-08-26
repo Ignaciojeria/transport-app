@@ -2,7 +2,16 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
-import { driverLocalState, routeStartedKey, setRouteStarted as setRouteStartedLocal, setDeliveryStatus, getDeliveryStatus, setDeliveryEvidence, setNonDeliveryEvidence } from './db/driver-local-state'
+import { 
+  useDriverState, 
+  useRouteStartedSync,
+  routeStartedKey, 
+  setRouteStarted as setRouteStartedLocal, 
+  setDeliveryStatus, 
+  getDeliveryStatusFromState, 
+  setDeliveryEvidence, 
+  setNonDeliveryEvidence 
+} from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair } from 'lucide-react'
 import Webcam from 'react-webcam'
@@ -75,10 +84,12 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [ndObservations, setNdObservations] = useState<string>('')
   const ndReasonInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Estado local reactivo via LocalStorageCollection
-  const { data: localState } = useLiveQuery((q) => q.from({ s: driverLocalState }))
+  // Estado local reactivo via GunJS
+  const { data: localState } = useDriverState()
+  // Información de sincronización entre dispositivos
+  const syncInfo = useRouteStartedSync(routeId)
 
-  const routeStarted = ((driverLocalState.get(routeStartedKey(routeId))?.value as any) === 'true')
+  const routeStarted = (localState?.s?.[`${routeStartedKey(routeId)}_simple`] === 'true')
 
   const handleStartRoute = () => {
     setRouteStartedLocal(routeId, true)
@@ -87,7 +98,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   // Nota: setDeliveryStatus se usa directamente en cada flujo
 
   const getDeliveryUnitStatus = (visitIndex: number, orderIndex: number, unitIndex: number) => {
-    return getDeliveryStatus(routeId, visitIndex, orderIndex, unitIndex)
+    return getDeliveryStatusFromState(localState?.s || {}, routeId, visitIndex, orderIndex, unitIndex)
   }
 
   const openEvidenceFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
@@ -552,6 +563,19 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             <div className="flex items-center space-x-2 text-green-200">
               <CheckCircle size={20} />
               <span>Ruta Iniciada</span>
+              {/* Indicador de sincronización */}
+              {syncInfo && (
+                <div className="flex items-center ml-2 text-xs">
+                  {navigator.onLine ? (
+                    <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                  ) : (
+                    <XCircle className="w-3 h-3 text-yellow-300" />
+                  )}
+                  <span className="ml-1 text-green-100 opacity-75">
+                    {syncInfo.deviceId.slice(-6)}
+                  </span>
+                </div>
+              )}
             </div>
           )}
           </div>
