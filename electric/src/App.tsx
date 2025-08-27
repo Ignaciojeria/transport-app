@@ -1558,28 +1558,43 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
                         {routeStarted && (
                           <div className="flex space-x-2 mt-3">
-                            <button
-                              onClick={() => openEvidenceFor(visitIndex, orderIndex, uIdx)}
-                              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                                status === 'delivered'
-                                  ? 'bg-green-600 text-white'
-                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
-                              }`}
-                            >
-                              <CheckCircle size={16} />
-                              <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
-                            </button>
-                            <button
-                              onClick={() => openNonDeliveryFor(visitIndex, orderIndex, uIdx)}
-                              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                                status === 'not-delivered'
-                                  ? 'bg-red-600 text-white'
-                                  : 'bg-red-100 text-red-700 hover:bg-red-200'
-                              }`}
-                            >
-                              <XCircle size={16} />
-                              <span>no entregado</span>
-                            </button>
+                            {status === 'delivered' ? (
+                              // Si está entregado, mostrar solo opción de cambiar a no entregado
+                              <button
+                                onClick={() => openNonDeliveryFor(visitIndex, orderIndex, uIdx)}
+                                className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                              >
+                                <XCircle size={16} />
+                                <span>Cambiar a no entregado</span>
+                              </button>
+                            ) : status === 'not-delivered' ? (
+                              // Si está no entregado, mostrar solo opción de cambiar a entregado
+                              <button
+                                onClick={() => openEvidenceFor(visitIndex, orderIndex, uIdx)}
+                                className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
+                              >
+                                <CheckCircle size={16} />
+                                <span>Cambiar a entregado</span>
+                              </button>
+                            ) : (
+                              // Si está pendiente, mostrar ambas opciones originales
+                              <>
+                                <button
+                                  onClick={() => openEvidenceFor(visitIndex, orderIndex, uIdx)}
+                                  className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
+                                >
+                                  <CheckCircle size={16} />
+                                  <span>entregar</span>
+                                </button>
+                                <button
+                                  onClick={() => openNonDeliveryFor(visitIndex, orderIndex, uIdx)}
+                                  className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                                >
+                                  <XCircle size={16} />
+                                  <span>no entregado</span>
+                                </button>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
@@ -1753,28 +1768,38 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                           </div>
                           {routeStarted && (
                             <div className="flex space-x-2 mt-3">
-                              {/* Deshabilitar botones si la visita está procesada y hay siguiente pendiente */}
-                              {isProcessed && hasNextPending ? (
-                                <div className="w-full flex items-center justify-center py-3 px-3 rounded-md bg-gray-100 text-gray-500 font-medium">
-                                  <CheckCircle size={16} className="mr-2" />
-                                  <span>Ya gestionado - Use "Siguiente a Entregar" arriba</span>
-                                </div>
+                              {/* Permitir cambios de estado en vista mapa siempre */}
+                              {status === 'delivered' ? (
+                                // Si está entregado, mostrar solo opción de cambiar a no entregado
+                                <button
+                                  onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
+                                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
+                                >
+                                  <XCircle size={16} />
+                                  <span>Cambiar a no entregado</span>
+                                </button>
+                              ) : status === 'not-delivered' ? (
+                                // Si está no entregado, mostrar solo opción de cambiar a entregado
+                                <button
+                                  onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
+                                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
+                                >
+                                  <CheckCircle size={16} />
+                                  <span>Cambiar a entregado</span>
+                                </button>
                               ) : (
+                                // Si está pendiente, mostrar ambas opciones originales
                                 <>
                                   <button
                                     onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
-                                    className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                                      status === 'delivered' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                    }`}
+                                    className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                                   >
                                     <CheckCircle size={16} />
-                                    <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
+                                    <span>entregar</span>
                                   </button>
                                   <button
                                     onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
-                                    className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                                      status === 'not-delivered' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                    }`}
+                                    className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                                   >
                                     <XCircle size={16} />
                                     <span>no entregado</span>
