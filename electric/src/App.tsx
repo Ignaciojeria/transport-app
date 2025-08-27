@@ -94,6 +94,9 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [ndObservations, setNdObservations] = useState<string>('')
   const ndReasonInputRef = useRef<HTMLInputElement | null>(null)
 
+  // Modal de descarga de reporte
+  const [downloadModal, setDownloadModal] = useState(false)
+
   // Estado local reactivo via GunJS
   const { data: localState } = useDriverState()
   
@@ -1135,6 +1138,221 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     }, 200) // Pausa más larga para asegurar que GunJS ha procesado el cambio
   }
 
+  // Función para abrir modal de descarga
+  const openDownloadModal = () => {
+    setDownloadModal(true)
+  }
+
+  // Función para cerrar modal de descarga
+  const closeDownloadModal = () => {
+    setDownloadModal(false)
+  }
+
+  // Función para generar y descargar reporte en formato especificado
+  const downloadReport = (format: 'csv' | 'excel') => {
+    try {
+      // Encabezados del CSV
+      const headers = [
+        'ID_Ruta',
+        'Patente_Vehiculo',
+        'Secuencia_Visita',
+        'Nombre_Cliente',
+        'Direccion',
+        'Telefono',
+        'Email',
+        'ID_Orden',
+        'Referencia_Orden',
+        'Unidad_Entrega',
+        'Descripcion_Items',
+        'Cantidad_Total',
+        'Peso_Total',
+        'Volumen_Total',
+        'Estado_Entrega',
+        'Nombre_Receptor',
+        'Documento_Receptor',
+        'Fecha_Gestion',
+        'Motivo_No_Entrega',
+        'Observaciones_No_Entrega',
+        'Coordenadas_Lat',
+        'Coordenadas_Lng'
+      ]
+
+      // Generar filas de datos
+      const rows: string[][] = []
+      const routeLicense = getRouteLicenseFromState(localState?.s || {}, routeId)
+      
+      // Debug: mostrar todas las claves disponibles en el estado para identificar problemas
+      console.log('🔍 Debug - Claves disponibles en localState.s:', 
+        Object.keys(localState?.s || {}).filter(key => key.includes('evidence') || key.includes('delivery'))
+      )
+      
+      ;(visits || []).forEach((visit: any, visitIndex: number) => {
+        const contactInfo = visit?.addressInfo?.contact || {}
+        const coordinates = visit?.addressInfo?.coordinates
+        const lat = Array.isArray(coordinates?.point) ? coordinates.point[1] : coordinates?.latitude
+        const lng = Array.isArray(coordinates?.point) ? coordinates.point[0] : coordinates?.longitude
+        
+        ;(visit?.orders || []).forEach((order: any, orderIndex: number) => {
+          ;(order?.deliveryUnits || []).forEach((unit: any, unitIndex: number) => {
+            const status = getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex)
+            const statusText = status === 'delivered' ? 'Entregado' : 
+                             status === 'not-delivered' ? 'No Entregado' : 'Pendiente'
+            
+            // Calcular totales de la unidad
+            const items = unit?.items || []
+            const totalQuantity = items.reduce((sum: number, item: any) => sum + (Number(item?.quantity) || 0), 0)
+            const itemDescriptions = items.map((item: any) => item?.description || '').filter(Boolean).join('; ')
+            
+            // Obtener evidencia si existe
+            let recipientName = ''
+            let recipientDocument = ''
+            let managementDate = ''
+            let nonDeliveryReason = ''
+            let nonDeliveryObservations = ''
+            
+            if (status === 'delivered') {
+              // Buscar evidencia de entrega usando las claves correctas
+              const deliveryEvidenceKey = `evidence:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
+              const deliveryEvidence = localState?.s?.[deliveryEvidenceKey]
+              
+              console.log(`🔍 Debug entrega ${visitIndex}-${orderIndex}-${unitIndex}:`, {
+                key: deliveryEvidenceKey,
+                found: !!deliveryEvidence,
+                evidence: deliveryEvidence
+              })
+              
+              if (deliveryEvidence) {
+                try {
+                  const parsedEvidence = typeof deliveryEvidence === 'string' ? JSON.parse(deliveryEvidence) : deliveryEvidence
+                  recipientName = parsedEvidence?.recipientName || ''
+                  recipientDocument = parsedEvidence?.recipientRut || ''
+                  managementDate = parsedEvidence?.takenAt ? new Date(parsedEvidence.takenAt).toLocaleString('es-CL') : ''
+                } catch (e) {
+                  console.warn('Error parsing delivery evidence:', e)
+                }
+              }
+            } else if (status === 'not-delivered') {
+              // Buscar evidencia de no entrega usando las claves correctas
+              const ndEvidenceKey = `nd-evidence:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
+              const ndEvidence = localState?.s?.[ndEvidenceKey]
+              
+              console.log(`🔍 Debug no entrega ${visitIndex}-${orderIndex}-${unitIndex}:`, {
+                key: ndEvidenceKey,
+                found: !!ndEvidence,
+                evidence: ndEvidence
+              })
+              
+              if (ndEvidence) {
+                try {
+                  const parsedEvidence = typeof ndEvidence === 'string' ? JSON.parse(ndEvidence) : ndEvidence
+                  nonDeliveryReason = parsedEvidence?.reason || ''
+                  nonDeliveryObservations = parsedEvidence?.observations || ''
+                  managementDate = parsedEvidence?.takenAt ? new Date(parsedEvidence.takenAt).toLocaleString('es-CL') : ''
+                } catch (e) {
+                  console.warn('Error parsing non-delivery evidence:', e)
+                }
+              }
+            }
+            
+            const row = [
+              routeId || '',
+              routeLicense || routeData?.vehicle?.plate || '',
+              visit?.sequenceNumber?.toString() || (visitIndex + 1).toString(),
+              contactInfo?.fullName || '',
+              visit?.addressInfo?.addressLine1 || '',
+              contactInfo?.phone || '',
+              contactInfo?.email || '',
+              order?.id || '',
+              order?.referenceID || '',
+              `Unidad ${unitIndex + 1}`,
+              itemDescriptions,
+              totalQuantity.toString(),
+              (unit?.weight || '').toString(),
+              (unit?.volume || '').toString(),
+              statusText,
+              recipientName,
+              recipientDocument,
+              managementDate,
+              nonDeliveryReason,
+              nonDeliveryObservations,
+              lat?.toString() || '',
+              lng?.toString() || ''
+            ]
+            
+            rows.push(row)
+          })
+        })
+      })
+
+      let blob: Blob
+      let filename: string
+      const now = new Date()
+      const timestamp = now.toISOString().slice(0, 19).replace(/[:.]/g, '-')
+
+      if (format === 'excel') {
+        // Generar archivo Excel usando HTML table
+        const excelContent = `
+          <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+          <head>
+            <meta charset="utf-8"/>
+            <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Reporte Ruta</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+          </head>
+          <body>
+            <table border="1">
+              <thead>
+                <tr>
+                  ${headers.map(header => `<th style="background-color: #4F46E5; color: white; font-weight: bold; padding: 8px;">${header}</th>`).join('')}
+                </tr>
+              </thead>
+              <tbody>
+                ${rows.map(row => `
+                  <tr>
+                    ${row.map(cell => `<td style="padding: 4px; border: 1px solid #ccc;">${cell || ''}</td>`).join('')}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+          </html>
+        `
+        blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8;' })
+        filename = `Reporte_Ruta_${routeId}_${timestamp}.xls`
+      } else {
+        // Generar archivo CSV
+        const csvContent = [
+          headers.join(','),
+          ...rows.map(row => row.map(field => `"${(field || '').toString().replace(/"/g, '""')}"`).join(','))
+        ].join('\n')
+        blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        filename = `Reporte_Ruta_${routeId}_${timestamp}.csv`
+      }
+
+      // Crear y descargar archivo
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', filename)
+      
+      // Ejecutar descarga
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+      
+      // Vibración y feedback
+      try { (navigator as any)?.vibrate?.(100) } catch {}
+      console.log(`📊 Reporte ${format.toUpperCase()} descargado:`, filename)
+      
+      // Cerrar modal
+      closeDownloadModal()
+      
+    } catch (error) {
+      console.error('Error generando reporte:', error)
+      alert('Error al generar el reporte. Por favor intenta nuevamente.')
+    }
+  }
+
   const openNextNavigation = (provider: 'google' | 'waze' | 'geo' = 'google') => {
     const nextIdx = getNextPendingVisitIndex()
     if (typeof nextIdx !== 'number') return
@@ -1213,6 +1431,18 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Botón descargar CSV - disponible cuando la ruta esté iniciada */}
+            {routeStarted && (
+              <button
+                onClick={openDownloadModal}
+                className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95 flex items-center space-x-1"
+                aria-label="Descargar reporte CSV"
+                title="Descargar reporte CSV"
+              >
+                📊
+                <span className="hidden sm:inline">CSV</span>
+              </button>
+            )}
             <button
               onClick={() => setViewMode((m) => (m === 'list' ? 'map' : 'list'))}
               className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95"
@@ -1610,8 +1840,17 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <h2 className="text-lg font-semibold text-gray-800 mb-2">¡Ruta Completada!</h2>
-                <p className="text-sm text-gray-600">Todas las entregas han sido gestionadas exitosamente.</p>
-                <p className="text-xs text-gray-500 mt-2">El mapa muestra el estado final de todas las visitas.</p>
+                <p className="text-sm text-gray-600 mb-4">Todas las entregas han sido gestionadas exitosamente.</p>
+                <p className="text-xs text-gray-500 mb-4">El mapa muestra el estado final de todas las visitas.</p>
+                
+                {/* Botón de descarga CSV */}
+                <button
+                  onClick={openDownloadModal}
+                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
+                >
+                  📊
+                  <span>Descargar Reporte CSV</span>
+                </button>
               </div>
             </div>
           )
@@ -2115,6 +2354,65 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
               }`}
             >
               Iniciar ruta
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Modal de descarga de reporte */}
+    {downloadModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/40" onClick={closeDownloadModal}></div>
+        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Descargar Reporte de Ruta</h3>
+          
+          <p className="text-sm text-gray-600 mb-6">
+            Selecciona el formato en el que deseas descargar el reporte con toda la información de la ruta:
+          </p>
+
+          <div className="space-y-3 mb-6">
+            {/* Opción CSV */}
+            <button
+              onClick={() => downloadReport('csv')}
+              className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                  <span className="text-green-600 font-bold text-lg">CSV</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-800">Archivo CSV</h4>
+                  <p className="text-sm text-gray-500">Compatible con Excel, Google Sheets, etc.</p>
+                  <p className="text-xs text-gray-400 mt-1">Formato estándar para datos tabulares</p>
+                </div>
+              </div>
+            </button>
+
+            {/* Opción Excel */}
+            <button
+              onClick={() => downloadReport('excel')}
+              className="w-full p-4 border-2 border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 text-left group"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                  <span className="text-blue-600 font-bold text-lg">XLS</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-800">Archivo Excel</h4>
+                  <p className="text-sm text-gray-500">Abre directamente en Microsoft Excel</p>
+                  <p className="text-xs text-gray-400 mt-1">Con formato y estilos incluidos</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <div className="flex items-center justify-end gap-3">
+            <button
+              onClick={closeDownloadModal}
+              className="px-4 py-2 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition-colors"
+            >
+              Cancelar
             </button>
           </div>
         </div>
