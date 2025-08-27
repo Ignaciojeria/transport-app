@@ -1136,17 +1136,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     setTimeout(() => {
       console.log('🧹 Evaluando si cambiar posicionamiento después de entrega...')
       
-      if (viewMode === 'map') {
-        // En modo mapa, SIEMPRE mantener selección para mostrar confirmación
-        console.log('🗺️ Modo mapa → manteniendo selección para mostrar confirmación de gestión')
-      } else {
-        // En modo lista, usar el comportamiento original
-        if (wasInitiallyPending) {
-          console.log('📋 Lista + punto pendiente → sin cambios (mantiene "Siguiente a Entregar")')
-        } else {
-          console.log('📋 Lista + punto procesado → sin cambios')
-        }
-      }
+      // NUNCA cambiar automáticamente - el conductor siempre debe confirmar manualmente
+      console.log('🔒 Manteniendo selección actual - conductor debe confirmar "Siguiente a Entregar" manualmente')
       
       // Si hay una posición sincronizada reciente que ya no tiene pendientes, 
       // podríamos considerarla inválida pero no podemos limpiarla directamente
@@ -1475,7 +1466,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold text-blue-800 flex items-center">
                   <Play className="w-4 h-4 mr-2" />
-                  Siguiente a Entregar
+                  Siguiente Disponible
                 </h3>
                 <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-medium">
                   #{nextVisit.sequenceNumber}
