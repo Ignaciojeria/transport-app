@@ -286,7 +286,12 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     if (!trimmedName || !trimmedRut || !photoDataUrl) return
     try {
       setSubmittingEvidence(true)
-      console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
+      
+      // Verificar si el punto era inicialmente pendiente
+      const currentStatus = getDeliveryUnitStatus(evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx)
+      const wasInitiallyPending = currentStatus === undefined
+      console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx, wasInitiallyPending })
+      
       setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
         recipientName: trimmedName,
         recipientRut: trimmedRut,
@@ -296,8 +301,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       console.log('📦 Estableciendo estado de entrega a "delivered"')
       setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
-      // Avanzar automáticamente a la siguiente visita si estamos en modo mapa
-      advanceToNextAfterDelivery()
+      // Comportamiento condicional según estado inicial
+      advanceToNextAfterDelivery(wasInitiallyPending)
     } finally {
       setSubmittingEvidence(false)
     }
@@ -309,7 +314,12 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     if (!reason || !ndPhotoDataUrl) return
     try {
       setSubmittingEvidence(true)
-      console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
+      
+      // Verificar si el punto era inicialmente pendiente
+      const currentStatus = getDeliveryUnitStatus(ndModal.vIdx, ndModal.oIdx, ndModal.uIdx)
+      const wasInitiallyPending = currentStatus === undefined
+      console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx, wasInitiallyPending })
+      
       setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
         reason,
         observations: ndObservations || '',
@@ -319,8 +329,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
-      // Avanzar automáticamente a la siguiente visita si estamos en modo mapa
-      advanceToNextAfterDelivery()
+      // Comportamiento condicional según estado inicial
+      advanceToNextAfterDelivery(wasInitiallyPending)
     } finally {
       setSubmittingEvidence(false)
     }
@@ -439,41 +449,34 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       nextPending
     })
     
-    // Priorizar estado sincronizado si es reciente (últimos 30 segundos) Y la visita tiene pendientes
+    // Priorizar estado sincronizado si es reciente (últimos 30 segundos)
+    // CAMBIO: Permitir sincronización de cualquier visita, no solo pendientes
     if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
-      const syncedVisitHasPending = visitHasPendingDeliveries(markerPosition.visitIndex)
-      if (syncedVisitHasPending) {
-        console.log('📍 Usando posición sincronizada:', markerPosition.visitIndex)
-        return markerPosition.visitIndex
-      } else {
-        console.log('📍 Posición sincronizada ya no tiene pendientes, usando automática')
-      }
+      console.log('📍 Usando posición sincronizada (cualquier estado):', markerPosition.visitIndex)
+      return markerPosition.visitIndex
     }
     
-    // Priorizar selección manual SI la visita seleccionada tiene pendientes
+    // Priorizar selección manual de cualquier visita
+    // CAMBIO: Permitir selección manual de entregados/no entregados también
     if (nextVisitIndex !== null) {
-      const selectedVisitHasPending = visitHasPendingDeliveries(nextVisitIndex)
-      if (selectedVisitHasPending) {
-        console.log('📍 Usando selección manual:', nextVisitIndex)
-        return nextVisitIndex
-      } else {
-        console.log('📍 Selección manual ya no tiene pendientes, usando automática')
-      }
+      console.log('📍 Usando selección manual (cualquier estado):', nextVisitIndex)
+      return nextVisitIndex
     }
     
-    // Usar última visita centrada solo si tiene pendientes
+    // Usar última visita centrada de cualquier estado
+    // CAMBIO: Permitir usar última centrada aunque esté entregada/no entregada
     if (lastCenteredVisit !== null) {
-      const centeredVisitHasPending = visitHasPendingDeliveries(lastCenteredVisit)
-      if (centeredVisitHasPending) {
-        console.log('📍 Usando última centrada:', lastCenteredVisit)
-        return lastCenteredVisit
-      } else {
-        console.log('📍 Última centrada ya no tiene pendientes, usando automática')
-      }
+      console.log('📍 Usando última centrada (cualquier estado):', lastCenteredVisit)
+      return lastCenteredVisit
     }
     
     // Fallback: siguiente pendiente automática
     console.log('📍 Usando siguiente pendiente automática:', nextPending)
+    if (nextPending !== null) {
+      console.log(`✅ Retornando visita ${nextPending} como posicionada`)
+    } else {
+      console.log(`❌ No hay visitas pendientes para posicionar`)
+    }
     return nextPending
   }
 
@@ -499,10 +502,10 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
         (order?.deliveryUnits || []).some((_u: any, uIdx: number) => getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined)
       )
       
-      // Debug: Log estado de cada visita (comentado en producción)
-      // if (vIdx <= 5) { 
-      //   console.log(`🔍 Visita ${vIdx}: hasPending=${hasPending}, seq=${visit?.sequenceNumber || vIdx + 1}`)
-      // }
+      // Debug: Log estado de cada visita
+      if (vIdx <= 5) { 
+        console.log(`🔍 Visita ${vIdx}: hasPending=${hasPending}, seq=${visit?.sequenceNumber || vIdx + 1}`)
+      }
       
       return {
         index: vIdx,
@@ -1019,6 +1022,40 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     }
   }, [licenseModal])
 
+  // Función para hacer zoom al punto actualmente seleccionado/posicionado (sin cambiar selección)
+  const zoomToCurrentlySelected = () => {
+    const L = (window as any)?.L
+    if (!L || !mapInstanceRef.current) return
+    
+    // Obtener el índice del marcador actualmente posicionado
+    const currentSelectedIdx = getPositionedVisitIndex()
+    if (typeof currentSelectedIdx !== 'number') {
+      console.log('📍 No hay marcador posicionado para hacer zoom')
+      return
+    }
+    
+    console.log(`🔍 Haciendo zoom al marcador actualmente seleccionado: ${currentSelectedIdx}`)
+    
+    // Obtener latlng de la visita seleccionada
+    const visit = (visits as any)[currentSelectedIdx]
+    const c = visit?.addressInfo?.coordinates
+    const latlng = Array.isArray(c?.point)
+      ? [c.point[1] as number, c.point[0] as number]
+      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
+          ? [c.latitude as number, c.longitude as number]
+          : null)
+    if (latlng) {
+      try { 
+        mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 })
+        console.log(`✅ Zoom realizado a visita ${currentSelectedIdx}`)
+      } catch (e) {
+        console.error('❌ Error al hacer zoom:', e)
+      }
+    } else {
+      console.log('❌ No se pudo obtener coordenadas para la visita')
+    }
+  }
+
   const centerOnNext = () => {
     const L = (window as any)?.L
     if (!L || !mapInstanceRef.current) return
@@ -1088,27 +1125,37 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     }
   }
 
-  const advanceToNextAfterDelivery = () => {
+  const advanceToNextAfterDelivery = (wasInitiallyPending: boolean = true) => {
     // Actualizar marcadores sin mover la vista (funciona en cualquier modo)
-    console.log('🔄 Avanzando a siguiente después de entrega (sin mover mapa)')
+    console.log('🔄 Actualizando después de gestionar entrega (sin mover mapa)')
     
     // NO usar isTransitioning aquí, ya que necesitamos que el useEffect funcione
     // para actualizar los marcadores inmediatamente
     
     // Esperar un poco para que el estado se actualice después de la entrega
     setTimeout(() => {
-      console.log('🧹 Limpiando estado después de entrega...')
+      console.log('🧹 Evaluando si cambiar posicionamiento después de entrega...')
       
-      // Limpiar TODOS los estados de posicionamiento para forzar uso de automático
-      setNextVisitIndex(null)
-      setLastCenteredVisit(null)
+      if (viewMode === 'map') {
+        // En modo mapa, SIEMPRE mantener selección para mostrar confirmación
+        console.log('🗺️ Modo mapa → manteniendo selección para mostrar confirmación de gestión')
+      } else {
+        // En modo lista, usar el comportamiento original
+        if (wasInitiallyPending) {
+          console.log('📋 Lista + punto pendiente → sin cambios (mantiene "Siguiente a Entregar")')
+        } else {
+          console.log('📋 Lista + punto procesado → sin cambios')
+        }
+      }
       
       // Si hay una posición sincronizada reciente que ya no tiene pendientes, 
       // podríamos considerarla inválida pero no podemos limpiarla directamente
       // ya que viene de otro dispositivo. La nueva lógica en getPositionedVisitIndex 
       // se encargará de validarla.
       
-      console.log('✅ Estado limpiado - marcadores se actualizarán automáticamente')
+      // Verificar a qué punto va a saltar automáticamente
+      const nextPendingVisit = getNextPendingVisitIndex()
+      console.log('✅ Estado limpiado - saltando automáticamente a visita:', nextPendingVisit)
       
       // Forzar múltiples actualizaciones para asegurar que el estado se refleje
       if (mapInstanceRef.current) {
@@ -1300,9 +1347,10 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             {/* Controles flotantes del mapa */}
             <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
               <button
-                onClick={centerOnNext}
+                onClick={zoomToCurrentlySelected}
                 className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
-                aria-label="Centrar en siguiente"
+                aria-label="Zoom al punto seleccionado"
+                title="Hacer zoom al punto seleccionado"
               >
                 <Crosshair className="w-5 h-5" />
               </button>
@@ -1400,6 +1448,66 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
       {viewMode === 'list' && (
       <div className="p-4 space-y-4">
+        {/* Sección "Siguiente a Entregar" - solo en pestaña "En ruta" */}
+        {activeTab === 'en-ruta' && (() => {
+          const nextIdx = getPositionedVisitIndex()
+          if (typeof nextIdx !== 'number') return null
+          const nextVisit: any = (visits as any)[nextIdx]
+          if (!nextVisit) return null
+          
+          // Solo mostrar si tiene elementos pendientes para el tab actual
+          const pendingForTab = (nextVisit?.orders || []).reduce(
+            (acc: number, order: any, orderIndex: number) => {
+              const countInOrder = (order?.deliveryUnits || []).reduce(
+                (a: number, _unit: any, uIdx: number) =>
+                  a + (shouldRenderByTab(getDeliveryUnitStatus(nextIdx, orderIndex, uIdx)) ? 1 : 0),
+                0
+              )
+              return acc + countInOrder
+            },
+            0
+          )
+          
+          if (pendingForTab === 0) return null
+          
+          return (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold text-blue-800 flex items-center">
+                  <Play className="w-4 h-4 mr-2" />
+                  Siguiente a Entregar
+                </h3>
+                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-medium">
+                  #{nextVisit.sequenceNumber}
+                </span>
+              </div>
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
+                  {nextVisit.sequenceNumber}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                    <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                    <span className="truncate">{nextVisit.addressInfo?.contact?.fullName}</span>
+                  </h4>
+                  <p className="text-xs text-gray-600 flex items-start">
+                    <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
+                    <span className="line-clamp-2">{nextVisit.addressInfo?.addressLine1}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => centerOnVisit(nextIdx)}
+                  className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
+                  aria-label={`Ver en mapa - Visita ${nextVisit.sequenceNumber}`}
+                  title="Ver en mapa"
+                >
+                  <MapPin className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )
+        })()}
+        
         {visits.map((visit: any, visitIndex: number) => {
           const matchesForTab: number = (visit?.orders || []).reduce(
             (acc: number, order: any, orderIndex: number) => {
@@ -1539,21 +1647,85 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
       {/* En modo mapa: mostrar la visita seleccionada o la siguiente pendiente debajo del mapa */}
       {viewMode === 'map' && (() => {
-        // Priorizar la visita seleccionada, si no hay, mostrar la siguiente pendiente
-        const displayIdx = nextVisitIndex !== null ? nextVisitIndex : getNextPendingVisitIndex()
+        // Usar la misma lógica que el mapa para determinar qué visita mostrar
+        const displayIdx = getPositionedVisitIndex()
         if (typeof displayIdx !== 'number') return null
         const visit: any = (visits as any)[displayIdx]
-        const isSelectedVisit = nextVisitIndex === displayIdx
+        // Es seleccionada si no es solo la automática (siguiente pendiente)
+        const autoNext = getNextPendingVisitIndex()
+        const isSelectedVisit = displayIdx !== autoNext || nextVisitIndex !== null || lastCenteredVisit !== null || (markerPosition && (Date.now() - markerPosition.timestamp) < 30000)
+        
+        // Debug para modo mapa
+        console.log('🗺️ Modo mapa - Determinando qué mostrar:', {
+          displayIdx,
+          autoNext,
+          isSelectedVisit,
+          nextVisitIndex,
+          lastCenteredVisit,
+          hasRecentMarkerPosition: markerPosition && (Date.now() - markerPosition.timestamp) < 30000
+        })
+        // Verificar si la visita actual ya está procesada
+        const visitStatus = getVisitStatus(displayIdx)
+        const isProcessed = visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial'
+        const nextPendingIdx = getNextPendingVisitIndex()
+        const hasNextPending = typeof nextPendingIdx === 'number' && nextPendingIdx !== displayIdx
+        
         return (
           <div className="p-4 space-y-4">
+            {/* Sección "Siguiente a Entregar" cuando la visita actual está procesada */}
+            {isProcessed && hasNextPending && (
+              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border-2 border-green-200 p-4 mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-green-800 flex items-center">
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    ¡Gestión Completada!
+                  </h3>
+                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full font-medium">
+                    ✓ Procesado
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    // Ir específicamente al siguiente pendiente y marcarlo como seleccionado
+                    setNextVisitIndex(nextPendingIdx)
+                    setLastCenteredVisit(nextPendingIdx)
+                    console.log('🎯 Usuario presionó "Siguiente a Entregar" - saltando a visita:', nextPendingIdx)
+                    
+                    // También sincronizar la posición del marcador
+                    if (nextPendingIdx !== null) {
+                      const nextVisit = (visits as any)[nextPendingIdx]
+                      const c = nextVisit?.addressInfo?.coordinates
+                      const latlng = Array.isArray(c?.point)
+                        ? [c.point[1] as number, c.point[0] as number]
+                        : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
+                            ? [c.latitude as number, c.longitude as number]
+                            : null)
+                      if (latlng && latlng.length === 2) {
+                        setMarkerPosition(routeId, nextPendingIdx, latlng as [number, number])
+                      }
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
+                >
+                  <Play className="w-4 h-4" />
+                  <span>Siguiente a Entregar (#{(visits as any)[nextPendingIdx]?.sequenceNumber})</span>
+                </button>
+              </div>
+            )}
+            
             {/* Indicador de qué visita se está mostrando */}
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-medium text-gray-700">
                 {isSelectedVisit ? 'Visita seleccionada' : 'Siguiente a entregar'}
               </h3>
-              {isSelectedVisit && (
+              {isSelectedVisit && !isProcessed && (
                 <button
-                  onClick={() => setNextVisitIndex(null)}
+                  onClick={() => {
+                    // Limpiar todas las selecciones para volver al automático
+                    setNextVisitIndex(null)
+                    setLastCenteredVisit(null)
+                    console.log('🔄 Usuario solicitó ver siguiente - limpiando selecciones')
+                  }}
                   className="text-xs text-blue-600 hover:text-blue-800 font-medium"
                 >
                   Ver siguiente
@@ -1632,24 +1804,34 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                           </div>
                           {routeStarted && (
                             <div className="flex space-x-2 mt-3">
-                              <button
-                                onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
-                                className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                                  status === 'delivered' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'
-                                }`}
-                              >
-                                <CheckCircle size={16} />
-                                <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
-                              </button>
-                              <button
-                                onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
-                                className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
-                                  status === 'not-delivered' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                }`}
-                              >
-                                <XCircle size={16} />
-                                <span>no entregado</span>
-                              </button>
+                              {/* Deshabilitar botones si la visita está procesada y hay siguiente pendiente */}
+                              {isProcessed && hasNextPending ? (
+                                <div className="w-full flex items-center justify-center py-3 px-3 rounded-md bg-gray-100 text-gray-500 font-medium">
+                                  <CheckCircle size={16} className="mr-2" />
+                                  <span>Ya gestionado - Use "Siguiente a Entregar" arriba</span>
+                                </div>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
+                                    className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
+                                      status === 'delivered' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                    }`}
+                                  >
+                                    <CheckCircle size={16} />
+                                    <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
+                                  </button>
+                                  <button
+                                    onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
+                                    className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
+                                      status === 'not-delivered' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                    }`}
+                                  >
+                                    <XCircle size={16} />
+                                    <span>no entregado</span>
+                                  </button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
