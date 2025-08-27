@@ -287,10 +287,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     try {
       setSubmittingEvidence(true)
       
-      // Verificar si el punto era inicialmente pendiente
-      const currentStatus = getDeliveryUnitStatus(evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx)
-      const wasInitiallyPending = currentStatus === undefined
-      console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx, wasInitiallyPending })
+      console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
       
       setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
         recipientName: trimmedName,
@@ -301,8 +298,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       console.log('📦 Estableciendo estado de entrega a "delivered"')
       setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
-      // Comportamiento condicional según estado inicial
-      advanceToNextAfterDelivery(wasInitiallyPending)
+      // Actualizar marcadores manteniendo control manual
+      advanceToNextAfterDelivery()
     } finally {
       setSubmittingEvidence(false)
     }
@@ -315,10 +312,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     try {
       setSubmittingEvidence(true)
       
-      // Verificar si el punto era inicialmente pendiente
-      const currentStatus = getDeliveryUnitStatus(ndModal.vIdx, ndModal.oIdx, ndModal.uIdx)
-      const wasInitiallyPending = currentStatus === undefined
-      console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx, wasInitiallyPending })
+      console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
       setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
         reason,
@@ -329,8 +323,8 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
-      // Comportamiento condicional según estado inicial
-      advanceToNextAfterDelivery(wasInitiallyPending)
+      // Actualizar marcadores manteniendo control manual
+      advanceToNextAfterDelivery()
     } finally {
       setSubmittingEvidence(false)
     }
@@ -480,17 +474,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     return nextPending
   }
 
-  // Helper para verificar si una visita tiene entregas pendientes
-  const visitHasPendingDeliveries = (visitIndex: number): boolean => {
-    const visit = (visits as any)?.[visitIndex]
-    if (!visit) return false
-    
-    return (visit?.orders || []).some((order: any, oIdx: number) =>
-      (order?.deliveryUnits || []).some((_u: any, uIdx: number) => 
-        getDeliveryUnitStatus(visitIndex, oIdx, uIdx) === undefined
-      )
-    )
-  }
+
 
   // Siguiente visita pendiente (busca la siguiente en orden secuencial, no solo la primera)
   const getNextPendingVisitIndex = (): number | null => {
@@ -544,16 +528,13 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     return pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0].index
   }
 
-  // Mantener sincronizado el índice de "siguiente por entregar" - SOLO cuando no estamos en transición
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  // Mantener sincronizado el índice de "siguiente por entregar"
   const markersRef = useRef<any[]>([])
   
   useEffect(() => {
-    if (!isTransitioning) {
-      setNextVisitIndex(getNextPendingVisitIndex())
-    }
+    setNextVisitIndex(getNextPendingVisitIndex())
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(localState), JSON.stringify((visits || []).map((v: any) => v?.orders?.length)), isTransitioning])
+  }, [JSON.stringify(localState), JSON.stringify((visits || []).map((v: any) => v?.orders?.length))])
 
     // Helper para obtener gradiente complementario
     const getGradientColor = (baseColor: string): string => {
@@ -967,12 +948,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     console.log('🔄 useEffect para updateMapMarkers disparado:', { 
       viewMode, 
       hasMapInstance: !!mapInstanceRef.current, 
-      isTransitioning, 
       mapEssentialDataLength: mapEssentialData?.length || 0,
       nextVisitIndex,
       lastCenteredVisit
     })
-    if (viewMode === 'map' && mapInstanceRef.current && !isTransitioning) {
+    if (viewMode === 'map' && mapInstanceRef.current) {
       console.log('✅ Ejecutando updateMapMarkers desde useEffect')
       updateMapMarkers()
     }
@@ -1056,29 +1036,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     }
   }
 
-  const centerOnNext = () => {
-    const L = (window as any)?.L
-    if (!L || !mapInstanceRef.current) return
-    const nextIdx = getNextPendingVisitIndex()
-    if (typeof nextIdx !== 'number') return
-    
-    // Limpiar selección para mostrar la siguiente pendiente
-    setNextVisitIndex(null)
-    // Guardar la última visita centrada
-    setLastCenteredVisit(nextIdx)
-    
-    // Obtener latlng de la visita
-    const visit = (visits as any)[nextIdx]
-    const c = visit?.addressInfo?.coordinates
-    const latlng = Array.isArray(c?.point)
-      ? [c.point[1] as number, c.point[0] as number]
-      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
-          ? [c.latitude as number, c.longitude as number]
-          : null)
-    if (latlng) {
-      try { mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 }) } catch {}
-    }
-  }
+
 
   const centerOnVisit = (visitIndex: number) => {
     // Obtener latlng de la visita específica
@@ -1125,12 +1083,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     }
   }
 
-  const advanceToNextAfterDelivery = (wasInitiallyPending: boolean = true) => {
+  const advanceToNextAfterDelivery = () => {
     // Actualizar marcadores sin mover la vista (funciona en cualquier modo)
     console.log('🔄 Actualizando después de gestionar entrega (sin mover mapa)')
     
-    // NO usar isTransitioning aquí, ya que necesitamos que el useEffect funcione
-    // para actualizar los marcadores inmediatamente
+    // Actualizar los marcadores inmediatamente
     
     // Esperar un poco para que el estado se actualice después de la entrega
     setTimeout(() => {
