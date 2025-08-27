@@ -1262,20 +1262,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
       {/* Vista de mapa (solo cuando viewMode === 'map') */}
       {viewMode === 'map' && (() => {
-      const nextIdxForMap = getNextPendingVisitIndex()
-      if (nextIdxForMap === null) {
-        return (
-          <div className="px-4 pt-10">
-            <div className="bg-white rounded-xl shadow-md border border-gray-100 p-6 text-center">
-              <div className="flex items-center justify-center mb-2">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-              <h2 className="text-base font-semibold text-gray-800">Ruta terminada</h2>
-              <p className="text-sm text-gray-600 mt-1">Todas las entregas fueron gestionadas.</p>
-            </div>
-          </div>
-        )
-      }
+      // Siempre mostrar el mapa, incluso cuando todas las entregas estén gestionadas
       return (
         <div className="px-4 pt-4">
           <div className="relative">
@@ -1613,7 +1600,23 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       {viewMode === 'map' && (() => {
         // Usar la misma lógica que el mapa para determinar qué visita mostrar
         const displayIdx = getPositionedVisitIndex()
-        if (typeof displayIdx !== 'number') return null
+        
+        // Si no hay punto seleccionado/posicionado, mostrar mensaje de ruta completada
+        if (typeof displayIdx !== 'number') {
+          return (
+            <div className="p-4 space-y-4">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 p-6 text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">¡Ruta Completada!</h2>
+                <p className="text-sm text-gray-600">Todas las entregas han sido gestionadas exitosamente.</p>
+                <p className="text-xs text-gray-500 mt-2">El mapa muestra el estado final de todas las visitas.</p>
+              </div>
+            </div>
+          )
+        }
+        
         const visit: any = (visits as any)[displayIdx]
         // Es seleccionada si no es solo la automática (siguiente pendiente)
         const autoNext = getNextPendingVisitIndex()
