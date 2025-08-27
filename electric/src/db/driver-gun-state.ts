@@ -36,6 +36,7 @@ const driverData = gun.get('driver-state')
 
 // Helpers para claves (igual que antes)
 export const routeStartedKey = (routeId: string) => `routeStarted:${routeId}`
+export const routeLicenseKey = (routeId: string) => `routeLicense:${routeId}`
 export const deliveryKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
   `delivery:${routeId}:${vIdx}-${oIdx}-${uIdx}`
 export const evidenceKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
@@ -141,6 +142,22 @@ export function setRouteStarted(routeId: string, started: boolean) {
   driverData.get(`${key}_simple`).put(started ? 'true' : 'false')
 }
 
+export function setRouteLicense(routeId: string, license: string) {
+  const key = routeLicenseKey(routeId)
+  const timestamp = Date.now()
+  const deviceId = getDeviceId()
+  
+  // Guardar con metadatos para sincronización
+  const value = {
+    license: license,
+    timestamp,
+    deviceId,
+    action: 'license_set'
+  }
+  
+  driverData.get(key).put(value)
+}
+
 export function setDeliveryStatus(
   routeId: string,
   visitIndex: number,
@@ -235,6 +252,15 @@ export function getDeliveryStatusFromState(
 ): 'delivered' | 'not-delivered' | undefined {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
   return state[key] ?? undefined
+}
+
+export function getRouteLicenseFromState(
+  state: Record<string, any>,
+  routeId: string
+): string | undefined {
+  const key = routeLicenseKey(routeId)
+  const licenseData = state[key]
+  return licenseData?.license ?? undefined
 }
 
 // Hook específico para monitorear sincronización de ruta iniciada
