@@ -1087,23 +1087,24 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     // Actualizar marcadores sin mover la vista (funciona en cualquier modo)
     console.log('🔄 Actualizando después de gestionar entrega (sin mover mapa)')
     
-    // Actualizar los marcadores inmediatamente
-    
     // Esperar un poco para que el estado se actualice después de la entrega
     setTimeout(() => {
-      console.log('🧹 Evaluando si cambiar posicionamiento después de entrega...')
+      console.log('🧹 Manteniendo visita actual después de gestionar entrega...')
       
-      // NUNCA cambiar automáticamente - el conductor siempre debe confirmar manualmente
-      console.log('🔒 Manteniendo selección actual - conductor debe confirmar "Siguiente a Entregar" manualmente')
+      // MANTENER la visita actual seleccionada para evitar salto automático
+      // Obtener la visita que se está mostrando actualmente
+      const currentDisplayedVisit = getPositionedVisitIndex()
       
-      // Si hay una posición sincronizada reciente que ya no tiene pendientes, 
-      // podríamos considerarla inválida pero no podemos limpiarla directamente
-      // ya que viene de otro dispositivo. La nueva lógica en getPositionedVisitIndex 
-      // se encargará de validarla.
+      if (typeof currentDisplayedVisit === 'number') {
+        // Forzar que se mantenga la visita actual como seleccionada
+        console.log('🔒 Fijando visita actual como seleccionada para evitar salto automático:', currentDisplayedVisit)
+        setNextVisitIndex(currentDisplayedVisit)
+        setLastCenteredVisit(currentDisplayedVisit)
+      }
       
-      // Verificar a qué punto va a saltar automáticamente
+      // Verificar cuál sería el siguiente punto pendiente para logs
       const nextPendingVisit = getNextPendingVisitIndex()
-      console.log('✅ Estado limpiado - saltando automáticamente a visita:', nextPendingVisit)
+      console.log('📍 Siguiente punto pendiente disponible:', nextPendingVisit, '(pero no saltando automáticamente)')
       
       // Forzar múltiples actualizaciones para asegurar que el estado se refleje
       if (mapInstanceRef.current) {
