@@ -57,9 +57,11 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
   const [nextVisitIndex, setNextVisitIndex] = useState<number | null>(null)
+  const [lastCenteredVisit, setLastCenteredVisit] = useState<number | null>(null) // Recordar última visita centrada
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
 
   // Modal de evidencia
   const [evidenceModal, setEvidenceModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
@@ -94,8 +96,67 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
   // Estado local reactivo via GunJS
   const { data: localState } = useDriverState()
+  
+  // Debug: Log cuando cambia el estado local (comentado en producción)
+  // useEffect(() => {
+  //   console.log('🔄 localState cambió:', localState?.s ? Object.keys(localState.s).filter(k => k.includes('delivery:')) : 'no state')
+  // }, [localState])
   // Información de sincronización entre dispositivos
   const syncInfo = useRouteStartedSync(routeId)
+
+  // Función para sincronizar posición del marcador entre dispositivos
+  const setMarkerPosition = async (routeId: string, visitIndex: number, coordinates: [number, number]) => {
+    try {
+      const { driverData } = await import('./db/driver-gun-state')
+      const key = `marker_position:${routeId}`
+      const deviceId = (() => {
+        try {
+          return syncInfo?.deviceId || `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        } catch {
+          return `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+        }
+      })()
+      const data = {
+        visitIndex,
+        coordinates,
+        timestamp: Date.now(),
+        deviceId
+      }
+      console.log('📍 Sincronizando posición de marcador:', data)
+      driverData.get(key).put(JSON.stringify(data))
+    } catch (error) {
+      console.error('Error sincronizando posición de marcador:', error)
+    }
+  }
+
+  // Hook para escuchar cambios de posición del marcador
+  const [markerPosition, setMarkerPosition_] = useState<{
+    visitIndex: number
+    coordinates: [number, number]
+    timestamp: number
+    deviceId: string
+  } | null>(null)
+
+  useEffect(() => {
+    import('./db/driver-gun-state').then(({ driverData }) => {
+      const key = `marker_position:${routeId}`
+      const unsubscribe = driverData.get(key).on((data) => {
+        if (data && typeof data === 'string') {
+          try {
+            const parsed = JSON.parse(data)
+            console.log('📡 Recibida posición de marcador sincronizada:', parsed)
+            setMarkerPosition_(parsed)
+          } catch {}
+        }
+      })
+
+      return () => {
+        if (unsubscribe && typeof unsubscribe.off === 'function') {
+          unsubscribe.off()
+        }
+      }
+    })
+  }, [routeId])
 
   const routeStarted = (localState?.s?.[`${routeStartedKey(routeId)}_simple`] === 'true')
 
@@ -130,7 +191,12 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   // Nota: setDeliveryStatus se usa directamente en cada flujo
 
   const getDeliveryUnitStatus = (visitIndex: number, orderIndex: number, unitIndex: number) => {
-    return getDeliveryStatusFromState(localState?.s || {}, routeId, visitIndex, orderIndex, unitIndex)
+    const status = getDeliveryStatusFromState(localState?.s || {}, routeId, visitIndex, orderIndex, unitIndex)
+    // Debug ocasional para verificar lecturas de estado
+    if (visitIndex === 7 && orderIndex === 0 && unitIndex === 0) {
+      console.log(`🔍 getDeliveryUnitStatus(7,0,0): ${status}`)
+    }
+    return status
   }
 
   const openEvidenceFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
@@ -220,14 +286,18 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     if (!trimmedName || !trimmedRut || !photoDataUrl) return
     try {
       setSubmittingEvidence(true)
+      console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
       setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
         recipientName: trimmedName,
         recipientRut: trimmedRut,
         photoDataUrl,
         takenAt: Date.now(),
       } as any)
+      console.log('📦 Estableciendo estado de entrega a "delivered"')
       setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
+      // Avanzar automáticamente a la siguiente visita si estamos en modo mapa
+      advanceToNextAfterDelivery()
     } finally {
       setSubmittingEvidence(false)
     }
@@ -239,14 +309,18 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     if (!reason || !ndPhotoDataUrl) return
     try {
       setSubmittingEvidence(true)
+      console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
         reason,
         observations: ndObservations || '',
         photoDataUrl: ndPhotoDataUrl,
         takenAt: Date.now(),
       } as any)
+      console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
+      // Avanzar automáticamente a la siguiente visita si estamos en modo mapa
+      advanceToNextAfterDelivery()
     } finally {
       setSubmittingEvidence(false)
     }
@@ -295,24 +369,362 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
   const visits = routeData?.visits ?? []
   
-  // Siguiente visita pendiente (primera con unidades sin estado)
+  // Obtener el estado de una visita completa
+  const getVisitStatus = (visitIndex: number): 'completed' | 'not-delivered' | 'partial' | 'pending' => {
+    const visit = (visits as any)[visitIndex]
+    if (!visit) return 'pending'
+    
+    const allUnits: Array<{ status: 'delivered' | 'not-delivered' | undefined }> = []
+    
+    // Recopilar el estado de todas las unidades de entrega de la visita
+    ;(visit.orders || []).forEach((order: any, oIdx: number) => {
+      ;(order.deliveryUnits || []).forEach((_unit: any, uIdx: number) => {
+        const status = getDeliveryUnitStatus(visitIndex, oIdx, uIdx)
+        allUnits.push({ status })
+      })
+    })
+    
+    if (allUnits.length === 0) return 'pending'
+    
+    const deliveredCount = allUnits.filter(u => u.status === 'delivered').length
+    const notDeliveredCount = allUnits.filter(u => u.status === 'not-delivered').length
+    const totalCount = allUnits.length
+    const processedCount = deliveredCount + notDeliveredCount
+    
+    if (processedCount === 0) return 'pending'
+    
+    // Si todas las unidades están marcadas como no entregadas
+    if (notDeliveredCount === totalCount) return 'not-delivered'
+    
+    // Si todas las unidades están procesadas (entregadas o no entregadas)
+    if (processedCount === totalCount) {
+      // Si hay al menos una entregada, considerarla completada exitosamente
+      return deliveredCount > 0 ? 'completed' : 'not-delivered'
+    }
+    
+    // Estado mixto: algunas procesadas, otras pendientes
+    return 'partial'
+  }
+
+  // Obtener color del marcador según el estado de la visita (sin considerar posicionamiento)
+  const getVisitMarkerColor = (visitIndex: number): string => {
+    const status = getVisitStatus(visitIndex)
+    switch (status) {
+      case 'completed':
+        // Completamente entregado (verde)
+        return '#10B981'
+      case 'not-delivered':
+        // Completamente no entregado (rojo)
+        return '#EF4444'
+      case 'partial':
+        // Parcialmente entregado (azul más oscuro)
+        return '#1D4ED8'
+      case 'pending':
+      default:
+        // Pendiente (gris por defecto)
+        return '#6B7280'
+    }
+  }
+
+  // Función centralizada para determinar qué marcador debe estar posicionado
+  const getPositionedVisitIndex = (): number | null => {
+    // Siempre obtener la siguiente pendiente real
+    const nextPending = getNextPendingVisitIndex()
+    
+    console.log('🔍 getPositionedVisitIndex - Estados:', {
+      markerPosition: markerPosition?.visitIndex,
+      markerPositionAge: markerPosition ? Date.now() - markerPosition.timestamp : null,
+      nextVisitIndex,
+      lastCenteredVisit,
+      nextPending
+    })
+    
+    // Priorizar estado sincronizado si es reciente (últimos 30 segundos) Y la visita tiene pendientes
+    if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
+      const syncedVisitHasPending = visitHasPendingDeliveries(markerPosition.visitIndex)
+      if (syncedVisitHasPending) {
+        console.log('📍 Usando posición sincronizada:', markerPosition.visitIndex)
+        return markerPosition.visitIndex
+      } else {
+        console.log('📍 Posición sincronizada ya no tiene pendientes, usando automática')
+      }
+    }
+    
+    // Priorizar selección manual SI la visita seleccionada tiene pendientes
+    if (nextVisitIndex !== null) {
+      const selectedVisitHasPending = visitHasPendingDeliveries(nextVisitIndex)
+      if (selectedVisitHasPending) {
+        console.log('📍 Usando selección manual:', nextVisitIndex)
+        return nextVisitIndex
+      } else {
+        console.log('📍 Selección manual ya no tiene pendientes, usando automática')
+      }
+    }
+    
+    // Usar última visita centrada solo si tiene pendientes
+    if (lastCenteredVisit !== null) {
+      const centeredVisitHasPending = visitHasPendingDeliveries(lastCenteredVisit)
+      if (centeredVisitHasPending) {
+        console.log('📍 Usando última centrada:', lastCenteredVisit)
+        return lastCenteredVisit
+      } else {
+        console.log('📍 Última centrada ya no tiene pendientes, usando automática')
+      }
+    }
+    
+    // Fallback: siguiente pendiente automática
+    console.log('📍 Usando siguiente pendiente automática:', nextPending)
+    return nextPending
+  }
+
+  // Helper para verificar si una visita tiene entregas pendientes
+  const visitHasPendingDeliveries = (visitIndex: number): boolean => {
+    const visit = (visits as any)?.[visitIndex]
+    if (!visit) return false
+    
+    return (visit?.orders || []).some((order: any, oIdx: number) =>
+      (order?.deliveryUnits || []).some((_u: any, uIdx: number) => 
+        getDeliveryUnitStatus(visitIndex, oIdx, uIdx) === undefined
+      )
+    )
+  }
+
+  // Siguiente visita pendiente (busca la siguiente en orden secuencial, no solo la primera)
   const getNextPendingVisitIndex = (): number | null => {
-    for (let vIdx = 0; vIdx < (visits || []).length; vIdx++) {
-      const visit: any = (visits as any)[vIdx]
+    if (!visits || visits.length === 0) return null
+    
+    // Crear array de visitas con su estado de pendiente y número de secuencia
+    const visitStatus = (visits as any[]).map((visit: any, vIdx: number) => {
       const hasPending = (visit?.orders || []).some((order: any, oIdx: number) =>
         (order?.deliveryUnits || []).some((_u: any, uIdx: number) => getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined)
       )
-      if (hasPending) return vIdx
+      
+      // Debug: Log estado de cada visita (comentado en producción)
+      // if (vIdx <= 5) { 
+      //   console.log(`🔍 Visita ${vIdx}: hasPending=${hasPending}, seq=${visit?.sequenceNumber || vIdx + 1}`)
+      // }
+      
+      return {
+        index: vIdx,
+        sequenceNumber: visit?.sequenceNumber || vIdx + 1,
+        hasPending
+      }
+    })
+    
+    // Filtrar solo las que tienen elementos pendientes
+    const pendingVisits = visitStatus.filter(v => v.hasPending)
+    
+    if (pendingVisits.length === 0) return null
+    
+    // Si hay una visita seleccionada manualmente y tiene pendientes, mantenerla
+    if (nextVisitIndex !== null) {
+      const selectedVisit = visitStatus[nextVisitIndex]
+      if (selectedVisit?.hasPending) {
+        return nextVisitIndex
+      }
     }
-    return null
+    
+    // Si hay una última visita centrada, buscar la siguiente después de esa
+    if (lastCenteredVisit !== null) {
+      const lastCenteredSequence = visitStatus[lastCenteredVisit]?.sequenceNumber
+      if (lastCenteredSequence) {
+        // Buscar la siguiente visita pendiente después de la última centrada
+        const nextPending = pendingVisits
+          .filter(v => v.sequenceNumber > lastCenteredSequence)
+          .sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0]
+        
+        if (nextPending) return nextPending.index
+      }
+    }
+    
+    // Si no hay contexto previo, devolver la primera pendiente por orden de secuencia
+    return pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0].index
   }
 
-  // Mantener sincronizado el índice de "siguiente por entregar"
-  useEffect(() => {
-    setNextVisitIndex(getNextPendingVisitIndex())
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(localState), JSON.stringify((visits || []).map((v: any) => v?.orders?.length))])
+  // Mantener sincronizado el índice de "siguiente por entregar" - SOLO cuando no estamos en transición
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const markersRef = useRef<any[]>([])
   
+  useEffect(() => {
+    if (!isTransitioning) {
+      setNextVisitIndex(getNextPendingVisitIndex())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(localState), JSON.stringify((visits || []).map((v: any) => v?.orders?.length)), isTransitioning])
+
+    // Helper para obtener gradiente complementario
+    const getGradientColor = (baseColor: string): string => {
+      const colorMap: Record<string, string> = {
+        '#10B981': '#059669', // Verde claro -> Verde más oscuro
+        '#EF4444': '#DC2626', // Rojo (no entregado) -> Rojo más oscuro
+        '#1D4ED8': '#1E40AF', // Azul oscuro (parcial) -> Azul más oscuro
+        '#6B7280': '#4B5563', // Gris -> Gris más oscuro
+      }
+      return colorMap[baseColor] || '#7C3AED'
+    }
+
+    // Icono circular normal para visitas
+  const createNumberedIcon = (L: any, number: number, color = '#4F46E5') => {
+      const gradientColor = getGradientColor(color)
+      
+      return L.divIcon({
+        html: `
+          <div style="
+            background: linear-gradient(135deg, ${color}, ${gradientColor});
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            border: 2px solid white;
+          ">${number}</div>
+        `,
+        className: 'custom-div-icon',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      })
+    }
+
+    // Icono en forma de marcador/pin de mapa para visita posicionada (CSS puro)
+  const createPositionedIcon = (L: any, number: number, color = '#4F46E5') => {
+      const gradientColor = getGradientColor(color)
+      
+      return L.divIcon({
+        html: `
+          <div style="
+            position: relative;
+            width: 36px;
+            height: 46px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+          ">
+            <!-- Círculo superior del pin -->
+            <div style="
+              width: 36px;
+              height: 36px;
+              border-radius: 50% 50% 50% 0;
+              transform: rotate(-45deg);
+              background: linear-gradient(135deg, ${color}, ${gradientColor});
+              border: 3px solid white;
+              box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+              position: relative;
+            "></div>
+            <!-- Número centrado -->
+            <div style="
+              position: absolute;
+              top: 8px;
+              left: 50%;
+              transform: translateX(-50%);
+              color: white;
+              font-weight: 700;
+              font-size: 12px;
+              z-index: 100;
+              text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+              pointer-events: none;
+            ">${number}</div>
+          </div>
+        `,
+        className: 'custom-div-icon positioned',
+        iconSize: [36, 46],
+        iconAnchor: [18, 42], // Ancla en la punta del pin
+      })
+    }
+
+  // Función optimizada para actualizar solo los marcadores sin recrear el mapa
+  const updateMapMarkers = () => {
+    // console.log('🚀 updateMapMarkers ejecutándose')
+    const L = (window as any)?.L
+    if (!L || !mapInstanceRef.current) {
+      // console.log('❌ updateMapMarkers abortado - no hay L o mapInstance')
+      return
+    }
+
+    // console.log('🧹 Limpiando marcadores existentes:', markersRef.current.length)
+    // Limpiar marcadores existentes
+    markersRef.current.forEach(marker => {
+      try { mapInstanceRef.current.removeLayer(marker) } catch {}
+    })
+    markersRef.current = []
+
+    // Helper: obtener [lat, lng] desde addressInfo
+    const getLatLngFromAddressInfo = (addr: any): [number, number] | null => {
+      const c = addr?.coordinates
+      if (!c) return null
+      if (Array.isArray(c?.point) && c.point.length >= 2) {
+        return [c.point[1] as number, c.point[0] as number]
+      }
+      if (typeof c.latitude === 'number' && typeof c.longitude === 'number') {
+        return [c.latitude as number, c.longitude as number]
+      }
+      return null
+    }
+
+    // Recrear marcadores con estados actualizados
+    // console.log('🔄 Recreando marcadores para', (visits || []).length, 'visitas')
+    ;(visits || []).forEach((v: any, idx: number) => {
+      const latlng = getLatLngFromAddressInfo(v?.addressInfo)
+      if (latlng) {
+        // Determinar si está posicionada usando función centralizada
+        const positionedVisitIndex = getPositionedVisitIndex()
+        const isCurrentlyPositioned = (positionedVisitIndex === idx)
+        
+        if (isCurrentlyPositioned) {
+          console.log(`📍 Marcador ${idx} posicionado (único)`)
+        }
+        
+        const color = getVisitMarkerColor(idx)
+        const sequenceNumber = v?.sequenceNumber || (idx + 1)
+        
+        // Debug para identificar problema de colores
+        const visitStatus = getVisitStatus(idx)
+        console.log(`🎨 Marcador ${idx}: status=${visitStatus}, color=${color}, positioned=${isCurrentlyPositioned}`)
+        
+        // Usar iconos optimizados
+        const icon = isCurrentlyPositioned 
+          ? createPositionedIcon(L, sequenceNumber, color)
+          : createNumberedIcon(L, sequenceNumber, color)
+        
+        const marker = L.marker(latlng as any, { icon }).addTo(mapInstanceRef.current)
+        
+        // Agregar event listener para click en marcador
+        marker.on('click', () => {
+          console.log(`🖱️ Click en marcador ${idx}`)
+          // Vibración táctil si está disponible
+          try { (navigator as any)?.vibrate?.(30) } catch {}
+          
+          // Sincronizar posición con otros dispositivos
+          setMarkerPosition(routeId, idx, latlng)
+          
+          // Actualizar estado local para cambiar al marcador clickeado
+          setNextVisitIndex(idx)
+          setLastCenteredVisit(idx)
+          
+          // Centrar el mapa en la nueva posición con una transición suave
+          try { 
+            mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.4 }) 
+          } catch {}
+        })
+        
+        // Agregar tooltip con información de la visita
+        const visitInfo = v?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
+        marker.bindTooltip(visitInfo, {
+          permanent: false,
+          direction: 'top',
+          offset: [0, -20]
+        })
+        
+        markersRef.current.push(marker)
+      }
+    })
+    // console.log('✅ updateMapMarkers completado -', markersRef.current.length, 'marcadores creados')
+  }
+
   // Inicialización dinámica de Leaflet y render del mapa con visitas
   const initializeLeafletMap = () => {
     if (typeof window === 'undefined') return
@@ -345,31 +757,70 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     ]
     const nextIdx = getNextPendingVisitIndex()
 
-    const defaultCenter: [number, number] = points[0] ?? [-33.45, -70.66] // Santiago fallback
-    const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 14 : 12)
+    // Determinar el centro inicial: última visita centrada, siguiente pendiente, o primera visita
+    const centerIdx = lastCenteredVisit !== null ? lastCenteredVisit : 
+                     (typeof nextIdx === 'number' ? nextIdx : 0)
+    const defaultCenter: [number, number] = points[centerIdx] ?? points[0] ?? [-33.45, -70.66] // Santiago fallback
+    const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 16 : 12)
     map.attributionControl.setPrefix(false)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(map)
 
-    // Icono numerado para visitas
-    const createNumberedIcon = (number: number, color = '#4F46E5') =>
-      L.divIcon({
-        html: `\n          <div style="\n            background: linear-gradient(135deg, ${color}, #7C3AED);\n            color: white;\n            width: 28px;\n            height: 28px;\n            border-radius: 50%;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            font-weight: 700;\n            font-size: 12px;\n            box-shadow: 0 4px 8px rgba(0,0,0,0.25);\n            border: 2px solid white;\n          ">${number}</div>\n        `,
-        className: 'custom-div-icon',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      })
+    // Limpiar marcadores existentes del ref antes de crear nuevos
+    markersRef.current = []
 
     // Marcador de inicio (opcional)
     if (startLatLng) {
-      L.marker(startLatLng as any, { icon: createNumberedIcon(0, '#10B981') }).addTo(map)
+      const startMarker = L.marker(startLatLng as any, { icon: createNumberedIcon(L, 0, '#10B981') }).addTo(map)
+      markersRef.current.push(startMarker)
     }
 
-    // Marcadores de visitas
+    // Marcadores de visitas con colores según estado
     points.forEach((latlng, idx) => {
-      const isNext = typeof nextIdx === 'number' && idx === nextIdx
-      L.marker(latlng as any, { icon: createNumberedIcon(idx + 1, isNext ? '#EF4444' : '#4F46E5') }).addTo(map)
+      // Determinar si esta visita está actualmente posicionada usando función centralizada
+      const positionedVisitIndex = getPositionedVisitIndex()
+      const isCurrentlyPositioned = (positionedVisitIndex === idx)
+      
+      const color = getVisitMarkerColor(idx)
+      const sequenceNumber = (visits as any)[idx]?.sequenceNumber || (idx + 1)
+      
+      // Usar forma diferente para visita posicionada
+      const icon = isCurrentlyPositioned 
+        ? createPositionedIcon(L, sequenceNumber, color)
+        : createNumberedIcon(L, sequenceNumber, color)
+      
+      const marker = L.marker(latlng as any, { icon }).addTo(map)
+      
+      // Agregar event listener para click en marcador
+      marker.on('click', () => {
+        console.log(`🖱️ Click en marcador inicial ${idx}`)
+        // Vibración táctil si está disponible
+        try { (navigator as any)?.vibrate?.(30) } catch {}
+        
+        // Sincronizar posición con otros dispositivos
+        setMarkerPosition(routeId, idx, latlng)
+        
+        // Actualizar estado local para cambiar al marcador clickeado
+        setNextVisitIndex(idx)
+        setLastCenteredVisit(idx)
+        
+        // Centrar el mapa en la nueva posición con una transición suave
+        try { 
+          map.flyTo(latlng as any, 16, { duration: 0.4 }) 
+        } catch {}
+      })
+      
+      // Agregar tooltip con información de la visita
+      const visit = (visits as any)[idx]
+      const visitInfo = visit?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
+      marker.bindTooltip(visitInfo, {
+        permanent: false,
+        direction: 'top',
+        offset: [0, -20]
+      })
+      
+      markersRef.current.push(marker)
     })
 
     // Ruta (polyline)
@@ -426,8 +877,10 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
         opacity: 0.85,
         dashArray: '10,5',
       }).addTo(map)
-      // Si hay siguiente, centramos ahí; si no, ajustamos a la ruta
-      if (typeof nextIdx === 'number' && points[nextIdx]) {
+      // Mantener la posición centrada si existe, si no, usar la siguiente pendiente o ajustar a la ruta
+      if (lastCenteredVisit !== null && points[lastCenteredVisit]) {
+        map.setView(points[lastCenteredVisit] as any, 16)
+      } else if (typeof nextIdx === 'number' && points[nextIdx]) {
         map.setView(points[nextIdx] as any, 16)
       } else {
         map.fitBounds(line.getBounds(), { padding: [24, 24] })
@@ -437,7 +890,13 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
         ...points.map((p) => L.marker(p as any)),
         ...(startLatLng ? [L.marker(startLatLng as any)] : []),
       ])
-      map.fitBounds(group.getBounds(), { padding: [24, 24] })
+      
+      // Mantener la posición centrada si existe, si no, ajustar a todos los puntos
+      if (lastCenteredVisit !== null && points[lastCenteredVisit]) {
+        map.setView(points[lastCenteredVisit] as any, 16)
+      } else {
+        map.fitBounds(group.getBounds(), { padding: [24, 24] })
+      }
     }
 
     mapInstanceRef.current = map
@@ -473,13 +932,83 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode, nextVisitIndex, JSON.stringify((visits || []).map((v: any) => v?.addressInfo?.coordinates?.point))])
 
-  // Re-render del mapa cuando cambian los estados de entrega para recalcular "siguiente"
+  // Optimización: Solo re-render cuando cambian datos esenciales del mapa
+  const mapEssentialData = useMemo(() => {
+    if (!localState?.s) return null
+    // Solo incluir las claves de estado que afectan los marcadores del mapa
+    // Usar el formato correcto de las claves: delivery:routeId:vIdx-oIdx-uIdx
+    const essentialKeys = Object.keys(localState.s).filter(key => 
+      key.startsWith(`delivery:${routeId}:`)
+    )
+    const result = essentialKeys.map(key => `${key}=${localState.s[key]}`).join(',')
+    console.log('🗺️ mapEssentialData update:', { 
+      essentialKeys: essentialKeys.length, 
+      sampleKey: essentialKeys[0], 
+      sampleValue: essentialKeys[0] ? localState.s[essentialKeys[0]] : null,
+      result: result.substring(0, 100) + (result.length > 100 ? '...' : ''),
+      timestamp: Date.now()
+    })
+    return result
+  }, [localState?.s, routeId])
+
   useEffect(() => {
+    console.log('🏗️ Main map useEffect disparado:', { viewMode, mapEssentialDataPreview: mapEssentialData?.substring(0, 50) })
     if (viewMode !== 'map') return
     setMapReady(false)
     setTimeout(initializeLeafletMap, 0)
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, JSON.stringify(localState)])
+  }, [viewMode, mapEssentialData, lastCenteredVisit, nextVisitIndex])
+
+  // UseEffect optimizado para actualizar solo marcadores cuando cambia el estado de entrega
+  useEffect(() => {
+    console.log('🔄 useEffect para updateMapMarkers disparado:', { 
+      viewMode, 
+      hasMapInstance: !!mapInstanceRef.current, 
+      isTransitioning, 
+      mapEssentialDataLength: mapEssentialData?.length || 0,
+      nextVisitIndex,
+      lastCenteredVisit
+    })
+    if (viewMode === 'map' && mapInstanceRef.current && !isTransitioning) {
+      console.log('✅ Ejecutando updateMapMarkers desde useEffect')
+      updateMapMarkers()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapEssentialData, nextVisitIndex, lastCenteredVisit, markerPosition, forceUpdateCounter])
+
+  // UseEffect para reaccionar a cambios de posición sincronizada desde otros dispositivos
+  useEffect(() => {
+    if (markerPosition && viewMode === 'map' && mapInstanceRef.current) {
+      const { visitIndex, coordinates, deviceId, timestamp } = markerPosition
+      
+      // Solo reaccionar si la posición viene de otro dispositivo y es reciente
+      const currentDeviceId = syncInfo?.deviceId || 'unknown'
+      const isFromOtherDevice = deviceId !== currentDeviceId
+      const isRecent = (Date.now() - timestamp) < 10000 // 10 segundos
+      
+      console.log('📡 Evaluando posición sincronizada:', { 
+        isFromOtherDevice, 
+        isRecent, 
+        currentDeviceId, 
+        senderDeviceId: deviceId 
+      })
+      
+      if (isFromOtherDevice && isRecent) {
+        console.log('🔄 Aplicando posición sincronizada desde otro dispositivo')
+        // Actualizar estado local para mostrar la posición sincronizada
+        setNextVisitIndex(visitIndex)
+        setLastCenteredVisit(visitIndex)
+        
+        // Centrar el mapa en la posición sincronizada con transición suave
+        try { 
+          mapInstanceRef.current.flyTo(coordinates as any, 16, { duration: 0.6 }) 
+        } catch {}
+        
+        // Vibración suave para notificar cambio
+        try { (navigator as any)?.vibrate?.(50) } catch {}
+      }
+    }
+  }, [markerPosition, viewMode, syncInfo?.deviceId])
 
   // Enfocar input de patente cuando se abra el modal
   useEffect(() => {
@@ -495,6 +1024,12 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     if (!L || !mapInstanceRef.current) return
     const nextIdx = getNextPendingVisitIndex()
     if (typeof nextIdx !== 'number') return
+    
+    // Limpiar selección para mostrar la siguiente pendiente
+    setNextVisitIndex(null)
+    // Guardar la última visita centrada
+    setLastCenteredVisit(nextIdx)
+    
     // Obtener latlng de la visita
     const visit = (visits as any)[nextIdx]
     const c = visit?.addressInfo?.coordinates
@@ -506,6 +1041,102 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     if (latlng) {
       try { mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 }) } catch {}
     }
+  }
+
+  const centerOnVisit = (visitIndex: number) => {
+    // Obtener latlng de la visita específica
+    const visit = (visits as any)[visitIndex]
+    if (!visit) return
+    
+    const c = visit?.addressInfo?.coordinates
+    const latlng = Array.isArray(c?.point)
+      ? [c.point[1] as number, c.point[0] as number]
+      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
+          ? [c.latitude as number, c.longitude as number]
+          : null)
+    
+    if (latlng && latlng.length === 2) {
+      // Sincronizar la posición del marcador seleccionado entre dispositivos
+      console.log('🎯 Usuario seleccionó "Ver en mapa" para visita', visitIndex)
+      setMarkerPosition(routeId, visitIndex, latlng as [number, number])
+      
+      // Cambiar a modo mapa primero
+      setViewMode('map')
+      // Guardar la visita seleccionada para centrarse después
+      setNextVisitIndex(visitIndex)
+      // Guardar la última visita centrada
+      setLastCenteredVisit(visitIndex)
+      
+      // Vibración táctil si está disponible
+      try { (navigator as any)?.vibrate?.(50) } catch {}
+      
+      // Función para centrar el mapa cuando esté listo
+      const attemptCenter = (attempts = 0) => {
+        const L = (window as any)?.L
+        if (L && mapInstanceRef.current) {
+          try { 
+            mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.8 }) 
+          } catch {}
+        } else if (attempts < 10) {
+          // Reintentar hasta que el mapa esté listo
+          setTimeout(() => attemptCenter(attempts + 1), 200)
+        }
+      }
+      
+      // Iniciar el intento de centrado
+      setTimeout(() => attemptCenter(), 100)
+    }
+  }
+
+  const advanceToNextAfterDelivery = () => {
+    // Actualizar marcadores sin mover la vista (funciona en cualquier modo)
+    console.log('🔄 Avanzando a siguiente después de entrega (sin mover mapa)')
+    
+    // NO usar isTransitioning aquí, ya que necesitamos que el useEffect funcione
+    // para actualizar los marcadores inmediatamente
+    
+    // Esperar un poco para que el estado se actualice después de la entrega
+    setTimeout(() => {
+      console.log('🧹 Limpiando estado después de entrega...')
+      
+      // Limpiar TODOS los estados de posicionamiento para forzar uso de automático
+      setNextVisitIndex(null)
+      setLastCenteredVisit(null)
+      
+      // Si hay una posición sincronizada reciente que ya no tiene pendientes, 
+      // podríamos considerarla inválida pero no podemos limpiarla directamente
+      // ya que viene de otro dispositivo. La nueva lógica en getPositionedVisitIndex 
+      // se encargará de validarla.
+      
+      console.log('✅ Estado limpiado - marcadores se actualizarán automáticamente')
+      
+      // Forzar múltiples actualizaciones para asegurar que el estado se refleje
+      if (mapInstanceRef.current) {
+        // Primera actualización inmediata
+        setTimeout(() => {
+          updateMapMarkers()
+          console.log('🔄 Primera actualización de marcadores')
+        }, 50)
+        
+        // Segunda actualización después de más tiempo para asegurar que GunJS se haya sincronizado
+        setTimeout(() => {
+          updateMapMarkers()
+          console.log('🔄 Segunda actualización de marcadores (post-GunJS)')
+        }, 300)
+        
+        // Tercera actualización como respaldo
+        setTimeout(() => {
+          updateMapMarkers()
+          console.log('🔄 Tercera actualización de marcadores (respaldo)')
+        }, 600)
+        
+        // Forzar re-render del useEffect después de que todo haya sido procesado
+        setTimeout(() => {
+          setForceUpdateCounter(prev => prev + 1)
+          console.log('🔄 Forzando re-render con counter')
+        }, 800)
+      }
+    }, 200) // Pausa más larga para asegurar que GunJS ha procesado el cambio
   }
 
   const openNextNavigation = (provider: 'google' | 'waze' | 'geo' = 'google') => {
@@ -605,19 +1236,28 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             <div className="flex items-center space-x-2 text-green-200">
               <CheckCircle size={20} />
               <span>Ruta Iniciada</span>
-              {/* Indicador de sincronización */}
-              {syncInfo && (
-                <div className="flex items-center ml-2 text-xs">
-                  {navigator.onLine ? (
-                    <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
-                  ) : (
-                    <XCircle className="w-3 h-3 text-yellow-300" />
-                  )}
-                  <span className="ml-1 text-green-100 opacity-75">
-                    {syncInfo.deviceId.slice(-6)}
-                  </span>
-                </div>
-              )}
+                             {/* Indicador de sincronización */}
+               {syncInfo && (
+                 <div className="flex items-center ml-2 text-xs">
+                   {navigator.onLine ? (
+                     <div className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></div>
+                   ) : (
+                     <XCircle className="w-3 h-3 text-yellow-300" />
+                   )}
+                   <span className="ml-1 text-green-100 opacity-75">
+                     {syncInfo.deviceId.slice(-6)}
+                   </span>
+                 </div>
+               )}
+               {/* Indicador de sincronización de posición de marcador */}
+               {markerPosition && (Date.now() - markerPosition.timestamp) < 30000 && (
+                 <div className="flex items-center ml-2 text-xs">
+                   <div className="w-1.5 h-1.5 bg-blue-300 rounded-full animate-pulse"></div>
+                   <span className="ml-1 text-green-100 opacity-75">
+                     📍 {markerPosition.deviceId.slice(-6)}
+                   </span>
+                 </div>
+               )}
             </div>
           )}
           </div>
@@ -790,6 +1430,14 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                     <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
                   </p>
                 </div>
+                <button
+                  onClick={() => centerOnVisit(visitIndex)}
+                  className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
+                  aria-label={`Ver en mapa - Visita ${visit.sequenceNumber}`}
+                  title="Ver en mapa"
+                >
+                  <MapPin className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
@@ -889,17 +1537,40 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
       </div>
       )}
 
-      {/* En modo mapa: mostrar sólo la siguiente visita debajo del mapa (si no está en pantalla completa) */}
+      {/* En modo mapa: mostrar la visita seleccionada o la siguiente pendiente debajo del mapa */}
       {viewMode === 'map' && (() => {
-        const nextIdx = getNextPendingVisitIndex()
-        if (typeof nextIdx !== 'number') return null
-        const visit: any = (visits as any)[nextIdx]
+        // Priorizar la visita seleccionada, si no hay, mostrar la siguiente pendiente
+        const displayIdx = nextVisitIndex !== null ? nextVisitIndex : getNextPendingVisitIndex()
+        if (typeof displayIdx !== 'number') return null
+        const visit: any = (visits as any)[displayIdx]
+        const isSelectedVisit = nextVisitIndex === displayIdx
         return (
           <div className="p-4 space-y-4">
-            <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100">
+            {/* Indicador de qué visita se está mostrando */}
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-700">
+                {isSelectedVisit ? 'Visita seleccionada' : 'Siguiente a entregar'}
+              </h3>
+              {isSelectedVisit && (
+                <button
+                  onClick={() => setNextVisitIndex(null)}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Ver siguiente
+                </button>
+              )}
+            </div>
+            
+            <div className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border ${
+              isSelectedVisit ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-100'
+            }`}>
               <div className="p-4 border-b border-gray-100">
                 <div className="flex items-start space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0 text-white ${
+                    isSelectedVisit 
+                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600' 
+                      : 'bg-gradient-to-br from-indigo-500 to-purple-600'
+                  }`}>
                     {visit.sequenceNumber}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -930,7 +1601,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                       .map((unit: any, uIdx: number): { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined } => ({
                         unit,
                         uIdx,
-                        status: getDeliveryUnitStatus(nextIdx, orderIndex, uIdx),
+                        status: getDeliveryUnitStatus(displayIdx, orderIndex, uIdx),
                       }))
                       .map(({ unit, uIdx, status }: { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined }) => (
                         <div key={uIdx} className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}>
@@ -962,7 +1633,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                           {routeStarted && (
                             <div className="flex space-x-2 mt-3">
                               <button
-                                onClick={() => openEvidenceFor(nextIdx, orderIndex, uIdx)}
+                                onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
                                 className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
                                   status === 'delivered' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-700 hover:bg-green-200'
                                 }`}
@@ -971,7 +1642,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                                 <span>{status === 'delivered' ? 'entregado' : 'entregar'}</span>
                               </button>
                               <button
-                                onClick={() => openNonDeliveryFor(nextIdx, orderIndex, uIdx)}
+                                onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
                                 className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors ${
                                   status === 'not-delivered' ? 'bg-red-600 text-white' : 'bg-red-100 text-red-700 hover:bg-red-200'
                                 }`}
