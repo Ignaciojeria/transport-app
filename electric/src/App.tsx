@@ -15,7 +15,7 @@ import {
   getRouteLicenseFromState
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair,Menu } from 'lucide-react'
+import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair,Menu,Truck,Route } from 'lucide-react'
 import Webcam from 'react-webcam'
 
 
@@ -33,11 +33,11 @@ export function RouteComponent() {
       {/* Renderizar UI si hay datos */}
       {(() => {
         const d: any = data as any
-        const raw = Array.isArray(d?.route)
-          ? d.route[0]?.raw
-          : d?.route?.raw ?? (Array.isArray(d) ? d[0]?.raw : d?.raw)
+        const route = Array.isArray(d?.route) ? d.route[0] : d?.route ?? (Array.isArray(d) ? d[0] : d)
+        const raw = route?.raw
+        const routeDbId = route?.id // ID de la base de datos
         return raw ? (
-          <DeliveryRouteView routeId={routeId} routeData={raw} />
+          <DeliveryRouteView routeId={routeId} routeData={raw} routeDbId={routeDbId} />
         ) : (
           <pre>{JSON.stringify(data, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), 2)}</pre>
         )
@@ -52,7 +52,7 @@ type DeliveryRouteRaw = {
   geometry?: { encoding?: string; type?: string; value?: string }
 }
 
-function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData: DeliveryRouteRaw }) {
+function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: DeliveryRouteRaw; routeDbId?: number }) {
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
@@ -1423,7 +1423,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             }
             
             const row = [
-              routeId || '',
+              (routeDbId || routeId)?.toString() || '',
               routeLicense || routeData?.vehicle?.plate || '',
               visit?.sequenceNumber?.toString() || (visitIndex + 1).toString(),
               contactInfo?.fullName || '',
@@ -1696,10 +1696,16 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-lg font-bold">Ruta de Entrega</h1>
+              <h1 className="text-lg font-bold flex items-center">
+                <Route className="w-5 h-5 mr-2" />
+                ID RUTA: {routeDbId || routeId}
+              </h1>
               <p className="text-indigo-100 text-sm flex items-center">
-                <Package className="w-3 h-3 mr-1" />
-                {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
+                <Truck className="w-3 h-3 mr-1" />
+                PATENTE: 
+                <span className="bg-white/20 text-white px-2 py-1 rounded-lg ml-2 font-mono text-xs">
+                  {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
+                </span>
               </p>
             </div>
           </div>
