@@ -18,6 +18,7 @@ declare module 'lucide-react' {
   export const Menu: React.FC<IconProps>
   export const Truck: React.FC<IconProps>
   export const Route: React.FC<IconProps>
+  export const Map: React.FC<IconProps>
 }
 
 
