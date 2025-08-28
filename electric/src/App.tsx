@@ -63,6 +63,13 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [mapReady, setMapReady] = useState(false)
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
 
+  // Estado para el pin de GPS del conductor
+  const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null)
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
+  const [gpsActive, setGpsActive] = useState(false)
+  const gpsMarkerRef = useRef<any>(null)
+  const gpsCircleRef = useRef<any>(null)
+
   // Modal de evidencia
   const [evidenceModal, setEvidenceModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
   const [recipientName, setRecipientName] = useState('')
@@ -1005,6 +1012,170 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
     }
   }, [licenseModal])
 
+  // Funciones para manejar el GPS del conductor
+  const startGPS = () => {
+    if (!navigator.geolocation) {
+      alert('El GPS no está disponible en este dispositivo')
+      return
+    }
+
+    setGpsActive(true)
+    
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+
+    const success = (position: GeolocationPosition) => {
+      const { latitude, longitude, accuracy } = position.coords
+      setDriverLocation([latitude, longitude])
+      setGpsAccuracy(accuracy)
+      
+      // Actualizar marcador en el mapa si está disponible
+      if (mapInstanceRef.current && (window as any)?.L) {
+        updateGPSMarker([latitude, longitude], accuracy)
+      }
+    }
+
+    const error = (err: GeolocationPositionError) => {
+      console.error('Error GPS:', err)
+      setGpsActive(false)
+      let message = 'Error al obtener ubicación'
+      switch (err.code) {
+        case err.PERMISSION_DENIED:
+          message = 'Permiso de ubicación denegado'
+          break
+        case err.POSITION_UNAVAILABLE:
+          message = 'Información de ubicación no disponible'
+          break
+        case err.TIMEOUT:
+          message = 'Tiempo de espera agotado'
+          break
+      }
+      alert(message)
+    }
+
+    // Iniciar seguimiento continuo
+    navigator.geolocation.watchPosition(success, error, options)
+  }
+
+  const stopGPS = () => {
+    setGpsActive(false)
+    setDriverLocation(null)
+    setGpsAccuracy(null)
+    
+    // Remover marcador del mapa
+    if (mapInstanceRef.current && gpsMarkerRef.current) {
+      try {
+        mapInstanceRef.current.removeLayer(gpsMarkerRef.current)
+        gpsMarkerRef.current = null
+      } catch {}
+    }
+    if (mapInstanceRef.current && gpsCircleRef.current) {
+      try {
+        mapInstanceRef.current.removeLayer(gpsCircleRef.current)
+        gpsCircleRef.current = null
+      } catch {}
+    }
+  }
+
+  const updateGPSMarker = (latlng: [number, number], accuracy: number) => {
+    const L = (window as any)?.L
+    if (!L || !mapInstanceRef.current) return
+
+    // Remover marcador anterior si existe
+    if (gpsMarkerRef.current) {
+      try { mapInstanceRef.current.removeLayer(gpsMarkerRef.current) } catch {}
+    }
+    if (gpsCircleRef.current) {
+      try { mapInstanceRef.current.removeLayer(gpsCircleRef.current) } catch {}
+    }
+
+    // Crear marcador de GPS con icono personalizado
+    const gpsIcon = L.divIcon({
+      html: `
+        <div style="
+          position: relative;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <!-- Círculo principal pulsante -->
+          <div style="
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #00D4AA;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #00D4AA;
+            animation: gps-pulse 2s infinite;
+            position: relative;
+          "></div>
+          <!-- Punto central -->
+          <div style="
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #00D4AA;
+          "></div>
+          <!-- Indicador de dirección -->
+          <div style="
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 6px solid #00D4AA;
+          "></div>
+        </div>
+        <style>
+          @keyframes gps-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 212, 170, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0); }
+          }
+        </style>
+      `,
+      className: 'gps-marker',
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+    })
+
+    // Crear marcador
+    gpsMarkerRef.current = L.marker(latlng as any, { icon: gpsIcon }).addTo(mapInstanceRef.current)
+    
+    // Crear círculo de precisión
+    gpsCircleRef.current = L.circle(latlng as any, {
+      radius: accuracy,
+      color: '#00D4AA',
+      fillColor: '#00D4AA',
+      fillOpacity: 0.1,
+      weight: 1,
+      opacity: 0.6
+    }).addTo(mapInstanceRef.current)
+
+    // Tooltip con información del GPS
+    gpsMarkerRef.current.bindTooltip(`
+      <div class="text-center">
+        <div class="font-bold text-green-700">Tu ubicación</div>
+        <div class="text-xs text-gray-600">Precisión: ${Math.round(accuracy)}m</div>
+        <div class="text-xs text-gray-500">${latlng[0].toFixed(6)}, ${latlng[1].toFixed(6)}</div>
+      </div>
+    `, {
+      permanent: false,
+      direction: 'top',
+      offset: [0, -15]
+    })
+  }
+
   // Función para hacer zoom al punto actualmente seleccionado/posicionado (sin cambiar selección)
   const zoomToCurrentlySelected = () => {
     const L = (window as any)?.L
@@ -1512,6 +1683,22 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
             </div>
             {/* Controles flotantes del mapa */}
             <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
+              {/* Botón de GPS del conductor */}
+              <button
+                onClick={gpsActive ? stopGPS : startGPS}
+                className={`w-10 h-10 rounded-lg shadow-lg flex items-center justify-center transition-all ${
+                  gpsActive 
+                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                } hover:shadow-xl`}
+                aria-label={gpsActive ? 'Desactivar GPS' : 'Activar GPS'}
+                title={gpsActive ? 'Desactivar GPS' : 'Activar GPS del conductor'}
+              >
+                <div className={`w-4 h-4 ${gpsActive ? 'animate-pulse' : ''}`}>
+                  📍
+                </div>
+              </button>
+              
               <button
                 onClick={zoomToCurrentlySelected}
                 className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
