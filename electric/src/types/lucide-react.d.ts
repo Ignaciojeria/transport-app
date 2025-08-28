@@ -15,7 +15,7 @@ declare module 'lucide-react' {
   export const Maximize2: React.FC<IconProps>
   export const Minimize2: React.FC<IconProps>
   export const Crosshair: React.FC<IconProps>
-  
+  export const Menu: React.FC<IconProps>
 }
 
 
