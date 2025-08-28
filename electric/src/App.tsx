@@ -15,7 +15,7 @@ import {
   getRouteLicenseFromState
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
-import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair,Menu,Truck,Route } from 'lucide-react'
+import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
 import Webcam from 'react-webcam'
 
 
@@ -1710,27 +1710,26 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setViewMode((m) => (m === 'list' ? 'map' : 'list'))}
-              className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95"
-              aria-label="Alternar mapa/lista"
-            >
-              {viewMode === 'list' ? 'Mapa' : 'Lista'}
-            </button>
-          {!routeStarted ? (
-            <button
-              onClick={handleStartRoute}
-              className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 text-sm active:scale-95"
-            >
-              <Play className="w-4 h-4" />
-              <span>Iniciar</span>
-            </button>
-          ) : (
-            <div className="flex items-center space-x-2 text-green-200">
-              <CheckCircle size={20} />
-              <span>Ruta Iniciada</span>
-            </div>
-          )}
+            {/* Mostrar botón mapa solo cuando la ruta esté iniciada */}
+            {routeStarted && (
+              <button
+                onClick={() => setViewMode((m) => (m === 'list' ? 'map' : 'list'))}
+                className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95 flex items-center space-x-2"
+                aria-label="Alternar mapa/lista"
+              >
+                <Map className="w-4 h-4" />
+                <span>{viewMode === 'list' ? 'Mapa' : 'Lista'}</span>
+              </button>
+            )}
+            {!routeStarted ? (
+              <button
+                onClick={handleStartRoute}
+                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 text-sm active:scale-95"
+              >
+                <Play className="w-4 h-4" />
+                <span>Iniciar</span>
+              </button>
+            ) : null}
           </div>
         </div>
       </div>
