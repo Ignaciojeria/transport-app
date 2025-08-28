@@ -20,7 +20,7 @@ type PublishWebhookWorkflow func(ctx context.Context, body interface{}, webhookT
 func init() {
 	ioc.Registry(
 		NewPublishWebhookWorkflow,
-		workflows.NewPublishWebhookWorkflow,
+		workflows.NewGenericWorkflow,
 		client.NewPostWebhook,
 		observability.NewObservability,
 		natsconn.NewKeyValue,
@@ -28,7 +28,7 @@ func init() {
 }
 
 func NewPublishWebhookWorkflow(
-	workflow workflows.PublishWebhookWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	postWebhook client.PostWebhook,
 	obs observability.Observability,
 	kv jetstream.KeyValue,
@@ -40,13 +40,15 @@ func NewPublishWebhookWorkflow(
 			return fmt.Errorf("idempotency key not found in context")
 		}
 
-		workflowInstance, err := workflow.Restore(ctx, key)
+		// Configurar workflow genérico para publish webhook con StorJ
+		config := workflows.CreateStorjWorkflow("publish_webhook_workflow", "publish_webhook_started", "webhook_published")
+		workflowInstance, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
 
 		// Intentar transición a webhook publicado
-		if err := workflowInstance.SetWebhookPublishedTransition(ctx); err != nil {
+		if err := workflowInstance.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx, err.Error())
 			return nil
 		}

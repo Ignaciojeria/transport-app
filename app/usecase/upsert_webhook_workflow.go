@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
-	"transport-app/app/domain/workflows"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
 
@@ -19,14 +18,12 @@ type UpsertWebhookWorkflow func(ctx context.Context, w domain.Webhook) error
 func init() {
 	ioc.Registry(
 		NewUpsertWebhookWorkflow,
-		workflows.NewUpsertWebhookWorkflow,
 		tidbrepository.NewUpsertWebhook,
 		observability.NewObservability,
 		natsconn.NewKeyValue)
 }
 
 func NewUpsertWebhookWorkflow(
-	domainWorkflow workflows.UpsertWebhookWorkflow,
 	upsertWebhook tidbrepository.UpsertWebhook,
 	obs observability.Observability,
 	kv jetstream.KeyValue,

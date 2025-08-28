@@ -17,13 +17,13 @@ type UpsertSizeCategoryWorkflow func(ctx context.Context, sc domain.SizeCategory
 func init() {
 	ioc.Registry(
 		NewUpsertSizeCategoryWorkflow,
-		workflows.NewUpsertSizeCategoryWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertSizeCategory,
 		observability.NewObservability)
 }
 
 func NewUpsertSizeCategoryWorkflow(
-	domainWorkflow workflows.UpsertSizeCategoryWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertSizeCategory tidbrepository.UpsertSizeCategory,
 	obs observability.Observability,
 ) UpsertSizeCategoryWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertSizeCategoryWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("size_category")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetSizeCategoryUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"size_category_doc_id", sc.DocumentID(ctx).String())

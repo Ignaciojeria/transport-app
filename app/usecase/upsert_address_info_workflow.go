@@ -17,13 +17,13 @@ type UpsertAddressInfoWorkflow func(ctx context.Context, ai domain.AddressInfo) 
 func init() {
 	ioc.Registry(
 		NewUpsertAddressInfoWorkflow,
-		workflows.NewUpsertAddressInfoWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertAddressInfo,
 		observability.NewObservability)
 }
 
 func NewUpsertAddressInfoWorkflow(
-	domainWorkflow workflows.UpsertAddressInfoWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertAddressInfo tidbrepository.UpsertAddressInfo,
 	obs observability.Observability,
 ) UpsertAddressInfoWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertAddressInfoWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("address_info")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetAddressInfoUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"address_doc_id", ai.DocID(ctx).String())

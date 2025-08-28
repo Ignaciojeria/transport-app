@@ -17,13 +17,13 @@ type UpsertOrderHeadersWorkflow func(ctx context.Context, headers domain.Headers
 func init() {
 	ioc.Registry(
 		NewUpsertOrderHeadersWorkflow,
-		workflows.NewUpsertOrderHeadersWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertOrderHeaders,
 		observability.NewObservability)
 }
 
 func NewUpsertOrderHeadersWorkflow(
-	domainWorkflow workflows.UpsertOrderHeadersWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertOrderHeaders tidbrepository.UpsertOrderHeaders,
 	obs observability.Observability,
 ) UpsertOrderHeadersWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertOrderHeadersWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("order_headers")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetOrderHeadersUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"headers_doc_id", headers.DocID(ctx).String())

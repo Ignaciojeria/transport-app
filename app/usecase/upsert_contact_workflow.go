@@ -17,13 +17,13 @@ type UpsertContactWorkflow func(ctx context.Context, contact domain.Contact) err
 func init() {
 	ioc.Registry(
 		NewUpsertContactWorkflow,
-		workflows.NewUpsertContactWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertContact,
 		observability.NewObservability)
 }
 
 func NewUpsertContactWorkflow(
-	domainWorkflow workflows.UpsertContactWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertContact tidbrepository.UpsertContact,
 	obs observability.Observability,
 ) UpsertContactWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertContactWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("contact")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetContactUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"contact_doc_id", contact.DocID(ctx).String())

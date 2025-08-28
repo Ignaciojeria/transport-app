@@ -17,13 +17,13 @@ type UpsertVehicleCategoryWorkflow func(ctx context.Context, vc domain.VehicleCa
 func init() {
 	ioc.Registry(
 		NewUpsertVehicleCategoryWorkflow,
-		workflows.NewUpsertVehicleCategoryWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertVehicleCategory,
 		observability.NewObservability)
 }
 
 func NewUpsertVehicleCategoryWorkflow(
-	domainWorkflow workflows.UpsertVehicleCategoryWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertVehicleCategory tidbrepository.UpsertVehicleCategory,
 	obs observability.Observability,
 ) UpsertVehicleCategoryWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertVehicleCategoryWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("vehicle_category")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetVehicleCategoryUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"vehicle_category_doc_id", vc.DocID(ctx).String())

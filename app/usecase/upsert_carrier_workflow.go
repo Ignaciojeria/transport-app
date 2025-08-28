@@ -17,13 +17,13 @@ type UpsertCarrierWorkflow func(ctx context.Context, c domain.Carrier) error
 func init() {
 	ioc.Registry(
 		NewUpsertCarrierWorkflow,
-		workflows.NewUpsertCarrierWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertCarrier,
 		observability.NewObservability)
 }
 
 func NewUpsertCarrierWorkflow(
-	domainWorkflow workflows.UpsertCarrierWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertCarrier tidbrepository.UpsertCarrier,
 	obs observability.Observability,
 ) UpsertCarrierWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertCarrierWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("carrier")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetCarrierUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"carrier_doc_id", c.DocID(ctx).String())

@@ -16,13 +16,13 @@ type UpsertElectricRouteWorkflow func(ctx context.Context, route domain.Route, p
 
 func init() {
 	ioc.Registry(NewUpsertElectricRouteWorkflow,
-		workflows.NewUpsertElectricRouteWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertRoute,
 		observability.NewObservability)
 }
 
 func NewUpsertElectricRouteWorkflow(
-	workflow workflows.UpsertElectricRouteWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertRoute tidbrepository.UpsertRoute,
 	obs observability.Observability,
 ) UpsertElectricRouteWorkflow {
@@ -37,14 +37,15 @@ func NewUpsertElectricRouteWorkflow(
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
 
-		// Restaurar el workflow usando la clave de idempotencia
-		workflowInstance, err := workflow.Restore(ctx, key)
+		// Configurar workflow genérico para electric route upsert
+		config := workflows.CreateUpsertWorkflow("electric_route")
+		workflowInstance, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
 
 		// Intentar hacer la transición de estado
-		if err := workflowInstance.SetElectricRouteUpsertedTransition(ctx); err != nil {
+		if err := workflowInstance.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"route_doc_id", route.DocID(ctx).String(),

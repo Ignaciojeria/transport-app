@@ -17,13 +17,13 @@ type UpsertPlanHeadersWorkflow func(ctx context.Context, headers domain.Headers)
 func init() {
 	ioc.Registry(
 		NewUpsertPlanHeadersWorkflow,
-		workflows.NewUpsertPlanHeadersWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertPlanHeaders,
 		observability.NewObservability)
 }
 
 func NewUpsertPlanHeadersWorkflow(
-	domainWorkflow workflows.UpsertPlanHeadersWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertPlanHeaders tidbrepository.UpsertPlanHeaders,
 	obs observability.Observability,
 ) UpsertPlanHeadersWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertPlanHeadersWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("plan_headers")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetPlanHeadersUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"plan_headers_doc_id", headers.DocID(ctx).String())

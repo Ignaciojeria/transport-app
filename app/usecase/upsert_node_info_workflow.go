@@ -17,13 +17,13 @@ type UpsertNodeInfoWorkflow func(ctx context.Context, ni domain.NodeInfo) error
 func init() {
 	ioc.Registry(
 		NewUpsertNodeInfoWorkflow,
-		workflows.NewUpsertNodeInfoWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertNodeInfo,
 		observability.NewObservability)
 }
 
 func NewUpsertNodeInfoWorkflow(
-	domainWorkflow workflows.UpsertNodeInfoWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertNodeInfo tidbrepository.UpsertNodeInfo,
 	obs observability.Observability,
 ) UpsertNodeInfoWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertNodeInfoWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("node_info")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetNodeInfoUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"node_info_doc_id", ni.DocID(ctx).String())

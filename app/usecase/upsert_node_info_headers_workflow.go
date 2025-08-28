@@ -17,13 +17,13 @@ type UpsertNodeInfoHeadersWorkflow func(ctx context.Context, nih domain.Headers)
 func init() {
 	ioc.Registry(
 		NewUpsertNodeInfoHeadersWorkflow,
-		workflows.NewUpsertNodeInfoHeadersWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertNodeInfoHeaders,
 		observability.NewObservability)
 }
 
 func NewUpsertNodeInfoHeadersWorkflow(
-	domainWorkflow workflows.UpsertNodeInfoHeadersWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertNodeInfoHeaders tidbrepository.UpsertNodeInfoHeaders,
 	obs observability.Observability,
 ) UpsertNodeInfoHeadersWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertNodeInfoHeadersWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("node_info_headers")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetNodeInfoHeadersUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"node_info_headers_doc_id", nih.DocID(ctx).String())

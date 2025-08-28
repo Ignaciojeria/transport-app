@@ -17,13 +17,13 @@ type UpsertPoliticalAreaWorkflow func(ctx context.Context, pa domain.PoliticalAr
 func init() {
 	ioc.Registry(
 		NewUpsertPoliticalAreaWorkflow,
-		workflows.NewUpsertPoliticalAreaWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertPoliticalArea,
 		observability.NewObservability)
 }
 
 func NewUpsertPoliticalAreaWorkflow(
-	domainWorkflow workflows.UpsertPoliticalAreaWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertPoliticalArea tidbrepository.UpsertPoliticalArea,
 	obs observability.Observability,
 ) UpsertPoliticalAreaWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertPoliticalAreaWorkflow(
 		if err != nil {
 			return fmt.Errorf("failed to hash key: %w", err)
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("political_area")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetPoliticalAreaUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"political_area_doc_id", pa.DocID(ctx).String())

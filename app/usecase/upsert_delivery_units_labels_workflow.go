@@ -17,13 +17,13 @@ type UpsertDeliveryUnitsLabelsWorkflow func(ctx context.Context, order domain.Or
 func init() {
 	ioc.Registry(
 		NewUpsertDeliveryUnitsLabelsWorkflow,
-		workflows.NewUpsertDeliveryUnitsLabelsWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertDeliveryUnitsLabels,
 		observability.NewObservability)
 }
 
 func NewUpsertDeliveryUnitsLabelsWorkflow(
-	domainWorkflow workflows.UpsertDeliveryUnitsLabelsWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertDeliveryUnitsLabels tidbrepository.UpsertDeliveryUnitsLabels,
 	obs observability.Observability,
 ) UpsertDeliveryUnitsLabelsWorkflow {
@@ -33,11 +33,12 @@ func NewUpsertDeliveryUnitsLabelsWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := domainWorkflow.Restore(ctx, key)
+		config := workflows.CreateUpsertWorkflow("delivery_units_labels")
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetDeliveryUnitsLabelsUpsertedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"delivery_units_labels_doc_id", order.DocID(ctx).String())
