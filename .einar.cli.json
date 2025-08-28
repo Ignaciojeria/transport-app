@@ -536,6 +536,10 @@
         {
             "kind": "usecase",
             "name": "store-data-in-redis-workflow"
+        },
+        {
+            "kind": "post-controller",
+            "name": "generate-pre-signed-url-request"
         }
     ]
 }

@@ -2,24 +2,22 @@ package storj
 
 import (
 	"context"
-	"fmt"
 	"time"
 	"transport-app/app/shared/configuration"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"storj.io/uplink"
-	"storj.io/uplink/edge"
 )
 
+// Interface simplificada - Solo S3
 type UplinkManager interface {
-	CreatePublicSharedLink(ctx context.Context, objectKey string) (string, error)
-	UploadWithToken(ctx context.Context, token string, objectKey string, data []byte) error
-	DownloadWithToken(ctx context.Context, token string, objectKey string) ([]byte, error)
+	GeneratePreSignedURL(ctx context.Context, objectKey string, ttl time.Duration) (string, error)
+	GeneratePreSignedURLsBatch(ctx context.Context, objectKeys []string, ttl time.Duration) ([]string, error)
+	GeneratePublicDownloadURL(ctx context.Context, objectKey string, ttl time.Duration) (string, error)
 }
 
+// Struct simplificado - Sin uplink nativo
 type Uplink struct {
-	Access *uplink.Access
-	Config edge.Config
+	// Solo necesitamos el config, ya no usamos uplink nativo
 }
 
 func init() {
@@ -27,65 +25,7 @@ func init() {
 }
 
 func NewUplink(env configuration.StorjConfiguration) (*Uplink, error) {
-
-	// Modo Edge (sin access grant)
-	if env.STORJ_ACCESS_GRANT == "" {
-		return &Uplink{
-			Access: nil,
-			Config: edge.Config{
-				AuthServiceAddress: "auth.storjshare.io:7777",
-			},
-		}, nil
-	}
-
-	// Modo Centralizado (con access grant)
-	access, err := uplink.ParseAccess(env.STORJ_ACCESS_GRANT)
-	if err != nil {
-		return nil, fmt.Errorf("invalid STORJ_ACCESS_GRANT: %w", err)
-	}
-
-	return &Uplink{
-		Access: access,
-		Config: edge.Config{
-			AuthServiceAddress: "auth.storjshare.io:7777",
-		},
-	}, nil
+	// Validación de credenciales S3 se hace en TransportAppBucket
+	return &Uplink{}, nil
 }
 
-func (u *Uplink) FromEphemeralToken(ctx context.Context, ephemeralToken string) (*uplink.Project, error) {
-	access, err := uplink.ParseAccess(ephemeralToken)
-	if err != nil {
-		return nil, fmt.Errorf("invalid access grant: %w", err)
-	}
-	project, err := uplink.OpenProject(ctx, access)
-	if err != nil {
-		return nil, fmt.Errorf("could not open project from token: %w", err)
-	}
-	return project, nil
-}
-
-func (u *Uplink) GenerateEphemeralToken(bucket, prefix string, ttl time.Duration, perm uplink.Permission) (string, error) {
-	if u.Access == nil {
-		return "", fmt.Errorf("uplink Access not initialized")
-	}
-
-	// Define permisos con expiración
-	if perm.NotAfter.IsZero() {
-		perm.NotAfter = time.Now().Add(ttl)
-	}
-
-	sharedAccess, err := u.Access.Share(perm, uplink.SharePrefix{
-		Bucket: bucket,
-		Prefix: prefix,
-	})
-	if err != nil {
-		return "", fmt.Errorf("could not generate ephemeral access: %w", err)
-	}
-
-	grant, err := sharedAccess.Serialize()
-	if err != nil {
-		return "", fmt.Errorf("could not serialize access: %w", err)
-	}
-
-	return grant, nil
-}

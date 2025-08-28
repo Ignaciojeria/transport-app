@@ -2,14 +2,10 @@ package workflows
 
 import (
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
-	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/adapter/out/tidbrepository"
 	"transport-app/app/domain"
-	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/looplab/fsm"
@@ -29,22 +25,18 @@ type GenericWorkflow struct {
 	IdempotencyKey       string
 	NextInput           []byte
 	getLastFSMTransition tidbrepository.GetLastFSMTransitionByIdempotencyKey
-	storjBucket         *storjbucket.TransportAppBucket
 	fsm                 *fsm.FSM
 }
 
 func init() {
 	ioc.Registry(NewGenericWorkflow,
-		tidbrepository.NewGetLastFSMTransitionByIdempotencyKey,
-		storjbucket.NewTransportAppBucket)
+		tidbrepository.NewGetLastFSMTransitionByIdempotencyKey)
 }
 
 func NewGenericWorkflow(
-	getLastFSMTransition tidbrepository.GetLastFSMTransitionByIdempotencyKey,
-	storjBucket *storjbucket.TransportAppBucket) (GenericWorkflow, error) {
+	getLastFSMTransition tidbrepository.GetLastFSMTransitionByIdempotencyKey) (GenericWorkflow, error) {
 	return GenericWorkflow{
 		getLastFSMTransition: getLastFSMTransition,
-		storjBucket:         storjBucket,
 	}, nil
 }
 
@@ -100,22 +92,8 @@ func (w GenericWorkflow) restoreFromTiDB(ctx context.Context, idempotencyKey str
 }
 
 func (w GenericWorkflow) restoreFromStorj(ctx context.Context, idempotencyKey string) (string, []byte, error) {
-	token, ok := sharedcontext.BucketTokenFromContext(ctx)
-	if !ok {
-		return "", nil, errors.New("token del bucket no encontrado en el contexto")
-	}
-
-	data, err := w.storjBucket.DownloadWithToken(ctx, token, idempotencyKey)
-	if err != nil {
-		return w.config.StartedState, nil, nil
-	}
-
-	var fsmState domain.FSMState
-	if err := json.Unmarshal(data, &fsmState); err != nil {
-		return "", nil, err
-	}
-
-	return fsmState.State, fsmState.NextInput, nil
+	// Storj workflow storage deprecated - return default state
+	return w.config.StartedState, nil, nil
 }
 
 func (w GenericWorkflow) WorkflowName() string {
@@ -131,22 +109,8 @@ func (w GenericWorkflow) CompletedState() string {
 }
 
 func (w GenericWorkflow) SaveState(ctx context.Context) error {
-	if !w.config.UseStorjBucket {
-		return nil
-	}
-
-	token, ok := sharedcontext.BucketTokenFromContext(ctx)
-	if !ok {
-		return errors.New("token del bucket no encontrado en el contexto")
-	}
-
-	fsmState := w.Map(ctx)
-	data, err := json.Marshal(fsmState)
-	if err != nil {
-		return err
-	}
-
-	return w.storjBucket.UploadWithToken(ctx, token, w.IdempotencyKey, data)
+	// Storj workflow storage deprecated - no-op
+	return nil
 }
 
 func (w GenericWorkflow) Map(ctx context.Context) domain.FSMState {

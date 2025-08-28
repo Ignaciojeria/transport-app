@@ -1,142 +1,70 @@
 package storjbucket
 
 import (
-	"bytes"
 	"context"
-	"errors"
 	"fmt"
-	"io"
-	"strings"
 	"time"
+	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/storj"
 	"transport-app/app/shared/sharedcontext"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/google/uuid"
-	"storj.io/uplink"
-	"storj.io/uplink/edge"
 )
 
 type TransportAppBucket struct {
-	fileExpiration  time.Duration
-	sharedLinkCreds *edge.Credentials
-	bucketName      string
-	upLink          *storj.Uplink
+	bucketName string
+	s3Client   *s3.S3 // Cliente S3 para pre-signed URLs rápidas
 }
 
 func init() {
 	ioc.Registry(
 		NewTransportAppBucket,
-		storj.NewUplink)
+		storj.NewUplink,
+		configuration.NewStorjConfiguration)
 }
 
-func NewTransportAppBucket(ul *storj.Uplink) (storj.UplinkManager, error) {
-	ctx := context.Background()
+func NewTransportAppBucket(ul *storj.Uplink, config configuration.StorjConfiguration) (storj.UplinkManager, error) {
 	bucketName := "transport-app-bucket"
 
-	// 🚫 Modo Edge: sin access grant, no se puede manipular bucket ni generar credenciales
-	if ul.Access == nil {
-		return &TransportAppBucket{
-			upLink:     ul,
-			bucketName: bucketName,
-		}, nil
+	// Configurar cliente S3 - REQUERIDO
+	if config.STORJ_S3_ACCESS_KEY_ID == "" || config.STORJ_S3_SECRET_ACCESS_KEY == "" {
+		return nil, fmt.Errorf("STORJ_S3_ACCESS_KEY_ID y STORJ_S3_SECRET_ACCESS_KEY son requeridas")
 	}
 
-	// ✅ Modo Centralizado: abrir project de forma efímera
-	project, err := uplink.OpenProject(ctx, ul.Access)
+	fmt.Printf("[INFO] Configurando cliente S3 para pre-signed URLs instantáneas\n")
+	sess, err := session.NewSession(&aws.Config{
+		Credentials: credentials.NewStaticCredentials(
+			config.STORJ_S3_ACCESS_KEY_ID,
+			config.STORJ_S3_SECRET_ACCESS_KEY,
+			"",
+		),
+		Endpoint:         aws.String(config.STORJ_S3_ENDPOINT),
+		Region:           aws.String("us-east-1"),
+		S3ForcePathStyle: aws.Bool(true), // Importante para Storj
+	})
 	if err != nil {
-		return nil, fmt.Errorf("could not open project: %w", err)
-	}
-	defer project.Close()
-
-	// Crear y asegurar bucket
-	_, err = project.CreateBucket(ctx, bucketName)
-	if err != nil && !errors.Is(err, uplink.ErrBucketAlreadyExists) {
-		return nil, fmt.Errorf("error creating bucket: %w", err)
-	}
-	_, err = project.EnsureBucket(ctx, bucketName)
-	if err != nil {
-		return nil, fmt.Errorf("could not ensure bucket: %v", err)
+		return nil, fmt.Errorf("no se pudo crear sesión S3: %w", err)
 	}
 
-	// Crear credenciales para linksharing
-	sharedLinkExpiration := 10 * time.Minute
-	sharedAccess, err := ul.Access.Share(
-		uplink.Permission{
-			AllowDownload: true,
-			NotAfter:      time.Now().Add(sharedLinkExpiration),
-		},
-		uplink.SharePrefix{
-			Bucket: bucketName,
-			Prefix: "",
-		},
-	)
-	if err != nil {
-		return nil, fmt.Errorf("could not restrict access grant: %w", err)
-	}
-
-	// 🔁 Reintento de RegisterAccess
-	credentials, err := retryRegisterAccess(ctx, ul.Config, sharedAccess, &edge.RegisterAccessOptions{Public: false}, 3)
-	if err != nil {
-		return nil, fmt.Errorf("could not register access: %w", err)
-	}
+	s3Client := s3.New(sess)
+	fmt.Printf("[INFO] Cliente S3 configurado exitosamente\n")
 
 	return &TransportAppBucket{
-		sharedLinkCreds: credentials,
-		bucketName:      bucketName,
-		upLink:          ul,
+		bucketName: bucketName,
+		s3Client:   s3Client,
 	}, nil
 }
 
-func retryRegisterAccess(ctx context.Context, cfg edge.Config, access *uplink.Access, opts *edge.RegisterAccessOptions, maxRetries int) (*edge.Credentials, error) {
-	var creds *edge.Credentials
-	var err error
-	delay := time.Second
 
-	for i := 0; i < maxRetries; i++ {
-		creds, err = cfg.RegisterAccess(ctx, access, opts)
-		if err == nil {
-			return creds, nil
-		}
+// ⚡ MÉTODOS S3 INSTANTÁNEOS
 
-		// Solo reintentar errores de red
-		if !isNetworkError(err) {
-			break
-		}
-
-		time.Sleep(delay)
-		delay *= 2
-	}
-	return nil, err
-}
-
-func isNetworkError(err error) bool {
-	return errors.Is(err, context.DeadlineExceeded) ||
-		errors.Is(err, context.Canceled) ||
-		strings.Contains(err.Error(), "connection") ||
-		strings.Contains(err.Error(), "wsarecv") ||
-		strings.Contains(err.Error(), "EOF")
-}
-
-func (b TransportAppBucket) CreatePublicSharedLink(ctx context.Context, objectKey string) (string, error) {
-	// Create a public link that is served by linksharing service.
-	url, err := edge.JoinShareURL("https://link.storjshare.io",
-		b.sharedLinkCreds.AccessKeyID,
-		b.bucketName, objectKey, nil)
-	if err != nil {
-		return "", fmt.Errorf("could not create a shared link: %w", err)
-	}
-	return url, nil
-}
-
-func (b TransportAppBucket) UploadWithToken(ctx context.Context, token string, objectKey string, data []byte) error {
-	project, err := b.upLink.FromEphemeralToken(ctx, token)
-	if err != nil {
-		return err
-	}
-	defer project.Close()
-
-	// Asegurar que el objectKey use el prefijo del tenant
+func (b TransportAppBucket) GeneratePreSignedURL(ctx context.Context, objectKey string, ttl time.Duration) (string, error) {
+	// Crear prefijo específico por tenant
 	tenantID := sharedcontext.TenantIDFromContext(ctx)
 	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
 
@@ -147,59 +75,26 @@ func (b TransportAppBucket) UploadWithToken(ctx context.Context, token string, o
 		prefixedKey = fmt.Sprintf("default/%s", objectKey)
 	}
 
-	upload, err := project.UploadObject(ctx, b.bucketName, prefixedKey, nil)
+	// Generar pre-signed URL usando AWS SDK - ⚡ INSTANTÁNEO
+	req, _ := b.s3Client.PutObjectRequest(&s3.PutObjectInput{
+		Bucket: aws.String(b.bucketName),
+		Key:    aws.String(prefixedKey),
+	})
+
+	urlStr, err := req.Presign(ttl)
 	if err != nil {
-		return fmt.Errorf("could not initiate upload: %v", err)
+		return "", fmt.Errorf("could not presign URL: %w", err)
 	}
 
-	_, err = io.Copy(upload, bytes.NewReader(data))
-	if err != nil {
-		_ = upload.Abort()
-		return fmt.Errorf("upload failed: %v", err)
-	}
-
-	return upload.Commit()
+	return urlStr, nil
 }
 
-func (b TransportAppBucket) DownloadWithToken(ctx context.Context, token string, objectKey string) ([]byte, error) {
-	project, err := b.upLink.FromEphemeralToken(ctx, token)
-	if err != nil {
-		return nil, fmt.Errorf("could not parse token: %w", err)
-	}
-	defer project.Close()
-
-	// Asegurar que el objectKey use el prefijo del tenant
-	tenantID := sharedcontext.TenantIDFromContext(ctx)
-	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
-
-	var prefixedKey string
-	if tenantID != uuid.Nil && tenantCountry != "" {
-		prefixedKey = fmt.Sprintf("%s-%s/%s", tenantID.String(), tenantCountry, objectKey)
-	} else {
-		prefixedKey = fmt.Sprintf("default/%s", objectKey)
+func (b TransportAppBucket) GeneratePreSignedURLsBatch(ctx context.Context, objectKeys []string, ttl time.Duration) ([]string, error) {
+	if len(objectKeys) == 0 {
+		return []string{}, nil
 	}
 
-	download, err := project.DownloadObject(ctx, b.bucketName, prefixedKey, nil)
-	if err != nil {
-		return nil, fmt.Errorf("could not initiate download with token: %w", err)
-	}
-	defer download.Close()
-
-	var data bytes.Buffer
-	_, err = io.Copy(&data, download)
-	if err != nil {
-		return nil, fmt.Errorf("could not read data: %w", err)
-	}
-
-	return data.Bytes(), nil
-}
-
-func (b TransportAppBucket) HasAccessGrant() bool {
-	return b.upLink.Access != nil
-}
-
-func (b TransportAppBucket) GenerateEphemeralToken(ctx context.Context, ttl time.Duration, perm uplink.Permission) (string, error) {
-	// Crear prefijo específico por tenant para organización y seguridad
+	// Crear prefijo específico por tenant
 	tenantID := sharedcontext.TenantIDFromContext(ctx)
 	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
 
@@ -210,9 +105,48 @@ func (b TransportAppBucket) GenerateEphemeralToken(ctx context.Context, ttl time
 		prefix = "default/"
 	}
 
-	return b.upLink.GenerateEphemeralToken(b.bucketName, prefix, ttl, uplink.Permission{
-		AllowDownload: true,
-		AllowUpload:   true,
-		NotAfter:      time.Now().Add(ttl),
-	})
+	// Generar todas las URLs - ⚡ SUPER INSTANTÁNEO
+	urls := make([]string, len(objectKeys))
+	for i, objectKey := range objectKeys {
+		prefixedKey := prefix + objectKey
+		req, _ := b.s3Client.PutObjectRequest(&s3.PutObjectInput{
+			Bucket: aws.String(b.bucketName),
+			Key:    aws.String(prefixedKey),
+		})
+
+		urlStr, err := req.Presign(ttl)
+		if err != nil {
+			return nil, fmt.Errorf("could not presign URL for %s: %w", objectKey, err)
+		}
+		urls[i] = urlStr
+	}
+
+	return urls, nil
 }
+
+func (b TransportAppBucket) GeneratePublicDownloadURL(ctx context.Context, objectKey string, ttl time.Duration) (string, error) {
+	// Crear prefijo específico por tenant
+	tenantID := sharedcontext.TenantIDFromContext(ctx)
+	tenantCountry := sharedcontext.TenantCountryFromContext(ctx)
+
+	var prefixedKey string
+	if tenantID != uuid.Nil && tenantCountry != "" {
+		prefixedKey = fmt.Sprintf("%s-%s/%s", tenantID.String(), tenantCountry, objectKey)
+	} else {
+		prefixedKey = fmt.Sprintf("default/%s", objectKey)
+	}
+
+	// Generar URL pública de descarga usando AWS SDK - ⚡ INSTANTÁNEO
+	req, _ := b.s3Client.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: aws.String(b.bucketName),
+		Key:    aws.String(prefixedKey),
+	})
+
+	urlStr, err := req.Presign(ttl)
+	if err != nil {
+		return "", fmt.Errorf("could not presign download URL: %w", err)
+	}
+
+	return urlStr, nil
+}
+

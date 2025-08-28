@@ -3,7 +3,9 @@
     "allow": [
       "Bash(go build:*)",
       "Bash(find:*)",
-      "Bash(go mod:*)"
+      "Bash(go mod:*)",
+      "Bash(go doc:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

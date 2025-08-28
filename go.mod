@@ -7,6 +7,7 @@ require (
 	firebase.google.com/go/v4 v4.18.0
 	github.com/99designs/gqlgen v0.17.78
 	github.com/Ignaciojeria/einar-ioc/v2 v2.4.0
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cockroachdb/errors v1.12.0
@@ -149,6 +150,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jtolio/noiseconn v0.0.0-20230111204749-d7ec1a08b0b8 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
