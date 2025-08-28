@@ -64,8 +64,6 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
 
   // Estado para el pin de GPS del conductor
-  const [driverLocation, setDriverLocation] = useState<[number, number] | null>(null)
-  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null)
   const [gpsActive, setGpsActive] = useState(false)
   const gpsMarkerRef = useRef<any>(null)
   const gpsCircleRef = useRef<any>(null)
@@ -1029,8 +1027,6 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
     const success = (position: GeolocationPosition) => {
       const { latitude, longitude, accuracy } = position.coords
-      setDriverLocation([latitude, longitude])
-      setGpsAccuracy(accuracy)
       
       // Actualizar marcador en el mapa si está disponible
       if (mapInstanceRef.current && (window as any)?.L) {
@@ -1062,8 +1058,6 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
 
   const stopGPS = () => {
     setGpsActive(false)
-    setDriverLocation(null)
-    setGpsAccuracy(null)
     
     // Remover marcador del mapa
     if (mapInstanceRef.current && gpsMarkerRef.current) {
