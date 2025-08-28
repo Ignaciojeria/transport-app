@@ -1623,10 +1623,10 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                       setSidebarOpen(false)
                     }}
                     className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-4 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center space-x-3"
-                    aria-label="Descargar reporte CSV"
+                    aria-label="Descargar reporte"
                   >
                     <span className="text-2xl">📊</span>
-                    <span>Descargar Reporte CSV</span>
+                    <span>Descargar Reporte</span>
                   </button>
                 </div>
               )}
@@ -2115,7 +2115,7 @@ function DeliveryRouteView({ routeId, routeData }: { routeId: string; routeData:
                   className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
                 >
                   📊
-                  <span>Descargar Reporte CSV</span>
+                  <span>Descargar Reporte</span>
                 </button>
               </div>
             </div>
