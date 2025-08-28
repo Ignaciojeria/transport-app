@@ -17,14 +17,14 @@ type CreateTenantWorkflow func(ctx context.Context, input domain.Tenant) error
 func init() {
 	ioc.Registry(
 		NewCreateTenantWorkflow,
-		workflows.NewCreateTenantWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewSaveTenant,
 		observability.NewObservability,
 	)
 }
 
 func NewCreateTenantWorkflow(
-	createTenantWorkflow workflows.CreateTenantWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	saveTenant tidbrepository.SaveTenant,
 	obs observability.Observability) CreateTenantWorkflow {
 	return func(ctx context.Context, input domain.Tenant) error {
@@ -33,11 +33,15 @@ func NewCreateTenantWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := createTenantWorkflow.Restore(ctx, key)
+		
+		// Configurar workflow genérico para tenant creation
+		config := workflows.CreateWorkflow("tenant", "create")
+		
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetTenantCreatedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"tenant_id", input.ID.String())

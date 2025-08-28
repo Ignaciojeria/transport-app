@@ -17,14 +17,14 @@ type AssociateTenantAccountWorkflow func(ctx context.Context, input domain.Tenan
 func init() {
 	ioc.Registry(
 		NewAssociateTenantAccountWorkflow,
-		workflows.NewAssociateTenantAccountWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewSaveTenantAccount,
 		observability.NewObservability,
 	)
 }
 
 func NewAssociateTenantAccountWorkflow(
-	associateTenantAccountWorkflow workflows.AssociateTenantAccountWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	saveTenantAccount tidbrepository.SaveTenantAccount,
 	obs observability.Observability) AssociateTenantAccountWorkflow {
 	return func(ctx context.Context, input domain.TenantAccount) error {
@@ -33,11 +33,20 @@ func NewAssociateTenantAccountWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := associateTenantAccountWorkflow.Restore(ctx, key)
-		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+		
+		// Configurar workflow genérico para tenant-account association
+		config := workflows.WorkflowConfig{
+			Name:           "associate_tenant_account_workflow",
+			StartedState:   "association_started",
+			CompletedState: "association_completed",
+			UseStorjBucket: false,
 		}
-		if err := workflow.SetAssociationCompletedTransition(ctx); err != nil {
+		
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
+		if err != nil {
+			return fmt.Errorf("failed to initialize workflow: %w", err)
+		}
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"email", input.Account.Email)

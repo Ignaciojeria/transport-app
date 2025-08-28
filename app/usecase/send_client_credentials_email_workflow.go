@@ -17,7 +17,7 @@ type SendClientCredentialsEmailWorkflow func(ctx context.Context, clientID strin
 func init() {
 	ioc.Registry(
 		NewSendClientCredentialsEmailWorkflow,
-		workflows.NewSendClientCredentialsEmailWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewFindClientCredentialsByClientID,
 		email.NewSendClientCredentialsEmail,
 		observability.NewObservability,
@@ -26,7 +26,7 @@ func init() {
 }
 
 func NewSendClientCredentialsEmailWorkflow(
-	workflow workflows.SendClientCredentialsEmailWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	findClientCredentials tidbrepository.FindClientCredentialsByClientID,
 	sendEmail email.SendClientCredentialsEmail,
 	obs observability.Observability,
@@ -38,13 +38,22 @@ func NewSendClientCredentialsEmailWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		w, err := workflow.Restore(ctx, key)
+		
+		// Configurar workflow genérico para email sending
+		config := workflows.WorkflowConfig{
+			Name:           "send_client_credentials_email_workflow",
+			StartedState:   "email_sending_started",
+			CompletedState: "email_sent",
+			UseStorjBucket: false,
+		}
+		
+		w, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
 
 		// Intentar transición a email enviado
-		if err := w.SetEmailSentTransition(ctx); err != nil {
+		if err := w.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"client_id", clientID)

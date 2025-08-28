@@ -17,14 +17,14 @@ type CreateDefaultClientCredentialsWorkflow func(ctx context.Context, input doma
 func init() {
 	ioc.Registry(
 		NewCreateDefaultClientCredentialsWorkflow,
-		workflows.NewCreateClientCredentialsWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertClientCredentials,
 		observability.NewObservability,
 	)
 }
 
 func NewCreateDefaultClientCredentialsWorkflow(
-	createClientCredentialsWorkflow workflows.CreateClientCredentialsWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertClientCredentials tidbrepository.UpsertClientCredentials,
 	obs observability.Observability,
 ) CreateDefaultClientCredentialsWorkflow {
@@ -34,13 +34,17 @@ func NewCreateDefaultClientCredentialsWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := createClientCredentialsWorkflow.Restore(ctx, key)
+		
+		// Configurar workflow genérico para client credentials creation
+		config := workflows.CreateWorkflow("client_credentials", "create")
+		
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
 
 		// Intentar transición a credenciales creadas
-		if err := workflow.SetCredentialsCreatedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"client_id", input.ClientID)

@@ -17,14 +17,14 @@ type CreateAccountWorkflow func(ctx context.Context, input domain.Account) error
 func init() {
 	ioc.Registry(
 		NewCreateAccountWorkflow,
-		workflows.NewCreateAccountWorkflow,
+		workflows.NewGenericWorkflow,
 		tidbrepository.NewUpsertAccount,
 		observability.NewObservability,
 	)
 }
 
 func NewCreateAccountWorkflow(
-	createAccountWorkflow workflows.CreateAccountWorkflow,
+	genericWorkflow workflows.GenericWorkflow,
 	upsertAccount tidbrepository.UpsertAccount,
 	obs observability.Observability) CreateAccountWorkflow {
 	return func(ctx context.Context, input domain.Account) error {
@@ -33,11 +33,15 @@ func NewCreateAccountWorkflow(
 		if !ok {
 			return fmt.Errorf("idempotency key not found in context")
 		}
-		workflow, err := createAccountWorkflow.Restore(ctx, key)
+		
+		// Configurar workflow genérico para account creation
+		config := workflows.CreateWorkflow("account", "create")
+		
+		workflow, err := genericWorkflow.Initialize(ctx, key, config)
 		if err != nil {
-			return fmt.Errorf("failed to restore workflow: %w", err)
+			return fmt.Errorf("failed to initialize workflow: %w", err)
 		}
-		if err := workflow.SetAccountCreatedTransition(ctx); err != nil {
+		if err := workflow.SetCompletedTransition(ctx); err != nil {
 			obs.Logger.WarnContext(ctx,
 				err.Error(),
 				"email", input.Email)
