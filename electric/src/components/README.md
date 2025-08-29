@@ -37,32 +37,26 @@ Componente de barra lateral que contiene el menú principal y funcionalidades ad
 
 ### Props
 
-- `isOpen: boolean` - Controla si el sidebar está abierto
-- `onClose: () => void` - Función para cerrar el sidebar
-- `onDownloadReport: () => void` - Función para abrir el modal de descarga
+- `onDownloadReport: () => void` - Función para abrir el modal de descarga de reporte
 - `syncInfo?: { deviceId: string } | null` - Información de sincronización
-- `routeStarted: boolean` - Estado de la ruta
 
 ### Uso
 
 ```tsx
 import { Sidebar } from './components'
 
-<Sidebar
-  isOpen={sidebarOpen}
-  onClose={() => setSidebarOpen(false)}
-  onDownloadReport={() => setDownloadModal(true)}
+<Sidebar 
+  onDownloadReport={openDownloadModal}
   syncInfo={syncInfo}
-  routeStarted={routeStarted}
 />
 ```
 
 ### Características
 
 - Menú de navegación principal
+- Botón de descarga de reporte
 - Indicador de estado de sincronización
-- Botón de descarga de reportes
-- Diseño responsive y accesible
+- Diseño responsive
 
 ### Dependencias
 
@@ -71,14 +65,14 @@ import { Sidebar } from './components'
 
 ## DeliveryModal
 
-Componente modal para confirmar entregas con evidencia fotográfica y datos del destinatario.
+Componente modal para gestionar entregas exitosas con evidencia fotográfica.
 
 ### Props
 
 - `isOpen: boolean` - Controla si el modal está abierto
 - `onClose: () => void` - Función para cerrar el modal
-- `onSubmit: (evidence: DeliveryEvidence) => void` - Función que se ejecuta al confirmar
-- `submitting: boolean` - Indica si se está procesando la entrega
+- `onSubmit: (evidence: DeliveryEvidence) => void` - Función que se ejecuta al enviar la evidencia
+- `submitting: boolean` - Indica si se está enviando la evidencia
 
 ### Uso
 
@@ -95,10 +89,10 @@ import { DeliveryModal } from './components'
 
 ### Características
 
-- Captura de foto del destinatario
-- Campos para nombre y RUT del destinatario
-- Validación de datos requeridos
-- Estado de carga durante el envío
+- Captura de fotos con cámara
+- Campos para razón y observaciones
+- Validación de formulario
+- Estado de carga durante envío
 
 ### Dependencias
 
@@ -108,14 +102,14 @@ import { DeliveryModal } from './components'
 
 ## NonDeliveryModal
 
-Componente modal para registrar no entregas con motivo y evidencia fotográfica.
+Componente modal para gestionar entregas no exitosas con evidencia fotográfica.
 
 ### Props
 
 - `isOpen: boolean` - Controla si el modal está abierto
 - `onClose: () => void` - Función para cerrar el modal
-- `onSubmit: (evidence: NonDeliveryEvidence) => void` - Función que se ejecuta al confirmar
-- `submitting: boolean` - Indica si se está procesando
+- `onSubmit: (evidence: NonDeliveryEvidence) => void` - Función que se ejecuta al enviar la evidencia
+- `submitting: boolean` - Indica si se está enviando la evidencia
 
 ### Uso
 
@@ -132,10 +126,10 @@ import { NonDeliveryModal } from './components'
 
 ### Características
 
-- Selección de motivo de no entrega
-- Campo de observaciones opcional
-- Captura de foto de evidencia
-- Validación de datos requeridos
+- Captura de fotos con cámara
+- Selección de razón de no entrega
+- Campo para observaciones
+- Validación de formulario
 
 ### Dependencias
 
@@ -145,17 +139,18 @@ import { NonDeliveryModal } from './components'
 
 ## VisitCard
 
-Componente principal para mostrar una visita individual con sus órdenes y unidades de entrega.
+Componente principal para mostrar una visita individual con sus detalles y unidades de entrega.
 
 ### Props
 
 - `visit: any` - Datos de la visita
-- `visitIndex: number` - Índice de la visita
-- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de entrega
-- `shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean` - Función para filtrar por pestaña
-- `openDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
-- `openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
-- `centerMapOnVisit: (visitIndex: number) => void` - Función para centrar mapa en la visita
+- `visitIndex: number` - Índice de la visita en la lista
+- `routeStarted: boolean` - Indica si la ruta ha comenzado
+- `onCenterOnVisit: (visitIndex: number) => void` - Función para centrar el mapa en la visita
+- `onOpenDelivery: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
+- `onOpenNonDelivery: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
+- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de una unidad
+- `shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean` - Función para determinar si mostrar la visita según el tab activo
 
 ### Uso
 
@@ -164,21 +159,23 @@ import { VisitCard } from './components'
 
 <VisitCard
   visit={visit}
-  visitIndex={index}
+  visitIndex={idx}
+  routeStarted={routeStarted}
+  onCenterOnVisit={() => {}}
+  onOpenDelivery={openDeliveryFor}
+  onOpenNonDelivery={openNonDeliveryFor}
   getDeliveryUnitStatus={getDeliveryUnitStatus}
   shouldRenderByTab={shouldRenderByTab}
-  openDeliveryFor={openDeliveryFor}
-  openNonDeliveryFor={openNonDeliveryFor}
-  centerMapOnVisit={centerMapOnVisit}
 />
 ```
 
 ### Características
 
-- Renderizado condicional por pestaña activa
-- Composición de sub-componentes especializados
-- Manejo de estados de entrega
-- Integración con funcionalidades del mapa
+- Header con información de contacto y dirección
+- Lista de órdenes con unidades de entrega
+- Botones de acción para gestionar entregas
+- Filtrado por estado de entrega
+- Integración con modales de entrega
 
 ### Dependencias
 
@@ -189,16 +186,13 @@ import { VisitCard } from './components'
 
 ## NextVisitCard
 
-Componente especializado para mostrar la "Siguiente Disponible" en la pestaña "en-ruta".
+Componente especializado para mostrar la "Siguiente Disponible" en la pestaña "En ruta".
 
 ### Props
 
 - `nextVisit: any` - Datos de la siguiente visita disponible
-- `nextVisitIndex: number` - Índice de la siguiente visita
-- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de entrega
-- `openDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
-- `openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
-- `centerMapOnVisit: (visitIndex: number) => void` - Función para centrar mapa en la visita
+- `nextIdx: number` - Índice de la siguiente visita
+- `onCenterOnVisit: (visitIndex: number) => void` - Función para centrar el mapa en la visita
 
 ### Uso
 
@@ -207,36 +201,31 @@ import { NextVisitCard } from './components'
 
 <NextVisitCard
   nextVisit={nextVisit}
-  nextVisitIndex={nextVisitIndex}
-  getDeliveryUnitStatus={getDeliveryUnitStatus}
-  openDeliveryFor={openDeliveryFor}
-  openNonDeliveryFor={openNonDeliveryFor}
-  centerMapOnVisit={centerMapOnVisit}
+  nextIdx={nextIdx}
+  onCenterOnVisit={() => {}}
 />
 ```
 
 ### Características
 
 - Diseño destacado para la siguiente visita
-- Indicador visual de prioridad
-- Misma funcionalidad que VisitCard pero con estilo diferenciado
+- Botón para centrar en el mapa
+- Información resumida de la visita
 
 ### Dependencias
 
-- `VisitCardHeader` - Para el encabezado de la visita
-- `VisitCardOrders` - Para la lista de órdenes
 - `lucide-react` - Para iconos
 - Tailwind CSS - Para estilos
 
 ## VisitCardHeader
 
-Componente para mostrar el encabezado de una visita con información básica.
+Componente para mostrar el encabezado de una visita con información de contacto y dirección.
 
 ### Props
 
 - `visit: any` - Datos de la visita
-- `visitIndex: number` - Índice de la visita
-- `centerMapOnVisit: (visitIndex: number) => void` - Función para centrar mapa en la visita
+- `visitIndex: number` - Índice de la visita en la lista
+- `onCenterOnVisit: (visitIndex: number) => void` - Función para centrar el mapa en la visita
 
 ### Uso
 
@@ -245,8 +234,8 @@ import { VisitCardHeader } from './components'
 
 <VisitCardHeader
   visit={visit}
-  visitIndex={index}
-  centerMapOnVisit={centerMapOnVisit}
+  visitIndex={visitIndex}
+  onCenterOnVisit={onCenterOnVisit}
 />
 ```
 
@@ -255,7 +244,7 @@ import { VisitCardHeader } from './components'
 - Número de secuencia de la visita
 - Nombre del contacto
 - Dirección de la visita
-- Botón para centrar mapa
+- Botón para centrar en el mapa
 
 ### Dependencias
 
@@ -269,11 +258,11 @@ Componente para mostrar la lista de órdenes de una visita.
 ### Props
 
 - `visit: any` - Datos de la visita
-- `visitIndex: number` - Índice de la visita
-- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de entrega
-- `shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean` - Función para filtrar por pestaña
-- `openDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
-- `openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
+- `visitIndex: number` - Índice de la visita en la lista
+- `routeStarted: boolean` - Indica si la ruta ha comenzado
+- `onOpenDelivery: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
+- `onOpenNonDelivery: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
+- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de una unidad
 
 ### Uso
 
@@ -282,23 +271,25 @@ import { VisitCardOrders } from './components'
 
 <VisitCardOrders
   visit={visit}
-  visitIndex={index}
+  visitIndex={visitIndex}
+  routeStarted={routeStarted}
+  onOpenDelivery={onOpenDelivery}
+  onOpenNonDelivery={onOpenNonDelivery}
   getDeliveryUnitStatus={getDeliveryUnitStatus}
-  shouldRenderByTab={shouldRenderByTab}
-  openDeliveryFor={openDeliveryFor}
-  openNonDeliveryFor={openNonDeliveryFor}
 />
 ```
 
 ### Características
 
-- Iteración sobre órdenes de la visita
-- Filtrado por estado de entrega según pestaña
-- Delegación de renderizado a VisitCardDeliveryUnit
+- Lista de órdenes con referencia ID
+- Unidades de entrega con estado
+- Botones de acción para gestionar entregas
+- Integración con modales
 
 ### Dependencias
 
-- `VisitCardDeliveryUnit` - Para unidades de entrega individuales
+- `VisitCardDeliveryUnit` - Para unidades individuales
+- `lucide-react` - Para iconos
 - Tailwind CSS - Para estilos
 
 ## VisitCardDeliveryUnit
@@ -308,12 +299,13 @@ Componente para mostrar una unidad de entrega individual con su estado y accione
 ### Props
 
 - `unit: any` - Datos de la unidad de entrega
-- `visitIndex: number` - Índice de la visita
-- `orderIndex: number` - Índice de la orden
-- `unitIndex: number` - Índice de la unidad
-- `status: 'delivered' | 'not-delivered' | undefined` - Estado actual de la entrega
-- `openDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
-- `openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
+- `unitIndex: number` - Índice de la unidad en la orden
+- `orderIndex: number` - Índice de la orden en la visita
+- `visitIndex: number` - Índice de la visita en la lista
+- `status?: 'delivered' | 'not-delivered'` - Estado actual de la unidad
+- `routeStarted: boolean` - Indica si la ruta ha comenzado
+- `onOpenDelivery: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
+- `onOpenNonDelivery: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
 
 ### Uso
 
@@ -322,21 +314,22 @@ import { VisitCardDeliveryUnit } from './components'
 
 <VisitCardDeliveryUnit
   unit={unit}
-  visitIndex={visitIndex}
+  unitIndex={uIdx}
   orderIndex={orderIndex}
-  unitIndex={unitIndex}
+  visitIndex={visitIndex}
   status={status}
-  openDeliveryFor={openDeliveryFor}
-  openNonDeliveryFor={openNonDeliveryFor}
+  routeStarted={routeStarted}
+  onOpenDelivery={onOpenDelivery}
+  onOpenNonDelivery={onOpenNonDelivery}
 />
 ```
 
 ### Características
 
-- Información detallada de la unidad (descripción, peso, volumen, cantidad)
-- Indicador visual del estado de entrega
+- Información detallada de la unidad
+- Estado visual con colores
 - Botones de acción según el estado
-- Colores diferenciados por estado
+- Manejo de peso, volumen y cantidad
 
 ### Dependencias
 
@@ -345,13 +338,13 @@ import { VisitCardDeliveryUnit } from './components'
 
 ## DownloadReportModal
 
-Componente modal para descargar reportes de ruta en formato CSV o Excel.
+Componente modal para seleccionar el formato de descarga del reporte.
 
 ### Props
 
 - `isOpen: boolean` - Controla si el modal está abierto
 - `onClose: () => void` - Función para cerrar el modal
-- `onDownloadReport: (format: 'csv' | 'excel') => void` - Función que se ejecuta al seleccionar un formato
+- `onDownloadReport: () => void` - Función que se ejecuta al confirmar la descarga
 
 ### Uso
 
@@ -361,31 +354,20 @@ import { DownloadReportModal } from './components'
 <DownloadReportModal
   isOpen={downloadModal}
   onClose={closeDownloadModal}
-  onDownloadReport={handleDownload}
+  onDownloadReport={downloadReport}
 />
 ```
 
 ### Características
 
-- Interfaz intuitiva para seleccionar formato de descarga
-- Opciones para CSV y Excel
-- Diseño responsive y accesible
-- Feedback visual para cada opción
+- Selección entre formato CSV y Excel
+- Botones de descarga
+- Interfaz simple y clara
 
 ### Dependencias
 
 - `lucide-react` - Para iconos
 - Tailwind CSS - Para estilos
-- Utilidades de reporte para generación de archivos
-
-### Utilidades Asociadas
-
-El componente utiliza funciones utilitarias para generar reportes:
-
-- `generateReportData()` - Prepara los datos del reporte
-- `generateCSVContent()` - Genera contenido CSV
-- `generateExcelContent()` - Genera contenido Excel
-- `downloadFile()` - Maneja la descarga del archivo
 
 ## RouteStartModal
 
@@ -426,16 +408,9 @@ import { RouteStartModal } from './components'
 - Tailwind CSS - Para estilos
 - React hooks (`useRef`, `useEffect`) - Para manejo del input y focus
 
-### Funcionalidades
-
-- **Patente sugerida**: Muestra la patente asignada a la ruta si está disponible
-- **Patente personalizada**: Permite ingresar una patente diferente
-- **Validación**: Solo permite confirmar si hay una patente ingresada
-- **UX mejorada**: Focus automático y soporte para tecla Enter
-
 ## VisitTabs
 
-Componente para mostrar los tabs de navegación entre diferentes estados de visitas (En ruta, Entregados, No entregados).
+Componente para los tabs de navegación entre estados de visitas.
 
 ### Props
 
@@ -469,13 +444,197 @@ import { VisitTabs } from './components'
 
 ### Dependencias
 
-- `lucide-react` - Para iconos (Play, CheckCircle, XCircle)
-- Tailwind CSS - Para estilos y animaciones
+- `lucide-react` - Para iconos
+- Tailwind CSS - Para estilos
 
-### Funcionalidades
+## MapView
 
-- **Navegación por tabs**: Cambio entre diferentes estados de visitas
-- **Contadores en tiempo real**: Muestra cantidad de unidades en cada estado
-- **Estados visuales**: Diferencia visual entre tab activo e inactivo
-- **Iconos descriptivos**: Cada tab tiene un icono representativo
-- **Posicionamiento sticky**: Los tabs permanecen visibles al hacer scroll
+Componente principal para la vista del mapa con toda la funcionalidad de navegación y gestión de visitas.
+
+### Props
+
+- `routeId: string` - ID de la ruta actual
+- `routeData: any` - Datos completos de la ruta
+- `visits: any[]` - Lista de visitas de la ruta
+- `routeStarted: boolean` - Indica si la ruta ha comenzado
+- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de una unidad
+- `getNextPendingVisitIndex: () => number | null` - Función para obtener el índice de la siguiente visita pendiente
+- `getPositionedVisitIndex: () => number | null` - Función para obtener el índice de la visita posicionada
+- `nextVisitIndex: number | null` - Índice de la siguiente visita
+- `lastCenteredVisit: number | null` - Índice de la última visita centrada
+- `markerPosition: any` - Información de posición del marcador
+- `openDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
+- `openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
+- `onDownloadReport: () => void` - Función para descargar reporte
+- `setNextVisitIndex: (index: number | null) => void` - Función para establecer el índice de la siguiente visita
+- `setLastCenteredVisit: (index: number | null) => void` - Función para establecer el índice de la última visita centrada
+- `setMarkerPosition: (routeId: string, visitIndex: number, coordinates: [number, number]) => Promise<void>` - Función para establecer la posición del marcador
+- `openNextNavigation: (provider: 'google' | 'waze' | 'geo') => void` - Función para abrir navegación externa
+
+### Uso
+
+```tsx
+import { MapView } from './components'
+
+<MapView
+  routeId={routeId}
+  routeData={routeData}
+  visits={visits}
+  routeStarted={routeStarted}
+  getDeliveryUnitStatus={getDeliveryUnitStatus}
+  getNextPendingVisitIndex={getNextPendingVisitIndex}
+  getPositionedVisitIndex={getPositionedVisitIndex}
+  nextVisitIndex={nextVisitIndex}
+  lastCenteredVisit={lastCenteredVisit}
+  markerPosition={markerPosition}
+  openDeliveryFor={openDeliveryFor}
+  openNonDeliveryFor={openNonDeliveryFor}
+  onDownloadReport={openDownloadModal}
+  setNextVisitIndex={setNextVisitIndex}
+  setLastCenteredVisit={setLastCenteredVisit}
+  setMarkerPosition={setMarkerPosition}
+  openNextNavigation={openNextNavigation}
+/>
+```
+
+### Características
+
+- Mapa interactivo con Leaflet
+- Marcadores de visitas con estados visuales
+- Controles de GPS y navegación
+- Card de visita integrada
+- Sincronización entre dispositivos
+- Gestión completa de entregas desde el mapa
+
+### Dependencias
+
+- `MapControls` - Para controles del mapa
+- `MapVisitCard` - Para mostrar la visita en modo mapa
+- `MapView.utils` - Para funciones utilitarias
+- Leaflet - Para el mapa
+- Tailwind CSS - Para estilos
+
+## MapControls
+
+Componente para los controles flotantes del mapa.
+
+### Props
+
+- `gpsActive: boolean` - Indica si el GPS está activo
+- `onGPSToggle: () => void` - Función para activar/desactivar GPS
+- `onZoomToSelected: () => void` - Función para hacer zoom al punto seleccionado
+- `onNavigate: (provider: 'google' | 'waze' | 'geo') => void` - Función para abrir navegación externa
+
+### Uso
+
+```tsx
+import { MapControls } from './components'
+
+<MapControls
+  gpsActive={gpsActive}
+  onGPSToggle={gpsActive ? stopGPS : startGPS}
+  onZoomToSelected={zoomToCurrentlySelected}
+  onNavigate={openNextNavigation}
+/>
+```
+
+### Características
+
+- Botón de GPS del conductor
+- Botón de zoom al punto seleccionado
+- Botones de navegación (Google Maps, Waze)
+- Diseño flotante y responsive
+
+### Dependencias
+
+- `lucide-react` - Para iconos
+- Tailwind CSS - Para estilos
+
+## MapVisitCard
+
+Componente para mostrar la card de visita en modo mapa.
+
+### Props
+
+- `visit: any` - Datos de la visita
+- `displayIdx: number` - Índice de la visita para mostrar
+- `isSelectedVisit: boolean` - Indica si es la visita seleccionada
+- `isProcessed: boolean` - Indica si la visita ya está procesada
+- `hasNextPending: boolean` - Indica si hay siguiente visita pendiente
+- `nextPendingIdx: number | null` - Índice de la siguiente visita pendiente
+- `routeStarted: boolean` - Indica si la ruta ha comenzado
+- `getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined` - Función para obtener el estado de una unidad
+- `openDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de entrega
+- `openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void` - Función para abrir modal de no entrega
+- `onNextPending: (nextPendingIdx: number) => void` - Función para ir a la siguiente visita pendiente
+- `onClearSelection: () => void` - Función para limpiar la selección
+
+### Uso
+
+```tsx
+import { MapVisitCard } from './components'
+
+<MapVisitCard
+  visit={visit}
+  displayIdx={displayIdx}
+  isSelectedVisit={isSelectedVisit}
+  isProcessed={isProcessed}
+  hasNextPending={hasNextPending}
+  nextPendingIdx={nextPendingIdx}
+  routeStarted={routeStarted}
+  getDeliveryUnitStatus={getDeliveryUnitStatus}
+  openDeliveryFor={openDeliveryFor}
+  openNonDeliveryFor={openNonDeliveryFor}
+  onNextPending={handleNextPending}
+  onClearSelection={handleClearSelection}
+/>
+```
+
+### Características
+
+- Información completa de la visita
+- Gestión de entregas desde el mapa
+- Navegación a siguiente visita pendiente
+- Estados visuales claros
+- Integración con modales
+
+### Dependencias
+
+- `lucide-react` - Para iconos
+- Tailwind CSS - Para estilos
+
+## MapView.utils
+
+Archivo de utilidades para la vista del mapa con funciones auxiliares.
+
+### Funciones Exportadas
+
+- `getLatLngFromAddressInfo(addr: any): [number, number] | null` - Extrae coordenadas de addressInfo
+- `decodePolyline(encoded: string): Array<[number, number]>` - Decodifica polylines de Google
+- `getGradientColor(baseColor: string): string` - Obtiene color de gradiente complementario
+- `getVisitStatus(visit: any, getDeliveryUnitStatus: Function, visitIndex: number): 'completed' | 'not-delivered' | 'partial' | 'pending'` - Determina el estado de una visita
+- `getVisitMarkerColor(visitStatus: string): string` - Obtiene el color del marcador según el estado
+
+### Uso
+
+```tsx
+import { 
+  getLatLngFromAddressInfo, 
+  decodePolyline, 
+  getGradientColor, 
+  getVisitStatus, 
+  getVisitMarkerColor 
+} from './MapView.utils'
+```
+
+### Características
+
+- Funciones puras y reutilizables
+- Manejo de coordenadas geográficas
+- Decodificación de polylines
+- Lógica de estados de visitas
+- Colores de marcadores
+
+### Dependencias
+
+- Ninguna (funciones puras)

@@ -16,7 +16,7 @@ import {
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
-import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs } from './components'
+import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView } from './components'
 import { 
   generateReportData, 
   generateCSVContent, 
@@ -70,10 +70,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const [mapReady, setMapReady] = useState(false)
   const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
 
-  // Estado para el pin de GPS del conductor
-  const [gpsActive, setGpsActive] = useState(false)
-  const gpsMarkerRef = useRef<any>(null)
-  const gpsCircleRef = useRef<any>(null)
+
 
   // Modal de evidencia
   const [evidenceModal, setEvidenceModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
@@ -223,8 +220,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       console.log('📦 Estableciendo estado de entrega a "delivered"')
       setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
-      // Actualizar marcadores manteniendo control manual
-      advanceToNextAfterDelivery()
+      // Función eliminada - ya no se necesita
     } finally {
       setSubmittingEvidence(false)
     }
@@ -246,8 +242,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
-      // Actualizar marcadores manteniendo control manual
-      advanceToNextAfterDelivery()
+      // Función eliminada - ya no se necesita
     } finally {
       setSubmittingEvidence(false)
     }
@@ -340,28 +335,26 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       nextPending
     })
     
-    // Priorizar estado sincronizado si es reciente (últimos 30 segundos)
-    // CAMBIO: Permitir sincronización de cualquier visita, no solo pendientes
+    // PRIORIDAD 1: Selección manual desde botón de mapa (lastCenteredVisit)
+    // Esta debe tener prioridad absoluta cuando se establece manualmente
+    if (lastCenteredVisit !== null) {
+      console.log('📍 Usando última centrada (selección manual):', lastCenteredVisit)
+      return lastCenteredVisit
+    }
+    
+    // PRIORIDAD 2: Estado sincronizado si es reciente (últimos 30 segundos)
     if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
       console.log('📍 Usando posición sincronizada (cualquier estado):', markerPosition.visitIndex)
       return markerPosition.visitIndex
     }
     
-    // Priorizar selección manual de cualquier visita
-    // CAMBIO: Permitir selección manual de entregados/no entregados también
+    // PRIORIDAD 3: Selección manual de cualquier visita
     if (nextVisitIndex !== null) {
       console.log('📍 Usando selección manual (cualquier estado):', nextVisitIndex)
       return nextVisitIndex
     }
     
-    // Usar última visita centrada de cualquier estado
-    // CAMBIO: Permitir usar última centrada aunque esté entregada/no entregada
-    if (lastCenteredVisit !== null) {
-      console.log('📍 Usando última centrada (cualquier estado):', lastCenteredVisit)
-      return lastCenteredVisit
-    }
-    
-    // Fallback: siguiente pendiente automática
+    // PRIORIDAD 4: Fallback - siguiente pendiente automática
     console.log('📍 Usando siguiente pendiente automática:', nextPending)
     if (nextPending !== null) {
       console.log(`✅ Retornando visita ${nextPending} como posicionada`)
@@ -425,8 +418,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     return pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0].index
   }
 
-  // Mantener sincronizado el índice de "siguiente por entregar"
-  const markersRef = useRef<any[]>([])
+
   
   useEffect(() => {
     setNextVisitIndex(getNextPendingVisitIndex())
@@ -444,746 +436,27 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       return colorMap[baseColor] || '#7C3AED'
     }
 
-    // Icono circular normal para visitas
-  const createNumberedIcon = (L: any, number: number, color = '#4F46E5') => {
-      const gradientColor = getGradientColor(color)
-      
-      return L.divIcon({
-        html: `
-          <div style="
-            background: linear-gradient(135deg, ${color}, ${gradientColor});
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-            border: 2px solid white;
-          ">${number}</div>
-        `,
-        className: 'custom-div-icon',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-      })
-    }
-
-    // Icono en forma de marcador/pin de mapa para visita posicionada (CSS puro)
-  const createPositionedIcon = (L: any, number: number, color = '#4F46E5') => {
-      const gradientColor = getGradientColor(color)
-      
-      return L.divIcon({
-        html: `
-          <div style="
-            position: relative;
-            width: 36px;
-            height: 46px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-          ">
-            <!-- Círculo superior del pin -->
-            <div style="
-              width: 36px;
-              height: 36px;
-              border-radius: 50% 50% 50% 0;
-              transform: rotate(-45deg);
-              background: linear-gradient(135deg, ${color}, ${gradientColor});
-              border: 3px solid white;
-              box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-              position: relative;
-            "></div>
-            <!-- Número centrado -->
-            <div style="
-              position: absolute;
-              top: 8px;
-              left: 50%;
-              transform: translateX(-50%);
-              color: white;
-              font-weight: 700;
-              font-size: 12px;
-              z-index: 100;
-              text-shadow: 0 1px 2px rgba(0,0,0,0.7);
-              pointer-events: none;
-            ">${number}</div>
-          </div>
-        `,
-        className: 'custom-div-icon positioned',
-        iconSize: [36, 46],
-        iconAnchor: [18, 42], // Ancla en la punta del pin
-      })
-    }
-
-  // Función optimizada para actualizar solo los marcadores sin recrear el mapa
-  const updateMapMarkers = () => {
-    // console.log('🚀 updateMapMarkers ejecutándose')
-    const L = (window as any)?.L
-    if (!L || !mapInstanceRef.current) {
-      // console.log('❌ updateMapMarkers abortado - no hay L o mapInstance')
-      return
-    }
-
-    // console.log('🧹 Limpiando marcadores existentes:', markersRef.current.length)
-    // Limpiar marcadores existentes
-    markersRef.current.forEach(marker => {
-      try { mapInstanceRef.current.removeLayer(marker) } catch {}
-    })
-    markersRef.current = []
-
-    // Helper: obtener [lat, lng] desde addressInfo
-    const getLatLngFromAddressInfo = (addr: any): [number, number] | null => {
-      const c = addr?.coordinates
-      if (!c) return null
-      if (Array.isArray(c?.point) && c.point.length >= 2) {
-        return [c.point[1] as number, c.point[0] as number]
-      }
-      if (typeof c.latitude === 'number' && typeof c.longitude === 'number') {
-        return [c.latitude as number, c.longitude as number]
-      }
-      return null
-    }
-
-    // Recrear marcadores con estados actualizados
-    // console.log('🔄 Recreando marcadores para', (visits || []).length, 'visitas')
-    ;(visits || []).forEach((v: any, idx: number) => {
-      const latlng = getLatLngFromAddressInfo(v?.addressInfo)
-      if (latlng) {
-        // Determinar si está posicionada usando función centralizada
-        const positionedVisitIndex = getPositionedVisitIndex()
-        const isCurrentlyPositioned = (positionedVisitIndex === idx)
-        
-        if (isCurrentlyPositioned) {
-          console.log(`📍 Marcador ${idx} posicionado (único)`)
-        }
-        
-        const color = getVisitMarkerColor(idx)
-        const sequenceNumber = v?.sequenceNumber || (idx + 1)
-        
-        // Debug para identificar problema de colores
-        const visitStatus = getVisitStatus(idx)
-        console.log(`🎨 Marcador ${idx}: status=${visitStatus}, color=${color}, positioned=${isCurrentlyPositioned}`)
-        
-        // Usar iconos optimizados
-        const icon = isCurrentlyPositioned 
-          ? createPositionedIcon(L, sequenceNumber, color)
-          : createNumberedIcon(L, sequenceNumber, color)
-        
-        const marker = L.marker(latlng as any, { icon }).addTo(mapInstanceRef.current)
-        
-        // Agregar event listener para click en marcador
-        marker.on('click', () => {
-          console.log(`🖱️ Click en marcador ${idx}`)
-          // Vibración táctil si está disponible
-          try { (navigator as any)?.vibrate?.(30) } catch {}
-          
-          // Sincronizar posición con otros dispositivos
-          setMarkerPosition(routeId, idx, latlng)
-          
-          // Actualizar estado local para cambiar al marcador clickeado
-          setNextVisitIndex(idx)
-          setLastCenteredVisit(idx)
-          
-          // Centrar el mapa en la nueva posición con una transición suave
-          try { 
-            mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.4 }) 
-          } catch {}
-        })
-        
-        // Agregar tooltip con información de la visita
-        const visitInfo = v?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
-        marker.bindTooltip(visitInfo, {
-          permanent: false,
-          direction: 'top',
-          offset: [0, -20]
-        })
-        
-        markersRef.current.push(marker)
-      }
-    })
-    // console.log('✅ updateMapMarkers completado -', markersRef.current.length, 'marcadores creados')
-  }
-
-  // Inicialización dinámica de Leaflet y render del mapa con visitas
-  const initializeLeafletMap = () => {
-    if (typeof window === 'undefined') return
-    const L = (window as any).L
-    if (!L || !mapRef.current) return
-    if (mapInstanceRef.current) {
-      try { mapInstanceRef.current.remove() } catch {}
-      mapInstanceRef.current = null
-    }
-
-    // Helper: obtener [lat, lng] desde addressInfo (acepta point [lng,lat] o {latitude,longitude})
-    const getLatLngFromAddressInfo = (addr: any): [number, number] | null => {
-      const c = addr?.coordinates
-      if (!c) return null
-      if (Array.isArray(c?.point) && c.point.length >= 2 && typeof c.point[0] === 'number' && typeof c.point[1] === 'number') {
-        return [c.point[1] as number, c.point[0] as number]
-      }
-      if (typeof c.latitude === 'number' && typeof c.longitude === 'number') {
-        return [c.latitude as number, c.longitude as number]
-      }
-      return null
-    }
-
-    // Extraer waypoints desde startLocation y visitas
-    const startLatLng = getLatLngFromAddressInfo(routeData?.vehicle?.startLocation?.addressInfo)
-    const points: Array<[number, number]> = [
-      ...((visits || [])
-        .map((v: any) => getLatLngFromAddressInfo(v?.addressInfo))
-        .filter((p: any): p is [number, number] => Array.isArray(p))),
-    ]
-    const nextIdx = getNextPendingVisitIndex()
-
-    // Determinar el centro inicial: última visita centrada, siguiente pendiente, o primera visita
-    const centerIdx = lastCenteredVisit !== null ? lastCenteredVisit : 
-                     (typeof nextIdx === 'number' ? nextIdx : 0)
-    const defaultCenter: [number, number] = points[centerIdx] ?? points[0] ?? [-33.45, -70.66] // Santiago fallback
-    const map = L.map(mapRef.current).setView(defaultCenter, points.length ? 16 : 12)
-    map.attributionControl.setPrefix(false)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map)
-
-    // Limpiar marcadores existentes del ref antes de crear nuevos
-    markersRef.current = []
-
-    // Marcador de inicio (opcional)
-    if (startLatLng) {
-      const startMarker = L.marker(startLatLng as any, { icon: createNumberedIcon(L, 0, '#10B981') }).addTo(map)
-      markersRef.current.push(startMarker)
-    }
-
-    // Marcadores de visitas con colores según estado
-    points.forEach((latlng, idx) => {
-      // Determinar si esta visita está actualmente posicionada usando función centralizada
-      const positionedVisitIndex = getPositionedVisitIndex()
-      const isCurrentlyPositioned = (positionedVisitIndex === idx)
-      
-      const color = getVisitMarkerColor(idx)
-      const sequenceNumber = (visits as any)[idx]?.sequenceNumber || (idx + 1)
-      
-      // Usar forma diferente para visita posicionada
-      const icon = isCurrentlyPositioned 
-        ? createPositionedIcon(L, sequenceNumber, color)
-        : createNumberedIcon(L, sequenceNumber, color)
-      
-      const marker = L.marker(latlng as any, { icon }).addTo(map)
-      
-      // Agregar event listener para click en marcador
-      marker.on('click', () => {
-        console.log(`🖱️ Click en marcador inicial ${idx}`)
-        // Vibración táctil si está disponible
-        try { (navigator as any)?.vibrate?.(30) } catch {}
-        
-        // Sincronizar posición con otros dispositivos
-        setMarkerPosition(routeId, idx, latlng)
-        
-        // Actualizar estado local para cambiar al marcador clickeado
-        setNextVisitIndex(idx)
-        setLastCenteredVisit(idx)
-        
-        // Centrar el mapa en la nueva posición con una transición suave
-        try { 
-          map.flyTo(latlng as any, 16, { duration: 0.4 }) 
-        } catch {}
-      })
-      
-      // Agregar tooltip con información de la visita
-      const visit = (visits as any)[idx]
-      const visitInfo = visit?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
-      marker.bindTooltip(visitInfo, {
-        permanent: false,
-        direction: 'top',
-        offset: [0, -20]
-      })
-      
-      markersRef.current.push(marker)
-    })
-
-    // Ruta (polyline)
-    // Decodificador de polylines (Google Encoded Polyline Algorithm Format)
-    const decodePolyline = (encoded: string): Array<[number, number]> => {
-      let index = 0
-      const len = encoded.length
-      let lat = 0
-      let lng = 0
-      const coordinates: Array<[number, number]> = []
-      while (index < len) {
-        let b = 0
-        let shift = 0
-        let result = 0
-        do {
-          b = encoded.charCodeAt(index++) - 63
-          result |= (b & 0x1f) << shift
-          shift += 5
-        } while (b >= 0x20)
-        const dlat = (result & 1) ? ~(result >> 1) : (result >> 1)
-        lat += dlat
-
-        shift = 0
-        result = 0
-        do {
-          b = encoded.charCodeAt(index++) - 63
-          result |= (b & 0x1f) << shift
-          shift += 5
-        } while (b >= 0x20)
-        const dlng = (result & 1) ? ~(result >> 1) : (result >> 1)
-        lng += dlng
-
-        coordinates.push([lat * 1e-5, lng * 1e-5])
-      }
-      return coordinates
-    }
-
-    const encoded = (routeData as any)?.geometry?.encoding === 'polyline' ? (routeData as any)?.geometry?.value : undefined
-    let routeLatLngs: Array<[number, number]> | null = null
-    if (typeof encoded === 'string' && encoded.length > 0) {
-      try {
-        const decoded = decodePolyline(encoded)
-        if (decoded.length >= 2) {
-          routeLatLngs = decoded
-        }
-      } catch {}
-    }
-
-    const linePoints = routeLatLngs ?? (points.length >= 2 ? points : null)
-    if (linePoints) {
-      const line = L.polyline(linePoints as any, {
-        color: '#4F46E5',
-        weight: 4,
-        opacity: 0.85,
-        dashArray: '10,5',
-      }).addTo(map)
-      // Mantener la posición centrada si existe, si no, usar la siguiente pendiente o ajustar a la ruta
-      if (lastCenteredVisit !== null && points[lastCenteredVisit]) {
-        map.setView(points[lastCenteredVisit] as any, 16)
-      } else if (typeof nextIdx === 'number' && points[nextIdx]) {
-        map.setView(points[nextIdx] as any, 16)
-      } else {
-        map.fitBounds(line.getBounds(), { padding: [24, 24] })
-      }
-    } else if (points.length > 0 || startLatLng) {
-      const group = L.featureGroup([
-        ...points.map((p) => L.marker(p as any)),
-        ...(startLatLng ? [L.marker(startLatLng as any)] : []),
-      ])
-      
-      // Mantener la posición centrada si existe, si no, ajustar a todos los puntos
-      if (lastCenteredVisit !== null && points[lastCenteredVisit]) {
-        map.setView(points[lastCenteredVisit] as any, 16)
-      } else {
-        map.fitBounds(group.getBounds(), { padding: [24, 24] })
-      }
-    }
-
-    mapInstanceRef.current = map
-    setMapReady(true)
-  }
-
-  useEffect(() => {
-    // Cargar Leaflet dinámicamente y luego inicializar
-    if (typeof window === 'undefined') return
-    if (viewMode !== 'map') return
-    if (!(window as any).L) {
-      setMapReady(false)
-      const link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
-      document.head.appendChild(link)
-
-      const script = document.createElement('script')
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
-      script.onload = () => setTimeout(initializeLeafletMap, 50)
-      document.body.appendChild(script)
-    } else {
-      setMapReady(false)
-      setTimeout(initializeLeafletMap, 0)
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        try { mapInstanceRef.current.remove() } catch {}
-        mapInstanceRef.current = null
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, nextVisitIndex, JSON.stringify((visits || []).map((v: any) => v?.addressInfo?.coordinates?.point))])
-
-  // Optimización: Solo re-render cuando cambian datos esenciales del mapa
-  const mapEssentialData = useMemo(() => {
-    if (!localState?.s) return null
-    // Solo incluir las claves de estado que afectan los marcadores del mapa
-    // Usar el formato correcto de las claves: delivery:routeId:vIdx-oIdx-uIdx
-    const essentialKeys = Object.keys(localState.s).filter(key => 
-      key.startsWith(`delivery:${routeId}:`)
-    )
-    const result = essentialKeys.map(key => `${key}=${localState.s[key]}`).join(',')
-    console.log('🗺️ mapEssentialData update:', { 
-      essentialKeys: essentialKeys.length, 
-      sampleKey: essentialKeys[0], 
-      sampleValue: essentialKeys[0] ? localState.s[essentialKeys[0]] : null,
-      result: result.substring(0, 100) + (result.length > 100 ? '...' : ''),
-      timestamp: Date.now()
-    })
-    return result
-  }, [localState?.s, routeId])
-
-  useEffect(() => {
-    console.log('🏗️ Main map useEffect disparado:', { viewMode, mapEssentialDataPreview: mapEssentialData?.substring(0, 50) })
-    if (viewMode !== 'map') return
-    setMapReady(false)
-    setTimeout(initializeLeafletMap, 0)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, mapEssentialData, lastCenteredVisit, nextVisitIndex])
-
-  // UseEffect optimizado para actualizar solo marcadores cuando cambia el estado de entrega
-  useEffect(() => {
-    console.log('🔄 useEffect para updateMapMarkers disparado:', { 
-      viewMode, 
-      hasMapInstance: !!mapInstanceRef.current, 
-      mapEssentialDataLength: mapEssentialData?.length || 0,
-      nextVisitIndex,
-      lastCenteredVisit
-    })
-    if (viewMode === 'map' && mapInstanceRef.current) {
-      console.log('✅ Ejecutando updateMapMarkers desde useEffect')
-      updateMapMarkers()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapEssentialData, nextVisitIndex, lastCenteredVisit, markerPosition, forceUpdateCounter])
-
-  // UseEffect para reaccionar a cambios de posición sincronizada desde otros dispositivos
-  useEffect(() => {
-    if (markerPosition && viewMode === 'map' && mapInstanceRef.current) {
-      const { visitIndex, coordinates, deviceId, timestamp } = markerPosition
-      
-      // Solo reaccionar si la posición viene de otro dispositivo y es reciente
-      const currentDeviceId = syncInfo?.deviceId || 'unknown'
-      const isFromOtherDevice = deviceId !== currentDeviceId
-      const isRecent = (Date.now() - timestamp) < 10000 // 10 segundos
-      
-      console.log('📡 Evaluando posición sincronizada:', { 
-        isFromOtherDevice, 
-        isRecent, 
-        currentDeviceId, 
-        senderDeviceId: deviceId 
-      })
-      
-      if (isFromOtherDevice && isRecent) {
-        console.log('🔄 Aplicando posición sincronizada desde otro dispositivo')
-        // Actualizar estado local para mostrar la posición sincronizada
-        setNextVisitIndex(visitIndex)
-        setLastCenteredVisit(visitIndex)
-        
-        // Centrar el mapa en la posición sincronizada con transición suave
-        try { 
-          mapInstanceRef.current.flyTo(coordinates as any, 16, { duration: 0.6 }) 
-        } catch {}
-        
-        // Vibración suave para notificar cambio
-        try { (navigator as any)?.vibrate?.(50) } catch {}
-      }
-    }
-  }, [markerPosition, viewMode, syncInfo?.deviceId])
-
-
-
-  // Funciones para manejar el GPS del conductor
-  const startGPS = () => {
-    if (!navigator.geolocation) {
-      alert('El GPS no está disponible en este dispositivo')
-      return
-    }
-
-    setGpsActive(true)
     
-    const options = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    }
-
-    const success = (position: GeolocationPosition) => {
-      const { latitude, longitude, accuracy } = position.coords
-      
-      // Actualizar marcador en el mapa si está disponible
-      if (mapInstanceRef.current && (window as any)?.L) {
-        updateGPSMarker([latitude, longitude], accuracy)
-      }
-    }
-
-    const error = (err: GeolocationPositionError) => {
-      console.error('Error GPS:', err)
-      setGpsActive(false)
-      let message = 'Error al obtener ubicación'
-      switch (err.code) {
-        case err.PERMISSION_DENIED:
-          message = 'Permiso de ubicación denegado'
-          break
-        case err.POSITION_UNAVAILABLE:
-          message = 'Información de ubicación no disponible'
-          break
-        case err.TIMEOUT:
-          message = 'Tiempo de espera agotado'
-          break
-      }
-      alert(message)
-    }
-
-    // Iniciar seguimiento continuo
-    navigator.geolocation.watchPosition(success, error, options)
-  }
-
-  const stopGPS = () => {
-    setGpsActive(false)
-    
-    // Remover marcador del mapa
-    if (mapInstanceRef.current && gpsMarkerRef.current) {
-      try {
-        mapInstanceRef.current.removeLayer(gpsMarkerRef.current)
-        gpsMarkerRef.current = null
-      } catch {}
-    }
-    if (mapInstanceRef.current && gpsCircleRef.current) {
-      try {
-        mapInstanceRef.current.removeLayer(gpsCircleRef.current)
-        gpsCircleRef.current = null
-      } catch {}
-    }
-  }
-
-  const updateGPSMarker = (latlng: [number, number], accuracy: number) => {
-    const L = (window as any)?.L
-    if (!L || !mapInstanceRef.current) return
-
-    // Remover marcador anterior si existe
-    if (gpsMarkerRef.current) {
-      try { mapInstanceRef.current.removeLayer(gpsMarkerRef.current) } catch {}
-    }
-    if (gpsCircleRef.current) {
-      try { mapInstanceRef.current.removeLayer(gpsCircleRef.current) } catch {}
-    }
-
-    // Crear marcador de GPS con icono personalizado
-    const gpsIcon = L.divIcon({
-      html: `
-        <div style="
-          position: relative;
-          width: 24px;
-          height: 24px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        ">
-          <!-- Círculo principal pulsante -->
-          <div style="
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background: #00D4AA;
-            border: 3px solid white;
-            box-shadow: 0 0 0 3px #00D4AA;
-            animation: gps-pulse 2s infinite;
-            position: relative;
-          "></div>
-          <!-- Punto central -->
-          <div style="
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: white;
-            border: 2px solid #00D4AA;
-          "></div>
-          <!-- Indicador de dirección -->
-          <div style="
-            position: absolute;
-            top: -2px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 4px solid transparent;
-            border-right: 4px solid transparent;
-            border-bottom: 6px solid #00D4AA;
-          "></div>
-        </div>
-        <style>
-          @keyframes gps-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 212, 170, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 212, 170, 0); }
-          }
-        </style>
-      `,
-      className: 'gps-marker',
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    })
-
-    // Crear marcador
-    gpsMarkerRef.current = L.marker(latlng as any, { icon: gpsIcon }).addTo(mapInstanceRef.current)
-    
-    // Crear círculo de precisión
-    gpsCircleRef.current = L.circle(latlng as any, {
-      radius: accuracy,
-      color: '#00D4AA',
-      fillColor: '#00D4AA',
-      fillOpacity: 0.1,
-      weight: 1,
-      opacity: 0.6
-    }).addTo(mapInstanceRef.current)
-
-    // Tooltip con información del GPS
-    gpsMarkerRef.current.bindTooltip(`
-      <div class="text-center">
-        <div class="font-bold text-green-700">Tu ubicación</div>
-        <div class="text-xs text-gray-600">Precisión: ${Math.round(accuracy)}m</div>
-        <div class="text-xs text-gray-500">${latlng[0].toFixed(6)}, ${latlng[1].toFixed(6)}</div>
-      </div>
-    `, {
-      permanent: false,
-      direction: 'top',
-      offset: [0, -15]
-    })
-  }
-
-  // Función para hacer zoom al punto actualmente seleccionado/posicionado (sin cambiar selección)
-  const zoomToCurrentlySelected = () => {
-    const L = (window as any)?.L
-    if (!L || !mapInstanceRef.current) return
-    
-    // Obtener el índice del marcador actualmente posicionado
-    const currentSelectedIdx = getPositionedVisitIndex()
-    if (typeof currentSelectedIdx !== 'number') {
-      console.log('📍 No hay marcador posicionado para hacer zoom')
-      return
-    }
-    
-    console.log(`🔍 Haciendo zoom al marcador actualmente seleccionado: ${currentSelectedIdx}`)
-    
-    // Obtener latlng de la visita seleccionada
-    const visit = (visits as any)[currentSelectedIdx]
-    const c = visit?.addressInfo?.coordinates
-    const latlng = Array.isArray(c?.point)
-      ? [c.point[1] as number, c.point[0] as number]
-      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
-          ? [c.latitude as number, c.longitude as number]
-          : null)
-    if (latlng) {
-      try { 
-        mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 })
-        console.log(`✅ Zoom realizado a visita ${currentSelectedIdx}`)
-      } catch (e) {
-        console.error('❌ Error al hacer zoom:', e)
-      }
-    } else {
-      console.log('❌ No se pudo obtener coordenadas para la visita')
-    }
-  }
 
 
 
-  const centerOnVisit = (visitIndex: number) => {
-    // Obtener latlng de la visita específica
-    const visit = (visits as any)[visitIndex]
-    if (!visit) return
-    
-    const c = visit?.addressInfo?.coordinates
-    const latlng = Array.isArray(c?.point)
-      ? [c.point[1] as number, c.point[0] as number]
-      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
-          ? [c.latitude as number, c.longitude as number]
-          : null)
-    
-    if (latlng && latlng.length === 2) {
-      // Sincronizar la posición del marcador seleccionado entre dispositivos
-      console.log('🎯 Usuario seleccionó "Ver en mapa" para visita', visitIndex)
-      setMarkerPosition(routeId, visitIndex, latlng as [number, number])
-      
-      // Cambiar a modo mapa primero
-      setViewMode('map')
-      // Guardar la visita seleccionada para centrarse después
-      setNextVisitIndex(visitIndex)
-      // Guardar la última visita centrada
-      setLastCenteredVisit(visitIndex)
-      
-      // Vibración táctil si está disponible
-      try { (navigator as any)?.vibrate?.(50) } catch {}
-      
-      // Función para centrar el mapa cuando esté listo
-      const attemptCenter = (attempts = 0) => {
-        const L = (window as any)?.L
-        if (L && mapInstanceRef.current) {
-          try { 
-            mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.8 }) 
-          } catch {}
-        } else if (attempts < 10) {
-          // Reintentar hasta que el mapa esté listo
-          setTimeout(() => attemptCenter(attempts + 1), 200)
-        }
-      }
-      
-      // Iniciar el intento de centrado
-      setTimeout(() => attemptCenter(), 100)
-    }
-  }
 
-  const advanceToNextAfterDelivery = () => {
-    // Actualizar marcadores sin mover la vista (funciona en cualquier modo)
-    console.log('🔄 Actualizando después de gestionar entrega (sin mover mapa)')
-    
-    // Esperar un poco para que el estado se actualice después de la entrega
-    setTimeout(() => {
-      console.log('🧹 Manteniendo visita actual después de gestionar entrega...')
-      
-      // MANTENER la visita actual seleccionada para evitar salto automático
-      // Obtener la visita que se está mostrando actualmente
-      const currentDisplayedVisit = getPositionedVisitIndex()
-      
-      if (typeof currentDisplayedVisit === 'number') {
-        // Forzar que se mantenga la visita actual como seleccionada
-        console.log('🔒 Fijando visita actual como seleccionada para evitar salto automático:', currentDisplayedVisit)
-        setNextVisitIndex(currentDisplayedVisit)
-        setLastCenteredVisit(currentDisplayedVisit)
-      }
-      
-      // Verificar cuál sería el siguiente punto pendiente para logs
-      const nextPendingVisit = getNextPendingVisitIndex()
-      console.log('📍 Siguiente punto pendiente disponible:', nextPendingVisit, '(pero no saltando automáticamente)')
-      
-      // Forzar múltiples actualizaciones para asegurar que el estado se refleje
-      if (mapInstanceRef.current) {
-        // Primera actualización inmediata
-        setTimeout(() => {
-          updateMapMarkers()
-          console.log('🔄 Primera actualización de marcadores')
-        }, 50)
-        
-        // Segunda actualización después de más tiempo para asegurar que GunJS se haya sincronizado
-        setTimeout(() => {
-          updateMapMarkers()
-          console.log('🔄 Segunda actualización de marcadores (post-GunJS)')
-        }, 300)
-        
-        // Tercera actualización como respaldo
-        setTimeout(() => {
-          updateMapMarkers()
-          console.log('🔄 Tercera actualización de marcadores (respaldo)')
-        }, 600)
-        
-        // Forzar re-render del useEffect después de que todo haya sido procesado
-        setTimeout(() => {
-          setForceUpdateCounter(prev => prev + 1)
-          console.log('🔄 Forzando re-render con counter')
-        }, 800)
-      }
-    }, 200) // Pausa más larga para asegurar que GunJS ha procesado el cambio
-  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Función para abrir modal de descarga
   const openDownloadModal = () => {
@@ -1360,85 +633,27 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       </div>
 
       {/* Vista de mapa (solo cuando viewMode === 'map') */}
-      {viewMode === 'map' && (() => {
-      // Siempre mostrar el mapa, incluso cuando todas las entregas estén gestionadas
-      return (
-        <div className="px-4 pt-4">
-          <div className="relative">
-            <div
-              ref={mapRef}
-              className={`h-72 w-full rounded-xl overflow-hidden shadow-md bg-gray-100`}
-              style={{ zIndex: 1 }}
-            >
-              {!mapReady && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-indigo-100">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-4 border-indigo-500 border-t-transparent mx-auto mb-3"></div>
-                    <p className="text-indigo-600 text-sm font-medium">Cargando mapa…</p>
-                  </div>
-                </div>
-              )}
-            </div>
-            {/* Controles flotantes del mapa */}
-            <div className="absolute top-3 right-3 space-y-2" style={{ zIndex: 1000 }}>
-              {/* Botón de GPS del conductor */}
-              <button
-                onClick={gpsActive ? stopGPS : startGPS}
-                className={`w-10 h-10 rounded-lg shadow-lg flex items-center justify-center transition-all ${
-                  gpsActive 
-                    ? 'bg-green-500 text-white hover:bg-green-600' 
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                } hover:shadow-xl`}
-                aria-label={gpsActive ? 'Desactivar GPS' : 'Activar GPS'}
-                title={gpsActive ? 'Desactivar GPS' : 'Activar GPS del conductor'}
-              >
-                <div className={`w-5 h-5 ${gpsActive ? 'animate-pulse' : ''}`}>
-                  <svg 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                    className="w-full h-full"
-                  >
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                    <circle cx="12" cy="9" r="2.5"/>
-                  </svg>
-                </div>
-              </button>
-              
-              <button
-                onClick={zoomToCurrentlySelected}
-                className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-gray-700 hover:bg-gray-50 hover:shadow-xl transition-all"
-                aria-label="Zoom al punto seleccionado"
-                title="Hacer zoom al punto seleccionado"
-              >
-                <Crosshair className="w-5 h-5" />
-              </button>
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={() => openNextNavigation('google')}
-                  className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-blue-600 hover:bg-gray-50 hover:shadow-xl transition-all"
-                  aria-label="Navegar con Google Maps"
-                  title="Google Maps"
-                >
-                  G
-                </button>
-                <button
-                  onClick={() => openNextNavigation('waze')}
-                  className="w-10 h-10 bg-white rounded-lg shadow-lg flex items-center justify-center text-indigo-600 hover:bg-gray-50 hover:shadow-xl transition-all"
-                  aria-label="Navegar con Waze"
-                  title="Waze"
-                >
-                  W
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-      })()}
+      {viewMode === 'map' && (
+        <MapView
+          routeId={routeId}
+          routeData={routeData}
+          visits={visits}
+          routeStarted={routeStarted}
+          getDeliveryUnitStatus={getDeliveryUnitStatus}
+          getNextPendingVisitIndex={getNextPendingVisitIndex}
+          getPositionedVisitIndex={getPositionedVisitIndex}
+          nextVisitIndex={nextVisitIndex}
+          lastCenteredVisit={lastCenteredVisit}
+          markerPosition={markerPosition}
+          openDeliveryFor={openDeliveryFor}
+          openNonDeliveryFor={openNonDeliveryFor}
+          onDownloadReport={openDownloadModal}
+          setNextVisitIndex={setNextVisitIndex}
+          setLastCenteredVisit={setLastCenteredVisit}
+          setMarkerPosition={setMarkerPosition}
+          openNextNavigation={openNextNavigation}
+        />
+      )}
 
       {/* Tabs sticky: En ruta | Entregados | No entregados (ocultas en modo mapa) */}
       {viewMode === 'list' && (
@@ -1479,7 +694,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             <NextVisitCard
               nextVisit={nextVisit}
               nextIdx={nextIdx}
-              onCenterOnVisit={centerOnVisit}
+              onCenterOnVisit={(visitIndex: number) => {
+                setViewMode('map')
+                setLastCenteredVisit(visitIndex)
+                setNextVisitIndex(null) // Limpiar selección automática para dar prioridad a la manual
+              }}
             />
           )
         })()}
@@ -1490,7 +709,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             visit={visit}
             visitIndex={visitIndex}
             routeStarted={routeStarted}
-            onCenterOnVisit={centerOnVisit}
+            onCenterOnVisit={(visitIndex: number) => {
+              setViewMode('map')
+              setLastCenteredVisit(visitIndex)
+              setNextVisitIndex(null) // Limpiar selección automática para dar prioridad a la manual
+            }}
             onOpenDelivery={openDeliveryFor}
             onOpenNonDelivery={openNonDeliveryFor}
             getDeliveryUnitStatus={getDeliveryUnitStatus}
@@ -1501,239 +724,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       )}
 
       {/* En modo mapa: mostrar la visita seleccionada o la siguiente pendiente debajo del mapa */}
-      {viewMode === 'map' && (() => {
-        // Usar la misma lógica que el mapa para determinar qué visita mostrar
-        const displayIdx = getPositionedVisitIndex()
-        
-        // Si no hay punto seleccionado/posicionado, mostrar mensaje de ruta completada
-        if (typeof displayIdx !== 'number') {
-          return (
-            <div className="p-4 space-y-4">
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200 p-6 text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">¡Ruta Completada!</h2>
-                <p className="text-sm text-gray-600 mb-4">Todas las entregas han sido gestionadas exitosamente.</p>
-                <p className="text-xs text-gray-500 mb-4">El mapa muestra el estado final de todas las visitas.</p>
-                
-                {/* Botón de descarga CSV */}
-                <button
-                  onClick={openDownloadModal}
-                  className="inline-flex items-center space-x-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
-                >
-                  📊
-                  <span>Descargar Reporte</span>
-                </button>
-              </div>
-            </div>
-          )
-        }
-        
-        const visit: any = (visits as any)[displayIdx]
-        // Es seleccionada si no es solo la automática (siguiente pendiente)
-        const autoNext = getNextPendingVisitIndex()
-        const isSelectedVisit = displayIdx !== autoNext || nextVisitIndex !== null || lastCenteredVisit !== null || (markerPosition && (Date.now() - markerPosition.timestamp) < 30000)
-        
-        // Debug para modo mapa
-        console.log('🗺️ Modo mapa - Determinando qué mostrar:', {
-          displayIdx,
-          autoNext,
-          isSelectedVisit,
-          nextVisitIndex,
-          lastCenteredVisit,
-          hasRecentMarkerPosition: markerPosition && (Date.now() - markerPosition.timestamp) < 30000
-        })
-        // Verificar si la visita actual ya está procesada
-        const visitStatus = getVisitStatus(displayIdx)
-        const isProcessed = visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial'
-        const nextPendingIdx = getNextPendingVisitIndex()
-        const hasNextPending = typeof nextPendingIdx === 'number' && nextPendingIdx !== displayIdx
-        
-        return (
-          <div className="p-4 space-y-4">
-            {/* Sección "Siguiente a Entregar" cuando la visita actual está procesada */}
-            {isProcessed && hasNextPending && (
-              <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border-2 border-green-200 p-4 mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-green-800 flex items-center">
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    ¡Gestión Completada!
-                  </h3>
-                  <span className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full font-medium">
-                    ✓ Procesado
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    // Ir específicamente al siguiente pendiente y marcarlo como seleccionado
-                    setNextVisitIndex(nextPendingIdx)
-                    setLastCenteredVisit(nextPendingIdx)
-                    console.log('🎯 Usuario presionó "Siguiente a Entregar" - saltando a visita:', nextPendingIdx)
-                    
-                    // También sincronizar la posición del marcador
-                    if (nextPendingIdx !== null) {
-                      const nextVisit = (visits as any)[nextPendingIdx]
-                      const c = nextVisit?.addressInfo?.coordinates
-                      const latlng = Array.isArray(c?.point)
-                        ? [c.point[1] as number, c.point[0] as number]
-                        : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
-                            ? [c.latitude as number, c.longitude as number]
-                            : null)
-                      if (latlng && latlng.length === 2) {
-                        setMarkerPosition(routeId, nextPendingIdx, latlng as [number, number])
-                      }
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
-                >
-                  <Play className="w-4 h-4" />
-                  <span>Siguiente a Entregar (#{(visits as any)[nextPendingIdx]?.sequenceNumber})</span>
-                </button>
-              </div>
-            )}
-            
-            {/* Indicador de qué visita se está mostrando */}
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-700">
-                {isSelectedVisit ? 'Visita seleccionada' : 'Siguiente a entregar'}
-              </h3>
-              {isSelectedVisit && !isProcessed && (
-                <button
-                  onClick={() => {
-                    // Limpiar todas las selecciones para volver al automático
-                    setNextVisitIndex(null)
-                    setLastCenteredVisit(null)
-                    console.log('🔄 Usuario solicitó ver siguiente - limpiando selecciones')
-                  }}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Ver siguiente
-                </button>
-              )}
-            </div>
-            
-            <div className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border ${
-              isSelectedVisit ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-100'
-            }`}>
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex items-start space-x-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0 text-white ${
-                    isSelectedVisit 
-                      ? 'bg-gradient-to-br from-indigo-500 to-purple-600' 
-                      : 'bg-gradient-to-br from-indigo-500 to-purple-600'
-                  }`}>
-                    {visit.sequenceNumber}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-                      <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                      <span className="truncate">{visit.addressInfo?.contact?.fullName}</span>
-                    </h3>
-                    <p className="text-xs text-gray-600 flex items-start mb-2">
-                      <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
-                      <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4">
-                <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
-                  <Package size={18} />
-                  <span className="ml-2">Unidades de Entrega:</span>
-                </h4>
-                {(visit.orders || []).map((order: any, orderIndex: number) => (
-                  <div key={orderIndex} className="mb-4">
-                    <div className="mb-2">
-                      <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
-                        {order.referenceID}
-                      </span>
-                    </div>
-                    {(order.deliveryUnits || [])
-                      .map((unit: any, uIdx: number): { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined } => ({
-                        unit,
-                        uIdx,
-                        status: getDeliveryUnitStatus(displayIdx, orderIndex, uIdx),
-                      }))
-                      .map(({ unit, uIdx, status }: { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined }) => (
-                        <div key={uIdx} className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}>
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="flex-1 min-w-0">
-                              <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">Unidad de Entrega {uIdx + 1}</h5>
-                              {Array.isArray(unit.items) && unit.items.length > 0 && (
-                                <div className="flex items-center space-x-1 mb-2">
-                                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-                                  <span className="text-xs text-gray-700 truncate">{unit.items[0]?.description}</span>
-                                </div>
-                              )}
-                              <div className="flex items-center space-x-3 text-xs text-gray-600">
-                                <span className="flex items-center">
-                                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
-                                  {typeof unit.weight === 'number' ? `${unit.weight}kg` : unit.weight}
-                                </span>
-                                <span className="flex items-center">
-                                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>
-                                  {typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right ml-3">
-                              <span className="text-xs text-gray-500 block">Cant.</span>
-                              <span className="text-xl font-bold text-indigo-600">{(unit.items || []).reduce((a: number, it: any) => a + (Number(it?.quantity) || 0), 0)}</span>
-                            </div>
-                          </div>
-                          {routeStarted && (
-                            <div className="flex space-x-2 mt-3">
-                              {/* Permitir cambios de estado en vista mapa siempre */}
-                              {status === 'delivered' ? (
-                                // Si está entregado, mostrar solo opción de cambiar a no entregado
-                                <button
-                                  onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
-                                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                                >
-                                  <XCircle size={16} />
-                                  <span>Cambiar a no entregado</span>
-                                </button>
-                              ) : status === 'not-delivered' ? (
-                                // Si está no entregado, mostrar solo opción de cambiar a entregado
-                                <button
-                                  onClick={() => openDeliveryFor(displayIdx, orderIndex, uIdx)}
-                                  className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
-                                >
-                                  <CheckCircle size={16} />
-                                  <span>Cambiar a entregado</span>
-                                </button>
-                              ) : (
-                                // Si está pendiente, mostrar ambas opciones originales
-                                <>
-                                  <button
-                                    onClick={() => openDeliveryFor(displayIdx, orderIndex, uIdx)}
-                                    className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
-                                  >
-                                    <CheckCircle size={16} />
-                                    <span>entregar</span>
-                                  </button>
-                                  <button
-                                    onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
-                                    className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                                  >
-                                    <XCircle size={16} />
-                                    <span>no entregado</span>
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )
-      })()}
-      
 
       
 
