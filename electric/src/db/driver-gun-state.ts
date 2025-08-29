@@ -1,8 +1,6 @@
 import { z } from 'zod'
 import Gun from 'gun'
 import { useEffect, useState } from 'react'
-import { getDeliveryUnitUploadUrl, type RouteData } from '../utils/photo-upload'
-import { uploadQueue } from '../utils/offline-upload-queue'
 
 // Esquemas iguales que antes
 const DeliveryEvidence = z.object({
@@ -190,42 +188,15 @@ export function getDeliveryStatus(
   return result ?? undefined
 }
 
-export async function setDeliveryEvidence(
+export function setDeliveryEvidence(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  evidence: DeliveryEvidence,
-  routeData?: RouteData
+  evidence: DeliveryEvidence
 ) {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
-  
-  // Always save evidence locally first
   driverData.get(key).put(evidence)
-  
-  // Queue photo upload if we have route data and upload URL
-  if (routeData && evidence.photoDataUrl) {
-    const uploadUrl = getDeliveryUnitUploadUrl(routeData, visitIndex, orderIndex, unitIndex)
-    if (uploadUrl) {
-      console.log('📤 Queueing delivery evidence photo for upload')
-      
-      // Add to upload queue with retry logic
-      const uploadId = uploadQueue.addToQueue({
-        routeId,
-        visitIndex,
-        orderIndex,
-        unitIndex,
-        photoDataUrl: evidence.photoDataUrl,
-        uploadUrl,
-        type: 'delivery',
-        maxAttempts: 5 // Retry up to 5 times
-      });
-      
-      console.log('✅ Delivery evidence queued for upload with ID:', uploadId)
-    } else {
-      console.warn('⚠️ No upload URL found for delivery unit evidence')
-    }
-  }
 }
 
 export function getDeliveryEvidence(
@@ -244,42 +215,15 @@ export function getDeliveryEvidence(
   return result ? DeliveryEvidence.parse(result) : undefined
 }
 
-export async function setNonDeliveryEvidence(
+export function setNonDeliveryEvidence(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  evidence: NonDeliveryEvidence,
-  routeData?: RouteData
+  evidence: NonDeliveryEvidence
 ) {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
-  
-  // Always save evidence locally first
   driverData.get(key).put(evidence)
-  
-  // Queue photo upload if we have route data and upload URL
-  if (routeData && evidence.photoDataUrl) {
-    const uploadUrl = getDeliveryUnitUploadUrl(routeData, visitIndex, orderIndex, unitIndex)
-    if (uploadUrl) {
-      console.log('📤 Queueing non-delivery evidence photo for upload')
-      
-      // Add to upload queue with retry logic
-      const uploadId = uploadQueue.addToQueue({
-        routeId,
-        visitIndex,
-        orderIndex,
-        unitIndex,
-        photoDataUrl: evidence.photoDataUrl,
-        uploadUrl,
-        type: 'non-delivery',
-        maxAttempts: 5 // Retry up to 5 times
-      });
-      
-      console.log('✅ Non-delivery evidence queued for upload with ID:', uploadId)
-    } else {
-      console.warn('⚠️ No upload URL found for delivery unit evidence')
-    }
-  }
 }
 
 export function getNonDeliveryEvidence(
