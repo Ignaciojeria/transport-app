@@ -1,31 +1,33 @@
+import type { Visit, Order, DeliveryUnit } from '../domain/route'
+
 export interface ReportData {
   routeId: string
   routeDbId?: number
   routeLicense?: string
-  visits: any[]
+  visits: Visit[]
   localState: any
 }
 
 export interface DeliveryUnitData {
-  visit: any
+  visit: Visit
   visitIndex: number
-  order: any
+  order: Order
   orderIndex: number
-  unit: any
+  unit: DeliveryUnit
   unitIndex: number
   status: 'delivered' | 'not-delivered' | undefined
 }
 
 export function generateReportData(
-  visits: any[],
+  visits: Visit[],
   localState: any,
   routeId: string
 ): DeliveryUnitData[] {
   const allUnits: DeliveryUnitData[] = []
   
-  visits.forEach((visit: any, visitIndex: number) => {
-    visit?.orders?.forEach((order: any, orderIndex: number) => {
-      order?.deliveryUnits?.forEach((unit: any, unitIndex: number) => {
+  visits.forEach((visit: Visit, visitIndex: number) => {
+    visit?.orders?.forEach((order: Order, orderIndex: number) => {
+      order?.deliveryUnits?.forEach((unit: DeliveryUnit, unitIndex: number) => {
         const status = getDeliveryUnitStatus(localState, routeId, visitIndex, orderIndex, unitIndex)
         allUnits.push({
           visit,
@@ -101,7 +103,6 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
     'Direccion',
     'Telefono',
     'Email',
-    'ID_Orden',
     'Referencia_Orden',
     'Unidad_Entrega',
     'Descripcion_Items',
@@ -122,8 +123,8 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
     const { visit, visitIndex, order, orderIndex, unit: deliveryUnit, unitIndex, status } = unit
     const contactInfo = visit?.addressInfo?.contact || {}
     const coordinates = visit?.addressInfo?.coordinates
-    const lat = Array.isArray(coordinates?.point) ? coordinates.point[1] : coordinates?.latitude
-    const lng = Array.isArray(coordinates?.point) ? coordinates.point[0] : coordinates?.longitude
+    const lat = coordinates?.latitude
+    const lng = coordinates?.longitude
     
     const statusText = status === 'delivered' ? 'Entregado' : 
                       status === 'not-delivered' ? 'No Entregado' : 'Pendiente'
@@ -164,7 +165,6 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
       visit?.addressInfo?.addressLine1 || '',
       contactInfo?.phone || '',
       contactInfo?.email || '',
-      order?.id || '',
       order?.referenceID || '',
       `Unidad ${unitIndex + 1}`,
       itemDescriptions,
@@ -197,7 +197,6 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
     'Direccion',
     'Telefono',
     'Email',
-    'ID_Orden',
     'Referencia_Orden',
     'Unidad_Entrega',
     'Descripcion_Items',
@@ -218,8 +217,8 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
     const { visit, visitIndex, order, orderIndex, unit: deliveryUnit, unitIndex, status } = unit
     const contactInfo = visit?.addressInfo?.contact || {}
     const coordinates = visit?.addressInfo?.coordinates
-    const lat = Array.isArray(coordinates?.point) ? coordinates.point[1] : coordinates?.latitude
-    const lng = Array.isArray(coordinates?.point) ? coordinates.point[0] : coordinates?.longitude
+    const lat = coordinates?.latitude
+    const lng = coordinates?.longitude
     
     const statusText = status === 'delivered' ? 'Entregado' : 
                       status === 'not-delivered' ? 'No Entregado' : 'Pendiente'
@@ -260,7 +259,6 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
       visit?.addressInfo?.addressLine1 || '',
       contactInfo?.phone || '',
       contactInfo?.email || '',
-      order?.id || '',
       order?.referenceID || '',
       `Unidad ${unitIndex + 1}`,
       itemDescriptions,
@@ -321,3 +319,4 @@ export function downloadFile(content: string, filename: string, mimeType: string
   // Vibración táctil si está disponible
   try { (navigator as any)?.vibrate?.(100) } catch {}
 }
+

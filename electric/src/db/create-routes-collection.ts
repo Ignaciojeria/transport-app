@@ -1,18 +1,19 @@
 import { createCollection } from '@tanstack/react-db'
 import { electricCollectionOptions } from '@tanstack/electric-db-collection'
 import { z } from 'zod'
+import type { Route } from '../domain/route'
 
 // Schema para las rutas
-const Route = z.object({
+const RouteSchema = z.object({
   id: z.string(),
-  raw: z.any(), // Electric devuelve datos raw, puedes ajustar esto según tu schema
+  raw: z.any(), // Mantener z.any() por ahora para evitar conflictos de tipos
   reference_id: z.string().optional(),
   created_at: z.date().optional(),
   updated_at: z.date().optional(),
 })
 
 // Tipos derivados de los schemas
-type RouteType = z.infer<typeof Route>
+type RouteType = z.infer<typeof RouteSchema>
 
 export type { RouteType }
 
@@ -35,7 +36,7 @@ export const createRoutesCollection = (token: string, referenceId?: string) =>
         },
       },
       getKey: (r) => r.id,
-      schema: Route,
+      schema: RouteSchema,
       
       async onInsert({ transaction }) {
         const { modified: newRoute } = transaction.mutations[0]

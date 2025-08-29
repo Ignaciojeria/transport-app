@@ -9,11 +9,12 @@ import {
   getVisitStatus, 
   getVisitMarkerColor 
 } from './MapView.utils'
+import type { Visit } from '../domain/route'
 
 interface MapViewProps {
   routeId: string
   routeData: any
-  visits: any[]
+  visits: Visit[]
   routeStarted: boolean
   getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, unitIndex: number) => 'delivered' | 'not-delivered' | undefined
   getNextPendingVisitIndex: () => number | null
@@ -77,11 +78,9 @@ export function MapView({
     
     const visit = visits[currentSelectedIdx]
     const c = visit?.addressInfo?.coordinates
-    const latlng = Array.isArray(c?.point)
-      ? [c.point[1] as number, c.point[0] as number]
-      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
-          ? [c.latitude as number, c.longitude as number]
-          : null)
+    const latlng = (typeof c?.latitude === 'number' && typeof c?.longitude === 'number')
+      ? [c.latitude as number, c.longitude as number]
+      : null
     
     if (latlng) {
       try { 
@@ -557,7 +556,7 @@ export function MapView({
         mapInstanceRef.current = null
       }
     }
-  }, [nextVisitIndex, JSON.stringify(visits.map((v: any) => v?.addressInfo?.coordinates?.point))])
+  }, [nextVisitIndex, JSON.stringify(visits.map((v: any) => ({ lat: v?.addressInfo?.coordinates?.latitude, lng: v?.addressInfo?.coordinates?.longitude })))])
 
   // UseEffect optimizado para actualizar solo marcadores cuando cambia el estado de entrega
   useEffect(() => {
@@ -579,11 +578,9 @@ export function MapView({
     // También sincronizar la posición del marcador
     const nextVisit = visits[nextPendingIdx]
     const c = nextVisit?.addressInfo?.coordinates
-    const latlng = Array.isArray(c?.point)
-      ? [c.point[1] as number, c.point[0] as number]
-      : (typeof c?.latitude === 'number' && typeof c?.longitude === 'number'
-          ? [c.latitude as number, c.longitude as number]
-          : null)
+    const latlng = (typeof c?.latitude === 'number' && typeof c?.longitude === 'number')
+      ? [c.latitude as number, c.longitude as number]
+      : null
     if (latlng && latlng.length === 2) {
       setMarkerPosition(routeId, nextPendingIdx, latlng as [number, number])
     }

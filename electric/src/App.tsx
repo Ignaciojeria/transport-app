@@ -24,6 +24,7 @@ import {
   downloadFile,
   type ReportData 
 } from './components/DownloadReportModal.utils'
+import type { Route as RouteType } from './domain/route'
 
 
 // Componente para rutas específicas del driver
@@ -53,13 +54,7 @@ export function RouteComponent() {
   )
 }
 
-type DeliveryRouteRaw = {
-  vehicle?: { plate?: string; startLocation?: { addressInfo?: any } }
-  visits?: Array<any>
-  geometry?: { encoding?: string; type?: string; value?: string }
-}
-
-function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: DeliveryRouteRaw; routeDbId?: number }) {
+function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: RouteType; routeDbId?: number }) {
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
