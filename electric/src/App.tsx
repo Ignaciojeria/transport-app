@@ -16,7 +16,7 @@ import {
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
-import { Sidebar, DeliveryModal, NonDeliveryModal } from './components'
+import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard } from './components'
 
 
 // Componente para rutas específicas del driver
@@ -1717,192 +1717,27 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           if (pendingForTab === 0) return null
           
           return (
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-4 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-blue-800 flex items-center">
-                  <Play className="w-4 h-4 mr-2" />
-                  Siguiente Disponible
-                </h3>
-                <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-medium">
-                  #{nextVisit.sequenceNumber}
-                </span>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
-                  {nextVisit.sequenceNumber}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-                    <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                    <span className="truncate">{nextVisit.addressInfo?.contact?.fullName}</span>
-                  </h4>
-                  <p className="text-xs text-gray-600 flex items-start">
-                    <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
-                    <span className="line-clamp-2">{nextVisit.addressInfo?.addressLine1}</span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => centerOnVisit(nextIdx)}
-                  className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
-                  aria-label={`Ver en mapa - Visita ${nextVisit.sequenceNumber}`}
-                  title="Ver en mapa"
-                >
-                  <MapPin className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+            <NextVisitCard
+              nextVisit={nextVisit}
+              nextIdx={nextIdx}
+              onCenterOnVisit={centerOnVisit}
+            />
           )
         })()}
         
-        {visits.map((visit: any, visitIndex: number) => {
-          const matchesForTab: number = (visit?.orders || []).reduce(
-            (acc: number, order: any, orderIndex: number) => {
-              const countInOrder = (order?.deliveryUnits || []).reduce(
-                (a: number, _unit: any, uIdx: number) =>
-                  a + (shouldRenderByTab(getDeliveryUnitStatus(visitIndex, orderIndex, uIdx)) ? 1 : 0),
-                0
-              )
-              return acc + countInOrder
-            },
-            0
-          )
-          if (matchesForTab === 0) return null
-          return (
-          <div key={visitIndex} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 active:scale-98">
-            <div className="p-4 border-b border-gray-100">
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
-                  {visit.sequenceNumber}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-                    <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                    <span className="truncate">{visit.addressInfo?.contact?.fullName}</span>
-                  </h3>
-                  <p className="text-xs text-gray-600 flex items-start mb-2">
-                    <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
-                    <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
-                  </p>
-                </div>
-                <button
-                  onClick={() => centerOnVisit(visitIndex)}
-                  className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
-                  aria-label={`Ver en mapa - Visita ${visit.sequenceNumber}`}
-                  title="Ver en mapa"
-                >
-                  <MapPin className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4">
-              <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
-                <Package size={18} />
-                <span className="ml-2">Unidades de Entrega:</span>
-              </h4>
-
-              {visit.orders?.map((order: any, orderIndex: number) => (
-                <div key={orderIndex} className="mb-4">
-                  <div className="mb-2">
-                    <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
-                      {order.referenceID}
-                    </span>
-                  </div>
-                  {(order.deliveryUnits || [])
-                    .map((unit: any, uIdx: number): MappedUnit => ({
-                      unit,
-                      uIdx,
-                      status: getDeliveryUnitStatus(visitIndex, orderIndex, uIdx),
-                    }))
-                    .filter((x: MappedUnit) => shouldRenderByTab(x.status))
-                    .map((x: MappedUnit) => (
-                      // extraemos para legibilidad
-                      (({ unit, uIdx, status }: MappedUnit) => (
-                      <div
-                        key={uIdx}
-                        className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex-1 min-w-0">
-                            <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">Unidad de Entrega {uIdx + 1}</h5>
-                            {Array.isArray(unit.items) && unit.items.length > 0 && (
-                              <div className="flex items-center space-x-1 mb-2">
-                                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-                                <span className="text-xs text-gray-700 truncate">{unit.items[0]?.description}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center space-x-3 text-xs text-gray-600">
-                              <span className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
-                                {typeof unit.weight === 'number' ? `${unit.weight}kg` : unit.weight}
-                              </span>
-                              <span className="flex items-center">
-                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>
-                                {typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}
-                              </span>
-                            </div>
-                            {status === 'delivered' && (
-                              <div className="mt-2 inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
-                                <CheckCircle className="w-3 h-3 mr-1" /> Evidencia registrada
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-right ml-3">
-                            <span className="text-xs text-gray-500 block">Cant.</span>
-                            <span className="text-xl font-bold text-indigo-600">{(unit.items || []).reduce((a: number, it: any) => a + (Number(it?.quantity) || 0), 0)}</span>
-                          </div>
-                        </div>
-
-                        {routeStarted && (
-                          <div className="flex space-x-2 mt-3">
-                            {status === 'delivered' ? (
-                              // Si está entregado, mostrar solo opción de cambiar a no entregado
-                              <button
-                                onClick={() => openNonDeliveryFor(visitIndex, orderIndex, uIdx)}
-                                className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                              >
-                                <XCircle size={16} />
-                                <span>Cambiar a no entregado</span>
-                              </button>
-                            ) : status === 'not-delivered' ? (
-                              // Si está no entregado, mostrar solo opción de cambiar a entregado
-                              <button
-                                onClick={() => openDeliveryFor(visitIndex, orderIndex, uIdx)}
-                                className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
-                              >
-                                <CheckCircle size={16} />
-                                <span>Cambiar a entregado</span>
-                              </button>
-                            ) : (
-                              // Si está pendiente, mostrar ambas opciones originales
-                              <>
-                                <button
-                                  onClick={() => openDeliveryFor(visitIndex, orderIndex, uIdx)}
-                                  className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
-                                >
-                                  <CheckCircle size={16} />
-                                  <span>entregar</span>
-                                </button>
-                                <button
-                                  onClick={() => openNonDeliveryFor(visitIndex, orderIndex, uIdx)}
-                                  className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
-                                >
-                                  <XCircle size={16} />
-                                  <span>no entregado</span>
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                      ))(x)
-                    ))}
-                </div>
-              ))}
-            </div>
-          </div>
-          )
-        })}
+        {visits.map((visit: any, visitIndex: number) => (
+          <VisitCard
+            key={visitIndex}
+            visit={visit}
+            visitIndex={visitIndex}
+            routeStarted={routeStarted}
+            onCenterOnVisit={centerOnVisit}
+            onOpenDelivery={openDeliveryFor}
+            onOpenNonDelivery={openNonDeliveryFor}
+            getDeliveryUnitStatus={getDeliveryUnitStatus}
+            shouldRenderByTab={shouldRenderByTab}
+          />
+        ))}
       </div>
       )}
 
