@@ -16,7 +16,7 @@ import {
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
-import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal } from './components'
+import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs } from './components'
 import { 
   generateReportData, 
   generateCSVContent, 
@@ -266,18 +266,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }
 
-  const getTabIcon = (tabId: 'en-ruta' | 'entregados' | 'no-entregados') => {
-    switch (tabId) {
-      case 'en-ruta':
-        return <Play className="w-3 h-3" />
-      case 'entregados':
-        return <CheckCircle className="w-3 h-3" />
-      case 'no-entregados':
-        return <XCircle className="w-3 h-3" />
-      default:
-        return null
-    }
-  }
+
 
   const visits = routeData?.visits ?? []
   
@@ -1453,70 +1442,13 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
       {/* Tabs sticky: En ruta | Entregados | No entregados (ocultas en modo mapa) */}
       {viewMode === 'list' && (
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b">
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab('en-ruta')}
-            className={`flex-1 py-3 px-2 text-center text-xs font-medium transition-all duration-200 border-b-2 ${
-              activeTab === 'en-ruta'
-                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-500 text-indigo-700'
-                : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <div className="flex flex-col items-center space-y-1">
-              <div className="flex items-center space-x-1">
-                {getTabIcon('en-ruta')}
-                <span className="truncate">En ruta</span>
-              </div>
-              <span className={`${
-                activeTab === 'en-ruta' ? 'bg-indigo-200 text-indigo-800' : 'bg-gray-200 text-gray-600'
-              } px-2 py-0.5 rounded-full text-xs font-bold`}>
-                ({inRouteUnits.length})
-              </span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('entregados')}
-            className={`flex-1 py-3 px-2 text-center text-xs font-medium transition-all duration-200 border-b-2 ${
-              activeTab === 'entregados'
-                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-500 text-indigo-700'
-                : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <div className="flex flex-col items-center space-y-1">
-              <div className="flex items-center space-x-1">
-                {getTabIcon('entregados')}
-                <span className="truncate">Entregados</span>
-              </div>
-              <span className={`${
-                activeTab === 'entregados' ? 'bg-indigo-200 text-indigo-800' : 'bg-gray-200 text-gray-600'
-              } px-2 py-0.5 rounded-full text-xs font-bold`}>
-                ({deliveredUnits.length})
-              </span>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('no-entregados')}
-            className={`flex-1 py-3 px-2 text-center text-xs font-medium transition-all duration-200 border-b-2 ${
-              activeTab === 'no-entregados'
-                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-indigo-500 text-indigo-700'
-                : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
-            }`}
-          >
-            <div className="flex flex-col items-center space-y-1">
-              <div className="flex items-center space-x-1">
-                {getTabIcon('no-entregados')}
-                <span className="truncate">No entregados</span>
-              </div>
-              <span className={`${
-                activeTab === 'no-entregados' ? 'bg-indigo-200 text-indigo-800' : 'bg-gray-200 text-gray-600'
-              } px-2 py-0.5 rounded-full text-xs font-bold`}>
-                ({notDeliveredUnits.length})
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
+        <VisitTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          inRouteUnits={inRouteUnits.length}
+          deliveredUnits={deliveredUnits.length}
+          notDeliveredUnits={notDeliveredUnits.length}
+        />
       )}
 
       {viewMode === 'list' && (

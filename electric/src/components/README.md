@@ -432,3 +432,50 @@ import { RouteStartModal } from './components'
 - **Patente personalizada**: Permite ingresar una patente diferente
 - **Validación**: Solo permite confirmar si hay una patente ingresada
 - **UX mejorada**: Focus automático y soporte para tecla Enter
+
+## VisitTabs
+
+Componente para mostrar los tabs de navegación entre diferentes estados de visitas (En ruta, Entregados, No entregados).
+
+### Props
+
+- `activeTab: 'en-ruta' | 'entregados' | 'no-entregados'` - Tab activo actualmente
+- `onTabChange: (tab: 'en-ruta' | 'entregados' | 'no-entregados') => void` - Función para cambiar de tab
+- `inRouteUnits: number` - Cantidad de unidades en ruta
+- `deliveredUnits: number` - Cantidad de unidades entregadas
+- `notDeliveredUnits: number` - Cantidad de unidades no entregadas
+
+### Uso
+
+```tsx
+import { VisitTabs } from './components'
+
+<VisitTabs
+  activeTab={activeTab}
+  onTabChange={setActiveTab}
+  inRouteUnits={inRouteUnits.length}
+  deliveredUnits={deliveredUnits.length}
+  notDeliveredUnits={notDeliveredUnits.length}
+/>
+```
+
+### Características
+
+- Tabs sticky con backdrop blur
+- Contadores dinámicos para cada estado
+- Iconos representativos para cada tab
+- Transiciones suaves y estados hover
+- Diseño responsive y accesible
+
+### Dependencias
+
+- `lucide-react` - Para iconos (Play, CheckCircle, XCircle)
+- Tailwind CSS - Para estilos y animaciones
+
+### Funcionalidades
+
+- **Navegación por tabs**: Cambio entre diferentes estados de visitas
+- **Contadores en tiempo real**: Muestra cantidad de unidades en cada estado
+- **Estados visuales**: Diferencia visual entre tab activo e inactivo
+- **Iconos descriptivos**: Cada tab tiene un icono representativo
+- **Posicionamiento sticky**: Los tabs permanecen visibles al hacer scroll
