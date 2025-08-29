@@ -16,7 +16,7 @@ import {
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
-import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal } from './components'
+import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal } from './components'
 import { 
   generateReportData, 
   generateCSVContent, 
@@ -80,11 +80,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
   const [ndModal, setNdModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
 
-  // Modal de patente
-  const [licenseModal, setLicenseModal] = useState(false)
-  const [enteredLicense, setEnteredLicense] = useState('')
-  const [licenseError, setLicenseError] = useState('')
-  const licenseInputRef = useRef<HTMLInputElement | null>(null)
+
 
   // Modal de descarga de reporte
   const [downloadModal, setDownloadModal] = useState(false)
@@ -158,33 +154,26 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   const routeStarted = (localState?.s?.[`${routeStartedKey(routeId)}_simple`] === 'true')
 
+  const [routeStartModal, setRouteStartModal] = useState(false)
+
   const handleStartRoute = () => {
-    setLicenseModal(true)
-    setEnteredLicense('')
-    setLicenseError('')
+    setRouteStartModal(true)
   }
 
-  const handleLicenseConfirm = () => {
-    if (!enteredLicense.trim()) {
-      setLicenseError('Por favor ingresa la patente del vehículo')
+  const handleLicenseConfirm = (license: string) => {
+    if (!license.trim()) {
       return
     }
     
     // Guardar la patente ingresada en GunJS para sincronización
-    setRouteLicense(routeId, enteredLicense.trim())
+    setRouteLicense(routeId, license.trim())
     
     // Iniciar la ruta con la patente ingresada (no necesita coincidir)
     setRouteStartedLocal(routeId, true)
-    setLicenseModal(false)
-    setEnteredLicense('')
-    setLicenseError('')
+    setRouteStartModal(false)
   }
 
-  const handleUseDifferentLicense = () => {
-    setEnteredLicense('')
-    setLicenseError('')
-    // Mantener el modal abierto para que ingrese una patente diferente
-  }
+
 
   // Nota: setDeliveryStatus se usa directamente en cada flujo
 
@@ -912,14 +901,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }, [markerPosition, viewMode, syncInfo?.deviceId])
 
-  // Enfocar input de patente cuando se abra el modal
-  useEffect(() => {
-    if (licenseModal && licenseInputRef.current) {
-      setTimeout(() => {
-        licenseInputRef.current?.focus()
-      }, 100)
-    }
-  }, [licenseModal])
+
 
   // Funciones para manejar el GPS del conductor
   const startGPS = () => {
@@ -1840,90 +1822,13 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     />
 
 
-    {/* Modal de patente */}
-    {licenseModal && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/40" onClick={() => setLicenseModal(false)}></div>
-        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Ingresar patente del vehículo</h3>
-          
-          {routeData?.vehicle?.plate && !enteredLicense && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800 mb-2">
-                ¿Usar la patente asignada a esta ruta?
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-semibold text-blue-900">
-                  {routeData.vehicle.plate}
-                </span>
-                <button
-                  onClick={() => setEnteredLicense(routeData?.vehicle?.plate || '')}
-                  className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                >
-                  Usar esta
-                </button>
-                <button
-                  onClick={handleUseDifferentLicense}
-                  className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                >
-                  Usar otra
-                </button>
-              </div>
-            </div>
-          )}
-          
-          <div className="mb-4">
-            <label htmlFor="licenseInput" className="block text-sm font-medium text-gray-700 mb-2">
-              Patente del vehículo:
-            </label>
-            <input
-              id="licenseInput"
-              ref={licenseInputRef}
-              type="text"
-              value={enteredLicense}
-              onChange={(e) => {
-                setEnteredLicense(e.target.value.toUpperCase())
-                setLicenseError('')
-              }}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleLicenseConfirm()
-                }
-              }}
-              placeholder="Ej: ABC123"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-              maxLength={8}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Puedes ingresar cualquier patente para esta ruta
-            </p>
-            {licenseError && (
-              <p className="text-sm text-red-600 mt-1">{licenseError}</p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-end gap-3">
-            <button
-              onClick={() => setLicenseModal(false)}
-              className="px-4 py-2 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleLicenseConfirm}
-              disabled={!enteredLicense.trim()}
-              className={`px-4 py-2 text-sm rounded-lg text-white font-medium transition-colors ${
-                !enteredLicense.trim()
-                  ? 'bg-green-300 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700'
-              }`}
-            >
-              Iniciar ruta
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    {/* Modal de inicio de ruta */}
+    <RouteStartModal
+      isOpen={routeStartModal}
+      onClose={() => setRouteStartModal(false)}
+      onConfirm={handleLicenseConfirm}
+      defaultLicense={routeData?.vehicle?.plate}
+    />
 
     {/* Modal de descarga de reporte */}
     <DownloadReportModal
