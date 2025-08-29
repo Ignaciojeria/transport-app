@@ -20,7 +20,7 @@ export function VisitCardDeliveryUnit({
   routeStarted,
   onOpenDelivery,
   onOpenNonDelivery
-}: DeliveryUnitProps) {
+}: VisitCardDeliveryUnitProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':

@@ -1,4 +1,4 @@
-import { User, MapPin, Package, CheckCircle, XCircle } from 'lucide-react'
+import { Package } from 'lucide-react'
 import { VisitCardHeader } from './VisitCardHeader'
 import { VisitCardOrders } from './VisitCardOrders'
 

@@ -156,3 +156,47 @@ import { NonDeliveryModal } from './components'
 
 - `CameraCapture` component
 - `useState`, `useRef` de React
+
+## DownloadReportModal
+
+Componente modal para descargar reportes de ruta en formato CSV o Excel.
+
+### Props
+
+- `isOpen: boolean` - Controla si el modal está abierto
+- `onClose: () => void` - Función para cerrar el modal
+- `onDownloadReport: (format: 'csv' | 'excel') => void` - Función que se ejecuta al seleccionar un formato
+
+### Uso
+
+```tsx
+import { DownloadReportModal } from './components'
+
+<DownloadReportModal
+  isOpen={downloadModal}
+  onClose={closeDownloadModal}
+  onDownloadReport={handleDownload}
+/>
+```
+
+### Características
+
+- Interfaz intuitiva para seleccionar formato de descarga
+- Opciones para CSV y Excel
+- Diseño responsive y accesible
+- Feedback visual para cada opción
+
+### Dependencias
+
+- `lucide-react` - Para iconos
+- Tailwind CSS - Para estilos
+- Utilidades de reporte para generación de archivos
+
+### Utilidades Asociadas
+
+El componente utiliza funciones utilitarias para generar reportes:
+
+- `generateReportData()` - Prepara los datos del reporte
+- `generateCSVContent()` - Genera contenido CSV
+- `generateExcelContent()` - Genera contenido Excel
+- `downloadFile()` - Maneja la descarga del archivo

@@ -18,7 +18,7 @@ export function VisitCardOrders({
   onOpenNonDelivery,
   getDeliveryUnitStatus,
   shouldRenderByTab
-}: VisitOrdersProps) {
+}: VisitCardOrdersProps) {
   return (
     <>
       {visit.orders?.map((order: any, orderIndex: number) => (
