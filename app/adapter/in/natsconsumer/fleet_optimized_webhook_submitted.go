@@ -12,12 +12,14 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/infrastructure/storj"
 	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase"
 
 	client "transport-app/app/adapter/out/restyclient/webhook"
 
 	"cloud.google.com/go/pubsub"
+	"github.com/google/uuid"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
@@ -34,6 +36,7 @@ func init() {
 		usecase.NewGetDataFromRedisWorkflow,
 		client.NewPostWebhook,
 		usecase.NewUpsertElectricRouteWorkflow,
+		storj.NewUplink,
 	)
 }
 
@@ -45,6 +48,7 @@ func newFleetOptimizedWebhookSubmitted(
 	getDataFromRedisWorkflow usecase.GetDataFromRedisWorkflow,
 	publishCustomerWebhook client.PostWebhook,
 	upsertElectricRoute usecase.UpsertElectricRouteWorkflow,
+	storjManager storj.UplinkManager,
 ) (jetstream.ConsumeContext, error) {
 	// Validación para verificar si el nombre de la suscripción está vacío
 	if conf.FLEET_OPTIMIZED_WEBHOOK_SUBSCRIPTION == "" {
@@ -130,6 +134,13 @@ func newFleetOptimizedWebhookSubmitted(
 				return
 			}
 
+			// Asignar URLs a delivery units antes del upsert
+			if err := assignURLsToDeliveryUnits(webhookCtx, &routeRequest, storjManager, obs); err != nil {
+				obs.Logger.Error("Error asignando URLs a delivery units", "error", err)
+				msg.Nak()
+				return
+			}
+
 			route, err := routeRequest.Map()
 			if err != nil {
 				obs.Logger.Error("Error mappeando datos de ruta", "error", err)
@@ -171,4 +182,49 @@ func newFleetOptimizedWebhookSubmitted(
 		obs.Logger.InfoContext(webhookCtx, "Webhook procesado exitosamente desde NATS")
 		msg.Ack()
 	})
+}
+
+func assignURLsToDeliveryUnits(ctx context.Context, routeRequest *request.UpsertRouteRequest, storjManager storj.UplinkManager, obs observability.Observability) error {
+	uploadTTL := 30 * 24 * time.Hour  // 1 mes para upload
+	// Sin expiración para download (10 años)
+	downloadTTL := 10 * 365 * 24 * time.Hour
+
+	for visitIdx := range routeRequest.Visits {
+		for orderIdx := range routeRequest.Visits[visitIdx].Orders {
+			for duIdx := range routeRequest.Visits[visitIdx].Orders[orderIdx].DeliveryUnits {
+				du := &routeRequest.Visits[visitIdx].Orders[orderIdx].DeliveryUnits[duIdx]
+				
+				// Generar objectKey único para este delivery unit
+				fileID := uuid.New()
+				objectKey := fmt.Sprintf("deliveries/%s/evidence_%s.jpg", 
+					du.DocumentID, 
+					fileID.String()[:8])
+
+				// Generar upload URL (1 mes)
+				uploadURL, err := storjManager.GeneratePreSignedURL(ctx, objectKey, uploadTTL)
+				if err != nil {
+					obs.Logger.Error("Error generando upload URL", "error", err, "documentID", du.DocumentID)
+					return fmt.Errorf("failed to generate upload URL for delivery unit %s: %w", du.DocumentID, err)
+				}
+
+				// Generar download URL (sin expiración)
+				downloadURL, err := storjManager.GeneratePublicDownloadURL(ctx, objectKey, downloadTTL)
+				if err != nil {
+					obs.Logger.Error("Error generando download URL", "error", err, "documentID", du.DocumentID)
+					return fmt.Errorf("failed to generate download URL for delivery unit %s: %w", du.DocumentID, err)
+				}
+
+				// Asignar las URLs al delivery unit
+				evidence := request.UpsertRouteEvidences{
+					UploadUrl:   uploadURL,
+					DownloadUrl: downloadURL,
+				}
+				du.Evidences = append(du.Evidences, evidence)
+
+				obs.Logger.InfoContext(ctx, "URLs asignadas a delivery unit", "documentID", du.DocumentID, "lpn", du.Lpn)
+			}
+		}
+	}
+
+	return nil
 }

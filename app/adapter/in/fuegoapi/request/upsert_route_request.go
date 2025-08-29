@@ -53,6 +53,11 @@ type UpsertRouteContact struct {
 	FullName   string `json:"fullName,omitempty"`
 }
 
+type UpsertRouteEvidences struct {
+	UploadUrl   string `json:"uploadUrl,omitempty" example:"https://gateway.storjshare.io/bucket/file.jpg?signature=upload"`
+	DownloadUrl string `json:"downloadUrl,omitempty" example:"https://gateway.storjshare.io/bucket/file.jpg?signature=download"`
+}
+
 type UpsertRouteCoordinates struct {
 	Latitude  float64 `json:"latitude,omitempty"`
 	Longitude float64 `json:"longitude,omitempty"`
@@ -109,13 +114,14 @@ type UpsertRouteOrder struct {
 }
 
 type UpsertRouteDeliveryUnit struct {
-	DocumentID string            `json:"documentID"`
-	Items      []UpsertRouteItem `json:"items,omitempty"`
-	Volume     int64             `json:"volume,omitempty" example:"1000"`
-	Weight     int64             `json:"weight,omitempty" example:"1000"`
-	Price      int64             `json:"price,omitempty" example:"10000"`
-	Lpn        string            `json:"lpn,omitempty" example:"LPN-789012"`
-	Skills     []string          `json:"skills,omitempty"`
+	DocumentID string                 `json:"documentID"`
+	Items      []UpsertRouteItem      `json:"items,omitempty"`
+	Volume     int64                  `json:"volume,omitempty" example:"1000"`
+	Weight     int64                  `json:"weight,omitempty" example:"1000"`
+	Price      int64                  `json:"price,omitempty" example:"10000"`
+	Lpn        string                 `json:"lpn,omitempty" example:"LPN-789012"`
+	Skills     []string               `json:"skills,omitempty"`
+	Evidences  []UpsertRouteEvidences `json:"evidences,omitempty"`
 }
 
 type UpsertRouteItem struct {
