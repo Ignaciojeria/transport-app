@@ -6,19 +6,20 @@ import {
   useDriverState, 
   useRouteStartedSync,
   routeStartedKey, 
-  setRouteStarted as setRouteStartedLocal, 
+  setRouteStarted, 
   setDeliveryStatus, 
   getDeliveryStatusFromState, 
   setDeliveryEvidence, 
   setNonDeliveryEvidence,
   setRouteLicense,
   getRouteLicenseFromState
-} from './db/driver-gun-state'
+} from './db/driver-offline-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
 import Webcam from 'react-webcam'
 import { getDeliveryUnitDownloadUrl } from './utils/photo-upload'
-import { UploadProgressBar } from './components/UploadProgressBar'
+import { syncQueue, type SyncProgress } from './utils/sync-queue'
+import { uploadQueue, type UploadProgress } from './utils/offline-upload-queue'
 
 
 // Componente para rutas específicas del driver
@@ -32,8 +33,6 @@ export function RouteComponent() {
 
   return (
     <div>
-      {/* Upload Progress Bar */}
-      <UploadProgressBar />
       
       {/* Renderizar UI si hay datos */}
       {(() => {
@@ -110,6 +109,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   // Estado del sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Estado de sincronización
+  const [syncItems, setSyncItems] = useState<SyncProgress[]>([]);
+  const [uploadItems, setUploadItems] = useState<UploadProgress[]>([]);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
   // Estado local reactivo via GunJS
   const { data: localState } = useDriverState()
   
@@ -119,6 +123,49 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   // }, [localState])
   // Información de sincronización entre dispositivos
   const syncInfo = useRouteStartedSync(routeId)
+
+  // Suscribirse a cambios de sincronización y uploads
+  useEffect(() => {
+    const unsubscribeProgress = syncQueue.onProgress(setSyncItems);
+    const unsubscribeUploads = uploadQueue.onProgress(setUploadItems);
+    const unsubscribeNetwork = syncQueue.onNetworkChange(setIsOnline);
+
+    return () => {
+      unsubscribeProgress();
+      unsubscribeUploads();
+      unsubscribeNetwork();
+    };
+  }, []);
+
+  // Estadísticas de sincronización
+  const syncStats = syncItems.reduce(
+    (acc, item) => {
+      acc[item.status]++;
+      return acc;
+    },
+    { pending: 0, syncing: 0, completed: 0, failed: 0 }
+  );
+
+  // Estadísticas de uploads
+  const uploadStats = uploadItems.reduce(
+    (acc, item) => {
+      acc[item.status]++;
+      return acc;
+    },
+    { pending: 0, uploading: 0, completed: 0, failed: 0 }
+  );
+
+  const getSyncTypeLabel = (type: string) => {
+    switch (type) {
+      case 'route_start': return 'Inicio de ruta';
+      case 'route_stop': return 'Fin de ruta';
+      case 'delivery_status': return 'Estado de entrega';
+      case 'delivery_evidence': return 'Evidencia de entrega';
+      case 'non_delivery_evidence': return 'Evidencia de no entrega';
+      case 'license_set': return 'Patente registrada';
+      default: return type;
+    }
+  };
 
   // Función para sincronizar posición del marcador entre dispositivos
   const setMarkerPosition = async (routeId: string, visitIndex: number, coordinates: [number, number]) => {
@@ -182,17 +229,17 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     setLicenseError('')
   }
 
-  const handleLicenseConfirm = () => {
+  const handleLicenseConfirm = async () => {
     if (!enteredLicense.trim()) {
       setLicenseError('Por favor ingresa la patente del vehículo')
       return
     }
     
     // Guardar la patente ingresada en GunJS para sincronización
-    setRouteLicense(routeId, enteredLicense.trim())
+    await setRouteLicense(routeId, enteredLicense.trim())
     
     // Iniciar la ruta con la patente ingresada (no necesita coincidir)
-    setRouteStartedLocal(routeId, true)
+    await setRouteStarted(routeId, true)
     setLicenseModal(false)
     setEnteredLicense('')
     setLicenseError('')
@@ -312,7 +359,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         takenAt: Date.now(),
       } as any, routeData)
       console.log('📦 Estableciendo estado de entrega a "delivered"')
-      setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
+      await setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
       // Actualizar marcadores manteniendo control manual
       advanceToNextAfterDelivery()
@@ -337,7 +384,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         takenAt: Date.now(),
       } as any, routeData)
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
-      setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
+      await setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
       // Actualizar marcadores manteniendo control manual
       advanceToNextAfterDelivery()
@@ -1699,6 +1746,101 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                   )}
                 </div>
               </div>
+
+              {/* Estado de Sincronización y Uploads */}
+              {(syncItems.length > 0 || uploadItems.length > 0) && (
+                <div className="space-y-2">
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Sincronización</h3>
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                    {/* Estado general */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-gray-700">Estado</span>
+                      <div className="flex items-center space-x-2">
+                        {!isOnline ? (
+                          <>
+                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            <span className="text-sm text-red-600 font-medium">Sin conexión</span>
+                          </>
+                        ) : (syncStats.syncing > 0 || uploadStats.uploading > 0) ? (
+                          <>
+                            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm text-blue-600 font-medium">Sincronizando</span>
+                          </>
+                        ) : (syncStats.pending > 0 || uploadStats.pending > 0) ? (
+                          <>
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                            <span className="text-sm text-yellow-600 font-medium">Pendiente</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-sm text-green-600 font-medium">Sincronizado</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Estadísticas */}
+                    {(syncStats.pending > 0 || syncStats.syncing > 0 || syncStats.failed > 0 || 
+                      uploadStats.pending > 0 || uploadStats.uploading > 0 || uploadStats.failed > 0) && (
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        {(syncStats.pending > 0 || uploadStats.pending > 0) && (
+                          <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-center">
+                            {syncStats.pending + uploadStats.pending} pendiente{(syncStats.pending + uploadStats.pending) > 1 ? 's' : ''}
+                          </div>
+                        )}
+                        {(syncStats.syncing > 0 || uploadStats.uploading > 0) && (
+                          <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-center">
+                            {syncStats.syncing + uploadStats.uploading} procesando
+                          </div>
+                        )}
+                        {(syncStats.failed > 0 || uploadStats.failed > 0) && (
+                          <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-center">
+                            {syncStats.failed + uploadStats.failed} error{(syncStats.failed + uploadStats.failed) > 1 ? 'es' : ''}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Lista de elementos pendientes/fallidos */}
+                    {[...syncItems, ...uploadItems].filter(item => item.status !== 'completed').slice(0, 3).map((item) => (
+                      <div key={item.itemId} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600 truncate flex-1">
+                          {'type' in item ? getSyncTypeLabel(item.type) : `Subida evidencia #${item.itemId.slice(-4)}`}
+                        </span>
+                        <span className={`ml-2 px-2 py-1 rounded text-xs ${
+                          (item.status === 'pending') ? 'bg-yellow-100 text-yellow-800' :
+                          (item.status === 'syncing' || item.status === 'uploading') ? 'bg-blue-100 text-blue-800' :
+                          (item.status === 'failed') ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {item.status === 'pending' ? 'Pendiente' :
+                           (item.status === 'syncing' || item.status === 'uploading') ? 'Procesando' :
+                           item.status === 'failed' ? 'Error' : item.status}
+                        </span>
+                      </div>
+                    ))}
+
+                    {/* Botón limpiar (solo si hay elementos completados o fallidos) */}
+                    {(syncStats.completed > 0 || syncStats.failed > 0 || uploadStats.completed > 0 || uploadStats.failed > 0) && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => syncQueue.clearQueue()}
+                          className="flex-1 text-xs text-gray-600 hover:text-gray-800 py-2 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          Limpiar sync
+                        </button>
+                        <button
+                          onClick={() => uploadQueue.clearQueue()}
+                          className="flex-1 text-xs text-gray-600 hover:text-gray-800 py-2 border border-gray-200 rounded hover:bg-gray-100 transition-colors"
+                        >
+                          Limpiar uploads
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -19,6 +19,13 @@ declare module 'lucide-react' {
   export const Truck: React.FC<IconProps>
   export const Route: React.FC<IconProps>
   export const Map: React.FC<IconProps>
+  export const Activity: React.FC<IconProps>
+  export const AlertTriangle: React.FC<IconProps>
+  export const Cloud: React.FC<IconProps>
+  export const CloudOff: React.FC<IconProps>
+  export const Wifi: React.FC<IconProps>
+  export const WifiOff: React.FC<IconProps>
+  export const Loader2: React.FC<IconProps>
 }
 
 
