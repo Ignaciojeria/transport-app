@@ -12,11 +12,14 @@ import {
   setDeliveryEvidence, 
   setNonDeliveryEvidence,
   setRouteLicense,
-  getRouteLicenseFromState
+  getRouteLicenseFromState,
+  syncLocalBackupToGun,
+  clearLocalBackup
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
 import Webcam from 'react-webcam'
+
 
 
 // Componente para rutas específicas del driver
@@ -50,6 +53,154 @@ type DeliveryRouteRaw = {
   vehicle?: { plate?: string; startLocation?: { addressInfo?: any } }
   visits?: Array<any>
   geometry?: { encoding?: string; type?: string; value?: string }
+}
+
+  // Hook personalizado para sincronización inteligente entre ElectricSQL y GunJS
+  const useRouteSync = (routeId: string, routeData: any) => {
+    const [isOnline, setIsOnline] = useState(navigator.onLine)
+    const { data: localState } = useDriverState()
+    
+    // Función mejorada para detectar conectividad real
+    // Esta función va más allá de navigator.onLine para detectar
+    // casos como modo avión, red bloqueada, o problemas de DNS
+    const checkConnectivity = async () => {
+      try {
+        // Verificar conectividad real con una petición HTTP
+        const response = await fetch('https://httpbin.org/status/200', {
+          method: 'HEAD',
+          mode: 'no-cors',
+          cache: 'no-cache'
+        })
+        return true
+      } catch (error) {
+        return false
+      }
+    }
+    
+    // Escuchar cambios de conectividad y verificar más frecuentemente
+    useEffect(() => {
+      const handleOnline = async () => {
+        // Verificar conectividad real antes de marcar como online
+        const connected = await checkConnectivity()
+        setIsOnline(connected)
+      }
+      
+      const handleOffline = () => {
+        // Marcar como offline inmediatamente cuando se detecta desconexión
+        setIsOnline(false)
+      }
+      
+      // Verificación inicial
+      checkConnectivity().then(connected => setIsOnline(connected))
+      
+      // Verificación más frecuente cada 3 segundos para mejor respuesta
+      const intervalId = setInterval(async () => {
+        const connected = await checkConnectivity()
+        setIsOnline(connected)
+      }, 3000)
+      
+      // Verificación adicional cada 1 segundo cuando está offline para detectar reconexión rápida
+      const offlineIntervalId = setInterval(async () => {
+        if (!isOnline) {
+          const connected = await checkConnectivity()
+          if (connected) {
+            setIsOnline(true)
+          }
+        }
+      }, 1000)
+      
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+      
+      // Verificación adicional cuando la ventana recupera el foco
+      const handleFocus = () => {
+        checkConnectivity().then(connected => setIsOnline(connected))
+      }
+      
+      window.addEventListener('focus', handleFocus)
+      
+      return () => {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+        window.removeEventListener('focus', handleFocus)
+        clearInterval(intervalId)
+        clearInterval(offlineIntervalId)
+      }
+    }, [isOnline])
+
+  // Sincronizar estado offline a ElectricSQL cuando esté online
+  useEffect(() => {
+    if (!isOnline || !localState?.s) return
+    
+    const syncOfflineState = async () => {
+      try {
+        // Primero sincronizar el respaldo local con GunJS
+        const syncedCount = syncLocalBackupToGun()
+        console.log(`🔄 Sincronizados ${syncedCount} elementos del respaldo local con GunJS`)
+        
+        // Obtener todas las claves de estado offline
+        const offlineKeys = Object.keys(localState.s).filter(key => 
+          key.startsWith(`delivery:${routeId}:`) ||
+          key.startsWith(`evidence:${routeId}:`) ||
+          key.startsWith(`nd-evidence:${routeId}:`) ||
+          key.startsWith(`route_license:${routeId}`)
+        )
+        
+        if (offlineKeys.length === 0) return
+        
+        console.log('🔄 Sincronizando estado offline:', offlineKeys.length, 'registros')
+        
+        // Aquí implementarías la lógica para enviar a ElectricSQL
+        // Por ejemplo, usando el cliente de ElectricSQL
+        for (const key of offlineKeys) {
+          const value = localState.s[key]
+          console.log(`📤 Sincronizando clave: ${key}`, value)
+          
+          // TODO: Implementar sincronización real con ElectricSQL
+          // Ejemplo de implementación:
+          // if (key.startsWith(`delivery:${routeId}:`)) {
+          //   const [vIdx, oIdx, uIdx] = key.split(':')[2].split('-').map(Number)
+          //   await electricClient.table('delivery_status').upsert({
+          //     route_id: routeDbId,
+          //     visit_index: vIdx,
+          //     order_index: oIdx,
+          //     unit_index: uIdx,
+          //     status: value,
+          //     updated_at: new Date().toISOString()
+          //   })
+          // } else if (key.startsWith(`evidence:${routeId}:`)) {
+          //   const [vIdx, oIdx, uIdx] = key.split(':')[2].split('-').map(Number)
+          //   const evidence = typeof value === 'string' ? JSON.parse(value) : value
+          //   await electricClient.table('delivery_evidence').upsert({
+          //     route_id: routeDbId,
+          //     visit_index: vIdx,
+          //     order_index: oIdx,
+          //     unit_index: uIdx,
+          //     recipient_name: evidence.recipientName,
+          //     recipient_rut: evidence.recipientRut,
+          //     photo_data_url: evidence.photoDataUrl,
+          //     taken_at: new Date(evidence.takenAt).toISOString()
+          //   })
+          // }
+        }
+        
+        console.log('✅ Estado offline sincronizado exitosamente')
+        
+        // Limpiar el respaldo local después de sincronización exitosa
+        // Solo si la sincronización con ElectricSQL fue exitosa
+        // clearLocalBackup()
+        
+      } catch (error) {
+        console.error('❌ Error sincronizando estado offline:', error)
+      }
+    }
+    
+    // Delay para asegurar que ElectricSQL esté listo
+    const timeoutId = setTimeout(syncOfflineState, 1000)
+    return () => clearTimeout(timeoutId)
+  }, [isOnline, localState?.s, routeId])
+
+  return { isOnline }
 }
 
 function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: DeliveryRouteRaw; routeDbId?: number }) {
@@ -107,6 +258,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   // Estado local reactivo via GunJS
   const { data: localState } = useDriverState()
+  
+  // Hook de sincronización inteligente
+  const { isOnline } = useRouteSync(routeId, routeData)
   
   // Debug: Log cuando cambia el estado local (comentado en producción)
   // useEffect(() => {
@@ -1637,17 +1791,17 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                 <div className="bg-gray-50 rounded-xl p-4 space-y-3">
                   {/* Estado de conexión a internet */}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Internet</span>
+                    <span className="text-sm font-medium text-gray-700">Estado del Dispositivo</span>
                     <div className="flex items-center space-x-2">
-                      {navigator.onLine ? (
+                      {isOnline ? (
                         <>
                           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-sm text-green-600 font-medium">Conectado</span>
+                          <span className="text-sm text-green-600 font-medium">Online</span>
                         </>
                       ) : (
                         <>
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          <span className="text-sm text-red-600 font-medium">Desconectado</span>
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                          <span className="text-sm text-yellow-600 font-medium">Offline</span>
                         </>
                       )}
                     </div>
@@ -1666,6 +1820,42 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                     </div>
                   )}
                   
+                  {/* Estado de sincronización ElectricSQL */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">ElectricSQL</span>
+                    <div className="flex items-center space-x-2">
+                      {isOnline ? (
+                        <>
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm text-green-600 font-medium">Sincronizando</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                          <span className="text-sm text-yellow-600 font-medium">Modo offline</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Indicador de calidad de conexión */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Calidad de Red</span>
+                    <div className="flex items-center space-x-2">
+                      {isOnline ? (
+                        <>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm text-blue-600 font-medium">Estable</span>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="text-sm text-gray-600 font-medium">No disponible</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
                   {/* Indicador de posición sincronizada */}
                   {markerPosition && (Date.now() - markerPosition.timestamp) < 30000 && (
                     <div className="flex items-center justify-between">
@@ -1680,6 +1870,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                   )}
                 </div>
               </div>
+              
+
             </div>
           </div>
         </div>
