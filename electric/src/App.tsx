@@ -16,7 +16,7 @@ import {
 } from './db/driver-gun-state'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
-import Webcam from 'react-webcam'
+import { Sidebar, DeliveryModal, NonDeliveryModal } from './components'
 
 
 // Componente para rutas específicas del driver
@@ -70,34 +70,14 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   // Modal de evidencia
   const [evidenceModal, setEvidenceModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
-  const [recipientName, setRecipientName] = useState('')
-  const [recipientRut, setRecipientRut] = useState('')
-  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
-  const [ndPhotoDataUrl, setNdPhotoDataUrl] = useState<string | null>(null)
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
-  const webcamRef = useRef<any>(null)
-  const [cameraError, setCameraError] = useState<string | null>(null)
-  const [usingCamera, setUsingCamera] = useState(false)
-  const [flashActive, setFlashActive] = useState(false)
-  const [ndFlashActive, setNdFlashActive] = useState(false)
-  const nameInputRef = useRef<HTMLInputElement | null>(null)
-  const rutInputRef = useRef<HTMLInputElement | null>(null)
-  const cameraContainerRef = useRef<HTMLDivElement | null>(null)
-  const ndCameraContainerRef = useRef<HTMLDivElement | null>(null)
   const [ndModal, setNdModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
-  const [ndUsingCamera, setNdUsingCamera] = useState(false)
-  const [ndCameraError, setNdCameraError] = useState<string | null>(null)
-  const ndWebcamRef = useRef<any>(null)
 
   // Modal de patente
   const [licenseModal, setLicenseModal] = useState(false)
   const [enteredLicense, setEnteredLicense] = useState('')
   const [licenseError, setLicenseError] = useState('')
   const licenseInputRef = useRef<HTMLInputElement | null>(null)
-  const [ndReasonQuery, setNdReasonQuery] = useState('')
-  const [ndSelectedReason, setNdSelectedReason] = useState<string>('')
-  const [ndObservations, setNdObservations] = useState<string>('')
-  const ndReasonInputRef = useRef<HTMLInputElement | null>(null)
 
   // Modal de descarga de reporte
   const [downloadModal, setDownloadModal] = useState(false)
@@ -210,26 +190,16 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     return status
   }
 
-  const openEvidenceFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
+  const openDeliveryFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
     setEvidenceModal({ open: true, vIdx: visitIndex, oIdx: orderIndex, uIdx: unitIndex })
-    setRecipientName('')
-    setRecipientRut('')
-    setPhotoDataUrl(null)
   }
 
   const openNonDeliveryFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
     setNdModal({ open: true, vIdx: visitIndex, oIdx: orderIndex, uIdx: unitIndex })
-    setNdPhotoDataUrl(null)
-    setNdCameraError(null)
-    setNdUsingCamera(false)
-    setNdReasonQuery('')
-    setNdSelectedReason('')
-    setNdObservations('')
   }
 
   const closeNdModal = () => {
     setNdModal({ open: false, vIdx: null, oIdx: null, uIdx: null })
-    setNdUsingCamera(false)
   }
 
   const closeEvidenceModal = () => {
@@ -239,71 +209,19 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   
 
-  const stopWebcam = () => {
-    try {
-      const stream: MediaStream | undefined = (webcamRef.current as any)?.stream
-      if (stream) {
-        stream.getTracks().forEach((t) => t.stop())
-      }
-    } catch {}
-    setUsingCamera(false)
-  }
 
-  const captureFromWebcam = () => {
-    try {
-      const imgSrc = webcamRef.current?.getScreenshot?.()
-      if (imgSrc) {
-        setPhotoDataUrl(imgSrc)
-        try { (navigator as any)?.vibrate?.(60) } catch {}
-        setFlashActive(true)
-        setTimeout(() => setFlashActive(false), 140)
-        stopWebcam()
-        // Enfocar el primer campo faltante y hacer scroll si corresponde
-        const needsName = !recipientName.trim()
-        const needsRut = !recipientRut.trim()
-        const target = needsName ? nameInputRef.current : (needsRut ? rutInputRef.current : null)
-        if (target) {
-          setTimeout(() => {
-            try { target.focus({ preventScroll: false } as any) } catch {}
-            try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
-          }, 60)
-        }
-      }
-    } catch (e) {
-      setCameraError('No se pudo capturar la imagen.')
-    }
-  }
 
-  const captureFromNdWebcam = () => {
-    try {
-      const imgSrc = ndWebcamRef.current?.getScreenshot?.()
-      if (imgSrc) {
-        setNdPhotoDataUrl(imgSrc)
-        try { (navigator as any)?.vibrate?.(60) } catch {}
-        setNdFlashActive(true)
-        setTimeout(() => setNdFlashActive(false), 140)
-        setNdUsingCamera(false)
-        setTimeout(() => { try { ndReasonInputRef.current?.focus?.() } catch {} }, 60)
-      }
-    } catch (e) {
-      setNdCameraError('No se pudo capturar la imagen.')
-    }
-  }
-
-  const submitEvidence = async () => {
+  const submitEvidence = async (evidence: { recipientName: string; recipientRut: string; photoDataUrl: string }) => {
     if (!evidenceModal.open || evidenceModal.vIdx === null || evidenceModal.oIdx === null || evidenceModal.uIdx === null) return
-    const trimmedName = recipientName.trim()
-    const trimmedRut = recipientRut.trim()
-    if (!trimmedName || !trimmedRut || !photoDataUrl) return
     try {
       setSubmittingEvidence(true)
       
       console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
       
       setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
-        recipientName: trimmedName,
-        recipientRut: trimmedRut,
-        photoDataUrl,
+        recipientName: evidence.recipientName,
+        recipientRut: evidence.recipientRut,
+        photoDataUrl: evidence.photoDataUrl,
         takenAt: Date.now(),
       } as any)
       console.log('📦 Estableciendo estado de entrega a "delivered"')
@@ -316,19 +234,17 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }
 
-  const submitNonDelivery = async () => {
+  const submitNonDelivery = async (evidence: { reason: string; observations: string; photoDataUrl: string }) => {
     if (!ndModal.open || ndModal.vIdx === null || ndModal.oIdx === null || ndModal.uIdx === null) return
-    const reason = (ndSelectedReason || ndReasonQuery || '').trim()
-    if (!reason || !ndPhotoDataUrl) return
     try {
       setSubmittingEvidence(true)
       
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
       setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
-        reason,
-        observations: ndObservations || '',
-        photoDataUrl: ndPhotoDataUrl,
+        reason: evidence.reason,
+        observations: evidence.observations,
+        photoDataUrl: evidence.photoDataUrl,
         takenAt: Date.now(),
       } as any)
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
@@ -341,22 +257,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }
 
-  useEffect(() => {
-    // Cuando se activa la cámara, desplazar el modal para centrar la vista de cámara
-    if (usingCamera) {
-      setTimeout(() => {
-        try { cameraContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
-      }, 80)
-    }
-  }, [usingCamera])
 
-  useEffect(() => {
-    if (ndUsingCamera) {
-      setTimeout(() => {
-        try { ndCameraContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }) } catch {}
-      }, 80)
-    }
-  }, [ndUsingCamera])
 
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
     switch (status) {
@@ -1585,106 +1486,14 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-8">
       {/* Sidebar */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50">
-          {/* Overlay */}
-          <div 
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300"
-            onClick={() => setSidebarOpen(false)}
-          ></div>
-          
-          {/* Sidebar Panel */}
-          <div className="absolute top-0 left-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-out">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Menú</h2>
-                <button 
-                  onClick={() => setSidebarOpen(false)}
-                  className="bg-white/20 hover:bg-white/30 rounded-lg p-2 transition-colors duration-200"
-                  aria-label="Cerrar menú"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Botón CSV */}
-              {routeStarted && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Reportes</h3>
-                  <button
-                    onClick={() => {
-                      openDownloadModal()
-                      setSidebarOpen(false)
-                    }}
-                    className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white p-4 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 flex items-center justify-center space-x-3"
-                    aria-label="Descargar reporte"
-                  >
-                    <span className="text-2xl">📊</span>
-                    <span>Descargar Reporte</span>
-                  </button>
-                </div>
-              )}
-              
-              {/* Indicadores de conexión */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Estado de Conexión</h3>
-                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
-                  {/* Estado de conexión a internet */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-gray-700">Internet</span>
-                    <div className="flex items-center space-x-2">
-                      {navigator.onLine ? (
-                        <>
-                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                          <span className="text-sm text-green-600 font-medium">Conectado</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                          <span className="text-sm text-red-600 font-medium">Desconectado</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Estado de sincronización GunJS */}
-                  {syncInfo && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Sincronización</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm text-blue-600 font-medium">
-                          {syncInfo.deviceId.slice(-6)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Indicador de posición sincronizada */}
-                  {markerPosition && (Date.now() - markerPosition.timestamp) < 30000 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">Marcador Sync</span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm text-purple-600 font-medium">
-                          📍 {markerPosition.deviceId.slice(-6)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        routeStarted={routeStarted}
+        onDownloadReport={openDownloadModal}
+        syncInfo={syncInfo}
+        markerPosition={markerPosition}
+      />
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-3">
@@ -2058,7 +1867,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                             ) : status === 'not-delivered' ? (
                               // Si está no entregado, mostrar solo opción de cambiar a entregado
                               <button
-                                onClick={() => openEvidenceFor(visitIndex, orderIndex, uIdx)}
+                                onClick={() => openDeliveryFor(visitIndex, orderIndex, uIdx)}
                                 className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                               >
                                 <CheckCircle size={16} />
@@ -2068,7 +1877,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                               // Si está pendiente, mostrar ambas opciones originales
                               <>
                                 <button
-                                  onClick={() => openEvidenceFor(visitIndex, orderIndex, uIdx)}
+                                  onClick={() => openDeliveryFor(visitIndex, orderIndex, uIdx)}
                                   className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                                 >
                                   <CheckCircle size={16} />
@@ -2294,7 +2103,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                               ) : status === 'not-delivered' ? (
                                 // Si está no entregado, mostrar solo opción de cambiar a entregado
                                 <button
-                                  onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
+                                  onClick={() => openDeliveryFor(displayIdx, orderIndex, uIdx)}
                                   className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                                 >
                                   <CheckCircle size={16} />
@@ -2304,7 +2113,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                                 // Si está pendiente, mostrar ambas opciones originales
                                 <>
                                   <button
-                                    onClick={() => openEvidenceFor(displayIdx, orderIndex, uIdx)}
+                                    onClick={() => openDeliveryFor(displayIdx, orderIndex, uIdx)}
                                     className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                                   >
                                     <CheckCircle size={16} />
@@ -2336,215 +2145,20 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
       {/* Barra inferior de progreso eliminada por redundancia con la barra superior */}
     {/* Modal de evidencia */}
-    {evidenceModal.open && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/40" onClick={closeEvidenceModal}></div>
-        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4 max-h-[85vh] overflow-y-auto">
-          <h3 className="text-base font-semibold text-gray-800 mb-3">Evidencia de entrega</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Nombre de quien recibe</label>
-              <input
-                type="text"
-                value={recipientName}
-                onChange={(e) => setRecipientName((e as any).target.value)}
-                ref={nameInputRef}
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Nombre completo"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">RUT / Documento</label>
-              <input
-                type="text"
-                value={recipientRut}
-                onChange={(e) => setRecipientRut((e as any).target.value)}
-                ref={rutInputRef}
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="12.345.678-9"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Foto de evidencia</label>
-              {/* Cámara con react-webcam: activar bajo demanda */}
-              <div className="mb-2">
-                {!usingCamera ? (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => { try { (document.activeElement as any)?.blur?.() } catch {}; setCameraError(null); setUsingCamera(true) }}
-                      className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-                    >
-                      Activar cámara
-                    </button>
-                    {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      className="relative w-full h-[60vh] sm:h-96 rounded-md overflow-hidden border bg-black cursor-pointer select-none"
-                      ref={cameraContainerRef}
-                      onClick={captureFromWebcam}
-                      title="Toca para capturar"
-                    >
-                      <Webcam
-                        ref={webcamRef}
-                        audio={false}
-                        screenshotFormat="image/jpeg"
-                        className="w-full h-full object-cover"
-                        videoConstraints={{
-                          facingMode: { ideal: 'environment' },
-                          width: { ideal: 1280 },
-                          height: { ideal: 720 },
-                        }}
-                        onUserMediaError={() => setCameraError('No se pudo acceder a la cámara. Revisa permisos.')}
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-xs text-center py-1">
-                        Toca para capturar
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button type="button" onClick={stopWebcam} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cerrar cámara</button>
-                    </div>
-                    {cameraError && <p className="text-xs text-red-600 mt-1">{cameraError}</p>}
-                  </div>
-                )}
-              </div>
-              {photoDataUrl && (
-                <div className="mt-2 flex items-center gap-3">
-                  <img src={photoDataUrl} alt="Evidencia" className="w-24 h-24 object-cover rounded-md border" />
-                  <button type="button" onClick={() => { setUsingCamera(true); setCameraError(null) }} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cambiar foto</button>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-end gap-2">
-            <button
-              onClick={closeEvidenceModal}
-              className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-              disabled={submittingEvidence}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={submitEvidence}
-              disabled={submittingEvidence || !recipientName.trim() || !recipientRut.trim() || !photoDataUrl}
-              className={`px-3 py-2 text-sm rounded-md text-white ${submittingEvidence || !recipientName.trim() || !recipientRut.trim() || !photoDataUrl ? 'bg-green-300' : 'bg-green-600 hover:bg-green-700'}`}
-            >
-              Confirmar entrega
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    <DeliveryModal
+      isOpen={evidenceModal.open}
+      onClose={closeEvidenceModal}
+      onSubmit={submitEvidence}
+      submitting={submittingEvidence}
+    />
     {/* Modal de No Entregado */}
-    {ndModal.open && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center">
-        <div className="absolute inset-0 bg-black/40" onClick={closeNdModal}></div>
-        <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4 max-h-[85vh] overflow-y-auto">
-          <h3 className="text-base font-semibold text-gray-800 mb-3">No entregado</h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Motivo</label>
-              <input
-                type="text"
-                value={ndReasonQuery}
-                onChange={(e) => { setNdReasonQuery((e as any).target.value); setNdSelectedReason('') }}
-                ref={ndReasonInputRef}
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Buscar/ingresar motivo"
-              />
-              {/* Lista filtrada de motivos sugeridos */}
-              {(() => {
-                const base = ['cliente rechaza entrega', 'sin moradores', 'producto dañado', 'otro motivo']
-                const q = ndReasonQuery.trim().toLowerCase()
-                const items = base.filter((m) => m.includes(q))
-                return (
-                  <div className="mt-2 max-h-40 overflow-auto border rounded-md">
-                    {items.map((m) => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => { setNdSelectedReason(m); setNdReasonQuery(m) }}
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 ${ndSelectedReason === m ? 'bg-indigo-50 text-indigo-700' : ''}`}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                )
-              })()}
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Observaciones</label>
-              <textarea
-                value={ndObservations}
-                onChange={(e) => setNdObservations((e as any).target.value)}
-                rows={3}
-                className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Detalles adicionales (opcional)"
-              />
-            </div>
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Foto de evidencia</label>
-              <div className="mb-2">
-                {!ndUsingCamera ? (
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => { try { (document.activeElement as any)?.blur?.() } catch {}; setNdCameraError(null); setNdUsingCamera(true) }}
-                      className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
-                    >
-                      Activar cámara
-                    </button>
-                    {ndCameraError && <p className="text-xs text-red-600 mt-1">{ndCameraError}</p>}
-                  </div>
-                ) : (
-                  <div>
-                    <div
-                      className="relative w-full h-[60vh] sm:h-96 rounded-md overflow-hidden border bg-black cursor-pointer select-none"
-                      ref={ndCameraContainerRef}
-                      onClick={captureFromNdWebcam}
-                      title="Toca para capturar"
-                    >
-                      <Webcam
-                        ref={ndWebcamRef}
-                        audio={false}
-                        screenshotFormat="image/jpeg"
-                        className="w-full h-full object-cover"
-                        videoConstraints={{ facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } }}
-                        onUserMediaError={() => setNdCameraError('No se pudo acceder a la cámara. Revisa permisos.')}
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/40 text-white text-xs text-center py-1">Toca para capturar</div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button type="button" onClick={() => setNdUsingCamera(false)} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cerrar cámara</button>
-                    </div>
-                    {ndCameraError && <p className="text-xs text-red-600 mt-1">{ndCameraError}</p>}
-                  </div>
-                )}
-              </div>
-              {ndPhotoDataUrl && (
-                <div className="mt-2 flex items-center gap-3">
-                  <img src={ndPhotoDataUrl} alt="Evidencia" className="w-24 h-24 object-cover rounded-md border" />
-                  <button type="button" onClick={() => { setNdUsingCamera(true); setNdCameraError(null) }} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50">Cambiar foto</button>
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="mt-4 flex items-center justify-end gap-2">
-            <button onClick={closeNdModal} className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50" disabled={submittingEvidence}>Cancelar</button>
-            <button onClick={submitNonDelivery} disabled={submittingEvidence || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl} className={`px-3 py-2 text-sm rounded-md text-white ${submittingEvidence || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}>Confirmar no entrega</button>
-          </div>
-        </div>
-      </div>
-    )}
-    {ndFlashActive && (
-      <div className="fixed inset-0 z-[100000] pointer-events-none bg-white opacity-70"></div>
-    )}
-    {flashActive && (
-      <div className="fixed inset-0 z-[100000] pointer-events-none bg-white opacity-70"></div>
-    )}
+    <NonDeliveryModal
+      isOpen={ndModal.open}
+      onClose={closeNdModal}
+      onSubmit={submitNonDelivery}
+      submitting={submittingEvidence}
+    />
+
 
     {/* Modal de patente */}
     {licenseModal && (
