@@ -10,7 +10,7 @@ import {
   setDeliveryStatus, 
   getDeliveryStatusFromState, 
   setDeliveryEvidence, 
-  setNonDeliveryEvidence,
+  setFailedDelivery,
   setRouteLicense,
   getRouteLicenseFromState,
   setRouteStart,
@@ -262,12 +262,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
-      setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
+      setFailedDelivery(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
         reason: evidence.reason,
-        observations: evidence.observations,
-        photoDataUrl: evidence.photoDataUrl,
-        takenAt: Date.now(),
-      } as any)
+        detail: evidence.observations,
+        referenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
+      }, evidence.photoDataUrl)
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
 
 interface NonDeliveryModalProps {
@@ -23,6 +23,16 @@ export function NonDeliveryModal({
   const [ndObservations, setNdObservations] = useState<string>('')
   const [ndPhotoDataUrl, setNdPhotoDataUrl] = useState<string | null>(null)
   const ndReasonInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Limpiar estado cuando se abre el modal para una nueva no entrega
+  useEffect(() => {
+    if (isOpen) {
+      setNdReasonQuery('')
+      setNdSelectedReason('')
+      setNdObservations('')
+      setNdPhotoDataUrl(null)
+    }
+  }, [isOpen])
 
   const handleSubmit = () => {
     const reason = (ndSelectedReason || ndReasonQuery || '').trim()

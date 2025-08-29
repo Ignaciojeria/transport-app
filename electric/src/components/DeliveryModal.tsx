@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
 
 interface DeliveryModalProps {
@@ -23,6 +23,15 @@ export function DeliveryModal({
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const rutInputRef = useRef<HTMLInputElement | null>(null)
+
+  // Limpiar estado cuando se abre el modal para una nueva entrega
+  useEffect(() => {
+    if (isOpen) {
+      setRecipientName('')
+      setRecipientRut('')
+      setPhotoDataUrl(null)
+    }
+  }, [isOpen])
 
   const handleSubmit = () => {
     const trimmedName = recipientName.trim()

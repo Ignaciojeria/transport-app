@@ -8,23 +8,7 @@ import type {
   DeliveryItem
 } from '../domain/deliveries'
 
-// Tipos para la interfaz de la aplicación (sin duplicar el dominio)
-export interface DeliveryEvidence {
-  recipient: Recipient
-  photoDataUrl: string
-  takenAt: number
-  items?: DeliveryItem[]
-  location?: DeliveryLocation
-}
 
-export interface NonDeliveryEvidence {
-  reason: string
-  observations?: string
-  photoDataUrl: string
-  takenAt: number
-  location?: DeliveryLocation
-  failure?: DeliveryFailure
-}
 
 // Configuración de Gun para MVP con sincronización entre dispositivos
 const gun = Gun({
@@ -150,40 +134,23 @@ export function getDeliveryStatus(
   })
 }
 
-// Función mejorada que crea una DeliveryUnit completa
+// Función que crea una DeliveryUnit completa usando directamente la entidad de dominio
 export function setDeliveryEvidence(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  evidence: DeliveryEvidence
+  deliveryUnit: Partial<DeliveryUnit>
 ): void {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Crear DeliveryUnit compatible con el dominio
-  const deliveryUnit: Partial<DeliveryUnit> = {
-    recipient: evidence.recipient,
-    evidencePhotos: [{
-      takenAt: new Date(evidence.takenAt).toISOString(),
-      type: 'delivery',
-      url: evidence.photoDataUrl,
-    }],
-    items: evidence.items || [],
-    delivery: {
-      status: 'delivered',
-      handledAt: new Date(evidence.takenAt).toISOString(),
-      location: evidence.location || { latitude: 0, longitude: 0 },
-    },
-    // Campos requeridos que podrían necesitar ser proporcionados
-    businessIdentifiers: {
-      commerce: '',
-      consumer: '',
-    },
-    lpn: '',
-    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  // Asegurar que los campos requeridos estén presentes
+  const completeDeliveryUnit: Partial<DeliveryUnit> = {
+    ...deliveryUnit,
+    orderReferenceID: deliveryUnit.orderReferenceID || `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
   }
   
-  deliveriesData.get(key).put(deliveryUnit)
+  deliveriesData.get(key).put(completeDeliveryUnit)
 }
 
 export function getDeliveryEvidence(
@@ -191,74 +158,65 @@ export function getDeliveryEvidence(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number
-): Promise<DeliveryEvidence | undefined> {
+): Promise<Partial<DeliveryUnit> | undefined> {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
   return new Promise((resolve) => {
     deliveriesData.get(key).once((value) => {
-      if (value) {
-        try {
-          // Convertir DeliveryUnit de vuelta a DeliveryEvidence
-          const evidence: DeliveryEvidence = {
-            recipient: value.recipient,
-            photoDataUrl: value.evidencePhotos?.[0]?.url || '',
-            takenAt: new Date(value.delivery?.handledAt || Date.now()).getTime(),
-            items: value.items,
-            location: value.delivery?.location,
-          }
-          resolve(evidence)
-        } catch (error) {
-          console.error('Error parsing delivery evidence:', error)
-          resolve(undefined)
-        }
-      } else {
-        resolve(undefined)
-      }
+      resolve(value || undefined)
     })
   })
 }
 
-// Función mejorada que crea una DeliveryUnit con failure para no entrega
-export function setNonDeliveryEvidence(
+// Función específica para gestionar entrega exitosa
+export function setSuccessfulDelivery(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  evidence: NonDeliveryEvidence
+  recipient: Recipient,
+  photoDataUrl: string,
+  items?: DeliveryItem[],
+  location?: DeliveryLocation
 ): void {
-  const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
+  const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Crear DeliveryUnit con failure para no entrega
   const deliveryUnit: Partial<DeliveryUnit> = {
-    recipient: {
-      fullName: 'N/A',
-      nationalID: 'N/A',
-    },
+    recipient,
     evidencePhotos: [{
-      takenAt: new Date(evidence.takenAt).toISOString(),
-      type: 'non-delivery',
-      url: evidence.photoDataUrl,
+      takenAt: new Date().toISOString(),
+      type: 'delivery',
+      url: photoDataUrl,
     }],
-    items: [],
+    items: items || [],
     delivery: {
-      status: 'not-delivered',
-      handledAt: new Date(evidence.takenAt).toISOString(),
-      location: evidence.location || { latitude: 0, longitude: 0 },
-      failure: evidence.failure || {
-        detail: evidence.observations || '',
-        reason: evidence.reason,
-        referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
-      },
+      status: 'delivered',
+      handledAt: new Date().toISOString(),
+      location: location || { latitude: 0, longitude: 0 },
     },
-    businessIdentifiers: {
-      commerce: '',
-      consumer: '',
-    },
-    lpn: '',
     orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
   }
   
   deliveriesData.get(key).put(deliveryUnit)
+}
+
+// Función específica para gestionar no entrega
+export function setFailedDelivery(
+  routeId: string,
+  visitIndex: number,
+  orderIndex: number,
+  unitIndex: number,
+  deliveryUnit: Partial<DeliveryUnit>
+): void {
+  const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
+  
+  // Asegurar que los campos requeridos estén presentes
+  const completeDeliveryUnit: Partial<DeliveryUnit> = {
+    ...deliveryUnit,
+    orderReferenceID: deliveryUnit.orderReferenceID || `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  }
+  
+  deliveriesData.get(key).put(completeDeliveryUnit)
 }
 
 export function getNonDeliveryEvidence(
@@ -266,30 +224,12 @@ export function getNonDeliveryEvidence(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number
-): Promise<NonDeliveryEvidence | undefined> {
+): Promise<Partial<DeliveryUnit> | undefined> {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
   return new Promise((resolve) => {
     deliveriesData.get(key).once((value) => {
-      if (value) {
-        try {
-          // Convertir DeliveryUnit de vuelta a NonDeliveryEvidence
-          const evidence: NonDeliveryEvidence = {
-            reason: value.delivery?.failure?.reason || '',
-            observations: value.delivery?.failure?.detail || '',
-            photoDataUrl: value.evidencePhotos?.[0]?.url || '',
-            takenAt: new Date(value.delivery?.handledAt || Date.now()).getTime(),
-            location: value.delivery?.location,
-            failure: value.delivery?.failure,
-          }
-          resolve(evidence)
-        } catch (error) {
-          console.error('Error parsing non-delivery evidence:', error)
-          resolve(undefined)
-        }
-      } else {
-        resolve(undefined)
-      }
+      resolve(value || undefined)
     })
   })
 }
