@@ -17,6 +17,8 @@ import {
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
 import Webcam from 'react-webcam'
+import { getDeliveryUnitDownloadUrl } from './utils/photo-upload'
+import { UploadProgressBar } from './components/UploadProgressBar'
 
 
 // Componente para rutas específicas del driver
@@ -30,6 +32,9 @@ export function RouteComponent() {
 
   return (
     <div>
+      {/* Upload Progress Bar */}
+      <UploadProgressBar />
+      
       {/* Renderizar UI si hay datos */}
       {(() => {
         const d: any = data as any
@@ -300,12 +305,12 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       
       console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
       
-      setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
+      await setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
         recipientName: trimmedName,
         recipientRut: trimmedRut,
         photoDataUrl,
         takenAt: Date.now(),
-      } as any)
+      } as any, routeData)
       console.log('📦 Estableciendo estado de entrega a "delivered"')
       setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
@@ -325,12 +330,12 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
-      setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
+      await setNonDeliveryEvidence(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
         reason,
         observations: ndObservations || '',
         photoDataUrl: ndPhotoDataUrl,
         takenAt: Date.now(),
-      } as any)
+      } as any, routeData)
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
@@ -1341,6 +1346,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         'Fecha_Gestion',
         'Motivo_No_Entrega',
         'Observaciones_No_Entrega',
+        'URL_Imagen_Evidencia',
+        'Estado_Imagen',
         'Coordenadas_Lat',
         'Coordenadas_Lng'
       ]
@@ -1377,6 +1384,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             let managementDate = ''
             let nonDeliveryReason = ''
             let nonDeliveryObservations = ''
+            let imageDownloadUrl = ''
+            let imageStatus = 'Sin evidencia'
             
             if (status === 'delivered') {
               // Buscar evidencia de entrega usando las claves correctas
@@ -1395,6 +1404,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                   recipientName = parsedEvidence?.recipientName || ''
                   recipientDocument = parsedEvidence?.recipientRut || ''
                   managementDate = parsedEvidence?.takenAt ? new Date(parsedEvidence.takenAt).toLocaleString('es-CL') : ''
+                  // Get download URL from route data
+                  imageDownloadUrl = getDeliveryUnitDownloadUrl(routeData, visitIndex, orderIndex, unitIndex) || ''
+                  imageStatus = imageDownloadUrl === 'URL_EXPIRADA_O_INVALIDA' ? 'URL Expirada' : 
+                              imageDownloadUrl ? 'Disponible' : 'No disponible'
                 } catch (e) {
                   console.warn('Error parsing delivery evidence:', e)
                 }
@@ -1416,6 +1429,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                   nonDeliveryReason = parsedEvidence?.reason || ''
                   nonDeliveryObservations = parsedEvidence?.observations || ''
                   managementDate = parsedEvidence?.takenAt ? new Date(parsedEvidence.takenAt).toLocaleString('es-CL') : ''
+                  // Get download URL from route data
+                  imageDownloadUrl = getDeliveryUnitDownloadUrl(routeData, visitIndex, orderIndex, unitIndex) || ''
+                  imageStatus = imageDownloadUrl === 'URL_EXPIRADA_O_INVALIDA' ? 'URL Expirada' : 
+                              imageDownloadUrl ? 'Disponible' : 'No disponible'
                 } catch (e) {
                   console.warn('Error parsing non-delivery evidence:', e)
                 }
@@ -1443,6 +1460,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
               managementDate,
               nonDeliveryReason,
               nonDeliveryObservations,
+              imageDownloadUrl,
+              imageStatus,
               lat?.toString() || '',
               lng?.toString() || ''
             ]
