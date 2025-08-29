@@ -1,15 +1,10 @@
 // Exportar funciones del deliveries state
 export {
   useDeliveriesState,
-  useRouteStartedSync,
-  routeStartedKey,
-  setRouteStarted,
   setDeliveryStatus,
   getDeliveryStatusFromState,
   setDeliveryEvidence,
-  setNonDeliveryEvidence,
-  setRouteLicense,
-  getRouteLicenseFromState
+  setNonDeliveryEvidence
 } from './deliveries-gun-state'
 
 // Exportar funciones del route start state
@@ -20,7 +15,12 @@ export {
   getVehiclePlate,
   getDriverInfo,
   getCarrierInfo,
-  clearRouteStart
+  clearRouteStart,
+  useRouteStartedSync,
+  routeStartedKey,
+  setRouteStarted,
+  setRouteLicense,
+  getRouteLicenseFromState
 } from './route-start-gun-state'
 
 // Exportar hooks

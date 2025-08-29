@@ -1,5 +1,6 @@
 import { deliveriesData } from './deliveries-gun-state'
 import type { RouteStart } from '../domain/route-start'
+import { useState, useEffect } from 'react'
 
 // Clave para almacenar el estado de inicio de ruta
 export const routeStartKey = (routeId: string) => `route_start:${routeId}`
@@ -12,6 +13,12 @@ export const driverInfoKey = (routeId: string) => `driver_info:${routeId}`
 
 // Clave para almacenar información del carrier
 export const carrierInfoKey = (routeId: string) => `carrier_info:${routeId}`
+
+// Clave para almacenar el estado de inicio de ruta (para el nuevo sistema)
+export const routeStartedKey = (routeId: string) => `routeStarted:${routeId}`
+
+// Clave para almacenar la licencia del vehículo (para el nuevo sistema)
+export const routeLicenseKey = (routeId: string) => `routeLicense:${routeId}`
 
 // Función para establecer el inicio de ruta
 export const setRouteStart = async (routeId: string, routeStart: RouteStart): Promise<void> => {
@@ -114,7 +121,7 @@ export const getVehiclePlate = async (routeId: string): Promise<string | null> =
   try {
     const key = vehiclePlateKey(routeId)
     const data = await deliveriesData.get(key).once()
-    return data || null
+    return typeof data === 'string' ? data : null
   } catch (error) {
     console.error('Error obteniendo patente:', error)
     return null
@@ -175,5 +182,134 @@ export const clearRouteStart = async (routeId: string): Promise<void> => {
     throw error
   }
 }
+
+// ===== FUNCIONES PARA MANEJO DE ESTADO DE RUTAS =====
+
+// Tipos para el estado de rutas
+interface RouteStarted {
+  status: 'true' | 'false'
+  timestamp: number
+  deviceId: string
+  action: 'route_started' | 'route_stopped'
+  routeId: string
+}
+
+interface RouteLicense {
+  license: string
+  timestamp: number
+  deviceId: string
+  action: 'license_set'
+  routeId: string
+}
+
+// Helper para generar un ID único del dispositivo
+function getRouteDeviceId(): string {
+  let deviceId = localStorage.getItem('gun-device-id')
+  if (!deviceId) {
+    deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem('gun-device-id', deviceId)
+  }
+  return deviceId
+}
+
+// Funciones para manejar el estado de rutas
+export function setRouteStarted(routeId: string, started: boolean): void {
+  const key = routeStartedKey(routeId)
+  const timestamp = Date.now()
+  const deviceId = getRouteDeviceId()
+  
+  const value: RouteStarted = {
+    status: started ? 'true' : 'false',
+    timestamp,
+    deviceId,
+    action: started ? 'route_started' : 'route_stopped',
+    routeId
+  }
+  
+  deliveriesData.get(key).put(value)
+  // Mantener versión simple para compatibilidad
+  deliveriesData.get(`${key}_simple`).put(started ? 'true' : 'false')
+}
+
+export function setRouteLicense(routeId: string, license: string): void {
+  const key = routeLicenseKey(routeId)
+  const timestamp = Date.now()
+  const deviceId = getRouteDeviceId()
+  
+  const value: RouteLicense = {
+    license,
+    timestamp,
+    deviceId,
+    action: 'license_set',
+    routeId
+  }
+  
+  deliveriesData.get(key).put(value)
+}
+
+export function getRouteLicenseFromState(
+  state: Record<string, any>,
+  routeId: string
+): string | undefined {
+  const key = routeLicenseKey(routeId)
+  const licenseData = state[key]
+  return licenseData?.license ?? undefined
+}
+
+// Hook específico para monitorear sincronización de ruta iniciada
+export function useRouteStartedSync(routeId: string) {
+  const [syncData, setSyncData] = useState<{
+    isStarted: boolean
+    lastAction: string
+    deviceId: string
+    timestamp: number
+    syncedDevices: string[]
+  } | null>(null)
+
+  useEffect(() => {
+    const key = routeStartedKey(routeId)
+    
+    const unsubscribe = deliveriesData.get(key).on((data) => {
+      if (data && typeof data === 'object') {
+        setSyncData({
+          isStarted: data.status === 'true',
+          lastAction: data.action || 'unknown',
+          deviceId: data.deviceId || 'unknown',
+          timestamp: data.timestamp || 0,
+          syncedDevices: [data.deviceId || 'unknown']
+        })
+      }
+    })
+
+    return () => {
+      if (unsubscribe && typeof unsubscribe.off === 'function') {
+        unsubscribe.off()
+      }
+    }
+  }, [routeId])
+
+  return syncData
+}
+
+// Función para obtener información de sincronización de todas las rutas
+export function getAllRoutesSyncInfo(): Promise<Record<string, RouteStarted>> {
+  return new Promise((resolve) => {
+    const routes: Record<string, RouteStarted> = {}
+    
+    deliveriesData.map().once((data, key) => {
+      if (key && key.includes('routeStarted:') && !key.includes('_simple')) {
+        const routeId = key.replace('routeStarted:', '')
+        if (data && typeof data === 'object') {
+          routes[routeId] = data as RouteStarted
+        }
+      }
+    })
+    
+    setTimeout(() => resolve(routes), 500)
+  })
+}
+
+// Exportar tipos
+export type { RouteStarted, RouteLicense }
 
 

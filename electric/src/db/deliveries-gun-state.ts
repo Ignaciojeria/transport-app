@@ -1,71 +1,30 @@
-import { z } from 'zod'
 import Gun from 'gun'
 import { useEffect, useState } from 'react'
 import type { 
   DeliveryUnit, 
-  EvidencePhoto, 
   Recipient, 
   DeliveryFailure,
   DeliveryLocation,
   DeliveryItem
 } from '../domain/deliveries'
 
-// Esquemas de Zod basados en las entidades del dominio
-const DeliveryEvidenceSchema = z.object({
-  recipient: z.object({
-    fullName: z.string().min(1),
-    nationalID: z.string().min(1),
-  }),
-  photoDataUrl: z.string().min(10),
-  takenAt: z.number(),
-  items: z.array(z.object({
-    sku: z.string(),
-    description: z.string(),
-    quantity: z.number(),
-    deliveredQuantity: z.number(),
-  })).optional(),
-  location: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-  }).optional(),
-})
+// Tipos para la interfaz de la aplicación (sin duplicar el dominio)
+export interface DeliveryEvidence {
+  recipient: Recipient
+  photoDataUrl: string
+  takenAt: number
+  items?: DeliveryItem[]
+  location?: DeliveryLocation
+}
 
-const NonDeliveryEvidenceSchema = z.object({
-  reason: z.string().min(1),
-  observations: z.string().optional().default(''),
-  photoDataUrl: z.string().min(10),
-  takenAt: z.number(),
-  location: z.object({
-    latitude: z.number(),
-    longitude: z.number(),
-  }).optional(),
-  failure: z.object({
-    detail: z.string(),
-    reason: z.string(),
-    referenceID: z.string(),
-  }).optional(),
-})
-
-const RouteStartedSchema = z.object({
-  status: z.union([z.literal('true'), z.literal('false')]),
-  timestamp: z.number(),
-  deviceId: z.string(),
-  action: z.enum(['route_started', 'route_stopped']),
-  routeId: z.string(),
-})
-
-const RouteLicenseSchema = z.object({
-  license: z.string(),
-  timestamp: z.number(),
-  deviceId: z.string(),
-  action: z.literal('license_set'),
-  routeId: z.string(),
-})
-
-export type DeliveryEvidence = z.infer<typeof DeliveryEvidenceSchema>
-export type NonDeliveryEvidence = z.infer<typeof NonDeliveryEvidenceSchema>
-export type RouteStarted = z.infer<typeof RouteStartedSchema>
-export type RouteLicense = z.infer<typeof RouteLicenseSchema>
+export interface NonDeliveryEvidence {
+  reason: string
+  observations?: string
+  photoDataUrl: string
+  takenAt: number
+  location?: DeliveryLocation
+  failure?: DeliveryFailure
+}
 
 // Configuración de Gun para MVP con sincronización entre dispositivos
 const gun = Gun({
@@ -80,8 +39,6 @@ const gun = Gun({
 const deliveriesData = gun.get('deliveries-state')
 
 // Helpers para claves
-export const routeStartedKey = (routeId: string) => `routeStarted:${routeId}`
-export const routeLicenseKey = (routeId: string) => `routeLicense:${routeId}`
 export const deliveryKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
   `delivery:${routeId}:${vIdx}-${oIdx}-${uIdx}`
 export const evidenceKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
@@ -166,39 +123,6 @@ export function useDeliveriesState() {
 }
 
 // Mutadores usando las entidades de deliveries.ts
-export function setRouteStarted(routeId: string, started: boolean): void {
-  const key = routeStartedKey(routeId)
-  const timestamp = Date.now()
-  const deviceId = getDeviceId()
-  
-  const value: RouteStarted = {
-    status: started ? 'true' : 'false',
-    timestamp,
-    deviceId,
-    action: started ? 'route_started' : 'route_stopped',
-    routeId
-  }
-  
-  deliveriesData.get(key).put(value)
-  // Mantener versión simple para compatibilidad
-  deliveriesData.get(`${key}_simple`).put(started ? 'true' : 'false')
-}
-
-export function setRouteLicense(routeId: string, license: string): void {
-  const key = routeLicenseKey(routeId)
-  const timestamp = Date.now()
-  const deviceId = getDeviceId()
-  
-  const value: RouteLicense = {
-    license,
-    timestamp,
-    deviceId,
-    action: 'license_set',
-    routeId
-  }
-  
-  deliveriesData.get(key).put(value)
-}
 
 export function setDeliveryStatus(
   routeId: string,
@@ -382,67 +306,11 @@ export function getDeliveryStatusFromState(
   return state[key] ?? undefined
 }
 
-export function getRouteLicenseFromState(
-  state: Record<string, any>,
-  routeId: string
-): string | undefined {
-  const key = routeLicenseKey(routeId)
-  const licenseData = state[key]
-  return licenseData?.license ?? undefined
-}
 
-// Hook específico para monitorear sincronización de ruta iniciada
-export function useRouteStartedSync(routeId: string) {
-  const [syncData, setSyncData] = useState<{
-    isStarted: boolean
-    lastAction: string
-    deviceId: string
-    timestamp: number
-    syncedDevices: string[]
-  } | null>(null)
 
-  useEffect(() => {
-    const key = routeStartedKey(routeId)
-    
-    const unsubscribe = deliveriesData.get(key).on((data) => {
-      if (data && typeof data === 'object') {
-        setSyncData({
-          isStarted: data.status === 'true',
-          lastAction: data.action || 'unknown',
-          deviceId: data.deviceId || 'unknown',
-          timestamp: data.timestamp || 0,
-          syncedDevices: [data.deviceId || 'unknown']
-        })
-      }
-    })
 
-    return () => {
-      if (unsubscribe && typeof unsubscribe.off === 'function') {
-        unsubscribe.off()
-      }
-    }
-  }, [routeId])
 
-  return syncData
-}
 
-// Función para obtener información de sincronización de todas las rutas
-export function getAllRoutesSyncInfo(): Promise<Record<string, RouteStarted>> {
-  return new Promise((resolve) => {
-    const routes: Record<string, RouteStarted> = {}
-    
-    deliveriesData.map().once((data, key) => {
-      if (key && key.includes('routeStarted:') && !key.includes('_simple')) {
-        const routeId = key.replace('routeStarted:', '')
-        if (data && typeof data === 'object') {
-          routes[routeId] = data as RouteStarted
-        }
-      }
-    })
-    
-    setTimeout(() => resolve(routes), 500)
-  })
-}
 
 // Exportar también la instancia de Gun por si necesitas funcionalidades avanzadas
 export { gun, deliveriesData }
