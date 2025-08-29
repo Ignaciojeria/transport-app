@@ -12,8 +12,11 @@ import {
   setDeliveryEvidence, 
   setNonDeliveryEvidence,
   setRouteLicense,
-  getRouteLicenseFromState
-} from './db/driver-gun-state'
+  getRouteLicenseFromState,
+  setRouteStart,
+  getRouteStart,
+  isRouteStarted
+} from './db'
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
 import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView } from './components'
@@ -25,6 +28,7 @@ import {
   type ReportData 
 } from './components/DownloadReportModal.utils'
 import type { Route as RouteType } from './domain/route'
+import type { RouteStart } from './domain/route-start'
 
 
 // Componente para rutas específicas del driver
@@ -152,17 +156,47 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     setRouteStartModal(true)
   }
 
-  const handleLicenseConfirm = (license: string) => {
+  const handleLicenseConfirm = async (license: string) => {
     if (!license.trim()) {
       return
     }
     
-    // Guardar la patente ingresada en GunJS para sincronización
-    setRouteLicense(routeId, license.trim())
-    
-    // Iniciar la ruta con la patente ingresada (no necesita coincidir)
-    setRouteStartedLocal(routeId, true)
-    setRouteStartModal(false)
+    try {
+      // Crear la entidad RouteStart
+      const routeStart: RouteStart = {
+        carrier: {
+          name: '', // Por ahora vacío como mencionaste
+          nationalID: ''
+        },
+        driver: {
+          email: 'driver@example.com', // Por ahora hardcodeado
+          nationalID: '12345678-9' // Por ahora hardcodeado
+        },
+        route: {
+          id: routeDbId || 0,
+          documentID: routeId,
+          referenceID: routeId
+        },
+        startedAt: new Date().toISOString(),
+        vehicle: {
+          plate: license.trim()
+        }
+      }
+      
+      // Guardar en la nueva colección RouteStart
+      await setRouteStart(routeId, routeStart)
+      
+      // También mantener compatibilidad con el sistema anterior
+      setRouteLicense(routeId, license.trim())
+      setRouteStartedLocal(routeId, true)
+      
+      setRouteStartModal(false)
+      console.log('🚀 Ruta iniciada con RouteStart:', routeStart)
+      
+    } catch (error) {
+      console.error('Error iniciando ruta:', error)
+      alert('Error al iniciar la ruta. Por favor intenta nuevamente.')
+    }
   }
 
 
