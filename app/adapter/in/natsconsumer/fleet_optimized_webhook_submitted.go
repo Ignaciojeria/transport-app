@@ -7,6 +7,7 @@ import (
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
 	"transport-app/app/adapter/in/natsconsumer/model"
+	"transport-app/app/adapter/out/storjbucket"
 	"transport-app/app/domain"
 	canonicaljson "transport-app/app/shared/caonincaljson"
 	"transport-app/app/shared/configuration"
@@ -36,7 +37,7 @@ func init() {
 		usecase.NewGetDataFromRedisWorkflow,
 		client.NewPostWebhook,
 		usecase.NewUpsertElectricRouteWorkflow,
-		storj.NewUplink,
+		storjbucket.NewTransportAppBucket,
 	)
 }
 
