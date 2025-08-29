@@ -186,9 +186,9 @@ func newFleetOptimizedWebhookSubmitted(
 }
 
 func assignURLsToDeliveryUnits(ctx context.Context, routeRequest *request.UpsertRouteRequest, storjManager storj.UplinkManager, obs observability.Observability) error {
-	uploadTTL := 30 * 24 * time.Hour  // 1 mes para upload
-	// Sin expiración para download (10 años)
-	downloadTTL := 10 * 365 * 24 * time.Hour
+	uploadTTL := 5 * 24 * time.Hour   // 5 días para upload
+	// TTL para download: 5 días (máximo seguro para S3/Storj)
+	downloadTTL := 5 * 24 * time.Hour
 
 	for visitIdx := range routeRequest.Visits {
 		for orderIdx := range routeRequest.Visits[visitIdx].Orders {
