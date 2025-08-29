@@ -10,8 +10,8 @@ import type {
   DeliveryItem
 } from '../domain/deliveries'
 
-// Esquemas de Zod basados en las entidades existentes
-const DeliveryEvidence = z.object({
+// Esquemas de Zod basados en las entidades del dominio
+const DeliveryEvidenceSchema = z.object({
   recipient: z.object({
     fullName: z.string().min(1),
     nationalID: z.string().min(1),
@@ -24,13 +24,21 @@ const DeliveryEvidence = z.object({
     quantity: z.number(),
     deliveredQuantity: z.number(),
   })).optional(),
+  location: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).optional(),
 })
 
-const NonDeliveryEvidence = z.object({
+const NonDeliveryEvidenceSchema = z.object({
   reason: z.string().min(1),
   observations: z.string().optional().default(''),
   photoDataUrl: z.string().min(10),
   takenAt: z.number(),
+  location: z.object({
+    latitude: z.number(),
+    longitude: z.number(),
+  }).optional(),
   failure: z.object({
     detail: z.string(),
     reason: z.string(),
@@ -38,8 +46,26 @@ const NonDeliveryEvidence = z.object({
   }).optional(),
 })
 
-export type DeliveryEvidence = z.infer<typeof DeliveryEvidence>
-export type NonDeliveryEvidence = z.infer<typeof NonDeliveryEvidence>
+const RouteStartedSchema = z.object({
+  status: z.union([z.literal('true'), z.literal('false')]),
+  timestamp: z.number(),
+  deviceId: z.string(),
+  action: z.enum(['route_started', 'route_stopped']),
+  routeId: z.string(),
+})
+
+const RouteLicenseSchema = z.object({
+  license: z.string(),
+  timestamp: z.number(),
+  deviceId: z.string(),
+  action: z.literal('license_set'),
+  routeId: z.string(),
+})
+
+export type DeliveryEvidence = z.infer<typeof DeliveryEvidenceSchema>
+export type NonDeliveryEvidence = z.infer<typeof NonDeliveryEvidenceSchema>
+export type RouteStarted = z.infer<typeof RouteStartedSchema>
+export type RouteLicense = z.infer<typeof RouteLicenseSchema>
 
 // Configuración de Gun para MVP con sincronización entre dispositivos
 const gun = Gun({
@@ -50,8 +76,8 @@ const gun = Gun({
   ]
 })
 
-// Namespace para datos del driver
-const driverData = gun.get('driver-state')
+// Namespace para datos de deliveries
+const deliveriesData = gun.get('deliveries-state')
 
 // Helpers para claves
 export const routeStartedKey = (routeId: string) => `routeStarted:${routeId}`
@@ -94,7 +120,7 @@ export function useGunData(key?: string) {
       return
     }
 
-    const ref = driverData.get(key)
+    const ref = deliveriesData.get(key)
     const unsubscribe = ref.on((value, _key) => {
       setData(value)
       setLoading(false)
@@ -110,13 +136,13 @@ export function useGunData(key?: string) {
   return { data, loading }
 }
 
-// Hook para escuchar todos los cambios del estado del driver
-export function useDriverState() {
+// Hook para escuchar todos los cambios del estado de deliveries
+export function useDeliveriesState() {
   const [state, setState] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = driverData.map().on((value, key) => {
+    const unsubscribe = deliveriesData.map().on((value, key) => {
       if (value !== null && value !== undefined) {
         setState(prev => ({ ...prev, [key]: value }))
       } else {
@@ -140,35 +166,38 @@ export function useDriverState() {
 }
 
 // Mutadores usando las entidades de deliveries.ts
-export function setRouteStarted(routeId: string, started: boolean) {
+export function setRouteStarted(routeId: string, started: boolean): void {
   const key = routeStartedKey(routeId)
   const timestamp = Date.now()
   const deviceId = getDeviceId()
   
-  const value = {
+  const value: RouteStarted = {
     status: started ? 'true' : 'false',
     timestamp,
     deviceId,
-    action: started ? 'route_started' : 'route_stopped'
+    action: started ? 'route_started' : 'route_stopped',
+    routeId
   }
   
-  driverData.get(key).put(value)
-  driverData.get(`${key}_simple`).put(started ? 'true' : 'false')
+  deliveriesData.get(key).put(value)
+  // Mantener versión simple para compatibilidad
+  deliveriesData.get(`${key}_simple`).put(started ? 'true' : 'false')
 }
 
-export function setRouteLicense(routeId: string, license: string) {
+export function setRouteLicense(routeId: string, license: string): void {
   const key = routeLicenseKey(routeId)
   const timestamp = Date.now()
   const deviceId = getDeviceId()
   
-  const value = {
-    license: license,
+  const value: RouteLicense = {
+    license,
     timestamp,
     deviceId,
-    action: 'license_set'
+    action: 'license_set',
+    routeId
   }
   
-  driverData.get(key).put(value)
+  deliveriesData.get(key).put(value)
 }
 
 export function setDeliveryStatus(
@@ -179,7 +208,7 @@ export function setDeliveryStatus(
   status: 'delivered' | 'not-delivered'
 ) {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
-  driverData.get(key).put(status)
+  deliveriesData.get(key).put(status)
 }
 
 export function getDeliveryStatus(
@@ -187,41 +216,50 @@ export function getDeliveryStatus(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number
-): 'delivered' | 'not-delivered' | undefined {
+): Promise<'delivered' | 'not-delivered' | undefined> {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
-  let result: any = undefined
   
-  driverData.get(key).once((value) => {
-    result = value
+  return new Promise((resolve) => {
+    deliveriesData.get(key).once((value) => {
+      resolve(value ?? undefined)
+    })
   })
-  
-  return result ?? undefined
 }
 
-// Función mejorada que usa la entidad DeliveryUnit
+// Función mejorada que crea una DeliveryUnit completa
 export function setDeliveryEvidence(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
   evidence: DeliveryEvidence
-) {
+): void {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Convertir a formato compatible con DeliveryUnit
-  const evidenceData = {
-    ...evidence,
-    // Convertir timestamp a ISO string para compatibilidad
-    takenAt: new Date(evidence.takenAt).toISOString(),
-    // Crear EvidencePhoto compatible
+  // Crear DeliveryUnit compatible con el dominio
+  const deliveryUnit: Partial<DeliveryUnit> = {
+    recipient: evidence.recipient,
     evidencePhotos: [{
       takenAt: new Date(evidence.takenAt).toISOString(),
       type: 'delivery',
       url: evidence.photoDataUrl,
     }],
+    items: evidence.items || [],
+    delivery: {
+      status: 'delivered',
+      handledAt: new Date(evidence.takenAt).toISOString(),
+      location: evidence.location || { latitude: 0, longitude: 0 },
+    },
+    // Campos requeridos que podrían necesitar ser proporcionados
+    businessIdentifiers: {
+      commerce: '',
+      consumer: '',
+    },
+    lpn: '',
+    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
   }
   
-  driverData.get(key).put(evidenceData)
+  deliveriesData.get(key).put(deliveryUnit)
 }
 
 export function getDeliveryEvidence(
@@ -229,40 +267,74 @@ export function getDeliveryEvidence(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number
-): DeliveryEvidence | undefined {
+): Promise<DeliveryEvidence | undefined> {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
-  let result: any = undefined
   
-  driverData.get(key).once((value) => {
-    result = value
+  return new Promise((resolve) => {
+    deliveriesData.get(key).once((value) => {
+      if (value) {
+        try {
+          // Convertir DeliveryUnit de vuelta a DeliveryEvidence
+          const evidence: DeliveryEvidence = {
+            recipient: value.recipient,
+            photoDataUrl: value.evidencePhotos?.[0]?.url || '',
+            takenAt: new Date(value.delivery?.handledAt || Date.now()).getTime(),
+            items: value.items,
+            location: value.delivery?.location,
+          }
+          resolve(evidence)
+        } catch (error) {
+          console.error('Error parsing delivery evidence:', error)
+          resolve(undefined)
+        }
+      } else {
+        resolve(undefined)
+      }
+    })
   })
-  
-  return result ? DeliveryEvidence.parse(result) : undefined
 }
 
-// Función mejorada que usa la entidad DeliveryFailure
+// Función mejorada que crea una DeliveryUnit con failure para no entrega
 export function setNonDeliveryEvidence(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
   evidence: NonDeliveryEvidence
-) {
+): void {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Convertir a formato compatible con las entidades existentes
-  const evidenceData = {
-    ...evidence,
-    takenAt: new Date(evidence.takenAt).toISOString(),
-    // Crear DeliveryFailure si no existe
-    failure: evidence.failure || {
-      detail: evidence.observations || '',
-      reason: evidence.reason,
-      referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  // Crear DeliveryUnit con failure para no entrega
+  const deliveryUnit: Partial<DeliveryUnit> = {
+    recipient: {
+      fullName: 'N/A',
+      nationalID: 'N/A',
     },
+    evidencePhotos: [{
+      takenAt: new Date(evidence.takenAt).toISOString(),
+      type: 'non-delivery',
+      url: evidence.photoDataUrl,
+    }],
+    items: [],
+    delivery: {
+      status: 'not-delivered',
+      handledAt: new Date(evidence.takenAt).toISOString(),
+      location: evidence.location || { latitude: 0, longitude: 0 },
+      failure: evidence.failure || {
+        detail: evidence.observations || '',
+        reason: evidence.reason,
+        referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+      },
+    },
+    businessIdentifiers: {
+      commerce: '',
+      consumer: '',
+    },
+    lpn: '',
+    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
   }
   
-  driverData.get(key).put(evidenceData)
+  deliveriesData.get(key).put(deliveryUnit)
 }
 
 export function getNonDeliveryEvidence(
@@ -270,15 +342,32 @@ export function getNonDeliveryEvidence(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number
-): NonDeliveryEvidence | undefined {
+): Promise<NonDeliveryEvidence | undefined> {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
-  let result: any = undefined
   
-  driverData.get(key).once((value) => {
-    result = value
+  return new Promise((resolve) => {
+    deliveriesData.get(key).once((value) => {
+      if (value) {
+        try {
+          // Convertir DeliveryUnit de vuelta a NonDeliveryEvidence
+          const evidence: NonDeliveryEvidence = {
+            reason: value.delivery?.failure?.reason || '',
+            observations: value.delivery?.failure?.detail || '',
+            photoDataUrl: value.evidencePhotos?.[0]?.url || '',
+            takenAt: new Date(value.delivery?.handledAt || Date.now()).getTime(),
+            location: value.delivery?.location,
+            failure: value.delivery?.failure,
+          }
+          resolve(evidence)
+        } catch (error) {
+          console.error('Error parsing non-delivery evidence:', error)
+          resolve(undefined)
+        }
+      } else {
+        resolve(undefined)
+      }
+    })
   })
-  
-  return result ? NonDeliveryEvidence.parse(result) : undefined
 }
 
 // Helper para obtener estado de delivery usando el estado reactivo
@@ -315,7 +404,7 @@ export function useRouteStartedSync(routeId: string) {
   useEffect(() => {
     const key = routeStartedKey(routeId)
     
-    const unsubscribe = driverData.get(key).on((data) => {
+    const unsubscribe = deliveriesData.get(key).on((data) => {
       if (data && typeof data === 'object') {
         setSyncData({
           isStarted: data.status === 'true',
@@ -338,14 +427,16 @@ export function useRouteStartedSync(routeId: string) {
 }
 
 // Función para obtener información de sincronización de todas las rutas
-export function getAllRoutesSyncInfo() {
+export function getAllRoutesSyncInfo(): Promise<Record<string, RouteStarted>> {
   return new Promise((resolve) => {
-    const routes: Record<string, any> = {}
+    const routes: Record<string, RouteStarted> = {}
     
-    driverData.map().once((data, key) => {
+    deliveriesData.map().once((data, key) => {
       if (key && key.includes('routeStarted:') && !key.includes('_simple')) {
         const routeId = key.replace('routeStarted:', '')
-        routes[routeId] = data
+        if (data && typeof data === 'object') {
+          routes[routeId] = data as RouteStarted
+        }
       }
     })
     
@@ -354,4 +445,4 @@ export function getAllRoutesSyncInfo() {
 }
 
 // Exportar también la instancia de Gun por si necesitas funcionalidades avanzadas
-export { gun, driverData }
+export { gun, deliveriesData }

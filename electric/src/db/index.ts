@@ -1,6 +1,6 @@
-// Exportar funciones del driver state
+// Exportar funciones del deliveries state
 export {
-  useDriverState,
+  useDeliveriesState,
   useRouteStartedSync,
   routeStartedKey,
   setRouteStarted,
@@ -10,7 +10,7 @@ export {
   setNonDeliveryEvidence,
   setRouteLicense,
   getRouteLicenseFromState
-} from './driver-gun-state'
+} from './deliveries-gun-state'
 
 // Exportar funciones del route start state
 export {

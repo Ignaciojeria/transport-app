@@ -3,7 +3,7 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
 import { createRoutesCollection } from './db/create-routes-collection'
 import { 
-  useDriverState, 
+  useDeliveriesState, 
   useRouteStartedSync,
   routeStartedKey, 
   setRouteStarted as setRouteStartedLocal, 
@@ -85,7 +85,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Estado local reactivo via GunJS
-  const { data: localState } = useDriverState()
+  const { data: localState } = useDeliveriesState()
   
   // Debug: Log cuando cambia el estado local (comentado en producción)
   // useEffect(() => {
@@ -97,7 +97,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   // Función para sincronizar posición del marcador entre dispositivos
   const setMarkerPosition = async (routeId: string, visitIndex: number, coordinates: [number, number]) => {
     try {
-      const { driverData } = await import('./db/driver-gun-state')
+      const { deliveriesData } = await import('./db/deliveries-gun-state')
       const key = `marker_position:${routeId}`
       const deviceId = (() => {
         try {
@@ -113,7 +113,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         deviceId
       }
       console.log('📍 Sincronizando posición de marcador:', data)
-      driverData.get(key).put(JSON.stringify(data))
+              deliveriesData.get(key).put(JSON.stringify(data))
     } catch (error) {
       console.error('Error sincronizando posición de marcador:', error)
     }
@@ -128,9 +128,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   } | null>(null)
 
   useEffect(() => {
-    import('./db/driver-gun-state').then(({ driverData }) => {
+    import('./db/deliveries-gun-state').then(({ deliveriesData }) => {
       const key = `marker_position:${routeId}`
-      const unsubscribe = driverData.get(key).on((data) => {
+      const unsubscribe = deliveriesData.get(key).on((data) => {
         if (data && typeof data === 'string') {
           try {
             const parsed = JSON.parse(data)

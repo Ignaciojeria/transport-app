@@ -1,4 +1,4 @@
-import { driverData } from './driver-gun-state'
+import { deliveriesData } from './deliveries-gun-state'
 import type { RouteStart } from '../domain/route-start'
 
 // Clave para almacenar el estado de inicio de ruta
@@ -50,20 +50,20 @@ export const setRouteStart = async (routeId: string, routeStart: RouteStart): Pr
     console.log('🚀 Guardando inicio de ruta:', data)
     console.log('📝 JSON stringificado:', JSON.stringify(data))
     
-    // Verificar que driverData esté disponible
-    if (!driverData) {
-      throw new Error('driverData no está disponible')
+    // Verificar que deliveriesData esté disponible
+    if (!deliveriesData) {
+      throw new Error('deliveriesData no está disponible')
     }
     
     console.log('💾 Guardando en GunJS...')
-    await driverData.get(key).put(JSON.stringify(data))
+    await deliveriesData.get(key).put(JSON.stringify(data))
     console.log('✅ Guardado principal exitoso')
     
     // También guardar por separado para acceso rápido
     console.log('💾 Guardando datos separados...')
-    await driverData.get(vehiclePlateKey(routeId)).put(routeStart.vehicle.plate)
-    await driverData.get(driverInfoKey(routeId)).put(JSON.stringify(routeStart.driver))
-    await driverData.get(carrierInfoKey(routeId)).put(JSON.stringify(routeStart.carrier))
+    await deliveriesData.get(vehiclePlateKey(routeId)).put(routeStart.vehicle.plate)
+    await deliveriesData.get(driverInfoKey(routeId)).put(JSON.stringify(routeStart.driver))
+    await deliveriesData.get(carrierInfoKey(routeId)).put(JSON.stringify(routeStart.carrier))
     console.log('✅ Todos los datos guardados exitosamente')
     
   } catch (error) {
@@ -82,7 +82,7 @@ export const setRouteStart = async (routeId: string, routeStart: RouteStart): Pr
 export const getRouteStart = async (routeId: string): Promise<RouteStart | null> => {
   try {
     const key = routeStartKey(routeId)
-    const data = await driverData.get(key).once()
+    const data = await deliveriesData.get(key).once()
     
     if (data && typeof data === 'string') {
       const parsed = JSON.parse(data)
@@ -113,7 +113,7 @@ export const isRouteStarted = async (routeId: string): Promise<boolean> => {
 export const getVehiclePlate = async (routeId: string): Promise<string | null> => {
   try {
     const key = vehiclePlateKey(routeId)
-    const data = await driverData.get(key).once()
+    const data = await deliveriesData.get(key).once()
     return data || null
   } catch (error) {
     console.error('Error obteniendo patente:', error)
@@ -125,7 +125,7 @@ export const getVehiclePlate = async (routeId: string): Promise<string | null> =
 export const getDriverInfo = async (routeId: string): Promise<RouteStart['driver'] | null> => {
   try {
     const key = driverInfoKey(routeId)
-    const data = await driverData.get(key).once()
+    const data = await deliveriesData.get(key).once()
     
     if (data && typeof data === 'string') {
       return JSON.parse(data)
@@ -142,7 +142,7 @@ export const getDriverInfo = async (routeId: string): Promise<RouteStart['driver
 export const getCarrierInfo = async (routeId: string): Promise<RouteStart['carrier'] | null> => {
   try {
     const key = carrierInfoKey(routeId)
-    const data = await driverData.get(key).once()
+    const data = await deliveriesData.get(key).once()
     
     if (data && typeof data === 'string') {
       return JSON.parse(data)
@@ -166,7 +166,7 @@ export const clearRouteStart = async (routeId: string): Promise<void> => {
     ]
     
     for (const key of keys) {
-      await driverData.get(key).put(null)
+      await deliveriesData.get(key).put(null)
     }
     
     console.log('🧹 Estado de inicio de ruta limpiado para:', routeId)

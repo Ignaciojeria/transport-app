@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getRouteStart, routeStartKey } from '../db/route-start-gun-state'
-import { driverData } from '../db/driver-gun-state'
+import { deliveriesData } from '../db/deliveries-gun-state'
 import type { RouteStart } from '../domain/route-start'
 
 export const useRouteStartSync = (routeId: string) => {
@@ -17,7 +17,7 @@ export const useRouteStartSync = (routeId: string) => {
     
     // Escuchar cambios
     const key = routeStartKey(routeId)
-    const unsubscribe = driverData.get(key).on((data) => {
+    const unsubscribe = deliveriesData.get(key).on((data) => {
       if (data && typeof data === 'string') {
         try {
           const parsed = JSON.parse(data)
