@@ -1,13 +1,29 @@
 import { z } from 'zod'
 import Gun from 'gun'
 import { useEffect, useState } from 'react'
+import type { 
+  DeliveryUnit, 
+  EvidencePhoto, 
+  Recipient, 
+  DeliveryFailure,
+  DeliveryLocation,
+  DeliveryItem
+} from '../domain/deliveries'
 
-// Esquemas iguales que antes
+// Esquemas de Zod basados en las entidades existentes
 const DeliveryEvidence = z.object({
-  recipientName: z.string().min(1),
-  recipientRut: z.string().min(1),
+  recipient: z.object({
+    fullName: z.string().min(1),
+    nationalID: z.string().min(1),
+  }),
   photoDataUrl: z.string().min(10),
   takenAt: z.number(),
+  items: z.array(z.object({
+    sku: z.string(),
+    description: z.string(),
+    quantity: z.number(),
+    deliveredQuantity: z.number(),
+  })).optional(),
 })
 
 const NonDeliveryEvidence = z.object({
@@ -15,17 +31,20 @@ const NonDeliveryEvidence = z.object({
   observations: z.string().optional().default(''),
   photoDataUrl: z.string().min(10),
   takenAt: z.number(),
+  failure: z.object({
+    detail: z.string(),
+    reason: z.string(),
+    referenceID: z.string(),
+  }).optional(),
 })
 
 export type DeliveryEvidence = z.infer<typeof DeliveryEvidence>
 export type NonDeliveryEvidence = z.infer<typeof NonDeliveryEvidence>
 
 // Configuración de Gun para MVP con sincronización entre dispositivos
-// Incluye peers públicos para sincronización y localStorage para persistencia local
 const gun = Gun({
   localStorage: true,
-  radisk: false,  // Desactiva indexedDB para simplicidad
-  // Peers públicos de Gun para sincronización entre dispositivos
+  radisk: false,
   peers: [
     'https://peer.wallie.io/gun',
   ]
@@ -34,7 +53,7 @@ const gun = Gun({
 // Namespace para datos del driver
 const driverData = gun.get('driver-state')
 
-// Helpers para claves (igual que antes)
+// Helpers para claves
 export const routeStartedKey = (routeId: string) => `routeStarted:${routeId}`
 export const routeLicenseKey = (routeId: string) => `routeLicense:${routeId}`
 export const deliveryKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
@@ -64,7 +83,7 @@ export function getDeviceInfo() {
   }
 }
 
-// Hook reactivo para escuchar cambios en Gun (similar a useLiveQuery)
+// Hook reactivo para escuchar cambios en Gun
 export function useGunData(key?: string) {
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -75,7 +94,6 @@ export function useGunData(key?: string) {
       return
     }
 
-    // Escuchar cambios en tiempo real
     const ref = driverData.get(key)
     const unsubscribe = ref.on((value, _key) => {
       setData(value)
@@ -98,7 +116,6 @@ export function useDriverState() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Escuchar todos los cambios en el namespace del driver
     const unsubscribe = driverData.map().on((value, key) => {
       if (value !== null && value !== undefined) {
         setState(prev => ({ ...prev, [key]: value }))
@@ -122,13 +139,12 @@ export function useDriverState() {
   return { data: { s: state }, loading }
 }
 
-// Mutadores - API similar a la anterior pero usando Gun
+// Mutadores usando las entidades de deliveries.ts
 export function setRouteStarted(routeId: string, started: boolean) {
   const key = routeStartedKey(routeId)
   const timestamp = Date.now()
   const deviceId = getDeviceId()
   
-  // Guardar con metadatos para sincronización
   const value = {
     status: started ? 'true' : 'false',
     timestamp,
@@ -137,8 +153,6 @@ export function setRouteStarted(routeId: string, started: boolean) {
   }
   
   driverData.get(key).put(value)
-  
-  // También guardar en key simple para compatibilidad
   driverData.get(`${key}_simple`).put(started ? 'true' : 'false')
 }
 
@@ -147,7 +161,6 @@ export function setRouteLicense(routeId: string, license: string) {
   const timestamp = Date.now()
   const deviceId = getDeviceId()
   
-  // Guardar con metadatos para sincronización
   const value = {
     license: license,
     timestamp,
@@ -175,12 +188,9 @@ export function getDeliveryStatus(
   orderIndex: number,
   unitIndex: number
 ): 'delivered' | 'not-delivered' | undefined {
-  // Para obtener valor síncrono, necesitamos usar el estado local
-  // Esto se maneja mejor con el hook useDriverState
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
   let result: any = undefined
   
-  // Gun es asíncrono, pero podemos intentar obtener del cache local
   driverData.get(key).once((value) => {
     result = value
   })
@@ -188,6 +198,7 @@ export function getDeliveryStatus(
   return result ?? undefined
 }
 
+// Función mejorada que usa la entidad DeliveryUnit
 export function setDeliveryEvidence(
   routeId: string,
   visitIndex: number,
@@ -196,7 +207,21 @@ export function setDeliveryEvidence(
   evidence: DeliveryEvidence
 ) {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
-  driverData.get(key).put(evidence)
+  
+  // Convertir a formato compatible con DeliveryUnit
+  const evidenceData = {
+    ...evidence,
+    // Convertir timestamp a ISO string para compatibilidad
+    takenAt: new Date(evidence.takenAt).toISOString(),
+    // Crear EvidencePhoto compatible
+    evidencePhotos: [{
+      takenAt: new Date(evidence.takenAt).toISOString(),
+      type: 'delivery',
+      url: evidence.photoDataUrl,
+    }],
+  }
+  
+  driverData.get(key).put(evidenceData)
 }
 
 export function getDeliveryEvidence(
@@ -215,6 +240,7 @@ export function getDeliveryEvidence(
   return result ? DeliveryEvidence.parse(result) : undefined
 }
 
+// Función mejorada que usa la entidad DeliveryFailure
 export function setNonDeliveryEvidence(
   routeId: string,
   visitIndex: number,
@@ -223,7 +249,20 @@ export function setNonDeliveryEvidence(
   evidence: NonDeliveryEvidence
 ) {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
-  driverData.get(key).put(evidence)
+  
+  // Convertir a formato compatible con las entidades existentes
+  const evidenceData = {
+    ...evidence,
+    takenAt: new Date(evidence.takenAt).toISOString(),
+    // Crear DeliveryFailure si no existe
+    failure: evidence.failure || {
+      detail: evidence.observations || '',
+      reason: evidence.reason,
+      referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+    },
+  }
+  
+  driverData.get(key).put(evidenceData)
 }
 
 export function getNonDeliveryEvidence(
@@ -242,7 +281,7 @@ export function getNonDeliveryEvidence(
   return result ? NonDeliveryEvidence.parse(result) : undefined
 }
 
-// Helper mejorado para obtener estado de delivery usando el estado reactivo
+// Helper para obtener estado de delivery usando el estado reactivo
 export function getDeliveryStatusFromState(
   state: Record<string, any>,
   routeId: string,
@@ -276,7 +315,6 @@ export function useRouteStartedSync(routeId: string) {
   useEffect(() => {
     const key = routeStartedKey(routeId)
     
-    // Escuchar cambios con metadatos
     const unsubscribe = driverData.get(key).on((data) => {
       if (data && typeof data === 'object') {
         setSyncData({
@@ -284,7 +322,7 @@ export function useRouteStartedSync(routeId: string) {
           lastAction: data.action || 'unknown',
           deviceId: data.deviceId || 'unknown',
           timestamp: data.timestamp || 0,
-          syncedDevices: [data.deviceId || 'unknown'] // En un MVP simple, solo mostramos el último dispositivo
+          syncedDevices: [data.deviceId || 'unknown']
         })
       }
     })
@@ -304,7 +342,6 @@ export function getAllRoutesSyncInfo() {
   return new Promise((resolve) => {
     const routes: Record<string, any> = {}
     
-    // Escuchar todos los cambios relacionados con rutas
     driverData.map().once((data, key) => {
       if (key && key.includes('routeStarted:') && !key.includes('_simple')) {
         const routeId = key.replace('routeStarted:', '')
@@ -312,7 +349,7 @@ export function getAllRoutesSyncInfo() {
       }
     })
     
-    setTimeout(() => resolve(routes), 500) // Dar tiempo para recopilar datos
+    setTimeout(() => resolve(routes), 500)
   })
 }
 
