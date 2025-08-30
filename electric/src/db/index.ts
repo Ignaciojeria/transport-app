@@ -22,11 +22,9 @@ export {
   routeStartedKey,
   setRouteStarted,
   setRouteLicense,
-  getRouteLicenseFromState
-} from './route-start-gun-state'
-
-// Exportar hooks
-export { useRouteStartSync } from '../hooks/useRouteStartSync'
+  getRouteLicenseFromState,
+  useRouteStartDomain
+} from './gun/state/route-start-gun-state'
 
 // Exportar funciones de creación de colecciones
 export { createRoutesCollection } from './create-routes-collection'

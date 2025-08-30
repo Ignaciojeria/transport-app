@@ -1,6 +1,7 @@
-import { deliveriesData } from './gun'
-import type { RouteStart } from '../domain/route-start'
+import { deliveriesData } from '../index'
+import type { RouteStart } from '../../../domain/route-start'
 import { useState, useEffect } from 'react'
+import { mapGunToRouteStart } from '../mappers/route-start-mappers'
 
 // Clave para almacenar el estado de inicio de ruta
 export const routeStartKey = (routeId: string) => `route_start:${routeId}`
@@ -311,5 +312,51 @@ export function getAllRoutesSyncInfo(): Promise<Record<string, RouteStarted>> {
 
 // Exportar tipos
 export type { RouteStarted, RouteLicense }
+
+// Hook que retorna la entidad de dominio RouteStart directamente
+export function useRouteStartDomain(routeId: string) {
+  const [routeStart, setRouteStart] = useState<RouteStart | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!routeId) {
+      setLoading(false)
+      return
+    }
+
+    setLoading(true)
+    
+    // Obtener estado inicial
+    getRouteStart(routeId).then(setRouteStart).finally(() => setLoading(false))
+    
+    // Escuchar cambios
+    const key = routeStartKey(routeId)
+    const unsubscribe = deliveriesData.get(key).on((data) => {
+      if (data && typeof data === 'string') {
+        try {
+          const parsed = JSON.parse(data)
+          const { timestamp, deviceId, ...routeStartData } = parsed
+          
+          // Usar el mapper para convertir a la entidad del dominio
+          const routeStart = mapGunToRouteStart(routeStartData)
+          setRouteStart(routeStart)
+        } catch (error) {
+          console.error('Error parseando datos de inicio de ruta:', error)
+          setRouteStart(null)
+        }
+      } else {
+        setRouteStart(null)
+      }
+    })
+
+    return () => {
+      if (unsubscribe && typeof unsubscribe.off === 'function') {
+        unsubscribe.off()
+      }
+    }
+  }, [routeId])
+
+  return { routeStart, loading }
+}
 
 
