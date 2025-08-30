@@ -31,19 +31,13 @@ import type { DeliveryUnit, DeliveryEvent } from './domain/deliveries'
 
 // Componente para rutas específicas del driver
 export function RouteComponent() {
-  console.log('🏠🏠🏠 RouteComponent EJECUTÁNDOSE 🏠🏠🏠')
-  
   // Obtener el routeId de los parámetros de la ruta usando TanStack Router
   const { routeId } = useParams({ from: '/driver/routes/$routeId' })
-  console.log('🏠🏠🏠 RouteId:', routeId)
   
   const token = new URLSearchParams(window.location.hash.slice(1)).get('access_token') || 
                new URLSearchParams(window.location.hash.slice(1)).get('token') || ''
-  console.log('🏠🏠🏠 Token:', token ? '✅' : '❌')
   
-  console.log('🏠🏠🏠 Llamando a useRoutes...')
   const routes = useRoutes(token, routeId)
-  console.log('🏠🏠🏠 Routes recibidas:', routes)
 
   return (
     <div>

@@ -4,57 +4,27 @@ import { createRoutesCollection, extractRouteFromElectric, type RouteWithElectri
 
 // Hook personalizado que combina la collection con useLiveQuery
 export const useRoutesCollection = (token: string, referenceId?: string) => {
-  console.log('🚀🚀🚀 useRoutesCollection EJECUTÁNDOSE 🚀🚀🚀')
-  console.log('🚀🚀🚀 Token:', token ? '✅' : '❌')
-  console.log('🚀🚀🚀 ReferenceId:', referenceId)
-  
   const collection = useMemo(() => createRoutesCollection(token, referenceId), [token, referenceId])
-  
-  console.log('🔍 useRoutesCollection - Token:', token ? '✅' : '❌')
-  console.log('🔍 useRoutesCollection - ReferenceId:', referenceId)
-  console.log('🔍 useRoutesCollection - Collection:', collection)
   
   const query = useLiveQuery((queryBuilder: any) => 
     queryBuilder.from({ route: collection })
   )
   
-  console.log('🔍 useRoutesCollection - Query data:', query.data)
-  console.log('🔍 useRoutesCollection - Query data type:', typeof query.data)
-  console.log('🔍 useRoutesCollection - Query data isArray:', Array.isArray(query.data))
-  if (query.data && query.data.length > 0) {
-    console.log('🔍 useRoutesCollection - First item keys:', Object.keys(query.data[0]))
-    console.log('🔍 useRoutesCollection - First item:', query.data[0])
-  }
-  console.log('🔍 useRoutesCollection - Query isLoading:', query.isLoading)
-  console.log('🔍 useRoutesCollection - Query isError:', query.isError)
-  
   // Transformar los datos para trabajar solo con el raw
   const routes = useMemo(() => {
-    console.log('🔍 useRoutesCollection - Transformando datos...')
-    console.log('🔍 useRoutesCollection - Query data completo:', query.data)
-    
     // query.data es un array de items con {id, raw}
     if (Array.isArray(query.data) && query.data.length > 0) {
-      console.log('🔍 useRoutesCollection - Procesando items...')
-      
-      const result = query.data.map((item: any) => {
-        console.log('🔍 useRoutesCollection - Procesando item:', item)
-        
+      return query.data.map((item: any) => {
         // Usar extractRouteFromElectric para transformar cada item
         if (item && item.id && item.raw) {
           return extractRouteFromElectric(item)
         }
         
         // Fallback: si no tiene la estructura esperada, devolver el item completo
-        console.log('🔍 useRoutesCollection - Item no tiene estructura esperada, usando fallback')
         return item
       })
-      
-      console.log('🔍 useRoutesCollection - Rutas transformadas:', result)
-      return result
     }
     
-    console.log('🔍 useRoutesCollection - No hay datos para transformar')
     return []
   }, [query.data])
   
@@ -73,15 +43,7 @@ export const useRoutesCollection = (token: string, referenceId?: string) => {
 
 // Hook simplificado que solo devuelve las rutas transformadas
 export const useRoutes = (token: string, referenceId?: string): RouteWithElectricId[] => {
-  console.log('🎯🎯🎯 useRoutes EJECUTÁNDOSE 🎯🎯🎯')
-  console.log('🎯🎯🎯 Token:', token ? '✅' : '❌')
-  console.log('🎯🎯🎯 ReferenceId:', referenceId)
-  
-  const { routes, isLoading, error } = useRoutesCollection(token, referenceId)
-  
-  console.log('🎯🎯🎯 Routes result:', routes)
-  console.log('🎯🎯🎯 IsLoading:', isLoading)
-  console.log('🎯🎯🎯 Error:', error)
+  const { routes, error } = useRoutesCollection(token, referenceId)
   
   if (error) {
     console.error('Error cargando rutas:', error)

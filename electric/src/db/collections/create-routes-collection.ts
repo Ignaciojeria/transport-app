@@ -21,28 +21,18 @@ export type RouteWithElectricId = Route & { electricId: string }
 
 // Función helper para transformar ElectricRouteData a RouteWithElectricId
 export const extractRouteFromElectric = (electricData: ElectricRouteData): RouteWithElectricId => {
-  console.log('🔍 extractRouteFromElectric - Input:', electricData)
-  
-  const result = {
+  return {
     ...electricData.raw,
     electricId: electricData.id
   }
-  
-  console.log('🔍 extractRouteFromElectric - Output:', result)
-  return result
 }
 
 // Factory para crear la colección inyectando el token
 export const createRoutesCollection = (token: string, referenceId?: string) => {
   const url = (() => {
     const base = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=routes&columns=id,raw`
-    const finalUrl = referenceId ? `${base}&where=reference_id='${referenceId}'` : base
-    console.log('🔍 createRoutesCollection - URL:', finalUrl)
-    return finalUrl
+    return referenceId ? `${base}&where=reference_id='${referenceId}'` : base
   })()
-  
-  console.log('🔍 createRoutesCollection - Token:', token ? '✅' : '❌')
-  console.log('🔍 createRoutesCollection - ReferenceId:', referenceId)
   
   return createCollection(
     electricCollectionOptions({
@@ -60,18 +50,15 @@ export const createRoutesCollection = (token: string, referenceId?: string) => {
       getKey: (r: ElectricRouteData) => r.id,
       // No necesitas schema si usas tipos TypeScript
       
-      async onInsert({ transaction }) {
-        console.log('🔍 createRoutesCollection - onInsert:', transaction)
+      async onInsert() {
         return { txid: [Date.now()] }
       },
       
       async onUpdate() {
-        console.log('🔍 createRoutesCollection - onUpdate')
         return { txid: [Date.now()] }
       },
       
       async onDelete() {
-        console.log('🔍 createRoutesCollection - onDelete')
         return { txid: [Date.now()] }
       },
     })
