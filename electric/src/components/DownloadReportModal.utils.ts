@@ -62,14 +62,22 @@ export function getDeliveryUnitStatus(
   const key = `delivery:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
   const data = localState?.[key]
   
+  // Debug: ver qué estamos procesando
+  console.log(`🔍 getDeliveryUnitStatus - Clave:`, key)
+  console.log(`🔍 getDeliveryUnitStatus - Datos encontrados:`, data)
+  console.log(`🔍 getDeliveryUnitStatus - Tipo de datos:`, typeof data)
+  
   if (typeof data === 'string') {
     // Estado simple (formato anterior)
+    console.log(`🔍 getDeliveryUnitStatus - Estado string:`, data)
     return data as 'delivered' | 'not-delivered'
-  } else if (data && typeof data === 'object' && data.status) {
-    // Estado con evidencia (nuevo formato)
-    return data.status as 'delivered' | 'not-delivered'
+  } else if (data && typeof data === 'object' && data.delivery?.status) {
+    // Estado con evidencia (nuevo formato) - el mapper devuelve { delivery: { status: ... } }
+    console.log(`🔍 getDeliveryUnitStatus - Estado objeto:`, data.delivery.status)
+    return data.delivery.status as 'delivered' | 'not-delivered'
   }
   
+  console.log(`🔍 getDeliveryUnitStatus - No se pudo determinar estado`)
   return undefined
 }
 
@@ -130,9 +138,14 @@ export function getNonDeliveryEvidence(
   orderIndex: number,
   unitIndex: number
 ): any {
+  // Debug: ver qué estamos procesando
+  console.log(`🔍 getNonDeliveryEvidence - Buscando evidencia para (${visitIndex},${orderIndex},${unitIndex})`)
+  
   // Buscar en la clave evidence para no entregas (nueva estructura del dominio)
   const evidenceKey = `evidence:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
   const evidence = localState?.[evidenceKey]
+  
+  console.log(`🔍 getNonDeliveryEvidence - Evidence key:`, evidenceKey, evidence)
   
   if (evidence && typeof evidence === 'object') {
     // Nueva estructura: evidence.delivery.failure y evidence.evidencePhotos
@@ -161,18 +174,23 @@ export function getNonDeliveryEvidence(
     }
   }
   
-  // Fallback: buscar en delivery si no se encuentra en evidence
+  // Fallback: buscar en delivery si no se encuentra en evidence (ESTA ES LA CLAVE PRINCIPAL)
   const deliveryKey = `delivery:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
   const deliveryData = localState?.[deliveryKey]
   
-  if (deliveryData && typeof deliveryData === 'object' && deliveryData.status === 'not-delivered') {
-    // Extraer información del dominio DeliveryFailure
-    return {
-      reason: deliveryData.failure?.reason || '',
-      observations: deliveryData.failure?.detail || '',
-      takenAt: deliveryData.timestamp || Date.now(),
-      photoDataUrl: deliveryData.photoDataUrl || ''
+  console.log(`🔍 getNonDeliveryEvidence - Delivery key:`, deliveryKey, deliveryData)
+  
+  if (deliveryData && typeof deliveryData === 'object' && deliveryData.delivery?.status === 'not-delivered') {
+    // Extraer información del dominio DeliveryFailure - estructura: { delivery: { failure: { reason, detail } } }
+    const result = {
+      reason: deliveryData.delivery?.failure?.reason || '',
+      observations: deliveryData.delivery?.failure?.detail || '',
+      takenAt: deliveryData.delivery?.handledAt || Date.now(),
+      photoDataUrl: deliveryData.evidencePhotos?.[0]?.url || ''
     }
+    
+    console.log(`🔍 getNonDeliveryEvidence - Resultado desde delivery:`, result)
+    return result
   }
   
   // Fallback: buscar en la clave antigua nd-evidence

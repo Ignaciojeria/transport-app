@@ -134,6 +134,44 @@ function convertGunDataToDomain(key: string, value: any): any {
     }
   }
   
+  // Si es una clave de delivery, determinar qué mapper usar basado en el contenido
+  if (key.includes('delivery:')) {
+    try {
+      // Debug: ver qué estamos procesando
+      console.log(`🔍 convertGunDataToDomain - Procesando clave delivery:`, { key, value, valueType: typeof value })
+      
+      // Si el valor es un string simple (estado anterior), devolverlo tal como está
+      if (typeof value === 'string') {
+        console.log(`🔍 convertGunDataToDomain - Valor string para delivery:`, value)
+        return value
+      }
+      
+      // Si el valor es un objeto, determinar si es entrega exitosa o fallida
+      if (value && typeof value === 'object') {
+        console.log(`🔍 convertGunDataToDomain - Valor objeto para delivery:`, value)
+        
+        if (value.delivery_status === 'not-delivered') {
+          // Es una no entrega, usar el mapper de fallo
+          console.log(`🔍 convertGunDataToDomain - Aplicando mapper de fallo`)
+          const result = mapGunToDeliveryFailure(value)
+          console.log(`🔍 convertGunDataToDomain - Resultado del mapper:`, result)
+          return result
+        } else {
+          // Es una entrega exitosa, usar el mapper normal
+          console.log(`🔍 convertGunDataToDomain - Aplicando mapper normal`)
+          const result = mapGunToDeliveryUnit(value)
+          console.log(`🔍 convertGunDataToDomain - Resultado del mapper:`, result)
+          return result
+        }
+      }
+      
+      return value
+    } catch (error) {
+      console.warn('Error convirtiendo delivery a dominio:', error)
+      return value // Fallback a valor original
+    }
+  }
+  
   // Para otras claves, devolver el valor tal como está
   return value
 }
@@ -338,9 +376,9 @@ export function getDeliveryStatusFromState(
   if (typeof data === 'string') {
     // Estado simple (formato anterior)
     return data as 'delivered' | 'not-delivered'
-  } else if (data && typeof data === 'object' && data.status) {
-    // Estado con evidencia (nuevo formato)
-    return data.status as 'delivered' | 'not-delivered'
+  } else if (data && typeof data === 'object' && data.delivery?.status) {
+    // Estado con evidencia (nuevo formato) - el mapper devuelve { delivery: { status: ... } }
+    return data.delivery.status as 'delivered' | 'not-delivered'
   }
   
   return undefined
