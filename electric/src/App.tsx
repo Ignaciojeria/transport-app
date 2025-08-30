@@ -148,6 +148,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   const [routeStartModal, setRouteStartModal] = useState(false)
   const [initialDeliveryEvent, setInitialDeliveryEvent] = useState<DeliveryEvent | undefined>(undefined)
+  const [initialNonDeliveryEvent, setInitialNonDeliveryEvent] = useState<DeliveryEvent | undefined>(undefined)
 
   const handleStartRoute = () => {
     setRouteStartModal(true)
@@ -255,11 +256,54 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   }
 
   const openNonDeliveryFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
+    // Crear un DeliveryEvent inicial para no entrega
+    const initialNonDeliveryEvent: DeliveryEvent = {
+      carrier: {
+        name: '',
+        nationalID: ''
+      },
+      deliveryUnits: [{
+        businessIdentifiers: {
+          commerce: '',
+          consumer: ''
+        },
+        delivery: {
+          status: 'pending',
+          handledAt: new Date().toISOString(),
+          location: { latitude: 0, longitude: 0 }
+        },
+        evidencePhotos: [],
+        items: [],
+        lpn: '',
+        orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+        recipient: {
+          fullName: '',
+          nationalID: ''
+        }
+      }],
+      driver: {
+        email: '',
+        nationalID: ''
+      },
+      route: {
+        id: routeData?.id || 0,
+        documentID: routeData?.documentID || '',
+        referenceID: routeData?.referenceID || '',
+        sequenceNumber: 0,
+        startedAt: new Date().toISOString()
+      },
+      vehicle: {
+        plate: routeData?.vehicle?.plate || ''
+      }
+    }
+    
     setNdModal({ open: true, vIdx: visitIndex, oIdx: orderIndex, uIdx: unitIndex })
+    setInitialNonDeliveryEvent(initialNonDeliveryEvent)
   }
 
   const closeNdModal = () => {
     setNdModal({ open: false, vIdx: null, oIdx: null, uIdx: null })
+    setInitialNonDeliveryEvent(undefined)
   }
 
   const closeEvidenceModal = () => {
@@ -312,12 +356,21 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }
 
-  const submitNonDelivery = async (evidence: { reason: string; observations: string; photoDataUrl: string }) => {
+  const submitNonDelivery = async (deliveryEvent: DeliveryEvent) => {
     if (!ndModal.open || ndModal.vIdx === null || ndModal.oIdx === null || ndModal.uIdx === null) return
     try {
       setSubmittingEvidence(true)
       
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
+      
+      // Extraer datos del DeliveryEvent
+      const failure = deliveryEvent.deliveryUnits[0]?.delivery?.failure
+      const photoDataUrl = deliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url
+      
+      if (!failure || !photoDataUrl) {
+        console.error('❌ Datos incompletos en DeliveryEvent')
+        return
+      }
       
       // Crear la entidad del dominio completa
       const deliveryUnit: Partial<DeliveryUnit> & {
@@ -335,15 +388,15 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           handledAt: new Date().toISOString(),
           location: { latitude: 0, longitude: 0 }, // TODO: obtener ubicación real
           failure: {
-            reason: evidence.reason,
-            detail: evidence.observations,
+            reason: failure.reason,
+            detail: failure.detail,
             referenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`
           }
         },
         evidencePhotos: [{
           takenAt: new Date().toISOString(),
           type: 'non-delivery',
-          url: evidence.photoDataUrl,
+          url: photoDataUrl,
         }],
         orderReferenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
       }
@@ -741,6 +794,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       isOpen={ndModal.open}
       onClose={closeNdModal}
       onSubmit={submitNonDelivery}
+      initialDeliveryEvent={initialNonDeliveryEvent}
       submitting={submittingEvidence}
     />
 

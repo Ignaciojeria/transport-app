@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
-import type { DeliveryEvent, Recipient, EvidencePhoto } from '../domain/deliveries'
+import type { DeliveryEvent } from '../domain/deliveries'
 
 interface DeliveryModalProps {
   isOpen: boolean

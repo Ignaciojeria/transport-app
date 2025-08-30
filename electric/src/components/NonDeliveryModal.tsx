@@ -1,14 +1,12 @@
 import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
+import type { DeliveryEvent } from '../domain/deliveries'
 
 interface NonDeliveryModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (evidence: {
-    reason: string
-    observations: string
-    photoDataUrl: string
-  }) => void
+  onSubmit: (deliveryEvent: DeliveryEvent) => void
+  initialDeliveryEvent?: DeliveryEvent // Para edición
   submitting?: boolean
 }
 
@@ -16,6 +14,7 @@ export function NonDeliveryModal({
   isOpen,
   onClose,
   onSubmit,
+  initialDeliveryEvent,
   submitting = false
 }: NonDeliveryModalProps) {
   const [ndReasonQuery, setNdReasonQuery] = useState('')
@@ -24,25 +23,53 @@ export function NonDeliveryModal({
   const [ndPhotoDataUrl, setNdPhotoDataUrl] = useState<string | null>(null)
   const ndReasonInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Limpiar estado cuando se abre el modal para una nueva no entrega
+  // Inicializar con datos existentes si los hay
   useEffect(() => {
     if (isOpen) {
-      setNdReasonQuery('')
-      setNdSelectedReason('')
-      setNdObservations('')
-      setNdPhotoDataUrl(null)
+      if (initialDeliveryEvent) {
+        // Cargar datos existentes si estamos editando
+        const failure = initialDeliveryEvent.deliveryUnits[0]?.delivery?.failure
+        setNdSelectedReason(failure?.reason || '')
+        setNdReasonQuery(failure?.reason || '')
+        setNdObservations(failure?.detail || '')
+        setNdPhotoDataUrl(initialDeliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url || null)
+      } else {
+        // Limpiar para nueva no entrega
+        setNdReasonQuery('')
+        setNdSelectedReason('')
+        setNdObservations('')
+        setNdPhotoDataUrl(null)
+      }
     }
-  }, [isOpen])
+  }, [isOpen, initialDeliveryEvent])
 
   const handleSubmit = () => {
     const reason = (ndSelectedReason || ndReasonQuery || '').trim()
     if (!reason || !ndPhotoDataUrl) return
     
-    onSubmit({
-      reason,
-      observations: ndObservations || '',
-      photoDataUrl: ndPhotoDataUrl
-    })
+    // ✅ Crear y retornar un DeliveryEvent hidratado
+    const hydratedDeliveryEvent: DeliveryEvent = {
+      ...initialDeliveryEvent!,
+      deliveryUnits: initialDeliveryEvent?.deliveryUnits.map(unit => ({
+        ...unit,
+        delivery: {
+          ...unit.delivery,
+          status: 'not-delivered',
+          failure: {
+            reason,
+            detail: ndObservations || '',
+            referenceID: unit.orderReferenceID
+          }
+        },
+        evidencePhotos: [{
+          takenAt: new Date().toISOString(),
+          type: 'non-delivery',
+          url: ndPhotoDataUrl
+        }]
+      })) || []
+    }
+    
+    onSubmit(hydratedDeliveryEvent)
   }
 
   const handleClose = () => {
