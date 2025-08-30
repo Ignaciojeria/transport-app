@@ -105,7 +105,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         timestamp: Date.now(),
         deviceId
       }
-      console.log('📍 Sincronizando posición de marcador:', data)
+      // Debug: logs removidos para limpiar la consola
               deliveriesData.get(key).put(JSON.stringify(data))
     } catch (error) {
       console.error('Error sincronizando posición de marcador:', error)
@@ -127,7 +127,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         if (data && typeof data === 'string') {
           try {
             const parsed = JSON.parse(data)
-            console.log('📡 Recibida posición de marcador sincronizada:', parsed)
+            // Debug: logs removidos para limpiar la consola
             setMarkerPosition_(parsed)
           } catch {}
         }
@@ -198,10 +198,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   const getDeliveryUnitStatus = (visitIndex: number, orderIndex: number, unitIndex: number) => {
     const status = getDeliveryStatusFromState(localState?.s || {}, routeId, visitIndex, orderIndex, unitIndex)
-    // Debug ocasional para verificar lecturas de estado
-    if (visitIndex === 7 && orderIndex === 0 && unitIndex === 0) {
-      console.log(`🔍 getDeliveryUnitStatus(7,0,0): ${status}`)
-    }
+    
+    // Debug: logs removidos para limpiar la consola
+    
     return status
   }
 
@@ -238,7 +237,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         recipientRut: evidence.recipientRut,
         photoDataUrl: evidence.photoDataUrl,
         takenAt: Date.now(),
-      } as any)
+      })
       console.log('📦 Estableciendo estado de entrega a "delivered"')
       setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
       closeEvidenceModal()
@@ -256,25 +255,16 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
       setFailedDelivery(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
-        delivery: {
-          status: 'not-delivered',
-          handledAt: new Date().toISOString(),
-          location: { latitude: 0, longitude: 0 },
-          failure: {
-            reason: evidence.reason,
-            detail: evidence.observations,
-            referenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
-          }
-        },
-        evidencePhotos: [{
-          takenAt: new Date().toISOString(),
-          type: 'non-delivery',
-          url: evidence.photoDataUrl,
-        }],
-        orderReferenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
+        reason: evidence.reason,
+        observations: evidence.observations,
+        photoDataUrl: evidence.photoDataUrl
       })
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
-      setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
+      setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered', {
+        reason: evidence.reason,
+        observations: evidence.observations,
+        photoDataUrl: evidence.photoDataUrl
+      })
       closeNdModal()
       // Función eliminada - ya no se necesita
     } finally {
@@ -294,39 +284,33 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     // Siempre obtener la siguiente pendiente real
     const nextPending = getNextPendingVisitIndex()
     
-    console.log('🔍 getPositionedVisitIndex - Estados:', {
-      markerPosition: markerPosition?.visitIndex,
-      markerPositionAge: markerPosition ? Date.now() - markerPosition.timestamp : null,
-      nextVisitIndex,
-      lastCenteredVisit,
-      nextPending
-    })
+    // Debug: logs removidos para limpiar la consola
     
     // PRIORIDAD 1: Selección manual desde botón de mapa (lastCenteredVisit)
     // Esta debe tener prioridad absoluta cuando se establece manualmente
     if (lastCenteredVisit !== null) {
-      console.log('📍 Usando última centrada (selección manual):', lastCenteredVisit)
+              // Debug: logs removidos para limpiar la consola
       return lastCenteredVisit
     }
     
     // PRIORIDAD 2: Estado sincronizado si es reciente (últimos 30 segundos)
     if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
-      console.log('📍 Usando posición sincronizada (cualquier estado):', markerPosition.visitIndex)
+              // Debug: logs removidos para limpiar la consola
       return markerPosition.visitIndex
     }
     
     // PRIORIDAD 3: Selección manual de cualquier visita
     if (nextVisitIndex !== null) {
-      console.log('📍 Usando selección manual (cualquier estado):', nextVisitIndex)
+              // Debug: logs removidos para limpiar la consola
       return nextVisitIndex
     }
     
     // PRIORIDAD 4: Fallback - siguiente pendiente automática
-    console.log('📍 Usando siguiente pendiente automática:', nextPending)
+            // Debug: logs removidos para limpiar la consola
     if (nextPending !== null) {
-      console.log(`✅ Retornando visita ${nextPending} como posicionada`)
+              // Debug: logs removidos para limpiar la consola
     } else {
-      console.log(`❌ No hay visitas pendientes para posicionar`)
+              // Debug: logs removidos para limpiar la consola
     }
     return nextPending
   }
@@ -343,10 +327,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         (order?.deliveryUnits || []).some((_u: any, uIdx: number) => getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined)
       )
       
-      // Debug: Log estado de cada visita
-      if (vIdx <= 5) { 
-        console.log(`🔍 Visita ${vIdx}: hasPending=${hasPending}, seq=${visit?.sequenceNumber || vIdx + 1}`)
-      }
+      // Debug: logs removidos para limpiar la consola
       
       return {
         index: vIdx,

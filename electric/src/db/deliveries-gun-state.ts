@@ -5,15 +5,15 @@ import type {
   Recipient, 
   DeliveryFailure,
   DeliveryLocation,
-  DeliveryItem
+  DeliveryItem,
+  EvidencePhoto
 } from '../domain/deliveries'
 
 
 
 // Configuración de Gun para MVP con sincronización entre dispositivos
 const gun = Gun({
-  localStorage: true,
-  radisk: false,
+  radisk: true,
   peers: [
     'https://peer.wallie.io/gun',
   ]
@@ -85,6 +85,17 @@ export function useDeliveriesState() {
   useEffect(() => {
     const unsubscribe = deliveriesData.map().on((value, key) => {
       if (value !== null && value !== undefined) {
+        // Debug: log para claves de delivery
+        if (key.includes('delivery:')) {
+          // console.log(`🔄 Estado local actualizado - Clave: ${key}`, value) // Comentado para reducir logs
+          // console.log(`🔄 Tipo de valor:`, typeof value) // Comentado para reducir logs
+          if (typeof value === 'object') {
+            // console.log(`🔄 Propiedades del objeto:`, Object.keys(value)) // Comentado para reducir logs
+            if (value.failure) {
+              // console.log(`🔄 DeliveryFailure encontrado:`, value.failure) // Comentado para reducir logs
+            }
+          }
+        }
         setState(prev => ({ ...prev, [key]: value }))
       } else {
         setState(prev => {
@@ -113,10 +124,42 @@ export function setDeliveryStatus(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  status: 'delivered' | 'not-delivered'
+  status: 'delivered' | 'not-delivered',
+  evidence?: {
+    reason?: string
+    observations?: string
+    photoDataUrl?: string
+  }
 ) {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
-  deliveriesData.get(key).put(status)
+  
+  // console.log(`🔧 setDeliveryStatus llamado:`, { routeId, visitIndex, orderIndex, unitIndex, status, evidence }) // Comentado para reducir logs
+  
+  if (status === 'not-delivered' && evidence) {
+    // Para no entregas, usar el dominio DeliveryFailure
+    const deliveryFailure: DeliveryFailure = {
+      reason: evidence.reason || '',
+      detail: evidence.observations || '',
+      referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`
+    }
+    
+    const deliveryData = {
+      status,
+      failure: deliveryFailure,
+      photoDataUrl: evidence.photoDataUrl,
+      timestamp: Date.now(),
+      deviceId: getDeviceId()
+    }
+    
+    // console.log(`💾 Guardando datos de no entrega en clave: ${key}`) // Comentado para reducir logs
+    // console.log(`💾 Datos guardados:`, deliveryData) // Comentado para reducir logs
+    
+    deliveriesData.get(key).put(deliveryData)
+  } else {
+    // Para entregas exitosas, solo guardar estado
+    // console.log(`💾 Guardando estado simple: ${status} en clave: ${key}`) // Comentado para reducir logs
+    deliveriesData.get(key).put(status)
+  }
 }
 
 export function getDeliveryStatus(
@@ -140,17 +183,36 @@ export function setDeliveryEvidence(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  deliveryUnit: Partial<DeliveryUnit>
+  evidence: {
+    recipientName: string
+    recipientRut: string
+    photoDataUrl: string
+    takenAt: number
+  }
 ): void {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Asegurar que los campos requeridos estén presentes
-  const completeDeliveryUnit: Partial<DeliveryUnit> = {
-    ...deliveryUnit,
-    orderReferenceID: deliveryUnit.orderReferenceID || `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  // Crear Recipient usando el dominio correcto
+  const recipient: Recipient = {
+    fullName: evidence.recipientName,
+    nationalID: evidence.recipientRut
   }
   
-  deliveriesData.get(key).put(completeDeliveryUnit)
+  // Crear evidencia de foto usando el dominio correcto
+  const evidencePhoto: EvidencePhoto = {
+    takenAt: new Date(evidence.takenAt).toISOString(),
+    type: 'delivery',
+    url: evidence.photoDataUrl,
+  }
+  
+  // Crear estructura de DeliveryUnit usando el dominio correcto
+  const deliveryUnit: Partial<DeliveryUnit> = {
+    recipient,
+    evidencePhotos: [evidencePhoto],
+    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  }
+  
+  deliveriesData.get(key).put(deliveryUnit)
 }
 
 export function getDeliveryEvidence(
@@ -181,13 +243,16 @@ export function setSuccessfulDelivery(
 ): void {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
+  // Crear evidencia de foto usando el dominio correcto
+  const evidencePhoto: EvidencePhoto = {
+    takenAt: new Date().toISOString(),
+    type: 'delivery',
+    url: photoDataUrl,
+  }
+  
   const deliveryUnit: Partial<DeliveryUnit> = {
     recipient,
-    evidencePhotos: [{
-      takenAt: new Date().toISOString(),
-      type: 'delivery',
-      url: photoDataUrl,
-    }],
+    evidencePhotos: [evidencePhoto],
     items: items || [],
     delivery: {
       status: 'delivered',
@@ -206,17 +271,41 @@ export function setFailedDelivery(
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  deliveryUnit: Partial<DeliveryUnit>
+  evidence: {
+    reason: string
+    observations: string
+    photoDataUrl: string
+  }
 ): void {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Asegurar que los campos requeridos estén presentes
-  const completeDeliveryUnit: Partial<DeliveryUnit> = {
-    ...deliveryUnit,
-    orderReferenceID: deliveryUnit.orderReferenceID || `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  // Crear DeliveryFailure usando el dominio correcto
+  const deliveryFailure: DeliveryFailure = {
+    reason: evidence.reason,
+    detail: evidence.observations,
+    referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`
   }
   
-  deliveriesData.get(key).put(completeDeliveryUnit)
+  // Crear evidencia de foto
+  const evidencePhoto: EvidencePhoto = {
+    takenAt: new Date().toISOString(),
+    type: 'non-delivery',
+    url: evidence.photoDataUrl,
+  }
+  
+  // Crear estructura de DeliveryUnit usando el dominio correcto
+  const deliveryUnit: Partial<DeliveryUnit> = {
+    delivery: {
+      status: 'not-delivered',
+      handledAt: new Date().toISOString(),
+      location: { latitude: 0, longitude: 0 },
+      failure: deliveryFailure
+    },
+    evidencePhotos: [evidencePhoto],
+    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+  }
+  
+  deliveriesData.get(key).put(deliveryUnit)
 }
 
 export function getNonDeliveryEvidence(
@@ -243,7 +332,49 @@ export function getDeliveryStatusFromState(
   unitIndex: number
 ): 'delivered' | 'not-delivered' | undefined {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
-  return state[key] ?? undefined
+  const data = state[key]
+  
+  // Debug: logs removidos para limpiar la consola
+  
+  if (typeof data === 'string') {
+    // Estado simple (formato anterior)
+    return data as 'delivered' | 'not-delivered'
+  } else if (data && typeof data === 'object' && data.status) {
+    // Estado con evidencia (nuevo formato)
+    return data.status as 'delivered' | 'not-delivered'
+  }
+  
+  return undefined
+}
+
+// Helper para obtener evidencia de no entrega desde el estado
+export function getNonDeliveryEvidenceFromState(
+  state: Record<string, any>,
+  routeId: string,
+  visitIndex: number,
+  orderIndex: number,
+  unitIndex: number
+): {
+  reason?: string
+  observations?: string
+  photoDataUrl?: string
+  timestamp?: number
+  deviceId?: string
+} | null {
+  const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
+  const data = state[key]
+  
+  if (data && typeof data === 'object' && data.status === 'not-delivered') {
+    return {
+      reason: data.failure?.reason,
+      observations: data.failure?.detail,
+      photoDataUrl: data.photoDataUrl,
+      timestamp: data.timestamp,
+      deviceId: data.deviceId
+    }
+  }
+  
+  return null
 }
 
 

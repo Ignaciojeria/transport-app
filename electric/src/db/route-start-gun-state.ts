@@ -23,20 +23,20 @@ export const routeLicenseKey = (routeId: string) => `routeLicense:${routeId}`
 // Función para establecer el inicio de ruta
 export const setRouteStart = async (routeId: string, routeStart: RouteStart): Promise<void> => {
   try {
-    console.log('🔍 Iniciando setRouteStart con:', { routeId, routeStart })
+    // console.log('🔍 Iniciando setRouteStart con:', { routeId, routeStart }) // Comentado para reducir logs
     
     const key = routeStartKey(routeId)
-    console.log('🔑 Clave generada:', key)
+    // console.log('🔑 Clave generada:', key) // Comentado para reducir logs
     
     // Verificar si hay BigInt en los datos
-    console.log('🔍 Verificando campos de routeStart:', {
-      routeId: routeStart.route?.id,
-      routeIdType: typeof routeStart.route?.id,
-      documentID: routeStart.route?.documentID,
-      documentIDType: typeof routeStart.route?.documentID,
-      referenceID: routeStart.route?.referenceID,
-      referenceIDType: typeof routeStart.route?.referenceID
-    })
+    // console.log('🔍 Verificando campos de routeStart:', { // Comentado para reducir logs
+    //   routeId: routeStart.route?.id,
+    //   routeIdType: typeof routeStart.route?.id,
+    //   documentID: routeStart.route?.documentID,
+    //   documentIDType: typeof routeStart.route?.documentID,
+    //   referenceID: routeStart.route?.referenceID,
+    //   referenceIDType: typeof routeStart.route?.referenceID
+    // })
     
     // Crear una copia segura para JSON
     const safeRouteStart = {
@@ -54,24 +54,24 @@ export const setRouteStart = async (routeId: string, routeStart: RouteStart): Pr
       deviceId: `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     }
     
-    console.log('🚀 Guardando inicio de ruta:', data)
-    console.log('📝 JSON stringificado:', JSON.stringify(data))
+    // console.log('🚀 Guardando inicio de ruta:', data) // Comentado para reducir logs
+    // console.log('📝 JSON stringificado:', JSON.stringify(data)) // Comentado para reducir logs
     
     // Verificar que deliveriesData esté disponible
     if (!deliveriesData) {
       throw new Error('deliveriesData no está disponible')
     }
     
-    console.log('💾 Guardando en GunJS...')
+    // console.log('💾 Guardando en GunJS...') // Comentado para reducir logs
     await deliveriesData.get(key).put(JSON.stringify(data))
-    console.log('✅ Guardado principal exitoso')
+    // console.log('✅ Guardado principal exitoso') // Comentado para reducir logs
     
     // También guardar por separado para acceso rápido
-    console.log('💾 Guardando datos separados...')
+    // console.log('💾 Guardando datos separados...') // Comentado para reducir logs
     await deliveriesData.get(vehiclePlateKey(routeId)).put(routeStart.vehicle.plate)
     await deliveriesData.get(driverInfoKey(routeId)).put(JSON.stringify(routeStart.driver))
     await deliveriesData.get(carrierInfoKey(routeId)).put(JSON.stringify(routeStart.carrier))
-    console.log('✅ Todos los datos guardados exitosamente')
+    // console.log('✅ Todos los datos guardados exitosamente') // Comentado para reducir logs
     
   } catch (error) {
     console.error('❌ Error guardando inicio de ruta:', error)
@@ -176,7 +176,7 @@ export const clearRouteStart = async (routeId: string): Promise<void> => {
       await deliveriesData.get(key).put(null)
     }
     
-    console.log('🧹 Estado de inicio de ruta limpiado para:', routeId)
+    // console.log('🧹 Estado de inicio de ruta limpiado para:', routeId) // Comentado para reducir logs
   } catch (error) {
     console.error('Error limpiando estado de inicio de ruta:', error)
     throw error

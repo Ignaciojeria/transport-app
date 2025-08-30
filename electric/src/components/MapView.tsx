@@ -70,11 +70,11 @@ export function MapView({
     
     const currentSelectedIdx = getPositionedVisitIndex()
     if (typeof currentSelectedIdx !== 'number') {
-      console.log('📍 No hay marcador posicionado para hacer zoom')
+      // Debug: logs removidos para limpiar la consola
       return
     }
     
-    console.log(`🔍 Haciendo zoom al marcador actualmente seleccionado: ${currentSelectedIdx}`)
+    // Debug: logs removidos para limpiar la consola
     
     const visit = visits[currentSelectedIdx]
     const c = visit?.addressInfo?.coordinates
@@ -85,12 +85,12 @@ export function MapView({
     if (latlng) {
       try { 
         mapInstanceRef.current.flyTo(latlng as any, 16, { duration: 0.6 })
-        console.log(`✅ Zoom realizado a visita ${currentSelectedIdx}`)
+        // Debug: logs removidos para limpiar la consola
       } catch (e) {
         console.error('❌ Error al hacer zoom:', e)
       }
     } else {
-      console.log('❌ No se pudo obtener coordenadas para la visita')
+      // Debug: logs removidos para limpiar la consola
     }
   }
 
@@ -349,15 +349,14 @@ export function MapView({
         const isCurrentlyPositioned = (positionedVisitIndex === idx)
         
         if (isCurrentlyPositioned) {
-          console.log(`📍 Marcador ${idx} posicionado (único)`)
+          // Debug: logs removidos para limpiar la consola
         }
         
         const visitStatus = getVisitStatus(v, getDeliveryUnitStatus, idx)
         const color = getVisitMarkerColor(visitStatus)
         const sequenceNumber = v?.sequenceNumber || (idx + 1)
         
-        // Debug para identificar problema de colores
-        console.log(`🎨 Marcador ${idx}: status=${visitStatus}, color=${color}, positioned=${isCurrentlyPositioned}`)
+        // Debug: logs removidos para limpiar la consola
         
         // Usar iconos optimizados
         const icon = isCurrentlyPositioned 
@@ -368,7 +367,7 @@ export function MapView({
         
         // Agregar event listener para click en marcador
         marker.on('click', () => {
-          console.log(`🖱️ Click en marcador ${idx}`)
+          // Debug: logs removidos para limpiar la consola
           // Vibración táctil si está disponible
           try { (navigator as any)?.vibrate?.(30) } catch {}
           
@@ -455,7 +454,7 @@ export function MapView({
       
       // Agregar event listener para click en marcador
       marker.on('click', () => {
-        console.log(`🖱️ Click en marcador inicial ${idx}`)
+        // Debug: logs removidos para limpiar la consola
         // Vibración táctil si está disponible
         try { (navigator as any)?.vibrate?.(30) } catch {}
         

@@ -3,6 +3,7 @@ export {
   useDeliveriesState,
   setDeliveryStatus,
   getDeliveryStatusFromState,
+  getNonDeliveryEvidenceFromState,
   setDeliveryEvidence,
   setSuccessfulDelivery,
   setFailedDelivery

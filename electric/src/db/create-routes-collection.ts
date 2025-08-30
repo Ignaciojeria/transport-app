@@ -40,19 +40,19 @@ export const createRoutesCollection = (token: string, referenceId?: string) =>
       
       async onInsert({ transaction }) {
         const { modified: newRoute } = transaction.mutations[0]
-        console.log('Inserting route:', newRoute)
+        // console.log('Inserting route:', newRoute) // Comentado para reducir logs
         return { txid: [Date.now()] }
       },
       
       async onUpdate({ transaction }) {
-        const { original, modified } = transaction.mutations[0]
-        console.log('Updating route:', { original, modified })
+        // const { original, modified } = transaction.mutations[0] // Comentado para reducir logs
+        // console.log('Updating route:', { original, modified }) // Comentado para reducir logs
         return { txid: [Date.now()] }
       },
       
       async onDelete({ transaction }) {
-        const { original } = transaction.mutations[0]
-        console.log('Deleting route:', original)
+        // const { original } = transaction.mutations[0] // Comentado para reducir logs
+        // console.log('Deleting route:', original) // Comentado para reducir logs
         return { txid: [Date.now()] }
       },
     })
