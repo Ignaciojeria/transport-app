@@ -11,9 +11,9 @@
   },
   "dependencies": {
     "@electric-sql/react": "^1.0.7",
-    "@tanstack/electric-db-collection": "^0.1.5",
+    "@tanstack/electric-db-collection": "^0.1.10",
     "@tanstack/query-db-collection": "^0.2.4",
-    "@tanstack/react-db": "^0.1.5",
+    "@tanstack/react-db": "^0.1.9",
     "@tanstack/react-router": "^1.131.27",
     "@tanstack/react-router-devtools": "^1.131.27",
     "@types/gun": "^0.9.6",

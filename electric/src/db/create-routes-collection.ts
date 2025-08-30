@@ -1,7 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { electricCollectionOptions } from '@tanstack/electric-db-collection'
 import { z } from 'zod'
-import type { Route } from '../domain/route'
 
 // Schema para las rutas
 const RouteSchema = z.object({
@@ -39,20 +38,17 @@ export const createRoutesCollection = (token: string, referenceId?: string) =>
       schema: RouteSchema,
       
       async onInsert({ transaction }) {
-        const { modified: newRoute } = transaction.mutations[0]
-        // console.log('Inserting route:', newRoute) // Comentado para reducir logs
+        // console.log('Inserting route:', transaction.mutations[0].modified)
         return { txid: [Date.now()] }
       },
       
-      async onUpdate({ transaction }) {
-        // const { original, modified } = transaction.mutations[0] // Comentado para reducir logs
-        // console.log('Updating route:', { original, modified }) // Comentado para reducir logs
+      async onUpdate() {
+        // console.log('Updating route')
         return { txid: [Date.now()] }
       },
       
-      async onDelete({ transaction }) {
-        // const { original } = transaction.mutations[0] // Comentado para reducir logs
-        // console.log('Deleting route:', original) // Comentado para reducir logs
+      async onDelete() {
+        // console.log('Deleting route')
         return { txid: [Date.now()] }
       },
     })
