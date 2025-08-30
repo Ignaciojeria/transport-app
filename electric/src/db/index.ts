@@ -7,7 +7,9 @@ export {
   setDeliveryEvidence,
   setSuccessfulDelivery,
   setFailedDelivery,
-  setDeliveryUnitByEntity
+  setDeliveryUnitByEntity,
+  setDeliveryEvidenceByEntity,
+  setSuccessfulDeliveryByEntity
 } from './gun'
 
 // Exportar funciones del route start state

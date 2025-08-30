@@ -1,7 +1,7 @@
 import { deliveriesData } from '../index'
 import type { RouteStart } from '../../../domain/route-start'
 import { useState, useEffect } from 'react'
-import { mapGunToRouteStart } from '../mappers/route-start-mappers'
+import { mapGunToRouteStart, mapRouteStartToGun } from '../mappers/route-start-mappers'
 
 // Clave para almacenar el estado de inicio de ruta
 export const routeStartKey = (routeId: string) => `route_start:${routeId}`
@@ -357,6 +357,35 @@ export function useRouteStartDomain(routeId: string) {
   }, [routeId])
 
   return { routeStart, loading }
+}
+
+// Versión refactorizada de setRouteStart que usa mappers
+export async function setRouteStartByEntity(
+  routeId: string,
+  routeStart: RouteStart
+): Promise<void> {
+  try {
+    const key = routeStartKey(routeId)
+    
+    // Usar el mapper para convertir a modelo de Gun.js
+    const gunData = mapRouteStartToGun(routeStart)
+    
+    // Agregar metadatos internos
+    const data = {
+      ...gunData,
+      timestamp: Date.now(),
+      deviceId: `device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    }
+    
+    // Guardar usando el modelo mapeado
+    await deliveriesData.get(key).put(JSON.stringify(data))
+    
+    console.log(`✅ setRouteStartByEntity completado para ${key}`)
+    
+  } catch (error) {
+    console.error('❌ Error guardando inicio de ruta:', error)
+    throw error
+  }
 }
 
 

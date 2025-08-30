@@ -408,3 +408,51 @@ export function setDeliveryUnitByEntity(
   
   console.log(`✅ setDeliveryUnitByEntity completado para ${key} con estado: ${unitData.delivery?.status}`)
 }
+
+// Versión refactorizada de setDeliveryEvidence que recibe entidad del dominio
+export function setDeliveryEvidenceByEntity(
+  deliveryUnit: Partial<DeliveryUnit> & {
+    routeId: string
+    visitIndex: number
+    orderIndex: number
+    unitIndex: number
+  }
+): void {
+  const { routeId, visitIndex, orderIndex, unitIndex, ...unitData } = deliveryUnit
+  
+  // Mapear entidad del dominio a modelo interno de Gun.js
+  const gunData = mapDeliveryUnitToGun(unitData)
+  
+  // Debug: ver qué estamos guardando
+  console.log(`💾 setDeliveryEvidenceByEntity - Datos a guardar:`, gunData)
+  
+  // Guardar evidencia detallada
+  const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
+  deliveriesData.get(key).put(gunData)
+  
+  // También actualizar el estado de delivery para mantener consistencia
+  const deliveryStateKey = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
+  deliveriesData.get(deliveryStateKey).put('delivered')
+  
+  console.log(`✅ setDeliveryEvidenceByEntity completado para ${key}`)
+}
+
+// Versión refactorizada de setSuccessfulDelivery que recibe entidad del dominio
+export function setSuccessfulDeliveryByEntity(
+  deliveryUnit: Partial<DeliveryUnit> & {
+    routeId: string
+    visitIndex: number
+    orderIndex: number
+    unitIndex: number
+  }
+): void {
+  const { routeId, visitIndex, orderIndex, unitIndex, ...unitData } = deliveryUnit
+  
+  // Mapear entidad del dominio a modelo interno de Gun.js
+  const gunData = mapDeliveryUnitToGun(unitData)
+  
+  const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
+  deliveriesData.get(key).put(gunData)
+  
+  console.log(`✅ setSuccessfulDeliveryByEntity completado para ${key}`)
+}
