@@ -1,14 +1,12 @@
 import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
+import type { DeliveryEvent, Recipient, EvidencePhoto } from '../domain/deliveries'
 
 interface DeliveryModalProps {
   isOpen: boolean
   onClose: () => void
-  onSubmit: (evidence: {
-    recipientName: string
-    recipientRut: string
-    photoDataUrl: string
-  }) => void
+  onSubmit: (deliveryEvent: DeliveryEvent) => void
+  initialDeliveryEvent?: DeliveryEvent // Para edición
   submitting?: boolean
 }
 
@@ -16,6 +14,7 @@ export function DeliveryModal({
   isOpen,
   onClose,
   onSubmit,
+  initialDeliveryEvent,
   submitting = false
 }: DeliveryModalProps) {
   const [recipientName, setRecipientName] = useState('')
@@ -24,25 +23,45 @@ export function DeliveryModal({
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const rutInputRef = useRef<HTMLInputElement | null>(null)
 
-  // Limpiar estado cuando se abre el modal para una nueva entrega
+  // Inicializar con datos existentes si los hay
   useEffect(() => {
     if (isOpen) {
-      setRecipientName('')
-      setRecipientRut('')
-      setPhotoDataUrl(null)
+      if (initialDeliveryEvent) {
+        setRecipientName(initialDeliveryEvent.deliveryUnits[0]?.recipient?.fullName || '')
+        setRecipientRut(initialDeliveryEvent.deliveryUnits[0]?.recipient?.nationalID || '')
+        setPhotoDataUrl(initialDeliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url || null)
+      } else {
+        // Limpiar para nueva entrega
+        setRecipientName('')
+        setRecipientRut('')
+        setPhotoDataUrl(null)
+      }
     }
-  }, [isOpen])
+  }, [isOpen, initialDeliveryEvent])
 
   const handleSubmit = () => {
     const trimmedName = recipientName.trim()
     const trimmedRut = recipientRut.trim()
     if (!trimmedName || !trimmedRut || !photoDataUrl) return
     
-    onSubmit({
-      recipientName: trimmedName,
-      recipientRut: trimmedRut,
-      photoDataUrl
-    })
+    // ✅ Crear y retornar un DeliveryEvent hidratado
+    const hydratedDeliveryEvent: DeliveryEvent = {
+      ...initialDeliveryEvent!,
+      deliveryUnits: initialDeliveryEvent?.deliveryUnits.map(unit => ({
+        ...unit,
+        recipient: {
+          fullName: trimmedName,
+          nationalID: trimmedRut
+        },
+        evidencePhotos: [{
+          takenAt: new Date().toISOString(),
+          type: 'delivery_evidence',
+          url: photoDataUrl
+        }]
+      })) || []
+    }
+    
+    onSubmit(hydratedDeliveryEvent)
   }
 
   const handleClose = () => {

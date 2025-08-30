@@ -1,3 +1,12 @@
+export interface DeliveryEvent {
+  carrier: Carrier
+  deliveryUnits: DeliveryUnit[]
+  driver: Driver
+  manualChange?: ManualChange
+  route: RouteReference
+  vehicle: Vehicle
+}
+
 export interface Carrier {
   name: string
   nationalID: string
@@ -76,11 +85,4 @@ export interface Vehicle {
   plate: string
 }
 
-export interface DeliveryReport {
-  carrier: Carrier
-  deliveryUnits: DeliveryUnit[]
-  driver: Driver
-  manualChange?: ManualChange
-  route: RouteReference
-  vehicle: Vehicle
-}
+

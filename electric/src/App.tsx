@@ -29,7 +29,7 @@ import {
 } from './components/DownloadReportModal.utils'
 import type { Route as RouteType } from './domain/route'
 import type { RouteStart } from './domain/route-start'
-import type { DeliveryUnit } from './domain/deliveries'
+import type { DeliveryUnit, DeliveryEvent } from './domain/deliveries'
 
 
 // Componente para rutas específicas del driver
@@ -147,6 +147,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const routeStarted = (localState?.s?.[`${routeStartedKey(routeId)}_simple`] === 'true')
 
   const [routeStartModal, setRouteStartModal] = useState(false)
+  const [initialDeliveryEvent, setInitialDeliveryEvent] = useState<DeliveryEvent | undefined>(undefined)
 
   const handleStartRoute = () => {
     setRouteStartModal(true)
@@ -208,7 +209,49 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   }
 
   const openDeliveryFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
+    // Crear un DeliveryEvent inicial simplificado
+    const initialDeliveryEvent: DeliveryEvent = {
+      carrier: {
+        name: '',
+        nationalID: ''
+      },
+      deliveryUnits: [{
+        businessIdentifiers: {
+          commerce: '',
+          consumer: ''
+        },
+        delivery: {
+          status: 'pending',
+          handledAt: new Date().toISOString(),
+          location: { latitude: 0, longitude: 0 }
+        },
+        evidencePhotos: [],
+        items: [],
+        lpn: '',
+        orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+        recipient: {
+          fullName: '',
+          nationalID: ''
+        }
+      }],
+      driver: {
+        email: '',
+        nationalID: ''
+      },
+      route: {
+        id: routeData?.id || 0,
+        documentID: routeData?.documentID || '',
+        referenceID: routeData?.referenceID || '',
+        sequenceNumber: 0,
+        startedAt: new Date().toISOString()
+      },
+      vehicle: {
+        plate: routeData?.vehicle?.plate || ''
+      }
+    }
+    
     setEvidenceModal({ open: true, vIdx: visitIndex, oIdx: orderIndex, uIdx: unitIndex })
+    setInitialDeliveryEvent(initialDeliveryEvent)
   }
 
   const openNonDeliveryFor = (visitIndex: number, orderIndex: number, unitIndex: number) => {
@@ -222,18 +265,24 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const closeEvidenceModal = () => {
     setEvidenceModal({ open: false, vIdx: null, oIdx: null, uIdx: null })
     setSubmittingEvidence(false)
+    setInitialDeliveryEvent(undefined)
   }
 
   
 
 
 
-  const submitEvidence = async (evidence: { recipientName: string; recipientRut: string; photoDataUrl: string }) => {
+  const submitEvidence = async (deliveryEvent: DeliveryEvent) => {
     if (!evidenceModal.open || evidenceModal.vIdx === null || evidenceModal.oIdx === null || evidenceModal.uIdx === null) return
     try {
       setSubmittingEvidence(true)
       
       console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
+      
+      // Extraer datos del DeliveryEvent
+      const recipientName = deliveryEvent.deliveryUnits[0]?.recipient?.fullName || ''
+      const recipientRut = deliveryEvent.deliveryUnits[0]?.recipient?.nationalID || ''
+      const photoDataUrl = deliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url || ''
       
       // Crear entidad del dominio
       const deliveryUnit: Partial<DeliveryUnit> = {
@@ -243,13 +292,13 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           location: { latitude: 0, longitude: 0 }
         },
         recipient: {
-          fullName: evidence.recipientName,
-          nationalID: evidence.recipientRut
+          fullName: recipientName,
+          nationalID: recipientRut
         },
         evidencePhotos: [{
           takenAt: new Date().toISOString(),
           type: 'delivery',
-          url: evidence.photoDataUrl,
+          url: photoDataUrl,
         }],
         orderReferenceID: `${routeId}-${evidenceModal.vIdx}-${evidenceModal.oIdx}-${evidenceModal.uIdx}`,
       }
@@ -684,6 +733,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       isOpen={evidenceModal.open}
       onClose={closeEvidenceModal}
       onSubmit={submitEvidence}
+      initialDeliveryEvent={initialDeliveryEvent}
       submitting={submittingEvidence}
     />
     {/* Modal de No Entregado */}
