@@ -378,3 +378,33 @@ export function getNonDeliveryEvidenceFromState(
 
 // Exportar también la instancia de Gun por si necesitas funcionalidades avanzadas
 export { gun, deliveriesData }
+
+// Función unificada que recibe entidades del dominio directamente
+export function setDeliveryUnitByEntity(
+  deliveryUnit: Partial<DeliveryUnit> & { 
+    routeId: string
+    visitIndex: number
+    orderIndex: number
+    unitIndex: number
+  }
+): void {
+  const { routeId, visitIndex, orderIndex, unitIndex, ...unitData } = deliveryUnit
+  
+  // Usar el mapper apropiado según el estado
+  let gunData: any
+  
+  if (unitData.delivery?.status === 'not-delivered') {
+    // Para no entregas, usar el mapper de fallo
+    gunData = mapDeliveryFailureToGun(unitData)
+  } else {
+    // Para entregas exitosas, usar el mapper normal
+    gunData = mapDeliveryUnitToGun(unitData)
+  }
+  
+  const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
+  
+  // Guardar en un solo lugar usando la clave principal
+  deliveriesData.get(key).put(gunData)
+  
+  console.log(`✅ setDeliveryUnitByEntity completado para ${key} con estado: ${unitData.delivery?.status}`)
+}

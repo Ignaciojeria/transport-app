@@ -14,6 +14,7 @@ import {
   setRouteLicense,
   getRouteLicenseFromState,
   setRouteStart,
+  setDeliveryUnitByEntity,
 } from './db'
 import { useMemo, useState, useEffect } from 'react'
 import { Play, Menu, Truck, Route, Map } from 'lucide-react'
@@ -269,19 +270,39 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
-      setFailedDelivery(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
-        reason: evidence.reason,
-        observations: evidence.observations,
-        photoDataUrl: evidence.photoDataUrl
-      })
-      console.log('📦 Estableciendo estado de entrega a "not-delivered"')
-      setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered', {
-        reason: evidence.reason,
-        observations: evidence.observations,
-        photoDataUrl: evidence.photoDataUrl
-      })
+      // Crear la entidad del dominio completa
+      const deliveryUnit: Partial<DeliveryUnit> & {
+        routeId: string
+        visitIndex: number
+        orderIndex: number
+        unitIndex: number
+      } = {
+        routeId,
+        visitIndex: ndModal.vIdx,
+        orderIndex: ndModal.oIdx,
+        unitIndex: ndModal.uIdx,
+        delivery: {
+          status: 'not-delivered',
+          handledAt: new Date().toISOString(),
+          location: { latitude: 0, longitude: 0 }, // TODO: obtener ubicación real
+          failure: {
+            reason: evidence.reason,
+            detail: evidence.observations,
+            referenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`
+          }
+        },
+        evidencePhotos: [{
+          takenAt: new Date().toISOString(),
+          type: 'non-delivery',
+          url: evidence.photoDataUrl,
+        }],
+        orderReferenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
+      }
+      
+      // Usar la función unificada que recibe la entidad del dominio
+      setDeliveryUnitByEntity(deliveryUnit)
+      
       closeNdModal()
-      // Función eliminada - ya no se necesita
     } finally {
       setSubmittingEvidence(false)
     }
