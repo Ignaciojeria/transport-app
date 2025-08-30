@@ -77,18 +77,34 @@ export function getDeliveryEvidence(
   localState: any,
   routeId: string,
   visitIndex: number,
-  orderIndex: number,
-  unitIndex: number
+  unitIndex: number,
+  orderIndex: number
 ): any {
-  // Buscar en la clave evidence para entregas exitosas
+  // Buscar en la clave evidence para entregas exitosas (nueva estructura del dominio)
   const evidenceKey = `evidence:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
   const evidence = localState?.[evidenceKey]
-  if (evidence) {
-    try {
-      return typeof evidence === 'string' ? JSON.parse(evidence) : evidence
-    } catch {
-      return null
+  
+  // Debug: ver qué datos estamos recibiendo
+  console.log(`🔍 getDeliveryEvidence para ${evidenceKey}:`, evidence)
+  
+  if (evidence && typeof evidence === 'object') {
+    // Ahora evidence ya es una entidad del dominio (convertida por useDeliveriesState)
+    const recipientName = evidence.recipient?.fullName || ''
+    const recipientRut = evidence.recipient?.nationalID || ''
+    const takenAt = evidence.evidencePhotos?.[0]?.takenAt || evidence.delivery?.handledAt || Date.now()
+    const photoDataUrl = evidence.evidencePhotos?.[0]?.url || ''
+    
+    console.log(`🔍 Datos extraídos:`, { recipientName, recipientRut, takenAt, photoDataUrl })
+    
+    const result = {
+      recipientName,
+      recipientRut,
+      takenAt,
+      photoDataUrl
     }
+    
+    console.log(`🔍 Resultado final:`, result)
+    return result
   }
   
   // Fallback: buscar en delivery si no se encuentra en evidence
@@ -114,20 +130,42 @@ export function getNonDeliveryEvidence(
   orderIndex: number,
   unitIndex: number
 ): any {
-  // Ahora la evidencia de no entrega está en el estado local con la clave delivery
+  // Buscar en la clave evidence para no entregas (nueva estructura del dominio)
+  const evidenceKey = `evidence:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
+  const evidence = localState?.[evidenceKey]
+  
+  if (evidence && typeof evidence === 'object') {
+    // Nueva estructura: evidence.delivery.failure y evidence.evidencePhotos
+    const failure = evidence.delivery?.failure
+    const evidencePhotos = evidence.evidencePhotos
+    
+    // Convertir evidencePhotos de formato Gun.js a array si es necesario
+    let photosArray = []
+    if (evidencePhotos) {
+      if (Array.isArray(evidencePhotos)) {
+        photosArray = evidencePhotos
+      } else if (typeof evidencePhotos === 'object') {
+        // Formato Gun.js: {"0": photo, "1": photo2, ...}
+        photosArray = Object.values(evidencePhotos).filter(photo => photo !== null && photo !== undefined)
+      }
+    }
+    
+    // Extraer la primera foto como evidencia principal
+    const mainPhoto = photosArray[0]
+    
+    return {
+      reason: failure?.reason || '',
+      observations: failure?.detail || '',
+      takenAt: mainPhoto?.takenAt || evidence.delivery?.handledAt || Date.now(),
+      photoDataUrl: mainPhoto?.url || ''
+    }
+  }
+  
+  // Fallback: buscar en delivery si no se encuentra en evidence
   const deliveryKey = `delivery:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
   const deliveryData = localState?.[deliveryKey]
   
-  // console.log(`🔍 Buscando evidencia no entrega en clave: ${deliveryKey}`) // Comentado para reducir logs
-  // console.log(`🔍 Datos encontrados:`, deliveryData) // Comentado para reducir logs
-  
   if (deliveryData && typeof deliveryData === 'object' && deliveryData.status === 'not-delivered') {
-    // console.log(`✅ Evidencia encontrada en delivery:`, { // Comentado para reducir logs
-    //   reason: deliveryData.failure?.reason, // Comentado para reducir logs
-    //   detail: deliveryData.failure?.detail, // Comentado para reducir logs
-    //   timestamp: deliveryData.timestamp // Comentado para reducir logs
-    // }) // Comentado para reducir logs
-    
     // Extraer información del dominio DeliveryFailure
     return {
       reason: deliveryData.failure?.reason || '',
@@ -139,20 +177,35 @@ export function getNonDeliveryEvidence(
   
   // Fallback: buscar en la clave antigua nd-evidence
   const ndEvidenceKey = `nd-evidence:${routeId}:${visitIndex}-${orderIndex}-${unitIndex}`
-  const evidence = localState?.[ndEvidenceKey]
-  if (evidence) {
+  const evidenceOld = localState?.[ndEvidenceKey]
+  if (evidenceOld) {
     try {
-      const parsed = typeof evidence === 'string' ? JSON.parse(evidence) : evidence
-      // console.log(`✅ Evidencia encontrada en nd-evidence:`, parsed) // Comentado para reducir logs
+      const parsed = typeof evidenceOld === 'string' ? JSON.parse(evidenceOld) : evidenceOld
       return parsed
     } catch {
-      // console.log(`❌ Error parseando evidencia:`, evidence) // Comentado para reducir logs
       return null
     }
   }
   
-  // console.log(`❌ No se encontró evidencia para: ${deliveryKey}`) // Comentado para reducir logs
   return null
+}
+
+// Función de debug para diagnosticar problemas de datos
+export function debugDeliveryData(localState: any, routeId: string): void {
+  console.log('🔍 Debug: Analizando estructura de datos para ruta:', routeId)
+  
+  // Buscar todas las claves relacionadas con la ruta
+  const relevantKeys = Object.keys(localState).filter(key => key.includes(routeId))
+  
+  relevantKeys.forEach(key => {
+    const data = localState[key]
+    console.log(`📋 Clave: ${key}`, {
+      tipo: typeof data,
+      esObjeto: typeof data === 'object',
+      propiedades: typeof data === 'object' ? Object.keys(data) : 'N/A',
+      datos: data
+    })
+  })
 }
 
 export function generateCSVContent(units: DeliveryUnitData[], reportData: ReportData): string {

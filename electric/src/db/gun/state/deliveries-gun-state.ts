@@ -1,19 +1,32 @@
 import Gun from 'gun'
+import 'gun/lib/radix'
+import 'gun/lib/radisk'
+import 'gun/lib/store'
+import 'gun/lib/rindexed'
 import { useEffect, useState } from 'react'
 import type { 
   DeliveryUnit, 
   Recipient, 
-  DeliveryFailure,
   DeliveryLocation,
-  DeliveryItem,
-  EvidencePhoto
-} from '../domain/deliveries'
+  DeliveryItem
+} from '../../../domain/deliveries'
+import type { 
+  GunDeliveryEvidence, 
+  GunDeliveryFailure
+} from '../models/delivery-models'
+import {
+  mapDeliveryUnitToGun,
+  mapGunToDeliveryUnit,
+  mapDeliveryFailureToGun,
+  mapGunToDeliveryFailure,
+  createDeliveryUnitFromEvidence,
+  createDeliveryUnitFromFailure
+} from '../mappers/delivery-mappers'
 
-
-
-// Configuración de Gun para MVP con sincronización entre dispositivos
+// Configuración de Gun usando RAD (Radix Adaptive Database)
 const gun = Gun({
-  radisk: true,
+  radisk: true, // Habilita RAD
+  localStorage: false, // Deshabilitar localStorage para evitar cuotas
   peers: [
     'https://peer.wallie.io/gun',
   ]
@@ -38,16 +51,6 @@ function getDeviceId(): string {
     localStorage.setItem('gun-device-id', deviceId)
   }
   return deviceId
-}
-
-// Helper para obtener información del dispositivo actual
-export function getDeviceInfo() {
-  return {
-    id: getDeviceId(),
-    userAgent: navigator.userAgent,
-    timestamp: Date.now(),
-    online: navigator.onLine
-  }
 }
 
 // Hook reactivo para escuchar cambios en Gun
@@ -78,6 +81,7 @@ export function useGunData(key?: string) {
 }
 
 // Hook para escuchar todos los cambios del estado de deliveries
+// Convierte internamente datos de Gun.js a entidades del dominio
 export function useDeliveriesState() {
   const [state, setState] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(true)
@@ -85,18 +89,9 @@ export function useDeliveriesState() {
   useEffect(() => {
     const unsubscribe = deliveriesData.map().on((value, key) => {
       if (value !== null && value !== undefined) {
-        // Debug: log para claves de delivery
-        if (key.includes('delivery:')) {
-          // console.log(`🔄 Estado local actualizado - Clave: ${key}`, value) // Comentado para reducir logs
-          // console.log(`🔄 Tipo de valor:`, typeof value) // Comentado para reducir logs
-          if (typeof value === 'object') {
-            // console.log(`🔄 Propiedades del objeto:`, Object.keys(value)) // Comentado para reducir logs
-            if (value.failure) {
-              // console.log(`🔄 DeliveryFailure encontrado:`, value.failure) // Comentado para reducir logs
-            }
-          }
-        }
-        setState(prev => ({ ...prev, [key]: value }))
+        // Convertir datos de Gun.js al dominio ANTES de guardar en el estado
+        const domainData = convertGunDataToDomain(key, value)
+        setState(prev => ({ ...prev, [key]: domainData }))
       } else {
         setState(prev => {
           const newState = { ...prev }
@@ -117,7 +112,33 @@ export function useDeliveriesState() {
   return { data: { s: state }, loading }
 }
 
-// Mutadores usando las entidades de deliveries.ts
+// Función interna para convertir datos de Gun.js al dominio
+function convertGunDataToDomain(key: string, value: any): any {
+  // Si es una clave de evidence, convertir usando el mapper
+  if (key.includes('evidence:')) {
+    try {
+      return mapGunToDeliveryUnit(value)
+    } catch (error) {
+      console.warn('Error convirtiendo evidence a dominio:', error)
+      return value // Fallback a valor original
+    }
+  }
+  
+  // Si es una clave de nd-evidence, convertir usando el mapper
+  if (key.includes('nd-evidence:')) {
+    try {
+      return mapGunToDeliveryFailure(value)
+    } catch (error) {
+      console.warn('Error convirtiendo nd-evidence a dominio:', error)
+      return value // Fallback a valor original
+    }
+  }
+  
+  // Para otras claves, devolver el valor tal como está
+  return value
+}
+
+// Mutadores usando los mappers y modelos internos
 
 export function setDeliveryStatus(
   routeId: string,
@@ -133,31 +154,25 @@ export function setDeliveryStatus(
 ) {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // console.log(`🔧 setDeliveryStatus llamado:`, { routeId, visitIndex, orderIndex, unitIndex, status, evidence }) // Comentado para reducir logs
-  
   if (status === 'not-delivered' && evidence) {
-    // Para no entregas, usar el dominio DeliveryFailure
-    const deliveryFailure: DeliveryFailure = {
-      reason: evidence.reason || '',
-      detail: evidence.observations || '',
-      referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`
-    }
+    // Para no entregas, crear entidad del dominio y mapear a Gun.js
+    const deliveryUnit = createDeliveryUnitFromFailure(
+      routeId, visitIndex, orderIndex, unitIndex, {
+        reason: evidence.reason || '',
+        observations: evidence.observations || '',
+        photoDataUrl: evidence.photoDataUrl || ''
+      }
+    )
     
-    const deliveryData = {
-      status,
-      failure: deliveryFailure,
-      photoDataUrl: evidence.photoDataUrl,
-      timestamp: Date.now(),
-      deviceId: getDeviceId()
-    }
+    const gunData = mapDeliveryFailureToGun(deliveryUnit)
     
-    // console.log(`💾 Guardando datos de no entrega en clave: ${key}`) // Comentado para reducir logs
-    // console.log(`💾 Datos guardados:`, deliveryData) // Comentado para reducir logs
-    
-    deliveriesData.get(key).put(deliveryData)
-  } else {
+    deliveriesData.get(key).put(gunData)
+  } else if (status === 'delivered') {
     // Para entregas exitosas, solo guardar estado
-    // console.log(`💾 Guardando estado simple: ${status} en clave: ${key}`) // Comentado para reducir logs
+    // La evidencia detallada ya se guardó en setDeliveryEvidence
+    deliveriesData.get(key).put(status)
+  } else {
+    // Para otros estados, guardar estado simple
     deliveriesData.get(key).put(status)
   }
 }
@@ -177,42 +192,30 @@ export function getDeliveryStatus(
   })
 }
 
-// Función que crea una DeliveryUnit completa usando directamente la entidad de dominio
+// Función que recibe entidades del dominio y las persiste en Gun.js
 export function setDeliveryEvidence(
   routeId: string,
   visitIndex: number,
   orderIndex: number,
   unitIndex: number,
-  evidence: {
-    recipientName: string
-    recipientRut: string
-    photoDataUrl: string
-    takenAt: number
-  }
+  deliveryUnit: Partial<DeliveryUnit>
 ): void {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Crear Recipient usando el dominio correcto
-  const recipient: Recipient = {
-    fullName: evidence.recipientName,
-    nationalID: evidence.recipientRut
-  }
+  // Mapear entidad del dominio a modelo interno de Gun.js
+  const gunData = mapDeliveryUnitToGun(deliveryUnit)
   
-  // Crear evidencia de foto usando el dominio correcto
-  const evidencePhoto: EvidencePhoto = {
-    takenAt: new Date(evidence.takenAt).toISOString(),
-    type: 'delivery',
-    url: evidence.photoDataUrl,
-  }
+  // Debug: ver qué estamos guardando
+  console.log(`💾 setDeliveryEvidence - Datos a guardar:`, gunData)
   
-  // Crear estructura de DeliveryUnit usando el dominio correcto
-  const deliveryUnit: Partial<DeliveryUnit> = {
-    recipient,
-    evidencePhotos: [evidencePhoto],
-    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
-  }
+  // Guardar evidencia detallada
+  deliveriesData.get(key).put(gunData)
   
-  deliveriesData.get(key).put(deliveryUnit)
+  // También actualizar el estado de delivery para mantener consistencia
+  const deliveryStateKey = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
+  deliveriesData.get(deliveryStateKey).put('delivered')
+  
+  console.log(`✅ setDeliveryEvidence completado para ${key}`)
 }
 
 export function getDeliveryEvidence(
@@ -225,7 +228,13 @@ export function getDeliveryEvidence(
   
   return new Promise((resolve) => {
     deliveriesData.get(key).once((value) => {
-      resolve(value || undefined)
+      if (value && typeof value === 'object') {
+        // Mapear desde modelo interno de Gun.js a entidad del dominio
+        const deliveryUnit = mapGunToDeliveryUnit(value as GunDeliveryEvidence)
+        resolve(deliveryUnit)
+      } else {
+        resolve(undefined)
+      }
     })
   })
 }
@@ -243,26 +252,30 @@ export function setSuccessfulDelivery(
 ): void {
   const key = evidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Crear evidencia de foto usando el dominio correcto
-  const evidencePhoto: EvidencePhoto = {
-    takenAt: new Date().toISOString(),
-    type: 'delivery',
-    url: photoDataUrl,
-  }
-  
+  // Crear entidad del dominio
   const deliveryUnit: Partial<DeliveryUnit> = {
-    recipient,
-    evidencePhotos: [evidencePhoto],
-    items: items || [],
     delivery: {
       status: 'delivered',
       handledAt: new Date().toISOString(),
-      location: location || { latitude: 0, longitude: 0 },
+      location: location || { latitude: 0, longitude: 0 }
     },
-    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
+    recipient: {
+      fullName: recipient.fullName,
+      nationalID: recipient.nationalID
+    },
+    evidencePhotos: [{
+      takenAt: new Date().toISOString(),
+      type: 'delivery',
+      url: photoDataUrl
+    }],
+    items: items || [],
+    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`
   }
   
-  deliveriesData.get(key).put(deliveryUnit)
+  // Mapear a modelo interno de Gun.js
+  const gunData = mapDeliveryUnitToGun(deliveryUnit)
+  
+  deliveriesData.get(key).put(gunData)
 }
 
 // Función específica para gestionar no entrega
@@ -279,33 +292,15 @@ export function setFailedDelivery(
 ): void {
   const key = ndEvidenceKey(routeId, visitIndex, orderIndex, unitIndex)
   
-  // Crear DeliveryFailure usando el dominio correcto
-  const deliveryFailure: DeliveryFailure = {
-    reason: evidence.reason,
-    detail: evidence.observations,
-    referenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`
-  }
+  // Crear entidad del dominio usando el helper
+  const deliveryUnit = createDeliveryUnitFromFailure(
+    routeId, visitIndex, orderIndex, unitIndex, evidence
+  )
   
-  // Crear evidencia de foto
-  const evidencePhoto: EvidencePhoto = {
-    takenAt: new Date().toISOString(),
-    type: 'non-delivery',
-    url: evidence.photoDataUrl,
-  }
+  // Mapear a modelo interno de Gun.js
+  const gunData = mapDeliveryFailureToGun(deliveryUnit)
   
-  // Crear estructura de DeliveryUnit usando el dominio correcto
-  const deliveryUnit: Partial<DeliveryUnit> = {
-    delivery: {
-      status: 'not-delivered',
-      handledAt: new Date().toISOString(),
-      location: { latitude: 0, longitude: 0 },
-      failure: deliveryFailure
-    },
-    evidencePhotos: [evidencePhoto],
-    orderReferenceID: `${routeId}-${visitIndex}-${orderIndex}-${unitIndex}`,
-  }
-  
-  deliveriesData.get(key).put(deliveryUnit)
+  deliveriesData.get(key).put(gunData)
 }
 
 export function getNonDeliveryEvidence(
@@ -318,7 +313,13 @@ export function getNonDeliveryEvidence(
   
   return new Promise((resolve) => {
     deliveriesData.get(key).once((value) => {
-      resolve(value || undefined)
+      if (value && typeof value === 'object') {
+        // Mapear desde modelo interno de Gun.js a entidad del dominio
+        const deliveryUnit = mapGunToDeliveryFailure(value as GunDeliveryFailure)
+        resolve(deliveryUnit)
+      } else {
+        resolve(undefined)
+      }
     })
   })
 }
@@ -333,8 +334,6 @@ export function getDeliveryStatusFromState(
 ): 'delivered' | 'not-delivered' | undefined {
   const key = deliveryKey(routeId, visitIndex, orderIndex, unitIndex)
   const data = state[key]
-  
-  // Debug: logs removidos para limpiar la consola
   
   if (typeof data === 'string') {
     // Estado simple (formato anterior)
@@ -376,12 +375,6 @@ export function getNonDeliveryEvidenceFromState(
   
   return null
 }
-
-
-
-
-
-
 
 // Exportar también la instancia de Gun por si necesitas funcionalidades avanzadas
 export { gun, deliveriesData }

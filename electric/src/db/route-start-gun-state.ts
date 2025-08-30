@@ -1,4 +1,4 @@
-import { deliveriesData } from './deliveries-gun-state'
+import { deliveriesData } from './gun'
 import type { RouteStart } from '../domain/route-start'
 import { useState, useEffect } from 'react'
 

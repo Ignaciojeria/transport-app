@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getRouteStart, routeStartKey } from '../db/route-start-gun-state'
-import { deliveriesData } from '../db/deliveries-gun-state'
+import { deliveriesData } from '../db/gun'
 import type { RouteStart } from '../domain/route-start'
 
 export const useRouteStartSync = (routeId: string) => {

@@ -7,7 +7,7 @@ export {
   setDeliveryEvidence,
   setSuccessfulDelivery,
   setFailedDelivery
-} from './deliveries-gun-state'
+} from './gun'
 
 // Exportar funciones del route start state
 export {

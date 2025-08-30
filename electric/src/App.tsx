@@ -23,10 +23,12 @@ import {
   generateCSVContent, 
   generateExcelContent, 
   downloadFile,
+  debugDeliveryData,
   type ReportData 
 } from './components/DownloadReportModal.utils'
 import type { Route as RouteType } from './domain/route'
 import type { RouteStart } from './domain/route-start'
+import type { DeliveryUnit } from './domain/deliveries'
 
 
 // Componente para rutas específicas del driver
@@ -90,7 +92,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   // Función para sincronizar posición del marcador entre dispositivos
   const setMarkerPosition = async (routeId: string, visitIndex: number, coordinates: [number, number]) => {
     try {
-      const { deliveriesData } = await import('./db/deliveries-gun-state')
+      const { deliveriesData } = await import('./db/gun')
       const key = `marker_position:${routeId}`
       const deviceId = (() => {
         try {
@@ -121,7 +123,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   } | null>(null)
 
   useEffect(() => {
-    import('./db/deliveries-gun-state').then(({ deliveriesData }) => {
+    import('./db/gun').then(({ deliveriesData }) => {
       const key = `marker_position:${routeId}`
       const unsubscribe = deliveriesData.get(key).on((data) => {
         if (data && typeof data === 'string') {
@@ -232,16 +234,29 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       
       console.log('💾 Guardando evidencia de entrega para:', { routeId, vIdx: evidenceModal.vIdx, oIdx: evidenceModal.oIdx, uIdx: evidenceModal.uIdx })
       
-      setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, {
-        recipientName: evidence.recipientName,
-        recipientRut: evidence.recipientRut,
-        photoDataUrl: evidence.photoDataUrl,
-        takenAt: Date.now(),
-      })
-      console.log('📦 Estableciendo estado de entrega a "delivered"')
-      setDeliveryStatus(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, 'delivered')
+      // Crear entidad del dominio
+      const deliveryUnit: Partial<DeliveryUnit> = {
+        delivery: {
+          status: 'delivered',
+          handledAt: new Date().toISOString(),
+          location: { latitude: 0, longitude: 0 }
+        },
+        recipient: {
+          fullName: evidence.recipientName,
+          nationalID: evidence.recipientRut
+        },
+        evidencePhotos: [{
+          takenAt: new Date().toISOString(),
+          type: 'delivery',
+          url: evidence.photoDataUrl,
+        }],
+        orderReferenceID: `${routeId}-${evidenceModal.vIdx}-${evidenceModal.oIdx}-${evidenceModal.uIdx}`,
+      }
+      
+      // Pasar entidad del dominio a setDeliveryEvidence
+      setDeliveryEvidence(routeId, evidenceModal.vIdx, evidenceModal.oIdx, evidenceModal.uIdx, deliveryUnit)
+      console.log('📦 Estado de entrega establecido a "delivered" por setDeliveryEvidence')
       closeEvidenceModal()
-      // Función eliminada - ya no se necesita
     } finally {
       setSubmittingEvidence(false)
     }
@@ -383,6 +398,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   // Función para generar y descargar reporte en formato especificado
   const downloadReport = (format: 'csv' | 'excel') => {
+    // Debug: Si hay problemas con los datos, descomenta esta línea
+    debugDeliveryData(localState?.s || {}, routeId)
     try {
       const routeLicense = getRouteLicenseFromState(localState?.s || {}, routeId)
       
