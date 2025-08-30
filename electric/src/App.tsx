@@ -14,11 +14,9 @@ import {
   setRouteLicense,
   getRouteLicenseFromState,
   setRouteStart,
-  getRouteStart,
-  isRouteStarted
 } from './db'
-import { useMemo, useState, useEffect, useRef } from 'react'
-import { CheckCircle, XCircle, Play, Package, User, MapPin, Crosshair, Menu, Truck, Route, Map } from 'lucide-react'
+import { useMemo, useState, useEffect } from 'react'
+import { Play, Menu, Truck, Route, Map } from 'lucide-react'
 import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView } from './components'
 import { 
   generateReportData, 
@@ -64,11 +62,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
   const [nextVisitIndex, setNextVisitIndex] = useState<number | null>(null)
   const [lastCenteredVisit, setLastCenteredVisit] = useState<number | null>(null) // Recordar última visita centrada
-  const mapRef = useRef<HTMLDivElement | null>(null)
-  const mapInstanceRef = useRef<any>(null)
-  const [mapReady, setMapReady] = useState(false)
-  const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
-
 
 
   // Modal de evidencia
@@ -263,10 +256,23 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       console.log('💾 Guardando evidencia de no entrega para:', { routeId, vIdx: ndModal.vIdx, oIdx: ndModal.oIdx, uIdx: ndModal.uIdx })
       
       setFailedDelivery(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, {
-        reason: evidence.reason,
-        detail: evidence.observations,
-        referenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
-      }, evidence.photoDataUrl)
+        delivery: {
+          status: 'not-delivered',
+          handledAt: new Date().toISOString(),
+          location: { latitude: 0, longitude: 0 },
+          failure: {
+            reason: evidence.reason,
+            detail: evidence.observations,
+            referenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
+          }
+        },
+        evidencePhotos: [{
+          takenAt: new Date().toISOString(),
+          type: 'non-delivery',
+          url: evidence.photoDataUrl,
+        }],
+        orderReferenceID: `${routeId}-${ndModal.vIdx}-${ndModal.oIdx}-${ndModal.uIdx}`,
+      })
       console.log('📦 Estableciendo estado de entrega a "not-delivered"')
       setDeliveryStatus(routeId, ndModal.vIdx, ndModal.oIdx, ndModal.uIdx, 'not-delivered')
       closeNdModal()
@@ -278,77 +284,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
 
 
-  const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
-    switch (status) {
-      case 'delivered':
-        return 'text-green-600 bg-green-50 border-green-200'
-      case 'not-delivered':
-        return 'text-red-600 bg-red-50 border-red-200'
-      default:
-        return 'text-gray-600 bg-white border-gray-200'
-    }
-  }
 
 
 
   const visits = routeData?.visits ?? []
-  
-  // Obtener el estado de una visita completa
-  const getVisitStatus = (visitIndex: number): 'completed' | 'not-delivered' | 'partial' | 'pending' => {
-    const visit = (visits as any)[visitIndex]
-    if (!visit) return 'pending'
-    
-    const allUnits: Array<{ status: 'delivered' | 'not-delivered' | undefined }> = []
-    
-    // Recopilar el estado de todas las unidades de entrega de la visita
-    ;(visit.orders || []).forEach((order: any, oIdx: number) => {
-      ;(order.deliveryUnits || []).forEach((_unit: any, uIdx: number) => {
-        const status = getDeliveryUnitStatus(visitIndex, oIdx, uIdx)
-        allUnits.push({ status })
-      })
-    })
-    
-    if (allUnits.length === 0) return 'pending'
-    
-    const deliveredCount = allUnits.filter(u => u.status === 'delivered').length
-    const notDeliveredCount = allUnits.filter(u => u.status === 'not-delivered').length
-    const totalCount = allUnits.length
-    const processedCount = deliveredCount + notDeliveredCount
-    
-    if (processedCount === 0) return 'pending'
-    
-    // Si todas las unidades están marcadas como no entregadas
-    if (notDeliveredCount === totalCount) return 'not-delivered'
-    
-    // Si todas las unidades están procesadas (entregadas o no entregadas)
-    if (processedCount === totalCount) {
-      // Si hay al menos una entregada, considerarla completada exitosamente
-      return deliveredCount > 0 ? 'completed' : 'not-delivered'
-    }
-    
-    // Estado mixto: algunas procesadas, otras pendientes
-    return 'partial'
-  }
-
-  // Obtener color del marcador según el estado de la visita (sin considerar posicionamiento)
-  const getVisitMarkerColor = (visitIndex: number): string => {
-    const status = getVisitStatus(visitIndex)
-    switch (status) {
-      case 'completed':
-        // Completamente entregado (verde)
-        return '#10B981'
-      case 'not-delivered':
-        // Completamente no entregado (rojo)
-        return '#EF4444'
-      case 'partial':
-        // Parcialmente entregado (azul más oscuro)
-        return '#1D4ED8'
-      case 'pending':
-      default:
-        // Pendiente (gris por defecto)
-        return '#6B7280'
-    }
-  }
 
   // Función centralizada para determinar qué marcador debe estar posicionado
   const getPositionedVisitIndex = (): number | null => {
@@ -446,45 +385,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     return pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0].index
   }
 
-
-  
   useEffect(() => {
     setNextVisitIndex(getNextPendingVisitIndex())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(localState), JSON.stringify((visits || []).map((v: any) => v?.orders?.length))])
-
-    // Helper para obtener gradiente complementario
-    const getGradientColor = (baseColor: string): string => {
-      const colorMap: Record<string, string> = {
-        '#10B981': '#059669', // Verde claro -> Verde más oscuro
-        '#EF4444': '#DC2626', // Rojo (no entregado) -> Rojo más oscuro
-        '#1D4ED8': '#1E40AF', // Azul oscuro (parcial) -> Azul más oscuro
-        '#6B7280': '#4B5563', // Gris -> Gris más oscuro
-      }
-      return colorMap[baseColor] || '#7C3AED'
-    }
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   // Función para abrir modal de descarga
   const openDownloadModal = () => {

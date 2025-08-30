@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 interface RouteStartModalProps {
   isOpen: boolean
@@ -9,11 +9,16 @@ interface RouteStartModalProps {
 
 export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: RouteStartModalProps) {
   const licenseInputRef = useRef<HTMLInputElement | null>(null)
+  const [inputValue, setInputValue] = useState('')
 
   // Focus en el input cuando se abre el modal
   useEffect(() => {
     if (isOpen && licenseInputRef.current) {
       licenseInputRef.current.focus()
+    }
+    // Limpiar el input cuando se abre el modal
+    if (isOpen) {
+      setInputValue('')
     }
   }, [isOpen])
 
@@ -40,49 +45,56 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
               >
                 Usar esta
               </button>
-              <button
-                onClick={() => {
-                  // Limpiar el input para que ingrese otra patente
-                  if (licenseInputRef.current) {
-                    licenseInputRef.current.value = ''
-                    licenseInputRef.current.focus()
-                  }
-                }}
-                className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-              >
-                Usar otra
-              </button>
+                             <button
+                 onClick={() => {
+                   // Limpiar el input para que ingrese otra patente
+                   setInputValue('')
+                   if (licenseInputRef.current) {
+                     licenseInputRef.current.focus()
+                   }
+                 }}
+                 className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+               >
+                 Usar otra
+               </button>
             </div>
           </div>
         )}
         
         <div className="mb-4">
           <label htmlFor="licenseInput" className="block text-sm font-medium text-gray-700 mb-2">
-            Patente del vehículo:
+            {defaultLicense ? 'O ingresa una patente diferente:' : 'Patente del vehículo:'}
           </label>
-          <input
-            id="licenseInput"
-            ref={licenseInputRef}
-            type="text"
-            onChange={(e) => {
-              e.target.value = e.target.value.toUpperCase()
-            }}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') {
-                const value = e.currentTarget.value.trim()
-                if (value) {
-                  onConfirm(value)
-                }
-              }
-            }}
-            placeholder="Ej: ABC123"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
-            maxLength={8}
-          />
+                     <input
+             id="licenseInput"
+             ref={licenseInputRef}
+             type="text"
+             value={inputValue}
+             onChange={(e) => {
+               const value = e.target.value.toUpperCase()
+               setInputValue(value)
+             }}
+             onKeyPress={(e) => {
+               if (e.key === 'Enter') {
+                 const value = e.currentTarget.value.trim()
+                 if (value) {
+                   onConfirm(value)
+                 }
+               }
+             }}
+             placeholder={defaultLicense ? "Ej: XYZ789" : "Ej: ABC123"}
+             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+             maxLength={8}
+           />
           <p className="text-xs text-gray-500 mt-1">
-            Puedes ingresar cualquier patente para esta ruta
+            {defaultLicense 
+              ? 'Escribe aquí si quieres usar una patente diferente a la asignada'
+              : 'Puedes ingresar cualquier patente para esta ruta'
+            }
           </p>
         </div>
+        
+
 
         <div className="flex items-center justify-end gap-3">
           <button
@@ -91,22 +103,22 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
           >
             Cancelar
           </button>
-          <button
-            onClick={() => {
-              const value = licenseInputRef.current?.value.trim()
-              if (value) {
-                onConfirm(value)
-              }
-            }}
-            disabled={!licenseInputRef.current?.value.trim()}
-            className={`px-4 py-2 text-sm rounded-lg text-white font-medium transition-colors ${
-              !licenseInputRef.current?.value.trim()
-                ? 'bg-green-300 cursor-not-allowed'
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-          >
-            Iniciar ruta
-          </button>
+                     <button
+             onClick={() => {
+               const value = inputValue.trim()
+               if (value) {
+                 onConfirm(value)
+               }
+             }}
+             disabled={!inputValue.trim()}
+             className={`px-4 py-2 text-sm rounded-lg text-white font-medium transition-colors ${
+               !inputValue.trim()
+                 ? 'bg-green-300 cursor-not-allowed'
+                 : 'bg-green-600 hover:bg-green-700'
+             }`}
+           >
+             Iniciar ruta
+           </button>
         </div>
       </div>
     </div>
