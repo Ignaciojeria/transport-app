@@ -1,22 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useLiveQuery } from '@tanstack/react-db'
 import { useParams } from '@tanstack/react-router'
-import { createRoutesCollection } from './db/create-routes-collection'
+import { useRoutes } from './db'
 import { 
   useDeliveriesState, 
   useRouteStartedSync,
   routeStartedKey, 
   setRouteStarted as setRouteStartedLocal, 
-  setDeliveryStatus, 
   getDeliveryStatusFromState, 
   setDeliveryEvidence, 
-  setFailedDelivery,
   setRouteLicense,
   getRouteLicenseFromState,
   setRouteStart,
   setDeliveryUnitByEntity,
 } from './db'
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Play, Menu, Truck, Route, Map } from 'lucide-react'
 import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView } from './components'
 import { 
@@ -34,32 +31,37 @@ import type { DeliveryUnit, DeliveryEvent } from './domain/deliveries'
 
 // Componente para rutas específicas del driver
 export function RouteComponent() {
+  console.log('🏠🏠🏠 RouteComponent EJECUTÁNDOSE 🏠🏠🏠')
+  
   // Obtener el routeId de los parámetros de la ruta usando TanStack Router
   const { routeId } = useParams({ from: '/driver/routes/$routeId' })
+  console.log('🏠🏠🏠 RouteId:', routeId)
+  
   const token = new URLSearchParams(window.location.hash.slice(1)).get('access_token') || 
                new URLSearchParams(window.location.hash.slice(1)).get('token') || ''
-  const routes = useMemo(() => createRoutesCollection(token, routeId), [token, routeId])
-  const { data } = useLiveQuery((query) => query.from({ route: routes }))
+  console.log('🏠🏠🏠 Token:', token ? '✅' : '❌')
+  
+  console.log('🏠🏠🏠 Llamando a useRoutes...')
+  const routes = useRoutes(token, routeId)
+  console.log('🏠🏠🏠 Routes recibidas:', routes)
 
   return (
     <div>
       {/* Renderizar UI si hay datos */}
-      {(() => {
-        const d: any = data as any
-        const route = Array.isArray(d?.route) ? d.route[0] : d?.route ?? (Array.isArray(d) ? d[0] : d)
-        const raw = route?.raw
-        const routeDbId = route?.id // ID de la base de datos
-        return raw ? (
-          <DeliveryRouteView routeId={routeId} routeData={raw} routeDbId={routeDbId} />
-        ) : (
-          <pre>{JSON.stringify(data, (_key, value) => (typeof value === 'bigint' ? value.toString() : value), 2)}</pre>
-        )
-      })()}
+      {routes.length > 0 ? (
+        <DeliveryRouteView 
+          routeId={routeId} 
+          routeData={routes[0]} 
+          routeDbId={routes[0].electricId} 
+        />
+      ) : (
+        <div>Cargando rutas...</div>
+      )}
     </div>
   )
 }
 
-function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: RouteType; routeDbId?: number }) {
+function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: RouteType; routeDbId?: string }) {
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
@@ -171,7 +173,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           nationalID: '12345678-9' // Por ahora hardcodeado
         },
         route: {
-          id: routeDbId || 0,
+          id: routeDbId || routeId,
           documentID: routeId,
           referenceID: routeId
         },

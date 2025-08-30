@@ -30,4 +30,7 @@ export {
 } from './gun/state/route-start-gun-state'
 
 // Exportar funciones de creación de colecciones
-export { createRoutesCollection } from './create-routes-collection'
+export { createRoutesCollection } from './collections/create-routes-collection'
+
+// Hooks de livequery que combinan collections con useLiveQuery
+export { useRoutesCollection, useRoutes } from './livequery'

@@ -2,7 +2,7 @@ import type { Visit, Order, DeliveryUnit } from '../domain/route'
 
 export interface ReportData {
   routeId: string
-  routeDbId?: number
+  routeDbId?: string
   routeLicense?: string
   visits: Visit[]
   localState: any
