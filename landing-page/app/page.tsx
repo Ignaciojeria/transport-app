@@ -55,10 +55,9 @@ export default function LandingPage() {
               <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">Beneficios</a>
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => routeId && window.open(`http://localhost:5173/demo?routeId=${routeId}`, '_blank')}
-                disabled={!routeId}
+                onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
               >
-                Solicitar Demo
+                Evaluación Gratuita
               </Button>
             </div>
           </div>
@@ -96,12 +95,21 @@ export default function LandingPage() {
                 <span className="font-semibold text-blue-600">Todo desde una sola plataforma</span>.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3">
-                  Solicitar Demo
+                <Button 
+                  size="lg" 
+                  className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
+                  onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
+                >
+                  Evaluación Gratuita
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-8 py-3">
-                  Solicitar Demo
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="text-lg px-8 py-3"
+                  onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
+                >
+                  Consulta Personalizada
                 </Button>
               </div>
             </motion.div>
@@ -376,21 +384,23 @@ export default function LandingPage() {
               ¿Listo para optimizar tu flota?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Contacta con nosotros para una demostración personalizada
+              Agenda una evaluación gratuita de tus procesos logísticos
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg" 
                 className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-                onClick={() => routeId && window.open(`http://localhost:5173/demo?routeId=${routeId}`, '_blank')}
-                disabled={!routeId}
+                onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
               >
-                Solicitar Demo
+                Evaluación Gratuita
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-3">
-                Contactar
-              </Button>
+              <button 
+                className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-blue-600 text-lg px-8 py-3 rounded-lg font-medium transition-colors duration-200"
+                onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
+              >
+                Consulta Personalizada
+              </button>
             </div>
           </motion.div>
         </div>
@@ -405,9 +415,9 @@ export default function LandingPage() {
                 <Truck className="h-8 w-8 text-blue-400" />
                 <span className="text-xl font-bold">TransportApp</span>
               </div>
-              <p className="text-gray-400">
-                Optimiza tu flota en minutos. Todo desde Google Sheets.
-              </p>
+                              <p className="text-gray-400">
+                  Optimiza rutas, genera enlaces para conductores y monitorea entregas en tiempo real. Todo desde una sola plataforma.
+                </p>
             </div>
             
             <div>
@@ -439,7 +449,7 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 TransportApp. Todos los derechos reservados.</p>
+            <p>&copy; 2025 TransportApp. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
