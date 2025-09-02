@@ -76,7 +76,7 @@ export function NonDeliveryModal({
       }
       
       console.log('📤 Subiendo imagen usando URL firmada del contrato...')
-      const { downloadUrl: uploadedDownloadUrl } = await processAndUploadImage(ndPhotoDataUrl, uploadUrl, downloadUrl)
+      const { downloadUrl: uploadedDownloadUrl } = await processAndUploadImage(ndPhotoDataUrl, uploadUrl, downloadUrl || undefined)
       const finalImageUrl = uploadedDownloadUrl
       console.log('✅ Imagen subida exitosamente:', finalImageUrl)
       
