@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { MapControls } from './MapControls'
 import { MapVisitCard } from './MapVisitCard'
@@ -53,7 +53,7 @@ export function MapView({
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
-  const [forceUpdateCounter, setForceUpdateCounter] = useState(0)
+  const [forceUpdateCounter] = useState(0)
   
   // Estado para el pin de GPS del conductor
   const [gpsActive, setGpsActive] = useState(false)
@@ -564,10 +564,10 @@ export function MapView({
     }
   }, [forceUpdateCounter, nextVisitIndex, lastCenteredVisit, markerPosition])
 
-  // Función para forzar actualización de marcadores
-  const forceUpdateMarkers = () => {
-    setForceUpdateCounter(prev => prev + 1)
-  }
+  // Función para forzar actualización de marcadores (comentada por no uso)
+  // const forceUpdateMarkers = () => {
+  //   setForceUpdateCounter(prev => prev + 1)
+  // }
 
   // Función para manejar el siguiente pendiente
   const handleNextPending = (nextPendingIdx: number) => {

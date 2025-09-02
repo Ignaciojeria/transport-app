@@ -85,7 +85,7 @@ export const disableLogs = () => {
 
 // Función para mostrar estado actual de logs
 export const getLogStatus = () => ({
-  debug: logger.isDebugMode,
+  debug: localStorage.getItem('debug-logs') === 'true',
   db: localStorage.getItem('db-logs') === 'true',
   state: localStorage.getItem('state-logs') === 'true'
 })

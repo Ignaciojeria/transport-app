@@ -167,7 +167,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           nationalID: '12345678-9' // Por ahora hardcodeado
         },
         route: {
-          id: routeDbId || routeId,
+          id: parseInt(routeDbId || routeId) || 0,
           documentID: routeId,
           referenceID: routeId
         },
