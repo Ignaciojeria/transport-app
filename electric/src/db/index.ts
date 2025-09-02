@@ -33,4 +33,4 @@ export {
 export { createRoutesCollection } from './collections/create-routes-collection'
 
 // Hooks de livequery que combinan collections con useLiveQuery
-export { useRoutesCollection, useRoutes } from './livequery'
+export { useRoutesCollection, useRoutes, isDemoMode } from './livequery'
