@@ -140,7 +140,7 @@ export function DemoEmbed() {
                   Haz clic en "Ver Demo" para experimentar la aplicación con datos simulados
                 </p>
                 <div className="text-sm text-gray-500">
-                  • 5 entregas simuladas<br/>
+                  • 9 entregas simuladas<br/>
                   • Funcionalidad completa<br/>
                   • Datos realistas de Santiago
                 </div>
