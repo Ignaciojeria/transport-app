@@ -247,6 +247,7 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
     'Fecha_Gestion',
     'Motivo_No_Entrega',
     'Observaciones_No_Entrega',
+    'URL_Evidencia',
     'Coordenadas_Lat',
     'Coordenadas_Lng'
   ]
@@ -272,6 +273,7 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
     let managementDate = ''
     let nonDeliveryReason = ''
     let nonDeliveryObservations = ''
+    let evidenceUrl = ''
     
     if (status === 'delivered') {
       const evidence = getDeliveryEvidence(reportData.localState, reportData.routeId, visitIndex, orderIndex, unitIndex)
@@ -279,6 +281,7 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
         recipientName = evidence?.recipientName || ''
         recipientDocument = evidence?.recipientRut || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
+        evidenceUrl = evidence?.photoDataUrl || ''
       }
     } else if (status === 'not-delivered') {
       const evidence = getNonDeliveryEvidence(reportData.localState, reportData.routeId, visitIndex, orderIndex, unitIndex)
@@ -286,6 +289,7 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
         nonDeliveryReason = evidence?.reason || ''
         nonDeliveryObservations = evidence?.observations || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
+        evidenceUrl = evidence?.photoDataUrl || ''
       }
     }
     
@@ -309,6 +313,7 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
       managementDate,
       nonDeliveryReason,
       nonDeliveryObservations,
+      evidenceUrl,
       lat?.toString() || '',
       lng?.toString() || ''
     ]
@@ -341,6 +346,7 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
     'Fecha_Gestion',
     'Motivo_No_Entrega',
     'Observaciones_No_Entrega',
+    'URL_Evidencia',
     'Coordenadas_Lat',
     'Coordenadas_Lng'
   ]
@@ -366,6 +372,7 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
     let managementDate = ''
     let nonDeliveryReason = ''
     let nonDeliveryObservations = ''
+    let evidenceUrl = ''
     
     if (status === 'delivered') {
       const evidence = getDeliveryEvidence(reportData.localState, reportData.routeId, visitIndex, orderIndex, unitIndex)
@@ -373,6 +380,7 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
         recipientName = evidence?.recipientName || ''
         recipientDocument = evidence?.recipientRut || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
+        evidenceUrl = evidence?.photoDataUrl || ''
       }
     } else if (status === 'not-delivered') {
       const evidence = getNonDeliveryEvidence(reportData.localState, reportData.routeId, visitIndex, orderIndex, unitIndex)
@@ -380,6 +388,7 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
         nonDeliveryReason = evidence?.reason || ''
         nonDeliveryObservations = evidence?.observations || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
+        evidenceUrl = evidence?.photoDataUrl || ''
       }
     }
     
@@ -403,6 +412,7 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
       managementDate,
       nonDeliveryReason,
       nonDeliveryObservations,
+      evidenceUrl,
       lat?.toString() || '',
       lng?.toString() || ''
     ]

@@ -784,6 +784,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       onSubmit={submitEvidence}
       initialDeliveryEvent={initialDeliveryEvent}
       submitting={submittingEvidence}
+      routeData={routeData}
+      visitIndex={evidenceModal.vIdx || undefined}
+      orderIndex={evidenceModal.oIdx || undefined}
+      unitIndex={evidenceModal.uIdx || undefined}
     />
     {/* Modal de No Entregado */}
     <NonDeliveryModal
@@ -792,6 +796,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       onSubmit={submitNonDelivery}
       initialDeliveryEvent={initialNonDeliveryEvent}
       submitting={submittingEvidence}
+      routeData={routeData}
+      visitIndex={ndModal.vIdx || undefined}
+      orderIndex={ndModal.oIdx || undefined}
+      unitIndex={ndModal.uIdx || undefined}
     />
 
 

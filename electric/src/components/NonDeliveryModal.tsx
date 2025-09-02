@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
+import { processAndUploadImage, getUploadUrlFromRoute } from '../utils/imageUpload'
 import type { DeliveryEvent } from '../domain/deliveries'
+import type { Route as RouteType } from '../domain/route'
 
 interface NonDeliveryModalProps {
   isOpen: boolean
@@ -8,6 +10,10 @@ interface NonDeliveryModalProps {
   onSubmit: (deliveryEvent: DeliveryEvent) => void
   initialDeliveryEvent?: DeliveryEvent // Para edición
   submitting?: boolean
+  routeData?: RouteType // Para obtener URLs de evidencia
+  visitIndex?: number
+  orderIndex?: number
+  unitIndex?: number
 }
 
 export function NonDeliveryModal({
@@ -15,12 +21,18 @@ export function NonDeliveryModal({
   onClose,
   onSubmit,
   initialDeliveryEvent,
-  submitting = false
+  submitting = false,
+  routeData,
+  visitIndex,
+  orderIndex,
+  unitIndex
 }: NonDeliveryModalProps) {
   const [ndReasonQuery, setNdReasonQuery] = useState('')
   const [ndSelectedReason, setNdSelectedReason] = useState<string>('')
   const [ndObservations, setNdObservations] = useState<string>('')
   const [ndPhotoDataUrl, setNdPhotoDataUrl] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
   const ndReasonInputRef = useRef<HTMLInputElement | null>(null)
 
   // Inicializar con datos existentes si los hay
@@ -43,33 +55,61 @@ export function NonDeliveryModal({
     }
   }, [isOpen, initialDeliveryEvent])
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const reason = (ndSelectedReason || ndReasonQuery || '').trim()
     if (!reason || !ndPhotoDataUrl) return
     
-    // ✅ Crear y retornar un DeliveryEvent hidratado
-    const hydratedDeliveryEvent: DeliveryEvent = {
-      ...initialDeliveryEvent!,
-      deliveryUnits: initialDeliveryEvent?.deliveryUnits.map(unit => ({
-        ...unit,
-        delivery: {
-          ...unit.delivery,
-          status: 'not-delivered',
-          failure: {
-            reason,
-            detail: ndObservations || '',
-            referenceID: unit.orderReferenceID
-          }
-        },
-        evidencePhotos: [{
-          takenAt: new Date().toISOString(),
-          type: 'non-delivery',
-          url: ndPhotoDataUrl
-        }]
-      })) || []
+    try {
+      setUploadingImage(true)
+      setUploadError(null)
+      
+      // Obtener URLs del contrato de ruta
+      const { uploadUrl, downloadUrl } = getUploadUrlFromRoute(
+        routeData, 
+        visitIndex || 0, 
+        orderIndex || 0, 
+        unitIndex || 0
+      )
+      
+      if (!uploadUrl) {
+        throw new Error('No se encontró uploadUrl en el contrato de ruta')
+      }
+      
+      console.log('📤 Subiendo imagen usando URL firmada del contrato...')
+      const { downloadUrl: uploadedDownloadUrl } = await processAndUploadImage(ndPhotoDataUrl, uploadUrl, downloadUrl)
+      const finalImageUrl = uploadedDownloadUrl
+      console.log('✅ Imagen subida exitosamente:', finalImageUrl)
+      
+      // ✅ Crear y retornar un DeliveryEvent hidratado
+      const hydratedDeliveryEvent: DeliveryEvent = {
+        ...initialDeliveryEvent!,
+        deliveryUnits: initialDeliveryEvent?.deliveryUnits.map(unit => ({
+          ...unit,
+          delivery: {
+            ...unit.delivery,
+            status: 'not-delivered',
+            failure: {
+              reason,
+              detail: ndObservations || '',
+              referenceID: unit.orderReferenceID
+            }
+          },
+          evidencePhotos: [{
+            takenAt: new Date().toISOString(),
+            type: 'non-delivery',
+            url: finalImageUrl
+          }]
+        })) || []
+      }
+      
+      onSubmit(hydratedDeliveryEvent)
+      
+    } catch (error) {
+      console.error('❌ Error subiendo imagen:', error)
+      setUploadError(error instanceof Error ? error.message : 'Error subiendo imagen')
+    } finally {
+      setUploadingImage(false)
     }
-    
-    onSubmit(hydratedDeliveryEvent)
   }
 
   const handleClose = () => {
@@ -77,6 +117,8 @@ export function NonDeliveryModal({
     setNdReasonQuery('')
     setNdSelectedReason('')
     setNdObservations('')
+    setUploadingImage(false)
+    setUploadError(null)
     onClose()
   }
 
@@ -135,20 +177,25 @@ export function NonDeliveryModal({
             buttonText="Activar cámara"
           />
         </div>
+        {uploadError && (
+          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-xs text-red-600">{uploadError}</p>
+          </div>
+        )}
         <div className="mt-4 flex items-center justify-end gap-2">
           <button 
             onClick={handleClose} 
             className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50" 
-            disabled={submitting}
+            disabled={submitting || uploadingImage}
           >
             Cancelar
           </button>
           <button 
             onClick={handleSubmit} 
-            disabled={submitting || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl} 
-            className={`px-3 py-2 text-sm rounded-md text-white ${submitting || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}
+            disabled={submitting || uploadingImage || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl} 
+            className={`px-3 py-2 text-sm rounded-md text-white ${submitting || uploadingImage || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}
           >
-            Confirmar no entrega
+            {uploadingImage ? 'Subiendo imagen...' : 'Confirmar no entrega'}
           </button>
         </div>
       </div>
