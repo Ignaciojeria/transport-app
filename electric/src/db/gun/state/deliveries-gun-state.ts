@@ -19,7 +19,6 @@ import {
   mapGunToDeliveryUnit,
   mapDeliveryFailureToGun,
   mapGunToDeliveryFailure,
-  createDeliveryUnitFromEvidence,
   createDeliveryUnitFromFailure
 } from '../mappers/delivery-mappers'
 
@@ -43,15 +42,15 @@ export const evidenceKey = (routeId: string, vIdx: number, oIdx: number, uIdx: n
 export const ndEvidenceKey = (routeId: string, vIdx: number, oIdx: number, uIdx: number) =>
   `nd-evidence:${routeId}:${vIdx}-${oIdx}-${uIdx}`
 
-// Helper para generar un ID único del dispositivo
-function getDeviceId(): string {
-  let deviceId = localStorage.getItem('gun-device-id')
-  if (!deviceId) {
-    deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    localStorage.setItem('gun-device-id', deviceId)
-  }
-  return deviceId
-}
+// Helper para generar un ID único del dispositivo (comentado por no uso)
+// function getDeviceId(): string {
+//   let deviceId = localStorage.getItem('gun-device-id')
+//   if (!deviceId) {
+//     deviceId = `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+//     localStorage.setItem('gun-device-id', deviceId)
+//   }
+//   return deviceId
+// }
 
 // Hook reactivo para escuchar cambios en Gun
 export function useGunData(key?: string) {

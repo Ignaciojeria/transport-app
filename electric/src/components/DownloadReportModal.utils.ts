@@ -32,7 +32,7 @@ export function generateReportData(
         
         // Debug: verificar evidencia para no entregas
         if (status === 'not-delivered') {
-          const evidence = getNonDeliveryEvidence(localState, routeId, visitIndex, orderIndex, unitIndex)
+          // const evidence = getNonDeliveryEvidence(localState, routeId, visitIndex, orderIndex, unitIndex)
           // console.log(`🔍 Evidencia no entrega (${visitIndex},${orderIndex},${unitIndex}):`, evidence) // Comentado para reducir logs
         }
         
