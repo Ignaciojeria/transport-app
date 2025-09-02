@@ -74,12 +74,12 @@ func getContactID(ctx context.Context, contact optimization.Contact) string {
 }
 
 // calculateVisitCapacity calcula la capacidad total de una visita basada en sus orders
-func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalDeliveryUnits, totalInsurance int64) {
+func calculateVisitCapacity(visit optimization.Visit) (totalWeight, totalVolume, totalInsurance int64) {
 	for _, order := range visit.Orders {
 		for _, deliveryUnit := range order.DeliveryUnits {
 			totalWeight += deliveryUnit.Weight
+			totalVolume += deliveryUnit.Volume
 			totalInsurance += deliveryUnit.Price
-			totalDeliveryUnits++
 		}
 	}
 	return
@@ -111,10 +111,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 		}
 
-		// Incluir Capacity siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+		// Incluir Capacity siempre con los 3 valores en orden: [peso, volumen, seguro]
 		vehicle.Capacity = []int64{
 			v.Capacity.Weight,
-			v.Capacity.DeliveryUnitsQuantity,
+			v.Capacity.Volume,
 			v.Capacity.Insurance,
 		}
 
@@ -136,7 +136,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 
 	for i, visit := range req.Visits {
 		// Calcular capacidad de la visita
-		totalWeight, totalDeliveryUnits, totalInsurance := calculateVisitCapacity(visit)
+		totalWeight, totalVolume, totalInsurance := calculateVisitCapacity(visit)
 
 		// Verificar si hay pickup válido (coordenadas no son cero)
 		hasValidPickup := visit.Pickup.AddressInfo.Coordinates.Longitude != 0 || visit.Pickup.AddressInfo.Coordinates.Latitude != 0
@@ -168,10 +168,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				},
 			}
 
-			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+			// Incluir Amount siempre con los 3 valores en orden: [peso, volumen, seguro]
 			job.Amount = []int64{
 				totalWeight,
-				totalDeliveryUnits,
+				totalVolume,
 				totalInsurance,
 			}
 
@@ -255,10 +255,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 				Delivery: delivery,
 			}
 
-			// Incluir Amount siempre con los 3 valores en orden: [peso, delivery_units, insurance]
+			// Incluir Amount siempre con los 3 valores en orden: [peso, volumen, seguro]
 			shipment.Amount = []int64{
 				totalWeight,
-				totalDeliveryUnits,
+				totalVolume,
 				totalInsurance,
 			}
 
