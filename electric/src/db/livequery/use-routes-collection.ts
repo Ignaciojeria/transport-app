@@ -14,6 +14,8 @@ export const isDemoMode = (): boolean => {
          urlParams.get('demold') !== null // Para el typo en la URL
 }
 
+
+
 // Hook personalizado que combina la collection con useLiveQuery
 export const useRoutesCollection = (token: string, referenceId?: string) => {
   const collection = useMemo(() => createRoutesCollection(token, referenceId), [token, referenceId])
@@ -71,12 +73,14 @@ export const useRoutes = (token: string, referenceId?: string): RouteWithElectri
   
   // Si es demo, retornar datos mock sin consultar Electric SQL
   if (isDemo) {
+    // Usar el referenceId (que es el routeId de la ruta) en lugar del hardcodeado
+    const actualRouteId = referenceId || '123' // Fallback si no hay referenceId
     const mockRoute = {
       ...mockRouteData,
-      electricId: 'demo-route'
+      electricId: actualRouteId
     } as RouteWithElectricId
     
-    console.log('🎭 Returning mock data:', mockRoute)
+    console.log('🎭 Returning mock data with routeId:', actualRouteId, mockRoute)
     return [mockRoute]
   }
   

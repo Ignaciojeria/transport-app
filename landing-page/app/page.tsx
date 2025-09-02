@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
@@ -21,7 +22,22 @@ import {
 import { motion } from "framer-motion"
 import { DemoEmbed } from "@/components/DemoEmbed"
 
+// Generar UUID único para esta sesión de demo
+const generateDemoUUID = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 export default function LandingPage() {
+  const [routeId, setRouteId] = useState<string>('')
+  
+  // Generar UUID solo en el cliente para evitar errores de hidratación
+  useEffect(() => {
+    setRouteId(generateDemoUUID())
+  }, [])
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
@@ -35,7 +51,13 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#como-funciona" className="text-gray-600 hover:text-blue-600 transition-colors">Cómo funciona</a>
               <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">Beneficios</a>
-              <Button className="bg-blue-600 hover:bg-blue-700">Solicitar Demo</Button>
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => routeId && window.open(`http://localhost:5173/demo?routeId=${routeId}`, '_blank')}
+                disabled={!routeId}
+              >
+                Solicitar Demo
+              </Button>
             </div>
           </div>
         </div>
@@ -204,11 +226,11 @@ export default function LandingPage() {
                 <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Planifica desde Google Sheets
+                 Crea tus vehículos
                </h3>
                <p className="text-gray-600">
-                 Carga tus vehículos y entregas directamente en Google Sheets para la planificación. 
-                 No necesitas instalar software ni aprender nuevas herramientas.
+                 Configura y registra tus vehículos con sus capacidades, dimensiones y características. 
+                 Define la flota que utilizarás para tus entregas.
                </p>
             </motion.div>
             
@@ -222,11 +244,11 @@ export default function LandingPage() {
                 <span className="text-2xl font-bold text-green-600">2</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Balancea carga y optimiza rutas
+                 Carga las entregas
                </h3>
                <p className="text-gray-600">
-                 Balancea automáticamente la carga entre vehículos y genera el orden óptimo 
-                 de entregas considerando peso, volumen y seguro de carga.
+                 Crea y configura tus entregas con destinos, productos y restricciones. 
+                 Define todos los detalles necesarios para la planificación de rutas.
                </p>
             </motion.div>
             
@@ -236,15 +258,15 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-center"
             >
-              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-blue-600">3</span>
+              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Ejecuta desde web mobile
+                 Optimiza y ejecuta
                </h3>
                <p className="text-gray-600">
-                 Comparte enlaces con conductores para acceder a la web mobile, obtén trazabilidad en tiempo real 
-                 y genera reportes de entrega automáticamente.
+                 Llama a nuestro agente de optimización y recibe los enlaces para el conductor. 
+                 Ejecuta las rutas optimizadas con trazabilidad en tiempo real.
                </p>
             </motion.div>
           </div>
@@ -355,7 +377,12 @@ export default function LandingPage() {
               Contacta con nosotros para una demostración personalizada
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3">
+              <Button 
+                size="lg" 
+                className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
+                onClick={() => routeId && window.open(`http://localhost:5173/demo?routeId=${routeId}`, '_blank')}
+                disabled={!routeId}
+              >
                 Solicitar Demo
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>

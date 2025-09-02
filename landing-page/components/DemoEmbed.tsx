@@ -16,11 +16,11 @@ const generateDemoUUID = () => {
 
 export function DemoEmbed() {
   const [showDemo, setShowDemo] = useState(false)
-  const [demoId, setDemoId] = useState<string>('')
+  const [routeId, setRouteId] = useState<string>('')
   
   // Generar UUID solo en el cliente para evitar errores de hidratación
   useEffect(() => {
-    setDemoId(generateDemoUUID())
+    setRouteId(generateDemoUUID())
   }, [])
 
   return (
@@ -33,10 +33,10 @@ export function DemoEmbed() {
           <p className="text-xl text-gray-600 mb-4">
             Experimenta cómo funciona la app desde la perspectiva del conductor con datos de prueba
           </p>
-          {demoId && (
+          {routeId && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 inline-block">
               <p className="text-sm text-blue-800">
-                <span className="font-semibold">ID de Demo:</span> <span className="font-mono text-blue-900">{demoId}</span>
+                <span className="font-semibold">ID de Ruta:</span> <span className="font-mono text-blue-900">{routeId}</span>
               </p>
             </div>
           )}
@@ -96,8 +96,8 @@ export function DemoEmbed() {
                   <Button 
                     variant="outline" 
                     className="w-full mt-2"
-                    onClick={() => demoId && window.open(`http://localhost:5173/demo?demoId=${demoId}`, '_blank')}
-                    disabled={!demoId}
+                    onClick={() => routeId && window.open(`http://localhost:5173/demo?routeId=${routeId}`, '_blank')}
+                    disabled={!routeId}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Abrir en Nueva Pestaña
@@ -112,9 +112,9 @@ export function DemoEmbed() {
             {showDemo ? (
               <div className="relative">
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-                  {demoId && (
+                  {routeId && (
                     <iframe 
-                      src={`http://localhost:5173/demo?demoId=${demoId}`} 
+                      src={`http://localhost:5173/demo?routeId=${routeId}`} 
                       width="100%" 
                       height="600"
                       className="border-0"
