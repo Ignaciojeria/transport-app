@@ -1,4 +1,5 @@
 import type { Visit, Order, DeliveryUnit } from '../domain/route'
+import { isDemoMode } from '../db/livequery/use-routes-collection'
 
 export interface ReportData {
   routeId: string
@@ -281,7 +282,8 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
         recipientName = evidence?.recipientName || ''
         recipientDocument = evidence?.recipientRut || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
-        evidenceUrl = evidence?.photoDataUrl || ''
+        // En modo demo, no incluir URL de evidencia
+        evidenceUrl = isDemoMode() ? '' : (evidence?.photoDataUrl || '')
       }
     } else if (status === 'not-delivered') {
       const evidence = getNonDeliveryEvidence(reportData.localState, reportData.routeId, visitIndex, orderIndex, unitIndex)
@@ -289,7 +291,8 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
         nonDeliveryReason = evidence?.reason || ''
         nonDeliveryObservations = evidence?.observations || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
-        evidenceUrl = evidence?.photoDataUrl || ''
+        // En modo demo, no incluir URL de evidencia
+        evidenceUrl = isDemoMode() ? '' : (evidence?.photoDataUrl || '')
       }
     }
     
@@ -380,7 +383,8 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
         recipientName = evidence?.recipientName || ''
         recipientDocument = evidence?.recipientRut || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
-        evidenceUrl = evidence?.photoDataUrl || ''
+        // En modo demo, no incluir URL de evidencia
+        evidenceUrl = isDemoMode() ? '' : (evidence?.photoDataUrl || '')
       }
     } else if (status === 'not-delivered') {
       const evidence = getNonDeliveryEvidence(reportData.localState, reportData.routeId, visitIndex, orderIndex, unitIndex)
@@ -388,7 +392,8 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
         nonDeliveryReason = evidence?.reason || ''
         nonDeliveryObservations = evidence?.observations || ''
         managementDate = evidence?.takenAt ? new Date(evidence.takenAt).toLocaleString('es-CL') : ''
-        evidenceUrl = evidence?.photoDataUrl || ''
+        // En modo demo, no incluir URL de evidencia
+        evidenceUrl = isDemoMode() ? '' : (evidence?.photoDataUrl || '')
       }
     }
     

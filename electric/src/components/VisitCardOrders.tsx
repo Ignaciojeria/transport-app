@@ -23,11 +23,6 @@ export function VisitCardOrders({
     <>
       {visit.orders?.map((order: any, orderIndex: number) => (
         <div key={orderIndex} className="mb-4">
-          <div className="mb-2">
-            <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
-              {order.referenceID}
-            </span>
-          </div>
           {(order.deliveryUnits || [])
             .map((unit: any, uIdx: number) => ({
               unit,
@@ -36,17 +31,23 @@ export function VisitCardOrders({
             }))
             .filter((x: any) => shouldRenderByTab(x.status))
             .map((x: any) => (
-                                        <VisitCardDeliveryUnit
-                            key={x.uIdx}
-                            unit={x.unit}
-                            uIdx={x.uIdx}
-                            status={x.status}
-                            visitIndex={visitIndex}
-                            orderIndex={orderIndex}
-                            routeStarted={routeStarted}
-                            onOpenDelivery={onOpenDelivery}
-                            onOpenNonDelivery={onOpenNonDelivery}
-                          />
+              <div key={x.uIdx}>
+                <div className="mb-2">
+                  <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                    {x.unit.lpn || `Unidad ${x.uIdx + 1}`}
+                  </span>
+                </div>
+                <VisitCardDeliveryUnit
+                  unit={x.unit}
+                  uIdx={x.uIdx}
+                  status={x.status}
+                  visitIndex={visitIndex}
+                  orderIndex={orderIndex}
+                  routeStarted={routeStarted}
+                  onOpenDelivery={onOpenDelivery}
+                  onOpenNonDelivery={onOpenNonDelivery}
+                />
+              </div>
             ))}
         </div>
       ))}

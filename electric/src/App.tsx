@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useParams } from '@tanstack/react-router'
-import { useRoutes } from './db'
+import { useRoutes, isDemoMode } from './db'
 import { 
   useDeliveriesState, 
   useRouteStartedSync,
@@ -788,6 +788,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       visitIndex={evidenceModal.vIdx || undefined}
       orderIndex={evidenceModal.oIdx || undefined}
       unitIndex={evidenceModal.uIdx || undefined}
+      isDemo={isDemoMode()}
     />
     {/* Modal de No Entregado */}
     <NonDeliveryModal
@@ -800,6 +801,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       visitIndex={ndModal.vIdx || undefined}
       orderIndex={ndModal.oIdx || undefined}
       unitIndex={ndModal.uIdx || undefined}
+      isDemo={isDemoMode()}
     />
 
 

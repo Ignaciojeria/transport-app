@@ -14,6 +14,7 @@ interface DeliveryModalProps {
   visitIndex?: number
   orderIndex?: number
   unitIndex?: number
+  isDemo?: boolean // Para modo demo
 }
 
 export function DeliveryModal({
@@ -25,7 +26,8 @@ export function DeliveryModal({
   routeData,
   visitIndex,
   orderIndex,
-  unitIndex
+  unitIndex,
+  isDemo = false
 }: DeliveryModalProps) {
   const [recipientName, setRecipientName] = useState('')
   const [recipientRut, setRecipientRut] = useState('')
@@ -60,22 +62,28 @@ export function DeliveryModal({
       setUploadingImage(true)
       setUploadError(null)
       
-      // Obtener URLs del contrato de ruta
-      const { uploadUrl, downloadUrl } = getUploadUrlFromRoute(
-        routeData, 
-        visitIndex || 0, 
-        orderIndex || 0, 
-        unitIndex || 0
-      )
+      let finalImageUrl = photoDataUrl
       
-      if (!uploadUrl) {
-        throw new Error('No se encontró uploadUrl en el contrato de ruta')
+      if (!isDemo) {
+        // Solo hacer upload si no es modo demo
+        const { uploadUrl, downloadUrl } = getUploadUrlFromRoute(
+          routeData, 
+          visitIndex || 0, 
+          orderIndex || 0, 
+          unitIndex || 0
+        )
+        
+        if (!uploadUrl) {
+          throw new Error('No se encontró uploadUrl en el contrato de ruta')
+        }
+        
+        console.log('📤 Subiendo imagen usando URL firmada del contrato...')
+        const { downloadUrl: uploadedDownloadUrl } = await processAndUploadImage(photoDataUrl, uploadUrl, downloadUrl || undefined)
+        finalImageUrl = uploadedDownloadUrl
+        console.log('✅ Imagen subida exitosamente:', finalImageUrl)
+      } else {
+        console.log('🎯 Modo demo: usando imagen local sin upload')
       }
-      
-      console.log('📤 Subiendo imagen usando URL firmada del contrato...')
-      const { downloadUrl: uploadedDownloadUrl } = await processAndUploadImage(photoDataUrl, uploadUrl, downloadUrl || undefined)
-      const finalImageUrl = uploadedDownloadUrl
-      console.log('✅ Imagen subida exitosamente:', finalImageUrl)
       
       // ✅ Crear y retornar un DeliveryEvent hidratado
       const hydratedDeliveryEvent: DeliveryEvent = {

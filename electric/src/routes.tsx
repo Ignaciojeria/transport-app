@@ -19,7 +19,7 @@ const indexRoute = createRoute({
     <Navigate
       to="/driver/routes/$routeId"
       params={{ routeId: '123' }}
-      hash="access_token=test"
+      hash="access_token=test&demo=true"
     />
   ),
 })
@@ -31,8 +31,27 @@ const routeByIdRoute = createRoute({
   component: RouteComponent,
 })
 
+// Ruta para la demo - redirige a la ruta del driver con demo=true
+const demoRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/demo',
+  component: () => {
+    // Leer routeId de los query parameters
+    const urlParams = new URLSearchParams(window.location.search)
+    const routeId = urlParams.get('routeId') || '123' // Default a '123' si no se proporciona
+    
+    return (
+      <Navigate
+        to="/driver/routes/$routeId"
+        params={{ routeId }}
+        hash="access_token=test&demo=true"
+      />
+    )
+  },
+})
+
 // Crear el árbol de rutas
-const routeTree = rootRoute.addChildren([indexRoute, routeByIdRoute])
+const routeTree = rootRoute.addChildren([indexRoute, routeByIdRoute, demoRoute])
 
 // Crear el router
 export const router = createRouter({ routeTree })
