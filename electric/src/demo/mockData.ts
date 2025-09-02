@@ -70,6 +70,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-1",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -107,6 +108,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-2",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -144,6 +146,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-3",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -181,6 +184,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-4",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -218,6 +222,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-5",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -255,6 +260,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-6",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -292,6 +298,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-7",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -329,6 +336,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-8",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -366,6 +374,7 @@ export const mockRouteData: any ={
                     "deliveryUnits": [
                         {
                             "documentID": "",
+                            "lpn": "CODE-9",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
