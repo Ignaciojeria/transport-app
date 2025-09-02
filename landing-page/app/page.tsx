@@ -19,6 +19,7 @@ import {
   Quote
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { DemoEmbed } from "@/components/DemoEmbed"
 
 export default function LandingPage() {
   return (
@@ -34,8 +35,7 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#como-funciona" className="text-gray-600 hover:text-blue-600 transition-colors">Cómo funciona</a>
               <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">Beneficios</a>
-              <a href="#testimonios" className="text-gray-600 hover:text-blue-600 transition-colors">Testimonios</a>
-              <Button className="bg-blue-600 hover:bg-blue-700">Probar Gratis</Button>
+              <Button className="bg-blue-600 hover:bg-blue-700">Solicitar Demo</Button>
             </div>
           </div>
         </div>
@@ -73,7 +73,7 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3">
-                  Probar Gratis
+                  Solicitar Demo
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button size="lg" variant="outline" className="text-lg px-8 py-3">
@@ -226,7 +226,7 @@ export default function LandingPage() {
                </h3>
                <p className="text-gray-600">
                  Balancea automáticamente la carga entre vehículos y genera el orden óptimo 
-                 de entregas considerando peso, volumen, seguro y restricciones de tiempo.
+                 de entregas considerando peso, volumen y seguro de carga.
                </p>
             </motion.div>
             
@@ -251,133 +251,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Driver View Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Vista del conductor
-              </h2>
-              <p className="text-xl text-gray-600 mb-8">
-                Tus conductores tienen una experiencia simple y funcional
-              </p>
-              
-              <div className="space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <Smartphone className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Abre el enlace</h3>
-                    <p className="text-gray-600">Recibe un enlace directo en su teléfono</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="bg-green-100 p-3 rounded-lg">
-                    <Navigation className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Ve la ruta optimizada</h3>
-                    <p className="text-gray-600">Visualiza todas las paradas en orden óptimo</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <MapPin className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Usa Google Maps</h3>
-                    <p className="text-gray-600">Navega directamente con Google Maps integrado</p>
-                  </div>
-                </div>
-                
-                                 <div className="flex items-start space-x-4">
-                   <div className="bg-orange-100 p-3 rounded-lg">
-                     <CheckCircle className="h-6 w-6 text-orange-600" />
-                   </div>
-                   <div>
-                                        <h3 className="font-semibold text-gray-900 mb-2">Trazabilidad en tiempo real</h3>
-                   <p className="text-gray-600">Monitorea y confirma entregas con actualizaciones instantáneas desde web mobile</p>
-                   </div>
-                 </div>
-              </div>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="bg-white rounded-2xl shadow-2xl p-6">
-                <div className="bg-gray-900 rounded-lg p-4 mb-4">
-                  <div className="flex items-center space-x-2 mb-3">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  </div>
-                  <div className="text-white text-sm">TransportApp - Conductor</div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">Ruta del día</span>
-                      <span className="text-sm text-gray-500">8 entregas</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-blue-600">1</span>
-                        </div>
-                                                 <div className="flex-1">
-                           <div className="font-medium text-sm">Cliente A - Centro</div>
-                           <div className="text-xs text-gray-500">15g, 500cm³ - 10:00 AM</div>
-                         </div>
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      </div>
-                      
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-blue-600">2</span>
-                        </div>
-                                                 <div className="flex-1">
-                           <div className="font-medium text-sm">Cliente B - Norte</div>
-                           <div className="text-xs text-gray-500">25g, 800cm³ - 10:30 AM</div>
-                         </div>
-                        <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-3">
-                        <div className="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-gray-600">3</span>
-                        </div>
-                                                 <div className="flex-1">
-                           <div className="font-medium text-sm text-gray-400">Cliente C - Sur</div>
-                           <div className="text-xs text-gray-400">20g, 600cm³ - 11:00 AM</div>
-                         </div>
-                        <div className="w-5 h-5 border-2 border-gray-300 rounded-full"></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Navigation className="mr-2 h-4 w-4" />
-                    Abrir en Google Maps
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+            {/* Demo Section */}
+      <DemoEmbed />
 
       {/* Benefits Section */}
       <section id="beneficios" className="py-20 bg-white">
@@ -463,108 +338,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonios" className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Lo que dicen nuestros clientes
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Empresas que ya optimizaron su logística con TransportApp
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <Card className="h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <Quote className="h-8 w-8 text-blue-600 mb-4" />
-                                     <p className="text-gray-600 mb-6">
-                     "El balanceo automático de carga y la trazabilidad en tiempo real nos han revolucionado la logística. Planificamos desde Sheets."
-                   </p>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <Users className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Carlos Mendoza</div>
-                      <div className="text-sm text-gray-500">Operador Logístico</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <Card className="h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <Quote className="h-8 w-8 text-green-600 mb-4" />
-                                     <p className="text-gray-600 mb-6">
-                     "La optimización de rutas y el balanceo de carga nos redujeron costos 25% y mejoraron la satisfacción de conductores."
-                   </p>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
-                      <Truck className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">María González</div>
-                      <div className="text-sm text-gray-500">Gerente de Flota</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              <Card className="h-full">
-                <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <Quote className="h-8 w-8 text-blue-600 mb-4" />
-                                     <p className="text-gray-600 mb-6">
-                     "La planificación desde Google Sheets es perfecta. La web mobile para conductores es muy intuitiva."
-                   </p>
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
-                      <BarChart3 className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Roberto Silva</div>
-                      <div className="text-sm text-gray-500">Director de Operaciones</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
       <section className="py-20 bg-blue-600">
@@ -578,18 +352,15 @@ export default function LandingPage() {
               ¿Listo para optimizar tu flota?
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Únete a las empresas que ya están ahorrando tiempo y dinero con TransportApp
+              Contacta con nosotros para una demostración personalizada
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3">
-                Solicitar Acceso
+                Solicitar Demo
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-3">
-                Agendar Demo
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 text-lg px-8 py-3">
-                Ver Precios
+                Contactar
               </Button>
             </div>
           </motion.div>
