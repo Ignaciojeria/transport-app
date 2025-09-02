@@ -89,8 +89,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="mt-16 relative"
             >
-                             <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl mx-auto">
-                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-4xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <Card className="border-2 border-blue-100 card-glow">
                     <CardHeader>
                       <div className="flex items-center space-x-2">
@@ -150,8 +150,8 @@ export default function LandingPage() {
                                      <Card className="border-2 border-purple-100 card-glow">
                     <CardHeader>
                       <div className="flex items-center space-x-2">
-                        <div className="p-2 bg-purple-100 rounded-lg">
-                          <Navigation className="h-6 w-6 text-purple-600" />
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <Navigation className="h-6 w-6 text-blue-600" />
                         </div>
                         <CardTitle className="text-lg">Rutas</CardTitle>
                       </div>
@@ -236,8 +236,8 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="text-center"
             >
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-purple-600">3</span>
+              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-2xl font-bold text-blue-600">3</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
                  Ejecuta desde web mobile
@@ -289,8 +289,8 @@ export default function LandingPage() {
                 </div>
                 
                 <div className="flex items-start space-x-4">
-                  <div className="bg-purple-100 p-3 rounded-lg">
-                    <MapPin className="h-6 w-6 text-purple-600" />
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <MapPin className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-2">Usa Google Maps</h3>
@@ -405,7 +405,7 @@ export default function LandingPage() {
                 Reduce costos logísticos
               </h3>
               <p className="text-gray-600">
-                Optimiza rutas y reduce combustible, tiempo y recursos hasta un 30%
+                Optimiza rutas y reduce combustible, tiempo y recursos.
               </p>
             </motion.div>
             
@@ -449,8 +449,8 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="text-center"
             >
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Zap className="h-8 w-8 text-purple-600" />
+              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Zap className="h-8 w-8 text-blue-600" />
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
                  Trazabilidad en tiempo real
@@ -546,13 +546,13 @@ export default function LandingPage() {
                       <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
                     ))}
                   </div>
-                  <Quote className="h-8 w-8 text-purple-600 mb-4" />
+                  <Quote className="h-8 w-8 text-blue-600 mb-4" />
                                      <p className="text-gray-600 mb-6">
                      "La planificación desde Google Sheets es perfecta. La web mobile para conductores es muy intuitiva."
                    </p>
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
-                      <BarChart3 className="h-6 w-6 text-purple-600" />
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                      <BarChart3 className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">Roberto Silva</div>
