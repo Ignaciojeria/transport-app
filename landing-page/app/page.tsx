@@ -133,21 +133,23 @@ export default function LandingPage() {
                       </div>
                     </CardHeader>
                                          <CardContent>
-                       <div className="space-y-3">
-                         <div className="space-y-1">
-                           <div className="text-sm font-medium text-gray-900">ABC-123</div>
-                           <div className="text-xs text-gray-600">Peso: 1000g, Vol: 5000cm³</div>
-                           <div className="text-xs text-gray-600">Seguro: $50,000</div>
-                         </div>
-                         <div className="space-y-1">
-                           <div className="text-sm font-medium text-gray-900">XYZ-789</div>
-                           <div className="text-xs text-gray-600">Peso: 800g, Vol: 4000cm³</div>
-                           <div className="text-xs text-gray-600">Seguro: $40,000</div>
-                         </div>
-                         <div className="text-xs text-gray-400 text-center">
-                           + 3 vehículos más...
-                         </div>
-                       </div>
+                                               <div className="space-y-3">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">Patente: ABC-123</div>
+                            <div className="text-xs text-gray-600">Peso: 1000kg, Vol: 5000cm³</div>
+                            <div className="text-xs text-gray-600">Seguro: $50,000</div>
+                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">Patente: XYZ-789</div>
+                            <div className="text-xs text-gray-600">Peso: 800kg, Vol: 4000cm³</div>
+                            <div className="text-xs text-gray-600">Seguro: $40,000</div>
+                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                          </div>
+                          <div className="text-xs text-gray-400 text-center">
+                            + 3 vehículos más...
+                          </div>
+                        </div>
                      </CardContent>
                   </Card>
                   
@@ -161,21 +163,25 @@ export default function LandingPage() {
                       </div>
                     </CardHeader>
                                          <CardContent>
-                       <div className="space-y-3">
-                         <div className="space-y-1">
-                           <div className="text-sm font-medium text-gray-900">Cliente A</div>
-                           <div className="text-xs text-gray-600">Peso: 15g, Vol: 500cm³</div>
-                           <div className="text-xs text-gray-600">Precio: $1,200</div>
-                         </div>
-                         <div className="space-y-1">
-                           <div className="text-sm font-medium text-gray-900">Cliente B</div>
-                           <div className="text-xs text-gray-600">Peso: 25g, Vol: 800cm³</div>
-                           <div className="text-xs text-gray-600">Precio: $1,800</div>
-                         </div>
-                         <div className="text-xs text-gray-400 text-center">
-                           + 8 entregas más...
-                         </div>
-                       </div>
+                                               <div className="space-y-3">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">Cliente A</div>
+                            <div className="text-xs text-gray-600">Dirección: Las Condes</div>
+                            <div className="text-xs text-gray-600">Peso: 15kg, Vol: 500cm³</div>
+                            <div className="text-xs text-gray-600">Precio: $1,200</div>
+                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">Cliente B</div>
+                            <div className="text-xs text-gray-600">Dirección: Providencia</div>
+                            <div className="text-xs text-gray-600">Peso: 25kg, Vol: 800cm³</div>
+                            <div className="text-xs text-gray-600">Precio: $1,800</div>
+                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                          </div>
+                          <div className="text-xs text-gray-400 text-center">
+                            + 8 entregas más...
+                          </div>
+                        </div>
                      </CardContent>
                   </Card>
                   
@@ -189,21 +195,23 @@ export default function LandingPage() {
                       </div>
                     </CardHeader>
                                          <CardContent>
-                       <div className="space-y-3">
-                         <div className="space-y-1">
-                           <div className="text-sm font-medium text-gray-900">Ruta 1</div>
-                           <div className="text-xs text-gray-600">Patente asignada: ABC-123</div>
-                           <div className="text-xs text-gray-600">5 entregas</div>
-                         </div>
-                         <div className="space-y-1">
-                           <div className="text-sm font-medium text-gray-900">Ruta 2</div>
-                           <div className="text-xs text-gray-600">Patente asignada: XYZ-789</div>
-                           <div className="text-xs text-gray-600">3 entregas</div>
-                         </div>
-                         <div className="text-xs text-gray-400 text-center">
-                           + 2 rutas más...
-                         </div>
-                       </div>
+                                               <div className="space-y-3">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">Ruta 1</div>
+                            <div className="text-xs text-gray-600">Patente asignada: ABC-123</div>
+                            <div className="text-xs text-gray-600">5 entregas</div>
+                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium text-gray-900">Ruta 2</div>
+                            <div className="text-xs text-gray-600">Patente asignada: XYZ-789</div>
+                            <div className="text-xs text-gray-600">3 entregas</div>
+                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                          </div>
+                          <div className="text-xs text-gray-400 text-center">
+                            + 2 rutas más...
+                          </div>
+                        </div>
                      </CardContent>
                   </Card>
                 </div>
