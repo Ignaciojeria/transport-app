@@ -116,7 +116,7 @@ export function DemoEmbed() {
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                   {routeId && (
                     <iframe 
-                      src={`http://localhost:5173/demo?routeId=${routeId}`} 
+                      src={`https://einar-404623.web.app/demo?routeId=${routeId}`} 
                       width="100%" 
                       height="600"
                       className="border-0"
@@ -137,7 +137,7 @@ export function DemoEmbed() {
                   Demo Interactiva
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Haz clic en "Ver Demo" para experimentar la aplicación con datos simulados
+                  Haz clic en &quot;Ver Demo&quot; para experimentar la aplicación con datos simulados
                 </p>
                 <div className="text-sm text-gray-500">
                   • 9 entregas simuladas<br/>

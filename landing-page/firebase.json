@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "transport-landing-68b83",
+    "public": "out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
