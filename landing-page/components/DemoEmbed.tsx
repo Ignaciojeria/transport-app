@@ -98,7 +98,7 @@ export function DemoEmbed() {
                   <Button 
                     variant="outline" 
                     className="w-full mt-2"
-                    onClick={() => routeId && window.open(`http://localhost:5173/demo?routeId=${routeId}`, '_blank')}
+                    onClick={() => routeId && window.open(`https://einar-404623.web.app/demo?routeId=${routeId}`, '_blank')}
                     disabled={!routeId}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
