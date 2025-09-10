@@ -186,7 +186,7 @@ import { VisitCard } from './components'
 
 ## NextVisitCard
 
-Componente especializado para mostrar la "Siguiente Disponible" en la pestaña "En ruta".
+Componente especializado para mostrar la "Siguiente visita" en la pestaña "En ruta".
 
 ### Props
 

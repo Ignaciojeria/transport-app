@@ -29,6 +29,12 @@ interface MapViewProps {
   setLastCenteredVisit: (index: number | null) => void
   setMarkerPosition: (routeId: string, visitIndex: number, coordinates: [number, number]) => Promise<void>
   openNextNavigation: (provider: 'google' | 'waze' | 'geo') => void
+  // Nuevas props para agrupación
+  openGroupedDelivery?: (visitIndex: number, group: any) => void
+  openGroupedNonDelivery?: (visitIndex: number, group: any) => void
+  // Props para entregar todo
+  onDeliverAll?: (visitIndex: number) => void
+  onNonDeliverAll?: (visitIndex: number) => void
 }
 
 export function MapView({
@@ -48,7 +54,11 @@ export function MapView({
   setNextVisitIndex,
   setLastCenteredVisit,
   setMarkerPosition,
-  openNextNavigation
+  openNextNavigation,
+  openGroupedDelivery,
+  openGroupedNonDelivery,
+  onDeliverAll,
+  onNonDeliverAll
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
@@ -651,7 +661,25 @@ export function MapView({
   
   // Verificar si la visita actual ya está procesada
   const visitStatus = getVisitStatus(visit, getDeliveryUnitStatus, displayIdx)
-  const isProcessed = visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial'
+  
+  // Verificar si hay otras visitas en la misma dirección que aún no han sido procesadas
+  const currentAddress = visit.addressInfo?.addressLine1 || 'Sin dirección'
+  const visitsAtSameAddress = visits.filter(v => 
+    v.addressInfo?.addressLine1 === currentAddress && v !== visit
+  )
+  
+  // Una visita se considera procesada solo si:
+  // 1. Su propio estado está procesado Y
+  // 2. No hay otras visitas en la misma dirección con unidades pendientes
+  const hasOtherVisitsAtSameAddress = visitsAtSameAddress.length > 0
+  const otherVisitsProcessed = hasOtherVisitsAtSameAddress ? 
+    visitsAtSameAddress.every(otherVisit => {
+      const otherVisitStatus = getVisitStatus(otherVisit, getDeliveryUnitStatus, visits.indexOf(otherVisit))
+      return otherVisitStatus === 'completed' || otherVisitStatus === 'not-delivered' || otherVisitStatus === 'partial'
+    }) : true
+  
+  const isProcessed = (visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial') && otherVisitsProcessed
+  
   const nextPendingIdx = getNextPendingVisitIndex()
   const hasNextPending = typeof nextPendingIdx === 'number' && nextPendingIdx !== displayIdx
 
@@ -693,6 +721,8 @@ export function MapView({
         openNonDeliveryFor={openNonDeliveryFor}
         onNextPending={handleNextPending}
         onClearSelection={handleClearSelection}
+        onDeliverAll={onDeliverAll}
+        onNonDeliverAll={onNonDeliverAll}
       />
     </div>
   )

@@ -1,4 +1,5 @@
 import { CheckCircle, XCircle } from 'lucide-react'
+import { IdentifierBadge } from './IdentifierBadge'
 
 interface VisitCardDeliveryUnitProps {
   unit: any
@@ -7,6 +8,7 @@ interface VisitCardDeliveryUnitProps {
   visitIndex: number
   orderIndex: number
   routeStarted: boolean
+  orderReferenceID?: string
   onOpenDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
   onOpenNonDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
 }
@@ -18,6 +20,7 @@ export function VisitCardDeliveryUnit({
   visitIndex,
   orderIndex,
   routeStarted,
+  orderReferenceID,
   onOpenDelivery,
   onOpenNonDelivery
 }: VisitCardDeliveryUnitProps) {
@@ -38,6 +41,15 @@ export function VisitCardDeliveryUnit({
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1 min-w-0">
+          {/* Identificadores prominentes */}
+          <div className="mb-2">
+            <IdentifierBadge 
+              lpn={unit.lpn} 
+              referenceID={orderReferenceID}
+              size="sm"
+              className="mb-2"
+            />
+          </div>
           <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">
             Unidad de Entrega {uIdx + 1}
           </h5>

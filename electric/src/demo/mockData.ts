@@ -50,9 +50,9 @@ export const mockRouteData: any ={
         {
             "type": "delivery",
             "addressInfo": {
-                "addressLine1": "Calle 1007, Piso 8, la-florida",
+                "addressLine1": "Calle 1007, la-florida",
                 "contact": {
-                    "fullName": "Patricia Vargas"
+                    "fullName": "Roberto Silva"
                 },
                 "coordinates": {
                     "latitude": -33.5226641,
@@ -65,12 +65,12 @@ export const mockRouteData: any ={
             "timeWindow": {},
             "orders": [
                 {
-                    "referenceID": "107LA",
+                    "referenceID": "107LA-A",
                     "documentID": "",
                     "deliveryUnits": [
                         {
                             "documentID": "",
-                            "lpn": "CODE-1",
+                            "lpn": "CODE-1A",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
@@ -80,6 +80,165 @@ export const mockRouteData: any ={
                             "volume": 2,
                             "weight": 12,
                             "price": 100
+                        }
+                    ]
+                },
+                {
+                    "referenceID": "107LA-B",
+                    "documentID": "",
+                    "deliveryUnits": [
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1B",
+                            "items": [
+                                {
+                                    "description": "comida enlatada",
+                                    "quantity": 5
+                                }
+                            ],
+                            "volume": 1.5,
+                            "weight": 8,
+                            "price": 150
+                        }
+                    ]
+                },
+                {
+                    "referenceID": "107LA-C",
+                    "documentID": "",
+                    "deliveryUnits": [
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1C",
+                            "items": [
+                                {
+                                    "description": "medicamentos",
+                                    "quantity": 2
+                                }
+                            ],
+                            "volume": 0.5,
+                            "weight": 3,
+                            "price": 75
+                        }
+                    ]
+                },
+                {
+                    "referenceID": "107LA-D",
+                    "documentID": "",
+                    "deliveryUnits": [
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1D",
+                            "items": [
+                                {
+                                    "description": "productos de limpieza",
+                                    "quantity": 3
+                                }
+                            ],
+                            "volume": 3,
+                            "weight": 15,
+                            "price": 200
+                        },
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1E",
+                            "items": [
+                                {
+                                    "description": "ropa deportiva",
+                                    "quantity": 2
+                                }
+                            ],
+                            "volume": 1,
+                            "weight": 5,
+                            "price": 120
+                        },
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1F",
+                            "items": [
+                                {
+                                    "description": "herramientas",
+                                    "quantity": 1
+                                }
+                            ],
+                            "volume": 2.5,
+                            "weight": 8,
+                            "price": 180
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "delivery",
+            "addressInfo": {
+                "addressLine1": "Calle 1007, la-florida",
+                "contact": {
+                    "fullName": "María Pérez"
+                },
+                "coordinates": {
+                    "latitude": -33.5226641,
+                    "longitude": -70.5996466
+                },
+                "politicalArea": {}
+            },
+            "nodeInfo": {},
+            "sequenceNumber": 2,
+            "timeWindow": {},
+            "orders": [
+                {
+                    "referenceID": "107LA-E",
+                    "documentID": "",
+                    "deliveryUnits": [
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1G",
+                            "items": [
+                                {
+                                    "description": "libros",
+                                    "quantity": 4
+                                }
+                            ],
+                            "volume": 1.2,
+                            "weight": 6,
+                            "price": 90
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "delivery",
+            "addressInfo": {
+                "addressLine1": "Calle 1007, la-florida",
+                "contact": {
+                    "fullName": "Carlos Mendoza"
+                },
+                "coordinates": {
+                    "latitude": -33.5226641,
+                    "longitude": -70.5996466
+                },
+                "politicalArea": {}
+            },
+            "nodeInfo": {},
+            "sequenceNumber": 6,
+            "timeWindow": {},
+            "orders": [
+                {
+                    "referenceID": "107LA-F",
+                    "documentID": "",
+                    "deliveryUnits": [
+                        {
+                            "documentID": "",
+                            "lpn": "CODE-1H",
+                            "items": [
+                                {
+                                    "description": "electrodomésticos",
+                                    "quantity": 1
+                                }
+                            ],
+                            "volume": 4,
+                            "weight": 25,
+                            "price": 350
                         }
                     ]
                 }
@@ -99,7 +258,7 @@ export const mockRouteData: any ={
                 "politicalArea": {}
             },
             "nodeInfo": {},
-            "sequenceNumber": 2,
+            "sequenceNumber": 6,
             "timeWindow": {},
             "orders": [
                 {
@@ -137,7 +296,7 @@ export const mockRouteData: any ={
                 "politicalArea": {}
             },
             "nodeInfo": {},
-            "sequenceNumber": 3,
+            "sequenceNumber": 6,
             "timeWindow": {},
             "orders": [
                 {
@@ -175,7 +334,7 @@ export const mockRouteData: any ={
                 "politicalArea": {}
             },
             "nodeInfo": {},
-            "sequenceNumber": 4,
+            "sequenceNumber": 6,
             "timeWindow": {},
             "orders": [
                 {
@@ -213,7 +372,7 @@ export const mockRouteData: any ={
                 "politicalArea": {}
             },
             "nodeInfo": {},
-            "sequenceNumber": 5,
+            "sequenceNumber": 6,
             "timeWindow": {},
             "orders": [
                 {

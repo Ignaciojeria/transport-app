@@ -1,6 +1,7 @@
 import { Package } from 'lucide-react'
 import { VisitCardHeader } from './VisitCardHeader'
 import { VisitCardOrders } from './VisitCardOrders'
+import type { DeliveryGroup } from './GroupedDeliveryUtils'
 
 interface VisitCardProps {
   visit: any
@@ -9,6 +10,8 @@ interface VisitCardProps {
   onCenterOnVisit: (visitIndex: number) => void
   onOpenDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
   onOpenNonDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
+  onOpenGroupedDelivery?: (visitIndex: number, group: DeliveryGroup) => void
+  onOpenGroupedNonDelivery?: (visitIndex: number, group: DeliveryGroup) => void
   getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, uIdx: number) => 'delivered' | 'not-delivered' | undefined
   shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean
 }
@@ -20,6 +23,8 @@ export function VisitCard({
   onCenterOnVisit,
   onOpenDelivery,
   onOpenNonDelivery,
+  onOpenGroupedDelivery,
+  onOpenGroupedNonDelivery,
   getDeliveryUnitStatus,
   shouldRenderByTab
 }: VisitCardProps) {
@@ -58,6 +63,8 @@ export function VisitCard({
                       routeStarted={routeStarted}
                       onOpenDelivery={onOpenDelivery}
                       onOpenNonDelivery={onOpenNonDelivery}
+                      onOpenGroupedDelivery={onOpenGroupedDelivery}
+                      onOpenGroupedNonDelivery={onOpenGroupedNonDelivery}
                       getDeliveryUnitStatus={getDeliveryUnitStatus}
                       shouldRenderByTab={shouldRenderByTab}
                     />

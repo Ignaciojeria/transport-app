@@ -1,4 +1,5 @@
 import { CheckCircle, XCircle, Play, Package, User, MapPin } from 'lucide-react'
+import { IdentifierBadge } from './IdentifierBadge'
 
 interface MapVisitCardProps {
   visit: any
@@ -13,6 +14,8 @@ interface MapVisitCardProps {
   openNonDeliveryFor: (visitIndex: number, orderIndex: number, unitIndex: number) => void
   onNextPending: (nextPendingIdx: number) => void
   onClearSelection: () => void
+  onDeliverAll?: (visitIndex: number) => void
+  onNonDeliverAll?: (visitIndex: number) => void
 }
 
 export function MapVisitCard({
@@ -27,7 +30,9 @@ export function MapVisitCard({
   openDeliveryFor,
   openNonDeliveryFor,
   onNextPending,
-  onClearSelection
+  onClearSelection,
+  onDeliverAll,
+  onNonDeliverAll
 }: MapVisitCardProps) {
   
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
@@ -40,6 +45,38 @@ export function MapVisitCard({
         return 'text-gray-600 bg-white border-gray-200'
     }
   }
+
+  // Calcular estadísticas de la visita
+  const visitStats = (() => {
+    let totalUnits = 0
+    let pendingUnits = 0
+    let deliveredUnits = 0
+    let notDeliveredUnits = 0
+
+    visit.orders?.forEach((order: any, orderIndex: number) => {
+      order.deliveryUnits?.forEach((_unit: any, unitIndex: number) => {
+        totalUnits++
+        const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+        if (status === 'delivered') {
+          deliveredUnits++
+        } else if (status === 'not-delivered') {
+          notDeliveredUnits++
+        } else {
+          pendingUnits++
+        }
+      })
+    })
+
+    return {
+      totalUnits,
+      pendingUnits,
+      deliveredUnits,
+      notDeliveredUnits,
+      hasPendingUnits: pendingUnits > 0,
+      hasDeliveredUnits: deliveredUnits > 0,
+      isPartiallyDelivered: deliveredUnits > 0 && pendingUnits > 0
+    }
+  })()
 
   return (
     <div className="p-4 space-y-4">
@@ -106,6 +143,76 @@ export function MapVisitCard({
           </div>
         </div>
         <div className="p-4">
+          {/* Botones de acción grupal */}
+          {routeStarted && visitStats.hasPendingUnits && onDeliverAll && onNonDeliverAll && (
+            <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="text-sm font-medium text-gray-700">
+                    {visitStats.isPartiallyDelivered ? 'Acciones para restantes:' : 'Acciones grupales:'}
+                  </span>
+                  {visitStats.isPartiallyDelivered && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {visitStats.deliveredUnits} entregadas • {visitStats.pendingUnits} pendientes
+                    </div>
+                  )}
+                </div>
+                <Package className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => onDeliverAll(displayIdx)}
+                  className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  <span>
+                    {visitStats.isPartiallyDelivered ? 'Entregar restante' : 'Entregar todo'}
+                  </span>
+                </button>
+                <button
+                  onClick={() => onNonDeliverAll(displayIdx)}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>
+                    {visitStats.isPartiallyDelivered ? 'No entregar restante' : 'No entregar todo'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Progreso de la visita */}
+          {visitStats.isPartiallyDelivered && (
+            <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Progreso de la visita:</span>
+                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                    {visitStats.deliveredUnits} entregadas
+                  </span>
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mr-1"></div>
+                    {visitStats.notDeliveredUnits} no entregadas
+                  </span>
+                  <span className="flex items-center">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full mr-1"></div>
+                    {visitStats.pendingUnits} pendientes
+                  </span>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ 
+                    width: `${((visitStats.deliveredUnits + visitStats.notDeliveredUnits) / visitStats.totalUnits) * 100}%` 
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
+
           <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
             <Package size={18} />
             <span className="ml-2">Unidades de Entrega:</span>
@@ -127,6 +234,15 @@ export function MapVisitCard({
                   <div key={uIdx} className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}>
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex-1 min-w-0">
+                        {/* Identificadores prominentes */}
+                        <div className="mb-2">
+                          <IdentifierBadge 
+                            lpn={unit.lpn} 
+                            code={unit.code} 
+                            size="sm"
+                            className="mb-2"
+                          />
+                        </div>
                         <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">Unidad de Entrega {uIdx + 1}</h5>
                         {Array.isArray(unit.items) && unit.items.length > 0 && (
                           <div className="flex items-center space-x-1 mb-2">

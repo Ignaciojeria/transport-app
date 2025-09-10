@@ -15,7 +15,8 @@ import {
 } from './db'
 import { useState, useEffect } from 'react'
 import { Play, Menu, Truck, Route, Map } from 'lucide-react'
-import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView } from './components'
+import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView, GroupedDeliveryModal, GroupedNonDeliveryModal } from './components'
+import { groupDeliveryUnitsByAddressForNextVisit } from './components/GroupedDeliveryUtils'
 import { 
   generateReportData, 
   generateCSVContent, 
@@ -27,6 +28,7 @@ import {
 import type { Route as RouteType } from './domain/route'
 import type { RouteStart } from './domain/route-start'
 import type { DeliveryUnit, DeliveryEvent } from './domain/deliveries'
+import type { DeliveryGroup } from './components/GroupedDeliveryUtils'
 
 
 // Componente para rutas específicas del driver
@@ -67,6 +69,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const [evidenceModal, setEvidenceModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
   const [ndModal, setNdModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
+
+  // Modales de entrega agrupada
+  const [groupedDeliveryModal, setGroupedDeliveryModal] = useState<{ open: boolean; group: DeliveryGroup | null }>({ open: false, group: null })
+  const [groupedNonDeliveryModal, setGroupedNonDeliveryModal] = useState<{ open: boolean; group: DeliveryGroup | null }>({ open: false, group: null })
 
 
 
@@ -308,6 +314,108 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     setInitialDeliveryEvent(undefined)
   }
 
+  // Funciones para entrega agrupada
+  const openGroupedDeliveryFor = (_visitIndex: number, group: DeliveryGroup) => {
+    setGroupedDeliveryModal({ open: true, group })
+  }
+
+  const openGroupedNonDeliveryFor = (_visitIndex: number, group: DeliveryGroup) => {
+    setGroupedNonDeliveryModal({ open: true, group })
+  }
+
+  // Funciones para entregar todo en modo mapa
+  const handleDeliverAll = (visitIndex: number) => {
+    const visit = visits[visitIndex]
+    if (!visit) return
+
+    // Crear un grupo temporal con todas las unidades pendientes de la visita
+    const allUnits: any[] = []
+    visit.orders?.forEach((order: any, orderIndex: number) => {
+      order.deliveryUnits?.forEach((unit: any, unitIndex: number) => {
+        const status = getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex)
+        if (!status) { // Solo unidades pendientes
+          allUnits.push({
+            unit,
+            uIdx: unitIndex,
+            orderIndex,
+            order
+          })
+        }
+      })
+    })
+
+    if (allUnits.length === 0) return
+
+    // Crear un grupo temporal
+    const tempGroup: DeliveryGroup = {
+      key: `temp-${visitIndex}`,
+      addressInfo: visit.addressInfo,
+      units: allUnits.map((unit) => ({
+        unit: unit.unit,
+        uIdx: unit.uIdx,
+        status: undefined,
+        visitIndex,
+        orderIndex: unit.orderIndex,
+        order: unit.order
+      })),
+      totalUnits: allUnits.length,
+      pendingUnits: allUnits.length
+    }
+
+    setGroupedDeliveryModal({ open: true, group: tempGroup })
+  }
+
+  const handleNonDeliverAll = (visitIndex: number) => {
+    const visit = visits[visitIndex]
+    if (!visit) return
+
+    // Crear un grupo temporal con todas las unidades pendientes de la visita
+    const allUnits: any[] = []
+    visit.orders?.forEach((order: any, orderIndex: number) => {
+      order.deliveryUnits?.forEach((unit: any, unitIndex: number) => {
+        const status = getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex)
+        if (!status) { // Solo unidades pendientes
+          allUnits.push({
+            unit,
+            uIdx: unitIndex,
+            orderIndex,
+            order
+          })
+        }
+      })
+    })
+
+    if (allUnits.length === 0) return
+
+    // Crear un grupo temporal
+    const tempGroup: DeliveryGroup = {
+      key: `temp-${visitIndex}`,
+      addressInfo: visit.addressInfo,
+      units: allUnits.map((unit) => ({
+        unit: unit.unit,
+        uIdx: unit.uIdx,
+        status: undefined,
+        visitIndex,
+        orderIndex: unit.orderIndex,
+        order: unit.order
+      })),
+      totalUnits: allUnits.length,
+      pendingUnits: allUnits.length
+    }
+
+    setGroupedNonDeliveryModal({ open: true, group: tempGroup })
+  }
+
+  const closeGroupedDeliveryModal = () => {
+    setGroupedDeliveryModal({ open: false, group: null })
+    setSubmittingEvidence(false)
+  }
+
+  const closeGroupedNonDeliveryModal = () => {
+    setGroupedNonDeliveryModal({ open: false, group: null })
+    setSubmittingEvidence(false)
+  }
+
   
 
 
@@ -406,12 +514,128 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }
 
+  // Funciones para procesar entregas agrupadas
+  const submitGroupedDelivery = async (deliveryEvent: DeliveryEvent) => {
+    if (!groupedDeliveryModal.group) return
+    
+    try {
+      setSubmittingEvidence(true)
+      
+      console.log('💾 Guardando entrega agrupada para:', { 
+        routeId, 
+        groupKey: groupedDeliveryModal.group.key,
+        unitsCount: groupedDeliveryModal.group.units.length 
+      })
+      
+      // Procesar cada unidad del grupo
+      for (const unit of groupedDeliveryModal.group.units) {
+        const recipientName = deliveryEvent.deliveryUnits[0]?.recipient?.fullName || ''
+        const recipientRut = deliveryEvent.deliveryUnits[0]?.recipient?.nationalID || ''
+        const photoDataUrl = deliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url || ''
+        
+        // Crear entidad del dominio para cada unidad
+        const deliveryUnit: Partial<DeliveryUnit> = {
+          delivery: {
+            status: 'delivered',
+            handledAt: new Date().toISOString(),
+            location: { latitude: 0, longitude: 0 }
+          },
+          recipient: {
+            fullName: recipientName,
+            nationalID: recipientRut
+          },
+          evidencePhotos: [{
+            takenAt: new Date().toISOString(),
+            type: 'delivery',
+            url: photoDataUrl,
+          }],
+          orderReferenceID: `${routeId}-${unit.visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
+        }
+        
+        // Guardar evidencia para cada unidad
+        setDeliveryEvidence(routeId, unit.visitIndex, unit.orderIndex, unit.uIdx, deliveryUnit)
+      }
+      
+      console.log('📦 Entrega agrupada completada para', groupedDeliveryModal.group.units.length, 'unidades')
+      closeGroupedDeliveryModal()
+      
+    } finally {
+      setSubmittingEvidence(false)
+    }
+  }
+
+  const submitGroupedNonDelivery = async (deliveryEvent: DeliveryEvent) => {
+    if (!groupedNonDeliveryModal.group) return
+    
+    try {
+      setSubmittingEvidence(true)
+      
+      console.log('💾 Guardando no entrega agrupada para:', { 
+        routeId, 
+        groupKey: groupedNonDeliveryModal.group.key,
+        unitsCount: groupedNonDeliveryModal.group.units.length 
+      })
+      
+      // Procesar cada unidad del grupo
+      for (const unit of groupedNonDeliveryModal.group.units) {
+        const failure = deliveryEvent.deliveryUnits[0]?.delivery?.failure
+        const photoDataUrl = deliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url
+        
+        if (!failure || !photoDataUrl) {
+          console.error('❌ Datos incompletos en DeliveryEvent para unidad', unit.uIdx)
+          continue
+        }
+        
+        // Crear la entidad del dominio completa para cada unidad
+        const deliveryUnit: Partial<DeliveryUnit> & {
+          routeId: string
+          visitIndex: number
+          orderIndex: number
+          unitIndex: number
+        } = {
+          routeId,
+          visitIndex: unit.visitIndex,
+          orderIndex: unit.orderIndex,
+          unitIndex: unit.uIdx,
+          delivery: {
+            status: 'not-delivered',
+            handledAt: new Date().toISOString(),
+            location: { latitude: 0, longitude: 0 },
+            failure: {
+              reason: failure.reason,
+              detail: failure.detail,
+              referenceID: `${routeId}-${unit.visitIndex}-${unit.orderIndex}-${unit.uIdx}`
+            }
+          },
+          evidencePhotos: [{
+            takenAt: new Date().toISOString(),
+            type: 'non-delivery',
+            url: photoDataUrl,
+          }],
+          orderReferenceID: `${routeId}-${unit.visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
+        }
+        
+        // Usar la función unificada que recibe la entidad del dominio
+        setDeliveryUnitByEntity(deliveryUnit)
+      }
+      
+      console.log('📦 No entrega agrupada completada para', groupedNonDeliveryModal.group.units.length, 'unidades')
+      closeGroupedNonDeliveryModal()
+      
+    } finally {
+      setSubmittingEvidence(false)
+    }
+  }
+
 
 
 
 
 
   const visits = routeData?.visits ?? []
+
+  // Generar grupos de dirección para la tarjeta de siguiente visita
+  const addressGroups = groupDeliveryUnitsByAddressForNextVisit(visits, getDeliveryUnitStatus)
 
   // Función centralizada para determinar qué marcador debe estar posicionado
   const getPositionedVisitIndex = (): number | null => {
@@ -701,6 +925,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           setLastCenteredVisit={setLastCenteredVisit}
           setMarkerPosition={setMarkerPosition}
           openNextNavigation={openNextNavigation}
+          openGroupedDelivery={openGroupedDeliveryFor}
+          openGroupedNonDelivery={openGroupedNonDeliveryFor}
+          onDeliverAll={handleDeliverAll}
+          onNonDeliverAll={handleNonDeliverAll}
         />
       )}
 
@@ -748,6 +976,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                 setLastCenteredVisit(visitIndex)
                 setNextVisitIndex(null) // Limpiar selección automática para dar prioridad a la manual
               }}
+              addressGroups={addressGroups}
+              viewMode={viewMode}
+              allVisits={visits}
             />
           )
         })()}
@@ -765,6 +996,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             }}
             onOpenDelivery={openDeliveryFor}
             onOpenNonDelivery={openNonDeliveryFor}
+            onOpenGroupedDelivery={openGroupedDeliveryFor}
+            onOpenGroupedNonDelivery={openGroupedNonDeliveryFor}
             getDeliveryUnitStatus={getDeliveryUnitStatus}
             shouldRenderByTab={shouldRenderByTab}
           />
@@ -818,6 +1051,30 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       isOpen={downloadModal}
       onClose={closeDownloadModal}
       onDownloadReport={downloadReport}
+    />
+
+    {/* Modal de entrega agrupada */}
+    <GroupedDeliveryModal
+      isOpen={groupedDeliveryModal.open}
+      onClose={closeGroupedDeliveryModal}
+      onSubmit={submitGroupedDelivery}
+      group={groupedDeliveryModal.group}
+      visitIndex={0} // Se pasará el visitIndex correcto desde el grupo
+      routeData={routeData}
+      submitting={submittingEvidence}
+      isDemo={isDemoMode()}
+    />
+
+    {/* Modal de no entrega agrupada */}
+    <GroupedNonDeliveryModal
+      isOpen={groupedNonDeliveryModal.open}
+      onClose={closeGroupedNonDeliveryModal}
+      onSubmit={submitGroupedNonDelivery}
+      group={groupedNonDeliveryModal.group}
+      visitIndex={0} // Se pasará el visitIndex correcto desde el grupo
+      routeData={routeData}
+      submitting={submittingEvidence}
+      isDemo={isDemoMode()}
     />
     </div>
   )
