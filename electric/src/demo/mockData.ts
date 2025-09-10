@@ -220,7 +220,7 @@ export const mockRouteData: any ={
                 "politicalArea": {}
             },
             "nodeInfo": {},
-            "sequenceNumber": 6,
+            "sequenceNumber": 3,
             "timeWindow": {},
             "orders": [
                 {

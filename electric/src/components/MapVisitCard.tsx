@@ -143,8 +143,8 @@ export function MapVisitCard({
           </div>
         </div>
         <div className="p-4">
-          {/* Botones de acción grupal */}
-          {routeStarted && visitStats.hasPendingUnits && onDeliverAll && onNonDeliverAll && (
+          {/* Botones de acción grupal - solo si hay 2 o más unidades pendientes */}
+          {routeStarted && visitStats.hasPendingUnits && visitStats.pendingUnits >= 2 && onDeliverAll && onNonDeliverAll && (
             <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -182,8 +182,8 @@ export function MapVisitCard({
             </div>
           )}
 
-          {/* Progreso de la visita */}
-          {visitStats.isPartiallyDelivered && (
+          {/* Progreso de la visita - solo si hay múltiples unidades */}
+          {visitStats.isPartiallyDelivered && visitStats.totalUnits > 1 && (
             <div className="mb-4 p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">Progreso de la visita:</span>
@@ -209,6 +209,18 @@ export function MapVisitCard({
                     width: `${((visitStats.deliveredUnits + visitStats.notDeliveredUnits) / visitStats.totalUnits) * 100}%` 
                   }}
                 ></div>
+              </div>
+            </div>
+          )}
+
+          {/* Indicación para una sola unidad */}
+          {routeStarted && visitStats.hasPendingUnits && visitStats.pendingUnits === 1 && (
+            <div className="mb-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center space-x-2">
+                <Package className="w-4 h-4 text-orange-600" />
+                <span className="text-sm text-gray-700">
+                  Solo queda 1 unidad pendiente. Usa los botones individuales abajo.
+                </span>
               </div>
             </div>
           )}

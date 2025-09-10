@@ -35,6 +35,9 @@ interface MapViewProps {
   // Props para entregar todo
   onDeliverAll?: (visitIndex: number) => void
   onNonDeliverAll?: (visitIndex: number) => void
+  // Props para selección de cliente
+  selectedClientIndex?: number | null
+  onClientSelect?: (clientIndex: number | null) => void
 }
 
 export function MapView({
@@ -58,13 +61,90 @@ export function MapView({
   openGroupedDelivery,
   openGroupedNonDelivery,
   onDeliverAll,
-  onNonDeliverAll
+  onNonDeliverAll,
+  selectedClientIndex,
+  onClientSelect
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
   const [forceUpdateCounter] = useState(0)
   
+  // Detectar si hay múltiples clientes en la misma dirección
+  const getClientsAtSameLocation = () => {
+    // Si hay un cliente seleccionado, usar su dirección
+    if (selectedClientIndex !== null) {
+      const selectedVisit = visits[selectedClientIndex]
+      if (!selectedVisit) return []
+      
+      const selectedAddress = selectedVisit.addressInfo?.addressLine1
+      if (!selectedAddress) return []
+      
+      // Buscar todas las visitas con la misma dirección
+      return visits
+        .map((visit, index) => ({ visit, index }))
+        .filter(({ visit }) => visit.addressInfo?.addressLine1 === selectedAddress)
+        .map(({ visit, index }) => ({
+          index,
+          clientName: visit.addressInfo?.contact?.fullName || 'Sin nombre',
+          hasPendingUnits: (visit.orders || []).some((order: any, orderIndex: number) =>
+            (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
+            )
+          )
+        }))
+    }
+    
+    // Si no hay cliente seleccionado, buscar la primera dirección con múltiples clientes
+    const addressGroups: { [key: string]: any[] } = {}
+    
+    visits.forEach((visit, index) => {
+      const address = visit.addressInfo?.addressLine1
+      if (address) {
+        if (!addressGroups[address]) {
+          addressGroups[address] = []
+        }
+        addressGroups[address].push({
+          visit,
+          index,
+          clientName: visit.addressInfo?.contact?.fullName || 'Sin nombre',
+          hasPendingUnits: (visit.orders || []).some((order: any, orderIndex: number) =>
+            (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
+            )
+          )
+        })
+      }
+    })
+    
+    // Encontrar la primera dirección con múltiples clientes
+    for (const [address, clients] of Object.entries(addressGroups)) {
+      if (clients.length > 1) {
+        return clients
+      }
+    }
+    
+    return []
+  }
+  
+  const clientsAtSameLocation = getClientsAtSameLocation()
+  const hasMultipleClients = clientsAtSameLocation.length > 1
+  
+  // Si hay múltiples clientes pero no hay uno seleccionado, seleccionar el primero automáticamente
+  useEffect(() => {
+    if (hasMultipleClients && selectedClientIndex === null && onClientSelect) {
+      onClientSelect(clientsAtSameLocation[0].index)
+    }
+  }, [hasMultipleClients, selectedClientIndex, onClientSelect, clientsAtSameLocation])
+  
+  // Debug temporal
+  console.log('🔍 Debug selector de clientes:', {
+    selectedClientIndex,
+    clientsAtSameLocation,
+    hasMultipleClients,
+    totalVisits: visits.length,
+    addresses: visits.map((v, i) => ({ index: i, address: v.addressInfo?.addressLine1, client: v.addressInfo?.contact?.fullName }))
+  })
   // Estado para el pin de GPS del conductor
   const [gpsActive, setGpsActive] = useState(false)
   const gpsMarkerRef = useRef<any>(null)
@@ -707,6 +787,59 @@ export function MapView({
           onNavigate={openNextNavigation}
         />
       </div>
+      
+      {/* Selector de cliente cuando hay múltiples clientes en la misma dirección */}
+      {hasMultipleClients && onClientSelect && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <span className="text-sm font-semibold text-gray-800">
+                🏢 Múltiples clientes en esta ubicación:
+              </span>
+            </div>
+            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">
+              {clientsAtSameLocation.length} clientes
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-2">
+            {clientsAtSameLocation.map((client) => (
+              <button
+                key={client.index}
+                onClick={() => onClientSelect(client.index)}
+                className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                  selectedClientIndex === client.index
+                    ? 'border-purple-500 bg-purple-100 shadow-md transform scale-[1.02]'
+                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50 hover:shadow-md'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 rounded-full ${
+                      client.hasPendingUnits ? 'bg-orange-400' : 'bg-green-500'
+                    }`}></div>
+                    <span className="font-semibold text-gray-800 text-base">
+                      {client.clientName}
+                    </span>
+                  </div>
+                  <div className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    client.hasPendingUnits 
+                      ? 'bg-orange-100 text-orange-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+                    {client.hasPendingUnits ? 'Pendiente' : 'Completado'}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          <div className="mt-3 text-xs text-gray-600 text-center bg-white/50 rounded-lg p-2">
+            👆 Selecciona el cliente al que vas a entregar
+          </div>
+        </div>
+      )}
       
       <MapVisitCard
         visit={visit}

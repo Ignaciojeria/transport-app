@@ -81,6 +81,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   
   // Estado del sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // Estado para selección de cliente en modo mapa
+  const [selectedClientIndex, setSelectedClientIndex] = useState<number | null>(null)
 
   // Estado local reactivo via GunJS
   const { data: localState } = useDeliveriesState()
@@ -406,6 +409,14 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     setGroupedNonDeliveryModal({ open: true, group: tempGroup })
   }
 
+  // Función para seleccionar cliente en modo mapa
+  const handleClientSelect = (clientIndex: number | null) => {
+    setSelectedClientIndex(clientIndex)
+    if (clientIndex !== null) {
+      setLastCenteredVisit(clientIndex)
+    }
+  }
+
   const closeGroupedDeliveryModal = () => {
     setGroupedDeliveryModal({ open: false, group: null })
     setSubmittingEvidence(false)
@@ -644,26 +655,31 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     
     // Debug: logs removidos para limpiar la consola
     
-    // PRIORIDAD 1: Selección manual desde botón de mapa (lastCenteredVisit)
-    // Esta debe tener prioridad absoluta cuando se establece manualmente
+    // PRIORIDAD 1: Cliente seleccionado manualmente (selectedClientIndex)
+    // Esta debe tener prioridad absoluta cuando se selecciona un cliente específico
+    if (selectedClientIndex !== null) {
+      return selectedClientIndex
+    }
+    
+    // PRIORIDAD 2: Selección manual desde botón de mapa (lastCenteredVisit)
     if (lastCenteredVisit !== null) {
               // Debug: logs removidos para limpiar la consola
       return lastCenteredVisit
     }
     
-    // PRIORIDAD 2: Estado sincronizado si es reciente (últimos 30 segundos)
+    // PRIORIDAD 3: Estado sincronizado si es reciente (últimos 30 segundos)
     if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
               // Debug: logs removidos para limpiar la consola
       return markerPosition.visitIndex
     }
     
-    // PRIORIDAD 3: Selección manual de cualquier visita
+    // PRIORIDAD 4: Selección manual de cualquier visita
     if (nextVisitIndex !== null) {
               // Debug: logs removidos para limpiar la consola
       return nextVisitIndex
     }
     
-    // PRIORIDAD 4: Fallback - siguiente pendiente automática
+    // PRIORIDAD 5: Fallback - siguiente pendiente automática
             // Debug: logs removidos para limpiar la consola
     if (nextPending !== null) {
               // Debug: logs removidos para limpiar la consola
@@ -929,6 +945,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           openGroupedNonDelivery={openGroupedNonDeliveryFor}
           onDeliverAll={handleDeliverAll}
           onNonDeliverAll={handleNonDeliverAll}
+          selectedClientIndex={selectedClientIndex}
+          onClientSelect={handleClientSelect}
         />
       )}
 
