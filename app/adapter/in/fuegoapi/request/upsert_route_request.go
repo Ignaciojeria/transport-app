@@ -70,10 +70,9 @@ type UpsertRoutePoliticalArea struct {
 }
 
 type UpsertRouteVehicleCapacity struct {
-	Volume                int64 `json:"volume,omitempty" example:"1000"`
-	Weight                int64 `json:"weight,omitempty" example:"1000"`
-	Insurance             int64 `json:"insurance,omitempty" example:"10000"`
-	DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity,omitempty"`
+	Volume    int64 `json:"volume,omitempty" example:"1000"`
+	Weight    int64 `json:"weight,omitempty" example:"1000"`
+	Insurance int64 `json:"insurance,omitempty" example:"10000"`
 }
 
 type UpsertRouteTimeWindow struct {

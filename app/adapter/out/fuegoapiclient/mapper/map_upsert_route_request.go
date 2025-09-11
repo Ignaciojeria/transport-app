@@ -194,10 +194,9 @@ func mapVehicleToRequest(vehicle domain.Vehicle) request.UpsertRouteVehicle {
 			End:   "", // TODO: Implementar si es necesario
 		},
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
-			Weight:                int64(vehicle.Weight.Value),
-			Insurance:             int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
-			DeliveryUnitsQuantity: 0, // TODO: Implementar si es necesario
+			Volume:    int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
+			Weight:    int64(vehicle.Weight.Value),
+			Insurance: int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
 		},
 	}
 }

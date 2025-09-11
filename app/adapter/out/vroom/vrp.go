@@ -772,10 +772,9 @@ func mapVehicleToRequestFromOptimization(vehicle optimization.Vehicle) request.U
 		Skills:        vehicle.Skills,
 		TimeWindow:    timeWindow,
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                vehicle.Capacity.Volume,
-			Weight:                vehicle.Capacity.Weight,
-			Insurance:             vehicle.Capacity.Insurance,
-			DeliveryUnitsQuantity: vehicle.Capacity.DeliveryUnitsQuantity,
+			Volume:    vehicle.Capacity.Volume,
+			Weight:    vehicle.Capacity.Weight,
+			Insurance: vehicle.Capacity.Insurance,
 		},
 	}
 }
@@ -847,10 +846,9 @@ func mapVehicleToRequest(vehicle domain.Vehicle) request.UpsertRouteVehicle {
 		Skills:        []string{}, // Por defecto vacío, se puede implementar mapeo específico
 		TimeWindow:    timeWindow,
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
-			Weight:                int64(vehicle.Weight.Value),
-			Insurance:             int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
-			DeliveryUnitsQuantity: 0, // Por defecto 0, se puede implementar mapeo específico
+			Volume:    int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
+			Weight:    int64(vehicle.Weight.Value),
+			Insurance: int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
 		},
 	}
 }
@@ -919,10 +917,9 @@ func createUnassignedRouteRequest(unassignedOrders []optimization.Order, planRef
 		Skills:     nil,
 		TimeWindow: request.UpsertRouteTimeWindow{},
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                0,
-			Weight:                0,
-			Insurance:             0,
-			DeliveryUnitsQuantity: 0,
+			Volume:    0,
+			Weight:    0,
+			Insurance: 0,
 		},
 	}
 
