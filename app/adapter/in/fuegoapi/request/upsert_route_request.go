@@ -6,7 +6,6 @@ import (
 )
 
 type UpsertRouteRequest struct {
-	DocumentID  string `json:"documentID"`
 	ReferenceID string `json:"referenceID,omitempty" example:"ROUTE-001"`
 	CreatedAt   string `json:"createdAt,omitempty" example:"2025-01-15T10:30:00Z"`
 
@@ -89,15 +88,13 @@ type UpsertRouteGeometry struct {
 }
 
 type UpsertRouteVisit struct {
-	Type                 string                 `json:"type,omitempty" example:"delivery"`
-	Instructions         string                 `json:"instructions,omitempty"`
-	AddressInfo          UpsertRouteAddressInfo `json:"addressInfo,omitempty"`
-	NodeInfo             UpsertRouteNodeInfo    `json:"nodeInfo,omitempty"`
-	DeliveryInstructions string                 `json:"deliveryInstructions,omitempty" example:"Entregar en recepción"`
-	SequenceNumber       int                    `json:"sequenceNumber,omitempty" example:"1"`
-	ServiceTime          int64                  `json:"serviceTime,omitempty"`
-	TimeWindow           UpsertRouteTimeWindow  `json:"timeWindow,omitempty"`
-	Orders               []UpsertRouteOrder     `json:"orders,omitempty"`
+	Type           string                 `json:"type,omitempty" example:"delivery"`
+	AddressInfo    UpsertRouteAddressInfo `json:"addressInfo,omitempty"`
+	NodeInfo       UpsertRouteNodeInfo    `json:"nodeInfo,omitempty"`
+	SequenceNumber int                    `json:"sequenceNumber,omitempty" example:"1"`
+	ServiceTime    int64                  `json:"serviceTime,omitempty"`
+	TimeWindow     UpsertRouteTimeWindow  `json:"timeWindow,omitempty"`
+	Orders         []UpsertRouteOrder     `json:"orders,omitempty"`
 	// Motivo de no asignación (solo para rutas UNASSIGNED)
 	UnassignedReason string `json:"unassignedReason,omitempty" example:"Vehicle capacity exceeded"`
 }
@@ -107,21 +104,20 @@ type UpsertRouteNodeInfo struct {
 }
 
 type UpsertRouteOrder struct {
-	ReferenceID   string                    `json:"referenceID,omitempty" example:"ORDER-001"`
-	DocumentID    string                    `json:"documentID"`
-	Contact       UpsertRouteContact        `json:"contact,omitempty"`
-	DeliveryUnits []UpsertRouteDeliveryUnit `json:"deliveryUnits,omitempty"`
+	ReferenceID          string                    `json:"referenceID,omitempty" example:"ORDER-001"`
+	Contact              UpsertRouteContact        `json:"contact,omitempty"`
+	DeliveryInstructions string                    `json:"instructions,omitempty" example:"Entregar en recepción"`
+	DeliveryUnits        []UpsertRouteDeliveryUnit `json:"deliveryUnits,omitempty"`
 }
 
 type UpsertRouteDeliveryUnit struct {
-	DocumentID string                 `json:"documentID"`
-	Items      []UpsertRouteItem      `json:"items,omitempty"`
-	Volume     int64                  `json:"volume,omitempty" example:"1000"`
-	Weight     int64                  `json:"weight,omitempty" example:"1000"`
-	Price      int64                  `json:"price,omitempty" example:"10000"`
-	Lpn        string                 `json:"lpn,omitempty" example:"LPN-789012"`
-	Skills     []string               `json:"skills,omitempty"`
-	Evidences  []UpsertRouteEvidences `json:"evidences,omitempty"`
+	Items     []UpsertRouteItem      `json:"items,omitempty"`
+	Volume    int64                  `json:"volume,omitempty" example:"1000"`
+	Weight    int64                  `json:"weight,omitempty" example:"1000"`
+	Price     int64                  `json:"price,omitempty" example:"10000"`
+	Lpn       string                 `json:"lpn,omitempty" example:"LPN-789012"`
+	Skills    []string               `json:"skills,omitempty"`
+	Evidences []UpsertRouteEvidences `json:"evidences,omitempty"`
 }
 
 type UpsertRouteItem struct {

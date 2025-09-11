@@ -508,15 +508,13 @@ func mapOrderGroupToVisit(group OrderGroup) request.UpsertRouteVisit {
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         "", // Por defecto vacío, se puede implementar mapeo específico
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             mapNodeInfoToRequest(group.AddressInfo),
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          serviceTime,
-		TimeWindow:           timeWindow,
-		Orders:               orders,
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       mapNodeInfoToRequest(group.AddressInfo),
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    serviceTime,
+		TimeWindow:     timeWindow,
+		Orders:         orders,
 	}
 }
 
@@ -564,7 +562,6 @@ func mapOrderGroupToVisitFromOptimizationWithOriginalVisits(group OrderGroup, or
 	}
 
 	// Preparar valores por defecto
-	instructions := ""
 	serviceTime := int64(0)
 	timeWindow := request.UpsertRouteTimeWindow{
 		Start: "",
@@ -576,22 +573,19 @@ func mapOrderGroupToVisitFromOptimizationWithOriginalVisits(group OrderGroup, or
 
 	// Usar información de la primera orden si está disponible
 	if firstOrder != nil {
-		instructions = firstOrder.DeliveryInstructions
 		nodeInfo = request.UpsertRouteNodeInfo{
 			ReferenceID: firstOrder.Destination.ReferenceID.String(),
 		}
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         instructions,
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             nodeInfo,
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          serviceTime,
-		TimeWindow:           timeWindow,
-		Orders:               orders,
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       nodeInfo,
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    serviceTime,
+		TimeWindow:     timeWindow,
+		Orders:         orders,
 	}
 }
 
@@ -626,7 +620,6 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 	}
 
 	// Preparar valores por defecto
-	instructions := ""
 	serviceTime := int64(0)
 	timeWindow := request.UpsertRouteTimeWindow{
 		Start: "",
@@ -638,7 +631,6 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 
 	// Usar información de la visita original si está disponible
 	if originalVisit != nil {
-		instructions = originalVisit.Delivery.Instructions
 		serviceTime = originalVisit.Delivery.ServiceTime
 		timeWindow = request.UpsertRouteTimeWindow{
 			Start: originalVisit.Delivery.TimeWindow.Start,
@@ -650,15 +642,13 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         instructions,
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             nodeInfo,
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          serviceTime,
-		TimeWindow:           timeWindow,
-		Orders:               orders,
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       nodeInfo,
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    serviceTime,
+		TimeWindow:     timeWindow,
+		Orders:         orders,
 	}
 }
 
@@ -677,9 +667,10 @@ func mapOrderToRequest(order domain.Order) request.UpsertRouteOrder {
 	}
 
 	return request.UpsertRouteOrder{
-		ReferenceID:   order.ReferenceID.String(),
-		Contact:       contact,
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:          order.ReferenceID.String(),
+		Contact:              contact,
+		DeliveryInstructions: order.DeliveryInstructions,
+		DeliveryUnits:        deliveryUnits,
 	}
 }
 
@@ -696,9 +687,10 @@ func mapOrderToRequestFromOptimization(order optimization.Order) request.UpsertR
 	var contact request.UpsertRouteContact
 
 	return request.UpsertRouteOrder{
-		ReferenceID:   order.ReferenceID,
-		Contact:       contact,
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:          order.ReferenceID,
+		Contact:              contact,
+		DeliveryInstructions: "", // optimization.Order no tiene DeliveryInstructions
+		DeliveryUnits:        deliveryUnits,
 	}
 }
 
@@ -964,23 +956,22 @@ func createUnassignedRouteRequest(unassignedOrders []optimization.Order, planRef
 
 			// Usar la información de la visita original
 			visit := request.UpsertRouteVisit{
-				Type:         "delivery",
-				Instructions: originalVisit.Delivery.Instructions,
-				AddressInfo:  mapAddressInfoToRequestFromOptimization(originalVisit.Delivery.AddressInfo),
+				Type:        "delivery",
+				AddressInfo: mapAddressInfoToRequestFromOptimization(originalVisit.Delivery.AddressInfo),
 				NodeInfo: request.UpsertRouteNodeInfo{
 					ReferenceID: originalVisit.Delivery.NodeInfo.ReferenceID,
 				},
-				DeliveryInstructions: originalVisit.Delivery.Instructions,
-				SequenceNumber:       1,
-				ServiceTime:          originalVisit.Delivery.ServiceTime,
+				SequenceNumber: 1,
+				ServiceTime:    originalVisit.Delivery.ServiceTime,
 				TimeWindow: request.UpsertRouteTimeWindow{
 					Start: originalVisit.Delivery.TimeWindow.Start,
 					End:   originalVisit.Delivery.TimeWindow.End,
 				},
 				Orders: []request.UpsertRouteOrder{
 					{
-						ReferenceID: order.ReferenceID,
-						Contact:     mapContactToRequestFromOptimization(originalVisit.Delivery.AddressInfo.Contact),
+						ReferenceID:          order.ReferenceID,
+						Contact:              mapContactToRequestFromOptimization(originalVisit.Delivery.AddressInfo.Contact),
+						DeliveryInstructions: originalVisit.Delivery.Instructions,
 						DeliveryUnits: func() []request.UpsertRouteDeliveryUnit {
 							units := make([]request.UpsertRouteDeliveryUnit, 0, len(order.DeliveryUnits))
 							for _, du := range order.DeliveryUnits {

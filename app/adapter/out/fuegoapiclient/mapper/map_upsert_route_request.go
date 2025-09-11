@@ -105,13 +105,11 @@ func mapOrderGroupToVisit(group OrderGroup) request.UpsertRouteVisit {
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         "", // TODO: Implementar si es necesario
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             mapNodeInfoToRequest(group.AddressInfo),
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          0, // TODO: Implementar si es necesario
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       mapNodeInfoToRequest(group.AddressInfo),
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    0, // TODO: Implementar si es necesario
 		TimeWindow: request.UpsertRouteTimeWindow{
 			Start: "", // TODO: Implementar si es necesario
 			End:   "", // TODO: Implementar si es necesario
@@ -128,15 +126,11 @@ func mapOrderToRequest(order domain.Order) request.UpsertRouteOrder {
 		deliveryUnits = append(deliveryUnits, modelDU)
 	}
 
-	// Generar DocumentID usando el método DocID del dominio
-	ctx := context.Background()
-	documentID := order.DocID(ctx)
-
 	return request.UpsertRouteOrder{
-		ReferenceID:   order.ReferenceID.String(),
-		DocumentID:    documentID.String(),
-		Contact:       mapContactToRequest(order.Destination.AddressInfo.Contact),
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:          order.ReferenceID.String(),
+		Contact:              mapContactToRequest(order.Destination.AddressInfo.Contact),
+		DeliveryInstructions: order.DeliveryInstructions,
+		DeliveryUnits:        deliveryUnits,
 	}
 }
 
