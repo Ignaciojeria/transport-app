@@ -360,66 +360,6 @@ func findVisitByShipmentID(shipmentID int64, visits []optimization.Visit) *optim
 	return nil
 }
 
-// createOrdersFromVisit crea órdenes del dominio basadas en una visita
-func createOrdersFromVisit(visit *optimization.Visit, hasPickup bool) []domain.Order {
-	var orders []domain.Order
-
-	// Crear orden para cada order en la visita
-	for _, orderReq := range visit.Orders {
-		order := domain.Order{
-			ReferenceID: domain.ReferenceID(orderReq.ReferenceID),
-			Destination: domain.NodeInfo{
-				ReferenceID: domain.ReferenceID(uuid.New().String()),
-				Name:        "Destino de entrega",
-				AddressInfo: domain.AddressInfo{
-					Coordinates: domain.Coordinates{
-						Point: orb.Point{visit.Delivery.AddressInfo.Coordinates.Longitude, visit.Delivery.AddressInfo.Coordinates.Latitude},
-					},
-				},
-			},
-		}
-
-		// Para shipments (pickup + delivery), incluir origen
-		if hasPickup {
-			order.Origin = domain.NodeInfo{
-				ReferenceID: domain.ReferenceID(uuid.New().String()),
-				Name:        "Origen de recogida",
-				AddressInfo: domain.AddressInfo{
-					Coordinates: domain.Coordinates{
-						Point: orb.Point{visit.Pickup.AddressInfo.Coordinates.Longitude, visit.Pickup.AddressInfo.Coordinates.Latitude},
-					},
-				},
-			}
-		}
-
-		// Mapear delivery units
-		var deliveryUnits domain.DeliveryUnits
-		for _, duReq := range orderReq.DeliveryUnits {
-			deliveryUnit := domain.DeliveryUnit{
-				Lpn:    duReq.Lpn,
-				Volume: &duReq.Volume,
-				Weight: &duReq.Weight,
-				Price:  &duReq.Price,
-			}
-
-			// Mapear items
-			for _, itemReq := range duReq.Items {
-				item := domain.Item{
-					Sku: itemReq.Sku,
-				}
-				deliveryUnit.Items = append(deliveryUnit.Items, item)
-			}
-
-			deliveryUnits = append(deliveryUnits, deliveryUnit)
-		}
-		order.DeliveryUnits = deliveryUnits
-
-		orders = append(orders, order)
-	}
-
-	return orders
-}
-
 // mapOptimizationAddressInfoToDomain mapea AddressInfo de optimization a domain
 func mapOptimizationAddressInfoToDomain(addrInfo optimization.AddressInfo) domain.AddressInfo {
 	return domain.AddressInfo{

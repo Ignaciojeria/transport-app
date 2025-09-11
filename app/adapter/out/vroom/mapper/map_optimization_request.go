@@ -134,7 +134,10 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 	var jobs []model.VroomJob
 	var shipments []model.VroomShipment
 
-	for i, visit := range req.Visits {
+	jobCounter := 1
+	shipmentCounter := 1
+
+	for _, visit := range req.Visits {
 		// Calcular capacidad de la visita
 		totalWeight, totalVolume, totalInsurance := calculateVisitCapacity(visit)
 
@@ -145,28 +148,28 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 		hasValidDelivery := visit.Delivery.AddressInfo.Coordinates.Longitude != 0 || visit.Delivery.AddressInfo.Coordinates.Latitude != 0
 
 		/* Log de depuración
-		fmt.Printf("Visita %d: pickup=(%.6f, %.6f) delivery=(%.6f, %.6f) hasValidPickup=%v hasValidDelivery=%v\n",
-			i+1,
+		fmt.Printf("Visita: pickup=(%.6f, %.6f) delivery=(%.6f, %.6f) hasValidPickup=%v hasValidDelivery=%v orders=%d\n",
 			visit.Pickup.AddressInfo.Coordinates.Longitude, visit.Pickup.AddressInfo.Coordinates.Latitude,
 			visit.Delivery.AddressInfo.Coordinates.Longitude, visit.Delivery.AddressInfo.Coordinates.Latitude,
-			hasValidPickup, hasValidDelivery)
+			hasValidPickup, hasValidDelivery, len(visit.Orders))
 		*/
 		// Si no hay delivery válido, omitir esta visita
 		if !hasValidDelivery {
-			//fmt.Printf("Omitiendo visita %d: no hay delivery válido\n", i+1)
+			//fmt.Printf("Omitiendo visita: no hay delivery válido\n")
 			continue
 		}
 
 		// Si no hay pickup válido, crear un Job (entrega directa)
 		if !hasValidPickup {
-			//fmt.Printf("Creando Job para visita %d (solo delivery)\n", i+1)
+			//fmt.Printf("Creando Job para visita (solo delivery) con %d órdenes\n", len(visit.Orders))
 			job := model.VroomJob{
-				ID: i + 1,
+				ID: jobCounter,
 				Location: [2]float64{
 					visit.Delivery.AddressInfo.Coordinates.Longitude,
 					visit.Delivery.AddressInfo.Coordinates.Latitude,
 				},
 			}
+			jobCounter++
 
 			// Incluir Amount siempre con los 3 valores en orden: [peso, volumen, seguro]
 			job.Amount = []int64{
@@ -214,7 +217,7 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			jobs = append(jobs, job)
 		} else {
 			// Si hay pickup válido, crear un Shipment (pickup + delivery)
-			//fmt.Printf("Creando Shipment para visita %d (pickup + delivery)\n", i+1)
+			//fmt.Printf("Creando Shipment para visita (pickup + delivery) con %d órdenes\n", len(visit.Orders))
 			pickupLocationKey := generateLocationKey(visit.Pickup.AddressInfo.Coordinates.Latitude, visit.Pickup.AddressInfo.Coordinates.Longitude)
 			pickupContactID := getContactID(ctx, visit.Pickup.AddressInfo.Contact)
 			pickupID := locationRegistry.getLocationContactID(pickupLocationKey, pickupContactID)
@@ -250,10 +253,11 @@ func MapOptimizationRequest(ctx context.Context, req optimization.FleetOptimizat
 			}
 
 			shipment := model.VroomShipment{
-				ID:       i + 1,
+				ID:       shipmentCounter,
 				Pickup:   pickup,
 				Delivery: delivery,
 			}
+			shipmentCounter++
 
 			// Incluir Amount siempre con los 3 valores en orden: [peso, volumen, seguro]
 			shipment.Amount = []int64{

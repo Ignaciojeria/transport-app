@@ -40,7 +40,6 @@ type UpsertRouteVehicleLocation struct {
 type UpsertRouteAddressInfo struct {
 	AddressLine1  string                   `json:"addressLine1,omitempty"`
 	AddressLine2  string                   `json:"addressLine2,omitempty"`
-	Contact       UpsertRouteContact       `json:"contact,omitempty"`
 	Coordinates   UpsertRouteCoordinates   `json:"coordinates,omitempty"`
 	PoliticalArea UpsertRoutePoliticalArea `json:"politicalArea,omitempty"`
 	ZipCode       string                   `json:"zipCode,omitempty"`
@@ -110,6 +109,7 @@ type UpsertRouteNodeInfo struct {
 type UpsertRouteOrder struct {
 	ReferenceID   string                    `json:"referenceID,omitempty" example:"ORDER-001"`
 	DocumentID    string                    `json:"documentID"`
+	Contact       UpsertRouteContact        `json:"contact,omitempty"`
 	DeliveryUnits []UpsertRouteDeliveryUnit `json:"deliveryUnits,omitempty"`
 }
 

@@ -128,8 +128,14 @@ func mapOrderToRequest(order domain.Order) request.UpsertRouteOrder {
 		deliveryUnits = append(deliveryUnits, modelDU)
 	}
 
+	// Generar DocumentID usando el método DocID del dominio
+	ctx := context.Background()
+	documentID := order.DocID(ctx)
+
 	return request.UpsertRouteOrder{
 		ReferenceID:   order.ReferenceID.String(),
+		DocumentID:    documentID.String(),
+		Contact:       mapContactToRequest(order.Destination.AddressInfo.Contact),
 		DeliveryUnits: deliveryUnits,
 	}
 }
@@ -207,7 +213,6 @@ func mapAddressInfoToRequest(addr domain.AddressInfo) request.UpsertRouteAddress
 	return request.UpsertRouteAddressInfo{
 		AddressLine1:  addr.AddressLine1,
 		AddressLine2:  addr.AddressLine2,
-		Contact:       mapContactToRequest(addr.Contact),
 		Coordinates:   mapCoordinatesToRequest(addr.Coordinates),
 		PoliticalArea: mapPoliticalAreaToRequest(addr.PoliticalArea),
 		ZipCode:       addr.ZipCode,
