@@ -21,6 +21,8 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { DemoEmbed } from "@/components/DemoEmbed"
+import { useLanguage } from "@/lib/useLanguage"
+import { LanguageSelector } from "@/components/LanguageSelector"
 
 // Generar short UUID único para esta sesión de demo
 const generateDemoUUID = () => {
@@ -35,11 +37,24 @@ const generateDemoUUID = () => {
 
 export default function LandingPage() {
   const [routeId, setRouteId] = useState<string>('')
+  const { language, changeLanguage, t, isLoading, availableLanguages, languageNames, languageFlags } = useLanguage()
   
   // Generar UUID solo en el cliente para evitar errores de hidratación
   useEffect(() => {
     setRouteId(generateDemoUUID())
   }, [])
+
+  // Mostrar loading mientras se carga el idioma
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    )
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
@@ -51,13 +66,20 @@ export default function LandingPage() {
               <span className="text-xl font-bold text-gray-900">TransportApp</span>
             </div>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#como-funciona" className="text-gray-600 hover:text-blue-600 transition-colors">Cómo funciona</a>
-              <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">Beneficios</a>
+              <a href="#como-funciona" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.howItWorks}</a>
+              <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.benefits}</a>
+              <LanguageSelector
+                currentLanguage={language}
+                onLanguageChange={changeLanguage}
+                availableLanguages={availableLanguages}
+                languageNames={languageNames}
+                languageFlags={languageFlags}
+              />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
               >
-                Evaluación Gratuita
+                {t.nav.freeEvaluation}
               </Button>
             </div>
           </div>
@@ -87,12 +109,18 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                Optimiza tu flota en{" "}
-                <span className="text-blue-600">minutos</span>
+                {t.hero.title}{" "}
+                <span className="text-blue-600">
+                  {language === 'CL' ? 'minutos' : language === 'BR' ? 'minutos' : 'minutes'}
+                </span>
               </h1>
               <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                Optimiza rutas, genera enlaces para conductores y monitorea entregas en tiempo real. 
-                <span className="font-semibold text-blue-600">Todo desde una sola plataforma</span>.
+                {t.hero.subtitle}{" "}
+                <span className="font-semibold text-blue-600">
+                  {language === 'CL' ? 'Todo desde una sola plataforma' : 
+                   language === 'BR' ? 'Tudo em uma única plataforma' : 
+                   'Everything from a single platform'}
+                </span>.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
@@ -100,7 +128,7 @@ export default function LandingPage() {
                   className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
                   onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
                 >
-                  Evaluación Gratuita
+                  {t.hero.freeEvaluation}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
@@ -109,7 +137,7 @@ export default function LandingPage() {
                   className="text-lg px-8 py-3"
                   onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
                 >
-                  Consulta Personalizada
+                  {t.hero.personalizedConsultation}
                 </Button>
               </div>
             </motion.div>
@@ -129,25 +157,25 @@ export default function LandingPage() {
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <Truck className="h-6 w-6 text-blue-600" />
                         </div>
-                        <CardTitle className="text-lg">Vehículos</CardTitle>
+                        <CardTitle className="text-lg">{t.hero.vehicles}</CardTitle>
                       </div>
                     </CardHeader>
                                          <CardContent>
                                                <div className="space-y-3">
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">Patente: ABC-123</div>
-                            <div className="text-xs text-gray-600">Peso: 1000kg, Vol: 5000cm³</div>
-                            <div className="text-xs text-gray-600">Seguro: $50,000</div>
-                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                            <div className="text-sm font-medium text-gray-900">{t.hero.vehicleDetails.license}: ABC-123</div>
+                            <div className="text-xs text-gray-600">{t.hero.vehicleDetails.weight}: 1000kg, {t.hero.vehicleDetails.volume}: 5000cm³</div>
+                            <div className="text-xs text-gray-600">{t.hero.vehicleDetails.insurance}: $50,000</div>
+                            <div className="text-xs text-gray-400">{t.hero.vehicleDetails.additionalVars}</div>
                           </div>
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">Patente: XYZ-789</div>
-                            <div className="text-xs text-gray-600">Peso: 800kg, Vol: 4000cm³</div>
-                            <div className="text-xs text-gray-600">Seguro: $40,000</div>
-                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                            <div className="text-sm font-medium text-gray-900">{t.hero.vehicleDetails.license}: XYZ-789</div>
+                            <div className="text-xs text-gray-600">{t.hero.vehicleDetails.weight}: 800kg, {t.hero.vehicleDetails.volume}: 4000cm³</div>
+                            <div className="text-xs text-gray-600">{t.hero.vehicleDetails.insurance}: $40,000</div>
+                            <div className="text-xs text-gray-400">{t.hero.vehicleDetails.additionalVars}</div>
                           </div>
                           <div className="text-xs text-gray-400 text-center">
-                            + 3 vehículos más...
+                            {t.hero.vehicleDetails.moreVehicles}
                           </div>
                         </div>
                      </CardContent>
@@ -159,27 +187,27 @@ export default function LandingPage() {
                         <div className="p-2 bg-green-100 rounded-lg">
                           <MapPin className="h-6 w-6 text-green-600" />
                         </div>
-                        <CardTitle className="text-lg">Entregas</CardTitle>
+                        <CardTitle className="text-lg">{t.hero.deliveries}</CardTitle>
                       </div>
                     </CardHeader>
                                          <CardContent>
                                                <div className="space-y-3">
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">Cliente A</div>
-                            <div className="text-xs text-gray-600">Dirección: Las Condes</div>
-                            <div className="text-xs text-gray-600">Peso: 15kg, Vol: 500cm³</div>
-                            <div className="text-xs text-gray-600">Precio: $1,200</div>
-                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                            <div className="text-sm font-medium text-gray-900">{t.hero.deliveryDetails.client} A</div>
+                            <div className="text-xs text-gray-600">{t.hero.deliveryDetails.address}: Las Condes</div>
+                            <div className="text-xs text-gray-600">{t.hero.deliveryDetails.weight}: 15kg, {t.hero.deliveryDetails.volume}: 500cm³</div>
+                            <div className="text-xs text-gray-600">{t.hero.deliveryDetails.price}: $1,200</div>
+                            <div className="text-xs text-gray-400">{t.hero.deliveryDetails.additionalVars}</div>
                           </div>
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">Cliente B</div>
-                            <div className="text-xs text-gray-600">Dirección: Providencia</div>
-                            <div className="text-xs text-gray-600">Peso: 25kg, Vol: 800cm³</div>
-                            <div className="text-xs text-gray-600">Precio: $1,800</div>
-                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                            <div className="text-sm font-medium text-gray-900">{t.hero.deliveryDetails.client} B</div>
+                            <div className="text-xs text-gray-600">{t.hero.deliveryDetails.address}: Providencia</div>
+                            <div className="text-xs text-gray-600">{t.hero.deliveryDetails.weight}: 25kg, {t.hero.deliveryDetails.volume}: 800cm³</div>
+                            <div className="text-xs text-gray-600">{t.hero.deliveryDetails.price}: $1,800</div>
+                            <div className="text-xs text-gray-400">{t.hero.deliveryDetails.additionalVars}</div>
                           </div>
                           <div className="text-xs text-gray-400 text-center">
-                            + 8 entregas más...
+                            {t.hero.deliveryDetails.moreDeliveries}
                           </div>
                         </div>
                      </CardContent>
@@ -191,25 +219,25 @@ export default function LandingPage() {
                         <div className="p-2 bg-blue-100 rounded-lg">
                           <Navigation className="h-6 w-6 text-blue-600" />
                         </div>
-                        <CardTitle className="text-lg">Rutas</CardTitle>
+                        <CardTitle className="text-lg">{t.hero.routes}</CardTitle>
                       </div>
                     </CardHeader>
                                          <CardContent>
                                                <div className="space-y-3">
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">Ruta 1</div>
-                            <div className="text-xs text-gray-600">Patente asignada: ABC-123</div>
-                            <div className="text-xs text-gray-600">5 entregas</div>
-                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                            <div className="text-sm font-medium text-gray-900">{t.hero.routeDetails.route} 1</div>
+                            <div className="text-xs text-gray-600">{t.hero.routeDetails.assignedLicense}: ABC-123</div>
+                            <div className="text-xs text-gray-600">5 {t.hero.routeDetails.deliveries}</div>
+                            <div className="text-xs text-gray-400">{t.hero.routeDetails.additionalVars}</div>
                           </div>
                           <div className="space-y-1">
-                            <div className="text-sm font-medium text-gray-900">Ruta 2</div>
-                            <div className="text-xs text-gray-600">Patente asignada: XYZ-789</div>
-                            <div className="text-xs text-gray-600">3 entregas</div>
-                            <div className="text-xs text-gray-400">Variables adicionales...</div>
+                            <div className="text-sm font-medium text-gray-900">{t.hero.routeDetails.route} 2</div>
+                            <div className="text-xs text-gray-600">{t.hero.routeDetails.assignedLicense}: XYZ-789</div>
+                            <div className="text-xs text-gray-600">3 {t.hero.routeDetails.deliveries}</div>
+                            <div className="text-xs text-gray-400">{t.hero.routeDetails.additionalVars}</div>
                           </div>
                           <div className="text-xs text-gray-400 text-center">
-                            + 2 rutas más...
+                            {t.hero.routeDetails.moreRoutes}
                           </div>
                         </div>
                      </CardContent>
@@ -226,10 +254,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              ¿Cómo funciona?
+              {t.howItWorks.title}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              En solo 3 pasos simples, optimiza tu logística y reduce costos
+              {t.howItWorks.subtitle}
             </p>
           </div>
           
@@ -244,11 +272,10 @@ export default function LandingPage() {
                 <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Crea tus vehículos
+                 {t.howItWorks.step1.title}
                </h3>
                <p className="text-gray-600">
-                 Configura y registra tus vehículos con sus capacidades, dimensiones y características. 
-                 Define la flota que utilizarás para tus entregas.
+                 {t.howItWorks.step1.description}
                </p>
             </motion.div>
             
@@ -262,11 +289,10 @@ export default function LandingPage() {
                 <span className="text-2xl font-bold text-green-600">2</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Carga las entregas
+                 {t.howItWorks.step2.title}
                </h3>
                <p className="text-gray-600">
-                 Crea y configura tus entregas con destinos, productos y restricciones. 
-                 Define todos los detalles necesarios para la planificación de rutas.
+                 {t.howItWorks.step2.description}
                </p>
             </motion.div>
             
@@ -280,11 +306,10 @@ export default function LandingPage() {
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Optimiza y ejecuta
+                 {t.howItWorks.step3.title}
                </h3>
                <p className="text-gray-600">
-                 Llama a nuestro agente de optimización y recibe los enlaces para el conductor. 
-                 Ejecuta las rutas optimizadas con trazabilidad en tiempo real.
+                 {t.howItWorks.step3.description}
                </p>
             </motion.div>
           </div>
@@ -299,10 +324,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Beneficios para empresas
+              {t.benefits.title}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Optimiza tu operación logística y reduce costos significativamente
+              {t.benefits.subtitle}
             </p>
           </div>
           
@@ -317,10 +342,10 @@ export default function LandingPage() {
                 <DollarSign className="h-8 w-8 text-red-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Reduce costos logísticos
+                {t.benefits.reduceCosts.title}
               </h3>
               <p className="text-gray-600">
-                Optimiza rutas y reduce combustible, tiempo y recursos.
+                {t.benefits.reduceCosts.description}
               </p>
             </motion.div>
             
@@ -334,10 +359,10 @@ export default function LandingPage() {
                 <Truck className="h-8 w-8 text-blue-600" />
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Balancea carga automáticamente
+                 {t.benefits.balanceLoad.title}
                </h3>
                <p className="text-gray-600">
-                 Distribuye la carga de manera óptima entre vehículos, maximizando eficiencia y minimizando viajes vacíos
+                 {t.benefits.balanceLoad.description}
                </p>
             </motion.div>
             
@@ -351,10 +376,10 @@ export default function LandingPage() {
                 <Clock className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Ahorra tiempo planificando
+                {t.benefits.saveTime.title}
               </h3>
               <p className="text-gray-600">
-                De 2 horas a 5 minutos. Planifica rutas automáticamente
+                {t.benefits.saveTime.description}
               </p>
             </motion.div>
             
@@ -368,10 +393,10 @@ export default function LandingPage() {
                 <Zap className="h-8 w-8 text-blue-600" />
               </div>
                              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                 Trazabilidad en tiempo real
+                 {t.benefits.realTimeTracking.title}
                </h3>
                <p className="text-gray-600">
-                 Monitorea el progreso de entregas en tiempo real desde la web mobile, sin necesidad de software adicional
+                 {t.benefits.realTimeTracking.description}
                </p>
             </motion.div>
           </div>
@@ -389,10 +414,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              ¿Listo para optimizar tu flota?
+              {t.cta.title}
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Agenda una evaluación gratuita de tus procesos logísticos
+              {t.cta.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -400,14 +425,14 @@ export default function LandingPage() {
                 className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
                 onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
               >
-                Evaluación Gratuita
+                {t.cta.freeEvaluation}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
               <button 
                 className="border-2 border-white text-white bg-transparent hover:bg-white hover:text-blue-600 text-lg px-8 py-3 rounded-lg font-medium transition-colors duration-200"
                 onClick={() => window.open('https://calendly.com/ignaciovl-j/30min', '_blank')}
               >
-                Consulta Personalizada
+                {t.cta.personalizedConsultation}
               </button>
             </div>
           </motion.div>
@@ -424,40 +449,40 @@ export default function LandingPage() {
                 <span className="text-xl font-bold">TransportApp</span>
               </div>
                               <p className="text-gray-400">
-                  Optimiza rutas, genera enlaces para conductores y monitorea entregas en tiempo real. Todo desde una sola plataforma.
+                  {t.footer.description}
                 </p>
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Producto</h3>
+              <h3 className="font-semibold mb-4">{t.footer.product}</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Cómo funciona</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Precios</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Demo</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.howItWorks}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.prices}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.demo}</a></li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Soporte</h3>
+              <h3 className="font-semibold mb-4">{t.footer.support}</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Ayuda</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contacto</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Documentación</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.help}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.contact}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.documentation}</a></li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Empresa</h3>
+              <h3 className="font-semibold mb-4">{t.footer.company}</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Acerca de</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Carreras</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.about}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.blog}</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">{t.footer.careers}</a></li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 TransportApp. Todos los derechos reservados.</p>
+            <p>{t.footer.copyright}</p>
           </div>
         </div>
       </footer>

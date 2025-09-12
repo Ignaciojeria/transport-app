@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Play, ExternalLink, Smartphone } from "lucide-react"
+import { useLanguage } from "@/lib/useLanguage"
 
 // Generar short UUID único para esta sesión de demo
 const generateDemoUUID = () => {
@@ -19,26 +20,41 @@ const generateDemoUUID = () => {
 export function DemoEmbed() {
   const [showDemo, setShowDemo] = useState(false)
   const [routeId, setRouteId] = useState<string>('')
+  const { t, isLoading } = useLanguage()
   
   // Generar UUID solo en el cliente para evitar errores de hidratación
   useEffect(() => {
     setRouteId(generateDemoUUID())
   }, [])
 
+  // Mostrar loading mientras se carga el idioma
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Prueba la App en Vivo
+            {t.demo.title}
           </h2>
           <p className="text-xl text-gray-600 mb-4">
-            Experimenta cómo funciona la app desde la perspectiva del conductor con datos de prueba
+            {t.demo.subtitle}
           </p>
           {routeId && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 inline-block">
               <p className="text-sm text-blue-800">
-                <span className="font-semibold">ID de Ruta:</span> <span className="font-mono text-blue-900">{routeId}</span>
+                <span className="font-semibold">{t.demo.routeId}:</span> <span className="font-mono text-blue-900">{routeId}</span>
               </p>
             </div>
           )}
@@ -51,7 +67,7 @@ export function DemoEmbed() {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Smartphone className="h-6 w-6 text-blue-600 mr-2" />
-                  Demo Interactiva
+                  {t.demo.interactiveDemo}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -59,29 +75,29 @@ export function DemoEmbed() {
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Inicia una ruta</h4>
-                      <p className="text-gray-600 text-sm">Simula el inicio de una ruta con patente</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.features.startRoute.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.features.startRoute.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Marca entregas</h4>
-                      <p className="text-gray-600 text-sm">Simula el proceso de entrega con evidencia</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.features.markDeliveries.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.features.markDeliveries.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Navega con mapas</h4>
-                      <p className="text-gray-600 text-sm">Integración con Google Maps y Waze</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.features.navigateMaps.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.features.navigateMaps.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Genera reportes</h4>
-                      <p className="text-gray-600 text-sm">Descarga reportes en CSV y Excel</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.features.generateReports.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.features.generateReports.description}</p>
                     </div>
                   </div>
                 </div>
@@ -92,7 +108,7 @@ export function DemoEmbed() {
                     className="w-full bg-blue-600 hover:bg-blue-700"
                   >
                     <Play className="h-4 w-4 mr-2" />
-                    {showDemo ? 'Ocultar Demo' : 'Ver Demo'}
+                    {showDemo ? t.demo.buttons.hideDemo : t.demo.buttons.viewDemo}
                   </Button>
                   
                   <Button 
@@ -102,7 +118,7 @@ export function DemoEmbed() {
                     disabled={!routeId}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Abrir en Nueva Pestaña
+                    {t.demo.buttons.openNewTab}
                   </Button>
                 </div>
               </CardContent>
@@ -134,15 +150,15 @@ export function DemoEmbed() {
                   <Smartphone className="h-8 w-8 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Demo Interactiva
+                  {t.demo.preview.title}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Haz clic en &quot;Ver Demo&quot; para experimentar la aplicación con datos simulados
+                  {t.demo.preview.description}
                 </p>
                 <div className="text-sm text-gray-500">
-                  • 9 entregas simuladas<br/>
-                  • Funcionalidad completa<br/>
-                  • Datos realistas de Santiago
+                  • {t.demo.preview.features.simulatedDeliveries}<br/>
+                  • {t.demo.preview.features.fullFunctionality}<br/>
+                  • {t.demo.preview.features.realisticData}
                 </div>
               </div>
             )}
