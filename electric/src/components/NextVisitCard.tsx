@@ -15,7 +15,25 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
   const [isExpanded, setIsExpanded] = useState(false)
   const address = nextVisit.addressInfo?.addressLine1 || 'Sin dirección'
   const addressGroup = addressGroups?.[address]
-  const hasMultipleClients = addressGroup && addressGroup.clients.length > 1
+  
+  // Detectar múltiples clientes dentro de la visita actual
+  const uniqueClientsInVisit = Array.from(new Set(
+    (nextVisit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+  ))
+  const hasMultipleClients = uniqueClientsInVisit.length > 1
+  
+  // Para compatibilidad con el acordeón expandible, usar addressGroup si existe
+  const clientCount = hasMultipleClients ? uniqueClientsInVisit.length : 1
+  
+  // Debug log
+  console.log('🔍 NextVisitCard DEBUG:', {
+    sequenceNumber: nextVisit.sequenceNumber,
+    address,
+    uniqueClientsInVisit,
+    hasMultipleClients,
+    clientCount,
+    ordersCount: nextVisit.orders?.length || 0
+  })
   
   // Obtener todas las visitas que comparten la misma dirección
   const visitsAtSameAddress = allVisits.filter(visit => 
@@ -50,35 +68,29 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
           {nextVisit.sequenceNumber}
         </div>
         <div className="flex-1 min-w-0">
+          {/* Siempre mostrar la dirección como elemento principal */}
+          <h4 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+            <MapPin className="w-3 h-3 mr-1 text-gray-500 flex-shrink-0" />
+            <span className="line-clamp-2">{address}</span>
+          </h4>
+          
+          {/* Mostrar información de clientes de forma discreta */}
           {hasMultipleClients ? (
-            // Mostrar múltiples clientes
             <div className="mb-2">
-              <h4 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-                <Users className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                <span className="text-blue-700">{addressGroup.clients.length} clientes</span>
-              </h4>
-              <div className="text-xs text-gray-600 mb-1">
-                {addressGroup.clients.map((client, index) => (
-                  <span key={index} className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded mr-1 mb-1">
-                    {client}
-                  </span>
-                ))}
-              </div>
-              <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block">
-                {addressGroup.totalUnits} unidades • {addressGroup.pendingUnits} pendientes
-              </div>
+              <p className="text-xs text-gray-600 mb-1">
+                <span className="text-blue-700 font-medium">{clientCount} clientes</span>
+              </p>
+              {addressGroup && (
+                <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block">
+                  {addressGroup.totalUnits} unidades • {addressGroup.pendingUnits} pendientes
+                </div>
+              )}
             </div>
           ) : (
-            // Mostrar cliente individual
-            <h4 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-              <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-              <span className="truncate">{nextVisit.orders?.[0]?.contact?.fullName || 'Sin nombre'}</span>
-            </h4>
+            <p className="text-xs text-gray-600">
+              <span className="text-blue-700 font-medium">1 cliente</span>
+            </p>
           )}
-          <p className="text-xs text-gray-600 flex items-start">
-            <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
-            <span className="line-clamp-2">{address}</span>
-          </p>
         </div>
         <button
           onClick={() => onCenterOnVisit(nextIdx)}

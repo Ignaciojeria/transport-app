@@ -4,9 +4,10 @@ interface VisitCardHeaderProps {
   visit: any
   visitIndex: number
   onCenterOnVisit: (visitIndex: number) => void
+  viewMode?: 'list' | 'map'
 }
 
-export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCardHeaderProps) {
+export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode = 'list' }: VisitCardHeaderProps) {
   // Obtener todos los clientes únicos de la visita
   const uniqueClients = Array.from(new Set(
     (visit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
@@ -21,30 +22,48 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCar
           {visit.sequenceNumber}
         </div>
         <div className="flex-1 min-w-0">
-          {hasMultipleClients ? (
-            <div className="mb-1">
+          {viewMode === 'list' ? (
+            // En modo lista: solo mostrar la dirección en negrita arriba
+            <>
               <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-                <Users className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                <span className="text-indigo-700">{uniqueClients.length} clientes</span>
+                <MapPin className="w-3 h-3 mr-1 text-gray-500 flex-shrink-0" />
+                <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
               </h3>
-              <div className="text-xs text-gray-600 mb-1">
-                {uniqueClients.map((client, index) => (
-                  <span key={index} className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded mr-1 mb-1">
-                    {client}
-                  </span>
-                ))}
-              </div>
-            </div>
+              {hasMultipleClients && (
+                <p className="text-xs text-gray-600 mb-2">
+                  <span className="text-indigo-700 font-medium">{uniqueClients.length} clientes</span>
+                </p>
+              )}
+            </>
           ) : (
-            <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-              <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-              <span className="truncate">{uniqueClients[0] || 'Sin nombre'}</span>
-            </h3>
+            // En modo mapa: comportamiento original
+            <>
+              {hasMultipleClients ? (
+                <div className="mb-1">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                    <Users className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                    <span className="text-indigo-700">{uniqueClients.length} clientes</span>
+                  </h3>
+                  <div className="text-xs text-gray-600 mb-1">
+                    {uniqueClients.map((client, index) => (
+                      <span key={index} className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded mr-1 mb-1">
+                        {client}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                  <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                  <span className="truncate">{uniqueClients[0] || 'Sin nombre'}</span>
+                </h3>
+              )}
+              <p className="text-xs text-gray-600 flex items-start mb-2">
+                <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
+                <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
+              </p>
+            </>
           )}
-          <p className="text-xs text-gray-600 flex items-start mb-2">
-            <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
-            <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
-          </p>
         </div>
         <button
           onClick={() => {

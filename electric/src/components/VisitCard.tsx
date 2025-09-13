@@ -51,6 +51,7 @@ export function VisitCard({
                     visit={visit}
                     visitIndex={visitIndex}
                     onCenterOnVisit={onCenterOnVisit}
+                    viewMode={viewMode}
                   />
       
       <div className="p-4">
