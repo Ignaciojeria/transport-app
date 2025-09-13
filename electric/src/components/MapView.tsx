@@ -866,6 +866,15 @@ export function MapView({
   // Determinar qué visita mostrar en modo mapa
   const displayIdx = getPositionedVisitIndex()
   
+  // Debug temporal para investigar el problema de displayIdx
+  console.log('🗺️ MapView displayIdx DEBUG:', {
+    displayIdx,
+    lastCenteredVisit,
+    nextVisitIndex,
+    selectedClientIndex,
+    visitSequenceAtDisplayIdx: visits[displayIdx]?.sequenceNumber
+  })
+  
   // Si no hay punto seleccionado/posicionado, mostrar mensaje de ruta completada
   if (typeof displayIdx !== 'number') {
     return (

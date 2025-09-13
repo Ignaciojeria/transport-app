@@ -675,7 +675,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     console.log('🔍 getPositionedVisitIndex DEBUG:', {
       lastCenteredVisit,
       selectedClientIndex,
-      nextPending
+      nextPending,
+      viewMode
     })
     
     // PRIORIDAD 1: Selección manual desde botón de mapa (lastCenteredVisit)
@@ -685,17 +686,17 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       return lastCenteredVisit
     }
     
-    // PRIORIDAD 2: Cliente seleccionado programáticamente (selectedClientIndex)
-    // Solo cuando no hay selección manual de visita
-    if (selectedClientIndex !== null) {
-      console.log('✅ Usando selectedClientIndex:', selectedClientIndex)
-      return selectedClientIndex
+    // PRIORIDAD 2: Estado sincronizado si es reciente (últimos 30 segundos)
+    if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
+      // Debug: logs removidos para limpiar la consola
+      return markerPosition.visitIndex
     }
     
-    // PRIORIDAD 3: Estado sincronizado si es reciente (últimos 30 segundos)
-    if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
-              // Debug: logs removidos para limpiar la consola
-      return markerPosition.visitIndex
+    // PRIORIDAD 3: Cliente seleccionado programáticamente (selectedClientIndex)
+    // Solo cuando NO estamos en modo mapa (para evitar interferir con la navegación del mapa)
+    if (selectedClientIndex !== null && viewMode !== 'map') {
+      console.log('✅ Usando selectedClientIndex fuera de modo mapa:', selectedClientIndex)
+      return selectedClientIndex
     }
     
     // PRIORIDAD 4: Selección manual de cualquier visita
@@ -726,8 +727,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         (order?.deliveryUnits || []).some((_u: any, uIdx: number) => getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined)
       )
       
-      // Debug: logs removidos para limpiar la consola
-      
       return {
         index: vIdx,
         sequenceNumber: visit?.sequenceNumber || vIdx + 1,
@@ -738,12 +737,20 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     // Filtrar solo las que tienen elementos pendientes
     const pendingVisits = visitStatus.filter(v => v.hasPending)
     
+    console.log('🔍 getNextPendingVisitIndex DEBUG:', {
+      visitStatus: visitStatus.map(v => ({ idx: v.index, seq: v.sequenceNumber, pending: v.hasPending })),
+      pendingVisits: pendingVisits.map(v => ({ idx: v.index, seq: v.sequenceNumber })),
+      nextVisitIndex,
+      lastCenteredVisit
+    })
+    
     if (pendingVisits.length === 0) return null
     
     // Si hay una visita seleccionada manualmente y tiene pendientes, mantenerla
     if (nextVisitIndex !== null) {
       const selectedVisit = visitStatus[nextVisitIndex]
       if (selectedVisit?.hasPending) {
+        console.log('✅ Manteniendo nextVisitIndex:', nextVisitIndex)
         return nextVisitIndex
       }
     }
@@ -757,12 +764,19 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           .filter(v => v.sequenceNumber > lastCenteredSequence)
           .sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0]
         
+        console.log('🎯 Buscando después de lastCenteredVisit:', {
+          lastCenteredSequence,
+          nextPending: nextPending ? { idx: nextPending.index, seq: nextPending.sequenceNumber } : null
+        })
+        
         if (nextPending) return nextPending.index
       }
     }
     
     // Si no hay contexto previo, devolver la primera pendiente por orden de secuencia
-    return pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0].index
+    const firstPending = pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0]
+    console.log('🥇 Usando primera pendiente:', firstPending ? { idx: firstPending.index, seq: firstPending.sequenceNumber } : null)
+    return firstPending.index
   }
 
   useEffect(() => {
@@ -924,14 +938,56 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           <div className="flex items-center gap-2">
             {/* Mostrar botón mapa solo cuando la ruta esté iniciada */}
             {routeStarted && (
-              <button
-                onClick={() => setViewMode((m) => (m === 'list' ? 'map' : 'list'))}
-                className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95 flex items-center space-x-2"
-                aria-label="Alternar mapa/lista"
-              >
-                <Map className="w-4 h-4" />
-                <span>{viewMode === 'list' ? 'Mapa' : 'Lista'}</span>
-              </button>
+            <button
+              onClick={() => {
+                const newMode = viewMode === 'list' ? 'map' : 'list'
+                console.log('🔄 Botón mapa general presionado:', { currentMode: viewMode, newMode, lastCenteredVisit, selectedClientIndex })
+                
+                setViewMode(newMode)
+                
+                // Si cambiamos a modo mapa, forzar lógica correcta
+                if (newMode === 'map') {
+                  console.log('🧹 Limpiando selectedClientIndex antes:', selectedClientIndex)
+                  setSelectedClientIndex(null) // Limpiar selección automática siempre
+                  
+                  // Si no hay selección manual previa, forzar ir a la primera visita pendiente
+                  if (lastCenteredVisit === null) {
+                    // Calcular la primera visita pendiente directamente (sin lógica compleja)
+                    const firstPendingIndex = visits.findIndex((visit: any, vIdx: number) => {
+                      return (visit?.orders || []).some((order: any, oIdx: number) =>
+                        (order?.deliveryUnits || []).some((_u: any, uIdx: number) => 
+                          getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined
+                        )
+                      )
+                    })
+                    
+                    console.log('🎯 Primera visita pendiente directa:', firstPendingIndex)
+                    
+                    if (firstPendingIndex !== -1) {
+                      setLastCenteredVisit(firstPendingIndex) // Usar lastCenteredVisit en lugar de nextVisitIndex
+                      console.log('🗺️ Forzando lastCenteredVisit a primera pendiente:', firstPendingIndex)
+                    }
+                  } else {
+                    console.log('🗺️ Modo mapa activado con selección manual previa:', lastCenteredVisit)
+                  }
+                  
+                  // Log del estado después de los cambios
+                  setTimeout(() => {
+                    console.log('📊 Estados después del cambio a mapa:', {
+                      selectedClientIndex,
+                      lastCenteredVisit,
+                      nextVisitIndex,
+                      calculatedDisplayIdx: getPositionedVisitIndex()
+                    })
+                  }, 100)
+                }
+              }}
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95 flex items-center space-x-2"
+              aria-label="Alternar mapa/lista"
+            >
+              <Map className="w-4 h-4" />
+              <span>{viewMode === 'list' ? 'Mapa' : 'Lista'}</span>
+            </button>
             )}
             {!routeStarted ? (
               <button
