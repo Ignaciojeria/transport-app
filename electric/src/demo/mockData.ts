@@ -69,8 +69,12 @@ export const mockRouteData: any ={
                         {
                             "items": [
                                 {
-                                    "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "description": "pepsi zero 350ml",
+                                    "quantity": 12
+                                },
+                                {
+                                    "description": "fanta zero 350ml",
+                                    "quantity": 12
                                 }
                             ],
                             "volume": 2,
@@ -80,8 +84,8 @@ export const mockRouteData: any ={
                         {
                             "items": [
                                 {
-                                    "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "description": "caja contenedora bebidas",
+                                    "quantity": 1
                                 }
                             ],
                             "volume": 2,

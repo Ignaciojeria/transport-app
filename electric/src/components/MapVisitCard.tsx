@@ -453,9 +453,13 @@ export function MapVisitCard({
                            Unidad de Entrega {uIdx + 1}
                          </h5>
                         {Array.isArray(unit.items) && unit.items.length > 0 && (
-                          <div className="flex items-center space-x-1 mb-2">
-                            <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-                            <span className="text-xs text-gray-700 truncate">{unit.items[0]?.description}</span>
+                          <div className="space-y-1 mb-2">
+                            {unit.items.map((item: any, index: number) => (
+                              <div key={index} className="flex items-center space-x-1">
+                                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                                <span className="text-xs text-gray-700 truncate">{item.description}{item.quantity ? ` (${item.quantity})` : ''}</span>
+                              </div>
+                            ))}
                           </div>
                         )}
                         <div className="flex items-center space-x-3 text-xs text-gray-600">

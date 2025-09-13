@@ -55,10 +55,12 @@ export function VisitCardDeliveryUnit({
           {/* Información del producto */}
           <div className="space-y-1 text-sm text-gray-600">
             {Array.isArray(unit.items) && unit.items.length > 0 && (
-              <div className="flex items-center">
-                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-                <span>{unit.items[0]?.description}</span>
-              </div>
+              unit.items.map((item: any, index: number) => (
+                <div key={index} className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  <span>{item.description}{item.quantity ? ` (${item.quantity})` : ''}</span>
+                </div>
+              ))
             )}
             <div className="flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
