@@ -47,7 +47,10 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCar
           </p>
         </div>
         <button
-          onClick={() => onCenterOnVisit(visitIndex)}
+          onClick={() => {
+            console.log('📍 PIN CLICKED! visitIndex:', visitIndex, 'sequenceNumber:', visit.sequenceNumber)
+            onCenterOnVisit(visitIndex)
+          }}
           className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
           aria-label={`Ver en mapa - Visita ${visit.sequenceNumber}`}
           title="Ver en mapa"

@@ -411,10 +411,19 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
   // Función para seleccionar cliente en modo mapa
   const handleClientSelect = (clientIndex: number | null) => {
+    console.log('🔄 handleClientSelect llamado con clientIndex:', clientIndex)
+    console.log('📍 ANTES - lastCenteredVisit:', lastCenteredVisit, 'selectedClientIndex:', selectedClientIndex)
     setSelectedClientIndex(clientIndex)
-    if (clientIndex !== null) {
+    
+    // NO sobrescribir lastCenteredVisit si fue una selección manual desde modo lista
+    // Solo establecer lastCenteredVisit si no hay una selección manual previa
+    if (clientIndex !== null && lastCenteredVisit === null) {
+      console.log('✅ Estableciendo lastCenteredVisit a', clientIndex, '(no había selección manual)')
       setLastCenteredVisit(clientIndex)
+    } else if (clientIndex !== null && lastCenteredVisit !== null) {
+      console.log('🚫 NO sobrescribiendo lastCenteredVisit (hay selección manual:', lastCenteredVisit, ')')
     }
+    console.log('📍 DESPUÉS - nuevo selectedClientIndex:', clientIndex)
   }
 
   const closeGroupedDeliveryModal = () => {
@@ -644,6 +653,15 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
 
 
   const visits = routeData?.visits ?? []
+  
+  // Debug: mostrar información de todas las visitas
+  console.log('📋 TODAS LAS VISITAS:', visits.map((visit, index) => ({
+    index,
+    sequenceNumber: visit.sequenceNumber,
+    clientName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre',
+    address: visit.addressInfo?.addressLine1,
+    orderCount: visit.orders?.length || 0
+  })))
 
   // Generar grupos de dirección para la tarjeta de siguiente visita
   const addressGroups = groupDeliveryUnitsByAddressForNextVisit(visits, getDeliveryUnitStatus)
@@ -653,18 +671,25 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     // Siempre obtener la siguiente pendiente real
     const nextPending = getNextPendingVisitIndex()
     
-    // Debug: logs removidos para limpiar la consola
+    // Debug temporal para investigar el problema
+    console.log('🔍 getPositionedVisitIndex DEBUG:', {
+      lastCenteredVisit,
+      selectedClientIndex,
+      nextPending
+    })
     
-    // PRIORIDAD 1: Cliente seleccionado manualmente (selectedClientIndex)
-    // Esta debe tener prioridad absoluta cuando se selecciona un cliente específico
-    if (selectedClientIndex !== null) {
-      return selectedClientIndex
+    // PRIORIDAD 1: Selección manual desde botón de mapa (lastCenteredVisit)
+    // Esta debe tener prioridad absoluta cuando el usuario selecciona una visita específica
+    if (lastCenteredVisit !== null) {
+      console.log('✅ Usando lastCenteredVisit:', lastCenteredVisit)
+      return lastCenteredVisit
     }
     
-    // PRIORIDAD 2: Selección manual desde botón de mapa (lastCenteredVisit)
-    if (lastCenteredVisit !== null) {
-              // Debug: logs removidos para limpiar la consola
-      return lastCenteredVisit
+    // PRIORIDAD 2: Cliente seleccionado programáticamente (selectedClientIndex)
+    // Solo cuando no hay selección manual de visita
+    if (selectedClientIndex !== null) {
+      console.log('✅ Usando selectedClientIndex:', selectedClientIndex)
+      return selectedClientIndex
     }
     
     // PRIORIDAD 3: Estado sincronizado si es reciente (últimos 30 segundos)
@@ -1008,9 +1033,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             visitIndex={visitIndex}
             routeStarted={routeStarted}
             onCenterOnVisit={(visitIndex: number) => {
+              console.log('🎯 onCenterOnVisit llamado con visitIndex:', visitIndex)
               setViewMode('map')
               setLastCenteredVisit(visitIndex)
               setNextVisitIndex(null) // Limpiar selección automática para dar prioridad a la manual
+              console.log('✅ Estados actualizados - lastCenteredVisit:', visitIndex, 'nextVisitIndex: null')
             }}
             onOpenDelivery={openDeliveryFor}
             onOpenNonDelivery={openNonDeliveryFor}

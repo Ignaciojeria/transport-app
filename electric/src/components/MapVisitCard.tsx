@@ -50,17 +50,27 @@ export function MapVisitCard({
     }
   }
 
-  // Calcular estadísticas de la visita
+  // Calcular estadísticas de la visita (filtradas por cliente seleccionado si aplica)
   const visitStats = (() => {
     let totalUnits = 0
     let pendingUnits = 0
     let deliveredUnits = 0
     let notDeliveredUnits = 0
 
-    visit.orders?.forEach((order: any, orderIndex: number) => {
+    // Filtrar órdenes según el cliente seleccionado
+    const ordersToCalculate = hasMultipleClients && selectedClient 
+      ? (visit.orders || []).filter((order: any) => 
+          order.contact?.fullName === selectedClient.clientName
+        )
+      : (visit.orders || [])
+
+    ordersToCalculate.forEach((order: any) => {
+      // Encontrar el índice real de la orden en la visita original
+      const realOrderIndex = (visit.orders || []).findIndex((o: any) => o === order)
+      
       order.deliveryUnits?.forEach((_unit: any, unitIndex: number) => {
         totalUnits++
-        const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+        const status = getDeliveryUnitStatus(displayIdx, realOrderIndex, unitIndex)
         if (status === 'delivered') {
           deliveredUnits++
         } else if (status === 'not-delivered') {
@@ -162,7 +172,7 @@ export function MapVisitCard({
                   </h3>
                   <div className="text-xs text-gray-600 mb-1">
                     <span className="inline-block bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">
-                      Selecciona un cliente arriba
+                      Selecciona un cliente en el selector de arriba
                     </span>
                   </div>
                 </div>
@@ -263,11 +273,26 @@ export function MapVisitCard({
             </div>
           )}
 
-          <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
-            <Package size={18} />
-            <span className="ml-2">Unidades de Entrega:</span>
-          </h4>
-          {(visit.orders || []).map((order: any, orderIndex: number) => (
+          {/* Solo mostrar órdenes si hay un cliente seleccionado o no hay múltiples clientes */}
+          {(!hasMultipleClients || selectedClient) && (
+            <>
+              <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
+                <Package size={18} />
+                <span className="ml-2">Unidades de Entrega:</span>
+              </h4>
+              {(() => {
+                // Filtrar órdenes según el cliente seleccionado
+                const ordersToShow = hasMultipleClients && selectedClient 
+                  ? (visit.orders || []).filter((order: any) => 
+                      order.contact?.fullName === selectedClient.clientName
+                    )
+                  : (visit.orders || [])
+                
+                return ordersToShow.map((order: any, orderIndex: number) => {
+              // Encontrar el índice real de la orden en la visita original
+              const realOrderIndex = (visit.orders || []).findIndex((o: any) => o === order)
+              
+              return (
             <div key={orderIndex} className="mb-4">
               <div className="mb-2">
                 <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
@@ -278,7 +303,7 @@ export function MapVisitCard({
                 .map((unit: any, uIdx: number): { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined } => ({
                   unit,
                   uIdx,
-                  status: getDeliveryUnitStatus(displayIdx, orderIndex, uIdx),
+                  status: getDeliveryUnitStatus(displayIdx, realOrderIndex, uIdx),
                 }))
                 .map(({ unit, uIdx, status }: { unit: any; uIdx: number; status: 'delivered' | 'not-delivered' | undefined }) => (
                   <div key={uIdx} className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}>
@@ -341,14 +366,14 @@ export function MapVisitCard({
                           // Si está pendiente, mostrar ambas opciones originales
                           <>
                             <button
-                              onClick={() => openDeliveryFor(displayIdx, orderIndex, uIdx)}
+                              onClick={() => openDeliveryFor(displayIdx, realOrderIndex, uIdx)}
                               className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                             >
                               <CheckCircle size={16} />
                               <span>entregar</span>
                             </button>
                             <button
-                              onClick={() => openNonDeliveryFor(displayIdx, orderIndex, uIdx)}
+                              onClick={() => openNonDeliveryFor(displayIdx, realOrderIndex, uIdx)}
                               className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                             >
                               <XCircle size={16} />
@@ -361,7 +386,11 @@ export function MapVisitCard({
                   </div>
                 ))}
             </div>
-          ))}
+              )
+            })
+          })()}
+            </>
+          )}
         </div>
       </div>
     </div>
