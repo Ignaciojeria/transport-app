@@ -16,6 +16,8 @@ interface MapVisitCardProps {
   onClearSelection: () => void
   onDeliverAll?: (visitIndex: number) => void
   onNonDeliverAll?: (visitIndex: number) => void
+  openGroupedDelivery?: (visitIndex: number, group: any) => void
+  openGroupedNonDelivery?: (visitIndex: number, group: any) => void
   selectedClient?: any
   hasMultipleClients?: boolean
 }
@@ -35,6 +37,8 @@ export function MapVisitCard({
   onClearSelection,
   onDeliverAll,
   onNonDeliverAll,
+  openGroupedDelivery,
+  openGroupedNonDelivery,
   selectedClient,
   hasMultipleClients
 }: MapVisitCardProps) {
@@ -209,21 +213,125 @@ export function MapVisitCard({
               </div>
               <div className="flex space-x-2">
                 <button
-                  onClick={() => onDeliverAll(displayIdx)}
+                  onClick={() => {
+                    // Si hay múltiples clientes y uno seleccionado, crear grupo solo para ese cliente
+                    if (hasMultipleClients && selectedClient) {
+                      // Crear un grupo temporal solo con las unidades del cliente seleccionado
+                      const clientUnits: any[] = []
+                      
+                      ;(visit.orders || [])
+                        .filter((order: any) => order.contact?.fullName === selectedClient.clientName)
+                        .forEach((order: any) => {
+                          const orderIndex = (visit.orders || []).indexOf(order)
+                          ;(order.deliveryUnits || []).forEach((unit: any, unitIndex: number) => {
+                            const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+                            if (!status) { // Solo unidades pendientes
+                              clientUnits.push({
+                                unit,
+                                uIdx: unitIndex,
+                                orderIndex,
+                                order
+                              })
+                            }
+                          })
+                        })
+                      
+                      if (clientUnits.length > 0) {
+                        // Crear grupo temporal para el cliente seleccionado
+                        const clientGroup = {
+                          key: `client-${displayIdx}-${selectedClient.clientName}`,
+                          addressInfo: visit.addressInfo,
+                          units: clientUnits.map((unit) => ({
+                            unit: unit.unit,
+                            uIdx: unit.uIdx,
+                            status: undefined,
+                            visitIndex: displayIdx,
+                            orderIndex: unit.orderIndex,
+                            order: unit.order
+                          })),
+                          totalUnits: clientUnits.length,
+                          pendingUnits: clientUnits.length
+                        }
+                        
+                        // Usar openGroupedDelivery en lugar de onDeliverAll
+                        if (openGroupedDelivery) {
+                          openGroupedDelivery(displayIdx, clientGroup)
+                        }
+                      }
+                    } else {
+                      // Comportamiento original para visitas sin múltiples clientes
+                      onDeliverAll && onDeliverAll(displayIdx)
+                    }
+                  }}
                   className="flex-1 bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>
-                    {visitStats.isPartiallyDelivered ? 'Entregar restante' : 'Entregar todo'}
+                    {hasMultipleClients && selectedClient 
+                      ? `Entregar todo (${selectedClient.clientName})`
+                      : visitStats.isPartiallyDelivered ? 'Entregar restante' : 'Entregar todo'
+                    }
                   </span>
                 </button>
                 <button
-                  onClick={() => onNonDeliverAll(displayIdx)}
+                  onClick={() => {
+                    // Si hay múltiples clientes y uno seleccionado, crear grupo solo para ese cliente
+                    if (hasMultipleClients && selectedClient) {
+                      // Crear un grupo temporal solo con las unidades del cliente seleccionado
+                      const clientUnits: any[] = []
+                      
+                      ;(visit.orders || [])
+                        .filter((order: any) => order.contact?.fullName === selectedClient.clientName)
+                        .forEach((order: any) => {
+                          const orderIndex = (visit.orders || []).indexOf(order)
+                          ;(order.deliveryUnits || []).forEach((unit: any, unitIndex: number) => {
+                            const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+                            if (!status) { // Solo unidades pendientes
+                              clientUnits.push({
+                                unit,
+                                uIdx: unitIndex,
+                                orderIndex,
+                                order
+                              })
+                            }
+                          })
+                        })
+                      
+                      if (clientUnits.length > 0) {
+                        // Crear grupo temporal para el cliente seleccionado
+                        const clientGroup = {
+                          key: `client-nd-${displayIdx}-${selectedClient.clientName}`,
+                          addressInfo: visit.addressInfo,
+                          units: clientUnits.map((unit) => ({
+                            unit: unit.unit,
+                            uIdx: unit.uIdx,
+                            status: undefined,
+                            visitIndex: displayIdx,
+                            orderIndex: unit.orderIndex,
+                            order: unit.order
+                          })),
+                          totalUnits: clientUnits.length,
+                          pendingUnits: clientUnits.length
+                        }
+                        
+                        // Usar openGroupedNonDelivery en lugar de onNonDeliverAll
+                        if (openGroupedNonDelivery) {
+                          openGroupedNonDelivery(displayIdx, clientGroup)
+                        }
+                      }
+                    } else {
+                      // Comportamiento original para visitas sin múltiples clientes
+                      onNonDeliverAll && onNonDeliverAll(displayIdx)
+                    }
+                  }}
                   className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors text-sm"
                 >
                   <XCircle className="w-4 h-4" />
                   <span>
-                    {visitStats.isPartiallyDelivered ? 'No entregar restante' : 'No entregar todo'}
+                    {hasMultipleClients && selectedClient 
+                      ? `No entregar todo (${selectedClient.clientName})`
+                      : visitStats.isPartiallyDelivered ? 'No entregar restante' : 'No entregar todo'
+                    }
                   </span>
                 </button>
               </div>
