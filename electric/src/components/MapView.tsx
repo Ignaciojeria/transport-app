@@ -72,55 +72,145 @@ export function MapView({
   
   // Detectar si hay múltiples clientes en la misma dirección
   const getClientsAtSameLocation = () => {
-    // Si hay un cliente seleccionado, usar su dirección
+    // Si hay un cliente seleccionado, usar su visita
     if (selectedClientIndex !== null) {
       const selectedVisit = visits[selectedClientIndex]
       if (!selectedVisit) return []
       
+      // Si la visita seleccionada tiene múltiples órdenes/clientes, mostrarlos
+      const orders = selectedVisit.orders || []
+      if (orders.length > 1) {
+        // Crear un mapa para evitar duplicados por nombre de cliente
+        const clientMap = new Map()
+        
+        orders.forEach((order: any, orderIndex: number) => {
+          const clientName = order.contact?.fullName || 'Sin nombre'
+          const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+            getDeliveryUnitStatus(selectedClientIndex, orderIndex, unitIndex) === undefined
+          )
+          
+          // Si el cliente ya existe, combinar el estado de unidades pendientes
+          if (clientMap.has(clientName)) {
+            const existing = clientMap.get(clientName)
+            existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+            existing.orderIndexes.push(orderIndex)
+          } else {
+            clientMap.set(clientName, {
+              index: selectedClientIndex,
+              orderIndex,
+              orderIndexes: [orderIndex],
+              clientName,
+              hasPendingUnits
+            })
+          }
+        })
+        
+        // Convertir a array y ordenar por nombre
+        return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+      }
+      
+      // Si solo tiene una orden, buscar otras visitas en la misma dirección
       const selectedAddress = selectedVisit.addressInfo?.addressLine1
       if (!selectedAddress) return []
       
-      // Buscar todas las visitas con la misma dirección
-      return visits
-        .map((visit, index) => ({ visit, index }))
-        .filter(({ visit }) => visit.addressInfo?.addressLine1 === selectedAddress)
-        .map(({ visit, index }) => ({
-          index,
-          clientName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre',
-          hasPendingUnits: (visit.orders || []).some((order: any, orderIndex: number) =>
-            (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
-              getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
+      const clientMap = new Map()
+      
+      visits
+        .filter(visit => visit.addressInfo?.addressLine1 === selectedAddress)
+        .forEach((visit, _, filteredVisits) => {
+          const visitIndex = visits.indexOf(visit)
+          
+          ;(visit.orders || []).forEach((order: any, orderIndex: number) => {
+            const clientName = order.contact?.fullName || 'Sin nombre'
+            const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex) === undefined
             )
-          )
-        }))
+            
+            if (clientMap.has(clientName)) {
+              const existing = clientMap.get(clientName)
+              existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+            } else {
+              clientMap.set(clientName, {
+                index: visitIndex,
+                orderIndex,
+                clientName,
+                hasPendingUnits
+              })
+            }
+          })
+        })
+      
+      return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
     }
     
-    // Si no hay cliente seleccionado, buscar la primera dirección con múltiples clientes
-    const addressGroups: { [key: string]: any[] } = {}
+    // Si no hay cliente seleccionado, buscar la primera visita con múltiples clientes
+    for (let visitIndex = 0; visitIndex < visits.length; visitIndex++) {
+      const visit = visits[visitIndex]
+      const orders = visit.orders || []
+      
+      if (orders.length > 1) {
+        const clientMap = new Map()
+        
+        orders.forEach((order: any, orderIndex: number) => {
+          const clientName = order.contact?.fullName || 'Sin nombre'
+          const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+            getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex) === undefined
+          )
+          
+          if (clientMap.has(clientName)) {
+            const existing = clientMap.get(clientName)
+            existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+            existing.orderIndexes.push(orderIndex)
+          } else {
+            clientMap.set(clientName, {
+              index: visitIndex,
+              orderIndex,
+              orderIndexes: [orderIndex],
+              clientName,
+              hasPendingUnits
+            })
+          }
+        })
+        
+        return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+      }
+    }
+    
+    // Si no hay visitas con múltiples clientes, buscar múltiples visitas en la misma dirección
+    const addressGroups: { [key: string]: Map<string, any> } = {}
     
     visits.forEach((visit, index) => {
       const address = visit.addressInfo?.addressLine1
       if (address) {
         if (!addressGroups[address]) {
-          addressGroups[address] = []
+          addressGroups[address] = new Map()
         }
-        addressGroups[address].push({
-          visit,
-          index,
-          clientName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre',
-          hasPendingUnits: (visit.orders || []).some((order: any, orderIndex: number) =>
-            (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
-              getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
-            )
+        
+        ;(visit.orders || []).forEach((order: any, orderIndex: number) => {
+          const clientName = order.contact?.fullName || 'Sin nombre'
+          const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+            getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
           )
+          
+          if (addressGroups[address].has(clientName)) {
+            const existing = addressGroups[address].get(clientName)
+            existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+          } else {
+            addressGroups[address].set(clientName, {
+              index,
+              orderIndex,
+              clientName,
+              hasPendingUnits
+            })
+          }
         })
       }
     })
     
     // Encontrar la primera dirección con múltiples clientes
-    for (const [address, clients] of Object.entries(addressGroups)) {
-      if (clients.length > 1) {
-        return clients
+    for (const [address, clientMap] of Object.entries(addressGroups)) {
+      if (clientMap.size > 1) {
+        return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
       }
     }
     
@@ -136,6 +226,24 @@ export function MapView({
       onClientSelect(clientsAtSameLocation[0].index)
     }
   }, [hasMultipleClients, selectedClientIndex, onClientSelect, clientsAtSameLocation])
+  
+  // Estado local para el cliente específico seleccionado (nombre del cliente)
+  const [selectedClientName, setSelectedClientName] = useState<string | null>(null)
+  
+  // Cuando hay múltiples clientes, seleccionar el primero por defecto
+  useEffect(() => {
+    if (hasMultipleClients && !selectedClientName) {
+      setSelectedClientName(clientsAtSameLocation[0]?.clientName || null)
+    }
+  }, [hasMultipleClients, selectedClientName, clientsAtSameLocation])
+  
+  // Función para obtener el cliente seleccionado
+  const getSelectedClient = () => {
+    if (!selectedClientName || !hasMultipleClients) return null
+    return clientsAtSameLocation.find(client => client.clientName === selectedClientName) || null
+  }
+  
+  const selectedClient = getSelectedClient()
   
   // Debug temporal
   console.log('🔍 Debug selector de clientes:', {
@@ -475,7 +583,12 @@ export function MapView({
         })
         
         // Agregar tooltip con información de la visita
-        const visitInfo = v?.orders?.[0]?.contact?.fullName || `Visita ${sequenceNumber}`
+        const uniqueClients = Array.from(new Set(
+          (v?.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+        ))
+        const visitInfo = uniqueClients.length > 1 
+          ? `${uniqueClients.length} clientes: ${uniqueClients.join(', ')}`
+          : uniqueClients[0] || `Visita ${sequenceNumber}`
         marker.bindTooltip(visitInfo, {
           permanent: false,
           direction: 'top',
@@ -563,7 +676,12 @@ export function MapView({
       
       // Agregar tooltip con información de la visita
       const visit = visits[idx]
-      const visitInfo = visit?.orders?.[0]?.contact?.fullName || `Visita ${sequenceNumber}`
+      const uniqueClients = Array.from(new Set(
+        (visit?.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+      ))
+      const visitInfo = uniqueClients.length > 1 
+        ? `${uniqueClients.length} clientes: ${uniqueClients.join(', ')}`
+        : uniqueClients[0] || `Visita ${sequenceNumber}`
       marker.bindTooltip(visitInfo, {
         permanent: false,
         direction: 'top',
@@ -804,12 +922,12 @@ export function MapView({
           </div>
           
           <div className="grid grid-cols-1 gap-2">
-            {clientsAtSameLocation.map((client) => (
+            {clientsAtSameLocation.map((client, clientIdx) => (
               <button
-                key={client.index}
-                onClick={() => onClientSelect(client.index)}
+                key={`${client.index}-${client.orderIndex || 0}`}
+                onClick={() => setSelectedClientName(client.clientName)}
                 className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
-                  selectedClientIndex === client.index
+                  selectedClientName === client.clientName
                     ? 'border-purple-500 bg-purple-100 shadow-md transform scale-[1.02]'
                     : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50 hover:shadow-md'
                 }`}
@@ -819,9 +937,22 @@ export function MapView({
                     <div className={`w-4 h-4 rounded-full ${
                       client.hasPendingUnits ? 'bg-orange-400' : 'bg-green-500'
                     }`}></div>
-                    <span className="font-semibold text-gray-800 text-base">
-                      {client.clientName}
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-800 text-base">
+                        {client.clientName}
+                      </span>
+                      {client.orderIndexes && client.orderIndexes.length > 1 ? (
+                        <span className="text-xs text-gray-500">
+                          {client.orderIndexes.length} órdenes
+                        </span>
+                      ) : (
+                        client.orderIndex !== undefined && (
+                          <span className="text-xs text-gray-500">
+                            Orden #{client.orderIndex + 1}
+                          </span>
+                        )
+                      )}
+                    </div>
                   </div>
                   <div className={`text-xs px-2 py-1 rounded-full font-medium ${
                     client.hasPendingUnits 
@@ -856,6 +987,8 @@ export function MapView({
         onClearSelection={handleClearSelection}
         onDeliverAll={onDeliverAll}
         onNonDeliverAll={onNonDeliverAll}
+        selectedClient={selectedClient}
+        hasMultipleClients={hasMultipleClients}
       />
     </div>
   )

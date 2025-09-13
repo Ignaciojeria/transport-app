@@ -1,6 +1,6 @@
 import { VisitCardDeliveryUnit } from './VisitCardDeliveryUnit'
 import { groupDeliveryUnitsByLocation, hasGroupPendingUnits, getGroupPendingUnits, type DeliveryGroup } from './GroupedDeliveryUtils'
-import { Package, Users } from 'lucide-react'
+import { Package, Users, User } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
 import { OrderCard, DeliveryUnitCard } from './OrderCard'
 
@@ -199,53 +199,119 @@ export function VisitCardOrders({
       })}
       
       {/* Mostrar unidades no agrupadas (que no pertenecen a ningún grupo) */}
-      {visit.orders?.map((order: any, orderIndex: number) => {
-        const orderUnits = (order.deliveryUnits || [])
-          .map((unit: any, uIdx: number) => ({
-            unit,
-            uIdx,
-            status: getDeliveryUnitStatus(visitIndex, orderIndex, uIdx),
-          }))
-          .filter((x: any) => shouldRenderByTab(x.status))
+      {(() => {
+        // Procesar órdenes y agrupar por cliente
+        const ordersByClient = new Map()
         
-        // Verificar si esta unidad ya está en algún grupo (solo relevante en modo mapa)
-        const isInGroup = shouldGroup && deliveryGroups.some(group => 
-          group.units.some(groupUnit => 
-            groupUnit.visitIndex === visitIndex && 
-            groupUnit.orderIndex === orderIndex && 
-            groupUnit.uIdx === orderUnits.findIndex((u: any) => u.uIdx === groupUnit.uIdx)
+        visit.orders?.forEach((order: any, orderIndex: number) => {
+          const orderUnits = (order.deliveryUnits || [])
+            .map((unit: any, uIdx: number) => ({
+              unit,
+              uIdx,
+              status: getDeliveryUnitStatus(visitIndex, orderIndex, uIdx),
+            }))
+            .filter((x: any) => shouldRenderByTab(x.status))
+          
+          // Verificar si esta unidad ya está en algún grupo (solo relevante en modo mapa)
+          const isInGroup = shouldGroup && deliveryGroups.some(group => 
+            group.units.some(groupUnit => 
+              groupUnit.visitIndex === visitIndex && 
+              groupUnit.orderIndex === orderIndex && 
+              groupUnit.uIdx === orderUnits.findIndex((u: any) => u.uIdx === groupUnit.uIdx)
+            )
           )
-        )
+          
+          if (isInGroup || orderUnits.length === 0) return
+          
+          const clientName = order.contact?.fullName || 'Sin nombre'
+          
+          if (!ordersByClient.has(clientName)) {
+            ordersByClient.set(clientName, [])
+          }
+          
+          ordersByClient.get(clientName).push({
+            order,
+            orderIndex,
+            orderUnits
+          })
+        })
         
-        if (isInGroup) return null
+        // Convertir a array y ordenar por nombre de cliente
+        const sortedClients = Array.from(ordersByClient.entries())
+          .sort(([clientA], [clientB]) => clientA.localeCompare(clientB))
         
-        return (
-          <div key={orderIndex} className="mb-4">
-            {orderUnits.map((x: any) => (
-              <div key={x.uIdx}>
-                <div className="mb-2">
-                  <IdentifierBadge 
-                    lpn={x.unit.lpn} 
-                    code={x.unit.code} 
-                    size="sm"
-                  />
+        return sortedClients.map(([clientName, clientOrders]) => (
+          <div key={clientName} className="mb-6">
+            {/* Header del cliente */}
+            <div className="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200">
+              <div className="flex items-center space-x-3">
+                <User className="w-5 h-5 text-indigo-600" />
+                <div className="flex-1">
+                  <h3 className="text-base font-bold text-gray-800">
+                    {clientName}
+                  </h3>
+                  <span className="text-sm text-gray-600">
+                    {clientOrders.length} {clientOrders.length === 1 ? 'orden' : 'órdenes'}
+                  </span>
                 </div>
-                <VisitCardDeliveryUnit
-                  unit={x.unit}
-                  uIdx={x.uIdx}
-                  status={x.status}
-                  visitIndex={visitIndex}
-                  orderIndex={orderIndex}
-                  routeStarted={routeStarted}
-                  orderReferenceID={order.referenceID}
-                  onOpenDelivery={onOpenDelivery}
-                  onOpenNonDelivery={onOpenNonDelivery}
-                />
+                {clientOrders[0]?.order?.contact?.phone && (
+                  <span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
+                    📞 {clientOrders[0].order.contact.phone}
+                  </span>
+                )}
               </div>
-            ))}
+            </div>
+            
+            {/* Órdenes del cliente */}
+            <div className="ml-4 space-y-4">
+              {clientOrders.map(({ order, orderIndex, orderUnits }: any) => (
+                <div key={orderIndex} className="border-l-2 border-indigo-200 pl-4">
+                  {/* Información de la orden */}
+                  <div className="mb-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">
+                        📦 Orden: {order.referenceID || `#${orderIndex + 1}`}
+                      </span>
+                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        {orderUnits.length} {orderUnits.length === 1 ? 'unidad' : 'unidades'}
+                      </span>
+                    </div>
+                    {order.instructions && (
+                      <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded border-l-2 border-blue-200">
+                        <strong>Instrucciones:</strong> {order.instructions}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Unidades de entrega */}
+                  {orderUnits.map((x: any) => (
+                    <div key={x.uIdx} className="mb-3">
+                      <div className="mb-2">
+                        <IdentifierBadge 
+                          lpn={x.unit.lpn} 
+                          code={x.unit.code} 
+                          size="sm"
+                        />
+                      </div>
+                      <VisitCardDeliveryUnit
+                        unit={x.unit}
+                        uIdx={x.uIdx}
+                        status={x.status}
+                        visitIndex={visitIndex}
+                        orderIndex={orderIndex}
+                        routeStarted={routeStarted}
+                        orderReferenceID={order.referenceID}
+                        onOpenDelivery={onOpenDelivery}
+                        onOpenNonDelivery={onOpenNonDelivery}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        )
-      })}
+        ))
+      })()}
     </>
   )
 }

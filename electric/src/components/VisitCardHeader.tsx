@@ -1,4 +1,4 @@
-import { User, MapPin } from 'lucide-react'
+import { User, MapPin, Users } from 'lucide-react'
 
 interface VisitCardHeaderProps {
   visit: any
@@ -7,6 +7,13 @@ interface VisitCardHeaderProps {
 }
 
 export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCardHeaderProps) {
+  // Obtener todos los clientes únicos de la visita
+  const uniqueClients = Array.from(new Set(
+    (visit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+  ))
+  
+  const hasMultipleClients = uniqueClients.length > 1
+  
   return (
     <div className="p-4 border-b border-gray-100">
       <div className="flex items-start space-x-3">
@@ -14,10 +21,26 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCar
           {visit.sequenceNumber}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-            <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-            <span className="truncate">{visit.orders?.[0]?.contact?.fullName || 'Sin nombre'}</span>
-          </h3>
+          {hasMultipleClients ? (
+            <div className="mb-1">
+              <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                <Users className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                <span className="text-indigo-700">{uniqueClients.length} clientes</span>
+              </h3>
+              <div className="text-xs text-gray-600 mb-1">
+                {uniqueClients.map((client, index) => (
+                  <span key={index} className="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded mr-1 mb-1">
+                    {client}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+              <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+              <span className="truncate">{uniqueClients[0] || 'Sin nombre'}</span>
+            </h3>
+          )}
           <p className="text-xs text-gray-600 flex items-start mb-2">
             <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
             <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>

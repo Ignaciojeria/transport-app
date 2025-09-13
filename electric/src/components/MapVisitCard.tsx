@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Play, Package, User, MapPin } from 'lucide-react'
+import { CheckCircle, XCircle, Play, Package, User, MapPin, Users } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
 
 interface MapVisitCardProps {
@@ -16,6 +16,8 @@ interface MapVisitCardProps {
   onClearSelection: () => void
   onDeliverAll?: (visitIndex: number) => void
   onNonDeliverAll?: (visitIndex: number) => void
+  selectedClient?: any
+  hasMultipleClients?: boolean
 }
 
 export function MapVisitCard({
@@ -32,7 +34,9 @@ export function MapVisitCard({
   onNextPending,
   onClearSelection,
   onDeliverAll,
-  onNonDeliverAll
+  onNonDeliverAll,
+  selectedClient,
+  hasMultipleClients
 }: MapVisitCardProps) {
   
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
@@ -131,10 +135,44 @@ export function MapVisitCard({
               {visit.sequenceNumber}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-                <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                <span className="truncate">{visit.orders?.[0]?.contact?.fullName || 'Sin nombre'}</span>
-              </h3>
+              {hasMultipleClients && selectedClient ? (
+                // Mostrar cliente seleccionado cuando hay múltiples clientes
+                <div className="mb-1">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                    <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                    <span className="truncate text-purple-700">{selectedClient.clientName}</span>
+                  </h3>
+                  <div className="text-xs text-gray-600 mb-1">
+                    <span className="inline-block bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
+                      Cliente seleccionado
+                    </span>
+                    {selectedClient.orderIndexes && selectedClient.orderIndexes.length > 1 && (
+                      <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded ml-1 text-xs">
+                        {selectedClient.orderIndexes.length} órdenes
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ) : hasMultipleClients ? (
+                // Mostrar múltiples clientes cuando no hay selección específica
+                <div className="mb-1">
+                  <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                    <Users className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                    <span className="text-indigo-700">Múltiples clientes</span>
+                  </h3>
+                  <div className="text-xs text-gray-600 mb-1">
+                    <span className="inline-block bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">
+                      Selecciona un cliente arriba
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                // Mostrar cliente único
+                <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
+                  <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
+                  <span className="truncate">{visit.orders?.[0]?.contact?.fullName || 'Sin nombre'}</span>
+                </h3>
+              )}
               <p className="text-xs text-gray-600 flex items-start mb-2">
                 <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
                 <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
