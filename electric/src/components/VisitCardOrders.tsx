@@ -247,10 +247,10 @@ export function VisitCardOrders({
               <div className="flex items-center space-x-3">
                 <User className="w-5 h-5 text-indigo-600" />
                 <div className="flex-1">
-                  <h3 className="text-base font-bold text-gray-800">
+                  <h3 className="text-sm font-bold text-gray-800">
                     {clientName}
                   </h3>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-xs text-gray-600">
                     {clientOrders.length} {clientOrders.length === 1 ? 'orden' : 'órdenes'}
                   </span>
                 </div>

@@ -28,12 +28,12 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode =
           {viewMode === 'list' ? (
             // En modo lista: solo dirección prominente
             <>
-              <h3 className="text-lg font-bold text-gray-800 flex items-center">
-                <MapPin className="w-5 h-5 mr-2 text-gray-600" />
+              <h3 className="text-base font-bold text-gray-800 flex items-center">
+                <MapPin className="w-4 h-4 mr-2 text-gray-600" />
                 {visit.addressInfo?.addressLine1}
               </h3>
               {hasMultipleClients && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   {uniqueClients.length} clientes
                 </p>
               )}
