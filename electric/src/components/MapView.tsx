@@ -86,7 +86,7 @@ export function MapView({
         .filter(({ visit }) => visit.addressInfo?.addressLine1 === selectedAddress)
         .map(({ visit, index }) => ({
           index,
-          clientName: visit.addressInfo?.contact?.fullName || 'Sin nombre',
+          clientName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre',
           hasPendingUnits: (visit.orders || []).some((order: any, orderIndex: number) =>
             (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
               getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
@@ -107,7 +107,7 @@ export function MapView({
         addressGroups[address].push({
           visit,
           index,
-          clientName: visit.addressInfo?.contact?.fullName || 'Sin nombre',
+          clientName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre',
           hasPendingUnits: (visit.orders || []).some((order: any, orderIndex: number) =>
             (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
               getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
@@ -143,7 +143,7 @@ export function MapView({
     clientsAtSameLocation,
     hasMultipleClients,
     totalVisits: visits.length,
-    addresses: visits.map((v, i) => ({ index: i, address: v.addressInfo?.addressLine1, client: v.addressInfo?.contact?.fullName }))
+    addresses: visits.map((v, i) => ({ index: i, address: v.addressInfo?.addressLine1, client: v.orders?.[0]?.contact?.fullName }))
   })
   // Estado para el pin de GPS del conductor
   const [gpsActive, setGpsActive] = useState(false)
@@ -475,7 +475,7 @@ export function MapView({
         })
         
         // Agregar tooltip con información de la visita
-        const visitInfo = v?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
+        const visitInfo = v?.orders?.[0]?.contact?.fullName || `Visita ${sequenceNumber}`
         marker.bindTooltip(visitInfo, {
           permanent: false,
           direction: 'top',
@@ -563,7 +563,7 @@ export function MapView({
       
       // Agregar tooltip con información de la visita
       const visit = visits[idx]
-      const visitInfo = visit?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
+      const visitInfo = visit?.orders?.[0]?.contact?.fullName || `Visita ${sequenceNumber}`
       marker.bindTooltip(visitInfo, {
         permanent: false,
         direction: 'top',

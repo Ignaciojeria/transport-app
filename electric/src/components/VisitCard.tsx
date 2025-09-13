@@ -14,6 +14,7 @@ interface VisitCardProps {
   onOpenGroupedNonDelivery?: (visitIndex: number, group: DeliveryGroup) => void
   getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, uIdx: number) => 'delivered' | 'not-delivered' | undefined
   shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean
+  viewMode?: 'list' | 'map' // Nuevo prop para controlar agrupación
 }
 
 export function VisitCard({
@@ -26,7 +27,8 @@ export function VisitCard({
   onOpenGroupedDelivery,
   onOpenGroupedNonDelivery,
   getDeliveryUnitStatus,
-  shouldRenderByTab
+  shouldRenderByTab,
+  viewMode = 'list'
 }: VisitCardProps) {
   // Solo mostrar si tiene elementos pendientes para el tab actual
   const matchesForTab: number = (visit?.orders || []).reduce(
@@ -67,6 +69,7 @@ export function VisitCard({
                       onOpenGroupedNonDelivery={onOpenGroupedNonDelivery}
                       getDeliveryUnitStatus={getDeliveryUnitStatus}
                       shouldRenderByTab={shouldRenderByTab}
+                      viewMode={viewMode}
                     />
       </div>
     </div>

@@ -21,7 +21,6 @@ export interface PoliticalArea {
 export interface AddressInfo {
   addressLine1: string
   addressLine2: string
-  contact: Contact
   coordinates: Coordinates
   politicalArea: PoliticalArea
   zipCode: string
@@ -37,7 +36,6 @@ export interface Location {
 }
 
 export interface VehicleCapacity {
-  deliveryUnitsQuantity: number
   insurance: number
   volume: number
   weight: number
@@ -86,15 +84,14 @@ export interface DeliveryUnit {
 }
 
 export interface Order {
+  contact: Contact
   deliveryUnits: DeliveryUnit[]
-  documentID: string
+  instructions: string
   referenceID: string
 }
 
 export interface Visit {
   addressInfo: AddressInfo
-  deliveryInstructions: string
-  instructions: string
   nodeInfo: NodeInfo
   orders: Order[]
   sequenceNumber: number
@@ -107,7 +104,6 @@ export interface Visit {
 export interface Route {
   id: number
   createdAt: string
-  documentID: string
   geometry: Geometry
   planReferenceID: string
   referenceID: string

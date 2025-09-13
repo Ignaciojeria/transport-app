@@ -1018,6 +1018,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             onOpenGroupedNonDelivery={openGroupedNonDeliveryFor}
             getDeliveryUnitStatus={getDeliveryUnitStatus}
             shouldRenderByTab={shouldRenderByTab}
+            viewMode="list"
           />
         ))}
       </div>

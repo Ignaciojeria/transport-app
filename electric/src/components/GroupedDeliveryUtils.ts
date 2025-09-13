@@ -118,7 +118,7 @@ export function groupDeliveryUnitsByAddressForNextVisit(
   
   visits.forEach((visit: any, visitIndex: number) => {
     const address = visit.addressInfo?.addressLine1 || 'Sin dirección'
-    const clientName = visit.addressInfo?.contact?.fullName || 'Sin nombre'
+    const clientName = visit.orders?.[0]?.contact?.fullName || 'Sin nombre'
     
     // Contar unidades totales y pendientes para esta visita
     let totalUnits = 0

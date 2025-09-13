@@ -16,7 +16,7 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCar
         <div className="flex-1 min-w-0">
           <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
             <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-            <span className="truncate">{visit.addressInfo?.contact?.fullName}</span>
+            <span className="truncate">{visit.orders?.[0]?.contact?.fullName || 'Sin nombre'}</span>
           </h3>
           <p className="text-xs text-gray-600 flex items-start mb-2">
             <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />

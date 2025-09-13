@@ -14,6 +14,7 @@ interface VisitCardOrdersProps {
   onOpenGroupedNonDelivery?: (visitIndex: number, group: DeliveryGroup) => void
   getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, uIdx: number) => 'delivered' | 'not-delivered' | undefined
   shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean
+  viewMode?: 'list' | 'map' // Nuevo prop para controlar agrupación
 }
 
 export function VisitCardOrders({
@@ -25,10 +26,14 @@ export function VisitCardOrders({
   onOpenGroupedDelivery,
   onOpenGroupedNonDelivery,
   getDeliveryUnitStatus,
-  shouldRenderByTab
+  shouldRenderByTab,
+  viewMode = 'list'
 }: VisitCardOrdersProps) {
-  // Obtener grupos de delivery units agrupables
-  const deliveryGroups = groupDeliveryUnitsByLocation(visit, visitIndex, getDeliveryUnitStatus)
+  // Solo agrupar en modo mapa, no en modo lista
+  const shouldGroup = viewMode === 'map'
+  
+  // Obtener grupos de delivery units agrupables solo si estamos en modo mapa
+  const deliveryGroups = shouldGroup ? groupDeliveryUnitsByLocation(visit, visitIndex, getDeliveryUnitStatus) : []
   
   // Filtrar grupos que tienen unidades pendientes para el tab actual
   const relevantGroups = deliveryGroups.filter(group => {
@@ -60,7 +65,7 @@ export function VisitCardOrders({
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 flex items-center">
                         <Users className="w-5 h-5 mr-2 text-purple-600" />
-                        {group.addressInfo.contact?.fullName || 'Cliente'}
+                        {group.units?.[0]?.order?.contact?.fullName || 'Cliente'}
                       </h3>
                       <p className="text-sm text-gray-600 flex items-center">
                         <span className="text-gray-500 mr-1">📍</span>
@@ -203,8 +208,8 @@ export function VisitCardOrders({
           }))
           .filter((x: any) => shouldRenderByTab(x.status))
         
-        // Verificar si esta unidad ya está en algún grupo
-        const isInGroup = deliveryGroups.some(group => 
+        // Verificar si esta unidad ya está en algún grupo (solo relevante en modo mapa)
+        const isInGroup = shouldGroup && deliveryGroups.some(group => 
           group.units.some(groupUnit => 
             groupUnit.visitIndex === visitIndex && 
             groupUnit.orderIndex === orderIndex && 

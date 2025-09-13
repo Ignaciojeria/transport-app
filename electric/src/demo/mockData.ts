@@ -8,7 +8,7 @@ const generateUUID = () => {
 };
 
 export const mockRouteData: any ={
-    "documentID": "",
+    "id": 1,
     "referenceID": generateUUID(),
     "createdAt": "2025-09-02T04:37:00Z",
     "planReferenceID": "5bfc89e2-8d23-4b1b-8bb7-b8a1b7b28195",
@@ -16,30 +16,56 @@ export const mockRouteData: any ={
         "plate": "vehicle_A",
         "startLocation": {
             "addressInfo": {
-                "contact": {},
+                "addressLine1": "Punto de inicio",
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.4505803,
                     "longitude": -70.7857318
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {}
+            "nodeInfo": {
+                "referenceID": "NODE-START"
+            }
         },
         "endLocation": {
             "addressInfo": {
-                "contact": {},
-                "coordinates": {},
-                "politicalArea": {}
+                "addressLine1": "Punto de fin",
+                "addressLine2": "",
+                "coordinates": {
+                    "latitude": -33.4505803,
+                    "longitude": -70.7857318
+                },
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {}
+            "nodeInfo": {
+                "referenceID": "NODE-END"
+            }
         },
-        "timeWindow": {},
+        "timeWindow": {
+            "start": "08:00",
+            "end": "18:00"
+        },
         "capacity": {
             "volume": 1000,
             "weight": 1000,
-            "insurance": 1000,
-            "deliveryUnitsQuantity": 1000
-        }
+            "insurance": 1000
+        },
+        "skills": []
     },
     "geometry": {
         "encoding": "polyline",
@@ -51,118 +77,166 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1007, la-florida",
-                "contact": {
-                    "fullName": "Roberto Silva"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5226641,
                     "longitude": -70.5996466
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
+            "nodeInfo": {
+                "referenceID": "NODE-001"
+            },
             "sequenceNumber": 1,
-            "timeWindow": {},
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "roberto.silva@email.com",
+                        "fullName": "Roberto Silva",
+                        "nationalID": "12345678-9",
+                        "phone": "+56912345678"
+                    },
                     "referenceID": "107LA-A",
-                    "documentID": "",
+                    "instructions": "Entregar en recepción del edificio",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-1A",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 },
                 {
+                    "contact": {
+                        "email": "roberto.silva@email.com",
+                        "fullName": "Roberto Silva",
+                        "nationalID": "12345678-9",
+                        "phone": "+56912345678"
+                    },
                     "referenceID": "107LA-B",
-                    "documentID": "",
+                    "instructions": "Entregar en recepción del edificio",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-1B",
                             "items": [
                                 {
                                     "description": "comida enlatada",
-                                    "quantity": 5
+                                    "quantity": 5,
+                                    "sku": "COM-ENL-001"
                                 }
                             ],
                             "volume": 1.5,
                             "weight": 8,
-                            "price": 150
+                            "price": 150,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 },
                 {
+                    "contact": {
+                        "email": "roberto.silva@email.com",
+                        "fullName": "Roberto Silva",
+                        "nationalID": "12345678-9",
+                        "phone": "+56912345678"
+                    },
                     "referenceID": "107LA-C",
-                    "documentID": "",
+                    "instructions": "Entregar en recepción del edificio",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-1C",
                             "items": [
                                 {
                                     "description": "medicamentos",
-                                    "quantity": 2
+                                    "quantity": 2,
+                                    "sku": "MED-001"
                                 }
                             ],
                             "volume": 0.5,
                             "weight": 3,
-                            "price": 75
+                            "price": 75,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 },
                 {
+                    "contact": {
+                        "email": "roberto.silva@email.com",
+                        "fullName": "Roberto Silva",
+                        "nationalID": "12345678-9",
+                        "phone": "+56912345678"
+                    },
                     "referenceID": "107LA-D",
-                    "documentID": "",
+                    "instructions": "Entregar en recepción del edificio",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-1D",
                             "items": [
                                 {
                                     "description": "productos de limpieza",
-                                    "quantity": 3
+                                    "quantity": 3,
+                                    "sku": "LIMP-001"
                                 }
                             ],
                             "volume": 3,
                             "weight": 15,
-                            "price": 200
+                            "price": 200,
+                            "skills": [],
+                            "evidences": []
                         },
                         {
-                            "documentID": "",
                             "lpn": "CODE-1E",
                             "items": [
                                 {
                                     "description": "ropa deportiva",
-                                    "quantity": 2
+                                    "quantity": 2,
+                                    "sku": "ROPA-DEP-001"
                                 }
                             ],
                             "volume": 1,
                             "weight": 5,
-                            "price": 120
+                            "price": 120,
+                            "skills": [],
+                            "evidences": []
                         },
                         {
-                            "documentID": "",
                             "lpn": "CODE-1F",
                             "items": [
                                 {
                                     "description": "herramientas",
-                                    "quantity": 1
+                                    "quantity": 1,
+                                    "sku": "HERR-001"
                                 }
                             ],
                             "volume": 2.5,
                             "weight": 8,
-                            "price": 180
+                            "price": 180,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -172,35 +246,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1007, la-florida",
-                "contact": {
-                    "fullName": "María Pérez"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5226641,
                     "longitude": -70.5996466
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
+            "nodeInfo": {
+                "referenceID": "NODE-002"
+            },
             "sequenceNumber": 2,
-            "timeWindow": {},
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "maria.perez@email.com",
+                        "fullName": "María Pérez",
+                        "nationalID": "98765432-1",
+                        "phone": "+56987654321"
+                    },
                     "referenceID": "107LA-E",
-                    "documentID": "",
+                    "instructions": "Tocar timbre del apartamento 2B",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-1G",
                             "items": [
                                 {
                                     "description": "libros",
-                                    "quantity": 4
+                                    "quantity": 4,
+                                    "sku": "LIB-001"
                                 }
                             ],
                             "volume": 1.2,
                             "weight": 6,
-                            "price": 90
+                            "price": 90,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -210,35 +304,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1007, la-florida",
-                "contact": {
-                    "fullName": "Carlos Mendoza"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5226641,
                     "longitude": -70.5996466
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
+            "nodeInfo": {
+                "referenceID": "NODE-003"
+            },
             "sequenceNumber": 3,
-            "timeWindow": {},
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "carlos.mendoza@email.com",
+                        "fullName": "Carlos Mendoza",
+                        "nationalID": "11223344-5",
+                        "phone": "+56911223344"
+                    },
                     "referenceID": "107LA-F",
-                    "documentID": "",
+                    "instructions": "Llamar antes de llegar",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-1H",
                             "items": [
                                 {
                                     "description": "electrodomésticos",
-                                    "quantity": 1
+                                    "quantity": 1,
+                                    "sku": "ELEC-001"
                                 }
                             ],
                             "volume": 4,
                             "weight": 25,
-                            "price": 350
+                            "price": 350,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -248,35 +362,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1016, Piso 17, la-florida",
-                "contact": {
-                    "fullName": "Roberto Silva"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5231166,
                     "longitude": -70.5830913
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 6,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-004"
+            },
+            "sequenceNumber": 4,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "roberto.silva2@email.com",
+                        "fullName": "Roberto Silva",
+                        "nationalID": "12345678-9",
+                        "phone": "+56912345678"
+                    },
                     "referenceID": "116LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 17, apartamento A",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-2",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -286,35 +420,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1009, Piso 10, la-florida",
-                "contact": {
-                    "fullName": "Gabriela Torres"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5301395,
                     "longitude": -70.5828204
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 6,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-005"
+            },
+            "sequenceNumber": 5,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "gabriela.torres@email.com",
+                        "fullName": "Gabriela Torres",
+                        "nationalID": "55667788-9",
+                        "phone": "+56955667788"
+                    },
                     "referenceID": "109LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 10, apartamento B",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-3",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -324,35 +478,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1000, Piso 1, la-florida",
-                "contact": {
-                    "fullName": "Ignacio Jeria"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5304825,
                     "longitude": -70.5854977
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
+            "nodeInfo": {
+                "referenceID": "NODE-006"
+            },
             "sequenceNumber": 6,
-            "timeWindow": {},
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "ignacio.jeria@email.com",
+                        "fullName": "Ignacio Jeria",
+                        "nationalID": "99887766-5",
+                        "phone": "+56999887766"
+                    },
                     "referenceID": "100LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 1, apartamento C",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-4",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -362,35 +536,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1006, Piso 7, la-florida",
-                "contact": {
-                    "fullName": "Roberto Silva"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5414441,
                     "longitude": -70.5872566
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 6,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-007"
+            },
+            "sequenceNumber": 7,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "roberto.silva3@email.com",
+                        "fullName": "Roberto Silva",
+                        "nationalID": "12345678-9",
+                        "phone": "+56912345678"
+                    },
                     "referenceID": "106LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 7, apartamento D",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-5",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -400,35 +594,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1013, Piso 14, la-florida",
-                "contact": {
-                    "fullName": "Ana Rodriguez"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5466664,
                     "longitude": -70.5596647
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 6,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-008"
+            },
+            "sequenceNumber": 8,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "ana.rodriguez@email.com",
+                        "fullName": "Ana Rodriguez",
+                        "nationalID": "44556677-8",
+                        "phone": "+56944556677"
+                    },
                     "referenceID": "113LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 14, apartamento E",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-6",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -438,35 +652,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1015, Piso 16, la-florida",
-                "contact": {
-                    "fullName": "Lucia Herrera"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5384557,
                     "longitude": -70.5767166
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 7,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-009"
+            },
+            "sequenceNumber": 9,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "lucia.herrera@email.com",
+                        "fullName": "Lucia Herrera",
+                        "nationalID": "33445566-7",
+                        "phone": "+56933445566"
+                    },
                     "referenceID": "115LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 16, apartamento F",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-7",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -476,35 +710,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1018, Piso 19, la-florida",
-                "contact": {
-                    "fullName": "Fernando Castro"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5341326,
                     "longitude": -70.5560076
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 8,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-010"
+            },
+            "sequenceNumber": 10,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "fernando.castro@email.com",
+                        "fullName": "Fernando Castro",
+                        "nationalID": "22334455-6",
+                        "phone": "+56922334455"
+                    },
                     "referenceID": "118LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 19, apartamento G",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-8",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }
@@ -514,35 +768,55 @@ export const mockRouteData: any ={
             "type": "delivery",
             "addressInfo": {
                 "addressLine1": "Calle 1002, Piso 3, la-florida",
-                "contact": {
-                    "fullName": "Maria Perez"
-                },
+                "addressLine2": "",
                 "coordinates": {
                     "latitude": -33.5332085,
                     "longitude": -70.5516135
                 },
-                "politicalArea": {}
+                "politicalArea": {
+                    "adminAreaLevel1": "",
+                    "adminAreaLevel2": "",
+                    "adminAreaLevel3": "",
+                    "adminAreaLevel4": "",
+                    "code": ""
+                },
+                "zipCode": ""
             },
-            "nodeInfo": {},
-            "sequenceNumber": 9,
-            "timeWindow": {},
+            "nodeInfo": {
+                "referenceID": "NODE-011"
+            },
+            "sequenceNumber": 11,
+            "serviceTime": 300,
+            "timeWindow": {
+                "start": "09:00",
+                "end": "17:00"
+            },
+            "unassignedReason": "",
             "orders": [
                 {
+                    "contact": {
+                        "email": "maria.perez2@email.com",
+                        "fullName": "Maria Perez",
+                        "nationalID": "11223344-5",
+                        "phone": "+56911223344"
+                    },
                     "referenceID": "102LA",
-                    "documentID": "",
+                    "instructions": "Entregar en piso 3, apartamento H",
                     "deliveryUnits": [
                         {
-                            "documentID": "",
                             "lpn": "CODE-9",
                             "items": [
                                 {
                                     "description": "bebida 350ml",
-                                    "quantity": 13
+                                    "quantity": 13,
+                                    "sku": "BEB-350-001"
                                 }
                             ],
                             "volume": 2,
                             "weight": 12,
-                            "price": 100
+                            "price": 100,
+                            "skills": [],
+                            "evidences": []
                         }
                     ]
                 }

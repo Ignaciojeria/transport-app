@@ -72,7 +72,7 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
             // Mostrar cliente individual
             <h4 className="text-sm font-bold text-gray-800 flex items-center mb-1">
               <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-              <span className="truncate">{nextVisit.addressInfo?.contact?.fullName}</span>
+              <span className="truncate">{nextVisit.orders?.[0]?.contact?.fullName || 'Sin nombre'}</span>
             </h4>
           )}
           <p className="text-xs text-gray-600 flex items-start">
