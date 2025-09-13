@@ -1,6 +1,6 @@
 import { VisitCardDeliveryUnit } from './VisitCardDeliveryUnit'
 import { groupDeliveryUnitsByLocation, hasGroupPendingUnits, getGroupPendingUnits, type DeliveryGroup } from './GroupedDeliveryUtils'
-import { Package, Users, User } from 'lucide-react'
+import { Package, Package2, Users, User } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
 import { OrderCard, DeliveryUnitCard } from './OrderCard'
 
@@ -122,7 +122,7 @@ export function VisitCardOrders({
                     <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-3 py-2 rounded-lg border border-gray-200">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <Package className="w-4 h-4 text-gray-600" />
+                          <Package2 className="w-4 h-4 text-gray-600" />
                           <span className="font-medium text-gray-800">
                             Orden: {referenceID}
                           </span>
@@ -269,9 +269,12 @@ export function VisitCardOrders({
                   {/* Información de la orden */}
                   <div className="mb-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
-                        📦 Orden: {order.referenceID || `#${orderIndex + 1}`}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <Package2 className="w-4 h-4 text-gray-600" />
+                        <span className="text-sm font-medium text-gray-700">
+                          Orden: {order.referenceID || `#${orderIndex + 1}`}
+                        </span>
+                      </div>
                       <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                         {orderUnits.length} {orderUnits.length === 1 ? 'unidad' : 'unidades'}
                       </span>

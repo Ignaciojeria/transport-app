@@ -448,7 +448,10 @@ export function MapVisitCard({
                             className="mb-2"
                           />
                         </div>
-                        <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">Unidad de Entrega {uIdx + 1}</h5>
+                         <h5 className="text-sm font-medium text-gray-800 mb-2 truncate flex items-center">
+                           <Package className="w-4 h-4 mr-2 text-gray-600" />
+                           Unidad de Entrega {uIdx + 1}
+                         </h5>
                         {Array.isArray(unit.items) && unit.items.length > 0 && (
                           <div className="flex items-center space-x-1 mb-2">
                             <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>

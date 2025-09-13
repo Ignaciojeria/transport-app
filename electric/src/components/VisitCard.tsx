@@ -1,4 +1,3 @@
-import { Package } from 'lucide-react'
 import { VisitCardHeader } from './VisitCardHeader'
 import { VisitCardOrders } from './VisitCardOrders'
 import type { DeliveryGroup } from './GroupedDeliveryUtils'
@@ -55,10 +54,6 @@ export function VisitCard({
                   />
       
       <div className="p-4">
-        <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
-          <Package size={18} />
-          <span className="ml-2">Unidades de Entrega:</span>
-        </h4>
 
                             <VisitCardOrders
                       visit={visit}

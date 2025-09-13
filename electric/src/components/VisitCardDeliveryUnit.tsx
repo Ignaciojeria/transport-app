@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle, Package } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
 
 interface VisitCardDeliveryUnitProps {
@@ -36,50 +36,51 @@ export function VisitCardDeliveryUnit({
   }
 
   return (
-    <div
-      className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}
-    >
-      <div className="flex justify-between items-start mb-2">
-        <div className="flex-1 min-w-0">
-          {/* Identificadores prominentes */}
-          <div className="mb-2">
-            <IdentifierBadge 
-              lpn={unit.lpn} 
-              referenceID={orderReferenceID}
-              size="sm"
-              className="mb-2"
-            />
-          </div>
-          <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">
+    <div className="bg-white rounded-lg p-4 border border-gray-200">
+      {/* Badge prominente */}
+      <div className="mb-3">
+        <span className="inline-block bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-medium">
+          {orderReferenceID || `CODE-${uIdx + 1}`}
+        </span>
+      </div>
+
+      <div className="flex justify-between items-start">
+        <div className="flex-1">
+          {/* Título de la unidad */}
+          <h5 className="text-base font-medium text-gray-800 mb-3 flex items-center">
+            <Package className="w-4 h-4 mr-2 text-gray-600" />
             Unidad de Entrega {uIdx + 1}
           </h5>
-          {Array.isArray(unit.items) && unit.items.length > 0 && (
-            <div className="flex items-center space-x-1 mb-2">
-              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-              <span className="text-xs text-gray-700 truncate">
-                {unit.items[0]?.description}
-              </span>
+
+          {/* Información del producto */}
+          <div className="space-y-1 text-sm text-gray-600">
+            {Array.isArray(unit.items) && unit.items.length > 0 && (
+              <div className="flex items-center">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                <span>{unit.items[0]?.description}</span>
+              </div>
+            )}
+            <div className="flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              <span>{typeof unit.weight === 'number' ? `${unit.weight}kg` : unit.weight}</span>
             </div>
-          )}
-          <div className="flex items-center space-x-3 text-xs text-gray-600">
-            <span className="flex items-center">
-              <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1"></span>
-              {typeof unit.weight === 'number' ? `${unit.weight}kg` : unit.weight}
-            </span>
-            <span className="flex items-center">
-              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>
-              {typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}
-            </span>
+            <div className="flex items-center">
+              <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+              <span>{typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}</span>
+            </div>
           </div>
+
           {status === 'delivered' && (
-            <div className="mt-2 inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+            <div className="mt-3 inline-flex items-center text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
               <CheckCircle className="w-3 h-3 mr-1" /> Evidencia registrada
             </div>
           )}
         </div>
-        <div className="text-right ml-3">
+
+        {/* Cantidad en la esquina derecha */}
+        <div className="text-right ml-4">
           <span className="text-xs text-gray-500 block">Cant.</span>
-          <span className="text-xl font-bold text-indigo-600">
+          <span className="text-2xl font-bold text-indigo-600">
             {(unit.items || []).reduce((a: number, it: any) => a + (Number(it?.quantity) || 0), 0)}
           </span>
         </div>

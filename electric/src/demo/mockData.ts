@@ -76,6 +76,17 @@ export const mockRouteData: any ={
                             "volume": 2,
                             "weight": 12,
                             "price": 100
+                        },
+                        {
+                            "items": [
+                                {
+                                    "description": "bebida 350ml",
+                                    "quantity": 13
+                                }
+                            ],
+                            "volume": 2,
+                            "weight": 12,
+                            "price": 100
                         }
                     ]
                 }
