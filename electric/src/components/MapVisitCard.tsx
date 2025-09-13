@@ -43,6 +43,28 @@ export function MapVisitCard({
   hasMultipleClients
 }: MapVisitCardProps) {
   
+  // Helper para verificar si un cliente tiene entregas parciales
+  const hasClientPartialDeliveries = (clientName: string) => {
+    const clientOrders = (visit.orders || []).filter((order: any) => 
+      order.contact?.fullName === clientName
+    )
+    let totalClientUnits = 0
+    let deliveredClientUnits = 0
+    
+    clientOrders.forEach((order: any) => {
+      const orderIndex = (visit.orders || []).indexOf(order)
+      ;(order.deliveryUnits || []).forEach((_unit: any, unitIndex: number) => {
+        totalClientUnits++
+        const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+        if (status === 'delivered') {
+          deliveredClientUnits++
+        }
+      })
+    })
+    
+    return deliveredClientUnits > 0 && deliveredClientUnits < totalClientUnits
+  }
+  
   const getStatusColor = (status?: 'delivered' | 'not-delivered') => {
     switch (status) {
       case 'delivered':
@@ -268,8 +290,8 @@ export function MapVisitCard({
                   <CheckCircle className="w-4 h-4" />
                   <span>
                     {hasMultipleClients && selectedClient 
-                      ? `Entregar todo (${selectedClient.clientName})`
-                      : visitStats.isPartiallyDelivered ? 'Entregar restante' : 'Entregar todo'
+                      ? (hasClientPartialDeliveries(selectedClient.clientName) ? 'Entregar restantes' : 'Entregar todo')
+                      : (visitStats.isPartiallyDelivered ? 'Entregar restantes' : 'Entregar todo')
                     }
                   </span>
                 </button>
@@ -329,8 +351,8 @@ export function MapVisitCard({
                   <XCircle className="w-4 h-4" />
                   <span>
                     {hasMultipleClients && selectedClient 
-                      ? `No entregar todo (${selectedClient.clientName})`
-                      : visitStats.isPartiallyDelivered ? 'No entregar restante' : 'No entregar todo'
+                      ? (hasClientPartialDeliveries(selectedClient.clientName) ? 'No entregar restantes' : 'No entregar todo')
+                      : (visitStats.isPartiallyDelivered ? 'No entregar restantes' : 'No entregar todo')
                     }
                   </span>
                 </button>
