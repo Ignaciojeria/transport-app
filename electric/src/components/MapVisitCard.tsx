@@ -76,6 +76,7 @@ export function MapVisitCard({
   }
 
   // Calcular estadísticas de la visita (filtradas por cliente seleccionado si aplica)
+  // Estadísticas para el cliente seleccionado (o toda la visita si no hay múltiples clientes)
   const visitStats = (() => {
     let totalUnits = 0
     let pendingUnits = 0
@@ -117,10 +118,46 @@ export function MapVisitCard({
     }
   })()
 
+  // Estadísticas para TODA la visita (independiente del cliente seleccionado)
+  // Esto se usa para determinar si habilitar el botón "Siguiente a entregar"
+  const allVisitStats = (() => {
+    let totalUnits = 0
+    let pendingUnits = 0
+    let deliveredUnits = 0
+    let notDeliveredUnits = 0
+
+    // SIEMPRE calcular para todas las órdenes de la visita
+    const allOrders = visit.orders || []
+
+    allOrders.forEach((order: any, orderIndex: number) => {
+      order.deliveryUnits?.forEach((_unit: any, unitIndex: number) => {
+        totalUnits++
+        const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+        if (status === 'delivered') {
+          deliveredUnits++
+        } else if (status === 'not-delivered') {
+          notDeliveredUnits++
+        } else {
+          pendingUnits++
+        }
+      })
+    })
+
+    return {
+      totalUnits,
+      pendingUnits,
+      deliveredUnits,
+      notDeliveredUnits,
+      hasPendingUnits: pendingUnits > 0,
+      hasDeliveredUnits: deliveredUnits > 0,
+      isPartiallyDelivered: deliveredUnits > 0 && pendingUnits > 0
+    }
+  })()
+
   return (
     <div className="p-4 space-y-4">
-      {/* Sección "Siguiente a Entregar" cuando la visita actual está completamente gestionada */}
-      {!visitStats.hasPendingUnits && hasNextPending && (
+      {/* Sección "Siguiente a Entregar" cuando TODA la visita está completamente gestionada */}
+      {!allVisitStats.hasPendingUnits && hasNextPending && (
         <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border-2 border-green-200 p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-green-800 flex items-center">
