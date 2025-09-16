@@ -43,7 +43,10 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
   )
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-4 mb-4">
+    <div 
+      className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200 p-4 mb-4 cursor-pointer"
+      onClick={() => onCenterOnVisit(nextIdx)}
+    >
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold text-blue-800 flex items-center">
           <Play className="w-4 h-4 mr-2" />
@@ -55,7 +58,10 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
           </span>
           {viewMode === 'map' && hasMultipleClients && (
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={(e) => {
+                e.stopPropagation()
+                setIsExpanded(!isExpanded)
+              }}
               className="w-6 h-6 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded-full flex items-center justify-center transition-all duration-200"
               aria-label={isExpanded ? "Contraer detalles" : "Expandir detalles"}
             >
@@ -94,14 +100,6 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
             </p>
           )}
         </div>
-        <button
-          onClick={() => onCenterOnVisit(nextIdx)}
-          className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
-          aria-label={`Ver en mapa - Visita ${nextVisit.sequenceNumber}`}
-          title="Ver en mapa"
-        >
-          <MapPin className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Acordeón expandible para modo mapa */}
