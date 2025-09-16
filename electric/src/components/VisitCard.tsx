@@ -45,11 +45,12 @@ export function VisitCard({
   if (matchesForTab === 0) return null
 
   return (
-    <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 active:scale-98">
+    <div 
+      className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden border border-gray-100 active:scale-98 cursor-pointer"
+      onClick={() => onCenterOnVisit(visitIndex)}
+    >
                         <VisitCardHeader
                     visit={visit}
-                    visitIndex={visitIndex}
-                    onCenterOnVisit={onCenterOnVisit}
                     viewMode={viewMode}
                   />
       

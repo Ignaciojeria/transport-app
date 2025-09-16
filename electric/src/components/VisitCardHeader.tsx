@@ -1,14 +1,12 @@
-import { User, MapPin, Users } from 'lucide-react'
+import { User, Users, MapPin } from 'lucide-react'
 import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardHeaderProps {
   visit: any
-  visitIndex: number
-  onCenterOnVisit: (visitIndex: number) => void
   viewMode?: 'list' | 'map'
 }
 
-export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode = 'list' }: VisitCardHeaderProps) {
+export function VisitCardHeader({ visit, viewMode = 'list' }: VisitCardHeaderProps) {
   const { t } = useLanguage()
   
   // Obtener todos los clientes únicos de la visita
@@ -71,18 +69,6 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode =
           )}
         </div>
 
-        {/* Botón del pin */}
-        <button
-          onClick={() => {
-            console.log('📍 PIN CLICKED! visitIndex:', visitIndex, 'sequenceNumber:', visit.sequenceNumber)
-            onCenterOnVisit(visitIndex)
-          }}
-          className="w-10 h-10 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
-          aria-label={`Ver en mapa - Visita ${visit.sequenceNumber}`}
-          title="Ver en mapa"
-        >
-          <MapPin className="w-5 h-5" />
-        </button>
       </div>
     </div>
   )

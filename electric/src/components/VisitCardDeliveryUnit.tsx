@@ -87,7 +87,10 @@ export function VisitCardDeliveryUnit({
           {status === 'delivered' ? (
             // Si está entregado, mostrar solo opción de cambiar a no entregado
             <button
-              onClick={() => onOpenNonDelivery(visitIndex, orderIndex, uIdx)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenNonDelivery(visitIndex, orderIndex, uIdx)
+              }}
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
             >
               <XCircle size={16} />
@@ -96,7 +99,10 @@ export function VisitCardDeliveryUnit({
           ) : status === 'not-delivered' ? (
             // Si está no entregado, mostrar solo opción de cambiar a entregado
             <button
-              onClick={() => onOpenDelivery(visitIndex, orderIndex, uIdx)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpenDelivery(visitIndex, orderIndex, uIdx)
+              }}
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
             >
               <CheckCircle size={16} />
@@ -106,14 +112,20 @@ export function VisitCardDeliveryUnit({
             // Si está pendiente, mostrar ambas opciones originales
             <>
               <button
-                onClick={() => onOpenDelivery(visitIndex, orderIndex, uIdx)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenDelivery(visitIndex, orderIndex, uIdx)
+                }}
                 className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
               >
                 <CheckCircle size={16} />
                 <span>{t.delivery.deliver}</span>
               </button>
               <button
-                onClick={() => onOpenNonDelivery(visitIndex, orderIndex, uIdx)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpenNonDelivery(visitIndex, orderIndex, uIdx)
+                }}
                 className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
               >
                 <XCircle size={16} />
