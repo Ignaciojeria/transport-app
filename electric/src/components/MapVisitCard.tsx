@@ -6,7 +6,6 @@ interface MapVisitCardProps {
   visit: any
   displayIdx: number
   isSelectedVisit: boolean
-  isProcessed: boolean
   hasNextPending: boolean
   nextPendingIdx: number | null
   routeStarted: boolean
@@ -27,7 +26,6 @@ export function MapVisitCard({
   visit,
   displayIdx,
   isSelectedVisit,
-  isProcessed,
   hasNextPending,
   nextPendingIdx,
   routeStarted,

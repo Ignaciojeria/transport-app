@@ -932,55 +932,8 @@ export function MapView({
   const autoNext = getNextPendingVisitIndex()
   const isSelectedVisit = displayIdx !== autoNext || nextVisitIndex !== null || lastCenteredVisit !== null || (markerPosition && (Date.now() - markerPosition.timestamp) < 30000)
   
-  // Verificar si la visita actual ya está procesada
-  const visitStatus = getVisitStatus(visit, getDeliveryUnitStatus, displayIdx)
+  // La lógica de procesamiento ahora se maneja directamente en MapVisitCard usando visitStats
   
-  // Verificar si hay otras visitas en la misma dirección que aún no han sido procesadas
-  const currentAddress = visit.addressInfo?.addressLine1 || 'Sin dirección'
-  const visitsAtSameAddress = visits.filter(v => 
-    v.addressInfo?.addressLine1 === currentAddress && v !== visit
-  )
-  
-  // Una visita se considera procesada solo si:
-  // 1. TODOS los clientes de la visita actual han sido gestionados Y
-  // 2. No hay otras visitas en la misma dirección con unidades pendientes
-  
-  // Verificar si todos los clientes de la visita actual han sido gestionados
-  const allClientsProcessed = (() => {
-    if (!hasMultipleClients || !selectedClient) {
-      // Si no hay múltiples clientes o no hay cliente seleccionado, usar lógica original
-      return visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial'
-    }
-    
-    // Si hay múltiples clientes, verificar que TODOS los clientes hayan sido gestionados
-    const uniqueClients = Array.from(new Set(
-      (visit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
-    ))
-    
-    return uniqueClients.every(clientName => {
-      // Verificar si todas las unidades de este cliente han sido gestionadas
-      const clientOrders = (visit.orders || []).filter((order: any) => 
-        order.contact?.fullName === clientName
-      )
-      
-      return clientOrders.every((order: any) => {
-        const orderIndex = (visit.orders || []).indexOf(order)
-        return (order.deliveryUnits || []).every((_unit: any, unitIndex: number) => {
-          const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
-          return status === 'delivered' || status === 'not-delivered'
-        })
-      })
-    })
-  })()
-  
-  const hasOtherVisitsAtSameAddress = visitsAtSameAddress.length > 0
-  const otherVisitsProcessed = hasOtherVisitsAtSameAddress ? 
-    visitsAtSameAddress.every(otherVisit => {
-      const otherVisitStatus = getVisitStatus(otherVisit, getDeliveryUnitStatus, visits.indexOf(otherVisit))
-      return otherVisitStatus === 'completed' || otherVisitStatus === 'not-delivered' || otherVisitStatus === 'partial'
-    }) : true
-  
-  const isProcessed = allClientsProcessed && otherVisitsProcessed
   
   const nextPendingIdx = getNextPendingVisitIndex()
   const hasNextPending = typeof nextPendingIdx === 'number' && nextPendingIdx !== displayIdx
@@ -1080,7 +1033,6 @@ export function MapView({
         visit={visit}
         displayIdx={displayIdx}
         isSelectedVisit={isSelectedVisit}
-        isProcessed={isProcessed}
         hasNextPending={hasNextPending}
         nextPendingIdx={nextPendingIdx}
         routeStarted={routeStarted}
