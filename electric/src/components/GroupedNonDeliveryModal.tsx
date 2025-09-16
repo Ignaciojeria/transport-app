@@ -83,7 +83,7 @@ export function GroupedNonDeliveryModal({
           failure: {
             reason: finalReason.trim(),
             detail: `No entrega grupal: ${finalReason.trim()}`,
-            referenceID: `${routeData?.documentID || 'route'}-${visitIndex}-${unit.orderIndex}-${unit.uIdx}`
+            referenceID: `${routeData?.referenceID || 'route'}-${visitIndex}-${unit.orderIndex}-${unit.uIdx}`
           }
         },
         evidencePhotos: [{
@@ -93,9 +93,9 @@ export function GroupedNonDeliveryModal({
         }],
         items: unit.unit.items || [],
         lpn: unit.unit.lpn || '',
-        orderReferenceID: `${routeData?.documentID || 'route'}-${visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
+        orderReferenceID: `${routeData?.referenceID || 'route'}-${visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
         recipient: {
-          fullName: group.addressInfo.contact?.fullName || '',
+          fullName: group.primaryContact?.fullName || '',
           nationalID: ''
         }
       })),
@@ -105,7 +105,6 @@ export function GroupedNonDeliveryModal({
       },
       route: {
         id: routeData?.id || 0,
-        documentID: routeData?.documentID || '',
         referenceID: routeData?.referenceID || '',
         sequenceNumber: 0,
         startedAt: new Date().toISOString()
@@ -131,7 +130,7 @@ export function GroupedNonDeliveryModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{t.delivery.notDeliverAll}</h2>
-              <p className="text-sm text-gray-600">{group.totalUnits} {t.groupedNonDeliveryModal.unitsFor} {group.addressInfo.contact?.fullName}</p>
+              <p className="text-sm text-gray-600">{group.totalUnits} {t.groupedNonDeliveryModal.unitsFor} {group.primaryContact?.fullName}</p>
             </div>
           </div>
           <button
@@ -172,7 +171,6 @@ export function GroupedNonDeliveryModal({
                       <div className="mb-2">
                         <IdentifierBadge 
                           lpn={unit.unit.lpn} 
-                          code={unit.unit.code} 
                           size="sm"
                         />
                       </div>

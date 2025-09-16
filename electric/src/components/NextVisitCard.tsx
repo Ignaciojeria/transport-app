@@ -1,4 +1,4 @@
-import { Play, User, MapPin, Users, ChevronDown, ChevronUp, Package } from 'lucide-react'
+import { Play, User, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
 import { useState } from 'react'
 import { IdentifierBadge } from './IdentifierBadge'
 import { useLanguage } from '../hooks/useLanguage'
@@ -113,7 +113,7 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="text-sm font-semibold text-gray-800 flex items-center">
                     <User className="w-3 h-3 mr-1 text-gray-600" />
-                    {visit.addressInfo?.contact?.fullName}
+                    {visit.orders?.[0]?.contact?.fullName}
                   </h5>
                   <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                     #{visit.sequenceNumber}
@@ -137,7 +137,6 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
                           <div key={unitIndex} className="mb-2">
                             <IdentifierBadge 
                               lpn={unit.lpn} 
-                              code={unit.code} 
                               size="sm"
                               className="mb-1"
                             />

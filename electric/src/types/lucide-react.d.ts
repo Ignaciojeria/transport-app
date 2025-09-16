@@ -26,6 +26,8 @@ declare module 'lucide-react' {
   export const AlertCircle: React.FC<IconProps>
   export const ChevronDown: React.FC<IconProps>
   export const ChevronUp: React.FC<IconProps>
+  export const Tag: React.FC<IconProps>
+  export const Package2: React.FC<IconProps>
 }
 
 

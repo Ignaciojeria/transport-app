@@ -1,8 +1,7 @@
 import { VisitCardDeliveryUnit } from './VisitCardDeliveryUnit'
 import { groupDeliveryUnitsByLocation, hasGroupPendingUnits, getGroupPendingUnits, type DeliveryGroup } from './GroupedDeliveryUtils'
 import { Package, Package2, Users, User } from 'lucide-react'
-import { IdentifierBadge } from './IdentifierBadge'
-import { OrderCard, DeliveryUnitCard } from './OrderCard'
+import { DeliveryUnitCard } from './OrderCard'
 import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardOrdersProps {

@@ -21,21 +21,10 @@ export function VisitCardDeliveryUnit({
   visitIndex,
   orderIndex,
   routeStarted,
-  orderReferenceID,
   onOpenDelivery,
   onOpenNonDelivery
 }: VisitCardDeliveryUnitProps) {
   const { t } = useLanguage()
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return 'bg-green-50 border-green-200'
-      case 'not-delivered':
-        return 'bg-red-50 border-red-200'
-      default:
-        return 'bg-white border-gray-200'
-    }
-  }
 
   return (
     <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border border-gray-200">
@@ -45,7 +34,6 @@ export function VisitCardDeliveryUnit({
           <div className="mb-2">
             <IdentifierBadge 
               lpn={unit.lpn} 
-              code={unit.code} 
               size="sm"
               className="mb-2"
             />

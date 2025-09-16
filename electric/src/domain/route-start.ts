@@ -10,7 +10,6 @@ export interface Driver {
 
 export interface RouteReference {
   id: number
-  documentID: string
   referenceID: string
 }
 

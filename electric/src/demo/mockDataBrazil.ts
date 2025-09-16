@@ -70,6 +70,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 1,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Rua Santa Rita, 156",
         addressLine2: "Praia Grande",
@@ -243,7 +244,8 @@ export const mockRouteBrazil: Route = {
     // Visitas 2-10: Clientes únicos em diferentes locais de Ubatuba
     {
       sequenceNumber: 2,
-      type: "delivery", 
+      type: "delivery",
+      unassignedReason: "", 
       addressInfo: {
         addressLine1: "Av. Leovigildo Dias Vieira, 1200",
         addressLine2: "Itaguá",
@@ -301,6 +303,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 3,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Rua Prof. Thomaz Galhardo, 89",
         addressLine2: "Perequê-Açu", 
@@ -358,6 +361,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 4,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Rua Guarani, 345",
         addressLine2: "Maranduba",
@@ -415,6 +419,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 5,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Av. Marginal, 1567",
         addressLine2: "Enseada",
@@ -472,6 +477,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 6,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Rua das Palmeiras, 234",
         addressLine2: "Toninhas",
@@ -529,6 +535,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 7,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Rua Dr. Otávio Ribeiro, 567",
         addressLine2: "Saco da Ribeira",
@@ -586,6 +593,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 8,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Av. Atlântica, 890",
         addressLine2: "Tenório",
@@ -643,6 +651,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 9,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Rua das Gaivotas, 123",
         addressLine2: "Lazaro",
@@ -700,6 +709,7 @@ export const mockRouteBrazil: Route = {
     {
       sequenceNumber: 10,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "Estrada da Fortaleza, 456",
         addressLine2: "Fortaleza",

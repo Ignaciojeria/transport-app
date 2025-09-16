@@ -35,7 +35,6 @@ export function MapVisitCard({
   openDeliveryFor,
   openNonDeliveryFor,
   onNextPending,
-  onClearSelection,
   onDeliverAll,
   onNonDeliverAll,
   openGroupedDelivery,
@@ -437,7 +436,6 @@ export function MapVisitCard({
                         <div className="mb-2">
                           <IdentifierBadge 
                             lpn={unit.lpn} 
-                            code={unit.code} 
                             size="sm"
                             className="mb-2"
                           />

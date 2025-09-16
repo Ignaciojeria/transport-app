@@ -17,7 +17,6 @@ export function mapRouteStartToGun(
     
     // Datos de la ruta (planos)
     route_id: routeStart.route.id,
-    route_documentID: routeStart.route.documentID,
     route_referenceID: routeStart.route.referenceID,
     
     // Datos del vehículo (planos)
@@ -42,7 +41,6 @@ export function mapGunToRouteStart(
     },
     route: {
       id: gunData.route_id,
-      documentID: gunData.route_documentID,
       referenceID: gunData.route_referenceID
     },
     vehicle: {

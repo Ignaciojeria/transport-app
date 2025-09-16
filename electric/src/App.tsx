@@ -181,7 +181,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         },
         route: {
           id: parseInt(routeDbId || routeId) || 0,
-          documentID: routeId,
           referenceID: routeId
         },
         startedAt: new Date().toISOString(),
@@ -250,7 +249,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       },
       route: {
         id: routeData?.id || 0,
-        documentID: routeData?.documentID || '',
         referenceID: routeData?.referenceID || '',
         sequenceNumber: 0,
         startedAt: new Date().toISOString()
@@ -296,7 +294,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       },
       route: {
         id: routeData?.id || 0,
-        documentID: routeData?.documentID || '',
         referenceID: routeData?.referenceID || '',
         sequenceNumber: 0,
         startedAt: new Date().toISOString()
@@ -356,7 +353,13 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     // Crear un grupo temporal
     const tempGroup: DeliveryGroup = {
       key: `temp-${visitIndex}`,
-      addressInfo: visit.addressInfo,
+      addressInfo: {
+        addressLine1: visit.addressInfo?.addressLine1,
+        coordinates: visit.addressInfo?.coordinates
+      },
+      primaryContact: {
+        fullName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre'
+      },
       units: allUnits.map((unit) => ({
         unit: unit.unit,
         uIdx: unit.uIdx,
@@ -397,7 +400,13 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     // Crear un grupo temporal
     const tempGroup: DeliveryGroup = {
       key: `temp-${visitIndex}`,
-      addressInfo: visit.addressInfo,
+      addressInfo: {
+        addressLine1: visit.addressInfo?.addressLine1,
+        coordinates: visit.addressInfo?.coordinates
+      },
+      primaryContact: {
+        fullName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre'
+      },
       units: allUnits.map((unit) => ({
         unit: unit.unit,
         uIdx: unit.uIdx,
@@ -853,7 +862,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     if (typeof nextIdx !== 'number') return
     const visit = (visits as any)[nextIdx]
     const c = visit?.addressInfo?.coordinates
-    const name = visit?.addressInfo?.contact?.fullName || 'Destino'
+    const name = visit?.orders?.[0]?.contact?.fullName || 'Destino'
     const address = visit?.addressInfo?.addressLine1
     const latlng = Array.isArray(c?.point)
       ? [c.point[1] as number, c.point[0] as number]

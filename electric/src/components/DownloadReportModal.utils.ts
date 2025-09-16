@@ -255,7 +255,7 @@ export function generateCSVContent(units: DeliveryUnitData[], reportData: Report
 
   const rows = units.map(unit => {
     const { visit, visitIndex, order, orderIndex, unit: deliveryUnit, unitIndex, status } = unit
-    const contactInfo = visit?.addressInfo?.contact || {}
+    const contactInfo = order?.contact || {}
     const coordinates = visit?.addressInfo?.coordinates
     const lat = coordinates?.latitude
     const lng = coordinates?.longitude
@@ -356,7 +356,7 @@ export function generateExcelContent(units: DeliveryUnitData[], reportData: Repo
 
   const rows = units.map(unit => {
     const { visit, visitIndex, order, orderIndex, unit: deliveryUnit, unitIndex, status } = unit
-    const contactInfo = visit?.addressInfo?.contact || {}
+    const contactInfo = order?.contact || {}
     const coordinates = visit?.addressInfo?.coordinates
     const lat = coordinates?.latitude
     const lng = coordinates?.longitude

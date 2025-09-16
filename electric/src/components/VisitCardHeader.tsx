@@ -59,7 +59,7 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode =
                 <div>
                   <h3 className="text-base font-medium text-gray-800 flex items-center mb-1">
                     <User className="w-4 h-4 mr-2 text-gray-600" />
-                    {uniqueClients[0] || 'Sin nombre'}
+                    {uniqueClients.length > 0 ? String(uniqueClients[0]) : 'Sin nombre'}
                   </h3>
                   <p className="text-sm text-gray-600 flex items-center">
                     <MapPin className="w-4 h-4 mr-2 text-gray-500" />
