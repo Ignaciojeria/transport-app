@@ -476,7 +476,7 @@ export function MapVisitCard({
               return (
             <div key={orderIndex} className="mb-4">
               <div className="mb-2">
-                <span className="inline-block bg-gradient-to-r from-orange-400 to-red-500 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                <span className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-2 py-1 rounded-lg text-xs font-medium">
                   {order.referenceID}
                 </span>
               </div>

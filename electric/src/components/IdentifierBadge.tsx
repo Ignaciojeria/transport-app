@@ -43,7 +43,7 @@ export function IdentifierBadge({
     <div className={`flex items-center space-x-2 ${className}`}>
       {/* REFERENCE Badge - siempre se muestra si hay referenceID */}
       {hasReferenceID && (
-        <div className="flex items-center space-x-1 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-lg font-medium shadow-sm">
+        <div className="flex items-center space-x-1 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg font-medium shadow-sm">
           {showIcons && <Tag className={iconSizes[size]} />}
           <span className={sizeClasses[size]}>
             REFERENCE: {referenceID}
@@ -53,7 +53,7 @@ export function IdentifierBadge({
 
       {/* LPN Badge - solo se muestra si hay LPN */}
       {hasLPN && (
-        <div className="flex items-center space-x-1 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-lg font-medium shadow-sm">
+        <div className="flex items-center space-x-1 bg-gradient-to-r from-slate-600 to-slate-700 text-white rounded-lg font-medium shadow-sm">
           {showIcons && <Package className={iconSizes[size]} />}
           <span className={sizeClasses[size]}>
             LPN: {lpn}
