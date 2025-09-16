@@ -206,6 +206,28 @@ export function MapVisitCard({
                 <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
                 <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
               </p>
+              
+              {/* Instrucciones del cliente/visita */}
+              {(() => {
+                // Obtener instrucciones según el cliente seleccionado o todas las instrucciones únicas
+                const ordersToCheck = hasMultipleClients && selectedClient 
+                  ? (visit.orders || []).filter((order: any) => 
+                      order.contact?.fullName === selectedClient.clientName
+                    )
+                  : (visit.orders || [])
+                
+                const uniqueInstructions = [...new Set(
+                  ordersToCheck
+                    .map((order: any) => order.instructions)
+                    .filter(Boolean)
+                )]
+                
+                return uniqueInstructions.length > 0 && (
+                  <div className="text-xs text-gray-600 mb-2 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
+                    <strong>{t.visitCard.instructions}</strong> {String(uniqueInstructions[0])}
+                  </div>
+                )
+              })()}
             </div>
           </div>
         </div>

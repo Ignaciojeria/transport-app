@@ -256,6 +256,22 @@ export function VisitCardOrders({
               )}
             </div>
             
+            {/* Instrucciones agrupadas del cliente */}
+            {(() => {
+              // Obtener todas las instrucciones únicas del cliente
+              const uniqueInstructions = [...new Set(
+                clientOrders
+                  .map(({ order }: any) => order.instructions)
+                  .filter(Boolean)
+              )]
+              
+              return uniqueInstructions.length > 0 && (
+                <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
+                  <strong>{t.visitCard.instructions}</strong> {String(uniqueInstructions[0])}
+                </div>
+              )
+            })()}
+            
             {/* Órdenes del cliente */}
             <div className="space-y-3">
               {clientOrders.map(({ order, orderIndex, orderUnits }: any) => (
@@ -272,11 +288,6 @@ export function VisitCardOrders({
                       {orderUnits.length} {orderUnits.length === 1 ? t.visitCard.unit : t.visitCard.units}
                     </span>
                   </div>
-                  {order.instructions && (
-                    <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
-                      <strong>{t.visitCard.instructions}</strong> {order.instructions}
-                    </div>
-                  )}
                   
                   {/* Unidades de entrega compactas */}
                   <div className="space-y-2">
