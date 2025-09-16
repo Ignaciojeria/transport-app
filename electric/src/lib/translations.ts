@@ -163,6 +163,20 @@ export interface MobileTranslations {
     }
   }
   
+  // Sidebar Menu
+  sidebar: {
+    title: string
+    closeMenu: string
+    reports: string
+    downloadReport: string
+    connectionStatus: string
+    internet: string
+    connected: string
+    disconnected: string
+    synchronization: string
+    markerSync: string
+  }
+  
   // Tabs
   tabs: {
     enRoute: string
@@ -330,6 +344,18 @@ export const translations: Record<Language, MobileTranslations> = {
         other: "Otro"
       }
     },
+    sidebar: {
+      title: "Menú",
+      closeMenu: "Cerrar menú",
+      reports: "Reportes",
+      downloadReport: "Descargar Reporte",
+      connectionStatus: "Estado de Conexión",
+      internet: "Internet",
+      connected: "Conectado",
+      disconnected: "Desconectado",
+      synchronization: "Sincronización",
+      markerSync: "Marcador Sync"
+    },
     tabs: {
       enRoute: "En ruta",
       delivered: "Entregados",
@@ -493,6 +519,18 @@ export const translations: Record<Language, MobileTranslations> = {
         other: "Outro"
       }
     },
+    sidebar: {
+      title: "Menu",
+      closeMenu: "Fechar menu",
+      reports: "Relatórios",
+      downloadReport: "Baixar Relatório",
+      connectionStatus: "Status da Conexão",
+      internet: "Internet",
+      connected: "Conectado",
+      disconnected: "Desconectado",
+      synchronization: "Sincronização",
+      markerSync: "Sincronização de Marcador"
+    },
     tabs: {
       enRoute: "Em rota",
       delivered: "Entregues",
@@ -655,6 +693,18 @@ export const translations: Record<Language, MobileTranslations> = {
         securityIssue: "Security issue",
         other: "Other"
       }
+    },
+    sidebar: {
+      title: "Menu",
+      closeMenu: "Close menu",
+      reports: "Reports",
+      downloadReport: "Download Report",
+      connectionStatus: "Connection Status",
+      internet: "Internet",
+      connected: "Connected",
+      disconnected: "Disconnected",
+      synchronization: "Synchronization",
+      markerSync: "Marker Sync"
     },
     tabs: {
       enRoute: "In route",
