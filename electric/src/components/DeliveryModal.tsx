@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
 import { processAndUploadImage, getUploadUrlFromRoute } from '../utils/imageUpload'
+import { useLanguage } from '../hooks/useLanguage'
 import type { DeliveryEvent } from '../domain/deliveries'
 import type { Route as RouteType } from '../domain/route'
 
@@ -29,6 +30,7 @@ export function DeliveryModal({
   unitIndex,
   isDemo = false
 }: DeliveryModalProps) {
+  const { t } = useLanguage()
   const [recipientName, setRecipientName] = useState('')
   const [recipientRut, setRecipientRut] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
@@ -127,34 +129,34 @@ export function DeliveryModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose}></div>
       <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4 max-h-[85vh] overflow-y-auto">
-        <h3 className="text-base font-semibold text-gray-800 mb-3">Evidencia de entrega</h3>
+        <h3 className="text-base font-semibold text-gray-800 mb-3">{t.deliveryModal.title}</h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Nombre de quien recibe</label>
+            <label className="block text-xs text-gray-600 mb-1">{t.deliveryModal.recipientNameLabel}</label>
             <input
               type="text"
               value={recipientName}
               onChange={(e) => setRecipientName(e.target.value)}
               ref={nameInputRef}
               className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Nombre completo"
+              placeholder={t.deliveryModal.recipientNamePlaceholder}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">RUT / Documento</label>
+            <label className="block text-xs text-gray-600 mb-1">{t.deliveryModal.documentLabel}</label>
             <input
               type="text"
               value={recipientRut}
               onChange={(e) => setRecipientRut(e.target.value)}
               ref={rutInputRef}
               className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="12.345.678-9"
+              placeholder={t.deliveryModal.documentPlaceholder}
             />
           </div>
           <CameraCapture
             onCapture={(photoDataUrl) => setPhotoDataUrl(photoDataUrl)}
-            title="Foto de evidencia"
-            buttonText="Activar cámara"
+            title={t.deliveryModal.photoLabel}
+            buttonText={t.deliveryModal.activateCamera}
           />
         </div>
         {uploadError && (
@@ -168,14 +170,14 @@ export function DeliveryModal({
             className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50"
             disabled={submitting || uploadingImage}
           >
-            Cancelar
+{t.deliveryModal.cancel}
           </button>
           <button
             onClick={handleSubmit}
             disabled={submitting || uploadingImage || !recipientName.trim() || !recipientRut.trim() || !photoDataUrl}
             className={`px-3 py-2 text-sm rounded-md text-white ${submitting || uploadingImage || !recipientName.trim() || !recipientRut.trim() || !photoDataUrl ? 'bg-green-300' : 'bg-green-600 hover:bg-green-700'}`}
           >
-            {uploadingImage ? 'Subiendo imagen...' : 'Confirmar entrega'}
+{uploadingImage ? t.deliveryModal.uploadingImage : t.deliveryModal.confirmDelivery}
           </button>
         </div>
       </div>

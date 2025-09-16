@@ -73,6 +73,20 @@ export interface MobileTranslations {
     pendingUnits: string
   }
   
+  // Delivery Modal
+  deliveryModal: {
+    title: string
+    recipientNameLabel: string
+    recipientNamePlaceholder: string
+    documentLabel: string
+    documentPlaceholder: string
+    photoLabel: string
+    activateCamera: string
+    cancel: string
+    confirmDelivery: string
+    uploadingImage: string
+  }
+  
   // Tabs
   tabs: {
     enRoute: string
@@ -158,6 +172,18 @@ export const translations: Record<Language, MobileTranslations> = {
       delivered: "entregadas",
       pendingUnits: "pendientes"
     },
+    deliveryModal: {
+      title: "Evidencia de entrega",
+      recipientNameLabel: "Nombre de quien recibe",
+      recipientNamePlaceholder: "Nombre completo",
+      documentLabel: "RUT / Documento",
+      documentPlaceholder: "12.345.678-9",
+      photoLabel: "Foto de evidencia",
+      activateCamera: "Activar cámara",
+      cancel: "Cancelar",
+      confirmDelivery: "Confirmar entrega",
+      uploadingImage: "Subiendo imagen..."
+    },
     tabs: {
       enRoute: "En ruta",
       delivered: "Entregados",
@@ -239,6 +265,18 @@ export const translations: Record<Language, MobileTranslations> = {
       delivered: "entregues",
       pendingUnits: "pendentes"
     },
+    deliveryModal: {
+      title: "Evidência de entrega",
+      recipientNameLabel: "Nome de quem recebe",
+      recipientNamePlaceholder: "Nome completo",
+      documentLabel: "CPF / Documento",
+      documentPlaceholder: "123.456.789-01",
+      photoLabel: "Foto de evidência",
+      activateCamera: "Ativar câmera",
+      cancel: "Cancelar",
+      confirmDelivery: "Confirmar entrega",
+      uploadingImage: "Enviando imagem..."
+    },
     tabs: {
       enRoute: "Em rota",
       delivered: "Entregues",
@@ -319,6 +357,18 @@ export const translations: Record<Language, MobileTranslations> = {
       completed: "Completed",
       delivered: "delivered",
       pendingUnits: "pending"
+    },
+    deliveryModal: {
+      title: "Delivery Evidence",
+      recipientNameLabel: "Recipient name",
+      recipientNamePlaceholder: "Full name",
+      documentLabel: "ID / Document",
+      documentPlaceholder: "123-45-6789",
+      photoLabel: "Evidence photo",
+      activateCamera: "Activate camera",
+      cancel: "Cancel",
+      confirmDelivery: "Confirm delivery",
+      uploadingImage: "Uploading image..."
     },
     tabs: {
       enRoute: "In route",
