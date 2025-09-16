@@ -87,6 +87,26 @@ export interface MobileTranslations {
     uploadingImage: string
   }
   
+  // Non-Delivery Modal
+  nonDeliveryModal: {
+    title: string
+    reasonLabel: string
+    reasonPlaceholder: string
+    observationsLabel: string
+    observationsPlaceholder: string
+    photoLabel: string
+    activateCamera: string
+    cancel: string
+    confirmNonDelivery: string
+    uploadingImage: string
+    reasons: {
+      clientRejects: string
+      noResidents: string
+      damagedProduct: string
+      otherReason: string
+    }
+  }
+  
   // Tabs
   tabs: {
     enRoute: string
@@ -184,6 +204,24 @@ export const translations: Record<Language, MobileTranslations> = {
       confirmDelivery: "Confirmar entrega",
       uploadingImage: "Subiendo imagen..."
     },
+    nonDeliveryModal: {
+      title: "No entregado",
+      reasonLabel: "Motivo",
+      reasonPlaceholder: "Buscar/ingresar motivo",
+      observationsLabel: "Observaciones",
+      observationsPlaceholder: "Detalles adicionales (opcional)",
+      photoLabel: "Foto de evidencia",
+      activateCamera: "Activar cámara",
+      cancel: "Cancelar",
+      confirmNonDelivery: "Confirmar no entrega",
+      uploadingImage: "Subiendo imagen...",
+      reasons: {
+        clientRejects: "cliente rechaza entrega",
+        noResidents: "sin moradores",
+        damagedProduct: "producto dañado",
+        otherReason: "otro motivo"
+      }
+    },
     tabs: {
       enRoute: "En ruta",
       delivered: "Entregados",
@@ -277,6 +315,24 @@ export const translations: Record<Language, MobileTranslations> = {
       confirmDelivery: "Confirmar entrega",
       uploadingImage: "Enviando imagem..."
     },
+    nonDeliveryModal: {
+      title: "Não entregue",
+      reasonLabel: "Motivo",
+      reasonPlaceholder: "Buscar/inserir motivo",
+      observationsLabel: "Observações",
+      observationsPlaceholder: "Detalhes adicionais (opcional)",
+      photoLabel: "Foto de evidência",
+      activateCamera: "Ativar câmera",
+      cancel: "Cancelar",
+      confirmNonDelivery: "Confirmar não entrega",
+      uploadingImage: "Enviando imagem...",
+      reasons: {
+        clientRejects: "cliente recusa entrega",
+        noResidents: "sem moradores",
+        damagedProduct: "produto danificado",
+        otherReason: "outro motivo"
+      }
+    },
     tabs: {
       enRoute: "Em rota",
       delivered: "Entregues",
@@ -369,6 +425,24 @@ export const translations: Record<Language, MobileTranslations> = {
       cancel: "Cancel",
       confirmDelivery: "Confirm delivery",
       uploadingImage: "Uploading image..."
+    },
+    nonDeliveryModal: {
+      title: "Not delivered",
+      reasonLabel: "Reason",
+      reasonPlaceholder: "Search/enter reason",
+      observationsLabel: "Observations",
+      observationsPlaceholder: "Additional details (optional)",
+      photoLabel: "Evidence photo",
+      activateCamera: "Activate camera",
+      cancel: "Cancel",
+      confirmNonDelivery: "Confirm non-delivery",
+      uploadingImage: "Uploading image...",
+      reasons: {
+        clientRejects: "customer refuses delivery",
+        noResidents: "no residents",
+        damagedProduct: "damaged product",
+        otherReason: "other reason"
+      }
     },
     tabs: {
       enRoute: "In route",
