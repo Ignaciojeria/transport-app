@@ -206,6 +206,7 @@ export function MapVisitCard({
                 <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
                 <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
               </p>
+              
             </div>
           </div>
         </div>
@@ -404,14 +405,36 @@ export function MapVisitCard({
                 <span className="ml-2">{t.visitCard.deliveryUnits}:</span>
               </h4>
               {(() => {
-                // Filtrar órdenes según el cliente seleccionado
+                // Obtener órdenes según el cliente seleccionado
                 const ordersToShow = hasMultipleClients && selectedClient 
                   ? (visit.orders || []).filter((order: any) => 
                       order.contact?.fullName === selectedClient.clientName
                     )
                   : (visit.orders || [])
                 
-                return ordersToShow.map((order: any, orderIndex: number) => {
+                // Agrupar órdenes por instrucciones
+                const ordersByInstructions = new Map()
+                
+                ordersToShow.forEach((order: any) => {
+                  const instructions = order.instructions || ''
+                  if (!ordersByInstructions.has(instructions)) {
+                    ordersByInstructions.set(instructions, [])
+                  }
+                  ordersByInstructions.get(instructions).push(order)
+                })
+                
+                // Convertir a array y procesar cada grupo
+                return Array.from(ordersByInstructions.entries()).map(([instructions, groupOrders], groupIndex) => (
+                  <div key={groupIndex} className="mb-4">
+                    {/* Mostrar instrucciones del grupo (si existen) */}
+                    {instructions && (
+                      <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
+                        <strong>{t.visitCard.instructions}</strong> {instructions}
+                      </div>
+                    )}
+                    
+                    {/* Órdenes del grupo */}
+                    {groupOrders.map((order: any, orderIndex: number) => {
               // Encontrar el índice real de la orden en la visita original
               const realOrderIndex = (visit.orders || []).findIndex((o: any) => o === order)
               
@@ -516,7 +539,9 @@ export function MapVisitCard({
                 ))}
             </div>
               )
-            })
+            })}
+                  </div>
+                ))
           })()}
             </>
           )}
