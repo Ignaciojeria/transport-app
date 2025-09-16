@@ -147,7 +147,7 @@ export function MapVisitCard({
       {/* Indicador de qué visita se está mostrando */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">
-          {isSelectedVisit ? 'Visita seleccionada' : 'Siguiente a entregar'}
+          {isSelectedVisit ? t.visitCard.selectedVisit : t.visitCard.nextToDeliver}
         </h3>
         {isSelectedVisit && !isProcessed && (
           <button
@@ -182,11 +182,11 @@ export function MapVisitCard({
                   </h3>
                   <div className="text-xs text-gray-600 mb-1">
                     <span className="inline-block bg-purple-100 text-purple-700 px-2 py-1 rounded text-xs font-medium">
-                      Cliente seleccionado
+{t.visitCard.selectedClient}
                     </span>
                     {selectedClient.orderIndexes && selectedClient.orderIndexes.length > 1 && (
                       <span className="inline-block bg-gray-100 text-gray-600 px-2 py-1 rounded ml-1 text-xs">
-                        {selectedClient.orderIndexes.length} órdenes
+                        {selectedClient.orderIndexes.length} {t.visitCard.orders}
                       </span>
                     )}
                   </div>
@@ -196,11 +196,11 @@ export function MapVisitCard({
                 <div className="mb-1">
                   <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
                     <Users className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-                    <span className="text-indigo-700">Múltiples clientes</span>
+                    <span className="text-indigo-700">{t.nextVisit.multipleClients}</span>
                   </h3>
                   <div className="text-xs text-gray-600 mb-1">
                     <span className="inline-block bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">
-                      Selecciona un cliente en el selector de arriba
+{t.nextVisit.selectClient}
                     </span>
                   </div>
                 </div>
@@ -225,11 +225,11 @@ export function MapVisitCard({
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <span className="text-sm font-medium text-gray-700">
-                    {visitStats.isPartiallyDelivered ? 'Acciones para restantes:' : 'Acciones grupales:'}
+                    {visitStats.isPartiallyDelivered ? t.delivery.actionsForRemaining : t.delivery.groupActions}
                   </span>
                   {visitStats.isPartiallyDelivered && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {visitStats.deliveredUnits} entregadas • {visitStats.pendingUnits} pendientes
+                      {visitStats.deliveredUnits} {t.status.delivered} • {visitStats.pendingUnits} {t.status.pendingUnits}
                     </div>
                   )}
                 </div>
@@ -410,7 +410,7 @@ export function MapVisitCard({
             <>
               <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
                 <Package size={18} />
-                <span className="ml-2">Unidades de Entrega:</span>
+                <span className="ml-2">{t.visitCard.deliveryUnits}:</span>
               </h4>
               {(() => {
                 // Filtrar órdenes según el cliente seleccionado
@@ -490,7 +490,7 @@ export function MapVisitCard({
                             className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                           >
                             <XCircle size={16} />
-                            <span>Cambiar a no entregado</span>
+                            <span>{t.delivery.changeToNotDelivered}</span>
                           </button>
                         ) : status === 'not-delivered' ? (
                           // Si está no entregado, mostrar solo opción de cambiar a entregado
@@ -499,7 +499,7 @@ export function MapVisitCard({
                             className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                           >
                             <CheckCircle size={16} />
-                            <span>Cambiar a entregado</span>
+                            <span>{t.delivery.changeToDelivered}</span>
                           </button>
                         ) : (
                           // Si está pendiente, mostrar ambas opciones originales
@@ -509,14 +509,14 @@ export function MapVisitCard({
                               className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
                             >
                               <CheckCircle size={16} />
-                              <span>entregar</span>
+                              <span>{t.delivery.deliver}</span>
                             </button>
                             <button
                               onClick={() => openNonDeliveryFor(displayIdx, realOrderIndex, uIdx)}
                               className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
                             >
                               <XCircle size={16} />
-                              <span>no entregado</span>
+                              <span>{t.delivery.notDeliver}</span>
                             </button>
                           </>
                         )}

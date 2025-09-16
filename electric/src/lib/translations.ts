@@ -20,6 +20,7 @@ export interface MobileTranslations {
     multipleClients: string
     client: string
     clients: string
+    selectClient: string
   }
   
   // Visit Card
@@ -34,6 +35,9 @@ export interface MobileTranslations {
     volume: string
     units: string
     unit: string
+    selectedClient: string
+    selectedVisit: string
+    nextToDeliver: string
   }
   
   // Delivery Actions
@@ -47,12 +51,18 @@ export interface MobileTranslations {
     delivered: string
     notDelivered: string
     next: string
+    groupActions: string
+    actionsForRemaining: string
+    changeToDelivered: string
+    changeToNotDelivered: string
   }
   
   // Status
   status: {
     pending: string
     completed: string
+    delivered: string
+    pendingUnits: string
   }
   
   // Tabs
@@ -95,7 +105,8 @@ export const translations: Record<Language, MobileTranslations> = {
       title: "Siguiente Visita",
       multipleClients: "Múltiples clientes",
       client: "Cliente",
-      clients: "clientes"
+      clients: "clientes",
+      selectClient: "Selecciona un cliente en el selector de arriba"
     },
     visitCard: {
       sequence: "Secuencia",
@@ -107,7 +118,10 @@ export const translations: Record<Language, MobileTranslations> = {
       weight: "Peso",
       volume: "Vol",
       units: "unidades",
-      unit: "unidad"
+      unit: "unidad",
+      selectedClient: "Cliente seleccionado",
+      selectedVisit: "Visita seleccionada",
+      nextToDeliver: "Siguiente a entregar"
     },
     delivery: {
       deliver: "Entregar",
@@ -118,11 +132,17 @@ export const translations: Record<Language, MobileTranslations> = {
       notDeliverRemaining: "No entregar restantes",
       delivered: "Entregado",
       notDelivered: "No entregado",
-      next: "Siguiente a entregar"
+      next: "Siguiente a entregar",
+      groupActions: "Acciones grupales:",
+      actionsForRemaining: "Acciones para restantes:",
+      changeToDelivered: "Cambiar a entregado",
+      changeToNotDelivered: "Cambiar a no entregado"
     },
     status: {
       pending: "Pendiente",
-      completed: "Completado"
+      completed: "Completado",
+      delivered: "entregadas",
+      pendingUnits: "pendientes"
     },
     tabs: {
       enRoute: "En ruta",
@@ -160,7 +180,8 @@ export const translations: Record<Language, MobileTranslations> = {
       title: "Próxima Visita",
       multipleClients: "Múltiplos clientes",
       client: "Cliente",
-      clients: "clientes"
+      clients: "clientes",
+      selectClient: "Selecione um cliente no seletor acima"
     },
     visitCard: {
       sequence: "Sequência",
@@ -172,7 +193,10 @@ export const translations: Record<Language, MobileTranslations> = {
       weight: "Peso",
       volume: "Vol",
       units: "unidades",
-      unit: "unidade"
+      unit: "unidade",
+      selectedClient: "Cliente selecionado",
+      selectedVisit: "Visita selecionada",
+      nextToDeliver: "Próximo a entregar"
     },
     delivery: {
       deliver: "Entregar",
@@ -183,11 +207,17 @@ export const translations: Record<Language, MobileTranslations> = {
       notDeliverRemaining: "Não entregar restantes", 
       delivered: "Entregue",
       notDelivered: "Não entregue",
-      next: "Próximo a entregar"
+      next: "Próximo a entregar",
+      groupActions: "Ações em grupo:",
+      actionsForRemaining: "Ações para restantes:",
+      changeToDelivered: "Mudar para entregue",
+      changeToNotDelivered: "Mudar para não entregue"
     },
     status: {
       pending: "Pendente",
-      completed: "Concluído"
+      completed: "Concluído",
+      delivered: "entregues",
+      pendingUnits: "pendentes"
     },
     tabs: {
       enRoute: "Em rota",
@@ -225,7 +255,8 @@ export const translations: Record<Language, MobileTranslations> = {
       title: "Next Visit",
       multipleClients: "Multiple clients",
       client: "Client",
-      clients: "clients"
+      clients: "clients",
+      selectClient: "Select a client in the selector above"
     },
     visitCard: {
       sequence: "Sequence",
@@ -237,7 +268,10 @@ export const translations: Record<Language, MobileTranslations> = {
       weight: "Weight",
       volume: "Vol",
       units: "units",
-      unit: "unit"
+      unit: "unit",
+      selectedClient: "Selected client",
+      selectedVisit: "Selected visit",
+      nextToDeliver: "Next to deliver"
     },
     delivery: {
       deliver: "Deliver",
@@ -248,11 +282,17 @@ export const translations: Record<Language, MobileTranslations> = {
       notDeliverRemaining: "Don't deliver remaining",
       delivered: "Delivered",
       notDelivered: "Not delivered",
-      next: "Next to deliver"
+      next: "Next to deliver",
+      groupActions: "Group actions:",
+      actionsForRemaining: "Actions for remaining:",
+      changeToDelivered: "Change to delivered",
+      changeToNotDelivered: "Change to not delivered"
     },
     status: {
       pending: "Pending",
-      completed: "Completed"
+      completed: "Completed",
+      delivered: "delivered",
+      pendingUnits: "pending"
     },
     tabs: {
       enRoute: "In route",
