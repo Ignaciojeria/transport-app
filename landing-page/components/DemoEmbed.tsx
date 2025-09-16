@@ -20,12 +20,15 @@ const generateDemoUUID = () => {
 export function DemoEmbed() {
   const [showDemo, setShowDemo] = useState(false)
   const [routeId, setRouteId] = useState<string>('')
-  const { t, isLoading } = useLanguage()
+  const { t, isLoading, language } = useLanguage()
   
   // Generar UUID solo en el cliente para evitar errores de hidratación
   useEffect(() => {
     setRouteId(generateDemoUUID())
   }, [])
+
+  // Forzar re-render del iframe cuando cambie el idioma
+  const iframeKey = `${routeId}-${language}`
 
   // Mostrar loading mientras se carga el idioma
   if (isLoading) {
@@ -114,7 +117,7 @@ export function DemoEmbed() {
                   <Button 
                     variant="outline" 
                     className="w-full mt-2"
-                    onClick={() => routeId && window.open(`https://einar-404623.web.app/demo?routeId=${routeId}`, '_blank')}
+                    onClick={() => routeId && window.open(`https://einar-404623.web.app/demo?routeId=${routeId}&lang=${language}`, '_blank')}
                     disabled={!routeId}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
@@ -132,7 +135,8 @@ export function DemoEmbed() {
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                   {routeId && (
                     <iframe 
-                      src={`https://einar-404623.web.app/demo?routeId=${routeId}`} 
+                      key={iframeKey}
+                      src={`https://einar-404623.web.app/demo?routeId=${routeId}&lang=${language}`} 
                       width="100%" 
                       height="600"
                       className="border-0"
