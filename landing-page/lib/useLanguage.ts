@@ -9,7 +9,7 @@ export function useLanguage() {
   const router = useRouter()
   const pathname = usePathname()
   
-  const [language, setLanguage] = useState<Language>('CL')
+  const [language, setLanguage] = useState<Language>('CL') // Español por defecto
   const [isLoading, setIsLoading] = useState(true)
 
   // Cargar idioma desde query params o localStorage
@@ -23,15 +23,8 @@ export function useLanguage() {
     } else if (savedLang && ['CL', 'BR', 'EU'].includes(savedLang)) {
       setLanguage(savedLang)
     } else {
-      // Detectar idioma del navegador
-      const browserLang = navigator.language.toLowerCase()
-      if (browserLang.startsWith('pt')) {
-        setLanguage('BR')
-      } else if (browserLang.startsWith('en')) {
-        setLanguage('EU')
-      } else {
-        setLanguage('CL') // Default a español
-      }
+      // Default siempre a español (Chile)
+      setLanguage('CL')
     }
     
     setIsLoading(false)
