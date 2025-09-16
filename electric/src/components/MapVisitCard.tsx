@@ -121,8 +121,8 @@ export function MapVisitCard({
 
   return (
     <div className="p-4 space-y-4">
-      {/* Sección "Siguiente a Entregar" cuando la visita actual está procesada */}
-      {isProcessed && hasNextPending && (
+      {/* Sección "Siguiente a Entregar" cuando la visita actual está completamente gestionada */}
+      {!visitStats.hasPendingUnits && hasNextPending && (
         <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border-2 border-green-200 p-4 mb-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-green-800 flex items-center">
@@ -211,8 +211,8 @@ export function MapVisitCard({
           </div>
         </div>
         <div className="p-4">
-          {/* Botones de acción grupal - solo si hay 2 o más unidades pendientes */}
-          {routeStarted && visitStats.hasPendingUnits && visitStats.pendingUnits >= 2 && onDeliverAll && onNonDeliverAll && (
+          {/* Botones de acción grupal - si hay múltiples unidades pendientes O hay entregas parciales */}
+          {routeStarted && visitStats.hasPendingUnits && (visitStats.pendingUnits >= 2 || visitStats.isPartiallyDelivered) && onDeliverAll && onNonDeliverAll && (
             <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
               <div className="flex items-center justify-between mb-2">
                 <div>
