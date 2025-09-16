@@ -3,6 +3,7 @@ import { groupDeliveryUnitsByLocation, hasGroupPendingUnits, getGroupPendingUnit
 import { Package, Package2, Users, User } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
 import { OrderCard, DeliveryUnitCard } from './OrderCard'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardOrdersProps {
   visit: any
@@ -29,6 +30,8 @@ export function VisitCardOrders({
   shouldRenderByTab,
   viewMode = 'list'
 }: VisitCardOrdersProps) {
+  const { t } = useLanguage()
+  
   // Solo agrupar en modo mapa, no en modo lista
   const shouldGroup = viewMode === 'map'
   
@@ -82,14 +85,14 @@ export function VisitCardOrders({
                         className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
                       >
                         <Package className="w-4 h-4" />
-                        <span>Entregar todo</span>
+                        <span>{t.delivery.deliverAll}</span>
                       </button>
                       <button
                         onClick={() => onOpenGroupedNonDelivery(visitIndex, group)}
                         className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-colors"
                       >
                         <Package className="w-4 h-4" />
-                        <span>No entregar</span>
+                        <span>{t.delivery.notDeliverAll}</span>
                       </button>
                     </div>
                   )}
@@ -176,14 +179,14 @@ export function VisitCardOrders({
                                 className="flex-1 bg-green-100 hover:bg-green-200 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors"
                               >
                                 <span className="text-green-600">✓</span>
-                                <span>Entregar</span>
+                                <span>{t.delivery.deliver}</span>
                               </button>
                               <button
                                 onClick={() => onOpenNonDelivery(visitIndex, unit.orderIndex, unit.uIdx)}
                                 className="flex-1 bg-red-100 hover:bg-red-200 text-gray-700 px-4 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors"
                               >
                                 <span className="text-red-600">✗</span>
-                                <span>No entregado</span>
+                                <span>{t.delivery.notDeliver}</span>
                               </button>
                             </div>
                           )}

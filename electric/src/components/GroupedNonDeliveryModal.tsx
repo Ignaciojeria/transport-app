@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Package, AlertTriangle, MapPin, CheckCircle } from 'lucide-react'
 import { CameraCapture } from './CameraCapture'
 import { IdentifierBadge } from './IdentifierBadge'
+import { useLanguage } from '../hooks/useLanguage'
 import type { DeliveryGroup } from './GroupedDeliveryUtils'
 import type { DeliveryEvent } from '../domain/deliveries'
 
@@ -36,6 +37,7 @@ export function GroupedNonDeliveryModal({
   submitting = false,
   isDemo: _isDemo = false
 }: GroupedNonDeliveryModalProps) {
+  const { t } = useLanguage()
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
@@ -126,7 +128,7 @@ export function GroupedNonDeliveryModal({
               <AlertTriangle className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">No entregar todo junto</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t.delivery.notDeliverAll}</h2>
               <p className="text-sm text-gray-600">{group.totalUnits} unidades para {group.addressInfo.contact?.fullName}</p>
             </div>
           </div>

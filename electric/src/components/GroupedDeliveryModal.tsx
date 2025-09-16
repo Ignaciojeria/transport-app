@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Package, User, MapPin, CheckCircle, AlertCircle } from 'lucide-react'
 import { CameraCapture } from './CameraCapture'
 import { IdentifierBadge } from './IdentifierBadge'
+import { useLanguage } from '../hooks/useLanguage'
 import type { DeliveryGroup } from './GroupedDeliveryUtils'
 import type { DeliveryEvent } from '../domain/deliveries'
 
@@ -26,6 +27,7 @@ export function GroupedDeliveryModal({
   submitting = false,
   isDemo: _isDemo = false
 }: GroupedDeliveryModalProps) {
+  const { t } = useLanguage()
   const [recipientName, setRecipientName] = useState('')
   const [recipientRut, setRecipientRut] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
@@ -108,7 +110,7 @@ export function GroupedDeliveryModal({
               <Package className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">Entregar todo junto</h2>
+              <h2 className="text-xl font-bold text-gray-900">{t.delivery.deliverAll}</h2>
               <p className="text-sm text-gray-600">{group.totalUnits} unidades para {group.addressInfo.contact?.fullName}</p>
             </div>
           </div>
@@ -274,7 +276,7 @@ export function GroupedDeliveryModal({
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4" />
-                  <span>Entregar todo</span>
+                  <span>{t.delivery.deliverAll}</span>
                 </>
               )}
             </button>

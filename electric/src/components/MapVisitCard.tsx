@@ -139,7 +139,7 @@ export function MapVisitCard({
             className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg active:scale-95"
           >
             <Play className="w-4 h-4" />
-            <span>Siguiente a Entregar (#{visit?.sequenceNumber})</span>
+            <span>{t.delivery.next} (#{visit?.sequenceNumber})</span>
           </button>
         </div>
       )}
@@ -292,8 +292,8 @@ export function MapVisitCard({
                   <CheckCircle className="w-4 h-4" />
                   <span>
                     {hasMultipleClients && selectedClient 
-                      ? (hasClientPartialDeliveries(selectedClient.clientName) ? 'Entregar restantes' : 'Entregar todo')
-                      : (visitStats.isPartiallyDelivered ? 'Entregar restantes' : 'Entregar todo')
+                      ? (hasClientPartialDeliveries(selectedClient.clientName) ? t.delivery.deliverRemaining : t.delivery.deliverAll)
+                      : (visitStats.isPartiallyDelivered ? t.delivery.deliverRemaining : t.delivery.deliverAll)
                     }
                   </span>
                 </button>
@@ -353,8 +353,8 @@ export function MapVisitCard({
                   <XCircle className="w-4 h-4" />
                   <span>
                     {hasMultipleClients && selectedClient 
-                      ? (hasClientPartialDeliveries(selectedClient.clientName) ? 'No entregar restantes' : 'No entregar todo')
-                      : (visitStats.isPartiallyDelivered ? 'No entregar restantes' : 'No entregar todo')
+                      ? (hasClientPartialDeliveries(selectedClient.clientName) ? t.delivery.notDeliverRemaining : t.delivery.notDeliverAll)
+                      : (visitStats.isPartiallyDelivered ? t.delivery.notDeliverRemaining : t.delivery.notDeliverAll)
                     }
                   </span>
                 </button>

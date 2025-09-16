@@ -103,7 +103,7 @@ export function VisitCardDeliveryUnit({
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
             >
               <XCircle size={16} />
-              <span>Cambiar a no entregado</span>
+              <span>{t.delivery.notDelivered}</span>
             </button>
           ) : status === 'not-delivered' ? (
             // Si está no entregado, mostrar solo opción de cambiar a entregado
@@ -112,7 +112,7 @@ export function VisitCardDeliveryUnit({
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
             >
               <CheckCircle size={16} />
-              <span>Cambiar a entregado</span>
+              <span>{t.delivery.delivered}</span>
             </button>
           ) : (
             // Si está pendiente, mostrar ambas opciones originales
@@ -122,14 +122,14 @@ export function VisitCardDeliveryUnit({
                 className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
               >
                 <CheckCircle size={16} />
-                <span>entregar</span>
+                <span>{t.delivery.deliver}</span>
               </button>
               <button
                 onClick={() => onOpenNonDelivery(visitIndex, orderIndex, uIdx)}
                 className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
               >
                 <XCircle size={16} />
-                <span>no entregado</span>
+                <span>{t.delivery.notDeliver}</span>
               </button>
             </>
           )}

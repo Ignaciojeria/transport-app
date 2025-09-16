@@ -1,7 +1,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useMemo } from 'react'
 import { createRoutesCollection, extractRouteFromElectric, type RouteWithElectricId } from '../collections/create-routes-collection'
-import { mockRouteData } from '../../demo/mockData'
+import { getMockDataByLanguage } from '../../demo/mockDataLoader'
 
 // Función utilitaria para detectar modo demo
 export const isDemoMode = (): boolean => {
@@ -73,6 +73,13 @@ export const useRoutes = (token: string, referenceId?: string): RouteWithElectri
   
   // Si es demo, retornar datos mock sin consultar Electric SQL
   if (isDemo) {
+    // Detectar idioma desde URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const language = (urlParams.get('lang') || 'CL') as 'CL' | 'BR' | 'EU'
+    
+    // Obtener mock data basado en el idioma
+    const mockRouteData = getMockDataByLanguage(language)
+    
     // Usar el referenceId (que es el routeId de la ruta) en lugar del hardcodeado
     const actualRouteId = referenceId || '123' // Fallback si no hay referenceId
     const mockRoute = {
@@ -80,7 +87,7 @@ export const useRoutes = (token: string, referenceId?: string): RouteWithElectri
       electricId: actualRouteId
     } as RouteWithElectricId
     
-    console.log('🎭 Returning mock data with routeId:', actualRouteId, mockRoute)
+    console.log('🎭 Returning mock data with routeId:', actualRouteId, 'language:', language, mockRoute)
     return [mockRoute]
   }
   
