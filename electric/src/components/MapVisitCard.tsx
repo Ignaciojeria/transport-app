@@ -149,14 +149,6 @@ export function MapVisitCard({
         <h3 className="text-sm font-medium text-gray-700">
           {isSelectedVisit ? t.visitCard.selectedVisit : t.visitCard.nextToDeliver}
         </h3>
-        {isSelectedVisit && !isProcessed && (
-          <button
-            onClick={onClearSelection}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-          >
-            Ver siguiente
-          </button>
-        )}
       </div>
       
       {/* Card de la visita */}
@@ -399,7 +391,7 @@ export function MapVisitCard({
               <div className="flex items-center space-x-2">
                 <Package className="w-4 h-4 text-orange-600" />
                 <span className="text-sm text-gray-700">
-                  Solo queda 1 unidad pendiente. Usa los botones individuales abajo.
+{t.delivery.singleUnitPending}
                 </span>
               </div>
             </div>

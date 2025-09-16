@@ -23,6 +23,12 @@ export interface MobileTranslations {
     selectClient: string
   }
   
+  // Map View
+  mapView: {
+    multipleClientsAtLocation: string
+    selectClientToDeliver: string
+  }
+  
   // Visit Card
   visitCard: {
     sequence: string
@@ -56,6 +62,7 @@ export interface MobileTranslations {
     actionsForRemaining: string
     changeToDelivered: string
     changeToNotDelivered: string
+    singleUnitPending: string
   }
   
   // Status
@@ -109,6 +116,10 @@ export const translations: Record<Language, MobileTranslations> = {
       clients: "clientes",
       selectClient: "Selecciona un cliente en el selector de arriba"
     },
+    mapView: {
+      multipleClientsAtLocation: "Múltiples clientes en esta ubicación:",
+      selectClientToDeliver: "Selecciona el cliente al que vas a entregar"
+    },
     visitCard: {
       sequence: "Secuencia",
       deliveryUnits: "Unidades de Entrega",
@@ -138,7 +149,8 @@ export const translations: Record<Language, MobileTranslations> = {
       groupActions: "Acciones grupales:",
       actionsForRemaining: "Acciones para restantes:",
       changeToDelivered: "Cambiar a entregado",
-      changeToNotDelivered: "Cambiar a no entregado"
+      changeToNotDelivered: "Cambiar a no entregado",
+      singleUnitPending: "Solo queda 1 unidad pendiente. Usa los botones individuales abajo."
     },
     status: {
       pending: "Pendiente",
@@ -185,6 +197,10 @@ export const translations: Record<Language, MobileTranslations> = {
       clients: "clientes",
       selectClient: "Selecione um cliente no seletor acima"
     },
+    mapView: {
+      multipleClientsAtLocation: "Múltiplos clientes nesta localização:",
+      selectClientToDeliver: "Selecione o cliente ao qual vai entregar"
+    },
     visitCard: {
       sequence: "Sequência",
       deliveryUnits: "Unidades de Entrega",
@@ -214,7 +230,8 @@ export const translations: Record<Language, MobileTranslations> = {
       groupActions: "Ações em grupo:",
       actionsForRemaining: "Ações para restantes:",
       changeToDelivered: "Mudar para entregue",
-      changeToNotDelivered: "Mudar para não entregue"
+      changeToNotDelivered: "Mudar para não entregue",
+      singleUnitPending: "Resta apenas 1 unidade pendente. Use os botões individuais abaixo."
     },
     status: {
       pending: "Pendente",
@@ -261,6 +278,10 @@ export const translations: Record<Language, MobileTranslations> = {
       clients: "clients",
       selectClient: "Select a client in the selector above"
     },
+    mapView: {
+      multipleClientsAtLocation: "Multiple clients at this location:",
+      selectClientToDeliver: "Select the client you want to deliver to"
+    },
     visitCard: {
       sequence: "Sequence",
       deliveryUnits: "Delivery Units",
@@ -290,7 +311,8 @@ export const translations: Record<Language, MobileTranslations> = {
       groupActions: "Group actions:",
       actionsForRemaining: "Actions for remaining:",
       changeToDelivered: "Change to delivered",
-      changeToNotDelivered: "Change to not delivered"
+      changeToNotDelivered: "Change to not delivered",
+      singleUnitPending: "Only 1 unit pending. Use individual buttons below."
     },
     status: {
       pending: "Pending",

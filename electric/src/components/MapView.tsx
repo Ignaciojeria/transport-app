@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { MapControls } from './MapControls'
 import { MapVisitCard } from './MapVisitCard'
+import { useLanguage } from '../hooks/useLanguage'
 import { 
   getLatLngFromAddressInfo, 
   decodePolyline, 
@@ -65,6 +66,7 @@ export function MapView({
   selectedClientIndex,
   onClientSelect
 }: MapViewProps) {
+  const { t } = useLanguage()
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
@@ -1015,11 +1017,11 @@ export function MapView({
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
               <span className="text-sm font-semibold text-gray-800">
-                🏢 Múltiples clientes en esta ubicación:
+🏢 {t.mapView.multipleClientsAtLocation}
               </span>
             </div>
             <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">
-              {clientsAtSameLocation.length} clientes
+{clientsAtSameLocation.length} {t.nextVisit.clients}
             </span>
           </div>
           
@@ -1045,12 +1047,12 @@ export function MapView({
                       </span>
                       {client.orderIndexes && client.orderIndexes.length > 1 ? (
                         <span className="text-xs text-gray-500">
-                          {client.orderIndexes.length} órdenes
+{client.orderIndexes.length} {t.visitCard.orders}
                         </span>
                       ) : (
                         client.orderIndex !== undefined && (
                           <span className="text-xs text-gray-500">
-                            Orden #{client.orderIndex + 1}
+{t.visitCard.order} #{client.orderIndex + 1}
                           </span>
                         )
                       )}
@@ -1061,7 +1063,7 @@ export function MapView({
                       ? 'bg-orange-100 text-orange-700' 
                       : 'bg-green-100 text-green-700'
                   }`}>
-                    {client.hasPendingUnits ? 'Pendiente' : 'Completado'}
+{client.hasPendingUnits ? t.status.pending : t.status.completed}
                   </div>
                 </div>
               </button>
@@ -1069,7 +1071,7 @@ export function MapView({
           </div>
           
           <div className="mt-3 text-xs text-gray-600 text-center bg-white/50 rounded-lg p-2">
-            👆 Selecciona el cliente al que vas a entregar
+👆 {t.mapView.selectClientToDeliver}
           </div>
         </div>
       )}
