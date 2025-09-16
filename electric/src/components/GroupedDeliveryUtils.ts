@@ -12,9 +12,12 @@ export interface GroupableDeliveryUnit {
 export interface DeliveryGroup {
   key: string // Clave única para el grupo (dirección + cliente)
   addressInfo: {
-    contact: any
     addressLine1: string
     coordinates: any
+  }
+  // Información del primer cliente del grupo (para propósitos de display)
+  primaryContact: {
+    fullName: string
   }
   units: GroupableDeliveryUnit[]
   totalUnits: number
@@ -59,7 +62,13 @@ export function groupDeliveryUnitsByLocation(
     if (!groups[groupKey]) {
       groups[groupKey] = {
         key: groupKey,
-        addressInfo,
+        addressInfo: {
+          addressLine1: addressInfo?.addressLine1,
+          coordinates: addressInfo?.coordinates
+        },
+        primaryContact: {
+          fullName: deliveryUnit.order?.contact?.fullName || 'Sin nombre'
+        },
         units: [],
         totalUnits: 0,
         pendingUnits: 0

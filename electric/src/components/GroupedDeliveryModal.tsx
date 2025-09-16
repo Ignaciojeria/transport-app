@@ -35,7 +35,7 @@ export function GroupedDeliveryModal({
   // Inicializar con datos del grupo
   useEffect(() => {
     if (group && isOpen) {
-      setRecipientName(group.addressInfo.contact?.fullName || '')
+      setRecipientName(group.primaryContact?.fullName || '')
       setRecipientRut('')
       setPhotoDataUrl(null)
     }
@@ -73,7 +73,7 @@ export function GroupedDeliveryModal({
         }],
         items: unit.unit.items || [],
         lpn: unit.unit.lpn || '',
-        orderReferenceID: `${routeData?.documentID || 'route'}-${visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
+        orderReferenceID: `${routeData?.referenceID || 'route'}-${visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
         recipient: {
           fullName: recipientName.trim(),
           nationalID: recipientRut.trim()
@@ -85,7 +85,6 @@ export function GroupedDeliveryModal({
       },
       route: {
         id: routeData?.id || 0,
-        documentID: routeData?.documentID || '',
         referenceID: routeData?.referenceID || '',
         sequenceNumber: 0,
         startedAt: new Date().toISOString()
@@ -111,7 +110,7 @@ export function GroupedDeliveryModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{t.delivery.deliverAll}</h2>
-              <p className="text-sm text-gray-600">{group.totalUnits} {t.groupedDeliveryModal.unitsFor} {group.addressInfo.contact?.fullName}</p>
+              <p className="text-sm text-gray-600">{group.totalUnits} {t.groupedDeliveryModal.unitsFor} {group.primaryContact?.fullName}</p>
             </div>
           </div>
           <button
@@ -152,7 +151,6 @@ export function GroupedDeliveryModal({
                       <div className="mb-2">
                         <IdentifierBadge 
                           lpn={unit.unit.lpn} 
-                          code={unit.unit.code} 
                           size="sm"
                         />
                       </div>

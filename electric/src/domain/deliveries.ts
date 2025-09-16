@@ -75,7 +75,6 @@ export interface ManualChange {
 
 export interface RouteReference {
   id: number
-  documentID: string
   referenceID: string
   sequenceNumber: number
   startedAt: string

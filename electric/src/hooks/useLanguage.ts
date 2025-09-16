@@ -39,7 +39,6 @@ export function useLanguage() {
 
     // Escuchar eventos de navegación
     const handlePopState = updateLanguage
-    const handlePushState = updateLanguage
     
     window.addEventListener('popstate', handlePopState)
     

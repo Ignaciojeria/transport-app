@@ -1,6 +1,5 @@
 import { Package } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
-import { useLanguage } from '../hooks/useLanguage'
 
 interface OrderCardProps {
   order: any
@@ -14,12 +13,9 @@ interface OrderCardProps {
 export function OrderCard({ 
   order, 
   orderIndex, 
-  visitIndex, 
-  getDeliveryUnitStatus,
   children,
   className = ''
 }: OrderCardProps) {
-  const { t } = useLanguage()
   const deliveryUnits = order?.deliveryUnits || []
   
   return (
@@ -68,8 +64,6 @@ interface DeliveryUnitCardProps {
 export function DeliveryUnitCard({ 
   unit, 
   unitIndex, 
-  visitIndex, 
-  orderIndex, 
   status,
   orderReferenceID,
   children,
@@ -97,7 +91,7 @@ export function DeliveryUnitCard({
           className="mb-2"
         />
         <h5 className="text-sm font-medium text-gray-800">
-          {t.visitCard.deliveryUnit} {unitIndex + 1}
+          Unidad de Entrega {unitIndex + 1}
         </h5>
       </div>
 

@@ -1,8 +1,7 @@
-import { Package, Hash } from 'lucide-react'
+import { Package, Tag } from 'lucide-react'
 
 interface IdentifierBadgeProps {
   lpn?: string
-  code?: string
   referenceID?: string
   className?: string
   size?: 'sm' | 'md' | 'lg'
@@ -11,7 +10,6 @@ interface IdentifierBadgeProps {
 
 export function IdentifierBadge({ 
   lpn, 
-  code, 
   referenceID,
   className = '', 
   size = 'md',
@@ -30,7 +28,6 @@ export function IdentifierBadge({
   }
 
   const hasLPN = lpn && lpn.trim() !== ''
-  const hasCode = code && code.trim() !== ''
   const hasReferenceID = referenceID && referenceID.trim() !== ''
 
   // Lógica del contrato:
@@ -47,7 +44,7 @@ export function IdentifierBadge({
       {/* REFERENCE Badge - siempre se muestra si hay referenceID */}
       {hasReferenceID && (
         <div className="flex items-center space-x-1 bg-gradient-to-r from-orange-400 to-red-500 text-white rounded-lg font-medium shadow-sm">
-          {showIcons && <Hash className={iconSizes[size]} />}
+          {showIcons && <Tag className={iconSizes[size]} />}
           <span className={sizeClasses[size]}>
             REFERENCE: {referenceID}
           </span>

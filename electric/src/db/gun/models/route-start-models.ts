@@ -12,7 +12,6 @@ export interface GunRouteStart {
   
   // Datos de la ruta (planos)
   route_id: number
-  route_documentID: string
   route_referenceID: string
   
   // Datos del vehículo (planos)

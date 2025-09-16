@@ -129,7 +129,7 @@ export function MapView({
     }
     
     // PRIORIDAD 2: Si hay un cliente seleccionado programáticamente, usar su visita
-    if (selectedClientIndex !== null) {
+    if (selectedClientIndex !== null && typeof selectedClientIndex === 'number' && selectedClientIndex < visits.length) {
       const selectedVisit = visits[selectedClientIndex]
       if (!selectedVisit) return []
       
@@ -141,7 +141,7 @@ export function MapView({
         orders.forEach((order: any, orderIndex: number) => {
           const clientName = order.contact?.fullName || 'Sin nombre'
           const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
-            getDeliveryUnitStatus(selectedClientIndex, orderIndex, unitIndex) === undefined
+            selectedClientIndex !== null && typeof selectedClientIndex === 'number' && getDeliveryUnitStatus(selectedClientIndex, orderIndex, unitIndex) === undefined
           )
           
           if (clientMap.has(clientName)) {
@@ -170,7 +170,7 @@ export function MapView({
       
       visits
         .filter(visit => visit.addressInfo?.addressLine1 === selectedAddress)
-        .forEach((visit, _, filteredVisits) => {
+        .forEach((visit) => {
           const visitIndex = visits.indexOf(visit)
           
           ;(visit.orders || []).forEach((order: any, orderIndex: number) => {
@@ -262,7 +262,7 @@ export function MapView({
       })
       
       // Encontrar la primera dirección con múltiples clientes
-      for (const [address, clientMap] of Object.entries(addressGroups)) {
+      for (const [, clientMap] of Object.entries(addressGroups)) {
         if (clientMap.size > 1) {
           return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
         }
@@ -874,7 +874,7 @@ export function MapView({
     lastCenteredVisit,
     nextVisitIndex,
     selectedClientIndex,
-    visitSequenceAtDisplayIdx: visits[displayIdx]?.sequenceNumber
+    visitSequenceAtDisplayIdx: displayIdx !== null ? visits[displayIdx]?.sequenceNumber : undefined
   })
   
   // Si no hay punto seleccionado/posicionado, mostrar mensaje de ruta completada
@@ -1026,7 +1026,7 @@ export function MapView({
           </div>
           
           <div className="grid grid-cols-1 gap-2">
-            {clientsAtSameLocation.map((client, clientIdx) => (
+            {clientsAtSameLocation.map((client) => (
               <button
                 key={`${client.index}-${client.orderIndex || 0}`}
                 onClick={() => setSelectedClientName(client.clientName)}

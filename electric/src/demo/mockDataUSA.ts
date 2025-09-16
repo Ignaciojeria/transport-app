@@ -70,6 +70,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 1,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "450 Lincoln Rd",
         addressLine2: "South Beach",
@@ -244,6 +245,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 2,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "3401 NE 1st Ave",
         addressLine2: "Design District",
@@ -301,6 +303,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 3,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "1111 SW 1st Ave",
         addressLine2: "Brickell",
@@ -358,6 +361,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 4,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "2700 NW 7th St",
         addressLine2: "Little Havana",
@@ -415,6 +419,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 5,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "19501 Biscayne Blvd",
         addressLine2: "Aventura",
@@ -472,6 +477,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 6,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "9700 Collins Ave",
         addressLine2: "Bal Harbour",
@@ -529,6 +535,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 7,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "1 Key Biscayne Blvd",
         addressLine2: "Key Biscayne",
@@ -586,6 +593,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 8,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "15701 Biscayne Blvd",
         addressLine2: "North Miami Beach",
@@ -643,6 +651,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 9,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "8888 SW 136th St",
         addressLine2: "Pinecrest",
@@ -700,6 +709,7 @@ export const mockRouteUSA: Route = {
     {
       sequenceNumber: 10,
       type: "delivery",
+      unassignedReason: "",
       addressInfo: {
         addressLine1: "12000 SW 88th St",
         addressLine2: "Kendall",

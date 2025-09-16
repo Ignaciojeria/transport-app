@@ -73,7 +73,6 @@ export interface DeliveryItem {
 }
 
 export interface DeliveryUnit {
-  documentID: string
   evidences: Evidence[]
   items: DeliveryItem[]
   lpn: string
