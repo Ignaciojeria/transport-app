@@ -256,25 +256,32 @@ export function VisitCardOrders({
               )}
             </div>
             
-            {/* Instrucciones agrupadas del cliente */}
+            {/* Agrupar órdenes por instrucciones */}
             {(() => {
-              // Obtener todas las instrucciones únicas del cliente
-              const uniqueInstructions = [...new Set(
-                clientOrders
-                  .map(({ order }: any) => order.instructions)
-                  .filter(Boolean)
-              )]
+              // Agrupar órdenes por instrucciones
+              const ordersByInstructions = new Map()
               
-              return uniqueInstructions.length > 0 && (
-                <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
-                  <strong>{t.visitCard.instructions}</strong> {String(uniqueInstructions[0])}
-                </div>
-              )
-            })()}
-            
-            {/* Órdenes del cliente */}
-            <div className="space-y-3">
-              {clientOrders.map(({ order, orderIndex, orderUnits }: any) => (
+              clientOrders.forEach((orderData: any) => {
+                const instructions = orderData.order.instructions || ''
+                if (!ordersByInstructions.has(instructions)) {
+                  ordersByInstructions.set(instructions, [])
+                }
+                ordersByInstructions.get(instructions).push(orderData)
+              })
+              
+              // Convertir a array y procesar cada grupo
+              return Array.from(ordersByInstructions.entries()).map(([instructions, groupOrders], groupIndex) => (
+                <div key={groupIndex} className="mb-4">
+                  {/* Mostrar instrucciones del grupo (si existen) */}
+                  {instructions && (
+                    <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
+                      <strong>{t.visitCard.instructions}</strong> {instructions}
+                    </div>
+                  )}
+                  
+                  {/* Órdenes del grupo */}
+                  <div className="space-y-3">
+                    {groupOrders.map(({ order, orderIndex, orderUnits }: any) => (
                 <div key={orderIndex}>
                   {/* Header de orden minimalista */}
                   <div className="flex items-center justify-between mb-2">
@@ -307,8 +314,11 @@ export function VisitCardOrders({
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            })()}
           </div>
         ))
       })()}

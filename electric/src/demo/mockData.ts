@@ -55,10 +55,10 @@ export const mockRouteData: any ={
             "orders": [
                 {
                     "referenceID": "105LA",
+                    "instructions": "Condominio Los Robles, portón azul. Intercom 2B.",
                     "contact": {
                         "fullName": "Fernando Castro"
                     },
-                    "instructions": "Entregar en portería del edificio. Timbre 201.",
                     "deliveryUnits": [
                         {
                             "lpn": "LPN-123456",
@@ -110,10 +110,10 @@ export const mockRouteData: any ={
             "orders": [
                 {
                     "referenceID": "104LA",
+                    "instructions": "Casa color azul, timbre rojo. Entregar en puerta principal.",
                     "contact": {
                         "fullName": "Lucia Herrera"
                     },
-                    "instructions": "Departamento N° 2214, piso 22. Ascensor B.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -148,10 +148,10 @@ export const mockRouteData: any ={
             "orders": [
                 {
                     "referenceID": "100LA-C",
+                    "instructions": "Departamento N° 2214, piso 22. Ascensor B.",
                     "contact": {
                         "fullName": "Roberto Silva"
                     },
-                    "instructions": "Departamento N° 1507, torre A. Dejar con conserje si no está.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -168,10 +168,10 @@ export const mockRouteData: any ={
                 },
                 {
                     "referenceID": "101LA",
+                    "instructions": "Departamento N° 2214, piso 22. Ascensor B.",
                     "contact": {
                         "fullName": "María Pérez"
                     },
-                    "instructions": "Casa azul con portón blanco. Tocar timbre 2 veces.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -188,10 +188,10 @@ export const mockRouteData: any ={
                 },
                 {
                     "referenceID": "100LA-A",
+                    "instructions": "Oficina 1507A, torre A. Horario 9:00-18:00 hrs.",
                     "contact": {
                         "fullName": "Roberto Silva"
                     },
-                    "instructions": "Departamento N° 1507, torre A. Dejar con conserje si no está.",
                     "deliveryUnits": [
                         {
                             "lpn": "LPN-123456",
@@ -209,10 +209,10 @@ export const mockRouteData: any ={
                 },
                 {
                     "referenceID": "102LA",
+                    "instructions": "Departamento N° 2214, piso 22. Ascensor B.",
                     "contact": {
                         "fullName": "Carlos Mendoza"
                     },
-                    "instructions": "Departamento N° 805, edificio Los Aromos. Interfón 805.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -229,10 +229,10 @@ export const mockRouteData: any ={
                 },
                 {
                     "referenceID": "100LA-B",
+                    "instructions": "Departamento N° 2214, piso 22. Ascensor B.",
                     "contact": {
                         "fullName": "Roberto Silva"
                     },
-                    "instructions": "Departamento N° 1507, torre A. Dejar con conserje si no está.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -267,10 +267,10 @@ export const mockRouteData: any ={
             "orders": [
                 {
                     "referenceID": "103LA",
+                    "instructions": "Oficina comercial planta baja. Preguntar por recepción.",
                     "contact": {
                         "fullName": "Ana Rodriguez"
                     },
-                    "instructions": "Departamento N° 412, bloque C. Avisar por WhatsApp +56987654321.",
                     "deliveryUnits": [
                         {
                             "items": [
