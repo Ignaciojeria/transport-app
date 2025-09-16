@@ -38,6 +38,7 @@ export interface MobileTranslations {
     selectedClient: string
     selectedVisit: string
     nextToDeliver: string
+    instructions: string
   }
   
   // Delivery Actions
@@ -121,7 +122,8 @@ export const translations: Record<Language, MobileTranslations> = {
       unit: "unidad",
       selectedClient: "Cliente seleccionado",
       selectedVisit: "Visita seleccionada",
-      nextToDeliver: "Siguiente a entregar"
+      nextToDeliver: "Siguiente a entregar",
+      instructions: "Instrucciones:"
     },
     delivery: {
       deliver: "Entregar",
@@ -196,7 +198,8 @@ export const translations: Record<Language, MobileTranslations> = {
       unit: "unidade",
       selectedClient: "Cliente selecionado",
       selectedVisit: "Visita selecionada",
-      nextToDeliver: "Próximo a entregar"
+      nextToDeliver: "Próximo a entregar",
+      instructions: "Instruções:"
     },
     delivery: {
       deliver: "Entregar",
@@ -271,7 +274,8 @@ export const translations: Record<Language, MobileTranslations> = {
       unit: "unit",
       selectedClient: "Selected client",
       selectedVisit: "Selected visit",
-      nextToDeliver: "Next to deliver"
+      nextToDeliver: "Next to deliver",
+      instructions: "Instructions:"
     },
     delivery: {
       deliver: "Deliver",

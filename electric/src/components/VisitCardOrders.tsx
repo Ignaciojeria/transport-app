@@ -99,7 +99,7 @@ export function VisitCardOrders({
                 </div>
                 
                 <div className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded-full inline-block">
-                  {group.totalUnits} unidades • {group.pendingUnits} pendientes
+                  {group.totalUnits} {t.visitCard.units} • {group.pendingUnits} {t.status.pendingUnits}
                 </div>
               </div>
             </div>
@@ -127,11 +127,11 @@ export function VisitCardOrders({
                         <div className="flex items-center space-x-2">
                           <Package2 className="w-4 h-4 text-gray-600" />
                           <span className="font-medium text-gray-800">
-                            Orden: {referenceID}
+{t.visitCard.order}: {referenceID}
                           </span>
                         </div>
                         <span className="text-sm text-gray-500">
-                          {units.length} unidad{units.length !== 1 ? 'es' : ''}
+                          {units.length} {units.length === 1 ? t.visitCard.unit : t.visitCard.units}
                         </span>
                       </div>
                     </div>
@@ -164,7 +164,7 @@ export function VisitCardOrders({
                           
                           <div className="flex items-center justify-between">
                             <div className="text-xs text-gray-500">
-                              Cant.
+                              {t.visitCard.quantity}
                             </div>
                             <div className="text-lg font-bold text-purple-600">
                               {unit.unit.items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0}
@@ -270,12 +270,12 @@ export function VisitCardOrders({
                       </span>
                     </div>
                     <span className="text-xs text-gray-500">
-                      {orderUnits.length} {orderUnits.length === 1 ? 'unidad' : 'unidades'}
+                      {orderUnits.length} {orderUnits.length === 1 ? t.visitCard.unit : t.visitCard.units}
                     </span>
                   </div>
                   {order.instructions && (
                     <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
-                      <strong>Instrucciones:</strong> {order.instructions}
+                      <strong>{t.visitCard.instructions}</strong> {order.instructions}
                     </div>
                   )}
                   

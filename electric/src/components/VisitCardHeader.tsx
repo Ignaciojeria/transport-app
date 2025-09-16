@@ -1,4 +1,5 @@
 import { User, MapPin, Users } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardHeaderProps {
   visit: any
@@ -8,6 +9,8 @@ interface VisitCardHeaderProps {
 }
 
 export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode = 'list' }: VisitCardHeaderProps) {
+  const { t } = useLanguage()
+  
   // Obtener todos los clientes únicos de la visita
   const uniqueClients = Array.from(new Set(
     (visit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
@@ -34,7 +37,7 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode =
               </h3>
               {hasMultipleClients && (
                 <p className="text-sm text-gray-500 mt-1">
-                  {uniqueClients.length} clientes
+                  {uniqueClients.length} {t.nextVisit.clients}
                 </p>
               )}
             </>
@@ -45,7 +48,7 @@ export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode =
                 <div>
                   <h3 className="text-base font-medium text-gray-800 flex items-center mb-1">
                     <Users className="w-4 h-4 mr-2 text-gray-600" />
-                    {uniqueClients.length} clientes
+                    {uniqueClients.length} {t.nextVisit.clients}
                   </h3>
                   <p className="text-sm text-gray-600 flex items-center">
                     <MapPin className="w-4 h-4 mr-2 text-gray-500" />

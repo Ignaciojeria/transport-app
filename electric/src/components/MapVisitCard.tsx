@@ -476,7 +476,7 @@ export function MapVisitCard({
                         </div>
                       </div>
                       <div className="text-right ml-3">
-                        <span className="text-xs text-gray-500 block">Cant.</span>
+                        <span className="text-xs text-gray-500 block">{t.visitCard.quantity}</span>
                         <span className="text-xl font-bold text-indigo-600">{(unit.items || []).reduce((a: number, it: any) => a + (Number(it?.quantity) || 0), 0)}</span>
                       </div>
                     </div>
