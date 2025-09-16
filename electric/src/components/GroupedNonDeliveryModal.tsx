@@ -17,15 +17,6 @@ interface GroupedNonDeliveryModalProps {
   isDemo?: boolean
 }
 
-const nonDeliveryReasons = [
-  { value: 'recipient_not_available', label: 'Receptor no disponible' },
-  { value: 'address_not_found', label: 'Dirección no encontrada' },
-  { value: 'recipient_refused', label: 'Receptor rechazó la entrega' },
-  { value: 'damaged_package', label: 'Paquete dañado' },
-  { value: 'incorrect_address', label: 'Dirección incorrecta' },
-  { value: 'security_issue', label: 'Problema de seguridad' },
-  { value: 'other', label: 'Otro' }
-]
 
 export function GroupedNonDeliveryModal({
   isOpen,
@@ -41,6 +32,17 @@ export function GroupedNonDeliveryModal({
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+
+  // Motivos de no entrega traducidos
+  const nonDeliveryReasons = [
+    { value: 'recipient_not_available', label: t.groupedNonDeliveryModal.reasons.recipientNotAvailable },
+    { value: 'address_not_found', label: t.groupedNonDeliveryModal.reasons.addressNotFound },
+    { value: 'recipient_refused', label: t.groupedNonDeliveryModal.reasons.recipientRefused },
+    { value: 'damaged_package', label: t.groupedNonDeliveryModal.reasons.damagedPackage },
+    { value: 'incorrect_address', label: t.groupedNonDeliveryModal.reasons.incorrectAddress },
+    { value: 'security_issue', label: t.groupedNonDeliveryModal.reasons.securityIssue },
+    { value: 'other', label: t.groupedNonDeliveryModal.reasons.other }
+  ]
 
   // Inicializar con datos del grupo
   useEffect(() => {
@@ -129,7 +131,7 @@ export function GroupedNonDeliveryModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{t.delivery.notDeliverAll}</h2>
-              <p className="text-sm text-gray-600">{group.totalUnits} unidades para {group.addressInfo.contact?.fullName}</p>
+              <p className="text-sm text-gray-600">{group.totalUnits} {t.groupedNonDeliveryModal.unitsFor} {group.addressInfo.contact?.fullName}</p>
             </div>
           </div>
           <button
@@ -147,10 +149,10 @@ export function GroupedNonDeliveryModal({
             <div className="flex items-start space-x-3">
               <MapPin className="w-5 h-5 text-red-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-red-900">Dirección de entrega</h3>
+                <h3 className="font-semibold text-red-900">{t.groupedNonDeliveryModal.deliveryAddress}</h3>
                 <p className="text-red-700">{group.addressInfo.addressLine1}</p>
                 <p className="text-sm text-red-600 mt-1">
-                  {group.totalUnits} unidades • {group.pendingUnits} pendientes
+{group.totalUnits} {t.visitCard.units} • {group.pendingUnits} {t.groupedNonDeliveryModal.unitsPending}
                 </p>
               </div>
             </div>
@@ -158,7 +160,7 @@ export function GroupedNonDeliveryModal({
 
           {/* Lista de unidades */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">Unidades que no se entregarán</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t.groupedNonDeliveryModal.unitsNotToDeliver}</h3>
             <div className="space-y-2">
               {group.units.map((unit, index) => (
                 <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
@@ -176,7 +178,7 @@ export function GroupedNonDeliveryModal({
                       </div>
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-xs font-medium text-gray-600">
-                          Orden {unit.orderIndex + 1}
+{t.groupedNonDeliveryModal.order} {unit.orderIndex + 1}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
@@ -186,7 +188,7 @@ export function GroupedNonDeliveryModal({
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">
-                      {unit.unit.items?.length || 0} items
+{unit.unit.items?.length || 0} {t.groupedNonDeliveryModal.items}
                     </p>
                     {unit.status && (
                       <span className={`text-xs px-2 py-1 rounded-full ${
@@ -194,7 +196,7 @@ export function GroupedNonDeliveryModal({
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {unit.status === 'delivered' ? 'Entregado' : 'No entregado'}
+{unit.status === 'delivered' ? t.groupedNonDeliveryModal.delivered : t.groupedNonDeliveryModal.notDelivered}
                       </span>
                     )}
                   </div>
@@ -205,7 +207,7 @@ export function GroupedNonDeliveryModal({
 
           {/* Motivo de no entrega */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Motivo de no entrega *</h3>
+            <h3 className="font-semibold text-gray-900">{t.groupedNonDeliveryModal.nonDeliveryReason}</h3>
             
             <div className="grid grid-cols-1 gap-3">
               {nonDeliveryReasons.map((reason) => (
@@ -226,13 +228,13 @@ export function GroupedNonDeliveryModal({
             {selectedReason === 'other' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Especificar motivo
+{t.groupedNonDeliveryModal.specifyReason}
                 </label>
                 <textarea
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                  placeholder="Describe el motivo específico..."
+                  placeholder={t.groupedNonDeliveryModal.reasonPlaceholder}
                   rows={3}
                 />
               </div>
@@ -241,12 +243,12 @@ export function GroupedNonDeliveryModal({
 
           {/* Captura de foto */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Evidencia fotográfica *</h3>
+            <h3 className="font-semibold text-gray-900">{t.groupedNonDeliveryModal.photographicEvidence}</h3>
             
             <CameraCapture
               onCapture={handlePhotoCapture}
-              title="Capturar evidencia de no entrega grupal"
-              buttonText="Tomar foto"
+              title={t.groupedNonDeliveryModal.captureGroupEvidence}
+              buttonText={t.groupedNonDeliveryModal.takePhoto}
               className="w-full"
             />
             
@@ -274,7 +276,7 @@ export function GroupedNonDeliveryModal({
         <div className="flex items-center justify-between p-6 border-t bg-gray-50 rounded-b-xl">
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <AlertTriangle className="w-4 h-4" />
-            <span>Esta acción marcará todas las unidades como no entregadas</span>
+            <span>{t.groupedNonDeliveryModal.actionWarning}</span>
           </div>
           
           <div className="flex space-x-3">
@@ -282,7 +284,7 @@ export function GroupedNonDeliveryModal({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancelar
+{t.groupedNonDeliveryModal.cancel}
             </button>
             <button
               onClick={handleSubmit}
@@ -292,12 +294,12 @@ export function GroupedNonDeliveryModal({
               {submitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Procesando...</span>
+                  <span>{t.groupedNonDeliveryModal.processing}</span>
                 </>
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4" />
-                  <span>Marcar como no entregado</span>
+                  <span>{t.groupedNonDeliveryModal.markAsNotDelivered}</span>
                 </>
               )}
             </button>

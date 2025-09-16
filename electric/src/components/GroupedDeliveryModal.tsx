@@ -111,7 +111,7 @@ export function GroupedDeliveryModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">{t.delivery.deliverAll}</h2>
-              <p className="text-sm text-gray-600">{group.totalUnits} unidades para {group.addressInfo.contact?.fullName}</p>
+              <p className="text-sm text-gray-600">{group.totalUnits} {t.groupedDeliveryModal.unitsFor} {group.addressInfo.contact?.fullName}</p>
             </div>
           </div>
           <button
@@ -129,10 +129,10 @@ export function GroupedDeliveryModal({
             <div className="flex items-start space-x-3">
               <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-blue-900">Dirección de entrega</h3>
+                <h3 className="font-semibold text-blue-900">{t.groupedDeliveryModal.deliveryAddress}</h3>
                 <p className="text-blue-700">{group.addressInfo.addressLine1}</p>
                 <p className="text-sm text-blue-600 mt-1">
-                  {group.totalUnits} unidades • {group.pendingUnits} pendientes
+{group.totalUnits} {t.visitCard.units} • {group.pendingUnits} {t.groupedDeliveryModal.unitsPending}
                 </p>
               </div>
             </div>
@@ -140,7 +140,7 @@ export function GroupedDeliveryModal({
 
           {/* Lista de unidades */}
           <div>
-            <h3 className="font-semibold text-gray-900 mb-3">Unidades a entregar</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t.groupedDeliveryModal.unitsToDeliver}</h3>
             <div className="space-y-2">
               {group.units.map((unit, index) => (
                 <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
@@ -158,7 +158,7 @@ export function GroupedDeliveryModal({
                       </div>
                       <div className="flex items-center space-x-2 mb-1">
                         <span className="text-xs font-medium text-gray-600">
-                          Orden {unit.orderIndex + 1}
+{t.groupedDeliveryModal.order} {unit.orderIndex + 1}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
@@ -168,7 +168,7 @@ export function GroupedDeliveryModal({
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">
-                      {unit.unit.items?.length || 0} items
+{unit.unit.items?.length || 0} {t.groupedDeliveryModal.items}
                     </p>
                     {unit.status && (
                       <span className={`text-xs px-2 py-1 rounded-full ${
@@ -176,7 +176,7 @@ export function GroupedDeliveryModal({
                           ? 'bg-green-100 text-green-800' 
                           : 'bg-red-100 text-red-800'
                       }`}>
-                        {unit.status === 'delivered' ? 'Entregado' : 'No entregado'}
+{unit.status === 'delivered' ? t.groupedDeliveryModal.delivered : t.groupedDeliveryModal.notDelivered}
                       </span>
                     )}
                   </div>
@@ -187,45 +187,45 @@ export function GroupedDeliveryModal({
 
           {/* Información del receptor */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Información del receptor</h3>
+            <h3 className="font-semibold text-gray-900">{t.groupedDeliveryModal.recipientInfo}</h3>
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <User className="w-4 h-4 inline mr-2" />
-                Nombre completo *
+{t.groupedDeliveryModal.fullNameRequired}
               </label>
               <input
                 type="text"
                 value={recipientName}
                 onChange={(e) => setRecipientName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Nombre del receptor"
+                placeholder={t.groupedDeliveryModal.fullNamePlaceholder}
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                RUT (opcional)
+{t.groupedDeliveryModal.documentOptional}
               </label>
               <input
                 type="text"
                 value={recipientRut}
                 onChange={(e) => setRecipientRut(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="12.345.678-9"
+                placeholder={t.groupedDeliveryModal.documentPlaceholder}
               />
             </div>
           </div>
 
           {/* Captura de foto */}
           <div className="space-y-4">
-            <h3 className="font-semibold text-gray-900">Evidencia fotográfica</h3>
+            <h3 className="font-semibold text-gray-900">{t.groupedDeliveryModal.photographicEvidence}</h3>
             
             <CameraCapture
               onCapture={handlePhotoCapture}
-              title="Capturar evidencia de entrega grupal"
-              buttonText="Tomar foto"
+              title={t.groupedDeliveryModal.captureGroupEvidence}
+              buttonText={t.groupedDeliveryModal.takePhoto}
               className="w-full"
             />
             
@@ -253,7 +253,7 @@ export function GroupedDeliveryModal({
         <div className="flex items-center justify-between p-6 border-t bg-gray-50 rounded-b-xl">
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <AlertCircle className="w-4 h-4" />
-              <span>Esta acción marcará todas las unidades como entregadas</span>
+              <span>{t.groupedDeliveryModal.actionWarning}</span>
             </div>
           
           <div className="flex space-x-3">
@@ -261,7 +261,7 @@ export function GroupedDeliveryModal({
               onClick={onClose}
               className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Cancelar
+{t.groupedDeliveryModal.cancel}
             </button>
             <button
               onClick={handleSubmit}
@@ -271,7 +271,7 @@ export function GroupedDeliveryModal({
               {submitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Procesando...</span>
+                  <span>{t.groupedDeliveryModal.processing}</span>
                 </>
               ) : (
                 <>

@@ -107,6 +107,62 @@ export interface MobileTranslations {
     }
   }
   
+  // Grouped Delivery Modal
+  groupedDeliveryModal: {
+    title: string
+    unitsFor: string
+    deliveryAddress: string
+    unitsPending: string
+    unitsToDeliver: string
+    order: string
+    items: string
+    recipientInfo: string
+    fullNameRequired: string
+    fullNamePlaceholder: string
+    documentOptional: string
+    documentPlaceholder: string
+    photographicEvidence: string
+    captureGroupEvidence: string
+    takePhoto: string
+    actionWarning: string
+    cancel: string
+    processing: string
+    delivered: string
+    notDelivered: string
+  }
+  
+  // Grouped Non-Delivery Modal
+  groupedNonDeliveryModal: {
+    title: string
+    unitsFor: string
+    deliveryAddress: string
+    unitsPending: string
+    unitsNotToDeliver: string
+    order: string
+    items: string
+    nonDeliveryReason: string
+    specifyReason: string
+    reasonPlaceholder: string
+    photographicEvidence: string
+    captureGroupEvidence: string
+    takePhoto: string
+    actionWarning: string
+    cancel: string
+    processing: string
+    markAsNotDelivered: string
+    delivered: string
+    notDelivered: string
+    reasons: {
+      recipientNotAvailable: string
+      addressNotFound: string
+      recipientRefused: string
+      damagedPackage: string
+      incorrectAddress: string
+      securityIssue: string
+      other: string
+    }
+  }
+  
   // Tabs
   tabs: {
     enRoute: string
@@ -222,6 +278,58 @@ export const translations: Record<Language, MobileTranslations> = {
         otherReason: "otro motivo"
       }
     },
+    groupedDeliveryModal: {
+      title: "Entregar todo",
+      unitsFor: "unidades para",
+      deliveryAddress: "Dirección de entrega",
+      unitsPending: "pendientes",
+      unitsToDeliver: "Unidades a entregar",
+      order: "Orden",
+      items: "ítems",
+      recipientInfo: "Información del receptor",
+      fullNameRequired: "Nombre completo *",
+      fullNamePlaceholder: "Nombre del receptor",
+      documentOptional: "RUT (opcional)",
+      documentPlaceholder: "12.345.678-9",
+      photographicEvidence: "Evidencia fotográfica",
+      captureGroupEvidence: "Capturar evidencia de entrega grupal",
+      takePhoto: "Tomar foto",
+      actionWarning: "Esta acción marcará todas las unidades como entregadas",
+      cancel: "Cancelar",
+      processing: "Procesando...",
+      delivered: "Entregado",
+      notDelivered: "No entregado"
+    },
+    groupedNonDeliveryModal: {
+      title: "No entregar todo",
+      unitsFor: "unidades para",
+      deliveryAddress: "Dirección de entrega",
+      unitsPending: "pendientes",
+      unitsNotToDeliver: "Unidades que no se entregarán",
+      order: "Orden",
+      items: "ítems",
+      nonDeliveryReason: "Motivo de no entrega *",
+      specifyReason: "Especificar motivo",
+      reasonPlaceholder: "Describe el motivo específico...",
+      photographicEvidence: "Evidencia fotográfica *",
+      captureGroupEvidence: "Capturar evidencia de no entrega grupal",
+      takePhoto: "Tomar foto",
+      actionWarning: "Esta acción marcará todas las unidades como no entregadas",
+      cancel: "Cancelar",
+      processing: "Procesando...",
+      markAsNotDelivered: "Marcar como no entregado",
+      delivered: "Entregado",
+      notDelivered: "No entregado",
+      reasons: {
+        recipientNotAvailable: "Receptor no disponible",
+        addressNotFound: "Dirección no encontrada",
+        recipientRefused: "Receptor rechazó la entrega",
+        damagedPackage: "Paquete dañado",
+        incorrectAddress: "Dirección incorrecta",
+        securityIssue: "Problema de seguridad",
+        other: "Otro"
+      }
+    },
     tabs: {
       enRoute: "En ruta",
       delivered: "Entregados",
@@ -333,6 +441,58 @@ export const translations: Record<Language, MobileTranslations> = {
         otherReason: "outro motivo"
       }
     },
+    groupedDeliveryModal: {
+      title: "Entregar tudo",
+      unitsFor: "unidades para",
+      deliveryAddress: "Endereço de entrega",
+      unitsPending: "pendentes",
+      unitsToDeliver: "Unidades a entregar",
+      order: "Pedido",
+      items: "itens",
+      recipientInfo: "Informações do destinatário",
+      fullNameRequired: "Nome completo *",
+      fullNamePlaceholder: "Nome do destinatário",
+      documentOptional: "CPF (opcional)",
+      documentPlaceholder: "123.456.789-01",
+      photographicEvidence: "Evidência fotográfica",
+      captureGroupEvidence: "Capturar evidência de entrega em grupo",
+      takePhoto: "Tirar foto",
+      actionWarning: "Esta ação marcará todas as unidades como entregues",
+      cancel: "Cancelar",
+      processing: "Processando...",
+      delivered: "Entregue",
+      notDelivered: "Não entregue"
+    },
+    groupedNonDeliveryModal: {
+      title: "Não entregar tudo",
+      unitsFor: "unidades para",
+      deliveryAddress: "Endereço de entrega",
+      unitsPending: "pendentes",
+      unitsNotToDeliver: "Unidades que não serão entregues",
+      order: "Pedido",
+      items: "itens",
+      nonDeliveryReason: "Motivo da não entrega *",
+      specifyReason: "Especificar motivo",
+      reasonPlaceholder: "Descreva o motivo específico...",
+      photographicEvidence: "Evidência fotográfica *",
+      captureGroupEvidence: "Capturar evidência de não entrega em grupo",
+      takePhoto: "Tirar foto",
+      actionWarning: "Esta ação marcará todas as unidades como não entregues",
+      cancel: "Cancelar",
+      processing: "Processando...",
+      markAsNotDelivered: "Marcar como não entregue",
+      delivered: "Entregue",
+      notDelivered: "Não entregue",
+      reasons: {
+        recipientNotAvailable: "Destinatário não disponível",
+        addressNotFound: "Endereço não encontrado",
+        recipientRefused: "Destinatário recusou a entrega",
+        damagedPackage: "Pacote danificado",
+        incorrectAddress: "Endereço incorreto",
+        securityIssue: "Problema de segurança",
+        other: "Outro"
+      }
+    },
     tabs: {
       enRoute: "Em rota",
       delivered: "Entregues",
@@ -442,6 +602,58 @@ export const translations: Record<Language, MobileTranslations> = {
         noResidents: "no residents",
         damagedProduct: "damaged product",
         otherReason: "other reason"
+      }
+    },
+    groupedDeliveryModal: {
+      title: "Deliver all",
+      unitsFor: "units for",
+      deliveryAddress: "Delivery address",
+      unitsPending: "pending",
+      unitsToDeliver: "Units to deliver",
+      order: "Order",
+      items: "items",
+      recipientInfo: "Recipient information",
+      fullNameRequired: "Full name *",
+      fullNamePlaceholder: "Recipient name",
+      documentOptional: "ID (optional)",
+      documentPlaceholder: "123-45-6789",
+      photographicEvidence: "Photographic evidence",
+      captureGroupEvidence: "Capture group delivery evidence",
+      takePhoto: "Take photo",
+      actionWarning: "This action will mark all units as delivered",
+      cancel: "Cancel",
+      processing: "Processing...",
+      delivered: "Delivered",
+      notDelivered: "Not delivered"
+    },
+    groupedNonDeliveryModal: {
+      title: "Don't deliver all",
+      unitsFor: "units for",
+      deliveryAddress: "Delivery address",
+      unitsPending: "pending",
+      unitsNotToDeliver: "Units not to deliver",
+      order: "Order",
+      items: "items",
+      nonDeliveryReason: "Non-delivery reason *",
+      specifyReason: "Specify reason",
+      reasonPlaceholder: "Describe the specific reason...",
+      photographicEvidence: "Photographic evidence *",
+      captureGroupEvidence: "Capture group non-delivery evidence",
+      takePhoto: "Take photo",
+      actionWarning: "This action will mark all units as not delivered",
+      cancel: "Cancel",
+      processing: "Processing...",
+      markAsNotDelivered: "Mark as not delivered",
+      delivered: "Delivered",
+      notDelivered: "Not delivered",
+      reasons: {
+        recipientNotAvailable: "Recipient not available",
+        addressNotFound: "Address not found",
+        recipientRefused: "Recipient refused delivery",
+        damagedPackage: "Damaged package",
+        incorrectAddress: "Incorrect address",
+        securityIssue: "Security issue",
+        other: "Other"
       }
     },
     tabs: {
