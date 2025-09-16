@@ -40,7 +40,7 @@ export const mockRouteData: any ={
         {
             "type": "delivery",
             "addressInfo": {
-                "addressLine1": "Calle 1005, Piso 3, La Florida",
+                "addressLine1": "Calle 1005, La Florida",
                 "coordinates": {
                     "latitude": -33.5374662,
                     "longitude": -70.5989191
@@ -58,6 +58,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Fernando Castro"
                     },
+                    "instructions": "Entregar en portería del edificio. Timbre 201.",
                     "deliveryUnits": [
                         {
                             "lpn": "LPN-123456",
@@ -94,7 +95,7 @@ export const mockRouteData: any ={
         {
             "type": "delivery",
             "addressInfo": {
-                "addressLine1": "Calle 1004, Piso 2, La Florida",
+                "addressLine1": "Calle 1004, La Florida",
                 "coordinates": {
                     "latitude": -33.536736,
                     "longitude": -70.5887186
@@ -112,6 +113,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Lucia Herrera"
                     },
+                    "instructions": "Departamento N° 2214, piso 22. Ascensor B.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -149,6 +151,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Roberto Silva"
                     },
+                    "instructions": "Departamento N° 1507, torre A. Dejar con conserje si no está.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -168,6 +171,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "María Pérez"
                     },
+                    "instructions": "Casa azul con portón blanco. Tocar timbre 2 veces.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -187,6 +191,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Roberto Silva"
                     },
+                    "instructions": "Departamento N° 1507, torre A. Dejar con conserje si no está.",
                     "deliveryUnits": [
                         {
                             "lpn": "LPN-123456",
@@ -207,6 +212,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Carlos Mendoza"
                     },
+                    "instructions": "Departamento N° 805, edificio Los Aromos. Interfón 805.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -226,6 +232,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Roberto Silva"
                     },
+                    "instructions": "Departamento N° 1507, torre A. Dejar con conserje si no está.",
                     "deliveryUnits": [
                         {
                             "items": [
@@ -245,7 +252,7 @@ export const mockRouteData: any ={
         {
             "type": "delivery",
             "addressInfo": {
-                "addressLine1": "Calle 1003, Piso 1, La Florida",
+                "addressLine1": "Calle 1003, La Florida",
                 "coordinates": {
                     "latitude": -33.5068584,
                     "longitude": -70.5895279
@@ -263,6 +270,7 @@ export const mockRouteData: any ={
                     "contact": {
                         "fullName": "Ana Rodriguez"
                     },
+                    "instructions": "Departamento N° 412, bloque C. Avisar por WhatsApp +56987654321.",
                     "deliveryUnits": [
                         {
                             "items": [
