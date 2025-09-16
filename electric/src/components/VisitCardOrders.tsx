@@ -241,62 +241,46 @@ export function VisitCardOrders({
           .sort(([clientA], [clientB]) => clientA.localeCompare(clientB))
         
         return sortedClients.map(([clientName, clientOrders]) => (
-          <div key={clientName} className="mb-6">
-            {/* Header del cliente */}
-            <div className="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-200">
-              <div className="flex items-center space-x-3">
-                <User className="w-5 h-5 text-indigo-600" />
-                <div className="flex-1">
-                  <h3 className="text-sm font-bold text-gray-800">
-                    {clientName}
-                  </h3>
-                  <span className="text-xs text-gray-600">
-                    {clientOrders.length} {clientOrders.length === 1 ? 'orden' : 'órdenes'}
-                  </span>
-                </div>
-                {clientOrders[0]?.order?.contact?.phone && (
-                  <span className="text-xs text-gray-500 bg-white px-3 py-1 rounded-full border">
-                    📞 {clientOrders[0].order.contact.phone}
-                  </span>
-                )}
+          <div key={clientName} className="mb-4">
+            {/* Header minimalista del cliente - similar a modo mapa */}
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-gray-600" />
+                <h3 className="text-sm font-medium text-gray-800">{clientName}</h3>
+                <span className="text-xs text-gray-500">({clientOrders.length})</span>
               </div>
+              {clientOrders[0]?.order?.contact?.phone && (
+                <span className="text-xs text-gray-500">📞 {clientOrders[0].order.contact.phone}</span>
+              )}
             </div>
             
             {/* Órdenes del cliente */}
-            <div className="ml-4 space-y-4">
+            <div className="space-y-3">
               {clientOrders.map(({ order, orderIndex, orderUnits }: any) => (
-                <div key={orderIndex} className="border-l-2 border-indigo-200 pl-4">
-                  {/* Información de la orden */}
-                  <div className="mb-3 p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Package2 className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">
-                          Orden: {order.referenceID || `#${orderIndex + 1}`}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        {orderUnits.length} {orderUnits.length === 1 ? 'unidad' : 'unidades'}
+                <div key={orderIndex}>
+                  {/* Header de orden minimalista */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Package2 className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">
+                        {order.referenceID || `#${orderIndex + 1}`}
                       </span>
                     </div>
-                    {order.instructions && (
-                      <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded border-l-2 border-blue-200">
-                        <strong>Instrucciones:</strong> {order.instructions}
-                      </div>
-                    )}
+                    <span className="text-xs text-gray-500">
+                      {orderUnits.length} {orderUnits.length === 1 ? 'unidad' : 'unidades'}
+                    </span>
                   </div>
+                  {order.instructions && (
+                    <div className="text-xs text-gray-600 mb-3 p-2 bg-blue-50 rounded border-l-2 border-blue-200">
+                      <strong>Instrucciones:</strong> {order.instructions}
+                    </div>
+                  )}
                   
-                  {/* Unidades de entrega */}
-                  {orderUnits.map((x: any) => (
-                    <div key={x.uIdx} className="mb-3">
-                      <div className="mb-2">
-                        <IdentifierBadge 
-                          lpn={x.unit.lpn} 
-                          code={x.unit.code} 
-                          size="sm"
-                        />
-                      </div>
+                  {/* Unidades de entrega compactas */}
+                  <div className="space-y-2">
+                    {orderUnits.map((x: any) => (
                       <VisitCardDeliveryUnit
+                        key={x.uIdx}
                         unit={x.unit}
                         uIdx={x.uIdx}
                         status={x.status}
@@ -307,8 +291,8 @@ export function VisitCardOrders({
                         onOpenDelivery={onOpenDelivery}
                         onOpenNonDelivery={onOpenNonDelivery}
                       />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

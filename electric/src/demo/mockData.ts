@@ -67,6 +67,7 @@ export const mockRouteData: any ={
                     },
                     "deliveryUnits": [
                         {
+                            "lpn": "LPN-123456",
                             "items": [
                                 {
                                     "description": "pepsi zero 350ml",
@@ -82,6 +83,7 @@ export const mockRouteData: any ={
                             "price": 100
                         },
                         {
+                            "lpn": "LPN-1234567",
                             "items": [
                                 {
                                     "description": "caja contenedora bebidas",
@@ -194,6 +196,7 @@ export const mockRouteData: any ={
                     },
                     "deliveryUnits": [
                         {
+                            "lpn": "LPN-123456",
                             "items": [
                                 {
                                     "description": "Bebida 350ml",

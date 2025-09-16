@@ -36,7 +36,7 @@ export function VisitCardDeliveryUnit({
   }
 
   return (
-    <div className="bg-white rounded-lg p-4 border border-gray-200">
+    <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border border-gray-200">
       {/* Badge prominente */}
       <div className="mb-3">
         <span className="inline-block bg-orange-500 text-white px-3 py-1 rounded-lg text-sm font-medium">
