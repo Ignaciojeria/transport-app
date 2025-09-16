@@ -103,7 +103,7 @@ export function VisitCardDeliveryUnit({
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
             >
               <XCircle size={16} />
-              <span>{t.delivery.notDelivered}</span>
+              <span>{t.delivery.changeToNotDelivered}</span>
             </button>
           ) : status === 'not-delivered' ? (
             // Si está no entregado, mostrar solo opción de cambiar a entregado
@@ -112,7 +112,7 @@ export function VisitCardDeliveryUnit({
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
             >
               <CheckCircle size={16} />
-              <span>{t.delivery.delivered}</span>
+              <span>{t.delivery.changeToDelivered}</span>
             </button>
           ) : (
             // Si está pendiente, mostrar ambas opciones originales
