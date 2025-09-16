@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle, Package } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardDeliveryUnitProps {
   unit: any
@@ -24,6 +25,7 @@ export function VisitCardDeliveryUnit({
   onOpenDelivery,
   onOpenNonDelivery
 }: VisitCardDeliveryUnitProps) {
+  const { t } = useLanguage()
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
@@ -51,7 +53,7 @@ export function VisitCardDeliveryUnit({
           {/* Título de la unidad - igual que modo mapa */}
           <h5 className="text-sm font-medium text-gray-800 mb-2 truncate flex items-center">
             <Package className="w-4 h-4 mr-2 text-gray-600" />
-            Unidad de Entrega {uIdx + 1}
+            {t.visitCard.deliveryUnit} {uIdx + 1}
           </h5>
 
           {/* Información del producto - igual que modo mapa */}

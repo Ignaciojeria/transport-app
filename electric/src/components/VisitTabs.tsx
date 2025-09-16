@@ -1,4 +1,5 @@
 import { Play, CheckCircle, XCircle } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitTabsProps {
   activeTab: 'en-ruta' | 'entregados' | 'no-entregados'
@@ -15,6 +16,7 @@ export function VisitTabs({
   deliveredUnits, 
   notDeliveredUnits 
 }: VisitTabsProps) {
+  const { t } = useLanguage()
   
   const getTabIcon = (tabId: 'en-ruta' | 'entregados' | 'no-entregados') => {
     switch (tabId) {
@@ -32,19 +34,19 @@ export function VisitTabs({
   const tabs = [
     {
       id: 'en-ruta' as const,
-      label: 'En ruta',
+      label: t.tabs.enRoute,
       count: inRouteUnits,
       icon: getTabIcon('en-ruta')
     },
     {
       id: 'entregados' as const,
-      label: 'Entregados',
+      label: t.tabs.delivered,
       count: deliveredUnits,
       icon: getTabIcon('entregados')
     },
     {
       id: 'no-entregados' as const,
-      label: 'No entregados',
+      label: t.tabs.notDelivered,
       count: notDeliveredUnits,
       icon: getTabIcon('no-entregados')
     }

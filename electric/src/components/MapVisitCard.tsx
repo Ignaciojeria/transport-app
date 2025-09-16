@@ -1,5 +1,6 @@
 import { CheckCircle, XCircle, Play, Package, User, MapPin, Users } from 'lucide-react'
 import { IdentifierBadge } from './IdentifierBadge'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface MapVisitCardProps {
   visit: any
@@ -42,6 +43,7 @@ export function MapVisitCard({
   selectedClient,
   hasMultipleClients
 }: MapVisitCardProps) {
+  const { t } = useLanguage()
   
   // Helper para verificar si un cliente tiene entregas parciales
   const hasClientPartialDeliveries = (clientName: string) => {
@@ -450,7 +452,7 @@ export function MapVisitCard({
                         </div>
                          <h5 className="text-sm font-medium text-gray-800 mb-2 truncate flex items-center">
                            <Package className="w-4 h-4 mr-2 text-gray-600" />
-                           Unidad de Entrega {uIdx + 1}
+                           {t.visitCard.deliveryUnit} {uIdx + 1}
                          </h5>
                         {Array.isArray(unit.items) && unit.items.length > 0 && (
                           <div className="space-y-1 mb-2">

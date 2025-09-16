@@ -15,13 +15,30 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: () => (
-    <Navigate
-      to="/driver/routes/$routeId"
-      params={{ routeId: '123' }}
-      hash="access_token=test&demo=true"
-    />
-  ),
+  component: () => {
+    // Preservar query parameters existentes como objeto
+    const urlParams = new URLSearchParams(window.location.search)
+    const searchParams: Record<string, string> = {}
+    
+    urlParams.forEach((value, key) => {
+      searchParams[key] = value
+    })
+    
+    console.log('🔄 IndexRoute: Redirecting with search params:', {
+      originalSearch: window.location.search,
+      searchParams,
+      href: window.location.href
+    })
+    
+    return (
+      <Navigate
+        to="/driver/routes/$routeId"
+        params={{ routeId: '123' }}
+        search={searchParams}
+        hash="access_token=test&demo=true"
+      />
+    )
+  },
 })
 
 // Ruta para rutas específicas del driver
@@ -40,10 +57,26 @@ const demoRoute = createRoute({
     const urlParams = new URLSearchParams(window.location.search)
     const routeId = urlParams.get('routeId') || '123' // Default a '123' si no se proporciona
     
+    // Preservar todos los query parameters existentes como objeto
+    const searchParams: Record<string, string> = {}
+    urlParams.forEach((value, key) => {
+      if (key !== 'routeId') { // No incluir routeId en search ya que va en params
+        searchParams[key] = value
+      }
+    })
+    
+    console.log('🔄 DemoRoute: Redirecting with search params:', {
+      originalSearch: window.location.search,
+      searchParams,
+      routeId,
+      href: window.location.href
+    })
+    
     return (
       <Navigate
         to="/driver/routes/$routeId"
         params={{ routeId }}
+        search={searchParams}
         hash="access_token=test&demo=true"
       />
     )

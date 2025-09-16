@@ -1,6 +1,7 @@
 import { Play, User, MapPin, Users, ChevronDown, ChevronUp, Package } from 'lucide-react'
 import { useState } from 'react'
 import { IdentifierBadge } from './IdentifierBadge'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface NextVisitCardProps {
   nextVisit: any
@@ -12,6 +13,7 @@ interface NextVisitCardProps {
 }
 
 export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGroups, viewMode = 'list', allVisits = [] }: NextVisitCardProps) {
+  const { t } = useLanguage()
   const [isExpanded, setIsExpanded] = useState(false)
   const address = nextVisit.addressInfo?.addressLine1 || 'Sin dirección'
   const addressGroup = addressGroups?.[address]
@@ -45,7 +47,7 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold text-blue-800 flex items-center">
           <Play className="w-4 h-4 mr-2" />
-          Siguiente visita
+          {t.nextVisit.title}
         </h3>
         <div className="flex items-center space-x-2">
           <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full font-medium">
@@ -78,17 +80,17 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
           {hasMultipleClients ? (
             <div className="mb-2">
               <p className="text-xs text-gray-600 mb-1">
-                <span className="text-blue-700 font-medium">{clientCount} clientes</span>
+                <span className="text-blue-700 font-medium">{clientCount} {t.nextVisit.clients}</span>
               </p>
               {addressGroup && (
                 <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block">
-                  {addressGroup.totalUnits} unidades • {addressGroup.pendingUnits} pendientes
+                  {addressGroup.totalUnits} {t.visitCard.units} • {addressGroup.pendingUnits} {t.status.pending}
                 </div>
               )}
             </div>
           ) : (
             <p className="text-xs text-gray-600">
-              <span className="text-blue-700 font-medium">1 cliente</span>
+              <span className="text-blue-700 font-medium">1 {t.nextVisit.client}</span>
             </p>
           )}
         </div>
@@ -123,10 +125,10 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
                     <div key={orderIndex} className="bg-gray-50 rounded p-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-xs font-medium text-gray-700">
-                          Orden: {order.referenceID}
+                          {t.visitCard.order}: {order.referenceID}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {order.deliveryUnits?.length || 0} unidades
+                          {order.deliveryUnits?.length || 0} {t.visitCard.units}
                         </span>
                       </div>
                       

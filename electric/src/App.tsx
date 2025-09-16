@@ -15,6 +15,7 @@ import {
 } from './db'
 import { useState, useEffect } from 'react'
 import { Play, Menu, Truck, Route, Map } from 'lucide-react'
+import { useLanguage } from './hooks/useLanguage'
 import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView, GroupedDeliveryModal, GroupedNonDeliveryModal } from './components'
 import { groupDeliveryUnitsByAddressForNextVisit } from './components/GroupedDeliveryUtils'
 import { 
@@ -58,6 +59,9 @@ export function RouteComponent() {
 }
 
 function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: RouteType; routeDbId?: string }) {
+  // Hook de idioma
+  const { t } = useLanguage()
+  
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
@@ -924,11 +928,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             <div>
               <h1 className="text-lg font-bold flex items-center">
                 <Route className="w-5 h-5 mr-2" />
-                ID RUTA: {routeDbId || routeId}
+                {t.header.routeId}: {routeDbId || routeId}
               </h1>
               <p className="text-indigo-100 text-sm flex items-center">
                 <Truck className="w-3 h-3 mr-1" />
-                PATENTE: 
+                {t.header.vehiclePlate}: 
                 <span className="bg-white/20 text-white px-2 py-1 rounded-lg ml-2 font-mono text-xs">
                   {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
                 </span>
@@ -986,7 +990,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
               aria-label="Alternar mapa/lista"
             >
               <Map className="w-4 h-4" />
-              <span>{viewMode === 'list' ? 'Mapa' : 'Lista'}</span>
+              <span>{viewMode === 'list' ? t.navigation.map : t.navigation.list}</span>
             </button>
             )}
             {!routeStarted ? (
@@ -995,7 +999,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 text-sm active:scale-95"
               >
                 <Play className="w-4 h-4" />
-                <span>Iniciar</span>
+                <span>{t.navigation.start}</span>
               </button>
             ) : null}
           </div>
