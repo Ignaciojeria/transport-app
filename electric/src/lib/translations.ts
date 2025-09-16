@@ -556,7 +556,7 @@ export const translations: Record<Language, MobileTranslations> = {
   EU: {
     header: {
       routeId: "ROUTE ID",
-      vehiclePlate: "PLATE"
+      vehiclePlate: "LICENSE PLATE"
     },
     navigation: {
       map: "Map",
