@@ -15,7 +15,9 @@ import {
 } from './db'
 import { useState, useEffect } from 'react'
 import { Play, Menu, Truck, Route, Map } from 'lucide-react'
-import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView } from './components'
+import { useLanguage } from './hooks/useLanguage'
+import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView, GroupedDeliveryModal, GroupedNonDeliveryModal } from './components'
+import { groupDeliveryUnitsByAddressForNextVisit } from './components/GroupedDeliveryUtils'
 import { 
   generateReportData, 
   generateCSVContent, 
@@ -27,6 +29,7 @@ import {
 import type { Route as RouteType } from './domain/route'
 import type { RouteStart } from './domain/route-start'
 import type { DeliveryUnit, DeliveryEvent } from './domain/deliveries'
+import type { DeliveryGroup } from './components/GroupedDeliveryUtils'
 
 
 // Componente para rutas específicas del driver
@@ -56,6 +59,9 @@ export function RouteComponent() {
 }
 
 function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string; routeData: RouteType; routeDbId?: string }) {
+  // Hook de idioma
+  const { t } = useLanguage()
+  
   const [activeTab, setActiveTab] = useState<'en-ruta' | 'entregados' | 'no-entregados'>('en-ruta')
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   // fullscreen deshabilitado para evitar cambios por clic en el mapa
@@ -68,6 +74,10 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   const [submittingEvidence, setSubmittingEvidence] = useState(false)
   const [ndModal, setNdModal] = useState<{ open: boolean; vIdx: number | null; oIdx: number | null; uIdx: number | null }>({ open: false, vIdx: null, oIdx: null, uIdx: null })
 
+  // Modales de entrega agrupada
+  const [groupedDeliveryModal, setGroupedDeliveryModal] = useState<{ open: boolean; group: DeliveryGroup | null }>({ open: false, group: null })
+  const [groupedNonDeliveryModal, setGroupedNonDeliveryModal] = useState<{ open: boolean; group: DeliveryGroup | null }>({ open: false, group: null })
+
 
 
   // Modal de descarga de reporte
@@ -75,6 +85,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
   
   // Estado del sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  // Estado para selección de cliente en modo mapa
+  const [selectedClientIndex, setSelectedClientIndex] = useState<number | null>(null)
 
   // Estado local reactivo via GunJS
   const { data: localState } = useDeliveriesState()
@@ -308,6 +321,125 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     setInitialDeliveryEvent(undefined)
   }
 
+  // Funciones para entrega agrupada
+  const openGroupedDeliveryFor = (_visitIndex: number, group: DeliveryGroup) => {
+    setGroupedDeliveryModal({ open: true, group })
+  }
+
+  const openGroupedNonDeliveryFor = (_visitIndex: number, group: DeliveryGroup) => {
+    setGroupedNonDeliveryModal({ open: true, group })
+  }
+
+  // Funciones para entregar todo en modo mapa
+  const handleDeliverAll = (visitIndex: number) => {
+    const visit = visits[visitIndex]
+    if (!visit) return
+
+    // Crear un grupo temporal con todas las unidades pendientes de la visita
+    const allUnits: any[] = []
+    visit.orders?.forEach((order: any, orderIndex: number) => {
+      order.deliveryUnits?.forEach((unit: any, unitIndex: number) => {
+        const status = getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex)
+        if (!status) { // Solo unidades pendientes
+          allUnits.push({
+            unit,
+            uIdx: unitIndex,
+            orderIndex,
+            order
+          })
+        }
+      })
+    })
+
+    if (allUnits.length === 0) return
+
+    // Crear un grupo temporal
+    const tempGroup: DeliveryGroup = {
+      key: `temp-${visitIndex}`,
+      addressInfo: visit.addressInfo,
+      units: allUnits.map((unit) => ({
+        unit: unit.unit,
+        uIdx: unit.uIdx,
+        status: undefined,
+        visitIndex,
+        orderIndex: unit.orderIndex,
+        order: unit.order
+      })),
+      totalUnits: allUnits.length,
+      pendingUnits: allUnits.length
+    }
+
+    setGroupedDeliveryModal({ open: true, group: tempGroup })
+  }
+
+  const handleNonDeliverAll = (visitIndex: number) => {
+    const visit = visits[visitIndex]
+    if (!visit) return
+
+    // Crear un grupo temporal con todas las unidades pendientes de la visita
+    const allUnits: any[] = []
+    visit.orders?.forEach((order: any, orderIndex: number) => {
+      order.deliveryUnits?.forEach((unit: any, unitIndex: number) => {
+        const status = getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex)
+        if (!status) { // Solo unidades pendientes
+          allUnits.push({
+            unit,
+            uIdx: unitIndex,
+            orderIndex,
+            order
+          })
+        }
+      })
+    })
+
+    if (allUnits.length === 0) return
+
+    // Crear un grupo temporal
+    const tempGroup: DeliveryGroup = {
+      key: `temp-${visitIndex}`,
+      addressInfo: visit.addressInfo,
+      units: allUnits.map((unit) => ({
+        unit: unit.unit,
+        uIdx: unit.uIdx,
+        status: undefined,
+        visitIndex,
+        orderIndex: unit.orderIndex,
+        order: unit.order
+      })),
+      totalUnits: allUnits.length,
+      pendingUnits: allUnits.length
+    }
+
+    setGroupedNonDeliveryModal({ open: true, group: tempGroup })
+  }
+
+  // Función para seleccionar cliente en modo mapa
+  const handleClientSelect = (clientIndex: number | null) => {
+    console.log('🔄 handleClientSelect llamado con clientIndex:', clientIndex)
+    console.log('📍 ANTES - lastCenteredVisit:', lastCenteredVisit, 'selectedClientIndex:', selectedClientIndex)
+    setSelectedClientIndex(clientIndex)
+    
+    // NO sobrescribir lastCenteredVisit si fue una selección manual desde modo lista
+    // Solo establecer lastCenteredVisit si no hay una selección manual previa
+    if (clientIndex !== null && lastCenteredVisit === null) {
+      console.log('✅ Estableciendo lastCenteredVisit a', clientIndex, '(no había selección manual)')
+      setLastCenteredVisit(clientIndex)
+    } else if (clientIndex !== null && lastCenteredVisit !== null) {
+      console.log('🚫 NO sobrescribiendo lastCenteredVisit (hay selección manual:', lastCenteredVisit, ')')
+    }
+    console.log('📍 DESPUÉS - nuevo selectedClientIndex:', clientIndex)
+  }
+
+  const closeGroupedDeliveryModal = () => {
+    setGroupedDeliveryModal({ open: false, group: null })
+    setSubmittingEvidence(false)
+  }
+
+  const closeGroupedNonDeliveryModal = () => {
+    setGroupedNonDeliveryModal({ open: false, group: null })
+    setSubmittingEvidence(false)
+  }
+
   
 
 
@@ -406,40 +538,178 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     }
   }
 
+  // Funciones para procesar entregas agrupadas
+  const submitGroupedDelivery = async (deliveryEvent: DeliveryEvent) => {
+    if (!groupedDeliveryModal.group) return
+    
+    try {
+      setSubmittingEvidence(true)
+      
+      console.log('💾 Guardando entrega agrupada para:', { 
+        routeId, 
+        groupKey: groupedDeliveryModal.group.key,
+        unitsCount: groupedDeliveryModal.group.units.length 
+      })
+      
+      // Procesar cada unidad del grupo
+      for (const unit of groupedDeliveryModal.group.units) {
+        const recipientName = deliveryEvent.deliveryUnits[0]?.recipient?.fullName || ''
+        const recipientRut = deliveryEvent.deliveryUnits[0]?.recipient?.nationalID || ''
+        const photoDataUrl = deliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url || ''
+        
+        // Crear entidad del dominio para cada unidad
+        const deliveryUnit: Partial<DeliveryUnit> = {
+          delivery: {
+            status: 'delivered',
+            handledAt: new Date().toISOString(),
+            location: { latitude: 0, longitude: 0 }
+          },
+          recipient: {
+            fullName: recipientName,
+            nationalID: recipientRut
+          },
+          evidencePhotos: [{
+            takenAt: new Date().toISOString(),
+            type: 'delivery',
+            url: photoDataUrl,
+          }],
+          orderReferenceID: `${routeId}-${unit.visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
+        }
+        
+        // Guardar evidencia para cada unidad
+        setDeliveryEvidence(routeId, unit.visitIndex, unit.orderIndex, unit.uIdx, deliveryUnit)
+      }
+      
+      console.log('📦 Entrega agrupada completada para', groupedDeliveryModal.group.units.length, 'unidades')
+      closeGroupedDeliveryModal()
+      
+    } finally {
+      setSubmittingEvidence(false)
+    }
+  }
+
+  const submitGroupedNonDelivery = async (deliveryEvent: DeliveryEvent) => {
+    if (!groupedNonDeliveryModal.group) return
+    
+    try {
+      setSubmittingEvidence(true)
+      
+      console.log('💾 Guardando no entrega agrupada para:', { 
+        routeId, 
+        groupKey: groupedNonDeliveryModal.group.key,
+        unitsCount: groupedNonDeliveryModal.group.units.length 
+      })
+      
+      // Procesar cada unidad del grupo
+      for (const unit of groupedNonDeliveryModal.group.units) {
+        const failure = deliveryEvent.deliveryUnits[0]?.delivery?.failure
+        const photoDataUrl = deliveryEvent.deliveryUnits[0]?.evidencePhotos[0]?.url
+        
+        if (!failure || !photoDataUrl) {
+          console.error('❌ Datos incompletos en DeliveryEvent para unidad', unit.uIdx)
+          continue
+        }
+        
+        // Crear la entidad del dominio completa para cada unidad
+        const deliveryUnit: Partial<DeliveryUnit> & {
+          routeId: string
+          visitIndex: number
+          orderIndex: number
+          unitIndex: number
+        } = {
+          routeId,
+          visitIndex: unit.visitIndex,
+          orderIndex: unit.orderIndex,
+          unitIndex: unit.uIdx,
+          delivery: {
+            status: 'not-delivered',
+            handledAt: new Date().toISOString(),
+            location: { latitude: 0, longitude: 0 },
+            failure: {
+              reason: failure.reason,
+              detail: failure.detail,
+              referenceID: `${routeId}-${unit.visitIndex}-${unit.orderIndex}-${unit.uIdx}`
+            }
+          },
+          evidencePhotos: [{
+            takenAt: new Date().toISOString(),
+            type: 'non-delivery',
+            url: photoDataUrl,
+          }],
+          orderReferenceID: `${routeId}-${unit.visitIndex}-${unit.orderIndex}-${unit.uIdx}`,
+        }
+        
+        // Usar la función unificada que recibe la entidad del dominio
+        setDeliveryUnitByEntity(deliveryUnit)
+      }
+      
+      console.log('📦 No entrega agrupada completada para', groupedNonDeliveryModal.group.units.length, 'unidades')
+      closeGroupedNonDeliveryModal()
+      
+    } finally {
+      setSubmittingEvidence(false)
+    }
+  }
+
 
 
 
 
 
   const visits = routeData?.visits ?? []
+  
+  // Debug: mostrar información de todas las visitas
+  console.log('📋 TODAS LAS VISITAS:', visits.map((visit, index) => ({
+    index,
+    sequenceNumber: visit.sequenceNumber,
+    clientName: visit.orders?.[0]?.contact?.fullName || 'Sin nombre',
+    address: visit.addressInfo?.addressLine1,
+    orderCount: visit.orders?.length || 0
+  })))
+
+  // Generar grupos de dirección para la tarjeta de siguiente visita
+  const addressGroups = groupDeliveryUnitsByAddressForNextVisit(visits, getDeliveryUnitStatus)
 
   // Función centralizada para determinar qué marcador debe estar posicionado
   const getPositionedVisitIndex = (): number | null => {
     // Siempre obtener la siguiente pendiente real
     const nextPending = getNextPendingVisitIndex()
     
-    // Debug: logs removidos para limpiar la consola
+    // Debug temporal para investigar el problema
+    console.log('🔍 getPositionedVisitIndex DEBUG:', {
+      lastCenteredVisit,
+      selectedClientIndex,
+      nextPending,
+      viewMode
+    })
     
     // PRIORIDAD 1: Selección manual desde botón de mapa (lastCenteredVisit)
-    // Esta debe tener prioridad absoluta cuando se establece manualmente
+    // Esta debe tener prioridad absoluta cuando el usuario selecciona una visita específica
     if (lastCenteredVisit !== null) {
-              // Debug: logs removidos para limpiar la consola
+      console.log('✅ Usando lastCenteredVisit:', lastCenteredVisit)
       return lastCenteredVisit
     }
     
     // PRIORIDAD 2: Estado sincronizado si es reciente (últimos 30 segundos)
     if (markerPosition && (Date.now() - markerPosition.timestamp) < 30000) {
-              // Debug: logs removidos para limpiar la consola
+      // Debug: logs removidos para limpiar la consola
       return markerPosition.visitIndex
     }
     
-    // PRIORIDAD 3: Selección manual de cualquier visita
+    // PRIORIDAD 3: Cliente seleccionado programáticamente (selectedClientIndex)
+    // Solo cuando NO estamos en modo mapa (para evitar interferir con la navegación del mapa)
+    if (selectedClientIndex !== null && viewMode !== 'map') {
+      console.log('✅ Usando selectedClientIndex fuera de modo mapa:', selectedClientIndex)
+      return selectedClientIndex
+    }
+    
+    // PRIORIDAD 4: Selección manual de cualquier visita
     if (nextVisitIndex !== null) {
               // Debug: logs removidos para limpiar la consola
       return nextVisitIndex
     }
     
-    // PRIORIDAD 4: Fallback - siguiente pendiente automática
+    // PRIORIDAD 5: Fallback - siguiente pendiente automática
             // Debug: logs removidos para limpiar la consola
     if (nextPending !== null) {
               // Debug: logs removidos para limpiar la consola
@@ -461,8 +731,6 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         (order?.deliveryUnits || []).some((_u: any, uIdx: number) => getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined)
       )
       
-      // Debug: logs removidos para limpiar la consola
-      
       return {
         index: vIdx,
         sequenceNumber: visit?.sequenceNumber || vIdx + 1,
@@ -473,12 +741,20 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
     // Filtrar solo las que tienen elementos pendientes
     const pendingVisits = visitStatus.filter(v => v.hasPending)
     
+    console.log('🔍 getNextPendingVisitIndex DEBUG:', {
+      visitStatus: visitStatus.map(v => ({ idx: v.index, seq: v.sequenceNumber, pending: v.hasPending })),
+      pendingVisits: pendingVisits.map(v => ({ idx: v.index, seq: v.sequenceNumber })),
+      nextVisitIndex,
+      lastCenteredVisit
+    })
+    
     if (pendingVisits.length === 0) return null
     
     // Si hay una visita seleccionada manualmente y tiene pendientes, mantenerla
     if (nextVisitIndex !== null) {
       const selectedVisit = visitStatus[nextVisitIndex]
       if (selectedVisit?.hasPending) {
+        console.log('✅ Manteniendo nextVisitIndex:', nextVisitIndex)
         return nextVisitIndex
       }
     }
@@ -492,12 +768,19 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           .filter(v => v.sequenceNumber > lastCenteredSequence)
           .sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0]
         
+        console.log('🎯 Buscando después de lastCenteredVisit:', {
+          lastCenteredSequence,
+          nextPending: nextPending ? { idx: nextPending.index, seq: nextPending.sequenceNumber } : null
+        })
+        
         if (nextPending) return nextPending.index
       }
     }
     
     // Si no hay contexto previo, devolver la primera pendiente por orden de secuencia
-    return pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0].index
+    const firstPending = pendingVisits.sort((a, b) => a.sequenceNumber - b.sequenceNumber)[0]
+    console.log('🥇 Usando primera pendiente:', firstPending ? { idx: firstPending.index, seq: firstPending.sequenceNumber } : null)
+    return firstPending.index
   }
 
   useEffect(() => {
@@ -645,11 +928,11 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             <div>
               <h1 className="text-lg font-bold flex items-center">
                 <Route className="w-5 h-5 mr-2" />
-                ID RUTA: {routeDbId || routeId}
+                {t.header.routeId}: {routeDbId || routeId}
               </h1>
               <p className="text-indigo-100 text-sm flex items-center">
                 <Truck className="w-3 h-3 mr-1" />
-                PATENTE: 
+                {t.header.vehiclePlate}: 
                 <span className="bg-white/20 text-white px-2 py-1 rounded-lg ml-2 font-mono text-xs">
                   {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
                 </span>
@@ -659,14 +942,56 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           <div className="flex items-center gap-2">
             {/* Mostrar botón mapa solo cuando la ruta esté iniciada */}
             {routeStarted && (
-              <button
-                onClick={() => setViewMode((m) => (m === 'list' ? 'map' : 'list'))}
-                className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95 flex items-center space-x-2"
-                aria-label="Alternar mapa/lista"
-              >
-                <Map className="w-4 h-4" />
-                <span>{viewMode === 'list' ? 'Mapa' : 'Lista'}</span>
-              </button>
+            <button
+              onClick={() => {
+                const newMode = viewMode === 'list' ? 'map' : 'list'
+                console.log('🔄 Botón mapa general presionado:', { currentMode: viewMode, newMode, lastCenteredVisit, selectedClientIndex })
+                
+                setViewMode(newMode)
+                
+                // Si cambiamos a modo mapa, forzar lógica correcta
+                if (newMode === 'map') {
+                  console.log('🧹 Limpiando selectedClientIndex antes:', selectedClientIndex)
+                  setSelectedClientIndex(null) // Limpiar selección automática siempre
+                  
+                  // Si no hay selección manual previa, forzar ir a la primera visita pendiente
+                  if (lastCenteredVisit === null) {
+                    // Calcular la primera visita pendiente directamente (sin lógica compleja)
+                    const firstPendingIndex = visits.findIndex((visit: any, vIdx: number) => {
+                      return (visit?.orders || []).some((order: any, oIdx: number) =>
+                        (order?.deliveryUnits || []).some((_u: any, uIdx: number) => 
+                          getDeliveryUnitStatus(vIdx, oIdx, uIdx) === undefined
+                        )
+                      )
+                    })
+                    
+                    console.log('🎯 Primera visita pendiente directa:', firstPendingIndex)
+                    
+                    if (firstPendingIndex !== -1) {
+                      setLastCenteredVisit(firstPendingIndex) // Usar lastCenteredVisit en lugar de nextVisitIndex
+                      console.log('🗺️ Forzando lastCenteredVisit a primera pendiente:', firstPendingIndex)
+                    }
+                  } else {
+                    console.log('🗺️ Modo mapa activado con selección manual previa:', lastCenteredVisit)
+                  }
+                  
+                  // Log del estado después de los cambios
+                  setTimeout(() => {
+                    console.log('📊 Estados después del cambio a mapa:', {
+                      selectedClientIndex,
+                      lastCenteredVisit,
+                      nextVisitIndex,
+                      calculatedDisplayIdx: getPositionedVisitIndex()
+                    })
+                  }, 100)
+                }
+              }}
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm active:scale-95 flex items-center space-x-2"
+              aria-label="Alternar mapa/lista"
+            >
+              <Map className="w-4 h-4" />
+              <span>{viewMode === 'list' ? t.navigation.map : t.navigation.list}</span>
+            </button>
             )}
             {!routeStarted ? (
               <button
@@ -674,7 +999,7 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 text-sm active:scale-95"
               >
                 <Play className="w-4 h-4" />
-                <span>Iniciar</span>
+                <span>{t.navigation.start}</span>
               </button>
             ) : null}
           </div>
@@ -701,6 +1026,12 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
           setLastCenteredVisit={setLastCenteredVisit}
           setMarkerPosition={setMarkerPosition}
           openNextNavigation={openNextNavigation}
+          openGroupedDelivery={openGroupedDeliveryFor}
+          openGroupedNonDelivery={openGroupedNonDeliveryFor}
+          onDeliverAll={handleDeliverAll}
+          onNonDeliverAll={handleNonDeliverAll}
+          selectedClientIndex={selectedClientIndex}
+          onClientSelect={handleClientSelect}
         />
       )}
 
@@ -748,6 +1079,9 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
                 setLastCenteredVisit(visitIndex)
                 setNextVisitIndex(null) // Limpiar selección automática para dar prioridad a la manual
               }}
+              addressGroups={addressGroups}
+              viewMode={viewMode}
+              allVisits={visits}
             />
           )
         })()}
@@ -759,14 +1093,19 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             visitIndex={visitIndex}
             routeStarted={routeStarted}
             onCenterOnVisit={(visitIndex: number) => {
+              console.log('🎯 onCenterOnVisit llamado con visitIndex:', visitIndex)
               setViewMode('map')
               setLastCenteredVisit(visitIndex)
               setNextVisitIndex(null) // Limpiar selección automática para dar prioridad a la manual
+              console.log('✅ Estados actualizados - lastCenteredVisit:', visitIndex, 'nextVisitIndex: null')
             }}
             onOpenDelivery={openDeliveryFor}
             onOpenNonDelivery={openNonDeliveryFor}
+            onOpenGroupedDelivery={openGroupedDeliveryFor}
+            onOpenGroupedNonDelivery={openGroupedNonDeliveryFor}
             getDeliveryUnitStatus={getDeliveryUnitStatus}
             shouldRenderByTab={shouldRenderByTab}
+            viewMode="list"
           />
         ))}
       </div>
@@ -818,6 +1157,30 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
       isOpen={downloadModal}
       onClose={closeDownloadModal}
       onDownloadReport={downloadReport}
+    />
+
+    {/* Modal de entrega agrupada */}
+    <GroupedDeliveryModal
+      isOpen={groupedDeliveryModal.open}
+      onClose={closeGroupedDeliveryModal}
+      onSubmit={submitGroupedDelivery}
+      group={groupedDeliveryModal.group}
+      visitIndex={0} // Se pasará el visitIndex correcto desde el grupo
+      routeData={routeData}
+      submitting={submittingEvidence}
+      isDemo={isDemoMode()}
+    />
+
+    {/* Modal de no entrega agrupada */}
+    <GroupedNonDeliveryModal
+      isOpen={groupedNonDeliveryModal.open}
+      onClose={closeGroupedNonDeliveryModal}
+      onSubmit={submitGroupedNonDelivery}
+      group={groupedNonDeliveryModal.group}
+      visitIndex={0} // Se pasará el visitIndex correcto desde el grupo
+      routeData={routeData}
+      submitting={submittingEvidence}
+      isDemo={isDemoMode()}
     />
     </div>
   )

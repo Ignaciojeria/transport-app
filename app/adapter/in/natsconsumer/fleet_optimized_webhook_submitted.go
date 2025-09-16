@@ -20,8 +20,8 @@ import (
 	client "transport-app/app/adapter/out/restyclient/webhook"
 
 	"cloud.google.com/go/pubsub"
-	"github.com/google/uuid"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go/jetstream"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/propagation"
@@ -186,7 +186,7 @@ func newFleetOptimizedWebhookSubmitted(
 }
 
 func assignURLsToDeliveryUnits(ctx context.Context, routeRequest *request.UpsertRouteRequest, storjManager storj.UplinkManager, obs observability.Observability) error {
-	uploadTTL := 5 * 24 * time.Hour   // 5 días para upload
+	uploadTTL := 5 * 24 * time.Hour // 5 días para upload
 	// TTL para download: 5 días (máximo seguro para S3/Storj)
 	downloadTTL := 5 * 24 * time.Hour
 
@@ -194,25 +194,25 @@ func assignURLsToDeliveryUnits(ctx context.Context, routeRequest *request.Upsert
 		for orderIdx := range routeRequest.Visits[visitIdx].Orders {
 			for duIdx := range routeRequest.Visits[visitIdx].Orders[orderIdx].DeliveryUnits {
 				du := &routeRequest.Visits[visitIdx].Orders[orderIdx].DeliveryUnits[duIdx]
-				
+
 				// Generar objectKey único para este delivery unit
 				fileID := uuid.New()
-				objectKey := fmt.Sprintf("deliveries/%s/evidence_%s.jpg", 
-					du.DocumentID, 
+				objectKey := fmt.Sprintf("deliveries/%s/evidence_%s.jpg",
+					du.Lpn,
 					fileID.String()[:8])
 
 				// Generar upload URL (1 mes)
 				uploadURL, err := storjManager.GeneratePreSignedURL(ctx, objectKey, uploadTTL)
 				if err != nil {
-					obs.Logger.Error("Error generando upload URL", "error", err, "documentID", du.DocumentID)
-					return fmt.Errorf("failed to generate upload URL for delivery unit %s: %w", du.DocumentID, err)
+					obs.Logger.Error("Error generando upload URL", "error", err, "lpn", du.Lpn)
+					return fmt.Errorf("failed to generate upload URL for delivery unit %s: %w", du.Lpn, err)
 				}
 
 				// Generar download URL (sin expiración)
 				downloadURL, err := storjManager.GeneratePublicDownloadURL(ctx, objectKey, downloadTTL)
 				if err != nil {
-					obs.Logger.Error("Error generando download URL", "error", err, "documentID", du.DocumentID)
-					return fmt.Errorf("failed to generate download URL for delivery unit %s: %w", du.DocumentID, err)
+					obs.Logger.Error("Error generando download URL", "error", err, "lpn", du.Lpn)
+					return fmt.Errorf("failed to generate download URL for delivery unit %s: %w", du.Lpn, err)
 				}
 
 				// Asignar las URLs al delivery unit
@@ -222,7 +222,7 @@ func assignURLsToDeliveryUnits(ctx context.Context, routeRequest *request.Upsert
 				}
 				du.Evidences = append(du.Evidences, evidence)
 
-				obs.Logger.InfoContext(ctx, "URLs asignadas a delivery unit", "documentID", du.DocumentID, "lpn", du.Lpn)
+				obs.Logger.InfoContext(ctx, "URLs asignadas a delivery unit", "lpn", du.Lpn)
 			}
 		}
 	}

@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { CheckCircle } from 'lucide-react'
 import { MapControls } from './MapControls'
 import { MapVisitCard } from './MapVisitCard'
+import { useLanguage } from '../hooks/useLanguage'
 import { 
   getLatLngFromAddressInfo, 
   decodePolyline, 
@@ -29,6 +30,15 @@ interface MapViewProps {
   setLastCenteredVisit: (index: number | null) => void
   setMarkerPosition: (routeId: string, visitIndex: number, coordinates: [number, number]) => Promise<void>
   openNextNavigation: (provider: 'google' | 'waze' | 'geo') => void
+  // Nuevas props para agrupación
+  openGroupedDelivery?: (visitIndex: number, group: any) => void
+  openGroupedNonDelivery?: (visitIndex: number, group: any) => void
+  // Props para entregar todo
+  onDeliverAll?: (visitIndex: number) => void
+  onNonDeliverAll?: (visitIndex: number) => void
+  // Props para selección de cliente
+  selectedClientIndex?: number | null
+  onClientSelect?: (clientIndex: number | null) => void
 }
 
 export function MapView({
@@ -48,13 +58,267 @@ export function MapView({
   setNextVisitIndex,
   setLastCenteredVisit,
   setMarkerPosition,
-  openNextNavigation
+  openNextNavigation,
+  openGroupedDelivery,
+  openGroupedNonDelivery,
+  onDeliverAll,
+  onNonDeliverAll,
+  selectedClientIndex,
+  onClientSelect
 }: MapViewProps) {
+  const { t } = useLanguage()
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<any>(null)
   const [mapReady, setMapReady] = useState(false)
   const [forceUpdateCounter] = useState(0)
   
+  // Estados para manejo de selección de clientes
+  const [selectedClientName, setSelectedClientName] = useState<string | null>(null)
+  const [wasManuallySelected, setWasManuallySelected] = useState(false)
+  
+  // Detectar si hay múltiples clientes en la misma dirección
+  const getClientsAtSameLocation = () => {
+    console.log('🔍 getClientsAtSameLocation DEBUG:', {
+      wasManuallySelected,
+      lastCenteredVisit,
+      selectedClientIndex
+    })
+    
+    // PRIORIDAD 1: Si fue selección manual desde modo lista, usar lastCenteredVisit
+    if (wasManuallySelected && lastCenteredVisit !== null) {
+      console.log('✅ Usando PRIORIDAD 1: selección manual, visitIndex:', lastCenteredVisit)
+      const manuallySelectedVisit = visits[lastCenteredVisit]
+      if (manuallySelectedVisit) {
+        const orders = manuallySelectedVisit.orders || []
+        console.log('📋 Visita seleccionada tiene', orders.length, 'órdenes')
+        
+        // Si la visita seleccionada manualmente tiene múltiples clientes, mostrarlos
+        if (orders.length > 1) {
+          console.log('👥 Múltiples clientes detectados en visita seleccionada')
+          const clientMap = new Map()
+          
+          orders.forEach((order: any, orderIndex: number) => {
+            const clientName = order.contact?.fullName || 'Sin nombre'
+            const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(lastCenteredVisit, orderIndex, unitIndex) === undefined
+            )
+            
+            if (clientMap.has(clientName)) {
+              const existing = clientMap.get(clientName)
+              existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+              existing.orderIndexes.push(orderIndex)
+            } else {
+              clientMap.set(clientName, {
+                index: lastCenteredVisit,
+                orderIndex,
+                orderIndexes: [orderIndex],
+                clientName,
+                hasPendingUnits
+              })
+            }
+          })
+          
+          return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+        } else {
+          console.log('👤 Un solo cliente detectado en visita seleccionada - no mostrar selector')
+        }
+        
+        // Si la visita seleccionada manualmente tiene un solo cliente, no mostrar selector
+        return []
+      }
+    }
+    
+    // PRIORIDAD 2: Si hay un cliente seleccionado programáticamente, usar su visita
+    if (selectedClientIndex !== null) {
+      const selectedVisit = visits[selectedClientIndex]
+      if (!selectedVisit) return []
+      
+      // Si la visita seleccionada tiene múltiples órdenes/clientes, mostrarlos
+      const orders = selectedVisit.orders || []
+      if (orders.length > 1) {
+        const clientMap = new Map()
+        
+        orders.forEach((order: any, orderIndex: number) => {
+          const clientName = order.contact?.fullName || 'Sin nombre'
+          const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+            getDeliveryUnitStatus(selectedClientIndex, orderIndex, unitIndex) === undefined
+          )
+          
+          if (clientMap.has(clientName)) {
+            const existing = clientMap.get(clientName)
+            existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+            existing.orderIndexes.push(orderIndex)
+          } else {
+            clientMap.set(clientName, {
+              index: selectedClientIndex,
+              orderIndex,
+              orderIndexes: [orderIndex],
+              clientName,
+              hasPendingUnits
+            })
+          }
+        })
+        
+        return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+      }
+      
+      // Si solo tiene una orden, buscar otras visitas en la misma dirección
+      const selectedAddress = selectedVisit.addressInfo?.addressLine1
+      if (!selectedAddress) return []
+      
+      const clientMap = new Map()
+      
+      visits
+        .filter(visit => visit.addressInfo?.addressLine1 === selectedAddress)
+        .forEach((visit, _, filteredVisits) => {
+          const visitIndex = visits.indexOf(visit)
+          
+          ;(visit.orders || []).forEach((order: any, orderIndex: number) => {
+            const clientName = order.contact?.fullName || 'Sin nombre'
+            const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex) === undefined
+            )
+            
+            if (clientMap.has(clientName)) {
+              const existing = clientMap.get(clientName)
+              existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+            } else {
+              clientMap.set(clientName, {
+                index: visitIndex,
+                orderIndex,
+                clientName,
+                hasPendingUnits
+              })
+            }
+          })
+        })
+      
+      return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+    }
+    
+    // PRIORIDAD 3: Solo si no hay selección manual, buscar automáticamente visitas con múltiples clientes
+    if (!wasManuallySelected) {
+      for (let visitIndex = 0; visitIndex < visits.length; visitIndex++) {
+        const visit = visits[visitIndex]
+        const orders = visit.orders || []
+        
+        if (orders.length > 1) {
+          const clientMap = new Map()
+          
+          orders.forEach((order: any, orderIndex: number) => {
+            const clientName = order.contact?.fullName || 'Sin nombre'
+            const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(visitIndex, orderIndex, unitIndex) === undefined
+            )
+            
+            if (clientMap.has(clientName)) {
+              const existing = clientMap.get(clientName)
+              existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+              existing.orderIndexes.push(orderIndex)
+            } else {
+              clientMap.set(clientName, {
+                index: visitIndex,
+                orderIndex,
+                orderIndexes: [orderIndex],
+                clientName,
+                hasPendingUnits
+              })
+            }
+          })
+          
+          return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+        }
+      }
+      
+      // Si no hay visitas con múltiples clientes, buscar múltiples visitas en la misma dirección
+      const addressGroups: { [key: string]: Map<string, any> } = {}
+      
+      visits.forEach((visit, index) => {
+        const address = visit.addressInfo?.addressLine1
+        if (address) {
+          if (!addressGroups[address]) {
+            addressGroups[address] = new Map()
+          }
+          
+          ;(visit.orders || []).forEach((order: any, orderIndex: number) => {
+            const clientName = order.contact?.fullName || 'Sin nombre'
+            const hasPendingUnits = (order.deliveryUnits || []).some((_unit: any, unitIndex: number) => 
+              getDeliveryUnitStatus(index, orderIndex, unitIndex) === undefined
+            )
+            
+            if (addressGroups[address].has(clientName)) {
+              const existing = addressGroups[address].get(clientName)
+              existing.hasPendingUnits = existing.hasPendingUnits || hasPendingUnits
+            } else {
+              addressGroups[address].set(clientName, {
+                index,
+                orderIndex,
+                clientName,
+                hasPendingUnits
+              })
+            }
+          })
+        }
+      })
+      
+      // Encontrar la primera dirección con múltiples clientes
+      for (const [address, clientMap] of Object.entries(addressGroups)) {
+        if (clientMap.size > 1) {
+          return Array.from(clientMap.values()).sort((a, b) => a.clientName.localeCompare(b.clientName))
+        }
+      }
+    }
+    
+    return []
+  }
+  
+  const clientsAtSameLocation = getClientsAtSameLocation()
+  const hasMultipleClients = clientsAtSameLocation.length > 1
+  
+  
+  // Detectar cuando lastCenteredVisit cambia (selección manual desde modo lista)
+  useEffect(() => {
+    if (lastCenteredVisit !== null) {
+      console.log('🔄 MapView: lastCenteredVisit cambió a:', lastCenteredVisit)
+      setWasManuallySelected(true)
+      // Limpiar selección de cliente cuando se selecciona manualmente una visita
+      setSelectedClientName(null)
+      console.log('✅ MapView: wasManuallySelected=true, selectedClientName=null')
+    }
+  }, [lastCenteredVisit])
+  
+  // Si hay múltiples clientes pero no hay uno seleccionado, seleccionar el primero automáticamente
+  // SOLO si no fue una selección manual desde modo lista
+  useEffect(() => {
+    if (hasMultipleClients && selectedClientIndex === null && onClientSelect && !wasManuallySelected) {
+      onClientSelect(clientsAtSameLocation[0].index)
+    }
+  }, [hasMultipleClients, selectedClientIndex, onClientSelect, clientsAtSameLocation, wasManuallySelected])
+  
+  // Cuando hay múltiples clientes, seleccionar el primero por defecto
+  // SOLO si no fue una selección manual desde modo lista
+  useEffect(() => {
+    if (hasMultipleClients && !selectedClientName && !wasManuallySelected) {
+      setSelectedClientName(clientsAtSameLocation[0]?.clientName || null)
+    }
+  }, [hasMultipleClients, selectedClientName, clientsAtSameLocation, wasManuallySelected])
+  
+  // Función para obtener el cliente seleccionado
+  const getSelectedClient = () => {
+    if (!selectedClientName || !hasMultipleClients) return null
+    return clientsAtSameLocation.find(client => client.clientName === selectedClientName) || null
+  }
+  
+  const selectedClient = getSelectedClient()
+  
+  // Debug temporal
+  console.log('🔍 Debug selector de clientes:', {
+    selectedClientIndex,
+    clientsAtSameLocation,
+    hasMultipleClients,
+    totalVisits: visits.length,
+    addresses: visits.map((v, i) => ({ index: i, address: v.addressInfo?.addressLine1, client: v.orders?.[0]?.contact?.fullName }))
+  })
   // Estado para el pin de GPS del conductor
   const [gpsActive, setGpsActive] = useState(false)
   const gpsMarkerRef = useRef<any>(null)
@@ -385,7 +649,12 @@ export function MapView({
         })
         
         // Agregar tooltip con información de la visita
-        const visitInfo = v?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
+        const uniqueClients = Array.from(new Set(
+          (v?.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+        ))
+        const visitInfo = uniqueClients.length > 1 
+          ? `${uniqueClients.length} clientes: ${uniqueClients.join(', ')}`
+          : uniqueClients[0] || `Visita ${sequenceNumber}`
         marker.bindTooltip(visitInfo, {
           permanent: false,
           direction: 'top',
@@ -473,7 +742,12 @@ export function MapView({
       
       // Agregar tooltip con información de la visita
       const visit = visits[idx]
-      const visitInfo = visit?.addressInfo?.contact?.fullName || `Visita ${sequenceNumber}`
+      const uniqueClients = Array.from(new Set(
+        (visit?.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+      ))
+      const visitInfo = uniqueClients.length > 1 
+        ? `${uniqueClients.length} clientes: ${uniqueClients.join(', ')}`
+        : uniqueClients[0] || `Visita ${sequenceNumber}`
       marker.bindTooltip(visitInfo, {
         permanent: false,
         direction: 'top',
@@ -594,6 +868,15 @@ export function MapView({
   // Determinar qué visita mostrar en modo mapa
   const displayIdx = getPositionedVisitIndex()
   
+  // Debug temporal para investigar el problema de displayIdx
+  console.log('🗺️ MapView displayIdx DEBUG:', {
+    displayIdx,
+    lastCenteredVisit,
+    nextVisitIndex,
+    selectedClientIndex,
+    visitSequenceAtDisplayIdx: visits[displayIdx]?.sequenceNumber
+  })
+  
   // Si no hay punto seleccionado/posicionado, mostrar mensaje de ruta completada
   if (typeof displayIdx !== 'number') {
     return (
@@ -651,7 +934,54 @@ export function MapView({
   
   // Verificar si la visita actual ya está procesada
   const visitStatus = getVisitStatus(visit, getDeliveryUnitStatus, displayIdx)
-  const isProcessed = visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial'
+  
+  // Verificar si hay otras visitas en la misma dirección que aún no han sido procesadas
+  const currentAddress = visit.addressInfo?.addressLine1 || 'Sin dirección'
+  const visitsAtSameAddress = visits.filter(v => 
+    v.addressInfo?.addressLine1 === currentAddress && v !== visit
+  )
+  
+  // Una visita se considera procesada solo si:
+  // 1. TODOS los clientes de la visita actual han sido gestionados Y
+  // 2. No hay otras visitas en la misma dirección con unidades pendientes
+  
+  // Verificar si todos los clientes de la visita actual han sido gestionados
+  const allClientsProcessed = (() => {
+    if (!hasMultipleClients || !selectedClient) {
+      // Si no hay múltiples clientes o no hay cliente seleccionado, usar lógica original
+      return visitStatus === 'completed' || visitStatus === 'not-delivered' || visitStatus === 'partial'
+    }
+    
+    // Si hay múltiples clientes, verificar que TODOS los clientes hayan sido gestionados
+    const uniqueClients = Array.from(new Set(
+      (visit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+    ))
+    
+    return uniqueClients.every(clientName => {
+      // Verificar si todas las unidades de este cliente han sido gestionadas
+      const clientOrders = (visit.orders || []).filter((order: any) => 
+        order.contact?.fullName === clientName
+      )
+      
+      return clientOrders.every((order: any) => {
+        const orderIndex = (visit.orders || []).indexOf(order)
+        return (order.deliveryUnits || []).every((_unit: any, unitIndex: number) => {
+          const status = getDeliveryUnitStatus(displayIdx, orderIndex, unitIndex)
+          return status === 'delivered' || status === 'not-delivered'
+        })
+      })
+    })
+  })()
+  
+  const hasOtherVisitsAtSameAddress = visitsAtSameAddress.length > 0
+  const otherVisitsProcessed = hasOtherVisitsAtSameAddress ? 
+    visitsAtSameAddress.every(otherVisit => {
+      const otherVisitStatus = getVisitStatus(otherVisit, getDeliveryUnitStatus, visits.indexOf(otherVisit))
+      return otherVisitStatus === 'completed' || otherVisitStatus === 'not-delivered' || otherVisitStatus === 'partial'
+    }) : true
+  
+  const isProcessed = allClientsProcessed && otherVisitsProcessed
+  
   const nextPendingIdx = getNextPendingVisitIndex()
   const hasNextPending = typeof nextPendingIdx === 'number' && nextPendingIdx !== displayIdx
 
@@ -680,6 +1010,72 @@ export function MapView({
         />
       </div>
       
+      {/* Selector de cliente cuando hay múltiples clientes en la misma dirección */}
+      {hasMultipleClients && onClientSelect && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 shadow-lg">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <span className="text-sm font-semibold text-gray-800">
+🏢 {t.mapView.multipleClientsAtLocation}
+              </span>
+            </div>
+            <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">
+{clientsAtSameLocation.length} {t.nextVisit.clients}
+            </span>
+          </div>
+          
+          <div className="grid grid-cols-1 gap-2">
+            {clientsAtSameLocation.map((client, clientIdx) => (
+              <button
+                key={`${client.index}-${client.orderIndex || 0}`}
+                onClick={() => setSelectedClientName(client.clientName)}
+                className={`p-4 rounded-lg border-2 transition-all duration-200 text-left ${
+                  selectedClientName === client.clientName
+                    ? 'border-purple-500 bg-purple-100 shadow-md transform scale-[1.02]'
+                    : 'border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50 hover:shadow-md'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 rounded-full ${
+                      client.hasPendingUnits ? 'bg-orange-400' : 'bg-green-500'
+                    }`}></div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-800 text-base">
+                        {client.clientName}
+                      </span>
+                      {client.orderIndexes && client.orderIndexes.length > 1 ? (
+                        <span className="text-xs text-gray-500">
+{client.orderIndexes.length} {t.visitCard.orders}
+                        </span>
+                      ) : (
+                        client.orderIndex !== undefined && (
+                          <span className="text-xs text-gray-500">
+{t.visitCard.order} #{client.orderIndex + 1}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                  <div className={`text-xs px-2 py-1 rounded-full font-medium ${
+                    client.hasPendingUnits 
+                      ? 'bg-orange-100 text-orange-700' 
+                      : 'bg-green-100 text-green-700'
+                  }`}>
+{client.hasPendingUnits ? t.status.pending : t.status.completed}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          
+          <div className="mt-3 text-xs text-gray-600 text-center bg-white/50 rounded-lg p-2">
+👆 {t.mapView.selectClientToDeliver}
+          </div>
+        </div>
+      )}
+      
       <MapVisitCard
         visit={visit}
         displayIdx={displayIdx}
@@ -693,6 +1089,12 @@ export function MapView({
         openNonDeliveryFor={openNonDeliveryFor}
         onNextPending={handleNextPending}
         onClearSelection={handleClearSelection}
+        onDeliverAll={onDeliverAll}
+        onNonDeliverAll={onNonDeliverAll}
+        openGroupedDelivery={openGroupedDelivery}
+        openGroupedNonDelivery={openGroupedNonDelivery}
+        selectedClient={selectedClient}
+        hasMultipleClients={hasMultipleClients}
       />
     </div>
   )

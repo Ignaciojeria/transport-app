@@ -105,13 +105,11 @@ func mapOrderGroupToVisit(group OrderGroup) request.UpsertRouteVisit {
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         "", // TODO: Implementar si es necesario
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             mapNodeInfoToRequest(group.AddressInfo),
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          0, // TODO: Implementar si es necesario
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       mapNodeInfoToRequest(group.AddressInfo),
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    0, // TODO: Implementar si es necesario
 		TimeWindow: request.UpsertRouteTimeWindow{
 			Start: "", // TODO: Implementar si es necesario
 			End:   "", // TODO: Implementar si es necesario
@@ -129,8 +127,10 @@ func mapOrderToRequest(order domain.Order) request.UpsertRouteOrder {
 	}
 
 	return request.UpsertRouteOrder{
-		ReferenceID:   order.ReferenceID.String(),
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:          order.ReferenceID.String(),
+		Contact:              mapContactToRequest(order.Destination.AddressInfo.Contact),
+		DeliveryInstructions: order.DeliveryInstructions,
+		DeliveryUnits:        deliveryUnits,
 	}
 }
 
@@ -194,10 +194,9 @@ func mapVehicleToRequest(vehicle domain.Vehicle) request.UpsertRouteVehicle {
 			End:   "", // TODO: Implementar si es necesario
 		},
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
-			Weight:                int64(vehicle.Weight.Value),
-			Insurance:             int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
-			DeliveryUnitsQuantity: 0, // TODO: Implementar si es necesario
+			Volume:    int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
+			Weight:    int64(vehicle.Weight.Value),
+			Insurance: int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
 		},
 	}
 }
@@ -207,7 +206,6 @@ func mapAddressInfoToRequest(addr domain.AddressInfo) request.UpsertRouteAddress
 	return request.UpsertRouteAddressInfo{
 		AddressLine1:  addr.AddressLine1,
 		AddressLine2:  addr.AddressLine2,
-		Contact:       mapContactToRequest(addr.Contact),
 		Coordinates:   mapCoordinatesToRequest(addr.Coordinates),
 		PoliticalArea: mapPoliticalAreaToRequest(addr.PoliticalArea),
 		ZipCode:       addr.ZipCode,

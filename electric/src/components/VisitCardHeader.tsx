@@ -1,35 +1,87 @@
-import { User, MapPin } from 'lucide-react'
+import { User, MapPin, Users } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardHeaderProps {
   visit: any
   visitIndex: number
   onCenterOnVisit: (visitIndex: number) => void
+  viewMode?: 'list' | 'map'
 }
 
-export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit }: VisitCardHeaderProps) {
+export function VisitCardHeader({ visit, visitIndex, onCenterOnVisit, viewMode = 'list' }: VisitCardHeaderProps) {
+  const { t } = useLanguage()
+  
+  // Obtener todos los clientes únicos de la visita
+  const uniqueClients = Array.from(new Set(
+    (visit.orders || []).map((order: any) => order.contact?.fullName).filter(Boolean)
+  ))
+  
+  const hasMultipleClients = uniqueClients.length > 1
+  
   return (
     <div className="p-4 border-b border-gray-100">
-      <div className="flex items-start space-x-3">
-        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-lg flex items-center justify-center font-bold text-sm shadow-md flex-shrink-0">
+      <div className="flex items-center justify-between">
+        {/* Número de secuencia */}
+        <div className="w-10 h-10 bg-indigo-600 text-white rounded-lg flex items-center justify-center font-bold text-lg flex-shrink-0">
           {visit.sequenceNumber}
         </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-gray-800 flex items-center mb-1">
-            <User className="w-3 h-3 mr-1 text-gray-600 flex-shrink-0" />
-            <span className="truncate">{visit.addressInfo?.contact?.fullName}</span>
-          </h3>
-          <p className="text-xs text-gray-600 flex items-start mb-2">
-            <MapPin className="w-3 h-3 mr-1 mt-0.5 text-gray-500 flex-shrink-0" />
-            <span className="line-clamp-2">{visit.addressInfo?.addressLine1}</span>
-          </p>
+
+        {/* Información del cliente */}
+        <div className="flex-1 mx-4">
+          {viewMode === 'list' ? (
+            // En modo lista: solo dirección prominente
+            <>
+              <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                <MapPin className="w-5 h-5 mr-2 text-gray-600" />
+                {visit.addressInfo?.addressLine1}
+              </h3>
+              {hasMultipleClients && (
+                <p className="text-sm text-gray-500 mt-1">
+                  {uniqueClients.length} {t.nextVisit.clients}
+                </p>
+              )}
+            </>
+          ) : (
+            // En modo mapa: comportamiento original
+            <>
+              {hasMultipleClients ? (
+                <div>
+                  <h3 className="text-base font-medium text-gray-800 flex items-center mb-1">
+                    <Users className="w-4 h-4 mr-2 text-gray-600" />
+                    {uniqueClients.length} {t.nextVisit.clients}
+                  </h3>
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                    {visit.addressInfo?.addressLine1}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <h3 className="text-base font-medium text-gray-800 flex items-center mb-1">
+                    <User className="w-4 h-4 mr-2 text-gray-600" />
+                    {uniqueClients[0] || 'Sin nombre'}
+                  </h3>
+                  <p className="text-sm text-gray-600 flex items-center">
+                    <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                    {visit.addressInfo?.addressLine1}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
+
+        {/* Botón del pin */}
         <button
-          onClick={() => onCenterOnVisit(visitIndex)}
-          className="w-8 h-8 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
+          onClick={() => {
+            console.log('📍 PIN CLICKED! visitIndex:', visitIndex, 'sequenceNumber:', visit.sequenceNumber)
+            onCenterOnVisit(visitIndex)
+          }}
+          className="w-10 h-10 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-600 rounded-lg flex items-center justify-center transition-all duration-200 hover:shadow-md active:scale-95 flex-shrink-0"
           aria-label={`Ver en mapa - Visita ${visit.sequenceNumber}`}
           title="Ver en mapa"
         >
-          <MapPin className="w-4 h-4" />
+          <MapPin className="w-5 h-5" />
         </button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"sort"
 	"time"
 	"transport-app/app/adapter/in/fuegoapi/request"
@@ -39,16 +40,29 @@ func NewOptimize(
 ) Optimize {
 	return func(ctx context.Context, fleetOptimization optimization.FleetOptimization) ([]request.UpsertRouteRequest, error) {
 
-		vroomRequest, err := mapper.MapOptimizationRequest(ctx, fleetOptimization)
+		// Agrupar visitas por coordenadas antes de optimizar para mejorar la eficiencia
+		groupedFleetOptimization := groupVisitsByCoordinates(fleetOptimization)
+
+		// Debug: Log para verificar la agrupación
+		obs.Logger.InfoContext(ctx, "VISITS_GROUPING_DEBUG",
+			"original_visits", len(fleetOptimization.Visits),
+			"grouped_visits", len(groupedFleetOptimization.Visits))
+
+		// Debug: Log de las visitas agrupadas
+		for i, visit := range groupedFleetOptimization.Visits {
+			obs.Logger.InfoContext(ctx, "GROUPED_VISIT_DEBUG",
+				"visit_index", i+1,
+				"coordinates", fmt.Sprintf("%.6f,%.6f",
+					visit.Delivery.AddressInfo.Coordinates.Latitude,
+					visit.Delivery.AddressInfo.Coordinates.Longitude),
+				"address", visit.Delivery.AddressInfo.AddressLine1,
+				"orders_count", len(visit.Orders))
+		}
+
+		vroomRequest, err := mapper.MapOptimizationRequest(ctx, groupedFleetOptimization)
 		if err != nil {
 			return nil, err
 		}
-		/*
-			obs.Logger.InfoContext(ctx,
-				"VROOM_REQUEST",
-				"url", conf.VROOM_PLANNER_URL,
-				"payload", vroomRequest,
-			)*/
 
 		res, err := restyClient.R().
 			SetContext(ctx).
@@ -98,6 +112,30 @@ func NewOptimize(
 		var routeRequests []request.UpsertRouteRequest
 
 		fleetOptimizations, unassignedOrders := vroomResponse.MapOptimizationRequests(ctx, fleetOptimization)
+
+		// Debug: Log de las rutas devueltas por VROOM
+		obs.Logger.InfoContext(ctx, "VROOM_RESPONSE_DEBUG",
+			"routes_count", len(vroomResponse.Routes),
+			"unassigned_count", len(vroomResponse.Unassigned))
+
+		for i, route := range vroomResponse.Routes {
+			obs.Logger.InfoContext(ctx, "VROOM_ROUTE_DEBUG",
+				"route_index", i+1,
+				"vehicle", route.Vehicle,
+				"steps_count", len(route.Steps))
+
+			// Log de los steps de la ruta
+			for j, step := range route.Steps {
+				if step.Type == "job" && step.Job > 0 {
+					obs.Logger.InfoContext(ctx, "VROOM_STEP_DEBUG",
+						"route_index", i+1,
+						"step_index", j+1,
+						"step_type", step.Type,
+						"job_id", step.Job,
+						"location", step.Location)
+				}
+			}
+		}
 
 		// Crear un mapa de motivos de no asignación
 		unassignedReasons := make(map[string]string)
@@ -313,7 +351,8 @@ func NewOptimize(
 				if len(individualFleetOptimization.Vehicles) > 0 {
 					originalVehicle = individualFleetOptimization.Vehicles[0]
 				}
-				routeRequest := createUpsertRouteRequest(route, planReferenceID, originalVehicle, individualFleetOptimization.Visits)
+				// Usar las visitas originales sin agrupar para preservar contactos individuales
+				routeRequest := createUpsertRouteRequest(route, planReferenceID, originalVehicle, fleetOptimization.Visits)
 				routeRequests = append(routeRequests, routeRequest)
 
 				// Consolidar polylines de esta optimización individual
@@ -364,18 +403,7 @@ func createUpsertRouteRequest(route domain.Route, planReferenceID string, origin
 	// Convertir grupos a visitas usando información de las visitas originales
 	visits := make([]request.UpsertRouteVisit, 0, len(visitGroups))
 	for _, group := range visitGroups {
-		// Buscar la visita original correspondiente
-		var originalVisit *optimization.Visit
-		for _, origVisit := range originalVisits {
-			// Buscar por dirección de delivery
-			if origVisit.Delivery.AddressInfo.Coordinates.Latitude == group.AddressInfo.Coordinates.Point[1] &&
-				origVisit.Delivery.AddressInfo.Coordinates.Longitude == group.AddressInfo.Coordinates.Point[0] {
-				originalVisit = &origVisit
-				break
-			}
-		}
-
-		visit := mapOrderGroupToVisitFromOptimization(group, originalVisit)
+		visit := mapOrderGroupToVisitFromOptimizationWithOriginalVisits(group, originalVisits)
 		visits = append(visits, visit)
 	}
 
@@ -449,14 +477,12 @@ func groupOrdersByVisit(orders []domain.Order) []OrderGroup {
 
 // createDestinationKey crea una clave única para agrupar órdenes por destino
 func createDestinationKey(addrInfo domain.AddressInfo) string {
-	// Usar coordenadas como clave principal
-	lat := addrInfo.Coordinates.Point[1]
-	lon := addrInfo.Coordinates.Point[0]
+	// Usar SOLO coordenadas redondeadas para agrupar direcciones similares
+	// Esto permite que múltiples contactos en la misma dirección se agrupen juntos
+	lat := roundCoordinate(addrInfo.Coordinates.Point[1], 6)
+	lon := roundCoordinate(addrInfo.Coordinates.Point[0], 6)
 
-	// También incluir información de contacto para mayor precisión
-	contactKey := fmt.Sprintf("%s-%s", addrInfo.Contact.FullName, addrInfo.Contact.PrimaryEmail)
-
-	return fmt.Sprintf("%.6f-%.6f-%s", lat, lon, contactKey)
+	return fmt.Sprintf("%.6f-%.6f", lat, lon)
 }
 
 // mapOrderGroupToVisit convierte un grupo de órdenes a una visita
@@ -482,15 +508,84 @@ func mapOrderGroupToVisit(group OrderGroup) request.UpsertRouteVisit {
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         "", // Por defecto vacío, se puede implementar mapeo específico
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             mapNodeInfoToRequest(group.AddressInfo),
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          serviceTime,
-		TimeWindow:           timeWindow,
-		Orders:               orders,
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       mapNodeInfoToRequest(group.AddressInfo),
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    serviceTime,
+		TimeWindow:     timeWindow,
+		Orders:         orders,
+	}
+}
+
+// mapOrderGroupToVisitFromOptimizationWithOriginalVisits convierte un grupo de órdenes de optimización a una visita
+// buscando el contacto correcto para cada orden individual
+func mapOrderGroupToVisitFromOptimizationWithOriginalVisits(group OrderGroup, originalVisits []optimization.Visit) request.UpsertRouteVisit {
+	// Mapear órdenes del grupo usando la información de optimización
+	orders := make([]request.UpsertRouteOrder, 0, len(group.Orders))
+	for _, order := range group.Orders {
+		// Buscar la visita original que contiene esta orden específica
+		var originalVisit *optimization.Visit
+		var originalOrder optimization.Order
+
+		for _, origVisit := range originalVisits {
+			for _, origOrder := range origVisit.Orders {
+				if origOrder.ReferenceID == order.ReferenceID.String() {
+					originalVisit = &origVisit
+					originalOrder = origOrder
+					break
+				}
+			}
+			if originalVisit != nil {
+				break
+			}
+		}
+
+		if originalOrder.ReferenceID != "" {
+			modelOrder := mapOrderToRequestFromOptimization(originalOrder)
+			// Mapear contacto desde la visita original específica
+			if originalVisit != nil {
+				modelOrder.Contact = mapContactToRequestFromOptimization(originalVisit.Delivery.AddressInfo.Contact)
+			}
+			orders = append(orders, modelOrder)
+		} else {
+			// Fallback a mapeo del dominio si no se encuentra
+			modelOrder := mapOrderToRequest(order)
+			orders = append(orders, modelOrder)
+		}
+	}
+
+	// Usar la primera orden para obtener información de la visita
+	var firstOrder *domain.Order
+	if len(group.Orders) > 0 {
+		firstOrder = &group.Orders[0]
+	}
+
+	// Preparar valores por defecto
+	serviceTime := int64(0)
+	timeWindow := request.UpsertRouteTimeWindow{
+		Start: "",
+		End:   "",
+	}
+	nodeInfo := request.UpsertRouteNodeInfo{
+		ReferenceID: "",
+	}
+
+	// Usar información de la primera orden si está disponible
+	if firstOrder != nil {
+		nodeInfo = request.UpsertRouteNodeInfo{
+			ReferenceID: firstOrder.Destination.ReferenceID.String(),
+		}
+	}
+
+	return request.UpsertRouteVisit{
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       nodeInfo,
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    serviceTime,
+		TimeWindow:     timeWindow,
+		Orders:         orders,
 	}
 }
 
@@ -512,6 +607,10 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 
 		if originalOrder.ReferenceID != "" {
 			modelOrder := mapOrderToRequestFromOptimization(originalOrder)
+			// Mapear contacto desde la visita original si está disponible
+			if originalVisit != nil {
+				modelOrder.Contact = mapContactToRequestFromOptimization(originalVisit.Delivery.AddressInfo.Contact)
+			}
 			orders = append(orders, modelOrder)
 		} else {
 			// Fallback a mapeo del dominio si no se encuentra
@@ -521,7 +620,6 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 	}
 
 	// Preparar valores por defecto
-	instructions := ""
 	serviceTime := int64(0)
 	timeWindow := request.UpsertRouteTimeWindow{
 		Start: "",
@@ -533,7 +631,6 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 
 	// Usar información de la visita original si está disponible
 	if originalVisit != nil {
-		instructions = originalVisit.Delivery.Instructions
 		serviceTime = originalVisit.Delivery.ServiceTime
 		timeWindow = request.UpsertRouteTimeWindow{
 			Start: originalVisit.Delivery.TimeWindow.Start,
@@ -545,15 +642,13 @@ func mapOrderGroupToVisitFromOptimization(group OrderGroup, originalVisit *optim
 	}
 
 	return request.UpsertRouteVisit{
-		Type:                 "delivery",
-		Instructions:         instructions,
-		AddressInfo:          mapAddressInfoToRequest(group.AddressInfo),
-		NodeInfo:             nodeInfo,
-		DeliveryInstructions: group.DeliveryInstructions,
-		SequenceNumber:       group.SequenceNumber,
-		ServiceTime:          serviceTime,
-		TimeWindow:           timeWindow,
-		Orders:               orders,
+		Type:           "delivery",
+		AddressInfo:    mapAddressInfoToRequest(group.AddressInfo),
+		NodeInfo:       nodeInfo,
+		SequenceNumber: group.SequenceNumber,
+		ServiceTime:    serviceTime,
+		TimeWindow:     timeWindow,
+		Orders:         orders,
 	}
 }
 
@@ -565,9 +660,17 @@ func mapOrderToRequest(order domain.Order) request.UpsertRouteOrder {
 		deliveryUnits = append(deliveryUnits, modelDU)
 	}
 
+	// Mapear contacto desde el destino de la orden
+	var contact request.UpsertRouteContact
+	if order.Destination.AddressInfo.Contact.FullName != "" {
+		contact = mapContactToRequest(order.Destination.AddressInfo.Contact)
+	}
+
 	return request.UpsertRouteOrder{
-		ReferenceID:   order.ReferenceID.String(),
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:          order.ReferenceID.String(),
+		Contact:              contact,
+		DeliveryInstructions: order.DeliveryInstructions,
+		DeliveryUnits:        deliveryUnits,
 	}
 }
 
@@ -579,9 +682,15 @@ func mapOrderToRequestFromOptimization(order optimization.Order) request.UpsertR
 		deliveryUnits = append(deliveryUnits, modelDU)
 	}
 
+	// Para órdenes de optimización, el contacto se mapea desde la información de la visita
+	// que se pasa como parámetro en las funciones que llaman a esta función
+	var contact request.UpsertRouteContact
+
 	return request.UpsertRouteOrder{
-		ReferenceID:   order.ReferenceID,
-		DeliveryUnits: deliveryUnits,
+		ReferenceID:          order.ReferenceID,
+		Contact:              contact,
+		DeliveryInstructions: "", // optimization.Order no tiene DeliveryInstructions
+		DeliveryUnits:        deliveryUnits,
 	}
 }
 
@@ -663,10 +772,9 @@ func mapVehicleToRequestFromOptimization(vehicle optimization.Vehicle) request.U
 		Skills:        vehicle.Skills,
 		TimeWindow:    timeWindow,
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                vehicle.Capacity.Volume,
-			Weight:                vehicle.Capacity.Weight,
-			Insurance:             vehicle.Capacity.Insurance,
-			DeliveryUnitsQuantity: vehicle.Capacity.DeliveryUnitsQuantity,
+			Volume:    vehicle.Capacity.Volume,
+			Weight:    vehicle.Capacity.Weight,
+			Insurance: vehicle.Capacity.Insurance,
 		},
 	}
 }
@@ -676,7 +784,6 @@ func mapAddressInfoToRequestFromOptimization(addrInfo optimization.AddressInfo) 
 	return request.UpsertRouteAddressInfo{
 		AddressLine1:  addrInfo.AddressLine1,
 		AddressLine2:  addrInfo.AddressLine2,
-		Contact:       mapContactToRequestFromOptimization(addrInfo.Contact),
 		Coordinates:   mapCoordinatesToRequestFromOptimization(addrInfo.Coordinates),
 		PoliticalArea: mapPoliticalAreaToRequestFromOptimization(addrInfo.PoliticalArea),
 		ZipCode:       addrInfo.ZipCode,
@@ -739,10 +846,9 @@ func mapVehicleToRequest(vehicle domain.Vehicle) request.UpsertRouteVehicle {
 		Skills:        []string{}, // Por defecto vacío, se puede implementar mapeo específico
 		TimeWindow:    timeWindow,
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
-			Weight:                int64(vehicle.Weight.Value),
-			Insurance:             int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
-			DeliveryUnitsQuantity: 0, // Por defecto 0, se puede implementar mapeo específico
+			Volume:    int64(vehicle.Weight.Value), // Usar Weight.Value como volumen
+			Weight:    int64(vehicle.Weight.Value),
+			Insurance: int64(vehicle.Insurance.MaxInsuranceCoverage.Amount),
 		},
 	}
 }
@@ -752,7 +858,6 @@ func mapAddressInfoToRequest(addr domain.AddressInfo) request.UpsertRouteAddress
 	return request.UpsertRouteAddressInfo{
 		AddressLine1:  addr.AddressLine1,
 		AddressLine2:  addr.AddressLine2,
-		Contact:       mapContactToRequest(addr.Contact),
 		Coordinates:   mapCoordinatesToRequest(addr.Coordinates),
 		PoliticalArea: mapPoliticalAreaToRequest(addr.PoliticalArea),
 		ZipCode:       addr.ZipCode,
@@ -812,10 +917,9 @@ func createUnassignedRouteRequest(unassignedOrders []optimization.Order, planRef
 		Skills:     nil,
 		TimeWindow: request.UpsertRouteTimeWindow{},
 		Capacity: request.UpsertRouteVehicleCapacity{
-			Volume:                0,
-			Weight:                0,
-			Insurance:             0,
-			DeliveryUnitsQuantity: 0,
+			Volume:    0,
+			Weight:    0,
+			Insurance: 0,
 		},
 	}
 
@@ -849,22 +953,22 @@ func createUnassignedRouteRequest(unassignedOrders []optimization.Order, planRef
 
 			// Usar la información de la visita original
 			visit := request.UpsertRouteVisit{
-				Type:         "delivery",
-				Instructions: originalVisit.Delivery.Instructions,
-				AddressInfo:  mapAddressInfoToRequestFromOptimization(originalVisit.Delivery.AddressInfo),
+				Type:        "delivery",
+				AddressInfo: mapAddressInfoToRequestFromOptimization(originalVisit.Delivery.AddressInfo),
 				NodeInfo: request.UpsertRouteNodeInfo{
 					ReferenceID: originalVisit.Delivery.NodeInfo.ReferenceID,
 				},
-				DeliveryInstructions: originalVisit.Delivery.Instructions,
-				SequenceNumber:       1,
-				ServiceTime:          originalVisit.Delivery.ServiceTime,
+				SequenceNumber: 1,
+				ServiceTime:    originalVisit.Delivery.ServiceTime,
 				TimeWindow: request.UpsertRouteTimeWindow{
 					Start: originalVisit.Delivery.TimeWindow.Start,
 					End:   originalVisit.Delivery.TimeWindow.End,
 				},
 				Orders: []request.UpsertRouteOrder{
 					{
-						ReferenceID: order.ReferenceID,
+						ReferenceID:          order.ReferenceID,
+						Contact:              mapContactToRequestFromOptimization(originalVisit.Delivery.AddressInfo.Contact),
+						DeliveryInstructions: originalVisit.Delivery.Instructions,
 						DeliveryUnits: func() []request.UpsertRouteDeliveryUnit {
 							units := make([]request.UpsertRouteDeliveryUnit, 0, len(order.DeliveryUnits))
 							for _, du := range order.DeliveryUnits {
@@ -1144,5 +1248,86 @@ func createOrderFromOptimizationOrder(optOrder optimization.Order) domain.Order 
 	return domain.Order{
 		ReferenceID:   domain.ReferenceID(optOrder.ReferenceID),
 		DeliveryUnits: deliveryUnits,
+	}
+}
+
+// roundCoordinate redondea una coordenada a un número específico de decimales
+func roundCoordinate(coord float64, decimals int) float64 {
+	multiplier := math.Pow(10, float64(decimals))
+	return math.Round(coord*multiplier) / multiplier
+}
+
+// groupVisitsByCoordinates agrupa las visitas por coordenadas para evitar duplicados antes de optimizar
+func groupVisitsByCoordinates(fleetOptimization optimization.FleetOptimization) optimization.FleetOptimization {
+	if len(fleetOptimization.Visits) == 0 {
+		return fleetOptimization
+	}
+
+	// Mapa para agrupar visitas por coordenadas redondeadas
+	coordinateGroups := make(map[string][]optimization.Visit)
+
+	for i, visit := range fleetOptimization.Visits {
+		// Crear clave de coordenadas redondeadas
+		lat := roundCoordinate(visit.Delivery.AddressInfo.Coordinates.Latitude, 6)
+		lon := roundCoordinate(visit.Delivery.AddressInfo.Coordinates.Longitude, 6)
+		coordKey := fmt.Sprintf("%.6f,%.6f", lat, lon)
+
+		// Debug: Log de cada visita
+		fmt.Printf("DEBUG: Visita %d - Coordenadas: %.6f,%.6f - Key: %s - Address: %s\n",
+			i+1, lat, lon, coordKey, visit.Delivery.AddressInfo.AddressLine1)
+
+		// Agrupar visitas por coordenadas
+		coordinateGroups[coordKey] = append(coordinateGroups[coordKey], visit)
+	}
+
+	// Debug: Log de grupos encontrados
+	fmt.Printf("DEBUG: Se encontraron %d grupos de coordenadas\n", len(coordinateGroups))
+	for coordKey, visits := range coordinateGroups {
+		fmt.Printf("DEBUG: Grupo %s tiene %d visitas\n", coordKey, len(visits))
+		if len(visits) > 1 {
+			fmt.Printf("DEBUG: ¡GRUPO CON DUPLICADOS! Consolidando %d visitas en 1\n", len(visits))
+		}
+	}
+
+	// Convertir grupos a visitas consolidadas
+	var groupedVisits []optimization.Visit
+	for coordKey, visitGroup := range coordinateGroups {
+		if len(visitGroup) == 0 {
+			continue
+		}
+
+		// Usar la primera visita como base
+		consolidatedVisit := visitGroup[0]
+
+		// Consolidar todas las órdenes de las visitas del grupo
+		var allOrders []optimization.Order
+		for _, visit := range visitGroup {
+			// Crear órdenes con información de contacto preservada
+			for _, order := range visit.Orders {
+				// Crear una copia de la orden
+				orderWithContact := order
+				// Nota: optimization.Order no tiene campo de contacto directo,
+				// pero se preservará en el mapeo posterior usando la visita original
+				allOrders = append(allOrders, orderWithContact)
+			}
+		}
+
+		// Asignar todas las órdenes consolidadas
+		consolidatedVisit.Orders = allOrders
+
+		// Debug: Log de consolidación
+		if len(visitGroup) > 1 {
+			fmt.Printf("DEBUG: Consolidando %d visitas en 1 para coordenadas %s\n", len(visitGroup), coordKey)
+			fmt.Printf("DEBUG: Órdenes consolidadas: %d\n", len(allOrders))
+		}
+
+		groupedVisits = append(groupedVisits, consolidatedVisit)
+	}
+
+	// Crear nuevo FleetOptimization con visitas agrupadas
+	return optimization.FleetOptimization{
+		PlanReferenceID: fleetOptimization.PlanReferenceID,
+		Vehicles:        fleetOptimization.Vehicles,
+		Visits:          groupedVisits,
 	}
 }

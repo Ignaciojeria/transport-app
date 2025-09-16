@@ -1,4 +1,6 @@
-import { CheckCircle, XCircle } from 'lucide-react'
+import { CheckCircle, XCircle, Package } from 'lucide-react'
+import { IdentifierBadge } from './IdentifierBadge'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface VisitCardDeliveryUnitProps {
   unit: any
@@ -7,6 +9,7 @@ interface VisitCardDeliveryUnitProps {
   visitIndex: number
   orderIndex: number
   routeStarted: boolean
+  orderReferenceID?: string
   onOpenDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
   onOpenNonDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
 }
@@ -18,9 +21,11 @@ export function VisitCardDeliveryUnit({
   visitIndex,
   orderIndex,
   routeStarted,
+  orderReferenceID,
   onOpenDelivery,
   onOpenNonDelivery
 }: VisitCardDeliveryUnitProps) {
+  const { t } = useLanguage()
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'delivered':
@@ -33,20 +38,33 @@ export function VisitCardDeliveryUnit({
   }
 
   return (
-    <div
-      className={`bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border ${getStatusColor(status).replace('bg-white ', '')}`}
-    >
+    <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-3 border border-gray-200">
       <div className="flex justify-between items-start mb-2">
         <div className="flex-1 min-w-0">
-          <h5 className="text-sm font-medium text-gray-800 mb-2 truncate">
-            Unidad de Entrega {uIdx + 1}
+          {/* Identificadores prominentes - igual que modo mapa */}
+          <div className="mb-2">
+            <IdentifierBadge 
+              lpn={unit.lpn} 
+              code={unit.code} 
+              size="sm"
+              className="mb-2"
+            />
+          </div>
+          {/* Título de la unidad - igual que modo mapa */}
+          <h5 className="text-sm font-medium text-gray-800 mb-2 truncate flex items-center">
+            <Package className="w-4 h-4 mr-2 text-gray-600" />
+            {t.visitCard.deliveryUnit} {uIdx + 1}
           </h5>
+
+          {/* Información del producto - igual que modo mapa */}
           {Array.isArray(unit.items) && unit.items.length > 0 && (
-            <div className="flex items-center space-x-1 mb-2">
-              <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
-              <span className="text-xs text-gray-700 truncate">
-                {unit.items[0]?.description}
-              </span>
+            <div className="space-y-1 mb-2">
+              {unit.items.map((item: any, index: number) => (
+                <div key={index} className="flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></span>
+                  <span className="text-xs text-gray-700 truncate">{item.description}{item.quantity ? ` (${item.quantity})` : ''}</span>
+                </div>
+              ))}
             </div>
           )}
           <div className="flex items-center space-x-3 text-xs text-gray-600">
@@ -59,14 +77,17 @@ export function VisitCardDeliveryUnit({
               {typeof unit.volume === 'number' ? `${unit.volume}m³` : unit.volume}
             </span>
           </div>
+
           {status === 'delivered' && (
-            <div className="mt-2 inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200">
+            <div className="mt-2 inline-flex items-center text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 border border-green-200">
               <CheckCircle className="w-3 h-3 mr-1" /> Evidencia registrada
             </div>
           )}
         </div>
+
+        {/* Cantidad en la esquina derecha - igual que modo mapa */}
         <div className="text-right ml-3">
-          <span className="text-xs text-gray-500 block">Cant.</span>
+          <span className="text-xs text-gray-500 block">{t.visitCard.quantity}</span>
           <span className="text-xl font-bold text-indigo-600">
             {(unit.items || []).reduce((a: number, it: any) => a + (Number(it?.quantity) || 0), 0)}
           </span>
@@ -82,7 +103,7 @@ export function VisitCardDeliveryUnit({
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
             >
               <XCircle size={16} />
-              <span>Cambiar a no entregado</span>
+              <span>{t.delivery.changeToNotDelivered}</span>
             </button>
           ) : status === 'not-delivered' ? (
             // Si está no entregado, mostrar solo opción de cambiar a entregado
@@ -91,7 +112,7 @@ export function VisitCardDeliveryUnit({
               className="w-full flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
             >
               <CheckCircle size={16} />
-              <span>Cambiar a entregado</span>
+              <span>{t.delivery.changeToDelivered}</span>
             </button>
           ) : (
             // Si está pendiente, mostrar ambas opciones originales
@@ -101,14 +122,14 @@ export function VisitCardDeliveryUnit({
                 className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-green-100 text-green-700 hover:bg-green-200"
               >
                 <CheckCircle size={16} />
-                <span>entregar</span>
+                <span>{t.delivery.deliver}</span>
               </button>
               <button
                 onClick={() => onOpenNonDelivery(visitIndex, orderIndex, uIdx)}
                 className="flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md font-medium transition-colors bg-red-100 text-red-700 hover:bg-red-200"
               >
                 <XCircle size={16} />
-                <span>no entregado</span>
+                <span>{t.delivery.notDeliver}</span>
               </button>
             </>
           )}

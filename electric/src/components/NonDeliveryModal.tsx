@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { CameraCapture } from './CameraCapture'
 import { processAndUploadImage, getUploadUrlFromRoute } from '../utils/imageUpload'
+import { useLanguage } from '../hooks/useLanguage'
 import type { DeliveryEvent } from '../domain/deliveries'
 import type { Route as RouteType } from '../domain/route'
 
@@ -29,6 +30,7 @@ export function NonDeliveryModal({
   unitIndex,
   isDemo = false
 }: NonDeliveryModalProps) {
+  const { t } = useLanguage()
   const [ndReasonQuery, setNdReasonQuery] = useState('')
   const [ndSelectedReason, setNdSelectedReason] = useState<string>('')
   const [ndObservations, setNdObservations] = useState<string>('')
@@ -136,21 +138,26 @@ export function NonDeliveryModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={handleClose}></div>
       <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-4 max-h-[85vh] overflow-y-auto">
-        <h3 className="text-base font-semibold text-gray-800 mb-3">No entregado</h3>
+        <h3 className="text-base font-semibold text-gray-800 mb-3">{t.nonDeliveryModal.title}</h3>
         <div className="space-y-3">
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Motivo</label>
+            <label className="block text-xs text-gray-600 mb-1">{t.nonDeliveryModal.reasonLabel}</label>
             <input
               type="text"
               value={ndReasonQuery}
               onChange={(e) => { setNdReasonQuery(e.target.value); setNdSelectedReason('') }}
               ref={ndReasonInputRef}
               className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Buscar/ingresar motivo"
+              placeholder={t.nonDeliveryModal.reasonPlaceholder}
             />
             {/* Lista filtrada de motivos sugeridos */}
             {(() => {
-              const base = ['cliente rechaza entrega', 'sin moradores', 'producto dañado', 'otro motivo']
+              const base = [
+                t.nonDeliveryModal.reasons.clientRejects,
+                t.nonDeliveryModal.reasons.noResidents,
+                t.nonDeliveryModal.reasons.damagedProduct,
+                t.nonDeliveryModal.reasons.otherReason
+              ]
               const q = ndReasonQuery.trim().toLowerCase()
               const items = base.filter((m) => m.includes(q))
               return (
@@ -170,19 +177,19 @@ export function NonDeliveryModal({
             })()}
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">Observaciones</label>
+            <label className="block text-xs text-gray-600 mb-1">{t.nonDeliveryModal.observationsLabel}</label>
             <textarea
               value={ndObservations}
               onChange={(e) => setNdObservations(e.target.value)}
               rows={3}
               className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="Detalles adicionales (opcional)"
+              placeholder={t.nonDeliveryModal.observationsPlaceholder}
             />
           </div>
           <CameraCapture
             onCapture={(photoDataUrl) => setNdPhotoDataUrl(photoDataUrl)}
-            title="Foto de evidencia"
-            buttonText="Activar cámara"
+            title={t.nonDeliveryModal.photoLabel}
+            buttonText={t.nonDeliveryModal.activateCamera}
           />
         </div>
         {uploadError && (
@@ -196,14 +203,14 @@ export function NonDeliveryModal({
             className="px-3 py-2 text-sm rounded-md border bg-white hover:bg-gray-50" 
             disabled={submitting || uploadingImage}
           >
-            Cancelar
+{t.nonDeliveryModal.cancel}
           </button>
           <button 
             onClick={handleSubmit} 
             disabled={submitting || uploadingImage || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl} 
             className={`px-3 py-2 text-sm rounded-md text-white ${submitting || uploadingImage || !(ndSelectedReason || ndReasonQuery).trim() || !ndPhotoDataUrl ? 'bg-red-300' : 'bg-red-600 hover:bg-red-700'}`}
           >
-            {uploadingImage ? 'Subiendo imagen...' : 'Confirmar no entrega'}
+{uploadingImage ? t.nonDeliveryModal.uploadingImage : t.nonDeliveryModal.confirmNonDelivery}
           </button>
         </div>
       </div>

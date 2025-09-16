@@ -1,6 +1,6 @@
-import { Package } from 'lucide-react'
 import { VisitCardHeader } from './VisitCardHeader'
 import { VisitCardOrders } from './VisitCardOrders'
+import type { DeliveryGroup } from './GroupedDeliveryUtils'
 
 interface VisitCardProps {
   visit: any
@@ -9,8 +9,11 @@ interface VisitCardProps {
   onCenterOnVisit: (visitIndex: number) => void
   onOpenDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
   onOpenNonDelivery: (visitIndex: number, orderIndex: number, uIdx: number) => void
+  onOpenGroupedDelivery?: (visitIndex: number, group: DeliveryGroup) => void
+  onOpenGroupedNonDelivery?: (visitIndex: number, group: DeliveryGroup) => void
   getDeliveryUnitStatus: (visitIndex: number, orderIndex: number, uIdx: number) => 'delivered' | 'not-delivered' | undefined
   shouldRenderByTab: (status?: 'delivered' | 'not-delivered') => boolean
+  viewMode?: 'list' | 'map' // Nuevo prop para controlar agrupación
 }
 
 export function VisitCard({
@@ -20,8 +23,11 @@ export function VisitCard({
   onCenterOnVisit,
   onOpenDelivery,
   onOpenNonDelivery,
+  onOpenGroupedDelivery,
+  onOpenGroupedNonDelivery,
   getDeliveryUnitStatus,
-  shouldRenderByTab
+  shouldRenderByTab,
+  viewMode = 'list'
 }: VisitCardProps) {
   // Solo mostrar si tiene elementos pendientes para el tab actual
   const matchesForTab: number = (visit?.orders || []).reduce(
@@ -44,13 +50,10 @@ export function VisitCard({
                     visit={visit}
                     visitIndex={visitIndex}
                     onCenterOnVisit={onCenterOnVisit}
+                    viewMode={viewMode}
                   />
       
       <div className="p-4">
-        <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
-          <Package size={18} />
-          <span className="ml-2">Unidades de Entrega:</span>
-        </h4>
 
                             <VisitCardOrders
                       visit={visit}
@@ -58,8 +61,11 @@ export function VisitCard({
                       routeStarted={routeStarted}
                       onOpenDelivery={onOpenDelivery}
                       onOpenNonDelivery={onOpenNonDelivery}
+                      onOpenGroupedDelivery={onOpenGroupedDelivery}
+                      onOpenGroupedNonDelivery={onOpenGroupedNonDelivery}
                       getDeliveryUnitStatus={getDeliveryUnitStatus}
                       shouldRenderByTab={shouldRenderByTab}
+                      viewMode={viewMode}
                     />
       </div>
     </div>

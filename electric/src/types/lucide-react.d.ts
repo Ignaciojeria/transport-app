@@ -7,10 +7,12 @@ declare module 'lucide-react' {
 
   export const CheckCircle: React.FC<IconProps>
   export const XCircle: React.FC<IconProps>
+  export const X: React.FC<IconProps>
   export const Play: React.FC<IconProps>
   export const Package: React.FC<IconProps>
   export const Phone: React.FC<IconProps>
   export const User: React.FC<IconProps>
+  export const Users: React.FC<IconProps>
   export const MapPin: React.FC<IconProps>
   export const Maximize2: React.FC<IconProps>
   export const Minimize2: React.FC<IconProps>
@@ -19,6 +21,11 @@ declare module 'lucide-react' {
   export const Truck: React.FC<IconProps>
   export const Route: React.FC<IconProps>
   export const Map: React.FC<IconProps>
+  export const Camera: React.FC<IconProps>
+  export const AlertTriangle: React.FC<IconProps>
+  export const AlertCircle: React.FC<IconProps>
+  export const ChevronDown: React.FC<IconProps>
+  export const ChevronUp: React.FC<IconProps>
 }
 
 

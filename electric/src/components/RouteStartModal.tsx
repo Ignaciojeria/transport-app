@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface RouteStartModalProps {
   isOpen: boolean
@@ -8,6 +9,7 @@ interface RouteStartModalProps {
 }
 
 export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: RouteStartModalProps) {
+  const { t } = useLanguage()
   const licenseInputRef = useRef<HTMLInputElement | null>(null)
   const [inputValue, setInputValue] = useState('')
 
@@ -28,12 +30,12 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
       <div className="relative bg-white w-full max-w-md mx-auto rounded-xl shadow-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Ingresar patente del vehículo</h3>
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.routeStartModal.title}</h3>
         
         {defaultLicense && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800 mb-2">
-              ¿Usar la patente asignada a esta ruta?
+              {t.routeStartModal.useAssignedPlate}
             </p>
             <div className="flex items-center gap-2">
               <span className="font-mono text-base font-semibold text-blue-900">
@@ -43,7 +45,7 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
                 onClick={() => onConfirm(defaultLicense)}
                 className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
               >
-                Usar esta
+                {t.routeStartModal.useThisPlate}
               </button>
                              <button
                  onClick={() => {
@@ -55,7 +57,7 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
                  }}
                  className="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
                >
-                 Usar otra
+                 {t.routeStartModal.useOtherPlate}
                </button>
             </div>
           </div>
@@ -63,7 +65,7 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
         
         <div className="mb-4">
           <label htmlFor="licenseInput" className="block text-sm font-medium text-gray-700 mb-2">
-            {defaultLicense ? 'O ingresa una patente diferente:' : 'Patente del vehículo:'}
+            {defaultLicense ? t.routeStartModal.differentPlateLabel : t.routeStartModal.licensePlateLabel}
           </label>
                      <input
              id="licenseInput"
@@ -82,14 +84,14 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
                  }
                }
              }}
-             placeholder={defaultLicense ? "Ej: XYZ789" : "Ej: ABC123"}
+             placeholder={t.routeStartModal.plateExample}
              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
              maxLength={8}
            />
           <p className="text-xs text-gray-500 mt-1">
             {defaultLicense 
-              ? 'Escribe aquí si quieres usar una patente diferente a la asignada'
-              : 'Puedes ingresar cualquier patente para esta ruta'
+              ? t.routeStartModal.plateHelpText
+              : t.routeStartModal.plateHelpTextDefault
             }
           </p>
         </div>
@@ -101,7 +103,7 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
             onClick={onClose}
             className="px-4 py-2 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition-colors"
           >
-            Cancelar
+            {t.routeStartModal.cancelButton}
           </button>
                      <button
              onClick={() => {
@@ -117,7 +119,7 @@ export function RouteStartModal({ isOpen, onClose, onConfirm, defaultLicense }: 
                  : 'bg-green-600 hover:bg-green-700'
              }`}
            >
-             Iniciar ruta
+             {t.routeStartModal.startButton}
            </button>
         </div>
       </div>
