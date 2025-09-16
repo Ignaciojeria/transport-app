@@ -14,7 +14,7 @@ import {
   setDeliveryUnitByEntity,
 } from './db'
 import { useState, useEffect } from 'react'
-import { Play, Menu, Truck, Route, Map } from 'lucide-react'
+import { Play, Menu, Truck, Map } from 'lucide-react'
 import { useLanguage } from './hooks/useLanguage'
 import { Sidebar, DeliveryModal, NonDeliveryModal, VisitCard, NextVisitCard, DownloadReportModal, RouteStartModal, VisitTabs, MapView, GroupedDeliveryModal, GroupedNonDeliveryModal } from './components'
 import { groupDeliveryUnitsByAddressForNextVisit } from './components/GroupedDeliveryUtils'
@@ -923,6 +923,8 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
         onDownloadReport={openDownloadModal}
         syncInfo={syncInfo}
         markerPosition={markerPosition}
+        routeId={routeId}
+        routeDbId={routeDbId}
       />
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 shadow-lg">
         <div className="flex items-center justify-between mb-3">
@@ -935,17 +937,13 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
               <Menu className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-lg font-bold flex items-center">
-                <Route className="w-5 h-5 mr-2" />
-                {t.header.routeId}: {routeDbId || routeId}
-              </h1>
-              <p className="text-indigo-100 text-sm flex items-center">
-                <Truck className="w-3 h-3 mr-1" />
+              <h1 className="text-sm font-bold flex items-center">
+                <Truck className="w-4 h-4 mr-2" />
                 {t.header.vehiclePlate}: 
                 <span className="bg-white/20 text-white px-2 py-1 rounded-lg ml-2 font-mono text-xs">
                   {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
                 </span>
-              </p>
+              </h1>
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -14,6 +14,8 @@ interface SidebarProps {
     timestamp: number
     deviceId: string
   } | null
+  routeId: string
+  routeDbId?: string
 }
 
 export function Sidebar({ 
@@ -22,7 +24,9 @@ export function Sidebar({
   routeStarted, 
   onDownloadReport,
   syncInfo,
-  markerPosition
+  markerPosition,
+  routeId,
+  routeDbId
 }: SidebarProps) {
   const { t } = useLanguage()
   if (!isOpen) return null
@@ -55,6 +59,24 @@ export function Sidebar({
         
         {/* Content */}
         <div className="p-6 space-y-6">
+          {/* Información de la ruta */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide">{t.header.routeId}</h3>
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{routeDbId || routeId}</p>
+                  <p className="text-xs text-gray-500">Identificador de ruta</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Botón CSV */}
           {routeStarted && (
             <div className="space-y-2">
