@@ -936,14 +936,18 @@ function DeliveryRouteView({ routeId, routeData, routeDbId }: { routeId: string;
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div>
-              <h1 className="text-sm font-bold flex items-center">
-                <Truck className="w-4 h-4 mr-2" />
-                {t.header.vehiclePlate}: 
-                <span className="bg-white/20 text-white px-2 py-1 rounded-lg ml-2 font-mono text-xs">
-                  {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
-                </span>
-              </h1>
+            <div className="flex items-center space-x-2">
+              <Truck className="w-4 h-4" />
+              <div>
+                <h1 className="text-sm font-bold">
+                  {t.header.vehiclePlate}:
+                </h1>
+                <div>
+                  <span className="bg-white/20 text-white px-2 py-1 rounded-lg font-mono text-xs">
+                    {getRouteLicenseFromState(localState?.s || {}, routeId) || (routeData?.vehicle?.plate ?? '—')}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
