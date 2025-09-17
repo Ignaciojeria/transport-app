@@ -287,7 +287,7 @@ export function VisitCardOrders({
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
                       <Package2 className="w-4 h-4 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-2 py-1 rounded-lg text-xs font-medium">
                         {order.referenceID || `#${orderIndex + 1}`}
                       </span>
                     </div>

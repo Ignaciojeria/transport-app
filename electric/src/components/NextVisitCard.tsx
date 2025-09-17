@@ -122,8 +122,8 @@ export function NextVisitCard({ nextVisit, nextIdx, onCenterOnVisit, addressGrou
                   {visit.orders?.map((order: any, orderIndex: number) => (
                     <div key={orderIndex} className="bg-gray-50 rounded p-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-700">
-                          {t.visitCard.order}: {order.referenceID}
+                        <span className="inline-block bg-gradient-to-r from-gray-600 to-gray-700 text-white px-2 py-1 rounded-lg text-xs font-medium">
+                          {order.referenceID}
                         </span>
                         <span className="text-xs text-gray-500">
                           {order.deliveryUnits?.length || 0} {t.visitCard.units}
