@@ -58,10 +58,9 @@ type OptimizeFleetPoliticalArea struct {
 }
 
 type OptimizeFleetVehicleCapacity struct {
-	Volume                int64 `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
-	Weight                int64 `json:"weight" example:"1000" description:"Weight in grams (g)"`
-	Insurance             int64 `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
-	DeliveryUnitsQuantity int64 `json:"deliveryUnitsQuantity"`
+	Volume    int64 `json:"volume" example:"1000" description:"Volume in cubic centimeters (cm³)"`
+	Weight    int64 `json:"weight" example:"1000" description:"Weight in grams (g)"`
+	Insurance int64 `json:"insurance" example:"10000" description:"Insurance value in currency units (CLP, MXN, PEN, CENTS etc.) - only integer values accepted"`
 }
 
 type OptimizeFleetTimeWindow struct {
@@ -172,10 +171,9 @@ func (r *OptimizeFleetRequest) Map() optimization.FleetOptimization {
 				End:   v.TimeWindow.End,
 			},
 			Capacity: optimization.Capacity{
-				Insurance:             v.Capacity.Insurance,
-				Volume:                v.Capacity.Volume,
-				Weight:                v.Capacity.Weight,
-				DeliveryUnitsQuantity: v.Capacity.DeliveryUnitsQuantity,
+				Insurance: v.Capacity.Insurance,
+				Volume:    v.Capacity.Volume,
+				Weight:    v.Capacity.Weight,
 			},
 		}
 	}

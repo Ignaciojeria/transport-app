@@ -103,10 +103,9 @@ func generateVehicles(baseLat, baseLon float64) []OptimizeFleetVehicle {
 				End:   "18:00",
 			},
 			Capacity: OptimizeFleetVehicleCapacity{
-				Insurance:             capacities[i].insurance,
-				Volume:                capacities[i].volume,
-				Weight:                capacities[i].weight,
-				DeliveryUnitsQuantity: capacities[i].deliveryUnits,
+				Insurance: capacities[i].insurance,
+				Volume:    capacities[i].volume,
+				Weight:    capacities[i].weight,
 			},
 		}
 		vehicles = append(vehicles, vehicle)
