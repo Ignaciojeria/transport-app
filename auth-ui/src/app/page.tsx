@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signIn, useSession } from 'next-auth/react'
+// import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
@@ -19,44 +19,20 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { data: session, status } = useSession()
+  // const { data: session, status } = useSession()
   const router = useRouter()
-
-  // Redirigir si ya está autenticado
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (session) {
-    // Redirigir a donde quieras después del login
-    window.location.href = '/success' // Cambiar por tu URL de destino
-    return null
-  }
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     setError('')
     try {
-      const result = await signIn('google', { 
-        redirect: false,
-        callbackUrl: '/success' // Cambiar por tu URL de destino
-      })
-      
-      if (result?.error) {
-        setError('Error al iniciar sesión con Google')
-      } else if (result?.url) {
-        window.location.href = result.url
-      }
+      // Simulación para demo - aquí integrarías con tu backend
+      setTimeout(() => {
+        alert('¡Funcionalidad de login será implementada próximamente!')
+        setIsLoading(false)
+      }, 1000)
     } catch (err) {
       setError('Error de conexión')
-    } finally {
       setIsLoading(false)
     }
   }
