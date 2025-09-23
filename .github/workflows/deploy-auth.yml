@@ -42,4 +42,4 @@ jobs:
         projectId: '${{ vars.GOOGLE_PROJECT_ID }}'
         channelId: live
         entryPoint: ./auth-ui
-        target: transport-auth-ui-b8c7d
+        target: transport-auth-ui
