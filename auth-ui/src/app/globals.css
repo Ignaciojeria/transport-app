@@ -1,0 +1,308 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Partículas animadas de fondo */
+.particles-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(1) {
+  width: 4px;
+  height: 4px;
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 8s;
+}
+
+.particle:nth-child(2) {
+  width: 6px;
+  height: 6px;
+  left: 20%;
+  animation-delay: 2s;
+  animation-duration: 10s;
+}
+
+.particle:nth-child(3) {
+  width: 3px;
+  height: 3px;
+  left: 30%;
+  animation-delay: 4s;
+  animation-duration: 7s;
+}
+
+.particle:nth-child(4) {
+  width: 5px;
+  height: 5px;
+  left: 40%;
+  animation-delay: 1s;
+  animation-duration: 9s;
+}
+
+.particle:nth-child(5) {
+  width: 4px;
+  height: 4px;
+  left: 50%;
+  animation-delay: 3s;
+  animation-duration: 6s;
+}
+
+.particle:nth-child(6) {
+  width: 7px;
+  height: 7px;
+  left: 60%;
+  animation-delay: 5s;
+  animation-duration: 11s;
+}
+
+.particle:nth-child(7) {
+  width: 3px;
+  height: 3px;
+  left: 70%;
+  animation-delay: 2.5s;
+  animation-duration: 8s;
+}
+
+.particle:nth-child(8) {
+  width: 5px;
+  height: 5px;
+  left: 80%;
+  animation-delay: 4.5s;
+  animation-duration: 9s;
+}
+
+.particle:nth-child(9) {
+  width: 4px;
+  height: 4px;
+  left: 90%;
+  animation-delay: 1.5s;
+  animation-duration: 7s;
+}
+
+.particle:nth-child(10) {
+  width: 6px;
+  height: 6px;
+  left: 15%;
+  animation-delay: 3.5s;
+  animation-duration: 10s;
+}
+
+/* Efecto de brillo en las tarjetas */
+.card-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glow::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(59, 130, 246, 0.1), transparent);
+  transform: rotate(45deg);
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Animación de entrada suave */
+.auth-container {
+  animation: fade-in 0.6s ease-out;
+}
+
+/* Efectos hover para botones */
+.auth-button {
+  transition: all 0.3s ease;
+}
+
+.auth-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para el logo animado */
+.logo-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Mejoras responsive */
+@media (max-width: 768px) {
+  .auth-particles {
+    display: none; /* Ocultar partículas en móvil para mejor rendimiento */
+  }
+  
+  .card-glow::before {
+    display: none; /* Ocultar efecto shimmer en móvil */
+  }
+  
+  /* Ajustes para viewport pequeño */
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh; /* Viewport dinámico */
+  }
+}
+
+/* Ajustes para pantallas muy pequeñas en altura */
+@media (max-height: 700px) {
+  .h-screen {
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  .overflow-y-auto {
+    overflow-y: visible;
+  }
+}
+
+/* Espaciado optimizado para pantallas pequeñas */
+@media (max-height: 800px) {
+  .space-y-8 > * + * {
+    margin-top: 1.5rem !important;
+  }
+  
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus states mejorados */
+.auth-button:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+}
+
+/* Mejor contraste para accesibilidad */
+.text-gray-400 {
+  color: rgb(107 114 128);
+}
+
+/* Estados de loading mejorados */
+.loading-spinner {
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fuentes responsivas basadas en viewport */
+.text-responsive-xs {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-responsive-sm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+.text-responsive-3xl {
+  font-size: clamp(2rem, 6vw, 3rem);
+}
