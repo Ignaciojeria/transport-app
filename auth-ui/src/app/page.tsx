@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-// import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
@@ -19,18 +18,19 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   
-  // const { data: session, status } = useSession()
   const router = useRouter()
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     setError('')
     try {
-      // Simulación para demo - aquí integrarías con tu backend
-      setTimeout(() => {
-        alert('¡Funcionalidad de login será implementada próximamente!')
-        setIsLoading(false)
-      }, 1000)
+      // Autenticación directa con Google OAuth usando window.open o redirect
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${window.location.origin}/auth/callback&response_type=code&scope=openid%20profile%20email&access_type=offline`
+      
+      // Por ahora, mostrar la URL para implementación futura
+      console.log('Google Auth URL:', googleAuthUrl)
+      alert('Auth URL generada - revisa la consola para implementar OAuth')
+      setIsLoading(false)
     } catch (err) {
       setError('Error de conexión')
       setIsLoading(false)
