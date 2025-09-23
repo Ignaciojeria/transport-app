@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "target": "transport-auth-ui",
+    "site": "transport-auth-ui-b8c7d",
     "public": "out",
     "ignore": [
       "firebase.json",
