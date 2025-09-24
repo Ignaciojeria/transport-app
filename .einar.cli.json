@@ -540,6 +540,10 @@
         {
             "kind": "post-controller",
             "name": "generate-pre-signed-url-request"
+        },
+        {
+            "kind": "post-controller",
+            "name": "auth-google-callback"
         }
     ]
 }
