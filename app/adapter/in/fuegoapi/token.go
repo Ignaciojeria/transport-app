@@ -123,8 +123,8 @@ func token(s httpserver.Server, jwtService *jwt.JWTService, findClientCredential
 			// Obtener el país del tenant
 			tenantCountry := credentials.TenantCountry.String()
 
-			// Generar token JWT usando client_id como sub, tenant ID, tenant country y zuplo-gateway como aud
-			token, err := jwtService.GenerateToken(
+			// Generar access token JWT usando client_id como sub, tenant ID, tenant country y zuplo-gateway como aud
+			accessToken, err := jwtService.GenerateToken(
 				clientID,                   // sub = client_id
 				[]string{scope},            // scopes
 				map[string]string{},        // context vacío
@@ -136,17 +136,31 @@ func token(s httpserver.Server, jwtService *jwt.JWTService, findClientCredential
 				return response.TokenResponse{}, err
 			}
 
-			// Extraer la expiración del token para calcular ExpiresIn
-			claims, err := jwtService.ValidateToken(token)
+			// Generar refresh token con mayor duración (7 días = 10080 minutos)
+			refreshToken, err := jwtService.GenerateToken(
+				clientID,                   // sub = client_id
+				[]string{"refresh"},        // scope específico para refresh
+				map[string]string{},        // context vacío
+				tenantID+"-"+tenantCountry, // tenant = tenant ID + country
+				"zuplo-gateway",            // aud en duro
+				10080,                      // 7 días de expiración
+			)
+			if err != nil {
+				return response.TokenResponse{}, err
+			}
+
+			// Extraer la expiración del access token para calcular ExpiresIn
+			claims, err := jwtService.ValidateToken(accessToken)
 			if err != nil {
 				return response.TokenResponse{}, err
 			}
 
 			return response.TokenResponse{
-				AccessToken: token,
-				TokenType:   "Bearer",
-				ExpiresIn:   int(claims.ExpiresAt.Unix() - time.Now().Unix()), // Calcular tiempo restante
-				Scope:       scope,
+				AccessToken:  accessToken,
+				TokenType:    "Bearer",
+				ExpiresIn:    int(claims.ExpiresAt.Unix() - time.Now().Unix()), // Calcular tiempo restante
+				RefreshToken: refreshToken,
+				Scope:        scope,
 			}, nil
 		}, option.Summary("auth token"), option.Tags("jwt"))
 }

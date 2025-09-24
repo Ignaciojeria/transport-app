@@ -7,8 +7,13 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
+	"transport-app/app/adapter/out/natspublisher"
+	"transport-app/app/domain"
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/httpserver"
+	"transport-app/app/shared/infrastructure/jwt"
+	"transport-app/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
@@ -41,16 +46,30 @@ type GoogleUserInfo struct {
 }
 
 type GoogleExchangeResponse struct {
-	Token string         `json:"token"`
-	User  GoogleUserInfo `json:"user"`
-	Error string         `json:"error,omitempty"`
+	AccessToken  string         `json:"access_token"`
+	TokenType    string         `json:"token_type"`
+	ExpiresIn    int            `json:"expires_in"`
+	RefreshToken string         `json:"refresh_token"`
+	User         GoogleUserInfo `json:"user"`
+	Error        string         `json:"error,omitempty"`
+}
+
+type AuthenticationSubmittedEvent struct {
+	UserID       string         `json:"user_id"`
+	Email        string         `json:"email"`
+	Name         string         `json:"name"`
+	Provider     string         `json:"provider"`
+	UserInfo     GoogleUserInfo `json:"user_info"`
+	AccessToken  string         `json:"access_token"`
+	RefreshToken string         `json:"refresh_token"`
+	Timestamp    time.Time      `json:"timestamp"`
 }
 
 func init() {
-	ioc.Registry(authGoogleExchange, httpserver.New, configuration.NewConf)
+	ioc.Registry(authGoogleExchange, httpserver.New, configuration.NewConf, jwt.NewJWTServiceFromConfig, natspublisher.NewApplicationEvents)
 }
 
-func authGoogleExchange(s httpserver.Server, conf configuration.Conf) {
+func authGoogleExchange(s httpserver.Server, conf configuration.Conf, jwtService *jwt.JWTService, publish natspublisher.ApplicationEvents) {
 	fuego.Post(s.Manager, "/auth/google/exchange",
 		func(c fuego.ContextWithBody[GoogleExchangeRequest]) (GoogleExchangeResponse, error) {
 			req, err := c.Body()
@@ -87,15 +106,91 @@ func authGoogleExchange(s httpserver.Server, conf configuration.Conf) {
 			//     }, nil
 			// }
 
-			// 4. Generar tu token personalizado (JWT)
-			// TODO: Implementar generación de JWT real
-			customToken := fmt.Sprintf("jwt_%s_%s", userInfo.ID, req.State)
+			// 4. Generar access token JWT sin tenant (usuario autenticado pero sin tenant asignado)
+			accessToken, err := jwtService.GenerateToken(
+				fmt.Sprintf("google_%s", userInfo.ID), // sub = google_userID
+				[]string{"profile", "select_tenant"},  // scopes para seleccionar tenant
+				map[string]string{
+					"provider": "google",
+					"email":    userInfo.Email,
+					"name":     userInfo.Name,
+				}, // context con información del usuario
+				"",              // sin tenant específico
+				"zuplo-gateway", // audiencia
+				60,              // 60 minutos de expiración
+			)
+			if err != nil {
+				fmt.Printf("Error generando access token: %v\n", err)
+				return GoogleExchangeResponse{
+					Error: "Error generando token de acceso",
+				}, nil
+			}
+
+			// 5. Generar refresh token para mantener la sesión
+			refreshToken, err := jwtService.GenerateToken(
+				fmt.Sprintf("google_%s", userInfo.ID), // sub = google_userID
+				[]string{"refresh"},                   // scope para refresh
+				map[string]string{
+					"provider": "google",
+					"email":    userInfo.Email,
+					"name":     userInfo.Name,
+				}, // context con información del usuario
+				"",              // sin tenant específico
+				"zuplo-gateway", // audiencia
+				10080,           // 7 días de expiración
+			)
+			if err != nil {
+				fmt.Printf("Error generando refresh token: %v\n", err)
+				return GoogleExchangeResponse{
+					Error: "Error generando refresh token",
+				}, nil
+			}
+
+			// 6. Preparar evento de autenticación
+			authEvent := AuthenticationSubmittedEvent{
+				UserID:       fmt.Sprintf("google_%s", userInfo.ID),
+				Email:        userInfo.Email,
+				Name:         userInfo.Name,
+				Provider:     "google",
+				UserInfo:     *userInfo,
+				AccessToken:  accessToken,
+				RefreshToken: refreshToken,
+				Timestamp:    time.Now(),
+			}
+
+			// 7. Publicar evento de autenticación
+			eventPayload, _ := json.Marshal(authEvent)
+			eventCtx := sharedcontext.AddEventContextToBaggage(c.Context(),
+				sharedcontext.EventContext{
+					EventType:  "authenticationSubmitted",
+					EntityType: "authentication",
+				},
+			)
+
+			if err := publish(eventCtx, domain.Outbox{
+				Payload: eventPayload,
+			}); err != nil {
+				fmt.Printf("Error publicando evento de autenticación: %v\n", err)
+				// No fallar el login por error en el evento, solo log
+			}
+
+			// 8. Extraer expiración para ExpiresIn
+			claims, err := jwtService.ValidateToken(accessToken)
+			if err != nil {
+				fmt.Printf("Error validando token generado: %v\n", err)
+				return GoogleExchangeResponse{
+					Error: "Error validando token generado",
+				}, nil
+			}
 
 			fmt.Printf("Usuario autenticado: %s (%s)\n", userInfo.Name, userInfo.Email)
 
 			return GoogleExchangeResponse{
-				Token: customToken,
-				User:  *userInfo,
+				AccessToken:  accessToken,
+				TokenType:    "Bearer",
+				ExpiresIn:    int(claims.ExpiresAt.Unix() - time.Now().Unix()),
+				RefreshToken: refreshToken,
+				User:         *userInfo,
 			}, nil
 		}, option.Summary("Exchange Google OAuth code for tokens"))
 }

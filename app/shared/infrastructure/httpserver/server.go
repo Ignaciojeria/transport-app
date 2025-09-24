@@ -191,13 +191,14 @@ func injectBaggageMiddleware(next http.Handler) http.Handler {
 	skipPaths := map[string]struct{}{
 		"/":                      {},
 		"/token":                 {},
+		"/refresh":               {},
 		"/login":                 {},
 		"/register":              {},
 		"/health":                {},
 		"/favicon.ico":           {},
 		"/tenants":               {},
 		"/.well-known/jwks.json": {},
-		"/auth/google/callback":  {},
+		"/auth/google/exchange":  {},
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
