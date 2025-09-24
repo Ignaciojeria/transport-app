@@ -45,6 +45,8 @@ type Conf struct {
 	JWT_PUBLIC_KEY                            string `env:"JWT_PUBLIC_KEY"`
 	CLIENT_CREDENTIALS_ENCRYPTION_KEY         string `env:"CLIENT_CREDENTIALS_ENCRYPTION_KEY"`
 	RESEND_API_KEY                            string `env:"RESEND_API_KEY"`
+	GOOGLE_OAUTH_CLIENT_ID                    string `env:"GOOGLE_OAUTH_CLIENT_ID"`
+	GOOGLE_OAUTH_CLIENT_SECRET                string `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
 }
 
 func NewConf() (Conf, error) {
