@@ -1,7 +1,21 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+
+// Types para Google Identity Services
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: any) => void
+          prompt: (callback?: any) => void
+        }
+      }
+    }
+  }
+}
 import { motion } from 'framer-motion'
 import { 
   Truck, 
@@ -19,19 +33,61 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Manejar respuesta de Google OAuth cuando regresa
+  useEffect(() => {
+    const success = searchParams.get('success')
+    const token = searchParams.get('token')
+    const errorParam = searchParams.get('error')
+
+    if (success === 'true' && token) {
+      // Autenticación exitosa
+      localStorage.setItem('auth_token', token)
+      alert('¡Autenticación exitosa!')
+      
+      // Limpiar URL
+      window.history.replaceState({}, '', '/')
+      
+      // Redirigir al dashboard cuando lo tengas
+      // router.push('/dashboard')
+    } else if (errorParam) {
+      // Error en autenticación
+      setError(`Error de autenticación: ${errorParam}`)
+      
+      // Limpiar URL
+      window.history.replaceState({}, '', '/')
+    }
+  }, [searchParams, router])
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     setError('')
+    
     try {
-      // Autenticación directa con Google OAuth usando window.open o redirect
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}&redirect_uri=${window.location.origin}/auth/callback&response_type=code&scope=openid%20profile%20email&access_type=offline`
+      // Redirigir directamente a Google OAuth (más simple y elegante)
+      const clientId = '27303662337-9hrgvj0d2blm0r3ajmh40o7nk8uarjkn.apps.googleusercontent.com'
+      const redirectUri = window.location.origin + '/auth/callback' // Frontend callback
+      const scope = 'openid profile email'
+      const state = Math.random().toString(36).substring(2, 15)
       
-      // Por ahora, mostrar la URL para implementación futura
-      console.log('Google Auth URL:', googleAuthUrl)
-      alert('Auth URL generada - revisa la consola para implementar OAuth')
-      setIsLoading(false)
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
+        `client_id=${clientId}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `response_type=code&` +
+        `scope=${encodeURIComponent(scope)}&` +
+        `state=${state}&` +
+        `access_type=offline&` +
+        `prompt=select_account`
+      
+      // Guardar state en localStorage para validar después
+      localStorage.setItem('oauth_state', state)
+      
+      // Redirigir a la página elegante de Google
+      window.location.href = googleAuthUrl
+      
     } catch (err) {
+      console.error('Error iniciando OAuth:', err)
       setError('Error de conexión')
       setIsLoading(false)
     }
