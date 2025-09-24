@@ -74,11 +74,11 @@ export default function AuthCallback() {
           throw new Error('No se recibió token del backend')
         }
 
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error en autenticación:', err)
-        setStatus(`Error: ${err.message}`)
+        setStatus(`Error: ${err.message || 'Error desconocido durante la autenticación.'}`)
         setIsLoading(false)
-        setTimeout(() => router.push('/?error=auth_failed'), 3000)
+        setTimeout(() => router.push('/'), 3000)
       }
     }
 
