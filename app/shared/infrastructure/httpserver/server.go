@@ -197,6 +197,7 @@ func injectBaggageMiddleware(next http.Handler) http.Handler {
 		"/favicon.ico":           {},
 		"/tenants":               {},
 		"/.well-known/jwks.json": {},
+		"/auth/google/callback":  {},
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
