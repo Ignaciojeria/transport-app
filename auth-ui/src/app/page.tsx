@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { AuthStorage } from '@/lib/auth-storage'
 
 // Types para Google Identity Services
 declare global {
@@ -36,16 +35,26 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Verificar si ya está autenticado al cargar
+  // Manejar respuesta de Google OAuth cuando regresa
   useEffect(() => {
-    if (AuthStorage.isAuthenticated()) {
-      router.push('/dashboard')
-      return
-    }
-
+    const success = searchParams.get('success')
+    const token = searchParams.get('token')
     const errorParam = searchParams.get('error')
-    if (errorParam) {
+
+    if (success === 'true' && token) {
+      // Autenticación exitosa
+      localStorage.setItem('auth_token', token)
+      alert('¡Autenticación exitosa!')
+      
+      // Limpiar URL
+      window.history.replaceState({}, '', '/')
+      
+      // Redirigir al dashboard cuando lo tengas
+      // router.push('/dashboard')
+    } else if (errorParam) {
+      // Error en autenticación
       setError(`Error de autenticación: ${errorParam}`)
+      
       // Limpiar URL
       window.history.replaceState({}, '', '/')
     }
@@ -71,8 +80,8 @@ export default function LoginPage() {
         `access_type=offline&` +
         `prompt=select_account`
       
-      // Guardar state usando AuthStorage para validar después
-      AuthStorage.saveOAuthState(state)
+      // Guardar state en localStorage para validar después
+      localStorage.setItem('oauth_state', state)
       
       // Redirigir a la página elegante de Google
       window.location.href = googleAuthUrl
