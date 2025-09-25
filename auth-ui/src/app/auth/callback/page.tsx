@@ -140,7 +140,7 @@ export default function AuthCallback() {
           
           // Redirect a la app con los datos en el fragment
           setTimeout(() => {
-            const redirectUrl = `https://app.transport-app.com#auth=${encodedAuth}`
+            const redirectUrl = `https://console.transport-app.com#auth=${encodedAuth}`
             console.log('🚀 Redirigiendo a:', redirectUrl)
             window.location.href = redirectUrl
           }, 2000) // 2 segundos para mostrar el mensaje
