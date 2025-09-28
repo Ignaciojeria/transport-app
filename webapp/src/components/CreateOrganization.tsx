@@ -43,21 +43,34 @@ export default function CreateOrganization({ onSubmit }: CreateOrganizationProps
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-blue-100 to-indigo-200 flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
-      {/* Partículas de fondo similares a auth-ui */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
+      {/* Partículas de fondo más visibles y claras */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-10 w-4 h-4 bg-blue-400 rounded-full animate-float opacity-80"></div>
-        <div className="absolute top-40 right-20 w-5 h-5 bg-indigo-400 rounded-full animate-float opacity-85" style={{animationDelay: '1s'}}></div>
-        <div className="absolute bottom-40 left-20 w-3 h-3 bg-blue-500 rounded-full animate-float opacity-75" style={{animationDelay: '2s'}}></div>
-        <div className="absolute bottom-20 right-10 w-4 h-4 bg-indigo-500 rounded-full animate-float opacity-80" style={{animationDelay: '3s'}}></div>
-        <div className="absolute top-60 left-1/3 w-3 h-3 bg-blue-400 rounded-full animate-float opacity-70" style={{animationDelay: '0.5s'}}></div>
-        <div className="absolute bottom-60 right-1/3 w-4 h-4 bg-indigo-400 rounded-full animate-float opacity-75" style={{animationDelay: '1.5s'}}></div>
-        <div className="absolute top-1/2 left-1/4 w-3 h-3 bg-blue-300 rounded-full animate-float opacity-65" style={{animationDelay: '2.5s'}}></div>
-        <div className="absolute bottom-1/3 right-1/4 w-4 h-4 bg-indigo-300 rounded-full animate-float opacity-70" style={{animationDelay: '0.8s'}}></div>
-        <div className="absolute top-1/3 right-1/3 w-3 h-3 bg-blue-400 rounded-full animate-float opacity-60" style={{animationDelay: '1.2s'}}></div>
-        <div className="absolute bottom-1/2 left-1/2 w-4 h-4 bg-indigo-400 rounded-full animate-float opacity-75" style={{animationDelay: '2.8s'}}></div>
-        <div className="absolute top-1/4 left-1/5 w-2 h-2 bg-blue-500 rounded-full animate-float opacity-50" style={{animationDelay: '1.8s'}}></div>
-        <div className="absolute bottom-1/4 right-1/5 w-3 h-3 bg-indigo-500 rounded-full animate-float opacity-60" style={{animationDelay: '3.5s'}}></div>
+        {/* Partículas grandes principales */}
+        <div className="absolute top-20 left-10 w-6 h-6 bg-blue-400 rounded-full animate-float opacity-90 shadow-lg"></div>
+        <div className="absolute top-40 right-20 w-7 h-7 bg-indigo-400 rounded-full animate-float opacity-95 shadow-lg" style={{animationDelay: '1s'}}></div>
+        <div className="absolute bottom-40 left-20 w-5 h-5 bg-blue-500 rounded-full animate-float opacity-85 shadow-lg" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-20 right-10 w-6 h-6 bg-indigo-500 rounded-full animate-float opacity-90 shadow-lg" style={{animationDelay: '3s'}}></div>
+        
+        {/* Partículas medianas */}
+        <div className="absolute top-60 left-1/3 w-5 h-5 bg-blue-400 rounded-full animate-float opacity-80 shadow-md" style={{animationDelay: '0.5s'}}></div>
+        <div className="absolute bottom-60 right-1/3 w-6 h-6 bg-indigo-400 rounded-full animate-float opacity-85 shadow-md" style={{animationDelay: '1.5s'}}></div>
+        <div className="absolute top-1/2 left-1/4 w-4 h-4 bg-blue-300 rounded-full animate-float opacity-75 shadow-md" style={{animationDelay: '2.5s'}}></div>
+        <div className="absolute bottom-1/3 right-1/4 w-5 h-5 bg-indigo-300 rounded-full animate-float opacity-80 shadow-md" style={{animationDelay: '0.8s'}}></div>
+        <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-blue-400 rounded-full animate-float opacity-70 shadow-md" style={{animationDelay: '1.2s'}}></div>
+        <div className="absolute bottom-1/2 left-1/2 w-5 h-5 bg-indigo-400 rounded-full animate-float opacity-85 shadow-md" style={{animationDelay: '2.8s'}}></div>
+        
+        {/* Partículas pequeñas para detalle */}
+        <div className="absolute top-1/4 left-1/5 w-3 h-3 bg-blue-500 rounded-full animate-float-small opacity-70 shadow-sm" style={{animationDelay: '1.8s'}}></div>
+        <div className="absolute bottom-1/4 right-1/5 w-4 h-4 bg-indigo-500 rounded-full animate-float-small opacity-75 shadow-sm" style={{animationDelay: '3.5s'}}></div>
+        <div className="absolute top-3/4 left-1/6 w-3 h-3 bg-blue-300 rounded-full animate-float-small opacity-65 shadow-sm" style={{animationDelay: '0.3s'}}></div>
+        <div className="absolute bottom-3/4 right-1/6 w-4 h-4 bg-indigo-300 rounded-full animate-float-small opacity-70 shadow-sm" style={{animationDelay: '2.2s'}}></div>
+        
+        {/* Partículas adicionales para más densidad */}
+        <div className="absolute top-1/6 left-2/3 w-3 h-3 bg-blue-400 rounded-full animate-float-small opacity-60 shadow-sm" style={{animationDelay: '1.7s'}}></div>
+        <div className="absolute bottom-1/6 right-2/3 w-4 h-4 bg-indigo-400 rounded-full animate-float-small opacity-65 shadow-sm" style={{animationDelay: '3.1s'}}></div>
+        <div className="absolute top-2/3 left-1/6 w-3 h-3 bg-blue-500 rounded-full animate-float-small opacity-55 shadow-sm" style={{animationDelay: '0.9s'}}></div>
+        <div className="absolute bottom-2/3 right-1/6 w-4 h-4 bg-indigo-500 rounded-full animate-float-small opacity-60 shadow-sm" style={{animationDelay: '2.4s'}}></div>
       </div>
       <div className="w-full max-w-2xl relative z-10">
         {/* Logo y título */}

@@ -69,23 +69,43 @@
 /* Animaciones para partículas de fondo */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px) translateX(0px);
-    opacity: 0.7;
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.8;
   }
   25% {
-    transform: translateY(-20px) translateX(10px);
+    transform: translateY(-30px) translateX(15px) scale(1.1);
     opacity: 1;
   }
   50% {
-    transform: translateY(-10px) translateX(-5px);
-    opacity: 0.8;
+    transform: translateY(-15px) translateX(-10px) scale(0.9);
+    opacity: 0.9;
   }
   75% {
-    transform: translateY(-15px) translateX(8px);
-    opacity: 0.9;
+    transform: translateY(-25px) translateX(12px) scale(1.05);
+    opacity: 0.95;
   }
 }
 
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  animation: float 8s ease-in-out infinite;
+}
+
+/* Animación adicional para partículas más pequeñas */
+@keyframes float-small {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+    opacity: 0.6;
+  }
+  33% {
+    transform: translateY(-20px) translateX(8px) scale(1.2);
+    opacity: 0.9;
+  }
+  66% {
+    transform: translateY(-10px) translateX(-5px) scale(0.8);
+    opacity: 0.7;
+  }
+}
+
+.animate-float-small {
+  animation: float-small 6s ease-in-out infinite;
 }
