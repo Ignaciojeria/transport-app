@@ -43,7 +43,7 @@ export default function CreateOrganization({ onSubmit }: CreateOrganizationProps
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
       {/* Partículas de fondo más pequeñas y numerosas */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Partículas medianas principales */}
