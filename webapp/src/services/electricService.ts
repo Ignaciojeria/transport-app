@@ -78,14 +78,7 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
         console.log('✅ ID de la cuenta:', accountData.value.id)
         
         // Comparar con verificación directa para detectar inconsistencias
-        const comparison = await compareElectricVsDirect(email, accountData.value)
-        
-        // Si hay inconsistencia, no devolver los datos obsoletos
-        if (!comparison.consistent) {
-          console.warn('⚠️ Datos obsoletos detectados en Electric SQL, no devolviendo datos')
-          console.warn('⚠️ Electric SQL tiene caché obsoleto, la cuenta no existe realmente')
-          return null
-        }
+        await compareElectricVsDirect(email, accountData.value)
         
         return accountData.value
       } else {
