@@ -40,7 +40,7 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     // Usar el endpoint correcto del proyecto electric con offset requerido
     // Agregar timestamp para evitar caché
     const timestamp = Date.now()
-    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1&_t=${timestamp}`
+    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1&_t=${timestamp}`
     
     const response = await fetch(url, {
       headers: {
@@ -88,7 +88,7 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     console.log('🔍 Buscando tenants para account_id:', accountId)
     
     // Primero obtener las relaciones account_tenants
-    const accountTenantsUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
+    const accountTenantsUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
     
     const accountTenantsResponse = await fetch(accountTenantsUrl, {
       headers: {
@@ -122,7 +122,7 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     
     for (const tenantId of tenantIds) {
       try {
-        const tenantUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&offset=-1`
+        const tenantUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&offset=-1`
         
         const tenantResponse = await fetch(tenantUrl, {
           headers: {
