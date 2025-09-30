@@ -8,6 +8,7 @@ export type AuthFlowResult = {
   account: ElectricAccount | null
   tenants: ElectricTenant[]
   error: string | null
+  retry: () => Promise<void>
 }
 
 export const useGoogleAuthFlow = (token: string, email: string) => {
@@ -15,53 +16,58 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
     state: 'loading',
     account: null,
     tenants: [],
-    error: null
+    error: null,
+    retry: async () => {} // Placeholder inicial
   })
+
+  const executeAuthFlow = async () => {
+    try {
+      // Paso 1: Verificar si el account existe
+      setResult(prev => ({ ...prev, state: 'checking-account' }))
+      
+      // Usar el servicio real de Electric SQL
+      console.log('🔍 Verificando cuenta en Electric SQL...')
+      const accountData = await checkAccountAndGetTenants(token, email)
+      console.log('🔍 Resultado de checkAccountAndGetTenants:', accountData)
+      
+      if (!accountData) {
+        // Account no existe, redirigir a creación de organización
+        console.log('ℹ️ Cuenta no encontrada, permitiendo creación de organización')
+        setResult(prev => ({ 
+          ...prev, 
+          state: 'account-not-found',
+          account: null,
+          tenants: []
+        }))
+        return
+      }
+
+      // Account existe, mostrar tenants
+      console.log('✅ Cuenta encontrada, mostrando organizaciones existentes:', accountData.tenants.length)
+      setResult(prev => ({ 
+        ...prev, 
+        state: 'tenants-loaded',
+        account: accountData.account,
+        tenants: accountData.tenants
+      }))
+
+    } catch (error) {
+      console.error('Error en el flujo de autenticación:', error)
+      setResult(prev => ({ 
+        ...prev, 
+        state: 'error',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      }))
+    }
+  }
+
+  // Actualizar la función retry en el estado
+  useEffect(() => {
+    setResult(prev => ({ ...prev, retry: executeAuthFlow }))
+  }, [token, email])
 
   useEffect(() => {
     if (!token || !email) return
-
-    const executeAuthFlow = async () => {
-      try {
-        // Paso 1: Verificar si el account existe
-        setResult(prev => ({ ...prev, state: 'checking-account' }))
-        
-        // Usar el servicio real de Electric SQL
-        console.log('🔍 Verificando cuenta en Electric SQL...')
-        const accountData = await checkAccountAndGetTenants(token, email)
-        console.log('🔍 Resultado de checkAccountAndGetTenants:', accountData)
-        
-        if (!accountData) {
-          // Account no existe, redirigir a creación de organización
-          console.log('ℹ️ Cuenta no encontrada, permitiendo creación de organización')
-          setResult(prev => ({ 
-            ...prev, 
-            state: 'account-not-found',
-            account: null,
-            tenants: []
-          }))
-          return
-        }
-
-        // Account existe, mostrar tenants
-        console.log('✅ Cuenta encontrada, mostrando organizaciones existentes:', accountData.tenants.length)
-        setResult(prev => ({ 
-          ...prev, 
-          state: 'tenants-loaded',
-          account: accountData.account,
-          tenants: accountData.tenants
-        }))
-
-      } catch (error) {
-        console.error('Error en el flujo de autenticación:', error)
-        setResult(prev => ({ 
-          ...prev, 
-          state: 'error',
-          error: error instanceof Error ? error.message : 'Error desconocido'
-        }))
-      }
-    }
-
     executeAuthFlow()
   }, [token, email])
 
