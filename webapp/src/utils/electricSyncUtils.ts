@@ -81,7 +81,7 @@ export const isElectricSynced = async (email: string): Promise<{
     // Verificar ambos lados
     const [electricResult, directResult] = await Promise.all([
       findAccountByEmail(access_token, email),
-      checkAccountDirectly(email)
+      checkAccountDirectly(email, access_token)
     ])
     
     const synced = (!!electricResult) === directResult.exists

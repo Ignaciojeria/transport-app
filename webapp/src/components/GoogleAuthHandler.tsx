@@ -4,9 +4,9 @@ import CreateOrganization from './CreateOrganization'
 import TenantsList from './TenantsList'
 import LoadingSpinner from './ui/LoadingSpinner'
 import SuccessNotification from './ui/SuccessNotification'
-import { clearElectricCache, getElectricCacheInfo } from '../utils/electricCacheUtils'
+import { clearElectricCache, getElectricCacheInfo, forceAppReload } from '../utils/electricCacheUtils'
 import { syncWithElectric } from '../utils/retryUtils'
-import { forceElectricSync, isElectricSynced } from '../utils/electricSyncUtils'
+import { isElectricSynced } from '../utils/electricSyncUtils'
 
 interface GoogleAuthHandlerProps {
   token: string
@@ -58,45 +58,34 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
                 <strong>Caché Electric:</strong> {cacheInfo.keys.length} claves
               </p>
               <div className="space-y-2">
-                <button 
-                  onClick={() => {
-                    clearElectricCache()
-                    console.log('🧹 Caché limpiado manualmente')
-                  }}
-                  className="w-full px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
-                >
-                  Limpiar Caché
-                </button>
+                <p className="text-xs text-gray-500 mb-2">
+                  Con LiveQuery, la sincronización es automática. Usa estos botones solo si hay problemas:
+                </p>
                 <button 
                   onClick={async () => {
-                    console.log('🔍 Verificando sincronización completa...')
+                    console.log('🔍 Verificando sincronización...')
                     const result = await isElectricSynced(email)
                     console.log('🔍 Estado de sincronización:', result)
                     alert(`Sincronización: ${result.synced ? 'SÍ' : 'NO'}\nMensaje: ${result.message}`)
                   }}
                   className="w-full px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
                 >
-                  Verificar Sincronización
-                </button>
-                <button 
-                  onClick={async () => {
-                    console.log('🔄 Forzando sincronización con Electric SQL...')
-                    const success = await forceElectricSync(token, email)
-                    console.log('🔄 Resultado:', success ? 'Éxito' : 'Falló')
-                    alert(`Sincronización forzada: ${success ? 'ÉXITO' : 'FALLÓ'}`)
-                    if (success) {
-                      window.location.reload()
-                    }
-                  }}
-                  className="w-full px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
-                >
-                  Forzar Sincronización
+                  Verificar Estado
                 </button>
                 <button 
                   onClick={() => {
-                    console.log('🔄 Forzando recarga completa...')
+                    console.log('🧹 Limpiando caché local...')
                     clearElectricCache()
-                    window.location.reload()
+                    console.log('✅ Caché limpiado - LiveQuery se encargará de la sincronización')
+                  }}
+                  className="w-full px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                >
+                  Limpiar Caché Local
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('🔄 Recarga completa como último recurso...')
+                    forceAppReload()
                   }}
                   className="w-full px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
                 >

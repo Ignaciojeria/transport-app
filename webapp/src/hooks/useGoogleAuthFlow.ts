@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { checkAccountAndGetTenants, type ElectricAccount, type ElectricTenant } from '../services/electricService'
+import { useElectricLiveQuery } from './useElectricLiveQuery'
 
 export type AuthFlowState = 'loading' | 'checking-account' | 'account-not-found' | 'loading-tenants' | 'tenants-loaded' | 'error'
 
@@ -20,45 +21,51 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
     retry: async () => {} // Placeholder inicial
   })
 
-  const executeAuthFlow = async () => {
-    try {
-      // Paso 1: Verificar si el account existe
-      setResult(prev => ({ ...prev, state: 'checking-account' }))
-      
-      // Usar el servicio real de Electric SQL
-      console.log('🔍 Verificando cuenta en Electric SQL...')
-      const accountData = await checkAccountAndGetTenants(token, email)
-      console.log('🔍 Resultado de checkAccountAndGetTenants:', accountData)
-      
-      if (!accountData) {
-        // Account no existe, redirigir a creación de organización
-        console.log('ℹ️ Cuenta no encontrada, permitiendo creación de organización')
+  // Usar LiveQuery para sincronización en tiempo real
+  const { isLoading, error } = useElectricLiveQuery(
+    () => checkAccountAndGetTenants(token, email),
+    [token, email],
+    {
+      enabled: !!token && !!email,
+      refetchInterval: 10000, // Refetch cada 10 segundos para mantener sincronización
+      onSuccess: (data) => {
+        console.log('🔄 Datos actualizados via LiveQuery:', data)
+        
+        if (!data) {
+          // Account no existe, redirigir a creación de organización
+          console.log('ℹ️ Cuenta no encontrada, permitiendo creación de organización')
+          setResult(prev => ({ 
+            ...prev, 
+            state: 'account-not-found',
+            account: null,
+            tenants: []
+          }))
+        } else {
+          // Account existe, mostrar tenants
+          console.log('✅ Cuenta encontrada, mostrando organizaciones existentes:', data.tenants.length)
+          setResult(prev => ({ 
+            ...prev, 
+            state: 'tenants-loaded',
+            account: data.account,
+            tenants: data.tenants
+          }))
+        }
+      },
+      onError: (error) => {
+        console.error('❌ Error en LiveQuery:', error)
         setResult(prev => ({ 
           ...prev, 
-          state: 'account-not-found',
-          account: null,
-          tenants: []
+          state: 'error',
+          error: error.message
         }))
-        return
       }
-
-      // Account existe, mostrar tenants
-      console.log('✅ Cuenta encontrada, mostrando organizaciones existentes:', accountData.tenants.length)
-      setResult(prev => ({ 
-        ...prev, 
-        state: 'tenants-loaded',
-        account: accountData.account,
-        tenants: accountData.tenants
-      }))
-
-    } catch (error) {
-      console.error('Error en el flujo de autenticación:', error)
-      setResult(prev => ({ 
-        ...prev, 
-        state: 'error',
-        error: error instanceof Error ? error.message : 'Error desconocido'
-      }))
     }
+  )
+
+  const executeAuthFlow = async () => {
+    // Esta función ahora es solo para compatibilidad
+    // La sincronización real se maneja con LiveQuery
+    console.log('🔄 Ejecutando consulta manual (LiveQuery se encarga de la sincronización)')
   }
 
   // Actualizar la función retry en el estado
@@ -66,10 +73,18 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
     setResult(prev => ({ ...prev, retry: executeAuthFlow }))
   }, [token, email])
 
+  // Actualizar estado basado en LiveQuery
   useEffect(() => {
-    if (!token || !email) return
-    executeAuthFlow()
-  }, [token, email])
+    if (isLoading) {
+      setResult(prev => ({ ...prev, state: 'checking-account' }))
+    } else if (error) {
+      setResult(prev => ({ 
+        ...prev, 
+        state: 'error',
+        error: error.message
+      }))
+    }
+  }, [isLoading, error])
 
   return result
 }
