@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import CreateOrganization from './components/CreateOrganization'
-import { type CreateOrganizationResponse } from './services/organizationService'
+import GoogleAuthHandler from './components/GoogleAuthHandler'
 import { extractTokenEarly } from './utils/earlyTokenExtraction'
 import './App.css'
 
@@ -11,6 +10,7 @@ function App() {
   const [organizationCreated, setOrganizationCreated] = useState(false)
   const [organizationData, setOrganizationData] = useState<{name: string; country: string} | null>(null)
   const [token, setToken] = useState<string | null>(earlyToken)
+  const [email, setEmail] = useState<string | null>(earlyEmail)
   const [isLoading, setIsLoading] = useState(!earlyToken)
 
   // Si ya tenemos el token de la extracción temprana, no necesitamos hacer nada más
@@ -18,6 +18,7 @@ function App() {
     if (earlyToken) {
       console.log('✅ Token ya extraído tempranamente:', earlyToken.substring(0, 20) + '...')
       console.log('✅ Email extraído tempranamente:', earlyEmail)
+      setEmail(earlyEmail)
       setIsLoading(false)
       return
     }
@@ -37,6 +38,10 @@ function App() {
         if (authData.access_token) {
           console.log('✅ Access token encontrado en localStorage')
           setToken(authData.access_token)
+          // Extraer email del localStorage también
+          if (authData.user?.email) {
+            setEmail(authData.user.email)
+          }
           setIsLoading(false)
           return
         }
@@ -47,23 +52,10 @@ function App() {
     
     console.warn('❌ No se encontró token en la extracción temprana ni en localStorage')
     setToken(null)
+    setEmail(null)
     setIsLoading(false)
   }, [])
 
-  const handleCreateOrganizationSuccess = (response: CreateOrganizationResponse) => {
-    console.log('Organización creada exitosamente:', response)
-    setOrganizationData({
-      name: 'Organización Creada', // En una implementación real, obtendrías esto de la respuesta
-      country: 'CL'
-    })
-    setOrganizationCreated(true)
-    // setError(null)
-  }
-
-  const handleCreateOrganizationError = (error: string) => {
-    console.error('Error al crear organización:', error)
-    // setError(error)
-  }
 
   if (organizationCreated && organizationData) {
     return (
@@ -137,11 +129,48 @@ function App() {
     )
   }
 
+  // Si no hay token o email, mostrar error de autenticación
+  if (!token || !email) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔐</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Autenticación Requerida</h2>
+          <p className="text-gray-600 mb-4">
+            No se encontró token de autenticación en la URL.<br/>
+            Por favor, inicia sesión con Google primero.
+          </p>
+          <div className="space-y-2">
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors mr-2"
+            >
+              Reintentar
+            </button>
+            <button 
+              onClick={() => {
+                // Aquí podrías redirigir a tu sistema de autenticación
+                console.log('Redirigir a autenticación...')
+              }}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Usar GoogleAuthHandler para manejar el flujo completo
   return (
-    <CreateOrganization 
+    <GoogleAuthHandler 
       token={token}
-      onSuccess={handleCreateOrganizationSuccess}
-      onError={handleCreateOrganizationError}
+      email={email}
+      onError={(error) => {
+        console.error('Error en el flujo de autenticación:', error)
+        // Aquí puedes mostrar una notificación de error al usuario
+      }}
     />
   )
 }

@@ -1,13 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Truck, AlertCircle, CheckCircle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/Card'
-import { extractEmailFromJWT } from '../utils/jwt'
-import { extractEmailFromFragment } from '../utils/urlUtils'
-import { getEarlyEmail } from '../utils/earlyTokenExtraction'
 import { createOrganization, validateOrganizationData, type CreateOrganizationResponse } from '../services/organizationService'
 
 interface CreateOrganizationProps {
-  token: string
+  email: string
   onSuccess?: (response: CreateOrganizationResponse) => void
   onError?: (error: string) => void
 }
@@ -24,44 +21,12 @@ const countries = [
   { name: 'Venezuela', code: 'VE' }
 ]
 
-export default function CreateOrganization({ token, onSuccess, onError }: CreateOrganizationProps) {
+export default function CreateOrganization({ email, onSuccess, onError }: CreateOrganizationProps) {
   const [organizationName, setOrganizationName] = useState('')
   const [selectedCountry, setSelectedCountry] = useState('CL')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [email, setEmail] = useState<string | null>(null)
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [submitResponse, setSubmitResponse] = useState<CreateOrganizationResponse | null>(null)
-
-  // Extraer email del JWT, fragment o extracción temprana al montar el componente
-  useEffect(() => {
-    console.log('🔍 Extrayendo email...')
-    
-    // Primero intentar con el email extraído tempranamente
-    let extractedEmail = getEarlyEmail()
-    if (extractedEmail) {
-      console.log('✅ Email extraído tempranamente:', extractedEmail)
-      setEmail(extractedEmail)
-      return
-    }
-    
-    // Si no hay email temprano, intentar del JWT
-    console.log('🔍 Extrayendo email del token JWT...')
-    extractedEmail = extractEmailFromJWT(token)
-    
-    // Si no se pudo extraer del JWT, intentar del fragment
-    if (!extractedEmail) {
-      console.log('🔍 Intentando extraer email del fragment...')
-      extractedEmail = extractEmailFromFragment()
-    }
-    
-    if (extractedEmail) {
-      console.log('✅ Email extraído:', extractedEmail)
-      setEmail(extractedEmail)
-    } else {
-      console.error('❌ No se pudo extraer el email del token ni del fragment')
-      onError?.('No se pudo extraer el email del token de autenticación')
-    }
-  }, [token, onError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

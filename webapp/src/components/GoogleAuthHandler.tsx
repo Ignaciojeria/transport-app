@@ -62,7 +62,7 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
   if (authResult.state === 'account-not-found') {
     return (
       <CreateOrganization 
-        token={token}
+        email={email}
         onSuccess={(response) => {
           console.log('Organización creada exitosamente:', response)
           // Aquí puedes redirigir o actualizar el estado
