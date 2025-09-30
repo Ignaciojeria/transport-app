@@ -36,7 +36,7 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
         <div className="text-center max-w-2xl">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Error de Carga</h2>
-          <p className="text-gray-600 mb-4">{error?.message || 'Error desconocido'}</p>
+          <p className="text-gray-600 mb-4">{error || 'Error desconocido'}</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"

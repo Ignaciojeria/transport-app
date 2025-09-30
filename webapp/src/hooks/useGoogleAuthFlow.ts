@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { findAccountByEmail, findTenantsByAccountId } from '../db/queries/accountQueries'
+import { useAccountData } from './useAccountData'
 import type { ElectricAccountData } from '../db/collections/create-accounts-collection'
 import type { ElectricTenantData } from '../db/collections/create-tenants-collection'
 
@@ -12,62 +11,43 @@ export type AuthFlowResult = {
   error: string | null
 }
 
-export const useGoogleAuthFlow = (token: string, email: string) => {
-  const [result, setResult] = useState<AuthFlowResult>({
-    state: 'loading',
-    account: null,
-    tenants: [],
-    error: null
-  })
-
-  useEffect(() => {
-    if (!token || !email) return
-
-    const executeAuthFlow = async () => {
-      try {
-        // Paso 1: Verificar si el account existe
-        setResult(prev => ({ ...prev, state: 'checking-account' }))
-        
-        // Buscar la cuenta
-        const account = await findAccountByEmail(token, email)
-        
-        if (!account) {
-          // Account no existe, redirigir a creación de organización
-          setResult(prev => ({ 
-            ...prev, 
-            state: 'account-not-found',
-            account: null,
-            tenants: []
-          }))
-          return
-        }
-
-        // Account existe, buscar tenants
-        setResult(prev => ({ ...prev, state: 'loading-tenants' }))
-        const tenants = await findTenantsByAccountId(token, account.id)
-
-        // Mostrar tenants
-        setResult(prev => ({ 
-          ...prev, 
-          state: 'tenants-loaded',
-          account,
-          tenants
-        }))
-
-      } catch (error) {
-        console.error('Error en el flujo de autenticación:', error)
-        setResult(prev => ({ 
-          ...prev, 
-          state: 'error',
-          error: error instanceof Error ? error.message : 'Error desconocido'
-        }))
-      }
+export const useGoogleAuthFlow = (token: string, email: string): AuthFlowResult => {
+  const { account, tenants, isLoading, error } = useAccountData(token, email)
+  
+  // Determinar el estado basado en los datos
+  if (isLoading) {
+    return {
+      state: 'loading',
+      account: null,
+      tenants: [],
+      error: null
     }
-
-    executeAuthFlow()
-  }, [token, email])
-
-  return result
+  }
+  
+  if (error) {
+    return {
+      state: 'error',
+      account: null,
+      tenants: [],
+      error: 'Error al cargar datos'
+    }
+  }
+  
+  if (!account) {
+    return {
+      state: 'account-not-found',
+      account: null,
+      tenants: [],
+      error: null
+    }
+  }
+  
+  return {
+    state: 'tenants-loaded',
+    account,
+    tenants,
+    error: null
+  }
 }
 
 // Hook para manejar la redirección basada en el estado

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import GoogleAuthHandler from './components/GoogleAuthHandler'
 import { extractTokenEarly } from './utils/earlyTokenExtraction'
-import { QueryProvider } from './providers/QueryProvider'
 import './App.css'
 
 // Extraer token INMEDIATAMENTE cuando se carga el módulo
@@ -165,16 +164,14 @@ function App() {
 
   // Usar GoogleAuthHandler para manejar el flujo completo
   return (
-    <QueryProvider>
-      <GoogleAuthHandler 
-        token={token}
-        email={email}
-        onError={(error) => {
-          console.error('Error en el flujo de autenticación:', error)
-          // Aquí puedes mostrar una notificación de error al usuario
-        }}
-      />
-    </QueryProvider>
+    <GoogleAuthHandler 
+      token={token}
+      email={email}
+      onError={(error) => {
+        console.error('Error en el flujo de autenticación:', error)
+        // Aquí puedes mostrar una notificación de error al usuario
+      }}
+    />
   )
 }
 
