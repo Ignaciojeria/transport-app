@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useGoogleAuthFlow, useAuthRedirect } from '../hooks/useGoogleAuthFlow'
 import CreateOrganization from './CreateOrganization'
 import TenantsList from './TenantsList'
 import LoadingSpinner from './ui/LoadingSpinner'
-import SuccessNotification from './ui/SuccessNotification'
 import { clearElectricCache, getElectricCacheInfo } from '../utils/electricCacheUtils'
-import { syncWithElectric } from '../utils/retryUtils'
 
 interface GoogleAuthHandlerProps {
   token: string
@@ -20,8 +18,6 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
 }) => {
   const authResult = useGoogleAuthFlow(token, email)
   const { isLoading } = useAuthRedirect(authResult)
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
-  const [isRetrying, setIsRetrying] = useState(false)
 
   useEffect(() => {
     if (authResult.state === 'error' && onError) {
@@ -30,7 +26,7 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
   }, [authResult.state, authResult.error, onError])
 
   // Mostrar loading mientras se verifica la cuenta
-  if (isLoading || isRetrying) {
+  if (isLoading) {
     const cacheInfo = getElectricCacheInfo()
     
     return (
@@ -38,9 +34,8 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-gray-600">
-            {isRetrying && 'Sincronizando con Electric SQL...'}
-            {!isRetrying && authResult.state === 'checking-account' && 'Verificando cuenta...'}
-            {!isRetrying && authResult.state === 'loading-tenants' && 'Cargando organizaciones...'}
+            {authResult.state === 'checking-account' && 'Verificando cuenta...'}
+            {authResult.state === 'loading-tenants' && 'Cargando organizaciones...'}
           </p>
           
           {/* Información de debug en modo desarrollo */}
@@ -132,11 +127,8 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
       <CreateOrganization 
         email={email}
         onSuccess={(response) => {
-          console.log('✅ Organización creada exitosamente:', response)
-          console.log('🔄 Recargando para verificar cuenta y cargar organizaciones...')
-          
-          // Mostrar notificación de éxito
-          setShowSuccessNotification(true)
+          console.log('Organización creada exitosamente:', response)
+          // Aquí puedes redirigir o actualizar el estado
         }}
         onError={(error) => {
           console.error('Error al crear organización:', error)
@@ -153,45 +145,6 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
         account={authResult.account!}
         tenants={authResult.tenants}
         token={token}
-      />
-    )
-  }
-
-  // Mostrar notificación de éxito si está activa
-  if (showSuccessNotification) {
-    return (
-      <SuccessNotification
-        message="¡Organización creada exitosamente!"
-        onComplete={async () => {
-          console.log('🔄 Sincronizando con Electric SQL...')
-          
-          // Limpiar caché y reintentar verificación
-          clearElectricCache()
-          setIsRetrying(true)
-          
-          try {
-            await syncWithElectric(async () => {
-              console.log('🔄 Ejecutando sincronización...')
-              await authResult.retry()
-            })
-            
-            console.log('✅ Sincronización exitosa')
-            setShowSuccessNotification(false)
-            setIsRetrying(false)
-          } catch (error) {
-            console.error('❌ Error al sincronizar después de múltiples intentos:', error)
-            setIsRetrying(false)
-            
-            // Mostrar error al usuario y ofrecer recargar
-            if (onError) {
-              onError('No se pudo sincronizar con la base de datos. Intenta recargar la página.')
-            } else {
-              // Fallback: recargar la página
-              window.location.reload()
-            }
-          }
-        }}
-        duration={2000}
       />
     )
   }
