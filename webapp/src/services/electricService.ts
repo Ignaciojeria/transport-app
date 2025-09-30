@@ -44,10 +44,7 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     
     const response = await fetch(url, {
       headers: {
-        'X-Access-Token': `Bearer ${token}`,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+        'X-Access-Token': `Bearer ${token}`
       }
     })
 

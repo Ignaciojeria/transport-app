@@ -14,7 +14,7 @@ Todas las consultas a Electric SQL requieren el parámetro `offset`:
 ### Endpoint Base
 
 ```
-https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape
+https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape
 ```
 
 ### Headers Requeridos
@@ -30,19 +30,19 @@ https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape
 ### 1. Buscar Cuenta por Email
 
 ```javascript
-const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
+const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
 ```
 
 ### 2. Buscar Account Tenants
 
 ```javascript
-const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
+const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
 ```
 
 ### 3. Buscar Tenants
 
 ```javascript
-const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&offset=-1`
+const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&offset=-1`
 ```
 
 ## 🚨 Errores Comunes
@@ -55,10 +55,10 @@ const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=ten
 
 ```javascript
 // ❌ Incorrecto
-const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'`
+const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'`
 
 // ✅ Correcto
-const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
+const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
 ```
 
 ## 🔄 Flujo de Sincronización
