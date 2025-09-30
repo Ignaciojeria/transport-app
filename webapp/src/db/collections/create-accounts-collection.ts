@@ -12,7 +12,7 @@ export type ElectricAccountData = {
 
 // Factory para crear la colección inyectando el token y email
 export const createAccountsCollection = (token: string, email: string) => {
-  const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
+  const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'`
   
   return createCollection(
     electricCollectionOptions({

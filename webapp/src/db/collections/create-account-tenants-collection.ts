@@ -12,7 +12,7 @@ export type ElectricAccountTenantData = {
 
 // Factory para crear la colección inyectando el token
 export const createAccountTenantsCollection = (token: string) => {
-  const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&offset=-1`
+  const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id`
   
   return createCollection(
     electricCollectionOptions({
