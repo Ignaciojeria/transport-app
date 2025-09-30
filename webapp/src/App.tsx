@@ -12,19 +12,26 @@ function App() {
 
   // Extraer token del fragment de la URL
   useEffect(() => {
+    console.log('🚀 Iniciando extracción de token...')
+    console.log('🚀 URL actual:', window.location.href)
+    
     const extractedToken = extractTokenFromFragment()
+    console.log('🚀 Token extraído:', extractedToken ? 'SÍ' : 'NO')
     
     if (extractedToken) {
+      console.log('✅ Token encontrado, estableciendo...')
       setToken(extractedToken)
       // Limpiar la URL después de extraer el token
       const cleanUrl = window.location.origin + window.location.pathname
+      console.log('🧹 Limpiando URL a:', cleanUrl)
       window.history.replaceState({}, document.title, cleanUrl)
     } else {
-      console.warn('No se encontró token en el fragment de la URL')
-      // Token de fallback para desarrollo
-      setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzdWFyaW9AZWplbXBsby5jb20iLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlVzdWFyaW8gZGUgUHJ1ZWJhIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+      console.warn('❌ No se encontró token en el fragment de la URL')
+      // No establecer token - esto hará que se muestre el error de autenticación
+      setToken(null)
     }
     
+    console.log('🏁 Finalizando extracción de token')
     setIsLoading(false)
   }, [])
 
@@ -87,15 +94,29 @@ function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error de Autenticación</h2>
-          <p className="text-gray-600 mb-4">No se pudo extraer el token de autenticación</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            Reintentar
-          </button>
+          <div className="text-red-500 text-6xl mb-4">🔐</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Autenticación Requerida</h2>
+          <p className="text-gray-600 mb-4">
+            No se encontró token de autenticación en la URL.<br/>
+            Por favor, inicia sesión con Google primero.
+          </p>
+          <div className="space-y-2">
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors mr-2"
+            >
+              Reintentar
+            </button>
+            <button 
+              onClick={() => {
+                // Aquí podrías redirigir a tu sistema de autenticación
+                console.log('Redirigir a autenticación...')
+              }}
+              className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
         </div>
       </div>
     )
