@@ -67,10 +67,9 @@ const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=
    - Obtiene todos los datos actuales
    - Usado para cargar datos por primera vez
 
-2. **Modo En Vivo (LiveQuery)**: `live=true&offset=0_0`
-   - Recibe actualizaciones en tiempo real automáticamente
-   - Se sincroniza automáticamente cuando cambian los datos
-   - **Recomendado** para aplicaciones que necesitan datos actualizados
+2. **Modo En Vivo**: `offset=0_0&live=true`
+   - Recibe actualizaciones en tiempo real
+   - Requiere un `handle` de forma
 
 ## 📊 Estructura de Respuesta
 

@@ -1,12 +1,10 @@
 /**
  * Utilidades para manejar el caché de Electric SQL
- * Con LiveQuery, la sincronización es automática, pero estas utilidades
- * siguen siendo útiles para debug y casos edge
  */
 
 /**
  * Limpia el caché local de Electric SQL
- * Útil para debug o cuando LiveQuery no funciona correctamente
+ * Esto puede ayudar cuando los datos no se sincronizan correctamente
  */
 export const clearElectricCache = (): void => {
   try {
@@ -36,8 +34,25 @@ export const clearElectricCache = (): void => {
 }
 
 /**
+ * Fuerza una sincronización completa con Electric SQL
+ * Esto puede ser útil cuando los datos no están actualizados
+ */
+export const forceElectricSync = async (): Promise<void> => {
+  try {
+    console.log('🔄 Forzando sincronización con Electric SQL...')
+    
+    // Limpiar caché primero
+    clearElectricCache()
+    
+    // Recargar la página para forzar una nueva sincronización
+    window.location.reload()
+  } catch (error) {
+    console.error('❌ Error al forzar sincronización:', error)
+  }
+}
+
+/**
  * Verifica si hay datos en caché de Electric SQL
- * Útil para debug
  */
 export const hasElectricCache = (): boolean => {
   try {
@@ -56,7 +71,6 @@ export const hasElectricCache = (): boolean => {
 
 /**
  * Obtiene información del caché de Electric SQL para debugging
- * Útil para diagnosticar problemas de sincronización
  */
 export const getElectricCacheInfo = (): { keys: string[], size: number } => {
   try {
@@ -82,14 +96,4 @@ export const getElectricCacheInfo = (): { keys: string[], size: number } => {
     console.error('❌ Error al obtener info del caché:', error)
     return { keys: [], size: 0 }
   }
-}
-
-/**
- * Fuerza una recarga completa de la aplicación
- * Útil como último recurso cuando LiveQuery no funciona
- */
-export const forceAppReload = (): void => {
-  console.log('🔄 Forzando recarga completa de la aplicación...')
-  clearElectricCache()
-  window.location.reload()
 }

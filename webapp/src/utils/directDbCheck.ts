@@ -5,9 +5,9 @@
 
 /**
  * Verifica directamente si existe una cuenta en la base de datos
- * Usando el endpoint de Electric SQL con un token válido
+ * Usando el endpoint de registro para verificar si el email ya existe
  */
-export const checkAccountDirectly = async (email: string, token: string): Promise<{
+export const checkAccountDirectly = async (email: string): Promise<{
   exists: boolean
   message: string
   details?: any
@@ -15,43 +15,43 @@ export const checkAccountDirectly = async (email: string, token: string): Promis
   try {
     console.log('🔍 Verificando cuenta directamente en la base de datos para:', email)
     
-    // Usar el endpoint de Electric SQL directamente con LiveQuery
-    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&live=true&offset=0_0`
-    
-    const response = await fetch(url, {
+    // Usar el endpoint de registro para verificar si el email ya existe
+    const response = await fetch('https://einar-main-f0820bc.d2.zuplo.dev/register', {
+      method: 'POST',
       headers: {
-        'X-Access-Token': `Bearer ${token}`
-      }
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        organizationName: 'TEST_CHECK', // Nombre de prueba
+        country: 'CL'
+      })
     })
 
+    const responseData = await response.json()
+    console.log('🔍 Respuesta directa de la base de datos:', responseData)
+
+    // Si el email ya existe, el servidor debería devolver un error
     if (!response.ok) {
-      console.log('❌ Error en consulta directa:', response.status, response.statusText)
-      return {
-        exists: false,
-        message: `Error en consulta directa: ${response.status}`,
-        details: { status: response.status, statusText: response.statusText }
-      }
-    }
-
-    const data = await response.json()
-    console.log('🔍 Respuesta directa de Electric SQL:', data)
-
-    // Verificar si hay datos reales (no solo objetos de control)
-    if (Array.isArray(data) && data.length > 0) {
-      const accountData = data.find(item => item.value && item.value.email)
-      if (accountData) {
+      const errorMessage = responseData.message || responseData.error || 'Error desconocido'
+      
+      if (errorMessage.toLowerCase().includes('email') && 
+          (errorMessage.toLowerCase().includes('exist') || 
+           errorMessage.toLowerCase().includes('ya existe') ||
+           errorMessage.toLowerCase().includes('already'))) {
         return {
           exists: true,
-          message: 'Email existe en la base de datos',
-          details: accountData.value
+          message: 'Email ya existe en la base de datos',
+          details: responseData
         }
       }
     }
 
+    // Si la respuesta es exitosa, significa que el email no existía
     return {
       exists: false,
       message: 'Email no existe en la base de datos',
-      details: data
+      details: responseData
     }
 
   } catch (error) {
@@ -67,10 +67,10 @@ export const checkAccountDirectly = async (email: string, token: string): Promis
 /**
  * Compara los resultados de Electric SQL vs verificación directa
  */
-export const compareElectricVsDirect = async (email: string, electricResult: any, token: string) => {
+export const compareElectricVsDirect = async (email: string, electricResult: any) => {
   console.log('🔄 Comparando Electric SQL vs verificación directa...')
   
-  const directResult = await checkAccountDirectly(email, token)
+  const directResult = await checkAccountDirectly(email)
   
   console.log('📊 Comparación de resultados:')
   console.log('  Electric SQL:', electricResult ? 'ENCONTRADO' : 'NO ENCONTRADO')
