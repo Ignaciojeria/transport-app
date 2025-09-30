@@ -6,6 +6,7 @@ import LoadingSpinner from './ui/LoadingSpinner'
 import SuccessNotification from './ui/SuccessNotification'
 import { clearElectricCache, getElectricCacheInfo } from '../utils/electricCacheUtils'
 import { syncWithElectric } from '../utils/retryUtils'
+import { checkAccountDirectly } from '../utils/directDbCheck'
 
 interface GoogleAuthHandlerProps {
   token: string
@@ -56,15 +57,38 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
               <p className="text-sm text-gray-600 mb-1">
                 <strong>Caché Electric:</strong> {cacheInfo.keys.length} claves
               </p>
-              <button 
-                onClick={() => {
-                  clearElectricCache()
-                  console.log('🧹 Caché limpiado manualmente')
-                }}
-                className="mt-2 px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
-              >
-                Limpiar Caché
-              </button>
+              <div className="space-y-2">
+                <button 
+                  onClick={() => {
+                    clearElectricCache()
+                    console.log('🧹 Caché limpiado manualmente')
+                  }}
+                  className="w-full px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                >
+                  Limpiar Caché
+                </button>
+                <button 
+                  onClick={async () => {
+                    console.log('🔍 Verificando base de datos directamente...')
+                    const result = await checkAccountDirectly(email)
+                    console.log('🔍 Resultado directo:', result)
+                    alert(`Verificación directa: ${result.exists ? 'ENCONTRADO' : 'NO ENCONTRADO'}\nMensaje: ${result.message}`)
+                  }}
+                  className="w-full px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                >
+                  Verificar BD Directa
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('🔄 Forzando recarga completa...')
+                    clearElectricCache()
+                    window.location.reload()
+                  }}
+                  className="w-full px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
+                >
+                  Recarga Completa
+                </button>
+              </div>
             </div>
           )}
         </div>
