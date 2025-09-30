@@ -5,7 +5,6 @@ import TenantsList from './TenantsList'
 import LoadingSpinner from './ui/LoadingSpinner'
 import SuccessNotification from './ui/SuccessNotification'
 import { clearElectricCache, getElectricCacheInfo, forceAppReload } from '../utils/electricCacheUtils'
-import { clearInvalidOffsets } from '../services/electricSyncService'
 import { syncWithElectric } from '../utils/retryUtils'
 import { isElectricSynced } from '../utils/electricSyncUtils'
 
@@ -82,16 +81,6 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
                   className="w-full px-3 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
                 >
                   Limpiar Caché Local
-                </button>
-                <button 
-                  onClick={() => {
-                    console.log('🧹 Limpiando offsets inválidos...')
-                    clearInvalidOffsets()
-                    console.log('✅ Offsets inválidos limpiados')
-                  }}
-                  className="w-full px-3 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-colors"
-                >
-                  Limpiar Offsets Inválidos
                 </button>
                 <button 
                   onClick={() => {

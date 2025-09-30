@@ -22,20 +22,6 @@ export interface ElectricSyncResult<T> {
 const SYNC_STATE_KEY = 'electric_sync_state'
 
 /**
- * Valida si un offset tiene el formato correcto para Electric SQL
- */
-const isValidOffset = (offset: string): boolean => {
-  // Electric SQL acepta offsets en formato de string
-  // Debe ser un número válido o '-1' para sincronización inicial
-  if (offset === '-1') return true
-  if (offset === '0') return true
-  
-  // Verificar si es un número válido
-  const num = Number(offset)
-  return !isNaN(num) && num > 0
-}
-
-/**
  * Obtiene el estado de sincronización guardado
  */
 export const getSyncState = (shapeId: string): ElectricSyncState => {
@@ -76,37 +62,21 @@ export const saveSyncState = (shapeId: string, state: ElectricSyncState): void =
 
 /**
  * Realiza una consulta incremental a Electric SQL
- * Patrón correcto: offset=-1 para inicial, luego offset+live=true para continuar
  */
 export const syncElectricShape = async <T>(
   shapeId: string,
   url: string,
   token: string,
-  parser: (data: any) => T,
-  useLive: boolean = false
+  parser: (data: any) => T
 ): Promise<ElectricSyncResult<T>> => {
   try {
     const syncState = getSyncState(shapeId)
     
     // Determinar el offset a usar
-    let offset = syncState.isInitialized ? syncState.offset : '-1'
+    const offset = syncState.isInitialized ? syncState.offset : '-1'
+    const syncUrl = `${url}&offset=${offset}`
     
-    // Validar formato del offset
-    if (offset && offset !== '-1' && !isValidOffset(offset)) {
-      console.warn(`⚠️ Offset inválido detectado: ${offset}, reseteando a -1`)
-      offset = '-1'
-      // Limpiar estado de sincronización para este shape
-      clearSyncState(shapeId)
-    }
-    
-    // Construir URL según el patrón correcto
-    let syncUrl = `${url}&offset=${offset}`
-    if (useLive && offset !== '-1') {
-      // Solo usar live=true para sincronización continua (no inicial)
-      syncUrl += '&live=true'
-    }
-    
-    console.log(`🔄 Sincronizando shape ${shapeId} con offset: ${offset}${useLive ? ' (live)' : ''}`)
+    console.log(`🔄 Sincronizando shape ${shapeId} con offset: ${offset}`)
     
     const response = await fetch(syncUrl, {
       headers: {
@@ -115,47 +85,6 @@ export const syncElectricShape = async <T>(
     })
 
     if (!response.ok) {
-      // Si es error 400 y el offset es inválido, resetear a sincronización inicial
-      if (response.status === 400 && offset !== '-1') {
-        console.warn(`⚠️ Error 400 con offset ${offset}, reseteando a sincronización inicial`)
-        clearSyncState(shapeId)
-        
-        // Reintentar con offset -1
-        const retryUrl = `${url}&offset=-1`
-        const retryResponse = await fetch(retryUrl, {
-          headers: {
-            'X-Access-Token': `Bearer ${token}`
-          }
-        })
-        
-        if (!retryResponse.ok) {
-          throw new Error(`Error en sincronización inicial: ${retryResponse.status} ${retryResponse.statusText}`)
-        }
-        
-        // Procesar respuesta de reintento
-        const retryData = await retryResponse.json()
-        const retryParsedData = parser(retryData)
-        
-        // Obtener nuevo offset de la respuesta de reintento
-        const retryControlHeaders = retryData.find((item: any) => item.headers?.control === 'snapshot-end')
-        const retryNewOffset = retryControlHeaders?.headers?.xmax ? String(retryControlHeaders.headers.xmax) : null
-        
-        // Actualizar estado con el nuevo offset
-        const newSyncState: ElectricSyncState = {
-          offset: retryNewOffset,
-          isInitialized: true,
-          lastSync: new Date()
-        }
-        saveSyncState(shapeId, newSyncState)
-        
-        return {
-          data: retryParsedData,
-          newOffset: retryNewOffset,
-          hasMore: false,
-          error: undefined
-        }
-      }
-      
       throw new Error(`Error en sincronización: ${response.status} ${response.statusText}`)
     }
 
@@ -165,41 +94,10 @@ export const syncElectricShape = async <T>(
     // Extraer el nuevo offset de la respuesta
     // Electric SQL devuelve el offset en los headers de control
     const controlHeaders = data.find((item: any) => item.headers?.control === 'snapshot-end')
-    let newOffset = null
-    
-    // Buscar el offset en los headers de control
-    if (controlHeaders?.headers?.xmax) {
-      newOffset = String(controlHeaders.headers.xmax)
-    }
-    
-    // También verificar si hay un electric-offset header en la respuesta HTTP
-    const electricOffsetHeader = response.headers.get('electric-offset')
-    if (electricOffsetHeader) {
-      newOffset = electricOffsetHeader
-      console.log(`📊 Offset encontrado en header: ${newOffset}`)
-    }
+    const newOffset = controlHeaders?.headers?.xmax || null
 
-    // Verificar mensajes de control
-    const upToDateMessage = data.find((item: any) => item.headers?.control === 'up-to-date')
-    const mustRefetchMessage = data.find((item: any) => item.headers?.control === 'must-refetch')
-    
-    if (mustRefetchMessage) {
-      console.warn(`⚠️ Mensaje must-refetch recibido para ${shapeId}, limpiando estado`)
-      clearSyncState(shapeId)
-      // Retornar error para que el cliente re-sync desde cero
-      return {
-        data: null,
-        newOffset: null,
-        hasMore: false,
-        error: 'must-refetch'
-      }
-    }
-    
     // Parsear los datos
     const parsedData = parser(data)
-    
-    // Determinar si hay más datos (paginación)
-    const hasMore = !upToDateMessage && newOffset !== null
 
     // Actualizar estado de sincronización
     const newSyncState: ElectricSyncState = {
@@ -212,7 +110,7 @@ export const syncElectricShape = async <T>(
     return {
       data: parsedData,
       newOffset,
-      hasMore,
+      hasMore: false, // Electric SQL maneja esto internamente
       error: undefined
     }
 
@@ -294,142 +192,5 @@ export const clearAllSyncStates = (): void => {
     console.log('🧹 Todos los estados de sincronización limpiados')
   } catch (error) {
     console.error('Error al limpiar todos los estados:', error)
-  }
-}
-
-/**
- * Limpia todos los offsets inválidos y resetea a sincronización inicial
- */
-export const clearInvalidOffsets = (): void => {
-  try {
-    const keys = Object.keys(localStorage)
-    let cleanedCount = 0
-    
-    keys.forEach(key => {
-      if (key.startsWith(SYNC_STATE_KEY)) {
-        try {
-          const stored = localStorage.getItem(key)
-          if (stored) {
-            const parsed = JSON.parse(stored)
-            if (parsed.offset && !isValidOffset(parsed.offset)) {
-              console.log(`🧹 Limpiando offset inválido: ${parsed.offset} en ${key}`)
-              localStorage.removeItem(key)
-              cleanedCount++
-            }
-          }
-        } catch (error) {
-          // Si no se puede parsear, limpiar también
-          console.log(`🧹 Limpiando estado corrupto: ${key}`)
-          localStorage.removeItem(key)
-          cleanedCount++
-        }
-      }
-    })
-    
-    console.log(`✅ Limpiados ${cleanedCount} offsets inválidos`)
-  } catch (error) {
-    console.error('Error al limpiar offsets inválidos:', error)
-  }
-}
-
-/**
- * Sincronización inicial: offset=-1 (sin live)
- */
-export const syncElectricShapeInitial = async <T>(
-  shapeId: string,
-  url: string,
-  token: string,
-  parser: (data: any) => T
-): Promise<ElectricSyncResult<T>> => {
-  console.log(`🔄 Sincronización inicial para shape ${shapeId}`)
-  return syncElectricShape(shapeId, url, token, parser, false)
-}
-
-/**
- * Sincronización continua: offset=último + live=true
- */
-export const syncElectricShapeLive = async <T>(
-  shapeId: string,
-  url: string,
-  token: string,
-  parser: (data: any) => T
-): Promise<ElectricSyncResult<T>> => {
-  console.log(`🔄 Sincronización continua (live) para shape ${shapeId}`)
-  return syncElectricShape(shapeId, url, token, parser, true)
-}
-
-/**
- * Sincronización completa con paginación automática
- * Maneja la sincronización inicial y la paginación hasta obtener todos los datos
- */
-export const syncElectricShapeComplete = async <T>(
-  shapeId: string,
-  url: string,
-  token: string,
-  parser: (data: any) => T
-): Promise<ElectricSyncResult<T>> => {
-  console.log(`🔄 Sincronización completa para shape ${shapeId}`)
-  
-  let allData: T | null = null
-  let currentOffset: string | null = null
-  let hasMore = true
-  
-  // Sincronización inicial
-  const initialResult = await syncElectricShapeInitial(shapeId, url, token, parser)
-  
-  if (initialResult.error === 'must-refetch') {
-    // Si hay must-refetch, limpiar todo y empezar de nuevo
-    clearSyncState(shapeId)
-    return await syncElectricShapeComplete(shapeId, url, token, parser)
-  }
-  
-  if (initialResult.error) {
-    return initialResult
-  }
-  
-  allData = initialResult.data
-  currentOffset = initialResult.newOffset
-  hasMore = initialResult.hasMore
-  
-  // Continuar con paginación si es necesario
-  while (hasMore && currentOffset) {
-    console.log(`🔄 Continuando paginación con offset: ${currentOffset}`)
-    
-    const paginatedResult = await syncElectricShape(shapeId, url, token, parser, false)
-    
-    if (paginatedResult.error === 'must-refetch') {
-      // Si hay must-refetch durante paginación, limpiar todo y empezar de nuevo
-      clearSyncState(shapeId)
-      return await syncElectricShapeComplete(shapeId, url, token, parser)
-    }
-    
-    if (paginatedResult.error) {
-      console.error(`❌ Error en paginación: ${paginatedResult.error}`)
-      break
-    }
-    
-    // Combinar datos (esto depende del tipo de datos)
-    if (paginatedResult.data) {
-      // Para arrays, concatenar
-      if (Array.isArray(allData) && Array.isArray(paginatedResult.data)) {
-        allData = [...allData, ...paginatedResult.data] as T
-      }
-      // Para objetos individuales, usar el último
-      else {
-        allData = paginatedResult.data
-      }
-    }
-    
-    currentOffset = paginatedResult.newOffset
-    hasMore = paginatedResult.hasMore
-  }
-  
-  console.log(`✅ Sincronización completa finalizada para ${shapeId}`)
-  
-  return {
-    data: allData,
-    newOffset: currentOffset,
-    hasMore: false,
-    error: undefined
   }
 }
