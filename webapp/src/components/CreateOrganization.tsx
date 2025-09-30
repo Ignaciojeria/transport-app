@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Truck, AlertCircle, CheckCircle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/Card'
 import { extractEmailFromJWT } from '../utils/jwt'
+import { extractEmailFromFragment } from '../utils/urlUtils'
 import { createOrganization, validateOrganizationData, type CreateOrganizationResponse } from '../services/organizationService'
 
 interface CreateOrganizationProps {
@@ -30,12 +31,22 @@ export default function CreateOrganization({ token, onSuccess, onError }: Create
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
   const [submitResponse, setSubmitResponse] = useState<CreateOrganizationResponse | null>(null)
 
-  // Extraer email del JWT al montar el componente
+  // Extraer email del JWT o del fragment al montar el componente
   useEffect(() => {
-    const extractedEmail = extractEmailFromJWT(token)
+    console.log('🔍 Extrayendo email del token JWT...')
+    let extractedEmail = extractEmailFromJWT(token)
+    
+    // Si no se pudo extraer del JWT, intentar del fragment
+    if (!extractedEmail) {
+      console.log('🔍 Intentando extraer email del fragment...')
+      extractedEmail = extractEmailFromFragment()
+    }
+    
     if (extractedEmail) {
+      console.log('✅ Email extraído:', extractedEmail)
       setEmail(extractedEmail)
     } else {
+      console.error('❌ No se pudo extraer el email del token ni del fragment')
       onError?.('No se pudo extraer el email del token de autenticación')
     }
   }, [token, onError])

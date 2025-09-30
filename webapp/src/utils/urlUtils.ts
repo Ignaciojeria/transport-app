@@ -41,13 +41,31 @@ export const extractTokenFromFragment = (url?: string): string | null => {
     const idToken = params.get('id_token')
     const token = params.get('token')
     const jwt = params.get('jwt')
+    const auth = params.get('auth') // Nuevo: parámetro 'auth' que contiene el payload completo
     
     console.log('🔍 Tokens encontrados:', {
       access_token: accessToken ? `${accessToken.substring(0, 20)}...` : null,
       id_token: idToken ? `${idToken.substring(0, 20)}...` : null,
       token: token ? `${token.substring(0, 20)}...` : null,
-      jwt: jwt ? `${jwt.substring(0, 20)}...` : null
+      jwt: jwt ? `${jwt.substring(0, 20)}...` : null,
+      auth: auth ? `${auth.substring(0, 20)}...` : null
     })
+    
+    // Si tenemos el parámetro 'auth', extraer el access_token de ahí
+    if (auth) {
+      try {
+        console.log('🔍 Procesando parámetro auth...')
+        const authPayload = JSON.parse(atob(auth))
+        console.log('🔍 Auth payload decodificado:', authPayload)
+        
+        if (authPayload.access_token) {
+          console.log('✅ Access token encontrado en auth payload')
+          return authPayload.access_token
+        }
+      } catch (error) {
+        console.error('❌ Error al decodificar auth payload:', error)
+      }
+    }
     
     const finalToken = accessToken || idToken || token || jwt
     
@@ -81,7 +99,30 @@ export const extractEmailFromFragment = (url?: string): string | null => {
     }
     
     const params = new URLSearchParams(fragment.substring(1))
-    return params.get('email')
+    
+    // Buscar email directamente en parámetros
+    const directEmail = params.get('email')
+    if (directEmail) {
+      return directEmail
+    }
+    
+    // Buscar email en el payload de auth
+    const auth = params.get('auth')
+    if (auth) {
+      try {
+        const authPayload = JSON.parse(atob(auth))
+        console.log('🔍 Extrayendo email del auth payload:', authPayload)
+        
+        if (authPayload.user && authPayload.user.email) {
+          console.log('✅ Email encontrado en auth.user.email:', authPayload.user.email)
+          return authPayload.user.email
+        }
+      } catch (error) {
+        console.error('❌ Error al decodificar auth payload para email:', error)
+      }
+    }
+    
+    return null
   } catch (error) {
     console.error('Error al extraer email del fragment:', error)
     return null
