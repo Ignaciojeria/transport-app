@@ -6,7 +6,7 @@ import LoadingSpinner from './ui/LoadingSpinner'
 import SuccessNotification from './ui/SuccessNotification'
 import { clearElectricCache, getElectricCacheInfo } from '../utils/electricCacheUtils'
 import { syncWithElectric } from '../utils/retryUtils'
-import { checkAccountDirectly } from '../utils/directDbCheck'
+import { forceElectricSync, isElectricSynced } from '../utils/electricSyncUtils'
 
 interface GoogleAuthHandlerProps {
   token: string
@@ -69,14 +69,28 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
                 </button>
                 <button 
                   onClick={async () => {
-                    console.log('🔍 Verificando base de datos directamente...')
-                    const result = await checkAccountDirectly(email)
-                    console.log('🔍 Resultado directo:', result)
-                    alert(`Verificación directa: ${result.exists ? 'ENCONTRADO' : 'NO ENCONTRADO'}\nMensaje: ${result.message}`)
+                    console.log('🔍 Verificando sincronización completa...')
+                    const result = await isElectricSynced(email)
+                    console.log('🔍 Estado de sincronización:', result)
+                    alert(`Sincronización: ${result.synced ? 'SÍ' : 'NO'}\nMensaje: ${result.message}`)
                   }}
                   className="w-full px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
                 >
-                  Verificar BD Directa
+                  Verificar Sincronización
+                </button>
+                <button 
+                  onClick={async () => {
+                    console.log('🔄 Forzando sincronización con Electric SQL...')
+                    const success = await forceElectricSync(token, email)
+                    console.log('🔄 Resultado:', success ? 'Éxito' : 'Falló')
+                    alert(`Sincronización forzada: ${success ? 'ÉXITO' : 'FALLÓ'}`)
+                    if (success) {
+                      window.location.reload()
+                    }
+                  }}
+                  className="w-full px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                >
+                  Forzar Sincronización
                 </button>
                 <button 
                   onClick={() => {
