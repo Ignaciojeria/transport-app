@@ -1,15 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CreateOrganization from './components/CreateOrganization'
 import { type CreateOrganizationResponse } from './services/organizationService'
+import { extractTokenFromFragment } from './utils/urlUtils'
 import './App.css'
 
 function App() {
   const [organizationCreated, setOrganizationCreated] = useState(false)
   const [organizationData, setOrganizationData] = useState<{name: string; country: string} | null>(null)
-  // const [error, setError] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Token simulado para pruebas
-  const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzdWFyaW9AZWplbXBsby5jb20iLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlVzdWFyaW8gZGUgUHJ1ZWJhIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+  // Extraer token del fragment de la URL
+  useEffect(() => {
+    const extractedToken = extractTokenFromFragment()
+    
+    if (extractedToken) {
+      setToken(extractedToken)
+      // Limpiar la URL después de extraer el token
+      const cleanUrl = window.location.origin + window.location.pathname
+      window.history.replaceState({}, document.title, cleanUrl)
+    } else {
+      console.warn('No se encontró token en el fragment de la URL')
+      // Token de fallback para desarrollo
+      setToken('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzdWFyaW9AZWplbXBsby5jb20iLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlVzdWFyaW8gZGUgUHJ1ZWJhIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c')
+    }
+    
+    setIsLoading(false)
+  }, [])
 
   const handleCreateOrganizationSuccess = (response: CreateOrganizationResponse) => {
     console.log('Organización creada exitosamente:', response)
@@ -53,9 +70,40 @@ function App() {
     )
   }
 
+  // Mostrar loading mientras se extrae el token
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Procesando autenticación...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Si no hay token, mostrar error
+  if (!token) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error de Autenticación</h2>
+          <p className="text-gray-600 mb-4">No se pudo extraer el token de autenticación</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <CreateOrganization 
-      token={mockToken}
+      token={token}
       onSuccess={handleCreateOrganizationSuccess}
       onError={handleCreateOrganizationError}
     />
