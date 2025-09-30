@@ -38,11 +38,16 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     console.log('🔍 Buscando cuenta en Electric SQL para email:', email)
     
     // Usar el endpoint correcto del proyecto electric con offset requerido
-    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
+    // Agregar timestamp para evitar caché
+    const timestamp = Date.now()
+    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1&_t=${timestamp}`
     
     const response = await fetch(url, {
       headers: {
         'X-Access-Token': `Bearer ${token}`,
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
       }
     })
 
