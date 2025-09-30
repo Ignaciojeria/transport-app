@@ -3,7 +3,7 @@
  */
 
 import { compareElectricVsDirect } from '../utils/directDbCheck'
-import { syncElectricShape, parseAccountData, parseAccountTenantsData } from './electricSyncService'
+import { syncElectricShapeComplete, parseAccountData, parseAccountTenantsData } from './electricSyncService'
 
 export interface ElectricAccount {
   id: string
@@ -44,7 +44,7 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     const shapeId = `accounts_${email}`
     const baseUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'`
     
-    const result = await syncElectricShape(
+    const result = await syncElectricShapeComplete(
       shapeId,
       baseUrl,
       token,
@@ -95,7 +95,7 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     const accountTenantsShapeId = `account_tenants_${accountId}`
     const accountTenantsBaseUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'`
     
-    const accountTenantsResult = await syncElectricShape(
+    const accountTenantsResult = await syncElectricShapeComplete(
       accountTenantsShapeId,
       accountTenantsBaseUrl,
       token,
@@ -125,7 +125,7 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
         const tenantShapeId = `tenant_${tenantId}`
         const tenantBaseUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'`
         
-        const tenantResult = await syncElectricShape(
+        const tenantResult = await syncElectricShapeComplete(
           tenantShapeId,
           tenantBaseUrl,
           token,
