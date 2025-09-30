@@ -14,10 +14,9 @@ import {
 export const exampleTenantsUsage = () => {
   // Token de autenticación (debería venir de tu sistema de auth)
   const token = 'your-auth-token-here'
-  const tenantId = 'specific-tenant-uuid'
   
-  // Crear la colección con token y tenant_id
-  const tenantsCollection = createTenantsCollection(token, tenantId)
+  // Crear la colección con token
+  const tenantsCollection = createTenantsCollection(token)
   
   return {
     tenantsCollection

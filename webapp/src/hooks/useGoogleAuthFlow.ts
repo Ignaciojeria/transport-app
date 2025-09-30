@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
-import { checkAccountAndGetTenants, type ElectricAccount, type ElectricTenant } from '../services/electricService'
+import { findAccountByEmail, findTenantsByAccountId } from '../db/queries/accountQueries'
+import type { ElectricAccountData } from '../db/collections/create-accounts-collection'
+import type { ElectricTenantData } from '../db/collections/create-tenants-collection'
 
 export type AuthFlowState = 'loading' | 'checking-account' | 'account-not-found' | 'loading-tenants' | 'tenants-loaded' | 'error'
 
 export type AuthFlowResult = {
   state: AuthFlowState
-  account: ElectricAccount | null
-  tenants: ElectricTenant[]
+  account: ElectricAccountData | null
+  tenants: ElectricTenantData[]
   error: string | null
 }
 
@@ -26,10 +28,10 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
         // Paso 1: Verificar si el account existe
         setResult(prev => ({ ...prev, state: 'checking-account' }))
         
-        // Usar el servicio real de Electric SQL
-        const accountData = await checkAccountAndGetTenants(token, email)
+        // Buscar la cuenta
+        const account = await findAccountByEmail(token, email)
         
-        if (!accountData) {
+        if (!account) {
           // Account no existe, redirigir a creación de organización
           setResult(prev => ({ 
             ...prev, 
@@ -40,12 +42,16 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
           return
         }
 
-        // Account existe, mostrar tenants
+        // Account existe, buscar tenants
+        setResult(prev => ({ ...prev, state: 'loading-tenants' }))
+        const tenants = await findTenantsByAccountId(token, account.id)
+
+        // Mostrar tenants
         setResult(prev => ({ 
           ...prev, 
           state: 'tenants-loaded',
-          account: accountData.account,
-          tenants: accountData.tenants
+          account,
+          tenants
         }))
 
       } catch (error) {

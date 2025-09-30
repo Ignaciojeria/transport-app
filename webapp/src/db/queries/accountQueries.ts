@@ -1,42 +1,13 @@
-/**
- * Servicio para consultar Electric SQL usando el patrón del proyecto electric
- */
+import type { ElectricAccountData } from '../collections/create-accounts-collection'
+import type { ElectricTenantData } from '../collections/create-tenants-collection'
+import type { ElectricAccountTenantData } from '../collections/create-account-tenants-collection'
 
-export interface ElectricAccount {
-  id: string
-  email: string
-  reference_id?: string
-  created_at?: Date
-  updated_at?: Date
-}
-
-export interface ElectricTenant {
-  id: string
-  name: string
-  country: string
-  reference_id?: string
-  created_at?: Date
-  updated_at?: Date
-}
-
-export interface ElectricAccountTenant {
-  account_id: string
-  tenant_id: string
-  reference_id?: string
-  created_at?: Date
-  updated_at?: Date
-}
-
-/**
- * Busca una cuenta por email en Electric SQL
- * @param token - Token de autenticación
- * @param email - Email a buscar
- * @returns Cuenta encontrada o null si no existe
- */
-export const findAccountByEmail = async (token: string, email: string): Promise<ElectricAccount | null> => {
+// Función para buscar cuenta por email usando la collection
+export const findAccountByEmail = async (token: string, email: string): Promise<ElectricAccountData | null> => {
   try {
     console.log('🔍 Buscando cuenta para email:', email)
     
+    // Consulta directa a Electric SQL
     const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
     
     const response = await fetch(url, {
@@ -53,7 +24,6 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     const data = await response.json()
     console.log('🔍 Respuesta de Electric SQL:', data)
     
-    // Electric SQL maneja el caché automáticamente
     if (data.rows && data.rows.length > 0) {
       console.log('✅ Cuenta encontrada:', data.rows[0])
       return data.rows[0]
@@ -67,14 +37,8 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
   }
 }
 
-/**
- * Busca los tenants (organizaciones) asociados a una cuenta
- * Lógica: account -> account_tenants -> tenants
- * @param token - Token de autenticación
- * @param accountId - ID de la cuenta
- * @returns Lista de tenants (organizaciones) asociados
- */
-export const findTenantsByAccountId = async (token: string, accountId: string): Promise<ElectricTenant[]> => {
+// Función para buscar tenants por account_id usando las collections
+export const findTenantsByAccountId = async (token: string, accountId: string): Promise<ElectricTenantData[]> => {
   try {
     console.log('🔍 Buscando organizaciones para account_id:', accountId)
     
@@ -101,11 +65,11 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     }
 
     // Paso 2: Obtener tenant_ids
-    const tenantIds = accountTenantsData.rows.map((at: ElectricAccountTenant) => at.tenant_id)
+    const tenantIds = accountTenantsData.rows.map((at: ElectricAccountTenantData) => at.tenant_id)
     console.log('🔍 Tenant IDs a consultar:', tenantIds)
     
     // Paso 3: Buscar detalles de cada tenant
-    const tenants: ElectricTenant[] = []
+    const tenants: ElectricTenantData[] = []
     
     for (const tenantId of tenantIds) {
       try {
@@ -133,36 +97,5 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
   } catch (error) {
     console.error('❌ Error al buscar tenants:', error)
     return []
-  }
-}
-
-/**
- * Verifica si una cuenta existe y obtiene sus tenants
- * @param token - Token de autenticación
- * @param email - Email a verificar
- * @returns Objeto con la cuenta y sus tenants, o null si no existe
- */
-export const checkAccountAndGetTenants = async (token: string, email: string): Promise<{
-  account: ElectricAccount
-  tenants: ElectricTenant[]
-} | null> => {
-  try {
-    console.log('🔍 Verificando cuenta y obteniendo tenants para:', email)
-    
-    // Buscar la cuenta
-    const account = await findAccountByEmail(token, email)
-    if (!account) {
-      console.log('ℹ️ Cuenta no encontrada, usuario puede crear organización')
-      return null
-    }
-    
-    // Buscar los tenants asociados
-    const tenants = await findTenantsByAccountId(token, account.id)
-    console.log('✅ Cuenta encontrada con tenants:', { account, tenants })
-    
-    return { account, tenants }
-  } catch (error) {
-    console.error('❌ Error al verificar cuenta:', error)
-    return null
   }
 }

@@ -12,10 +12,9 @@ import {
 export const exampleAccountTenantsUsage = () => {
   // Token de autenticación (debería venir de tu sistema de auth)
   const token = 'your-auth-token-here'
-  const accountId = 'specific-account-id'
   
-  // Crear la colección con token y account_id
-  const accountTenantsCollection = createAccountTenantsCollection(token, accountId)
+  // Crear la colección con token
+  const accountTenantsCollection = createAccountTenantsCollection(token)
   
   return {
     accountTenantsCollection

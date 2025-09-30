@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react'
-import { useGoogleAuthFlow, useAuthRedirect } from '../hooks/useGoogleAuthFlow'
+import React from 'react'
+import { useAccountData } from '../hooks/useAccountData'
 import CreateOrganization from './CreateOrganization'
 import TenantsList from './TenantsList'
 import LoadingSpinner from './ui/LoadingSpinner'
@@ -15,38 +15,28 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
   email, 
   onError 
 }) => {
-  const authResult = useGoogleAuthFlow(token, email)
-  const { isLoading } = useAuthRedirect(authResult)
+  const { account, tenants, isLoading, error } = useAccountData(token, email)
 
-  useEffect(() => {
-    if (authResult.state === 'error' && onError) {
-      onError(authResult.error || 'Error desconocido')
-    }
-  }, [authResult.state, authResult.error, onError])
-
-  // Mostrar loading mientras se verifica la cuenta
+  // Mostrar loading mientras se cargan los datos
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">
-            {authResult.state === 'checking-account' && 'Verificando cuenta...'}
-            {authResult.state === 'loading-tenants' && 'Cargando organizaciones...'}
-          </p>
+          <p className="mt-4 text-gray-600">Cargando datos...</p>
         </div>
       </div>
     )
   }
 
   // Mostrar error si ocurrió alguno
-  if (authResult.state === 'error') {
+  if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-orange-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-2xl">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error de Autenticación</h2>
-          <p className="text-gray-600 mb-4">{authResult.error}</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error de Carga</h2>
+          <p className="text-gray-600 mb-4">{error?.message || 'Error desconocido'}</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
@@ -59,13 +49,14 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
   }
 
   // Si no existe la cuenta, mostrar formulario de creación de organización
-  if (authResult.state === 'account-not-found') {
+  if (!account) {
     return (
       <CreateOrganization 
         email={email}
         onSuccess={(response) => {
-          console.log('Organización creada exitosamente:', response)
-          // Aquí puedes redirigir o actualizar el estado
+          console.log('✅ Organización creada exitosamente:', response)
+          console.log('🔄 Recargando para verificar cuenta y cargar organizaciones...')
+          window.location.reload()
         }}
         onError={(error) => {
           console.error('Error al crear organización:', error)
@@ -75,19 +66,14 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
     )
   }
 
-  // Si la cuenta existe y se cargaron los tenants, mostrar la lista
-  if (authResult.state === 'tenants-loaded') {
-    return (
-      <TenantsList 
-        account={authResult.account!}
-        tenants={authResult.tenants}
-        token={token}
-      />
-    )
-  }
-
-  // Estado por defecto (no debería llegar aquí)
-  return null
+  // Si la cuenta existe, mostrar la lista de organizaciones
+  return (
+    <TenantsList 
+      account={account}
+      tenants={tenants}
+      token={token}
+    />
+  )
 }
 
 export default GoogleAuthHandler
