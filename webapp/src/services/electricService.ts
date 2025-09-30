@@ -78,16 +78,17 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
 }
 
 /**
- * Busca los tenants asociados a una cuenta
+ * Busca los tenants (organizaciones) asociados a una cuenta
+ * Lógica: account -> account_tenants -> tenants
  * @param token - Token de autenticación
  * @param accountId - ID de la cuenta
- * @returns Lista de tenants asociados
+ * @returns Lista de tenants (organizaciones) asociados
  */
 export const findTenantsByAccountId = async (token: string, accountId: string): Promise<ElectricTenant[]> => {
   try {
-    console.log('🔍 Buscando tenants para account_id:', accountId)
+    console.log('🔍 Buscando organizaciones para account_id:', accountId)
     
-    // Primero obtener las relaciones account_tenants
+    // Paso 1: Buscar en account_tenants las relaciones con este account_id
     const accountTenantsUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
     
     const accountTenantsResponse = await fetch(accountTenantsUrl, {
@@ -118,10 +119,11 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
       return []
     }
 
-    // Obtener los detalles de cada tenant
+    // Paso 2: Obtener los tenant_id de las relaciones
     const tenantIds = accountTenants.map((at: ElectricAccountTenant) => at.tenant_id)
     console.log('🔍 Tenant IDs a consultar:', tenantIds)
     
+    // Paso 3: Buscar los detalles de cada tenant
     const tenants: ElectricTenant[] = []
     
     for (const tenantId of tenantIds) {
@@ -136,8 +138,21 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
 
         if (tenantResponse.ok) {
           const tenantData = await tenantResponse.json()
+          
+          // Electric SQL devuelve un array directo o con estructura de rows
+          let tenant = null
           if (tenantData.rows && tenantData.rows.length > 0) {
-            tenants.push(tenantData.rows[0])
+            tenant = tenantData.rows[0]
+          } else if (Array.isArray(tenantData) && tenantData.length > 0) {
+            // Si es array directo, buscar objetos con datos reales
+            const tenantItem = tenantData.find(item => item.value && item.value.id)
+            if (tenantItem) {
+              tenant = tenantItem.value
+            }
+          }
+          
+          if (tenant) {
+            tenants.push(tenant)
           }
         }
       } catch (error) {
@@ -145,7 +160,7 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
       }
     }
     
-    console.log('✅ Tenants encontrados:', tenants)
+    console.log('✅ Organizaciones encontradas:', tenants)
     return tenants
   } catch (error) {
     console.error('❌ Error al buscar tenants en Electric SQL:', error)
