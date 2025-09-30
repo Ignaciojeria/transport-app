@@ -101,6 +101,11 @@ const TenantsList: React.FC<TenantsListProps> = ({ account, tenants, token }) =>
                         </span>
                       </div>
                     )}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mt-3">
+                      <p className="text-yellow-800 text-xs font-medium text-center">
+                        📋 Waiting List
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
                 </Card>
