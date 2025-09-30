@@ -2,8 +2,6 @@
  * Servicio para consultar Electric SQL usando el patrón del proyecto electric
  */
 
-import { compareElectricVsDirect } from '../utils/directDbCheck'
-
 export interface ElectricAccount {
   id: string
   email: string
@@ -40,10 +38,9 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     console.log('🔍 Buscando cuenta en Electric SQL para email:', email)
     
     // Usar el endpoint correcto del proyecto electric con offset requerido
-    // Agregar múltiples parámetros para evitar caché
+    // Agregar timestamp para evitar caché
     const timestamp = Date.now()
-    const randomId = Math.random().toString(36).substring(7)
-    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1&_t=${timestamp}&_r=${randomId}&_v=${Date.now()}&_cache_bust=${Math.random()}`
+    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1&_t=${timestamp}`
     
     const response = await fetch(url, {
       headers: {
@@ -57,38 +54,16 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     }
 
     const data = await response.json()
-    console.log('🔍 Respuesta completa de Electric SQL:', data)
-    console.log('🔍 Tipo de respuesta:', typeof data, 'Es array:', Array.isArray(data))
-    console.log('🔍 Longitud de respuesta:', Array.isArray(data) ? data.length : 'N/A')
+    console.log('🔍 Respuesta de Electric SQL:', data)
     
     // Electric SQL devuelve un array de objetos con headers y value
     if (Array.isArray(data) && data.length > 0) {
-      console.log('🔍 Analizando elementos del array:')
-      data.forEach((item, index) => {
-        console.log(`  [${index}] Headers:`, item.headers)
-        console.log(`  [${index}] Value:`, item.value)
-        console.log(`  [${index}] Key:`, item.key)
-      })
-      
       // Buscar el primer objeto que tenga value (no los de control)
       const accountData = data.find(item => item.value && item.value.email)
       if (accountData) {
         console.log('✅ Cuenta encontrada:', accountData.value)
-        console.log('✅ Email de la cuenta:', accountData.value.email)
-        console.log('✅ ID de la cuenta:', accountData.value.id)
-        
-        // Comparar con verificación directa para detectar inconsistencias
-        await compareElectricVsDirect(email, accountData.value)
-        
         return accountData.value
-      } else {
-        console.log('ℹ️ No se encontró objeto con value.email en la respuesta')
-        
-        // Comparar con verificación directa para detectar inconsistencias
-        await compareElectricVsDirect(email, null)
       }
-    } else {
-      console.log('ℹ️ Respuesta no es un array o está vacía')
     }
     
     console.log('ℹ️ No se encontró cuenta para el email:', email)
