@@ -1,20 +1,29 @@
 import { useState } from 'react'
 import CreateOrganization from './components/CreateOrganization'
+import { type CreateOrganizationResponse } from './services/organizationService'
 import './App.css'
 
 function App() {
   const [organizationCreated, setOrganizationCreated] = useState(false)
   const [organizationData, setOrganizationData] = useState<{name: string; country: string} | null>(null)
+  // const [error, setError] = useState<string | null>(null)
 
-  const handleCreateOrganization = async (data: {name: string; country: string}) => {
-    // Simular una llamada a la API
-    console.log('Creando organización:', data)
-    
-    // Aquí puedes agregar la lógica para enviar los datos al backend
-    // Por ejemplo: await createOrganizationAPI(data)
-    
-    setOrganizationData(data)
+  // Token simulado para pruebas
+  const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzdWFyaW9AZWplbXBsby5jb20iLCJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IlVzdWFyaW8gZGUgUHJ1ZWJhIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c'
+
+  const handleCreateOrganizationSuccess = (response: CreateOrganizationResponse) => {
+    console.log('Organización creada exitosamente:', response)
+    setOrganizationData({
+      name: 'Organización Creada', // En una implementación real, obtendrías esto de la respuesta
+      country: 'CL'
+    })
     setOrganizationCreated(true)
+    // setError(null)
+  }
+
+  const handleCreateOrganizationError = (error: string) => {
+    console.error('Error al crear organización:', error)
+    // setError(error)
   }
 
   if (organizationCreated && organizationData) {
@@ -45,7 +54,11 @@ function App() {
   }
 
   return (
-    <CreateOrganization onSubmit={handleCreateOrganization} />
+    <CreateOrganization 
+      token={mockToken}
+      onSuccess={handleCreateOrganizationSuccess}
+      onError={handleCreateOrganizationError}
+    />
   )
 }
 

@@ -1,42 +1,82 @@
-import { useState } from 'react'
-import { Truck } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Truck, AlertCircle, CheckCircle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/Card'
+import { extractEmailFromJWT } from '../utils/jwt'
+import { createOrganization, validateOrganizationData, type CreateOrganizationResponse } from '../services/organizationService'
 
 interface CreateOrganizationProps {
-  onSubmit?: (data: { name: string; country: string }) => void
+  token: string
+  onSuccess?: (response: CreateOrganizationResponse) => void
+  onError?: (error: string) => void
 }
 
 const countries = [
-  'Argentina',
-  'Bolivia',
-  'Brasil',
-  'Chile',
-  'Colombia',
-  'Ecuador',
-  'Paraguay',
-  'Perú',
-  'Uruguay',
-  'Venezuela'
+  { name: 'Argentina', code: 'AR' },
+  { name: 'Brasil', code: 'BR' },
+  { name: 'Chile', code: 'CL' },
+  { name: 'Colombia', code: 'CO' },
+  { name: 'Ecuador', code: 'EC' },
+  { name: 'Paraguay', code: 'PY' },
+  { name: 'Perú', code: 'PE' },
+  { name: 'Uruguay', code: 'UY' },
+  { name: 'Venezuela', code: 'VE' }
 ]
 
-export default function CreateOrganization({ onSubmit }: CreateOrganizationProps) {
+export default function CreateOrganization({ token, onSuccess, onError }: CreateOrganizationProps) {
   const [organizationName, setOrganizationName] = useState('')
-  const [selectedCountry, setSelectedCountry] = useState('Chile')
+  const [selectedCountry, setSelectedCountry] = useState('CL')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [email, setEmail] = useState<string | null>(null)
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
+  const [submitResponse, setSubmitResponse] = useState<CreateOrganizationResponse | null>(null)
+
+  // Extraer email del JWT al montar el componente
+  useEffect(() => {
+    const extractedEmail = extractEmailFromJWT(token)
+    if (extractedEmail) {
+      setEmail(extractedEmail)
+    } else {
+      onError?.('No se pudo extraer el email del token de autenticación')
+    }
+  }, [token, onError])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!organizationName.trim()) return
+    
+    if (!email) {
+      onError?.('Email no disponible')
+      return
+    }
 
+    const formData = {
+      email,
+      organizationName: organizationName.trim(),
+      country: selectedCountry
+    }
+
+    // Validar datos
+    const validation = validateOrganizationData(formData)
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors)
+      return
+    }
+
+    setValidationErrors({})
     setIsSubmitting(true)
+    setSubmitResponse(null)
     
     try {
-      await onSubmit?.({
-        name: organizationName.trim(),
-        country: selectedCountry
-      })
+      const response = await createOrganization(formData)
+      setSubmitResponse(response)
+      
+      if (response.success) {
+        onSuccess?.(response)
+      } else {
+        onError?.(response.error || 'Error al crear la organización')
+      }
     } catch (error) {
-      console.error('Error creating organization:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido'
+      onError?.(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -109,7 +149,9 @@ export default function CreateOrganization({ onSubmit }: CreateOrganizationProps
               </svg>
             </div>
             <div className="text-center sm:text-left">
-              <p className="text-green-800 font-semibold text-sm sm:text-base">¡Bienvenido, Usuario de Prueba!</p>
+              <p className="text-green-800 font-semibold text-sm sm:text-base">
+                ¡Bienvenido, {email || 'Usuario'}!
+              </p>
               <p className="text-green-700 text-sm">Autenticación exitosa</p>
             </div>
           </div>
@@ -138,10 +180,18 @@ export default function CreateOrganization({ onSubmit }: CreateOrganizationProps
                   id="organizationName"
                   value={organizationName}
                   onChange={(e) => setOrganizationName(e.target.value)}
-                  placeholder="hass me :D"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base"
+                  placeholder="Ingresa el nombre de tu organización"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-sm sm:text-base ${
+                    validationErrors.organizationName ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   required
                 />
+                {validationErrors.organizationName && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.organizationName}
+                  </p>
+                )}
               </div>
 
               {/* País */}
@@ -153,14 +203,22 @@ export default function CreateOrganization({ onSubmit }: CreateOrganizationProps
                   id="country"
                   value={selectedCountry}
                   onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors appearance-none bg-white text-sm sm:text-base"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors appearance-none bg-white text-sm sm:text-base ${
+                    validationErrors.country ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 >
                   {countries.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
+                    <option key={country.code} value={country.code}>
+                      {country.name}
                     </option>
                   ))}
                 </select>
+                {validationErrors.country && (
+                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.country}
+                  </p>
+                )}
               </div>
 
               {/* Botón de envío */}
@@ -184,6 +242,29 @@ export default function CreateOrganization({ onSubmit }: CreateOrganizationProps
                 )}
               </button>
             </form>
+
+            {/* Mensaje de respuesta */}
+            {submitResponse && (
+              <div className={`mt-4 p-3 rounded-lg border ${
+                submitResponse.success 
+                  ? 'bg-green-50 border-green-200 text-green-800' 
+                  : 'bg-red-50 border-red-200 text-red-800'
+              }`}>
+                <div className="flex items-center gap-2">
+                  {submitResponse.success ? (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-red-600" />
+                  )}
+                  <span className="font-medium">
+                    {submitResponse.success ? '¡Éxito!' : 'Error'}
+                  </span>
+                </div>
+                <p className="mt-1 text-sm">
+                  {submitResponse.message || submitResponse.error}
+                </p>
+              </div>
+            )}
           </CardContent>
 
           <CardFooter>

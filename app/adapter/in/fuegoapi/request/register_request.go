@@ -1,6 +1,7 @@
 package request
 
 type RegisterRequest struct {
-	Email   string `json:"email"`
-	Country string `json:"country"`
+	Email            string `json:"email"`
+	OrganizationName string `json:"organizationName"`
+	Country          string `json:"country"`
 }
