@@ -111,7 +111,7 @@ func newRegistrationSubmittedConsumer(
 
 		tenant := domain.Tenant{
 			ID:      account.UUID(),
-			Name:    "default",
+			Name:    input.OrganizationName,
 			Country: countries.ByName(input.Country),
 		}
 		if err := createTenantWorkflow(registrationCtx, tenant); err != nil {
