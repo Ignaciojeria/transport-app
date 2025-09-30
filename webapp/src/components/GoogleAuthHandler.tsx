@@ -5,7 +5,7 @@ import TenantsList from './TenantsList'
 import LoadingSpinner from './ui/LoadingSpinner'
 import SuccessNotification from './ui/SuccessNotification'
 import { clearElectricCache, getElectricCacheInfo, forceAppReload } from '../utils/electricCacheUtils'
-import { clearInvalidOffsets, testOffsetValidation, clearProblematicOffsets } from '../services/electricSyncService'
+import { clearInvalidOffsets } from '../services/electricSyncService'
 import { syncWithElectric } from '../utils/retryUtils'
 import { isElectricSynced } from '../utils/electricSyncUtils'
 
@@ -92,25 +92,6 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
                   className="w-full px-3 py-1 bg-orange-500 text-white text-xs rounded hover:bg-orange-600 transition-colors"
                 >
                   Limpiar Offsets Inválidos
-                </button>
-                <button 
-                  onClick={() => {
-                    console.log('🧹 Limpiando offsets que causan error 400...')
-                    clearProblematicOffsets()
-                    console.log('✅ Offsets problemáticos limpiados')
-                  }}
-                  className="w-full px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
-                >
-                  Limpiar Offsets con Error 400
-                </button>
-                <button 
-                  onClick={() => {
-                    console.log('🧪 Probando validación de offsets...')
-                    testOffsetValidation()
-                  }}
-                  className="w-full px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors"
-                >
-                  Probar Validación Offsets
                 </button>
                 <button 
                   onClick={() => {

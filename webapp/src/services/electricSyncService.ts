@@ -23,7 +23,6 @@ const SYNC_STATE_KEY = 'electric_sync_state'
 
 /**
  * Valida si un offset tiene el formato correcto para Electric SQL
- * Basado en el error "has invalid format", parece que Electric SQL es muy estricto
  */
 const isValidOffset = (offset: string): boolean => {
   // Electric SQL acepta offsets en formato de string
@@ -31,25 +30,9 @@ const isValidOffset = (offset: string): boolean => {
   if (offset === '-1') return true
   if (offset === '0') return true
   
-  // Verificar si es un número válido simple (solo enteros positivos)
+  // Verificar si es un número válido
   const num = Number(offset)
-  if (!isNaN(num) && num > 0 && Number.isInteger(num)) return true
-  
-  // Verificar formato con guión bajo (ej: 0_0, 123_456)
-  // Pero solo si ambas partes son enteros
-  if (offset.includes('_')) {
-    const parts = offset.split('_')
-    if (parts.length === 2) {
-      const [first, second] = parts
-      const firstNum = Number(first)
-      const secondNum = Number(second)
-      return !isNaN(firstNum) && !isNaN(secondNum) && 
-             Number.isInteger(firstNum) && Number.isInteger(secondNum) &&
-             firstNum >= 0 && secondNum >= 0
-    }
-  }
-  
-  return false
+  return !isNaN(num) && num > 0
 }
 
 /**
@@ -114,8 +97,6 @@ export const syncElectricShape = async <T>(
       offset = '-1'
       // Limpiar estado de sincronización para este shape
       clearSyncState(shapeId)
-    } else if (offset && offset !== '-1') {
-      console.log(`✅ Offset válido detectado: ${offset}`)
     }
     
     // Construir URL según el patrón correcto
@@ -348,75 +329,6 @@ export const clearInvalidOffsets = (): void => {
     console.log(`✅ Limpiados ${cleanedCount} offsets inválidos`)
   } catch (error) {
     console.error('Error al limpiar offsets inválidos:', error)
-  }
-}
-
-/**
- * Función de prueba para validar formatos de offset
- * Útil para debug y verificar que los offsets se manejan correctamente
- */
-export const testOffsetValidation = (): void => {
-  const testOffsets = [
-    '-1',      // Sincronización inicial
-    '0',       // Offset cero
-    '123',     // Número simple
-    '0_0',     // Formato con guión bajo
-    '123_456', // Formato con guión bajo
-    '301131',  // El offset que causó el error
-    'invalid', // Offset inválido
-    '1_2_3',   // Formato inválido (más de 2 partes)
-    'a_b',     // Formato inválido (no numérico)
-  ]
-  
-  console.log('🧪 Probando validación de offsets:')
-  testOffsets.forEach(offset => {
-    const isValid = isValidOffset(offset)
-    console.log(`  ${offset}: ${isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO'}`)
-  })
-}
-
-/**
- * Limpia offsets que han causado errores 400 en el pasado
- * Basado en patrones observados en los logs de error
- */
-export const clearProblematicOffsets = (): void => {
-  try {
-    const keys = Object.keys(localStorage)
-    let cleanedCount = 0
-    
-    keys.forEach(key => {
-      if (key.startsWith(SYNC_STATE_KEY)) {
-        try {
-          const stored = localStorage.getItem(key)
-          if (stored) {
-            const parsed = JSON.parse(stored)
-            if (parsed.offset) {
-              // Limpiar offsets que sabemos que causan problemas
-              // Basado en los errores reales observados
-              const shouldClean = 
-                parsed.offset === '301131' ||  // Error 400 observado
-                parsed.offset === '0_0' ||    // Error 400 observado
-                !isValidOffset(parsed.offset) // Cualquier offset inválido
-              
-              if (shouldClean) {
-                console.log(`🧹 Limpiando offset problemático: ${parsed.offset} en ${key}`)
-                localStorage.removeItem(key)
-                cleanedCount++
-              }
-            }
-          }
-        } catch (error) {
-          // Si no se puede parsear, limpiar también
-          console.log(`🧹 Limpiando estado corrupto: ${key}`)
-          localStorage.removeItem(key)
-          cleanedCount++
-        }
-      }
-    })
-    
-    console.log(`✅ Limpiados ${cleanedCount} offsets problemáticos`)
-  } catch (error) {
-    console.error('Error al limpiar offsets problemáticos:', error)
   }
 }
 
