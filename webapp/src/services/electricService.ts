@@ -38,7 +38,7 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     console.log('🔍 Buscando cuenta en Electric SQL para email:', email)
     
     // Usar el endpoint correcto del proyecto electric con offset requerido
-    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
+    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&offset=-1`
     
     const response = await fetch(url, {
       headers: {
@@ -54,8 +54,17 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     const data = await response.json()
     console.log('🔍 Respuesta de Electric SQL:', data)
     
+    // Electric SQL devuelve un array directo o con estructura de rows
+    let accounts = []
     if (data.rows && data.rows.length > 0) {
-      const account = data.rows[0]
+      accounts = data.rows
+    } else if (Array.isArray(data) && data.length > 0) {
+      // Si es array directo, buscar objetos con datos reales
+      accounts = data.filter(item => item.value && item.value.email).map(item => item.value)
+    }
+    
+    if (accounts.length > 0) {
+      const account = accounts[0]
       console.log('✅ Cuenta encontrada:', account)
       return account
     }
@@ -79,7 +88,7 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     console.log('🔍 Buscando tenants para account_id:', accountId)
     
     // Primero obtener las relaciones account_tenants
-    const accountTenantsUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
+    const accountTenantsUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&offset=-1`
     
     const accountTenantsResponse = await fetch(accountTenantsUrl, {
       headers: {
@@ -95,20 +104,29 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     const accountTenantsData = await accountTenantsResponse.json()
     console.log('🔍 Account tenants encontrados:', accountTenantsData)
     
-    if (!accountTenantsData.rows || accountTenantsData.rows.length === 0) {
+    // Electric SQL devuelve un array directo o con estructura de rows
+    let accountTenants = []
+    if (accountTenantsData.rows && accountTenantsData.rows.length > 0) {
+      accountTenants = accountTenantsData.rows
+    } else if (Array.isArray(accountTenantsData) && accountTenantsData.length > 0) {
+      // Si es array directo, buscar objetos con datos reales
+      accountTenants = accountTenantsData.filter(item => item.value && item.value.tenant_id).map(item => item.value)
+    }
+    
+    if (accountTenants.length === 0) {
       console.log('ℹ️ No hay tenants asociados a la cuenta')
       return []
     }
 
     // Obtener los detalles de cada tenant
-    const tenantIds = accountTenantsData.rows.map((at: ElectricAccountTenant) => at.tenant_id)
+    const tenantIds = accountTenants.map((at: ElectricAccountTenant) => at.tenant_id)
     console.log('🔍 Tenant IDs a consultar:', tenantIds)
     
     const tenants: ElectricTenant[] = []
     
     for (const tenantId of tenantIds) {
       try {
-        const tenantUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&offset=-1`
+        const tenantUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&offset=-1`
         
         const tenantResponse = await fetch(tenantUrl, {
           headers: {
