@@ -91,20 +91,5 @@ export const getElectricCacheInfo = (): { keys: string[], size: number } => {
 export const forceAppReload = (): void => {
   console.log('🔄 Forzando recarga completa de la aplicación...')
   clearElectricCache()
-  
-  // También limpiar estados de sincronización incremental
-  try {
-    // Limpiar estados de sincronización manualmente
-    const keys = Object.keys(localStorage)
-    keys.forEach(key => {
-      if (key.startsWith('electric_sync_state')) {
-        localStorage.removeItem(key)
-      }
-    })
-    console.log('🧹 Estados de sincronización incremental limpiados')
-  } catch (error) {
-    console.warn('No se pudo limpiar estados de sincronización:', error)
-  }
-  
   window.location.reload()
 }

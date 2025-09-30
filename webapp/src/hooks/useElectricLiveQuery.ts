@@ -32,19 +32,19 @@ export const useElectricLiveQuery = <T>(
       setIsLoading(true)
       setError(null)
       
-      console.log('🔄 Ejecutando sincronización incremental con Electric SQL...')
+      console.log('🔄 Ejecutando consulta LiveQuery...')
       const result = await queryFn()
       
       setData(result)
       onSuccess?.(result)
       
-      console.log('✅ Sincronización incremental exitosa:', result)
+      console.log('✅ Consulta LiveQuery exitosa:', result)
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Error desconocido')
       setError(error)
       onError?.(error)
       
-      console.error('❌ Error en sincronización incremental:', error)
+      console.error('❌ Error en consulta LiveQuery:', error)
     } finally {
       setIsLoading(false)
     }
