@@ -1,37 +1,52 @@
 import { useState, useEffect } from 'react'
 import CreateOrganization from './components/CreateOrganization'
 import { type CreateOrganizationResponse } from './services/organizationService'
-import { extractTokenFromFragment } from './utils/urlUtils'
+import { extractTokenEarly } from './utils/earlyTokenExtraction'
 import './App.css'
+
+// Extraer token INMEDIATAMENTE cuando se carga el módulo
+const { token: earlyToken, email: earlyEmail } = extractTokenEarly()
 
 function App() {
   const [organizationCreated, setOrganizationCreated] = useState(false)
   const [organizationData, setOrganizationData] = useState<{name: string; country: string} | null>(null)
-  const [token, setToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [token, setToken] = useState<string | null>(earlyToken)
+  const [isLoading, setIsLoading] = useState(!earlyToken)
 
-  // Extraer token del fragment de la URL
+  // Si ya tenemos el token de la extracción temprana, no necesitamos hacer nada más
   useEffect(() => {
+    if (earlyToken) {
+      console.log('✅ Token ya extraído tempranamente:', earlyToken.substring(0, 20) + '...')
+      console.log('✅ Email extraído tempranamente:', earlyEmail)
+      setIsLoading(false)
+      return
+    }
+
+    // Si no hay token temprano, intentar extraer del fragment o localStorage
     console.log('🚀 Iniciando extracción de token...')
     console.log('🚀 URL actual:', window.location.href)
     
-    const extractedToken = extractTokenFromFragment()
-    console.log('🚀 Token extraído:', extractedToken ? 'SÍ' : 'NO')
-    
-    if (extractedToken) {
-      console.log('✅ Token encontrado, estableciendo...')
-      setToken(extractedToken)
-      // Limpiar la URL después de extraer el token
-      const cleanUrl = window.location.origin + window.location.pathname
-      console.log('🧹 Limpiando URL a:', cleanUrl)
-      window.history.replaceState({}, document.title, cleanUrl)
-    } else {
-      console.warn('❌ No se encontró token en el fragment de la URL')
-      // No establecer token - esto hará que se muestre el error de autenticación
-      setToken(null)
+    // Verificar localStorage como fallback
+    console.log('🔍 Verificando localStorage para tokens guardados...')
+    const storedAuth = localStorage.getItem('transport_auth')
+    if (storedAuth) {
+      try {
+        const authData = JSON.parse(storedAuth)
+        console.log('🔍 Auth data encontrada en localStorage:', authData)
+        
+        if (authData.access_token) {
+          console.log('✅ Access token encontrado en localStorage')
+          setToken(authData.access_token)
+          setIsLoading(false)
+          return
+        }
+      } catch (error) {
+        console.error('❌ Error al parsear auth data del localStorage:', error)
+      }
     }
     
-    console.log('🏁 Finalizando extracción de token')
+    console.warn('❌ No se encontró token en la extracción temprana ni en localStorage')
+    setToken(null)
     setIsLoading(false)
   }, [])
 
