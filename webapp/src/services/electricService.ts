@@ -3,6 +3,7 @@
  */
 
 import { compareElectricVsDirect } from '../utils/directDbCheck'
+import { syncElectricShape, parseAccountData, parseAccountTenantsData } from './electricSyncService'
 
 export interface ElectricAccount {
   id: string
@@ -39,65 +40,41 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
   try {
     console.log('🔍 Buscando cuenta en Electric SQL para email:', email)
     
-    // Usar el endpoint correcto del proyecto electric con LiveQuery
-    // Para sincronización en tiempo real, usar live=true
-    const url = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'&live=true&offset=0_0`
+    // Usar sincronización incremental correcta
+    const shapeId = `accounts_${email}`
+    const baseUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=accounts&columns=id,email&where=email='${email}'`
     
-    const response = await fetch(url, {
-      headers: {
-        'X-Access-Token': `Bearer ${token}`
-      }
-    })
+    const result = await syncElectricShape(
+      shapeId,
+      baseUrl,
+      token,
+      parseAccountData
+    )
 
-    if (!response.ok) {
-      console.error('❌ Error al consultar Electric SQL:', response.status, response.statusText)
+    if (result.error) {
+      console.error('❌ Error en sincronización:', result.error)
       return null
     }
 
-    const data = await response.json()
-    console.log('🔍 Respuesta completa de Electric SQL:', data)
-    console.log('🔍 Tipo de respuesta:', typeof data, 'Es array:', Array.isArray(data))
-    console.log('🔍 Longitud de respuesta:', Array.isArray(data) ? data.length : 'N/A')
+    if (!result.data) {
+      console.log('ℹ️ No se encontró cuenta para el email:', email)
+      return null
+    }
+
+    console.log('✅ Cuenta encontrada:', result.data)
+    console.log('✅ Nuevo offset:', result.newOffset)
     
-    // Electric SQL devuelve un array de objetos con headers y value
-    if (Array.isArray(data) && data.length > 0) {
-      console.log('🔍 Analizando elementos del array:')
-      data.forEach((item, index) => {
-        console.log(`  [${index}] Headers:`, item.headers)
-        console.log(`  [${index}] Value:`, item.value)
-        console.log(`  [${index}] Key:`, item.key)
-      })
-      
-      // Buscar el primer objeto que tenga value (no los de control)
-      const accountData = data.find(item => item.value && item.value.email)
-      if (accountData) {
-        console.log('✅ Cuenta encontrada:', accountData.value)
-        console.log('✅ Email de la cuenta:', accountData.value.email)
-        console.log('✅ ID de la cuenta:', accountData.value.id)
-        
-        // Comparar con verificación directa para detectar inconsistencias
-        const comparison = await compareElectricVsDirect(email, accountData.value, token)
-        
-        // Si hay inconsistencia, no devolver los datos obsoletos
-        if (!comparison.consistent) {
-          console.warn('⚠️ Datos obsoletos detectados en Electric SQL, no devolviendo datos')
-          console.warn('⚠️ Electric SQL tiene caché obsoleto, la cuenta no existe realmente')
-          return null
-        }
-        
-        return accountData.value
-      } else {
-        console.log('ℹ️ No se encontró objeto con value.email en la respuesta')
-        
-        // Comparar con verificación directa para detectar inconsistencias
-        await compareElectricVsDirect(email, null, token)
-      }
-    } else {
-      console.log('ℹ️ Respuesta no es un array o está vacía')
+    // Comparar con verificación directa para detectar inconsistencias
+    const comparison = await compareElectricVsDirect(email, result.data, token)
+    
+    // Si hay inconsistencia, no devolver los datos obsoletos
+    if (!comparison.consistent) {
+      console.warn('⚠️ Datos obsoletos detectados en Electric SQL, no devolviendo datos')
+      console.warn('⚠️ Electric SQL tiene caché obsoleto, la cuenta no existe realmente')
+      return null
     }
     
-    console.log('ℹ️ No se encontró cuenta para el email:', email)
-    return null
+    return result.data
   } catch (error) {
     console.error('❌ Error al buscar cuenta en Electric SQL:', error)
     return null
@@ -114,59 +91,50 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
   try {
     console.log('🔍 Buscando tenants para account_id:', accountId)
     
-    // Primero obtener las relaciones account_tenants con LiveQuery
-    const accountTenantsUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'&live=true&offset=0_0`
+    // Primero obtener las relaciones account_tenants usando sincronización incremental
+    const accountTenantsShapeId = `account_tenants_${accountId}`
+    const accountTenantsBaseUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=account_tenants&columns=account_id,tenant_id&where=account_id='${accountId}'`
     
-    const accountTenantsResponse = await fetch(accountTenantsUrl, {
-      headers: {
-        'X-Access-Token': `Bearer ${token}`,
-      }
-    })
+    const accountTenantsResult = await syncElectricShape(
+      accountTenantsShapeId,
+      accountTenantsBaseUrl,
+      token,
+      parseAccountTenantsData
+    )
 
-    if (!accountTenantsResponse.ok) {
-      console.error('❌ Error al consultar account_tenants:', accountTenantsResponse.status)
+    if (accountTenantsResult.error) {
+      console.error('❌ Error al sincronizar account_tenants:', accountTenantsResult.error)
       return []
     }
 
-    const accountTenantsData = await accountTenantsResponse.json()
-    console.log('🔍 Account tenants encontrados:', accountTenantsData)
-    
-    // Electric SQL devuelve un array de objetos con headers y value
-    const accountTenantItems = Array.isArray(accountTenantsData) 
-      ? accountTenantsData.filter(item => item.value && item.value.tenant_id)
-      : []
+    const accountTenantItems = accountTenantsResult.data || []
     
     if (accountTenantItems.length === 0) {
       console.log('ℹ️ No hay tenants asociados a la cuenta')
       return []
     }
 
-    // Obtener los detalles de cada tenant
-    const tenantIds = accountTenantItems.map(item => item.value.tenant_id)
+    // Obtener los detalles de cada tenant usando sincronización incremental
+    const tenantIds = accountTenantItems.map(item => item.tenant_id)
     console.log('🔍 Tenant IDs a consultar:', tenantIds)
     
     const tenants: ElectricTenant[] = []
     
     for (const tenantId of tenantIds) {
       try {
-        const tenantUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'&live=true&offset=0_0`
+        const tenantShapeId = `tenant_${tenantId}`
+        const tenantBaseUrl = `https://einar-main-f0820bc.d2.zuplo.dev/electric-me/v1/shape?table=tenants&columns=id,name,country&where=id='${tenantId}'`
         
-        const tenantResponse = await fetch(tenantUrl, {
-          headers: {
-            'X-Access-Token': `Bearer ${token}`,
-          }
-        })
+        const tenantResult = await syncElectricShape(
+          tenantShapeId,
+          tenantBaseUrl,
+          token,
+          parseAccountData // Usar el mismo parser para datos individuales
+        )
 
-                if (tenantResponse.ok) {
-                  const tenantData = await tenantResponse.json()
-                  // Electric SQL devuelve un array de objetos con headers y value
-                  if (Array.isArray(tenantData) && tenantData.length > 0) {
-                    const tenantItem = tenantData.find(item => item.value && item.value.id)
-                    if (tenantItem) {
-                      tenants.push(tenantItem.value)
-                    }
-                  }
-                }
+        if (tenantResult.data) {
+          tenants.push(tenantResult.data)
+        }
       } catch (error) {
         console.error(`❌ Error al consultar tenant ${tenantId}:`, error)
       }

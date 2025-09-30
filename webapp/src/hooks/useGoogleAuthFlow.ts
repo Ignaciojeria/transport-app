@@ -27,7 +27,7 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
     [token, email],
     {
       enabled: !!token && !!email,
-      refetchInterval: 10000, // Refetch cada 10 segundos para mantener sincronización
+      refetchInterval: 30000, // Refetch cada 30 segundos - la sincronización incremental es más eficiente
       onSuccess: (data) => {
         console.log('🔄 Datos actualizados via LiveQuery:', data)
         
