@@ -27,13 +27,10 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
         setResult(prev => ({ ...prev, state: 'checking-account' }))
         
         // Usar el servicio real de Electric SQL
-        console.log('🔍 Verificando cuenta en Electric SQL...')
         const accountData = await checkAccountAndGetTenants(token, email)
-        console.log('🔍 Resultado de checkAccountAndGetTenants:', accountData)
         
         if (!accountData) {
           // Account no existe, redirigir a creación de organización
-          console.log('ℹ️ Cuenta no encontrada, permitiendo creación de organización')
           setResult(prev => ({ 
             ...prev, 
             state: 'account-not-found',
@@ -44,7 +41,6 @@ export const useGoogleAuthFlow = (token: string, email: string) => {
         }
 
         // Account existe, mostrar tenants
-        console.log('✅ Cuenta encontrada, mostrando organizaciones existentes:', accountData.tenants.length)
         setResult(prev => ({ 
           ...prev, 
           state: 'tenants-loaded',

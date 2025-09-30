@@ -54,14 +54,10 @@ export const findAccountByEmail = async (token: string, email: string): Promise<
     const data = await response.json()
     console.log('🔍 Respuesta de Electric SQL:', data)
     
-    // Electric SQL devuelve un array de objetos con headers y value
-    if (Array.isArray(data) && data.length > 0) {
-      // Buscar el primer objeto que tenga value (no los de control)
-      const accountData = data.find(item => item.value && item.value.email)
-      if (accountData) {
-        console.log('✅ Cuenta encontrada:', accountData.value)
-        return accountData.value
-      }
+    if (data.rows && data.rows.length > 0) {
+      const account = data.rows[0]
+      console.log('✅ Cuenta encontrada:', account)
+      return account
     }
     
     console.log('ℹ️ No se encontró cuenta para el email:', email)
@@ -99,18 +95,13 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
     const accountTenantsData = await accountTenantsResponse.json()
     console.log('🔍 Account tenants encontrados:', accountTenantsData)
     
-    // Electric SQL devuelve un array de objetos con headers y value
-    const accountTenantItems = Array.isArray(accountTenantsData) 
-      ? accountTenantsData.filter(item => item.value && item.value.tenant_id)
-      : []
-    
-    if (accountTenantItems.length === 0) {
+    if (!accountTenantsData.rows || accountTenantsData.rows.length === 0) {
       console.log('ℹ️ No hay tenants asociados a la cuenta')
       return []
     }
 
     // Obtener los detalles de cada tenant
-    const tenantIds = accountTenantItems.map(item => item.value.tenant_id)
+    const tenantIds = accountTenantsData.rows.map((at: ElectricAccountTenant) => at.tenant_id)
     console.log('🔍 Tenant IDs a consultar:', tenantIds)
     
     const tenants: ElectricTenant[] = []
@@ -125,16 +116,12 @@ export const findTenantsByAccountId = async (token: string, accountId: string): 
           }
         })
 
-                if (tenantResponse.ok) {
-                  const tenantData = await tenantResponse.json()
-                  // Electric SQL devuelve un array de objetos con headers y value
-                  if (Array.isArray(tenantData) && tenantData.length > 0) {
-                    const tenantItem = tenantData.find(item => item.value && item.value.id)
-                    if (tenantItem) {
-                      tenants.push(tenantItem.value)
-                    }
-                  }
-                }
+        if (tenantResponse.ok) {
+          const tenantData = await tenantResponse.json()
+          if (tenantData.rows && tenantData.rows.length > 0) {
+            tenants.push(tenantData.rows[0])
+          }
+        }
       } catch (error) {
         console.error(`❌ Error al consultar tenant ${tenantId}:`, error)
       }
