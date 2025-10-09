@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { type CreateProductRequest } from '../types/product'
+import { type CreateProductRequest, type PromptItem } from '../types/product'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
 import { Plus, Save, X } from 'lucide-react'
 
@@ -14,6 +14,12 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
     name: '',
     description: '',
     image: '',
+    promptList: [{
+      question: '',
+      type: 'text',
+      required: false,
+      placeholder: ''
+    }],
     payment: {
       currency: 'CLP',
       methods: ['credit_card', 'debit_card', 'transfer'],
@@ -114,6 +120,76 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
     }
   }
 
+  const handleAddPrompt = () => {
+    const newPrompt: PromptItem = {
+      question: '',
+      type: 'text',
+      required: false,
+      placeholder: ''
+    }
+    setFormData(prev => ({
+      ...prev,
+      promptList: [...prev.promptList, newPrompt]
+    }))
+  }
+
+  const handleRemovePrompt = (index: number) => {
+    if (formData.promptList.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        promptList: prev.promptList.filter((_, i) => i !== index)
+      }))
+    }
+  }
+
+  const handlePromptChange = (index: number, field: keyof PromptItem, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      promptList: prev.promptList.map((prompt, i) => 
+        i === index ? { ...prompt, [field]: value } : prompt
+      )
+    }))
+  }
+
+  const handleAddOption = (promptIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      promptList: prev.promptList.map((prompt, i) => 
+        i === promptIndex 
+          ? { ...prompt, options: [...(prompt.options || []), ''] }
+          : prompt
+      )
+    }))
+  }
+
+  const handleRemoveOption = (promptIndex: number, optionIndex: number) => {
+    setFormData(prev => ({
+      ...prev,
+      promptList: prev.promptList.map((prompt, i) => 
+        i === promptIndex 
+          ? { 
+              ...prompt, 
+              options: prompt.options?.filter((_, j) => j !== optionIndex) || []
+            }
+          : prompt
+      )
+    }))
+  }
+
+  const handleOptionChange = (promptIndex: number, optionIndex: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      promptList: prev.promptList.map((prompt, i) => 
+        i === promptIndex 
+          ? { 
+              ...prompt, 
+              options: prompt.options?.map((option, j) => j === optionIndex ? value : option) || []
+            }
+          : prompt
+      )
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -193,6 +269,142 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+            </div>
+
+            {/* Prompt List */}
+            <div className="border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">Preguntas/Prompts para el Cliente</h3>
+                <button
+                  type="button"
+                  onClick={handleAddPrompt}
+                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Agregar Pregunta
+                </button>
+              </div>
+              <div className="space-y-6">
+                {formData.promptList.map((prompt, index) => (
+                  <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="font-medium text-gray-700">Pregunta {index + 1}</h4>
+                      {formData.promptList.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePrompt(index)}
+                          className="p-1 hover:bg-red-100 rounded transition-colors"
+                          title="Eliminar pregunta"
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Pregunta */}
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Pregunta
+                      </label>
+                      <input
+                        type="text"
+                        value={prompt.question}
+                        onChange={(e) => handlePromptChange(index, 'question', e.target.value)}
+                        placeholder="Ej: ¿Qué tamaño prefieres?"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Tipo de pregunta */}
+                    <div className="mb-3">
+                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                        Tipo de Respuesta
+                      </label>
+                      <select
+                        value={prompt.type}
+                        onChange={(e) => handlePromptChange(index, 'type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="text">Texto libre</option>
+                        <option value="select">Selección única</option>
+                        <option value="multiselect">Selección múltiple</option>
+                        <option value="number">Número</option>
+                        <option value="boolean">Sí/No</option>
+                      </select>
+                    </div>
+
+                    {/* Opciones para select y multiselect */}
+                    {(prompt.type === 'select' || prompt.type === 'multiselect') && (
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-sm font-medium text-gray-600">
+                            Opciones
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleAddOption(index)}
+                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors flex items-center"
+                          >
+                            <Plus className="w-3 h-3 mr-1" />
+                            Agregar
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {(prompt.options || []).map((option, optionIndex) => (
+                            <div key={optionIndex} className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={option}
+                                onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
+                                placeholder={`Opción ${optionIndex + 1}`}
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveOption(index, optionIndex)}
+                                className="p-1 hover:bg-red-100 rounded transition-colors"
+                                title="Eliminar opción"
+                              >
+                                <X className="w-3 h-3 text-red-500" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Placeholder para texto */}
+                    {prompt.type === 'text' && (
+                      <div className="mb-3">
+                        <label className="block text-sm font-medium text-gray-600 mb-1">
+                          Placeholder (opcional)
+                        </label>
+                        <input
+                          type="text"
+                          value={prompt.placeholder || ''}
+                          onChange={(e) => handlePromptChange(index, 'placeholder', e.target.value)}
+                          placeholder="Ej: Describe tus preferencias..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+                    )}
+
+                    {/* Campo requerido */}
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={prompt.required || false}
+                        onChange={(e) => handlePromptChange(index, 'required', e.target.checked)}
+                        className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label className="text-sm text-gray-700">Campo requerido</label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
+                Estas preguntas se mostrarán al cliente cuando esté interesado en el producto
+              </p>
             </div>
 
             {/* Información de Pago */}

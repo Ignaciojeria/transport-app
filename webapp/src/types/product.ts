@@ -1,8 +1,17 @@
+export interface PromptItem {
+  question: string
+  type: 'text' | 'select' | 'multiselect' | 'number' | 'boolean'
+  options?: string[]
+  required?: boolean
+  placeholder?: string
+}
+
 export interface Product {
   referenceID: string
   name: string
   description: string
   image: string
+  promptList: PromptItem[]
   payment: PaymentInfo
   stock: StockInfo
   price: PriceInfo
@@ -72,6 +81,7 @@ export interface CreateProductRequest {
   name: string
   description: string
   image: string
+  promptList: PromptItem[]
   payment: PaymentInfo
   stock: StockInfo
   price: PriceInfo
