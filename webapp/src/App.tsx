@@ -70,6 +70,11 @@ function App() {
           <p className="text-gray-600 mb-4">
             La organización <strong>"{organizationData.name}"</strong> ha sido creada exitosamente en <strong>{organizationData.country}</strong>.
           </p>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <p className="text-yellow-800 text-sm font-medium">
+              📋 Waiting List
+            </p>
+          </div>
           <button 
             onClick={() => {
               setOrganizationCreated(false)

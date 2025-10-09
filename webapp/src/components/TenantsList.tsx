@@ -7,14 +7,19 @@ interface TenantsListProps {
   account: ElectricAccountData
   tenants: ElectricTenantData[]
   token: string
+  onTenantSelect?: (tenant: ElectricTenantData) => void
 }
 
-const TenantsList: React.FC<TenantsListProps> = ({ account, tenants, token }) => {
+const TenantsList: React.FC<TenantsListProps> = ({ account, tenants, token, onTenantSelect }) => {
   const handleTenantSelect = (tenant: ElectricTenantData) => {
-    // Aquí puedes implementar la lógica para seleccionar un tenant
-    console.log('Tenant seleccionado:', tenant)
-    // Por ejemplo, redirigir a la aplicación principal con el tenant seleccionado
-    // window.location.href = `/app?tenant=${tenant.id}`
+    if (onTenantSelect) {
+      onTenantSelect(tenant)
+    } else {
+      // Comportamiento por defecto si no se proporciona onTenantSelect
+      console.log('Tenant seleccionado:', tenant)
+      // Por ejemplo, redirigir a la aplicación principal con el tenant seleccionado
+      // window.location.href = `/app?tenant=${tenant.id}`
+    }
   }
 
   const handleCreateNewOrganization = () => {

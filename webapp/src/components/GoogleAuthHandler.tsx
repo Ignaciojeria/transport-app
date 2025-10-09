@@ -1,7 +1,7 @@
 import React from 'react'
 import { useAccountData } from '../hooks/useAccountData'
 import CreateOrganization from './CreateOrganization'
-import TenantsList from './TenantsList'
+import OrganizationDashboard from './OrganizationDashboard'
 import LoadingSpinner from './ui/LoadingSpinner'
 
 interface GoogleAuthHandlerProps {
@@ -66,9 +66,9 @@ const GoogleAuthHandler: React.FC<GoogleAuthHandlerProps> = ({
     )
   }
 
-  // Si la cuenta existe, mostrar la lista de organizaciones
+  // Si la cuenta existe, mostrar el dashboard de organizaciones
   return (
-    <TenantsList 
+    <OrganizationDashboard 
       account={account}
       tenants={tenants}
       token={token}

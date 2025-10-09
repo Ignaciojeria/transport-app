@@ -140,7 +140,10 @@ export default function AuthCallback() {
           
           // Redirect a la app con los datos en el fragment
           setTimeout(() => {
-            const redirectUrl = `https://console.transport-app.com#auth=${encodedAuth}`
+            // Detectar si estamos en desarrollo local
+            const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            const baseUrl = isLocalDev ? 'http://localhost:5173' : 'https://console.transport-app.com'
+            const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
             console.log('🚀 Redirigiendo a:', redirectUrl)
             window.location.href = redirectUrl
           }, 2000) // 2 segundos para mostrar el mensaje
