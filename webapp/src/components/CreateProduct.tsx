@@ -85,6 +85,35 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
     })
   }
 
+  const handleAddCost = () => {
+    const newCost = {
+      condition: '',
+      type: 'fixed',
+      value: 0,
+      timeRange: { from: '09:00', to: '18:00' }
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      logistics: {
+        ...prev.logistics,
+        costs: [...prev.logistics.costs, newCost]
+      }
+    }))
+  }
+
+  const handleRemoveCost = (index: number) => {
+    if (formData.logistics.costs.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        logistics: {
+          ...prev.logistics,
+          costs: prev.logistics.costs.filter((_, i) => i !== index)
+        }
+      }))
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -428,9 +457,30 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* Costos */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-2">Costos de Logística</h4>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-md font-medium text-gray-700">Costos de Logística</h4>
+                  <button
+                    type="button"
+                    onClick={handleAddCost}
+                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Agregar Costo
+                  </button>
+                </div>
                 {formData.logistics.costs.map((cost, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2 p-3 bg-gray-50 rounded-lg">
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2 p-3 bg-gray-50 rounded-lg relative">
+                    {/* Botón de eliminar */}
+                    {formData.logistics.costs.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveCost(index)}
+                        className="absolute top-2 right-2 p-1 hover:bg-red-100 rounded-full transition-colors"
+                        title="Eliminar costo"
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </button>
+                    )}
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">
                         Condición
