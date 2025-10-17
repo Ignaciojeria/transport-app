@@ -1,7 +1,10 @@
 import React, { useState } from 'react'
-import { type CreateProductRequest, type PromptItem } from '../types/product'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/Card'
-import { Plus, Save, X } from 'lucide-react'
+import { type CreateProductRequest, type Attribute, type Component, type Attachment } from '../types/product'
+import { Card, CardContent } from './ui/Card'
+import { Plus, Save, X, Image, Upload, Video, Camera, Package, Truck, DollarSign, Layers, Star, Tag, Download, MessageSquare, ChevronDown } from 'lucide-react'
+import MDEditor from '@uiw/react-md-editor'
+import ReactMarkdown from 'react-markdown'
+import './MarkdownEditor.css'
 
 interface CreateProductProps {
   onSave: (product: CreateProductRequest) => void
@@ -12,14 +15,41 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
   const [formData, setFormData] = useState<CreateProductRequest>({
     referenceID: '',
     name: '',
+    descriptionMarkdown: '',
+    status: {
+      isAvailable: true,
+      isFeatured: false,
+      allowReviews: true
+    },
+    attachments: [],
+    properties: {
+      sku: '',
+      brand: '',
+      barcode: ''
+    },
+    purchaseConditions: {
+      fixed: { minUnits: 0, maxUnits: 0, multiplesOf: 0 },
+      weight: { minWeight: 0, maxWeight: 0, multiplesOf: 0 },
+      volume: { minVolume: 0, maxVolume: 0, multiplesOf: 0 }
+    },
+    attributes: [],
+    categories: [],
+    digitalBundle: {
+      hasDigitalContent: false,
+      type: 'downloadable',
+      title: '',
     description: '',
-    image: '',
-    promptList: [{
-      question: '',
-      type: 'text',
-      required: false,
-      placeholder: ''
-    }],
+      access: {
+        method: 'link',
+        url: '',
+        expiresInDays: 30
+      }
+    },
+    welcomeMessageMarkdown: '',
+    media: {
+      videos: [],
+      gallery: []
+    },
     payment: {
       currency: 'CLP',
       methods: ['credit_card', 'debit_card', 'transfer'],
@@ -35,26 +65,33 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
       weight: { unitSize: 1, pricePerUnit: 0 },
       volume: { unitSize: 1, pricePerUnit: 0 }
     },
+    cost: {
+      fixedCost: 0,
+      weight: { unitSize: 1, costPerUnit: 0 },
+      volume: { unitSize: 1, constPerUnit: 0 }
+    },
+    components: [],
     logistics: {
       dimensions: { height: 0, length: 0, width: 0 },
-      availabilityTime: [
-        {
+      weight: 0,
+      availabilityTime: [{
           timeRange: { from: '09:00', to: '22:00' },
           daysOfWeek: ['mon', 'tue', 'wed', 'thu', 'fri']
-        }
-      ],
-      costs: [
-        {
+      }],
+      deliveryFees: [{
           condition: 'prime',
           type: 'fixed',
           value: 0,
           timeRange: { from: '09:00', to: '18:00' }
-        }
-      ]
+      }]
     }
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryParent, setNewCategoryParent] = useState('')
 
   const handleInputChange = (path: string, value: any) => {
     setFormData(prev => {
@@ -91,102 +128,162 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
     })
   }
 
-  const handleAddCost = () => {
-    const newCost = {
-      condition: '',
-      type: 'fixed',
-      value: 0,
-      timeRange: { from: '09:00', to: '18:00' }
+  // Funciones para manejar arrays dinámicos
+  const addAttachment = () => {
+    const newAttachment: Attachment = {
+      name: '',
+      description: '',
+      url: '',
+      type: 'pdf',
+      sizeKb: 0
+    }
+    setFormData(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, newAttachment]
+    }))
+      }
+
+  const removeAttachment = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addAttribute = () => {
+    const newAttribute: Attribute = { name: '', value: '' }
+      setFormData(prev => ({
+        ...prev,
+      attributes: [...prev.attributes, newAttribute]
+    }))
+  }
+
+  const removeAttribute = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      attributes: prev.attributes.filter((_, i) => i !== index)
+    }))
+  }
+
+  // Función para generar ID jerárquico automáticamente
+  const generateCategoryId = (name: string, parentId: string | null) => {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
+    return parentId ? `${parentId}/${cleanName}` : cleanName
+  }
+
+  // Función para obtener la ruta completa de una categoría
+  const getCategoryPath = (categoryId: string): string => {
+    const category = formData.categories.find(cat => cat.id === categoryId)
+    if (!category) return ''
+    
+    if (!category.parent) {
+      return category.name
     }
     
+    const parentPath: string = getCategoryPath(category.parent)
+    return parentPath ? `${parentPath} / ${category.name}` : category.name
+  }
+
+  const addCategory = () => {
+    setShowCategoryModal(true)
+    setNewCategoryName('')
+    setNewCategoryParent('')
+  }
+
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return
+
+    const parentId = newCategoryParent || null
+    const newId = generateCategoryId(newCategoryName, parentId)
+    
+    const newCategory = {
+      id: newId,
+      name: newCategoryName.trim(),
+      parent: parentId
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      categories: [...prev.categories, newCategory]
+    }))
+
+    setShowCategoryModal(false)
+    setNewCategoryName('')
+    setNewCategoryParent('')
+  }
+
+  const removeCategory = (index: number) => {
+      setFormData(prev => ({
+        ...prev,
+      categories: prev.categories.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addComponent = () => {
+    const newComponent: Component = {
+      type: 'base',
+      name: '',
+      required: true,
+      stock: {}
+    }
+    setFormData(prev => ({
+      ...prev,
+      components: [...prev.components, newComponent]
+    }))
+  }
+
+  const removeComponent = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      components: prev.components.filter((_, i) => i !== index)
+    }))
+  }
+
+  const addAvailabilityTime = () => {
     setFormData(prev => ({
       ...prev,
       logistics: {
         ...prev.logistics,
-        costs: [...prev.logistics.costs, newCost]
+        availabilityTime: [...prev.logistics.availabilityTime, {
+          timeRange: { from: '09:00', to: '22:00' },
+          daysOfWeek: ['mon', 'tue', 'wed', 'thu', 'fri']
+        }]
       }
     }))
   }
 
-  const handleRemoveCost = (index: number) => {
-    if (formData.logistics.costs.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        logistics: {
-          ...prev.logistics,
-          costs: prev.logistics.costs.filter((_, i) => i !== index)
-        }
-      }))
-    }
-  }
-
-  const handleAddPrompt = () => {
-    const newPrompt: PromptItem = {
-      question: '',
-      type: 'text',
-      required: false,
-      placeholder: ''
-    }
+  const removeAvailabilityTime = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      promptList: [...prev.promptList, newPrompt]
+      logistics: {
+        ...prev.logistics,
+        availabilityTime: prev.logistics.availabilityTime.filter((_, i) => i !== index)
+      }
     }))
   }
 
-  const handleRemovePrompt = (index: number) => {
-    if (formData.promptList.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        promptList: prev.promptList.filter((_, i) => i !== index)
-      }))
-    }
-  }
-
-  const handlePromptChange = (index: number, field: keyof PromptItem, value: any) => {
+  const addDeliveryFee = () => {
     setFormData(prev => ({
       ...prev,
-      promptList: prev.promptList.map((prompt, i) => 
-        i === index ? { ...prompt, [field]: value } : prompt
-      )
+      logistics: {
+        ...prev.logistics,
+        deliveryFees: [...prev.logistics.deliveryFees, {
+          condition: '',
+          type: 'fixed',
+          value: 0,
+          timeRange: { from: '09:00', to: '18:00' }
+        }]
+      }
     }))
   }
 
-  const handleAddOption = (promptIndex: number) => {
+  const removeDeliveryFee = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      promptList: prev.promptList.map((prompt, i) => 
-        i === promptIndex 
-          ? { ...prompt, options: [...(prompt.options || []), ''] }
-          : prompt
-      )
-    }))
-  }
-
-  const handleRemoveOption = (promptIndex: number, optionIndex: number) => {
-    setFormData(prev => ({
-      ...prev,
-      promptList: prev.promptList.map((prompt, i) => 
-        i === promptIndex 
-          ? { 
-              ...prompt, 
-              options: prompt.options?.filter((_, j) => j !== optionIndex) || []
-            }
-          : prompt
-      )
-    }))
-  }
-
-  const handleOptionChange = (promptIndex: number, optionIndex: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      promptList: prev.promptList.map((prompt, i) => 
-        i === promptIndex 
-          ? { 
-              ...prompt, 
-              options: prompt.options?.map((option, j) => j === optionIndex ? value : option) || []
-            }
-          : prompt
-      )
+      logistics: {
+        ...prev.logistics,
+        deliveryFees: prev.logistics.deliveryFees.filter((_, i) => i !== index)
+      }
     }))
   }
 
@@ -204,20 +301,20 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Plus className="w-5 h-5 mr-2" />
-            Crear Nuevo Producto
-          </CardTitle>
-          <CardDescription>
-            Completa la información del producto siguiendo el contrato especificado
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Crear Nuevo Producto</h1>
+        <p className="text-gray-600">Completa la información del producto siguiendo el contrato especificado</p>
+      </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Información Básica */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Package className="w-5 h-5 mr-2" />
+              Información Básica
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -244,177 +341,724 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+        {/* descriptionMarkdown */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
                 Descripción
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows={3}
-                required
+            </h3>
+            <div className="border border-gray-300 rounded-lg overflow-hidden">
+              <MDEditor
+                value={formData.descriptionMarkdown}
+                onChange={(value) => handleInputChange('descriptionMarkdown', value || '')}
+                preview="edit"
+                hideToolbar={false}
+                data-color-mode="light"
+                height={300}
               />
             </div>
+            {formData.descriptionMarkdown && (
+              <div className="mt-2 p-3 bg-gray-50 rounded-lg border">
+                <h5 className="text-sm font-medium text-gray-600 mb-2">Vista previa:</h5>
+                <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown>{formData.descriptionMarkdown}</ReactMarkdown>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL de Imagen
+        {/* status */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Star className="w-5 h-5 mr-2" />
+              Estado del Producto
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={formData.status.isAvailable}
+                  onChange={(e) => handleInputChange('status.isAvailable', e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="text-sm font-medium text-gray-700">
+                  isAvailable
               </label>
+              </div>
+              <div className="flex items-center space-x-3">
               <input
-                type="url"
-                value={formData.image}
-                onChange={(e) => handleInputChange('image', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+                  type="checkbox"
+                  checked={formData.status.isFeatured}
+                  onChange={(e) => handleInputChange('status.isFeatured', e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="text-sm font-medium text-gray-700">
+                  isFeatured
+                </label>
             </div>
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={formData.status.allowReviews}
+                  onChange={(e) => handleInputChange('status.allowReviews', e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="text-sm font-medium text-gray-700">
+                  allowReviews
+                </label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Prompt List */}
-            <div className="border-t pt-6">
+        {/* attachments */}
+        <Card>
+          <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-800">Preguntas/Prompts para el Cliente</h3>
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                <Upload className="w-5 h-5 mr-2" />
+                Adjuntos
+              </h3>
                 <button
                   type="button"
-                  onClick={handleAddPrompt}
+                onClick={addAttachment}
                   className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                 >
                   <Plus className="w-4 h-4 mr-1" />
-                  Agregar Pregunta
+                Agregar Adjunto
                 </button>
               </div>
-              <div className="space-y-6">
-                {formData.promptList.map((prompt, index) => (
-                  <div key={index} className="p-4 bg-gray-50 rounded-lg border">
-                    <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-medium text-gray-700">Pregunta {index + 1}</h4>
-                      {formData.promptList.length > 1 && (
+            <div className="space-y-3">
+              {formData.attachments.map((attachment, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 bg-gray-50 rounded-lg">
+                  <input
+                    type="text"
+                    value={attachment.name}
+                    onChange={(e) => handleArrayChange('attachments', index, 'name', e.target.value)}
+                    placeholder="name"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={attachment.description}
+                    onChange={(e) => handleArrayChange('attachments', index, 'description', e.target.value)}
+                    placeholder="description"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="url"
+                    value={attachment.url}
+                    onChange={(e) => handleArrayChange('attachments', index, 'url', e.target.value)}
+                    placeholder="url"
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={attachment.type}
+                      onChange={(e) => handleArrayChange('attachments', index, 'type', e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="pdf">pdf</option>
+                      <option value="doc">doc</option>
+                      <option value="docx">docx</option>
+                      <option value="jpg">jpg</option>
+                      <option value="png">png</option>
+                    </select>
+                    <input
+                      type="number"
+                      value={attachment.sizeKb}
+                      onChange={(e) => handleArrayChange('attachments', index, 'sizeKb', parseInt(e.target.value) || 0)}
+                      placeholder="sizeKb"
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
                         <button
                           type="button"
-                          onClick={() => handleRemovePrompt(index)}
-                          className="p-1 hover:bg-red-100 rounded transition-colors"
-                          title="Eliminar pregunta"
+                      onClick={() => removeAttachment(index)}
+                      className="p-2 hover:bg-red-100 rounded transition-colors"
+                      title="Eliminar adjunto"
                         >
                           <X className="w-4 h-4 text-red-500" />
                         </button>
-                      )}
                     </div>
-                    
-                    {/* Pregunta */}
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Pregunta
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* properties */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Tag className="w-5 h-5 mr-2" />
+              Propiedades
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  sku
                       </label>
-                      <input
-                        type="text"
-                        value={prompt.question}
-                        onChange={(e) => handlePromptChange(index, 'question', e.target.value)}
-                        placeholder="Ej: ¿Qué tamaño prefieres?"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                <input
+                  type="text"
+                  value={formData.properties.sku}
+                  onChange={(e) => handleInputChange('properties.sku', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                      </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  brand
+                </label>
+                <input
+                  type="text"
+                  value={formData.properties.brand}
+                  onChange={(e) => handleInputChange('properties.brand', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  barcode
+                </label>
+                <input
+                  type="text"
+                  value={formData.properties.barcode}
+                  onChange={(e) => handleInputChange('properties.barcode', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* purchaseConditions */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Package className="w-5 h-5 mr-2" />
+              Condiciones de Compra
+            </h3>
+            <div className="space-y-6">
+              {/* fixed */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 mb-3">fixed</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">minUnits</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.fixed.minUnits || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.fixed.minUnits', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                          </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">maxUnits</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.fixed.maxUnits || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.fixed.maxUnits', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                        </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">multiplesOf</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.fixed.multiplesOf || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.fixed.multiplesOf', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* weight */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">minWeight</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.weight.minWeight || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.weight.minWeight', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                        </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">maxWeight</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.weight.maxWeight || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.weight.maxWeight', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">multiplesOf</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.weight.multiplesOf || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.weight.multiplesOf', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">notes</label>
+                    <input
+                      type="text"
+                      value={formData.purchaseConditions.weight.notes || ''}
+                      onChange={(e) => handleInputChange('purchaseConditions.weight.notes', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                      </div>
                     </div>
 
-                    {/* Tipo de pregunta */}
-                    <div className="mb-3">
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Tipo de Respuesta
-                      </label>
-                      <select
-                        value={prompt.type}
-                        onChange={(e) => handlePromptChange(index, 'type', e.target.value)}
+              {/* volume */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">minVolume</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.volume.minVolume || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.volume.minVolume', parseInt(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="text">Texto libre</option>
-                        <option value="select">Selección única</option>
-                        <option value="multiselect">Selección múltiple</option>
-                        <option value="number">Número</option>
-                        <option value="boolean">Sí/No</option>
-                      </select>
+                      min="0"
+                    />
                     </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">maxVolume</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.volume.maxVolume || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.volume.maxVolume', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">multiplesOf</label>
+                    <input
+                      type="number"
+                      value={formData.purchaseConditions.volume.multiplesOf || 0}
+                      onChange={(e) => handleInputChange('purchaseConditions.volume.multiplesOf', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                    {/* Opciones para select y multiselect */}
-                    {(prompt.type === 'select' || prompt.type === 'multiselect') && (
-                      <div className="mb-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="block text-sm font-medium text-gray-600">
-                            Opciones
-                          </label>
+        {/* attributes */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                <Tag className="w-5 h-5 mr-2" />
+                Atributos
+              </h3>
                           <button
                             type="button"
-                            onClick={() => handleAddOption(index)}
-                            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors flex items-center"
+                onClick={addAttribute}
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                           >
-                            <Plus className="w-3 h-3 mr-1" />
-                            Agregar
+                <Plus className="w-4 h-4 mr-1" />
+                Agregar Atributo
                           </button>
                         </div>
-                        <div className="space-y-2">
-                          {(prompt.options || []).map((option, optionIndex) => (
-                            <div key={optionIndex} className="flex items-center gap-2">
+            <div className="space-y-3">
+              {formData.attributes.map((attr, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                               <input
                                 type="text"
-                                value={option}
-                                onChange={(e) => handleOptionChange(index, optionIndex, e.target.value)}
-                                placeholder={`Opción ${optionIndex + 1}`}
+                    value={attr.name}
+                    onChange={(e) => handleArrayChange('attributes', index, 'name', e.target.value)}
+                    placeholder="name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={attr.value}
+                    onChange={(e) => handleArrayChange('attributes', index, 'value', e.target.value)}
+                    placeholder="value"
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
                               <button
                                 type="button"
-                                onClick={() => handleRemoveOption(index, optionIndex)}
+                    onClick={() => removeAttribute(index)}
+                    className="p-2 hover:bg-red-100 rounded transition-colors"
+                    title="Eliminar atributo"
+                  >
+                    <X className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* categories */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Layers className="w-5 h-5 mr-2" />
+              Categorías
+            </h3>
+            
+            {/* Selector de categoría */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Categorías</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  placeholder="Selecciona una categoría"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 pr-10"
+                />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              </div>
+            </div>
+
+            {/* Botón para agregar categoría */}
+            <button
+              type="button"
+              onClick={addCategory}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Agregar Categoría
+            </button>
+
+            {/* Lista de categorías existentes */}
+            {formData.categories.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Categorías existentes:</h4>
+                <div className="space-y-2">
+                  {formData.categories.map((cat, index) => (
+                    <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-800">{cat.name}</div>
+                        <div className="text-xs text-gray-500">ID: {cat.id}</div>
+                        {cat.parent && (
+                          <div className="text-xs text-gray-400">Padre: {getCategoryPath(cat.parent)}</div>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeCategory(index)}
                                 className="p-1 hover:bg-red-100 rounded transition-colors"
-                                title="Eliminar opción"
+                        title="Eliminar categoría"
                               >
-                                <X className="w-3 h-3 text-red-500" />
+                        <X className="w-4 h-4 text-red-500" />
                               </button>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
+          </CardContent>
+        </Card>
 
-                    {/* Placeholder para texto */}
-                    {prompt.type === 'text' && (
-                      <div className="mb-3">
-                        <label className="block text-sm font-medium text-gray-600 mb-1">
-                          Placeholder (opcional)
+        {/* digitalBundle */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Download className="w-5 h-5 mr-2" />
+              Bundle Digital
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  checked={formData.digitalBundle.hasDigitalContent}
+                  onChange={(e) => handleInputChange('digitalBundle.hasDigitalContent', e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label className="text-sm font-medium text-gray-700">
+                  hasDigitalContent
                         </label>
-                        <input
-                          type="text"
-                          value={prompt.placeholder || ''}
-                          onChange={(e) => handlePromptChange(index, 'placeholder', e.target.value)}
-                          placeholder="Ej: Describe tus preferencias..."
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                      </div>
-                    )}
+              </div>
 
-                    {/* Campo requerido */}
-                    <div className="flex items-center">
+              {formData.digitalBundle.hasDigitalContent && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">type</label>
+                      <select
+                        value={formData.digitalBundle.type}
+                        onChange={(e) => handleInputChange('digitalBundle.type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="downloadable">downloadable</option>
+                        <option value="streaming">streaming</option>
+                        <option value="access">access</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">access.method</label>
+                      <select
+                        value={formData.digitalBundle.access.method}
+                        onChange={(e) => handleInputChange('digitalBundle.access.method', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="link">link</option>
+                        <option value="email">email</option>
+                        <option value="sms">sms</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">title</label>
+                    <input
+                      type="text"
+                      value={formData.digitalBundle.title}
+                      onChange={(e) => handleInputChange('digitalBundle.title', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">description</label>
+                    <textarea
+                      value={formData.digitalBundle.description}
+                      onChange={(e) => handleInputChange('digitalBundle.description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">access.url</label>
                       <input
-                        type="checkbox"
-                        checked={prompt.required || false}
-                        onChange={(e) => handlePromptChange(index, 'required', e.target.checked)}
-                        className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        type="url"
+                        value={formData.digitalBundle.access.url}
+                        onChange={(e) => handleInputChange('digitalBundle.access.url', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                      <label className="text-sm text-gray-700">Campo requerido</label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">access.expiresInDays</label>
+                      <input
+                        type="number"
+                        value={formData.digitalBundle.access.expiresInDays}
+                        onChange={(e) => handleInputChange('digitalBundle.access.expiresInDays', parseInt(e.target.value) || 30)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        min="1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* welcomeMessageMarkdown */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" />
+              Mensaje de Bienvenida
+            </h3>
+                        <div className="border border-gray-300 rounded-lg overflow-hidden">
+                          <MDEditor
+                value={formData.welcomeMessageMarkdown}
+                onChange={(value) => handleInputChange('welcomeMessageMarkdown', value || '')}
+                            preview="edit"
+                            hideToolbar={false}
+                            data-color-mode="light"
+                height={200}
+                          />
+                        </div>
+            {formData.welcomeMessageMarkdown && (
+                          <div className="mt-2 p-3 bg-gray-50 rounded-lg border">
+                <h5 className="text-sm font-medium text-gray-600 mb-2">Vista previa:</h5>
+                            <div className="prose prose-sm max-w-none">
+                  <ReactMarkdown>{formData.welcomeMessageMarkdown}</ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
+          </CardContent>
+        </Card>
+
+        {/* media */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Camera className="w-5 h-5 mr-2" />
+              Medios
+            </h3>
+            <div className="space-y-6">
+              {/* videos */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-medium text-gray-700">videos</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        media: {
+                          ...prev.media,
+                          videos: [...prev.media.videos, { title: '', platform: 'YouTube', url: '', thumbnail: '' }]
+                        }
+                      }))
+                    }}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                  >
+                    <Video className="w-4 h-4 mr-1" />
+                    Agregar Video
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {formData.media.videos.map((video, index) => (
+                    <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-gray-50 rounded-lg">
+                      <input
+                        type="text"
+                        value={video.title}
+                        onChange={(e) => handleArrayChange('media.videos', index, 'title', e.target.value)}
+                        placeholder="title"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={video.platform}
+                        onChange={(e) => handleArrayChange('media.videos', index, 'platform', e.target.value)}
+                        placeholder="platform"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <input
+                        type="url"
+                        value={video.url}
+                        onChange={(e) => handleArrayChange('media.videos', index, 'url', e.target.value)}
+                        placeholder="url"
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="url"
+                          value={video.thumbnail}
+                          onChange={(e) => handleArrayChange('media.videos', index, 'thumbnail', e.target.value)}
+                          placeholder="thumbnail"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              media: {
+                                ...prev.media,
+                                videos: prev.media.videos.filter((_, i) => i !== index)
+                              }
+                            }))
+                          }}
+                          className="p-2 hover:bg-red-100 rounded transition-colors"
+                          title="Eliminar video"
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </button>
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Estas preguntas se mostrarán al cliente cuando esté interesado en el producto
-              </p>
             </div>
 
-            {/* Información de Pago */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Información de Pago</h3>
+              {/* gallery */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-medium text-gray-700">gallery</h4>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(prev => ({
+                        ...prev,
+                        media: {
+                          ...prev.media,
+                          gallery: [...prev.media.gallery, '']
+                        }
+                      }))
+                    }}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                  >
+                    <Image className="w-4 h-4 mr-1" />
+                    Agregar Imagen
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  {formData.media.gallery.map((image, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <input
+                        type="url"
+                        value={image}
+                        onChange={(e) => {
+                          const newGallery = [...formData.media.gallery]
+                          newGallery[index] = e.target.value
+                          setFormData(prev => ({
+                            ...prev,
+                            media: { ...prev.media, gallery: newGallery }
+                          }))
+                        }}
+                        placeholder="URL de imagen"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            media: {
+                              ...prev.media,
+                              gallery: prev.media.gallery.filter((_, i) => i !== index)
+                            }
+                          }))
+                        }}
+                        className="p-2 hover:bg-red-100 rounded transition-colors"
+                        title="Eliminar imagen"
+                      >
+                        <X className="w-4 h-4 text-red-500" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* payment */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <DollarSign className="w-5 h-5 mr-2" />
+              Pago
+            </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Moneda
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">currency</label>
                   <select
                     value={formData.payment.currency}
                     onChange={(e) => handleInputChange('payment.currency', e.target.value)}
@@ -426,21 +1070,16 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Proveedor
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">provider</label>
                   <input
                     type="text"
                     value={formData.payment.provider}
                     onChange={(e) => handleInputChange('payment.provider', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Métodos de Pago
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">methods</label>
                   <div className="space-y-2">
                     {['credit_card', 'debit_card', 'transfer'].map(method => (
                       <label key={method} className="flex items-center">
@@ -455,22 +1094,28 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                           }}
                           className="mr-2"
                         />
-                        <span className="text-sm capitalize">{method.replace('_', ' ')}</span>
+                      <span className="text-sm">{method}</span>
                       </label>
                     ))}
                   </div>
                 </div>
               </div>
-            </div>
+          </CardContent>
+        </Card>
 
-            {/* Stock */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Stock</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* stock */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Package className="w-5 h-5 mr-2" />
+              Stock
+            </h3>
+            <div className="space-y-6">
+              {/* fixed */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Unidades Disponibles
-                  </label>
+                <h4 className="text-md font-medium text-gray-700 mb-3">fixed</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">availableUnits</label>
                   <input
                     type="number"
                     value={formData.stock.fixed.availableUnits}
@@ -479,10 +1124,13 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     min="0"
                   />
                 </div>
+              </div>
+
+              {/* weight */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Peso Disponible (kg)
-                  </label>
+                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">availableWeight</label>
                   <input
                     type="number"
                     value={formData.stock.weight.availableWeight}
@@ -491,10 +1139,13 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     min="0"
                   />
                 </div>
+              </div>
+
+              {/* volume */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Volumen Disponible (m³)
-                  </label>
+                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">availableVolume</label>
                   <input
                     type="number"
                     value={formData.stock.volume.availableVolume}
@@ -505,15 +1156,19 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 </div>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Precios */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Precios</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* price */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <DollarSign className="w-5 h-5 mr-2" />
+              Precio
+            </h3>
+            <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Precio Fijo
-                  </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">fixedPrice</label>
                   <input
                     type="number"
                     value={formData.price.fixedPrice}
@@ -522,10 +1177,23 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     min="0"
                   />
                 </div>
+
+              {/* weight */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Precio por Peso
-                  </label>
+                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <input
+                      type="number"
+                      value={formData.price.weight.unitSize}
+                      onChange={(e) => handleInputChange('price.weight.unitSize', parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">pricePerUnit</label>
                   <input
                     type="number"
                     value={formData.price.weight.pricePerUnit}
@@ -534,10 +1202,25 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     min="0"
                   />
                 </div>
+                </div>
+              </div>
+
+              {/* volume */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Precio por Volumen
-                  </label>
+                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <input
+                      type="number"
+                      value={formData.price.volume.unitSize}
+                      onChange={(e) => handleInputChange('price.volume.unitSize', parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">pricePerUnit</label>
                   <input
                     type="number"
                     value={formData.price.volume.pricePerUnit}
@@ -548,15 +1231,214 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 </div>
               </div>
             </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Logística */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Logística</h3>
+        {/* cost */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <DollarSign className="w-5 h-5 mr-2" />
+              Costo
+            </h3>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">fixedCost</label>
+                <input
+                  type="number"
+                  value={formData.cost.fixedCost}
+                  onChange={(e) => handleInputChange('cost.fixedCost', parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="0"
+                />
+              </div>
+
+              {/* weight */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <input
+                      type="number"
+                      value={formData.cost.weight.unitSize}
+                      onChange={(e) => handleInputChange('cost.weight.unitSize', parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">costPerUnit</label>
+                    <input
+                      type="number"
+                      value={formData.cost.weight.costPerUnit}
+                      onChange={(e) => handleInputChange('cost.weight.costPerUnit', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* volume */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <input
+                      type="number"
+                      value={formData.cost.volume.unitSize}
+                      onChange={(e) => handleInputChange('cost.volume.unitSize', parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">constPerUnit</label>
+                    <input
+                      type="number"
+                      value={formData.cost.volume.constPerUnit}
+                      onChange={(e) => handleInputChange('cost.volume.constPerUnit', parseInt(e.target.value) || 0)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      min="0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* components */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                <Layers className="w-5 h-5 mr-2" />
+                Componentes
+              </h3>
+              <button
+                type="button"
+                onClick={addComponent}
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Agregar Componente
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {formData.components.map((component, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-lg border">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">type</label>
+                      <select
+                        value={component.type}
+                        onChange={(e) => handleArrayChange('components', index, 'type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="base">base</option>
+                        <option value="addon">addon</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">name</label>
+                      <input
+                        type="text"
+                        value={component.name}
+                        onChange={(e) => handleArrayChange('components', index, 'name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">quantity</label>
+                      <input
+                        type="text"
+                        value={component.quantity || ''}
+                        onChange={(e) => handleArrayChange('components', index, 'quantity', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">description</label>
+                      <input
+                        type="text"
+                        value={component.description || ''}
+                        onChange={(e) => handleArrayChange('components', index, 'description', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                  
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={component.required}
+                        onChange={(e) => handleArrayChange('components', index, 'required', e.target.checked)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <label className="text-sm font-medium text-gray-700">required</label>
+                    </div>
+                    {component.type === 'addon' && (
+                      <>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Altura (cm)
-                  </label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">price</label>
+                          <input
+                            type="number"
+                            value={component.price || 0}
+                            onChange={(e) => handleArrayChange('components', index, 'price', parseInt(e.target.value) || 0)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="0"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">cost.unitCost</label>
+                          <input
+                            type="number"
+                            value={component.cost?.unitCost || 0}
+                            onChange={(e) => handleArrayChange('components', index, 'cost', { unitCost: parseInt(e.target.value) || 0 })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="0"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => removeComponent(index)}
+                      className="p-2 hover:bg-red-100 rounded transition-colors"
+                      title="Eliminar componente"
+                    >
+                      <X className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* logistics */}
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <Truck className="w-5 h-5 mr-2" />
+              Logística
+            </h3>
+            <div className="space-y-6">
+              {/* dimensions */}
+              <div>
+                <h4 className="text-md font-medium text-gray-700 mb-3">dimensions</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">height</label>
                   <input
                     type="number"
                     value={formData.logistics.dimensions.height}
@@ -566,9 +1448,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Largo (cm)
-                  </label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">length</label>
                   <input
                     type="number"
                     value={formData.logistics.dimensions.length}
@@ -578,9 +1458,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ancho (cm)
-                  </label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">width</label>
                   <input
                     type="number"
                     value={formData.logistics.dimensions.width}
@@ -588,18 +1466,40 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     min="0"
                   />
+                  </div>
                 </div>
               </div>
 
-              {/* Horarios de Disponibilidad */}
-              <div className="mb-4">
-                <h4 className="text-md font-medium text-gray-700 mb-2">Horarios de Disponibilidad</h4>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">weight</label>
+                <input
+                  type="number"
+                  value={formData.logistics.weight}
+                  onChange={(e) => handleInputChange('logistics.weight', parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  min="0"
+                />
+              </div>
+
+              {/* availabilityTime */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-medium text-gray-700">availabilityTime</h4>
+                  <button
+                    type="button"
+                    onClick={addAvailabilityTime}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Agregar Horario
+                  </button>
+                </div>
+                <div className="space-y-3">
                 {formData.logistics.availabilityTime.map((time, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2 p-3 bg-gray-50 rounded-lg">
+                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Desde
-                      </label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.from</label>
                       <input
                         type="time"
                         value={time.timeRange.from}
@@ -608,20 +1508,27 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Hasta
-                      </label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.to</label>
                       <input
                         type="time"
                         value={time.timeRange.to}
                         onChange={(e) => handleArrayChange('logistics.availabilityTime', index, 'timeRange', { ...time.timeRange, to: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
+                        </div>
+                        <div className="flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={() => removeAvailabilityTime(index)}
+                            className="p-2 hover:bg-red-100 rounded transition-colors"
+                            title="Eliminar horario"
+                          >
+                            <X className="w-4 h-4 text-red-500" />
+                          </button>
+                        </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-2">
-                        Días de la Semana
-                      </label>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">daysOfWeek</label>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           { value: 'mon', label: 'Lunes' },
@@ -641,7 +1548,6 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                                   ? [...time.daysOfWeek, day.value]
                                   : time.daysOfWeek.filter(d => d !== day.value)
                                 
-                                // Actualizar directamente el array en el estado
                                 setFormData(prev => {
                                   const newData = { ...prev }
                                   const newAvailabilityTime = [...newData.logistics.availabilityTime]
@@ -665,86 +1571,84 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
 
-              {/* Costos */}
+              {/* deliveryFees */}
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-md font-medium text-gray-700">Costos de Logística</h4>
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-md font-medium text-gray-700">deliveryFees</h4>
                   <button
                     type="button"
-                    onClick={handleAddCost}
-                    className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                    onClick={addDeliveryFee}
+                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Agregar Costo
+                    Agregar Tarifa
                   </button>
                 </div>
-                {formData.logistics.costs.map((cost, index) => (
-                  <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-2 p-3 bg-gray-50 rounded-lg relative">
-                    {/* Botón de eliminar */}
-                    {formData.logistics.costs.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveCost(index)}
-                        className="absolute top-2 right-2 p-1 hover:bg-red-100 rounded-full transition-colors"
-                        title="Eliminar costo"
-                      >
-                        <X className="w-4 h-4 text-red-500" />
-                      </button>
-                    )}
+                <div className="space-y-3">
+                  {formData.logistics.deliveryFees.map((fee, index) => (
+                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Condición
-                      </label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">condition</label>
                       <input
                         type="text"
-                        value={cost.condition}
-                        onChange={(e) => handleArrayChange('logistics.costs', index, 'condition', e.target.value)}
+                            value={fee.condition}
+                            onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'condition', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Tipo
-                      </label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">type</label>
                       <select
-                        value={cost.type}
-                        onChange={(e) => handleArrayChange('logistics.costs', index, 'type', e.target.value)}
+                            value={fee.type}
+                            onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'type', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="fixed">Fijo</option>
-                        <option value="percentage">Porcentaje</option>
+                            <option value="fixed">fixed</option>
+                            <option value="percentage">percentage</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Valor
-                      </label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">value</label>
                       <input
                         type="number"
-                        value={cost.value}
-                        onChange={(e) => handleArrayChange('logistics.costs', index, 'value', parseInt(e.target.value) || 0)}
+                            value={fee.value}
+                            onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'value', parseInt(e.target.value) || 0)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         min="0"
                       />
                     </div>
+                        <div className="flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={() => removeDeliveryFee(index)}
+                            className="p-2 hover:bg-red-100 rounded transition-colors"
+                            title="Eliminar tarifa"
+                          >
+                            <X className="w-4 h-4 text-red-500" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Horario
-                      </label>
-                      <div className="flex gap-1">
+                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.from</label>
                         <input
                           type="time"
-                          value={cost.timeRange.from}
-                          onChange={(e) => handleArrayChange('logistics.costs', index, 'timeRange', { ...cost.timeRange, from: e.target.value })}
-                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
-                        />
+                            value={fee.timeRange.from}
+                            onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'timeRange', { ...fee.timeRange, from: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.to</label>
                         <input
                           type="time"
-                          value={cost.timeRange.to}
-                          onChange={(e) => handleArrayChange('logistics.costs', index, 'timeRange', { ...cost.timeRange, to: e.target.value })}
-                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs"
+                            value={fee.timeRange.to}
+                            onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'timeRange', { ...fee.timeRange, to: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -752,8 +1656,11 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 ))}
               </div>
             </div>
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Botones */}
+        {/* Botones de Acción */}
             <div className="flex justify-end gap-4 pt-6 border-t">
               <button
                 type="button"
@@ -773,8 +1680,84 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
               </button>
             </div>
           </form>
-        </CardContent>
-      </Card>
+
+      {/* Modal para agregar categoría */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Agregar Categoría</h3>
+              <button
+                type="button"
+                onClick={() => setShowCategoryModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Nueva categoría"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categoría Madre</label>
+                <div className="relative">
+                  <select
+                    value={newCategoryParent}
+                    onChange={(e) => setNewCategoryParent(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none pr-10"
+                  >
+                    <option value="">Selecciona una categoría</option>
+                    {formData.categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {getCategoryPath(cat.id)}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Vista previa del ID que se generará */}
+              {newCategoryName && (
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <div className="text-sm text-gray-600">ID que se generará:</div>
+                  <div className="text-sm font-mono text-gray-800">
+                    {generateCategoryId(newCategoryName, newCategoryParent || null)}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowCategoryModal(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                disabled={!newCategoryName.trim()}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Agregar Categoría
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
