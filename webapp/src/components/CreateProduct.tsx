@@ -318,7 +318,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Reference ID
+                  ID de Referencia
                 </label>
                 <input
                   type="text"
@@ -343,6 +343,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             </div>
           </CardContent>
         </Card>
+
 
         {/* descriptionMarkdown */}
         <Card>
@@ -388,7 +389,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label className="text-sm font-medium text-gray-700">
-                  isAvailable
+                  Disponible
               </label>
               </div>
               <div className="flex items-center space-x-3">
@@ -399,7 +400,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label className="text-sm font-medium text-gray-700">
-                  isFeatured
+                  Destacado
                 </label>
             </div>
               <div className="flex items-center space-x-3">
@@ -410,7 +411,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label className="text-sm font-medium text-gray-700">
-                  allowReviews
+                  Permitir Reseñas
                 </label>
               </div>
             </div>
@@ -436,57 +437,45 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
               </div>
             <div className="space-y-3">
               {formData.attachments.map((attachment, index) => (
-                <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 p-3 bg-gray-50 rounded-lg">
+                <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-gray-50 rounded-lg">
                   <input
                     type="text"
                     value={attachment.name}
                     onChange={(e) => handleArrayChange('attachments', index, 'name', e.target.value)}
-                    placeholder="name"
+                    placeholder="Nombre del archivo"
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     value={attachment.description}
                     onChange={(e) => handleArrayChange('attachments', index, 'description', e.target.value)}
-                    placeholder="description"
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <input
-                    type="url"
-                    value={attachment.url}
-                    onChange={(e) => handleArrayChange('attachments', index, 'url', e.target.value)}
-                    placeholder="url"
+                    placeholder="Descripción"
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <div className="flex items-center gap-2">
-                    <select
-                      value={attachment.type}
-                      onChange={(e) => handleArrayChange('attachments', index, 'type', e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="pdf">pdf</option>
-                      <option value="doc">doc</option>
-                      <option value="docx">docx</option>
-                      <option value="jpg">jpg</option>
-                      <option value="png">png</option>
-                    </select>
                     <input
-                      type="number"
-                      value={attachment.sizeKb}
-                      onChange={(e) => handleArrayChange('attachments', index, 'sizeKb', parseInt(e.target.value) || 0)}
-                      placeholder="sizeKb"
-                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      min="0"
+                      type="file"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) {
+                          // Aquí podrías manejar la subida del archivo
+                          // Por ahora solo actualizamos el nombre del archivo
+                          handleArrayChange('attachments', index, 'name', file.name)
+                          handleArrayChange('attachments', index, 'type', file.type.split('/')[1] || 'pdf')
+                          handleArrayChange('attachments', index, 'sizeKb', Math.round(file.size / 1024))
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                     />
-                        <button
-                          type="button"
+                    <button
+                      type="button"
                       onClick={() => removeAttachment(index)}
                       className="p-2 hover:bg-red-100 rounded transition-colors"
                       title="Eliminar adjunto"
-                        >
-                          <X className="w-4 h-4 text-red-500" />
-                        </button>
-                    </div>
+                    >
+                      <X className="w-4 h-4 text-red-500" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -503,7 +492,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  sku
+                  SKU
                       </label>
                 <input
                   type="text"
@@ -514,7 +503,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                       </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  brand
+                  Marca
                 </label>
                 <input
                   type="text"
@@ -525,7 +514,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  barcode
+                  Código de Barras
                 </label>
                 <input
                   type="text"
@@ -548,10 +537,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             <div className="space-y-6">
               {/* fixed */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">fixed</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Unidades Fijas</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">minUnits</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Mínimo de Unidades</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.fixed.minUnits || 0}
@@ -561,7 +550,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                           </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">maxUnits</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Máximo de Unidades</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.fixed.maxUnits || 0}
@@ -571,7 +560,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                         </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">multiplesOf</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Múltiplos de</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.fixed.multiplesOf || 0}
@@ -585,10 +574,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* weight */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Peso</h4>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">minWeight</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Peso Mínimo</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.weight.minWeight || 0}
@@ -598,7 +587,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                         </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">maxWeight</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Peso Máximo</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.weight.maxWeight || 0}
@@ -608,7 +597,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">multiplesOf</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Múltiplos de</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.weight.multiplesOf || 0}
@@ -618,7 +607,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">notes</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Notas</label>
                     <input
                       type="text"
                       value={formData.purchaseConditions.weight.notes || ''}
@@ -631,10 +620,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* volume */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Volumen</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">minVolume</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Volumen Mínimo</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.volume.minVolume || 0}
@@ -644,7 +633,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                     </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">maxVolume</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Volumen Máximo</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.volume.maxVolume || 0}
@@ -654,7 +643,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">multiplesOf</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Múltiplos de</label>
                     <input
                       type="number"
                       value={formData.purchaseConditions.volume.multiplesOf || 0}
@@ -693,14 +682,14 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                                 type="text"
                     value={attr.name}
                     onChange={(e) => handleArrayChange('attributes', index, 'name', e.target.value)}
-                    placeholder="name"
+                    placeholder="Nombre del atributo"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <input
                     type="text"
                     value={attr.value}
                     onChange={(e) => handleArrayChange('attributes', index, 'value', e.target.value)}
-                    placeholder="value"
+                    placeholder="Valor del atributo"
                                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               />
                               <button
@@ -796,7 +785,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label className="text-sm font-medium text-gray-700">
-                  hasDigitalContent
+                  Incluir Contenido Digital
                         </label>
               </div>
 
@@ -804,33 +793,33 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">type</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                       <select
                         value={formData.digitalBundle.type}
                         onChange={(e) => handleInputChange('digitalBundle.type', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="downloadable">downloadable</option>
-                        <option value="streaming">streaming</option>
-                        <option value="access">access</option>
+                        <option value="downloadable">Descargable</option>
+                        <option value="streaming">Streaming</option>
+                        <option value="access">Acceso</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">access.method</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Método de Acceso</label>
                       <select
                         value={formData.digitalBundle.access.method}
                         onChange={(e) => handleInputChange('digitalBundle.access.method', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="link">link</option>
-                        <option value="email">email</option>
-                        <option value="sms">sms</option>
+                        <option value="link">Enlace</option>
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">title</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
                     <input
                       type="text"
                       value={formData.digitalBundle.title}
@@ -840,7 +829,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">description</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                     <textarea
                       value={formData.digitalBundle.description}
                       onChange={(e) => handleInputChange('digitalBundle.description', e.target.value)}
@@ -851,7 +840,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">access.url</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">URL de Acceso</label>
                       <input
                         type="url"
                         value={formData.digitalBundle.access.url}
@@ -860,7 +849,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">access.expiresInDays</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Expira en (días)</label>
                       <input
                         type="number"
                         value={formData.digitalBundle.access.expiresInDays}
@@ -914,8 +903,8 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             <div className="space-y-6">
               {/* videos */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium text-gray-700">videos</h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-medium text-gray-700">Videos</h4>
                   <button
                     type="button"
                     onClick={() => {
@@ -940,21 +929,21 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                         type="text"
                         value={video.title}
                         onChange={(e) => handleArrayChange('media.videos', index, 'title', e.target.value)}
-                        placeholder="title"
+                        placeholder="Título del video"
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <input
                         type="text"
                         value={video.platform}
                         onChange={(e) => handleArrayChange('media.videos', index, 'platform', e.target.value)}
-                        placeholder="platform"
+                        placeholder="Plataforma (YouTube, Vimeo, etc.)"
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <input
                         type="url"
                         value={video.url}
                         onChange={(e) => handleArrayChange('media.videos', index, 'url', e.target.value)}
-                        placeholder="url"
+                        placeholder="URL del video"
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <div className="flex items-center gap-2">
@@ -962,7 +951,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                           type="url"
                           value={video.thumbnail}
                           onChange={(e) => handleArrayChange('media.videos', index, 'thumbnail', e.target.value)}
-                          placeholder="thumbnail"
+                          placeholder="URL del thumbnail"
                           className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <button
@@ -989,8 +978,8 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* gallery */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium text-gray-700">gallery</h4>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-md font-medium text-gray-700">Galería de Imágenes</h4>
                   <button
                     type="button"
                     onClick={() => {
@@ -1058,7 +1047,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">currency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Moneda</label>
                   <select
                     value={formData.payment.currency}
                     onChange={(e) => handleInputChange('payment.currency', e.target.value)}
@@ -1070,7 +1059,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   </select>
                 </div>
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">provider</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
                   <input
                     type="text"
                     value={formData.payment.provider}
@@ -1079,22 +1068,26 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   />
                 </div>
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">methods</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Métodos de Pago</label>
                   <div className="space-y-2">
-                    {['credit_card', 'debit_card', 'transfer'].map(method => (
-                      <label key={method} className="flex items-center">
+                  {[
+                    { value: 'credit_card', label: 'Tarjeta de Crédito' },
+                    { value: 'debit_card', label: 'Tarjeta de Débito' },
+                    { value: 'transfer', label: 'Transferencia' }
+                  ].map(method => (
+                    <label key={method.value} className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={formData.payment.methods.includes(method)}
+                        checked={formData.payment.methods.includes(method.value)}
                           onChange={(e) => {
                             const methods = e.target.checked
-                              ? [...formData.payment.methods, method]
-                              : formData.payment.methods.filter(m => m !== method)
+                            ? [...formData.payment.methods, method.value]
+                            : formData.payment.methods.filter(m => m !== method.value)
                             handleInputChange('payment.methods', methods)
                           }}
                           className="mr-2"
                         />
-                      <span className="text-sm">{method}</span>
+                      <span className="text-sm">{method.label}</span>
                       </label>
                     ))}
                   </div>
@@ -1113,9 +1106,9 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             <div className="space-y-6">
               {/* fixed */}
                 <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">fixed</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Unidades Fijas</h4>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">availableUnits</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Unidades Disponibles</label>
                   <input
                     type="number"
                     value={formData.stock.fixed.availableUnits}
@@ -1128,9 +1121,9 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* weight */}
                 <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Peso</h4>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">availableWeight</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Peso Disponible</label>
                   <input
                     type="number"
                     value={formData.stock.weight.availableWeight}
@@ -1143,9 +1136,9 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* volume */}
                 <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Volumen</h4>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">availableVolume</label>
+                  <label className="block text-sm font-medium text-gray-600 mb-1">Volumen Disponible</label>
                   <input
                     type="number"
                     value={formData.stock.volume.availableVolume}
@@ -1168,7 +1161,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             </h3>
             <div className="space-y-6">
                 <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">fixedPrice</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Precio Fijo</label>
                   <input
                     type="number"
                     value={formData.price.fixedPrice}
@@ -1180,10 +1173,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* weight */}
                 <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Precio por Peso</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Tamaño de Unidad</label>
                     <input
                       type="number"
                       value={formData.price.weight.unitSize}
@@ -1193,7 +1186,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">pricePerUnit</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Precio por Unidad</label>
                   <input
                     type="number"
                     value={formData.price.weight.pricePerUnit}
@@ -1207,10 +1200,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* volume */}
                 <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Precio por Volumen</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Tamaño de Unidad</label>
                     <input
                       type="number"
                       value={formData.price.volume.unitSize}
@@ -1220,7 +1213,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">pricePerUnit</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Precio por Unidad</label>
                   <input
                     type="number"
                     value={formData.price.volume.pricePerUnit}
@@ -1244,7 +1237,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             </h3>
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">fixedCost</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Costo Fijo</label>
                 <input
                   type="number"
                   value={formData.cost.fixedCost}
@@ -1256,10 +1249,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* weight */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">weight</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Costo por Peso</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Tamaño de Unidad</label>
                     <input
                       type="number"
                       value={formData.cost.weight.unitSize}
@@ -1269,7 +1262,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">costPerUnit</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Costo por Unidad</label>
                     <input
                       type="number"
                       value={formData.cost.weight.costPerUnit}
@@ -1283,10 +1276,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
 
               {/* volume */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">volume</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Costo por Volumen</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">unitSize</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Tamaño de Unidad</label>
                     <input
                       type="number"
                       value={formData.cost.volume.unitSize}
@@ -1296,7 +1289,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">constPerUnit</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Costo por Unidad</label>
                     <input
                       type="number"
                       value={formData.cost.volume.constPerUnit}
@@ -1334,18 +1327,18 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 <div key={index} className="p-4 bg-gray-50 rounded-lg border">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">type</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
                       <select
                         value={component.type}
                         onChange={(e) => handleArrayChange('components', index, 'type', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        <option value="base">base</option>
-                        <option value="addon">addon</option>
+                        <option value="base">Base</option>
+                        <option value="addon">Adicional</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">name</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Nombre</label>
                       <input
                         type="text"
                         value={component.name}
@@ -1354,7 +1347,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">quantity</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Cantidad</label>
                       <input
                         type="text"
                         value={component.quantity || ''}
@@ -1363,7 +1356,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">description</label>
+                      <label className="block text-sm font-medium text-gray-600 mb-1">Descripción</label>
                       <input
                         type="text"
                         value={component.description || ''}
@@ -1381,12 +1374,12 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                         onChange={(e) => handleArrayChange('components', index, 'required', e.target.checked)}
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <label className="text-sm font-medium text-gray-700">required</label>
+                      <label className="text-sm font-medium text-gray-700">Requerido</label>
                     </div>
                     {component.type === 'addon' && (
                       <>
                 <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">price</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Precio</label>
                           <input
                             type="number"
                             value={component.price || 0}
@@ -1396,7 +1389,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">cost.unitCost</label>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Costo por Unidad</label>
                           <input
                             type="number"
                             value={component.cost?.unitCost || 0}
@@ -1435,10 +1428,10 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
             <div className="space-y-6">
               {/* dimensions */}
               <div>
-                <h4 className="text-md font-medium text-gray-700 mb-3">dimensions</h4>
+                <h4 className="text-md font-medium text-gray-700 mb-3">Dimensiones</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">height</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Alto</label>
                   <input
                     type="number"
                     value={formData.logistics.dimensions.height}
@@ -1448,7 +1441,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">length</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Largo</label>
                   <input
                     type="number"
                     value={formData.logistics.dimensions.length}
@@ -1458,7 +1451,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">width</label>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Ancho</label>
                   <input
                     type="number"
                     value={formData.logistics.dimensions.width}
@@ -1471,7 +1464,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">weight</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Peso</label>
                 <input
                   type="number"
                   value={formData.logistics.weight}
@@ -1484,7 +1477,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
               {/* availabilityTime */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium text-gray-700">availabilityTime</h4>
+                  <h4 className="text-md font-medium text-gray-700">Horarios de Disponibilidad</h4>
                   <button
                     type="button"
                     onClick={addAvailabilityTime}
@@ -1498,23 +1491,23 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                 {formData.logistics.availabilityTime.map((time, index) => (
                     <div key={index} className="p-3 bg-gray-50 rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                    <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.from</label>
-                      <input
-                        type="time"
-                        value={time.timeRange.from}
-                        onChange={(e) => handleArrayChange('logistics.availabilityTime', index, 'timeRange', { ...time.timeRange, from: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.to</label>
-                      <input
-                        type="time"
-                        value={time.timeRange.to}
-                        onChange={(e) => handleArrayChange('logistics.availabilityTime', index, 'timeRange', { ...time.timeRange, to: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+                          <input
+                            type="time"
+                            value={time.timeRange.from}
+                            onChange={(e) => handleArrayChange('logistics.availabilityTime', index, 'timeRange', { ...time.timeRange, from: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                          <input
+                            type="time"
+                            value={time.timeRange.to}
+                            onChange={(e) => handleArrayChange('logistics.availabilityTime', index, 'timeRange', { ...time.timeRange, to: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
                         </div>
                         <div className="flex items-center justify-end">
                           <button
@@ -1527,18 +1520,18 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                           </button>
                         </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-600 mb-2">daysOfWeek</label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {[
-                          { value: 'mon', label: 'Lunes' },
-                          { value: 'tue', label: 'Martes' },
-                          { value: 'wed', label: 'Miércoles' },
-                          { value: 'thu', label: 'Jueves' },
-                          { value: 'fri', label: 'Viernes' },
-                          { value: 'sat', label: 'Sábado' },
-                          { value: 'sun', label: 'Domingo' }
-                        ].map((day) => (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-2">Días de la Semana</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: 'mon', label: 'Lunes' },
+                            { value: 'tue', label: 'Martes' },
+                            { value: 'wed', label: 'Miércoles' },
+                            { value: 'thu', label: 'Jueves' },
+                            { value: 'fri', label: 'Viernes' },
+                            { value: 'sat', label: 'Sábado' },
+                            { value: 'sun', label: 'Domingo' }
+                          ].map((day) => (
                           <label key={day.value} className="flex items-center">
                             <input
                               type="checkbox"
@@ -1577,7 +1570,7 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
               {/* deliveryFees */}
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-md font-medium text-gray-700">deliveryFees</h4>
+                  <h4 className="text-md font-medium text-gray-700">Tarifas de Envío</h4>
                   <button
                     type="button"
                     onClick={addDeliveryFee}
@@ -1591,36 +1584,36 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                   {formData.logistics.deliveryFees.map((fee, index) => (
                     <div key={index} className="p-3 bg-gray-50 rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
-                    <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">condition</label>
-                      <input
-                        type="text"
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Condición</label>
+                          <input
+                            type="text"
                             value={fee.condition}
                             onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'condition', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">type</label>
-                      <select
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Tipo</label>
+                          <select
                             value={fee.type}
                             onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'type', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                            <option value="fixed">fixed</option>
-                            <option value="percentage">percentage</option>
-                      </select>
-                    </div>
-                    <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">value</label>
-                      <input
-                        type="number"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="fixed">Fijo</option>
+                            <option value="percentage">Porcentaje</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Valor</label>
+                          <input
+                            type="number"
                             value={fee.value}
                             onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'value', parseInt(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        min="0"
-                      />
-                    </div>
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            min="0"
+                          />
+                        </div>
                         <div className="flex items-center justify-end">
                           <button
                             type="button"
@@ -1633,25 +1626,25 @@ const CreateProduct: React.FC<CreateProductProps> = ({ onSave, onCancel }) => {
                         </div>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.from</label>
-                        <input
-                          type="time"
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Desde</label>
+                          <input
+                            type="time"
                             value={fee.timeRange.from}
                             onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'timeRange', { ...fee.timeRange, from: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">timeRange.to</label>
-                        <input
-                          type="time"
+                          <label className="block text-sm font-medium text-gray-600 mb-1">Hasta</label>
+                          <input
+                            type="time"
                             value={fee.timeRange.to}
                             onChange={(e) => handleArrayChange('logistics.deliveryFees', index, 'timeRange', { ...fee.timeRange, to: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
+                          />
+                        </div>
                       </div>
-                    </div>
                   </div>
                 ))}
               </div>
