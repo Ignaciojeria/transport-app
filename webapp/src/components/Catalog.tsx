@@ -53,7 +53,7 @@ const Catalog: React.FC<CatalogProps> = ({ tenant }) => {
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.descriptionMarkdown.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.referenceID.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -163,13 +163,13 @@ const Catalog: React.FC<CatalogProps> = ({ tenant }) => {
               <CardContent>
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600 line-clamp-2">
-                    {product.description}
+                    {product.descriptionMarkdown}
                   </p>
                   
-                  {product.image && (
+                  {product.media.gallery.length > 0 && (
                     <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
                       <img 
-                        src={product.image} 
+                        src={product.media.gallery[0]} 
                         alt={product.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -241,7 +241,7 @@ const Catalog: React.FC<CatalogProps> = ({ tenant }) => {
             <div>
               <span className="text-gray-600">Con imagen:</span>
               <span className="font-semibold ml-1">
-                {products.filter(p => p.image).length}
+                {products.filter(p => p.media.gallery.length > 0).length}
               </span>
             </div>
           </div>
