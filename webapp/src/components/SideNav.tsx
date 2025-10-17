@@ -25,7 +25,7 @@ const SideNav: React.FC<SideNavProps> = ({
   activeMenuItem 
 }) => {
   const menuItems = [
-    { id: 'catalog', label: 'Catalog', icon: Package },
+    { id: 'catalog', label: 'Catalogo', icon: Package },
     { id: 'users', label: 'Usuarios', icon: Users },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'reports', label: 'Reportes', icon: FileText },
