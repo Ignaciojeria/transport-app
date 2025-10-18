@@ -16,6 +16,7 @@ import (
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	gitv6 "github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/plumbing/object"
 )
 
 // Los templates están definidos en templates.go
@@ -161,10 +162,24 @@ func NewCreateRepositoryWorkflow(
 			// Crear un commit inicial en el repositorio específico
 			commitOptions := &gitrepository.CommitOptions{
 				All: true,
+				Author: &object.Signature{
+					Name:  "Transport App",
+					Email: "noreply@transport-app.com",
+					When:  time.Now(),
+				},
+				Committer: &object.Signature{
+					Name:  "Transport App",
+					Email: "noreply@transport-app.com",
+					When:  time.Now(),
+				},
 			}
 			if err := gitRepoAdapter.CommitRepository(repoPath, "feat: initial repository setup for tenant", commitOptions); err != nil {
 				obs.Logger.WarnContext(ctx, "Failed to create initial commit",
 					"error", err,
+					"repository_name", repoName,
+					"repository_path", repoPath)
+			} else {
+				obs.Logger.InfoContext(ctx, "Initial commit created successfully",
 					"repository_name", repoName,
 					"repository_path", repoPath)
 			}
