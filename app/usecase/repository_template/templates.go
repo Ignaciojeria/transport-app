@@ -20,5 +20,8 @@ var IndexTemplate string
 //go:embed firebase_template.json
 var FirebaseTemplate string
 
+//go:embed firebaserc_template
+var FirebasercTemplate string
+
 //go:embed deploy_readme_template.md
 var DeployReadmeTemplate string

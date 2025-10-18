@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "einar-404623"
+  },
+  "targets": {
+    "einar-404623": {
+      "hosting": {
+        "transport-app-agents": [
+          "transport-app-agents"
+        ]
+      }
+    }
+  }
+}

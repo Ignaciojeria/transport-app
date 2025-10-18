@@ -336,6 +336,15 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 	}
 	fmt.Printf("DEBUG: Successfully created firebase.json at %s\n", firebasePath)
 
+	// Crear .firebaserc usando template
+	fmt.Printf("DEBUG: Creating .firebaserc\n")
+	firebasercPath := filepath.Join(repoPath, ".firebaserc")
+	if err := os.WriteFile(firebasercPath, []byte(FirebasercTemplate), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create .firebaserc: %v\n", err)
+		return fmt.Errorf("failed to create .firebaserc: %w", err)
+	}
+	fmt.Printf("DEBUG: Successfully created .firebaserc at %s\n", firebasercPath)
+
 	fmt.Printf("DEBUG: All template files created successfully\n")
 	return nil
 }
