@@ -63,14 +63,16 @@ func NewCreateRepositoryWorkflow(
 		fsmState := workflow.Map(ctx)
 
 		// Crear el repositorio usando la función independiente
-		repoPath := filepath.Join("./agent-repo", "tenants", repoName)
+		// Usar /tmp para todos los casos (desarrollo y producción)
+		repoPath := filepath.Join("/tmp", "tenants", repoName)
 
 		// Intentar crear repositorio remoto si hay token configurado
 		var repo *gitv6.Repository
 
 		obs.Logger.InfoContext(ctx, "Checking Git configuration",
 			"has_token", conf.GIT_TOKEN != "",
-			"token_length", len(conf.GIT_TOKEN))
+			"token_length", len(conf.GIT_TOKEN),
+			"repository_path", repoPath)
 
 		if conf.GIT_TOKEN != "" {
 			// Crear repositorio en GitHub
@@ -123,7 +125,15 @@ func NewCreateRepositoryWorkflow(
 			"workflow_state", fsmState)
 
 		// Hacer push del repositorio si el adaptador está disponible
+		obs.Logger.InfoContext(ctx, "Checking gitRepoAdapter availability",
+			"gitRepoAdapter_nil", gitRepoAdapter == nil,
+			"repository_name", repoName)
+
 		if gitRepoAdapter != nil {
+			obs.Logger.InfoContext(ctx, "Starting template file creation process",
+				"repository_name", repoName,
+				"repository_path", repoPath)
+
 			// Crear archivos iniciales para el tenant
 			if err := createInitialTenantFiles(repoPath, repoName); err != nil {
 				obs.Logger.WarnContext(ctx, "Failed to create initial tenant files",
@@ -193,6 +203,10 @@ func NewCreateRepositoryWorkflow(
 					"repository_name", repoName,
 					"repository_path", repoPath)
 			}
+		} else {
+			obs.Logger.WarnContext(ctx, "gitRepoAdapter is nil, skipping template file creation and push",
+				"repository_name", repoName,
+				"repository_path", repoPath)
 		}
 
 		// Log del repositorio creado (para debugging)
@@ -204,6 +218,8 @@ func NewCreateRepositoryWorkflow(
 
 // createInitialTenantFiles crea archivos iniciales para el tenant usando templates embedded
 func createInitialTenantFiles(repoPath, repoName string) error {
+	fmt.Printf("DEBUG: Starting createInitialTenantFiles for %s at %s\n", repoName, repoPath)
+
 	// Crear directorios necesarios
 	dirs := []string{
 		filepath.Join(repoPath, "data"),
@@ -211,16 +227,20 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 		filepath.Join(repoPath, "assets"),
 	}
 
+	fmt.Printf("DEBUG: Creating directories: %v\n", dirs)
 	for _, dir := range dirs {
 		if err := os.MkdirAll(dir, 0755); err != nil {
+			fmt.Printf("DEBUG: Failed to create directory %s: %v\n", dir, err)
 			return fmt.Errorf("failed to create directory %s: %w", dir, err)
 		}
+		fmt.Printf("DEBUG: Successfully created directory: %s\n", dir)
 	}
 
 	// Extraer tenant ID del nombre del repositorio
 	tenantID := strings.TrimPrefix(repoName, "tenant-")
 
 	// Crear README.md usando template
+	fmt.Printf("DEBUG: Creating README.md\n")
 	readmeContent := processTemplate(TenantRepoReadmeTemplate, map[string]string{
 		"TenantName": repoName,
 		"CreatedAt":  time.Now().Format(time.RFC3339),
@@ -228,10 +248,13 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 
 	readmePath := filepath.Join(repoPath, "README.md")
 	if err := os.WriteFile(readmePath, []byte(readmeContent), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create README.md: %v\n", err)
 		return fmt.Errorf("failed to create README.md: %w", err)
 	}
+	fmt.Printf("DEBUG: Successfully created README.md at %s\n", readmePath)
 
 	// Crear config/tenant.json usando template
+	fmt.Printf("DEBUG: Creating tenant.json\n")
 	configContent := processTemplate(TenantConfigTemplate, map[string]string{
 		"TenantName": repoName,
 		"TenantID":   tenantID,
@@ -240,15 +263,21 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 
 	configPath := filepath.Join(repoPath, "config", "tenant.json")
 	if err := os.WriteFile(configPath, []byte(configContent), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create tenant.json: %v\n", err)
 		return fmt.Errorf("failed to create tenant.json: %w", err)
 	}
+	fmt.Printf("DEBUG: Successfully created tenant.json at %s\n", configPath)
 
 	// Crear .gitignore usando template
+	fmt.Printf("DEBUG: Creating .gitignore\n")
 	gitignorePath := filepath.Join(repoPath, ".gitignore")
 	if err := os.WriteFile(gitignorePath, []byte(GitignoreTemplate), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create .gitignore: %v\n", err)
 		return fmt.Errorf("failed to create .gitignore: %w", err)
 	}
+	fmt.Printf("DEBUG: Successfully created .gitignore at %s\n", gitignorePath)
 
+	fmt.Printf("DEBUG: All template files created successfully\n")
 	return nil
 }
 
