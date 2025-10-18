@@ -76,10 +76,11 @@ func NewCreateRepositoryWorkflow(
 			"repository_path", repoPath)
 
 		if conf.GIT_TOKEN != "" {
-			// Crear repositorio en GitHub
-			obs.Logger.InfoContext(ctx, "Attempting to create GitHub repository",
-				"repository_name", repoName)
-			githubRepo, err := gitrepository.CreateGitHubRepository(ctx, conf.GIT_TOKEN, repoName,
+			// Crear repositorio en GitHub en la organización transport-app-agents
+			obs.Logger.InfoContext(ctx, "Attempting to create public GitHub repository in organization",
+				"repository_name", repoName,
+				"organization", "transport-app-agents")
+			githubRepo, err := gitrepository.CreateGitHubOrganizationRepository(ctx, conf.GIT_TOKEN, "transport-app-agents", repoName,
 				fmt.Sprintf("Tenant repository for %s", repoName), false)
 			if err != nil {
 				obs.Logger.WarnContext(ctx, "Failed to create GitHub repository, falling back to local",
@@ -87,8 +88,10 @@ func NewCreateRepositoryWorkflow(
 				// Fallback a repositorio local
 				repo, err = gitrepository.CreateRepositoryIfNotExists(repoPath)
 			} else {
-				obs.Logger.InfoContext(ctx, "GitHub repository created successfully",
-					"repository_name", repoName, "url", githubRepo.HTMLURL)
+				obs.Logger.InfoContext(ctx, "Public GitHub repository created successfully in organization",
+					"repository_name", repoName,
+					"organization", "transport-app-agents",
+					"url", githubRepo.HTMLURL)
 
 				// Limpiar el directorio si existe para poder clonar
 				if err := os.RemoveAll(repoPath); err != nil {
@@ -193,6 +196,7 @@ func NewCreateRepositoryWorkflow(
 			pushOptions := &gitrepository.PushOptions{
 				Token:      conf.GIT_TOKEN, // Token para Cloud Run
 				RemoteName: "origin",       // Nombre del remoto por defecto
+				Force:      true,           // Force push para resolver conflictos
 				Progress:   nil,            // Sin progress para evitar logs excesivos
 			}
 
@@ -240,6 +244,7 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 		filepath.Join(repoPath, "data"),
 		filepath.Join(repoPath, "config"),
 		filepath.Join(repoPath, "assets"),
+		filepath.Join(repoPath, ".github", "workflows"),
 	}
 
 	fmt.Printf("DEBUG: Creating directories: %v\n", dirs)
@@ -256,8 +261,9 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 
 	// Crear README.md usando template
 	fmt.Printf("DEBUG: Creating README.md\n")
-	readmeContent := processTemplate(TenantRepoReadmeTemplate, map[string]string{
+	readmeContent := processTemplate(DeployReadmeTemplate, map[string]string{
 		"TenantName": repoName,
+		"TenantID":   tenantID,
 		"CreatedAt":  time.Now().Format(time.RFC3339),
 	})
 
@@ -291,6 +297,44 @@ func createInitialTenantFiles(repoPath, repoName string) error {
 		return fmt.Errorf("failed to create .gitignore: %w", err)
 	}
 	fmt.Printf("DEBUG: Successfully created .gitignore at %s\n", gitignorePath)
+
+	// Crear index.html usando template
+	fmt.Printf("DEBUG: Creating index.html\n")
+	indexContent := processTemplate(IndexTemplate, map[string]string{
+		"TenantName": repoName,
+		"TenantID":   tenantID,
+		"CreatedAt":  time.Now().Format(time.RFC3339),
+	})
+
+	indexPath := filepath.Join(repoPath, "index.html")
+	if err := os.WriteFile(indexPath, []byte(indexContent), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create index.html: %v\n", err)
+		return fmt.Errorf("failed to create index.html: %w", err)
+	}
+	fmt.Printf("DEBUG: Successfully created index.html at %s\n", indexPath)
+
+	// Crear workflow de GitHub Actions usando template
+	fmt.Printf("DEBUG: Creating GitHub workflow\n")
+	workflowContent := processTemplate(GitHubWorkflowTemplate, map[string]string{
+		"TenantName": repoName,
+		"TenantID":   tenantID,
+	})
+
+	workflowPath := filepath.Join(repoPath, ".github", "workflows", "deploy.yml")
+	if err := os.WriteFile(workflowPath, []byte(workflowContent), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create GitHub workflow: %v\n", err)
+		return fmt.Errorf("failed to create GitHub workflow: %w", err)
+	}
+	fmt.Printf("DEBUG: Successfully created GitHub workflow at %s\n", workflowPath)
+
+	// Crear firebase.json usando template
+	fmt.Printf("DEBUG: Creating firebase.json\n")
+	firebasePath := filepath.Join(repoPath, "firebase.json")
+	if err := os.WriteFile(firebasePath, []byte(FirebaseTemplate), 0644); err != nil {
+		fmt.Printf("DEBUG: Failed to create firebase.json: %v\n", err)
+		return fmt.Errorf("failed to create firebase.json: %w", err)
+	}
+	fmt.Printf("DEBUG: Successfully created firebase.json at %s\n", firebasePath)
 
 	fmt.Printf("DEBUG: All template files created successfully\n")
 	return nil

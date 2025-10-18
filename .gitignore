@@ -24,3 +24,4 @@ osrm-static
 transport-app
 logs
 transport-app.exe
+firebase_deploy_key.json

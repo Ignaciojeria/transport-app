@@ -91,6 +91,62 @@ func CreateGitHubRepository(ctx context.Context, token, repoName, description st
 	return &repoResp, nil
 }
 
+// CreateGitHubOrganizationRepository crea un repositorio en una organización específica de GitHub
+func CreateGitHubOrganizationRepository(ctx context.Context, token, orgName, repoName, description string, isPrivate bool) (*GitHubRepositoryResponse, error) {
+	// Construir la URL de la API de GitHub para organizaciones
+	url := fmt.Sprintf("https://api.github.com/orgs/%s/repos", orgName)
+
+	// Crear la estructura de datos
+	reqData := GitHubRepositoryRequest{
+		Name:        repoName,
+		Description: description,
+		Private:     isPrivate,
+		AutoInit:    false, // No crear README inicial, usaremos nuestro template
+	}
+
+	// Convertir a JSON
+	jsonData, err := json.Marshal(reqData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request data: %w", err)
+	}
+
+	// Crear la solicitud HTTP
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+
+	// Añadir encabezados de autenticación y contenido
+	req.Header.Set("Authorization", "token "+token)
+	req.Header.Set("Accept", "application/vnd.github.v3+json")
+	req.Header.Set("Content-Type", "application/json")
+
+	// Enviar la solicitud
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Verificar la respuesta
+	if resp.StatusCode != http.StatusCreated {
+		var errorResp map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&errorResp); err != nil {
+			return nil, fmt.Errorf("failed to create repository: HTTP %d", resp.StatusCode)
+		}
+		return nil, fmt.Errorf("failed to create repository: %v", errorResp)
+	}
+
+	// Decodificar la respuesta
+	var repoResp GitHubRepositoryResponse
+	if err := json.NewDecoder(resp.Body).Decode(&repoResp); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &repoResp, nil
+}
+
 // CreateGitLabRepository crea un repositorio en GitLab usando la API
 func CreateGitLabRepository(ctx context.Context, token, repoName, description string, isPrivate bool) (*GitHubRepositoryResponse, error) {
 	// Construir la URL de la API de GitLab
