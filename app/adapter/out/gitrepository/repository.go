@@ -11,6 +11,7 @@ import (
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	gitv6 "github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/config"
 	"github.com/go-git/go-git/v6/plumbing"
 	"github.com/go-git/go-git/v6/plumbing/object"
 	"github.com/go-git/go-git/v6/plumbing/transport"
@@ -326,4 +327,158 @@ func (gra *GitRepositoryAdapter) GetRelativePath(filePath string) (string, error
 	}
 
 	return relPath, nil
+}
+
+// PushRepository hace push de un repositorio específico
+func (gra *GitRepositoryAdapter) PushRepository(ctx context.Context, repoPath string, options *PushOptions) error {
+	// Abrir el repositorio específico
+	repo, err := gitv6.PlainOpen(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to open repository at %s: %w", repoPath, err)
+	}
+
+	if options == nil {
+		options = &PushOptions{}
+	}
+
+	// Verificar si hay remotos configurados
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return fmt.Errorf("failed to get remotes: %w", err)
+	}
+
+	// Si no hay remotos, no hacer push (solo es un repositorio local)
+	if len(remotes) == 0 {
+		return fmt.Errorf("no remote repositories configured - this is a local-only repository")
+	}
+
+	// Configurar autenticación (priorizar token para Cloud Run)
+	var auth transport.AuthMethod
+	if options.Token != "" {
+		auth = &http.BasicAuth{
+			Username: "token", // Para GitHub, GitLab, etc.
+			Password: options.Token,
+		}
+	} else if options.SSHKeyPath != "" {
+		sshKey, err := ssh.NewPublicKeysFromFile("git", options.SSHKeyPath, "")
+		if err != nil {
+			return fmt.Errorf("failed to load SSH key: %w", err)
+		}
+		auth = sshKey
+	}
+
+	return repo.PushContext(ctx, &gitv6.PushOptions{
+		RemoteName: options.RemoteName,
+		Auth:       auth,
+		Progress:   options.Progress,
+		Prune:      options.Prune,
+		Force:      options.Force,
+		FollowTags: options.FollowTags,
+		Atomic:     options.Atomic,
+	})
+}
+
+// CommitRepository hace commit en un repositorio específico
+func (gra *GitRepositoryAdapter) CommitRepository(repoPath string, message string, options *CommitOptions) error {
+	// Abrir el repositorio específico
+	repo, err := gitv6.PlainOpen(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to open repository at %s: %w", repoPath, err)
+	}
+
+	if options == nil {
+		options = &CommitOptions{}
+	}
+
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("failed to get worktree: %w", err)
+	}
+
+	// Agregar todos los archivos al staging area
+	if options.All {
+		_, err = workTree.Add(".")
+		if err != nil {
+			return fmt.Errorf("failed to add files to staging: %w", err)
+		}
+	}
+
+	_, err = workTree.Commit(message, &gitv6.CommitOptions{
+		All:       options.All,
+		Author:    options.Author,
+		Committer: options.Committer,
+	})
+
+	return err
+}
+
+// GetRepositoryStatus obtiene el estado de un repositorio específico
+func (gra *GitRepositoryAdapter) GetRepositoryStatus(repoPath string) (gitv6.Status, error) {
+	// Abrir el repositorio específico
+	repo, err := gitv6.PlainOpen(repoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open repository at %s: %w", repoPath, err)
+	}
+
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get worktree: %w", err)
+	}
+
+	return workTree.Status()
+}
+
+// CreateRemoteRepository crea un repositorio remoto y lo clona localmente
+func (gra *GitRepositoryAdapter) CreateRemoteRepository(ctx context.Context, repoPath, repoName, remoteURL string, options *PushOptions) (*gitv6.Repository, error) {
+	// Crear el directorio si no existe
+	if err := os.MkdirAll(repoPath, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	// Configurar autenticación
+	var auth transport.AuthMethod
+	if options != nil && options.Token != "" {
+		auth = &http.BasicAuth{
+			Username: "token",
+			Password: options.Token,
+		}
+	} else if options != nil && options.SSHKeyPath != "" {
+		sshKey, err := ssh.NewPublicKeysFromFile("git", options.SSHKeyPath, "")
+		if err != nil {
+			return nil, fmt.Errorf("failed to load SSH key: %w", err)
+		}
+		auth = sshKey
+	}
+
+	// Clonar el repositorio remoto
+	repo, err := gitv6.PlainCloneContext(ctx, repoPath, &gitv6.CloneOptions{
+		URL:      remoteURL,
+		Auth:     auth,
+		Progress: options.Progress,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to clone repository: %w", err)
+	}
+
+	return repo, nil
+}
+
+// AddRemote añade un remoto a un repositorio existente
+func (gra *GitRepositoryAdapter) AddRemote(repoPath, remoteName, remoteURL string) error {
+	// Abrir el repositorio específico
+	repo, err := gitv6.PlainOpen(repoPath)
+	if err != nil {
+		return fmt.Errorf("failed to open repository at %s: %w", repoPath, err)
+	}
+
+	// Crear el remoto
+	_, err = repo.CreateRemote(&config.RemoteConfig{
+		Name: remoteName,
+		URLs: []string{remoteURL},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create remote: %w", err)
+	}
+
+	return nil
 }

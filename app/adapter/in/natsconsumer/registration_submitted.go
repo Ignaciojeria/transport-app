@@ -12,6 +12,7 @@ import (
 	"transport-app/app/shared/infrastructure/observability"
 	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase"
+	template "transport-app/app/usecase/repository_template"
 
 	canonicaljson "transport-app/app/shared/caonincaljson"
 
@@ -33,7 +34,7 @@ func init() {
 		usecase.NewAssociateTenantAccountWorkflow,
 		usecase.NewCreateDefaultClientCredentialsWorkflow,
 		usecase.NewSendClientCredentialsEmailWorkflow,
-		usecase.NewCreateRepositoryWorkflow,
+		template.NewCreateRepositoryWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -46,7 +47,7 @@ func newRegistrationSubmittedConsumer(
 	associateTenantAccountWorkflow usecase.AssociateTenantAccountWorkflow,
 	createDefaultClientCredentialsWorkflow usecase.CreateDefaultClientCredentialsWorkflow,
 	sendClientCredentialsEmailWorkflow usecase.SendClientCredentialsEmailWorkflow,
-	createRepositoryWorkflow usecase.CreateRepositoryWorkflow,
+	createRepositoryWorkflow template.CreateRepositoryWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -166,7 +167,12 @@ func newRegistrationSubmittedConsumer(
 
 		// Crear repositorio asociado al tenant
 		repoName := fmt.Sprintf("tenant-%s", tenant.ID)
-		if err := createRepositoryWorkflow(registrationCtx, repoName); err != nil {
+
+		// Generar idempotency key para el repositorio
+		repoKey := fmt.Sprintf("create-repository-%s", repoName)
+		repoCtx := sharedcontext.WithIdempotencyKey(registrationCtx, repoKey)
+
+		if err := createRepositoryWorkflow(repoCtx, repoName); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error creando repositorio para tenant",
 				"error", err,
 				"tenant_id", tenant.ID,

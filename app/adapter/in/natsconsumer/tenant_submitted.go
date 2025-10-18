@@ -8,7 +8,9 @@ import (
 	"transport-app/app/shared/configuration"
 	"transport-app/app/shared/infrastructure/natsconn"
 	"transport-app/app/shared/infrastructure/observability"
+	"transport-app/app/shared/sharedcontext"
 	"transport-app/app/usecase"
+	template "transport-app/app/usecase/repository_template"
 
 	"cloud.google.com/go/pubsub"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -22,7 +24,7 @@ func init() {
 		newTenantSubmittedConsumer,
 		natsconn.NewJetStream,
 		usecase.NewCreateTenantAccount,
-		usecase.NewCreateRepositoryWorkflow,
+		template.NewCreateRepositoryWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -31,7 +33,7 @@ func init() {
 func newTenantSubmittedConsumer(
 	js jetstream.JetStream,
 	createTenantAccount usecase.CreateTenantAccount,
-	createRepositoryWorkflow usecase.CreateRepositoryWorkflow,
+	createRepositoryWorkflow template.CreateRepositoryWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -88,7 +90,11 @@ func newTenantSubmittedConsumer(
 		tenantData := input.Map()
 		repoName := fmt.Sprintf("tenant-%s", tenantData.Tenant.ID)
 
-		if err := createRepositoryWorkflow(ctx, repoName); err != nil {
+		// Generar idempotency key para el repositorio
+		repoKey := fmt.Sprintf("create-repository-%s", repoName)
+		repoCtx := sharedcontext.WithIdempotencyKey(ctx, repoKey)
+
+		if err := createRepositoryWorkflow(repoCtx, repoName); err != nil {
 			obs.Logger.ErrorContext(ctx, "Error creando repositorio para tenant",
 				"error", err,
 				"tenant_id", tenantData.Tenant.ID,

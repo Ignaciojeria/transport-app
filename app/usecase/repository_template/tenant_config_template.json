@@ -1,0 +1,35 @@
+{
+  "tenant": {
+    "name": "{{.TenantName}}",
+    "description": "",
+    "created_at": "{{.CreatedAt}}",
+    "status": "active",
+    "id": "{{.TenantID}}"
+  },
+  "site": {
+    "title": "{{.TenantName}} - Transport App",
+    "description": "Transportation services for {{.TenantName}}",
+    "theme": "default",
+    "domain": "",
+    "logo": ""
+  },
+  "contact": {
+    "email": "",
+    "phone": "",
+    "address": {
+      "street": "",
+      "city": "",
+      "country": ""
+    }
+  },
+  "services": {
+    "delivery": true,
+    "pickup": true,
+    "scheduled": false
+  },
+  "ona": {
+    "enabled": true,
+    "auto_deploy": true,
+    "template": "default"
+  }
+}

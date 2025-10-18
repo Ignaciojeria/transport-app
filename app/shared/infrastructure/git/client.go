@@ -33,16 +33,23 @@ func NewClient(conf configuration.Conf) (GitClient, error) {
 		return nil, nil
 	}
 
-	// Verificar si el repositorio existe
+	// Crear el directorio si no existe
 	if _, err := os.Stat(conf.GIT_REPOSITORY_PATH); os.IsNotExist(err) {
-		fmt.Printf("Git repository path does not exist: %s\n", conf.GIT_REPOSITORY_PATH)
-		return nil, fmt.Errorf("git repository path does not exist: %s", conf.GIT_REPOSITORY_PATH)
+		fmt.Printf("Creating agent repository directory: %s\n", conf.GIT_REPOSITORY_PATH)
+		if err := os.MkdirAll(conf.GIT_REPOSITORY_PATH, 0755); err != nil {
+			return nil, fmt.Errorf("failed to create agent repository directory: %w", err)
+		}
 	}
 
-	// Abrir el repositorio existente
+	// Verificar si ya es un repositorio Git
 	repo, err := git.PlainOpen(conf.GIT_REPOSITORY_PATH)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open git repository: %w", err)
+		// Si no es un repositorio Git, inicializarlo
+		fmt.Printf("Initializing Git repository in: %s\n", conf.GIT_REPOSITORY_PATH)
+		repo, err = git.PlainInit(conf.GIT_REPOSITORY_PATH, false)
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize git repository: %w", err)
+		}
 	}
 
 	return &gitClient{
