@@ -22,6 +22,7 @@ func init() {
 		newTenantSubmittedConsumer,
 		natsconn.NewJetStream,
 		usecase.NewCreateTenantAccount,
+		usecase.NewCreateRepositoryWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -30,6 +31,7 @@ func init() {
 func newTenantSubmittedConsumer(
 	js jetstream.JetStream,
 	createTenantAccount usecase.CreateTenantAccount,
+	createRepositoryWorkflow usecase.CreateRepositoryWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -81,6 +83,23 @@ func newTenantSubmittedConsumer(
 
 		obs.Logger.InfoContext(ctx, "Tenant procesado exitosamente desde NATS",
 			"eventType", "tenantSubmitted")
+
+		// Crear repositorio asociado al tenant
+		tenantData := input.Map()
+		repoName := fmt.Sprintf("tenant-%s", tenantData.Tenant.ID)
+
+		if err := createRepositoryWorkflow(ctx, repoName); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error creando repositorio para tenant",
+				"error", err,
+				"tenant_id", tenantData.Tenant.ID,
+				"repository_name", repoName)
+			// No hacemos return aquí para no fallar el procesamiento del tenant
+		} else {
+			obs.Logger.InfoContext(ctx, "Repositorio creado exitosamente para tenant",
+				"tenant_id", tenantData.Tenant.ID,
+				"repository_name", repoName)
+		}
+
 		msg.Ack()
 	})
 }

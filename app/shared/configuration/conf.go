@@ -47,6 +47,9 @@ type Conf struct {
 	RESEND_API_KEY                            string `env:"RESEND_API_KEY"`
 	GOOGLE_OAUTH_CLIENT_ID                    string `env:"GOOGLE_OAUTH_CLIENT_ID"`
 	GOOGLE_OAUTH_CLIENT_SECRET                string `env:"GOOGLE_OAUTH_CLIENT_SECRET"`
+	GIT_REPOSITORY_PATH                       string `env:"GIT_REPOSITORY_PATH" envDefault:"/workspace"`
+	GIT_TOKEN                                 string `env:"GIT_TOKEN"`
+	GIT_SSH_KEY_PATH                          string `env:"GIT_SSH_KEY_PATH" envDefault:"/home/gitpod/.ssh/id_rsa"`
 }
 
 func NewConf() (Conf, error) {

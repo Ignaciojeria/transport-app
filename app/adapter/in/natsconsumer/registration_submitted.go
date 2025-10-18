@@ -33,6 +33,7 @@ func init() {
 		usecase.NewAssociateTenantAccountWorkflow,
 		usecase.NewCreateDefaultClientCredentialsWorkflow,
 		usecase.NewSendClientCredentialsEmailWorkflow,
+		usecase.NewCreateRepositoryWorkflow,
 		observability.NewObservability,
 		configuration.NewConf,
 	)
@@ -45,6 +46,7 @@ func newRegistrationSubmittedConsumer(
 	associateTenantAccountWorkflow usecase.AssociateTenantAccountWorkflow,
 	createDefaultClientCredentialsWorkflow usecase.CreateDefaultClientCredentialsWorkflow,
 	sendClientCredentialsEmailWorkflow usecase.SendClientCredentialsEmailWorkflow,
+	createRepositoryWorkflow usecase.CreateRepositoryWorkflow,
 	obs observability.Observability,
 	conf configuration.Conf,
 ) (jetstream.ConsumeContext, error) {
@@ -160,6 +162,20 @@ func newRegistrationSubmittedConsumer(
 			obs.Logger.ErrorContext(ctx, "Error procesando registro", "error", err)
 			msg.Nak() // Usar Nak para permitir reintentos
 			return
+		}
+
+		// Crear repositorio asociado al tenant
+		repoName := fmt.Sprintf("tenant-%s", tenant.ID)
+		if err := createRepositoryWorkflow(registrationCtx, repoName); err != nil {
+			obs.Logger.ErrorContext(ctx, "Error creando repositorio para tenant",
+				"error", err,
+				"tenant_id", tenant.ID,
+				"repository_name", repoName)
+			// No hacemos return aquí para no fallar el procesamiento del registro
+		} else {
+			obs.Logger.InfoContext(ctx, "Repositorio creado exitosamente para tenant",
+				"tenant_id", tenant.ID,
+				"repository_name", repoName)
 		}
 
 		obs.Logger.InfoContext(ctx, "Registro procesado exitosamente desde NATS",
