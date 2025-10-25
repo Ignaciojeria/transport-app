@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Header from './components/Header';
 import Sidenav from './components/Sidenav';
 import ProductForm from './components/ProductForm';
+import RegistroHHForm from './components/RegistroHHForm';
 
 interface Product {
   id: string;
@@ -11,10 +12,22 @@ interface Product {
   fechaCreacion: Date;
 }
 
+interface RegistroHH {
+  id: string;
+  fechaEjecucion: string;
+  trabajador: string;
+  orderDeTrabajo: string;
+  horasNormales: number;
+  horasExtras: number;
+  actividad: string;
+  fechaCreacion: Date;
+}
+
 const App: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(true);
   const [activeSection, setActiveSection] = useState('bodega');
   const [products, setProducts] = useState<Product[]>([]);
+  const [registrosHH, setRegistrosHH] = useState<RegistroHH[]>([]);
 
   const handleProductSubmit = (productData: { nombreProducto: string; descripcion: string; precio: number }) => {
     const newProduct: Product = {
@@ -24,6 +37,16 @@ const App: React.FC = () => {
     };
     setProducts(prev => [...prev, newProduct]);
     alert('Producto creado exitosamente!');
+  };
+
+  const handleRegistroHHSubmit = (registroData: { fechaEjecucion: string; trabajador: string; orderDeTrabajo: string; horasNormales: number; horasExtras: number; actividad: string }) => {
+    const newRegistro: RegistroHH = {
+      id: Date.now().toString(),
+      ...registroData,
+      fechaCreacion: new Date()
+    };
+    setRegistrosHH(prev => [...prev, newRegistro]);
+    alert('Registro HH creado exitosamente!');
   };
 
   const renderContent = () => {
@@ -67,6 +90,76 @@ const App: React.FC = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {product.fechaCreacion.toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (activeSection === 'produccion-2') { // Registro Manual HH por OT
+      return (
+        <div className="space-y-8">
+          <RegistroHHForm onSubmit={handleRegistroHHSubmit} />
+          
+          {registrosHH.length > 0 && (
+            <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Registros HH Creados</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Fecha Ejecución
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Trabajador
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Orden Trabajo
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Actividad
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        H. Normales
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        H. Extras
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Fecha Creación
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {registrosHH.map((registro) => (
+                      <tr key={registro.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {new Date(registro.fechaEjecucion).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {registro.trabajador}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {registro.orderDeTrabajo || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {registro.actividad}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
+                          {registro.horasNormales}h
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-orange-600">
+                          {registro.horasExtras}h
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {registro.fechaCreacion.toLocaleDateString()}
                         </td>
                       </tr>
                     ))}

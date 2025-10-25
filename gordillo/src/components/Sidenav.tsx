@@ -18,7 +18,18 @@ const Sidenav: React.FC<SidenavProps> = ({ activeSection, onSectionChange }) => 
       id: 'produccion',
       label: 'Producción',
       icon: Wrench,
-      hasSubmenu: true
+      hasSubmenu: true,
+      submenu: [
+        'Crear Orden de Trabajo',
+        'Busqueda y Edición de OT',
+        'Registro Manual HH por OT',
+        'Registro Manual HH por OT V2',
+        'Registro de HH por OT Historico',
+        'Crear Cliente',
+        'Indice Clientes',
+        'Crear Contacto Cliente',
+        'Indice Contacto Clientes'
+      ]
     },
     {
       id: 'modulo-vigia',
