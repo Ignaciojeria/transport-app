@@ -15,11 +15,13 @@ interface Product {
 interface RegistroHH {
   id: string;
   fechaEjecucion: string;
-  trabajador: string;
   orderDeTrabajo: string;
-  horasNormales: number;
-  horasExtras: number;
   actividad: string;
+  trabajadores: {
+    trabajador: string;
+    horasNormales: number;
+    horasExtras: number;
+  }[];
   fechaCreacion: Date;
 }
 
@@ -39,14 +41,14 @@ const App: React.FC = () => {
     alert('Producto creado exitosamente!');
   };
 
-  const handleRegistroHHSubmit = (registroData: { fechaEjecucion: string; trabajador: string; orderDeTrabajo: string; horasNormales: number; horasExtras: number; actividad: string }) => {
+  const handleRegistroHHSubmit = (registroData: { fechaEjecucion: string; orderDeTrabajo: string; actividad: string; trabajadores: { trabajador: string; horasNormales: number; horasExtras: number; }[] }) => {
     const newRegistro: RegistroHH = {
       id: Date.now().toString(),
       ...registroData,
       fechaCreacion: new Date()
     };
     setRegistrosHH(prev => [...prev, newRegistro]);
-    alert('Registro HH creado exitosamente!');
+    alert(`Registro HH creado exitosamente para ${registroData.trabajadores.length} trabajador(es)!`);
   };
 
   const renderContent = () => {
@@ -110,61 +112,82 @@ const App: React.FC = () => {
           {registrosHH.length > 0 && (
             <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">Registros HH Creados</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Fecha Ejecución
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Trabajador
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Orden Trabajo
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Actividad
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        H. Normales
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        H. Extras
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                        Fecha Creación
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {registrosHH.map((registro) => (
-                      <tr key={registro.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {new Date(registro.fechaEjecucion).toLocaleDateString()}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {registro.trabajador}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {registro.orderDeTrabajo || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {registro.actividad}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">
-                          {registro.horasNormales}h
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-orange-600">
-                          {registro.horasExtras}h
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {registro.fechaCreacion.toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-6">
+                {registrosHH.map((registro) => (
+                  <div key={registro.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                      <div>
+                        <span className="text-sm font-semibold text-gray-600">Fecha Ejecución:</span>
+                        <p className="text-sm text-gray-900">{new Date(registro.fechaEjecucion).toLocaleDateString()}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-gray-600">Orden Trabajo:</span>
+                        <p className="text-sm text-gray-900">{registro.orderDeTrabajo || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-gray-600">Actividad:</span>
+                        <p className="text-sm text-gray-900">{registro.actividad}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-gray-600">Fecha Creación:</span>
+                        <p className="text-sm text-gray-900">{registro.fechaCreacion.toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Trabajador
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              H. Normales
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              H. Extras
+                            </th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Total Horas
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {registro.trabajadores.map((trabajador, index) => (
+                            <tr key={index} className="hover:bg-gray-50 transition-colors">
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {trabajador.trabajador}
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-blue-600">
+                                {trabajador.horasNormales}h
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-orange-600">
+                                {trabajador.horasExtras}h
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600">
+                                {trabajador.horasNormales + trabajador.horasExtras}h
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot className="bg-gray-100">
+                          <tr>
+                            <td className="px-4 py-3 text-sm font-bold text-gray-900">TOTALES:</td>
+                            <td className="px-4 py-3 text-sm font-bold text-blue-600">
+                              {registro.trabajadores.reduce((sum, t) => sum + t.horasNormales, 0)}h
+                            </td>
+                            <td className="px-4 py-3 text-sm font-bold text-orange-600">
+                              {registro.trabajadores.reduce((sum, t) => sum + t.horasExtras, 0)}h
+                            </td>
+                            <td className="px-4 py-3 text-sm font-bold text-green-600">
+                              {registro.trabajadores.reduce((sum, t) => sum + t.horasNormales + t.horasExtras, 0)}h
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
