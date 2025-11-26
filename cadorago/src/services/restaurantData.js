@@ -2,43 +2,43 @@
  * Servicio de datos del restaurante Cadorago
  */
 export const restaurantData = {
-  contacto: {
-    whatssap: "+56957857558"
+  "contacto":{
+      "whatssap":"+56944930403"
   },
-  horariosDeAtencion: [
-    "lunes a viernes de 9 am a 4 de la tarde"
+  "horariosDeAtencion":[
+      "lunes a viernes de 9 am a 4 de la tarde"
   ],
-  carta: [
-    {
-      titulo: "menu de la casa",
-      items: [
-        {
-          titulo: "Lentejas Caseras",
-          descripción: "sabrosas lentejas con verduras y arroz",
-          precio: 7000
-        },
-        {
-          titulo: "Fideos con salsa blanca",
-          descripción: "sabrosos fideos con salsa alfredo",
-          precio: 7000
-        }
-      ]
-    },
-    {
-      titulo: "Bebestibles",
-      items: [
-        {
-          titulo: "CocaCola Zero",
-          descripción: "",
-          precio: 1000
-        },
-        {
-          titulo: "Fideos con salsa blanca",
-          descripción: "",
-          precio: 7000
-        }
-      ]
-    }
+  "carta":[
+      {
+          "titulo":"menu de la casa",
+          "items":[
+              {
+                  "titulo":"Lentejas Caseras",
+                  "descripción":"sabrosas lentejas con verduras y arroz",
+                  "precio":7000
+              },
+              {
+                  "titulo":"Fideos con salsa blanca",
+                  "descripción":"sabrosos fideos con salsa alfredo",
+                  "precio":7000
+              }
+          ]
+      },
+      {
+          "titulo":"Bebestibles",
+          "items":[
+              {
+                  "titulo":"CocaCola Zero",
+                  "descripción":"",
+                  "precio":1000
+              },
+              {
+                  "titulo":"Jugo de naranja",
+                  "descripción":"",
+                  "precio":800
+              }
+          ]
+      }
   ]
 };
 
