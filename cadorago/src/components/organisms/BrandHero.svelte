@@ -35,6 +35,7 @@
   <div class="flex justify-center lg:justify-start items-center w-full">
     <!-- Slogan con tamaños que coinciden con los breakpoints del BrandLogo -->
     <!-- Margen negativo moderado en mobile puro para evitar solapamiento, más agresivo en breakpoints intermedios -->
-    <Slogan className="h-56 min-[376px]:h-72 min-[535px]:h-96 min-[1024px]:h-[28rem] min-[1561px]:h-[48rem] w-auto max-w-full -mt-28 min-[376px]:-mt-40 min-[535px]:-mt-52 lg:-mt-[9rem]" />
+    <!-- Margen izquierdo negativo solo en layout de 2 columnas para moverlo a la izquierda -->
+    <Slogan className="h-56 min-[376px]:h-72 min-[535px]:h-96 min-[1024px]:h-[28rem] min-[1561px]:h-[48rem] w-auto max-w-full -mt-28 min-[376px]:-mt-40 min-[535px]:-mt-52 lg:-mt-[9rem] lg:-ml-32" />
   </div>
 </div>
