@@ -4,6 +4,7 @@
   import ContactSection from '../organisms/ContactSection.svelte';
   import CartaSection from '../organisms/CartaSection.svelte';
   import FloatingCart from '../organisms/FloatingCart.svelte';
+  import Footer from '../organisms/Footer.svelte';
   import { getRestaurantData } from '../../services/restaurantData.js';
   
   const restaurantData = getRestaurantData();
@@ -45,3 +46,6 @@
   <!-- Carrito flotante -->
   <FloatingCart />
 </HeroTemplate>
+
+<!-- Footer -->
+<Footer />
