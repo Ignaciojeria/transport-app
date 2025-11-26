@@ -32,9 +32,32 @@
     }
   });
   
+  function formatTimeInput(value) {
+    // Remover todo excepto números
+    let numbers = value.replace(/\D/g, '');
+    
+    // Limitar a 4 dígitos
+    if (numbers.length > 4) {
+      numbers = numbers.slice(0, 4);
+    }
+    
+    // Formatear como HH:MM
+    if (numbers.length >= 3) {
+      return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
+    } else if (numbers.length === 2) {
+      return `${numbers}:`;
+    }
+    return numbers;
+  }
+  
+  function validateTime(timeValue) {
+    if (!timeValue) return false;
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(timeValue);
+  }
+  
   function formatTimeForMessage(timeValue) {
     if (!timeValue) return '';
-    // timeValue viene en formato HH:MM (24h)
     const [hours, minutes] = timeValue.split(':');
     const hour = parseInt(hours);
     const min = minutes;
@@ -62,9 +85,19 @@
     horaRetiro = '';
   }
   
+  function handleTimeInput(event) {
+    const value = event.currentTarget.value;
+    horaRetiro = formatTimeInput(value);
+  }
+  
   function handleConfirmOrder() {
     if (!nombreRetiro.trim() || !horaRetiro.trim()) {
       alert('Por favor completa todos los campos');
+      return;
+    }
+    
+    if (!validateTime(horaRetiro)) {
+      alert('Por favor ingresa una hora válida (formato: HH:MM, ejemplo: 14:30)');
       return;
     }
     
@@ -257,11 +290,15 @@
           </label>
           <input
             id="hora-retiro"
-            type="time"
-            bind:value={horaRetiro}
+            type="text"
+            value={horaRetiro}
+            oninput={handleTimeInput}
+            placeholder="Ej: 14:30"
+            maxlength="5"
             class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />
+          <p class="text-xs text-gray-500 mt-1">Formato: HH:MM (24 horas, ejemplo: 14:30 para 2:30 PM)</p>
         </div>
       </div>
       
