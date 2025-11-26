@@ -86,9 +86,11 @@ class CartStore {
   /**
    * Genera el mensaje para WhatsApp con el pedido
    * @param {string} whatsappNumber - Número de WhatsApp
+   * @param {string} nombreRetiro - Nombre de quien va a retirar
+   * @param {string} horaRetiro - Hora de retiro
    * @returns {string} URL de WhatsApp con el mensaje
    */
-  generateWhatsAppMessage(whatsappNumber) {
+  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '') {
     let message = "¡Hola! Me gustaría hacer el siguiente pedido:\n\n";
     
     this.items.forEach((item, index) => {
@@ -104,6 +106,18 @@ class CartStore {
     });
     
     message += `\n*Total: $${this.getTotal().toLocaleString('es-CL')}*\n\n`;
+    
+    if (nombreRetiro || horaRetiro) {
+      message += "Información de retiro:\n";
+      if (nombreRetiro) {
+        message += `👤 Nombre: ${nombreRetiro}\n`;
+      }
+      if (horaRetiro) {
+        message += `🕐 Hora de retiro: ${horaRetiro}\n`;
+      }
+      message += "\n";
+    }
+    
     message += "Gracias!";
     
     const encodedMessage = encodeURIComponent(message);

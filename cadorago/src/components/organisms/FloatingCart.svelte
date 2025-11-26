@@ -12,6 +12,36 @@
   const totalItems = $derived(cartStore.getTotalItems());
   
   let isExpanded = $state(false);
+  let showOrderForm = $state(false);
+  let nombreRetiro = $state('');
+  let horaRetiro = $state('');
+  
+  // Obtener zona horaria
+  const timeZone = $derived(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timeZoneName = $derived(() => {
+    try {
+      const formatter = new Intl.DateTimeFormat('es-CL', {
+        timeZoneName: 'short',
+        timeZone: timeZone
+      });
+      const parts = formatter.formatToParts(new Date());
+      const tzPart = parts.find(part => part.type === 'timeZoneName');
+      return tzPart ? tzPart.value : timeZone;
+    } catch {
+      return timeZone;
+    }
+  });
+  
+  function formatTimeForMessage(timeValue) {
+    if (!timeValue) return '';
+    // timeValue viene en formato HH:MM (24h)
+    const [hours, minutes] = timeValue.split(':');
+    const hour = parseInt(hours);
+    const min = minutes;
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${min} ${period}`;
+  }
   
   function handleQuantityChange(titulo, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
@@ -22,9 +52,34 @@
     cartStore.removeItem(titulo);
   }
   
-  function handleSendOrder() {
-    const url = cartStore.generateWhatsAppMessage(restaurantData.contacto.whatssap);
+  function handleSendOrderClick() {
+    showOrderForm = true;
+  }
+  
+  function handleCancelOrder() {
+    showOrderForm = false;
+    nombreRetiro = '';
+    horaRetiro = '';
+  }
+  
+  function handleConfirmOrder() {
+    if (!nombreRetiro.trim() || !horaRetiro.trim()) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+    
+    const horaFormateada = formatTimeForMessage(horaRetiro);
+    const horaConZona = `${horaFormateada} (${timeZoneName()})`;
+    
+    const url = cartStore.generateWhatsAppMessage(
+      restaurantData.contacto.whatssap,
+      nombreRetiro.trim(),
+      horaConZona
+    );
     window.open(url, '_blank');
+    showOrderForm = false;
+    nombreRetiro = '';
+    horaRetiro = '';
   }
   
   function handleClearCart() {
@@ -89,7 +144,7 @@
           </button>
           
           <button
-            onclick={handleSendOrder}
+            onclick={handleSendOrderClick}
             class="px-4 py-2 sm:px-6 sm:py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2 sm:gap-3 font-semibold text-sm sm:text-base"
             aria-label="Enviar pedido por WhatsApp"
           >
@@ -158,6 +213,74 @@
         </div>
       </div>
     {/if}
+  </div>
+{/if}
+
+<!-- Modal de información de retiro -->
+{#if showOrderForm}
+  <div 
+    class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" 
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="order-form-title"
+    tabindex="-1"
+    onclick={handleCancelOrder}
+    onkeydown={(e) => {
+      if (e.key === 'Escape') {
+        handleCancelOrder();
+      }
+    }}
+  >
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8">
+      <h3 id="order-form-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
+        Información de Retiro
+      </h3>
+      
+      <div class="space-y-4 sm:space-y-5" onclick={(e) => e.stopPropagation()}>
+        <div>
+          <label for="nombre-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+            Nombre de quien va a retirar *
+          </label>
+          <input
+            id="nombre-retiro"
+            type="text"
+            bind:value={nombreRetiro}
+            placeholder="Ej: Juan Pérez"
+            class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          />
+        </div>
+        
+        <div>
+          <label for="hora-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+            Hora de retiro * <span class="text-xs text-gray-500 font-normal">({timeZoneName()})</span>
+          </label>
+          <input
+            id="hora-retiro"
+            type="time"
+            bind:value={horaRetiro}
+            class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+            required
+          />
+        </div>
+      </div>
+      
+      <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8" onclick={(e) => e.stopPropagation()}>
+        <button
+          onclick={handleCancelOrder}
+          class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
+        >
+          Cancelar
+        </button>
+        <button
+          onclick={handleConfirmOrder}
+          class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+        >
+          <WhatsAppIcon className="w-5 h-5" />
+          <span>Enviar Pedido</span>
+        </button>
+      </div>
+    </div>
   </div>
 {/if}
 
