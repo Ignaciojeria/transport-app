@@ -56,39 +56,39 @@
     }
   }}
 >
-  <div class="flex justify-between items-start gap-6 sm:gap-8">
-    <div class="flex-1">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6 lg:gap-8">
+    <div class="flex-1 min-w-0">
       <MenuItemTitle title={item.titulo} />
       <MenuItemDescription description={item.descripción} />
     </div>
-    <div class="flex items-center gap-4 sm:gap-6">
+    <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 lg:gap-6 flex-shrink-0">
       <div class="flex-shrink-0">
         <Price price={item.precio} />
       </div>
       
       {#if isInCart}
         <!-- Controles de cantidad cuando está en el carrito -->
-        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+        <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3 flex-shrink-0">
           <button
             onclick={handleDecrement}
-            class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
+            class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
             aria-label="Disminuir cantidad"
           >
-            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
             </svg>
           </button>
           
-          <span class="w-8 sm:w-10 lg:w-12 text-center font-bold text-lg sm:text-xl lg:text-2xl text-gray-800">
+          <span class="w-6 sm:w-8 lg:w-10 xl:w-12 text-center font-bold text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-800">
             {quantity}
           </span>
           
           <button
             onclick={handleIncrement}
-            class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
+            class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
             aria-label="Aumentar cantidad"
           >
-            <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
           </button>
@@ -97,10 +97,10 @@
         <!-- Botón de agregar cuando no está en el carrito -->
         <button
           onclick={handleAddToCart}
-          class="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors flex-shrink-0 shadow-md hover:shadow-lg"
+          class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors flex-shrink-0 shadow-md hover:shadow-lg"
           aria-label="Agregar al carrito"
         >
-          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
         </button>
