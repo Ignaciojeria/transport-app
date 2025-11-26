@@ -1,0 +1,134 @@
+<script>
+  import { cartStore } from '../../stores/cartStore.svelte.js';
+  import Price from '../atoms/Price.svelte';
+  import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
+  import { getRestaurantData } from '../../services/restaurantData.js';
+  
+  const { className = '' } = $props();
+  
+  const restaurantData = getRestaurantData();
+  
+  // Valores derivados reactivos
+  const items = $derived(cartStore.items);
+  const total = $derived(cartStore.getTotal());
+  const totalItems = $derived(cartStore.getTotalItems());
+  
+  function handleQuantityChange(titulo, event) {
+    const quantity = parseInt(event.currentTarget.value) || 0;
+    cartStore.updateQuantity(titulo, quantity);
+  }
+  
+  function handleRemoveItem(titulo) {
+    cartStore.removeItem(titulo);
+  }
+  
+  function handleSendOrder() {
+    const url = cartStore.generateWhatsAppMessage(restaurantData.contacto.whatssap);
+    window.open(url, '_blank');
+  }
+  
+  function handleClearCart() {
+    if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+      cartStore.clear();
+    }
+  }
+</script>
+
+<div class={`bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 sm:p-8 lg:p-10 ${className}`}>
+  <div class="flex justify-between items-center mb-6 sm:mb-8">
+    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
+      Carrito de Compras
+    </h2>
+    {#if items.length > 0}
+      <button
+        onclick={handleClearCart}
+        class="text-sm text-red-600 hover:text-red-800 font-medium"
+        aria-label="Vaciar carrito"
+      >
+        Vaciar
+      </button>
+    {/if}
+  </div>
+  
+  {#if cartStore.items.length === 0}
+    <div class="text-center py-8 sm:py-12">
+      <p class="text-lg sm:text-xl text-gray-600">
+        Tu carrito está vacío
+      </p>
+      <p class="text-sm sm:text-base text-gray-500 mt-2">
+        Agrega items del menú para comenzar
+      </p>
+    </div>
+  {:else}
+    <div class="space-y-4 sm:space-y-5 lg:space-y-6 mb-6 sm:mb-8">
+      {#each items as cartItem}
+        <div class="bg-[#E8E4D9] rounded-lg p-4 sm:p-5 lg:p-6">
+          <div class="flex justify-between items-start gap-4 mb-3">
+            <div class="flex-1">
+              <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">
+                {cartItem.titulo}
+              </h3>
+              {#if cartItem.descripción}
+                <p class="text-sm sm:text-base text-gray-600">
+                  {cartItem.descripción}
+                </p>
+              {/if}
+            </div>
+            <button
+              onclick={() => handleRemoveItem(cartItem.titulo)}
+              class="text-red-600 hover:text-red-800 text-xl font-bold"
+              aria-label="Eliminar item"
+            >
+              ×
+            </button>
+          </div>
+          
+          <div class="flex justify-between items-center">
+            <div class="flex items-center gap-3 sm:gap-4">
+              <label for="quantity-{cartItem.titulo}" class="text-sm sm:text-base text-gray-700 font-medium">
+                Cantidad:
+              </label>
+              <input
+                id="quantity-{cartItem.titulo}"
+                type="number"
+                min="1"
+                value={cartItem.cantidad}
+                oninput={(e) => handleQuantityChange(cartItem.titulo, e)}
+                class="w-16 sm:w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm sm:text-base"
+              />
+            </div>
+            <div class="text-right">
+              <p class="text-sm sm:text-base text-gray-600 mb-1">
+                ${(cartItem.precio * cartItem.cantidad).toLocaleString('es-CL')}
+              </p>
+              {#if cartItem.cantidad > 1}
+                <p class="text-xs sm:text-sm text-gray-500">
+                  ${cartItem.precio.toLocaleString('es-CL')} c/u
+                </p>
+              {/if}
+            </div>
+          </div>
+        </div>
+      {/each}
+    </div>
+    
+    <div class="border-t border-gray-300 pt-6 sm:pt-8">
+      <div class="flex justify-between items-center mb-6 sm:mb-8">
+        <span class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
+          Total:
+        </span>
+        <Price price={total} className="text-xl sm:text-2xl lg:text-3xl" />
+      </div>
+      
+      <button
+        onclick={handleSendOrder}
+        class="w-full flex items-center justify-center gap-3 px-6 py-4 sm:px-8 sm:py-5 lg:px-10 lg:py-6 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-semibold text-base sm:text-lg lg:text-xl"
+        aria-label="Enviar pedido por WhatsApp"
+      >
+        <WhatsAppIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
+        <span>Enviar Pedido por WhatsApp</span>
+      </button>
+    </div>
+  {/if}
+</div>
+
