@@ -6,7 +6,7 @@ export const restaurantData = {
     "whatssap": "+56944930403"
   },
   "horariosDeAtencion": [
-    "lunes a viernes de 9 am a 4 de la tarde"
+    "lunes a viernes de 9:00 a 16:00 horas"
   ],
   "carta": [
     {
