@@ -2,9 +2,52 @@
  * Store del carrito de compras usando Svelte 5 runes
  */
 
+const STORAGE_KEY = 'cadorago_cart';
+
 class CartStore {
   constructor() {
-    this.items = $state([]);
+    // Cargar items desde localStorage al inicializar
+    const savedItems = this.loadFromStorage();
+    this.items = $state(savedItems);
+  }
+
+  /**
+   * Carga los items del carrito desde localStorage
+   * @returns {Array} Array de items del carrito
+   */
+  loadFromStorage() {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) {
+        return [];
+      }
+      
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        return [];
+      }
+      
+      const parsed = JSON.parse(saved);
+      // Validar que sea un array
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.warn('Error al cargar el carrito desde localStorage:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Guarda los items del carrito en localStorage
+   */
+  saveToStorage() {
+    try {
+      if (typeof window === 'undefined' || !window.localStorage) {
+        return;
+      }
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.items));
+    } catch (error) {
+      console.warn('Error al guardar el carrito en localStorage:', error);
+    }
   }
 
   /**
@@ -50,6 +93,9 @@ class CartStore {
         acompanamientoId: acompanamiento ? acompanamiento.id : null
       }];
     }
+    
+    // Guardar en localStorage después de modificar
+    this.saveToStorage();
   }
 
   /**
@@ -58,6 +104,7 @@ class CartStore {
    */
   removeItem(titulo) {
     this.items = this.items.filter(item => item.titulo !== titulo);
+    this.saveToStorage();
   }
 
   /**
@@ -81,6 +128,8 @@ class CartStore {
       }
       return item;
     });
+    
+    this.saveToStorage();
   }
   
   /**
@@ -94,6 +143,7 @@ class CartStore {
         : item.titulo;
       return currentKey !== itemKey;
     });
+    this.saveToStorage();
   }
 
   /**
@@ -119,6 +169,7 @@ class CartStore {
    */
   clear() {
     this.items = [];
+    this.saveToStorage();
   }
 
   /**
