@@ -66,13 +66,19 @@
     return `${displayHour}:${min} ${period}`;
   }
   
-  function handleQuantityChange(titulo, event) {
+  function handleQuantityChange(cartItem, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
-    cartStore.updateQuantity(titulo, quantity);
+    const itemKey = cartItem.acompanamientoId 
+      ? `${cartItem.titulo}_${cartItem.acompanamientoId}` 
+      : cartItem.titulo;
+    cartStore.updateQuantity(itemKey, quantity);
   }
   
-  function handleRemoveItem(titulo) {
-    cartStore.removeItem(titulo);
+  function handleRemoveItem(cartItem) {
+    const itemKey = cartItem.acompanamientoId 
+      ? `${cartItem.titulo}_${cartItem.acompanamientoId}` 
+      : cartItem.titulo;
+    cartStore.removeItemByKey(itemKey);
   }
   
   function handleSendOrderClick() {
@@ -199,15 +205,18 @@
                   <div class="flex-1">
                     <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-1">
                       {cartItem.titulo}
+                      {#if cartItem.acompanamiento}
+                        <span class="text-sm font-normal text-gray-600">({cartItem.acompanamiento})</span>
+                      {/if}
                     </h3>
-                    {#if cartItem.descripción}
+                    {#if cartItem.descripcion}
                       <p class="text-xs sm:text-sm text-gray-600">
-                        {cartItem.descripción}
+                        {cartItem.descripcion}
                       </p>
                     {/if}
                   </div>
                   <button
-                    onclick={() => handleRemoveItem(cartItem.titulo)}
+                    onclick={() => handleRemoveItem(cartItem)}
                     class="text-red-600 hover:text-red-800 text-lg font-bold flex-shrink-0"
                     aria-label="Eliminar item"
                   >
@@ -225,7 +234,7 @@
                       type="number"
                       min="1"
                       value={cartItem.cantidad}
-                      oninput={(e) => handleQuantityChange(cartItem.titulo, e)}
+                      oninput={(e) => handleQuantityChange(cartItem, e)}
                       class="w-14 sm:w-16 px-2 py-1 border border-gray-300 rounded text-center text-xs sm:text-sm"
                     />
                   </div>

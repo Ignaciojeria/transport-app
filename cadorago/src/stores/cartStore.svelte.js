@@ -10,9 +10,28 @@ class CartStore {
   /**
    * Agrega un item al carrito
    * @param {Object} item - Item del menú a agregar
+   * @param {Object} acompanamiento - Acompañamiento seleccionado (opcional)
    */
-  addItem(item) {
-    const existingItemIndex = this.items.findIndex(i => i.titulo === item.titulo);
+  addItem(item, acompanamiento = null) {
+    // Si tiene acompañamientos, debe tener uno seleccionado
+    if (item.acompanamientos && item.acompanamientos.length > 0 && !acompanamiento) {
+      throw new Error('Debe seleccionar un acompañamiento');
+    }
+    
+    // Determinar precio: usar precio del acompañamiento si existe, sino el precio del item
+    const precio = acompanamiento ? acompanamiento.precio : (item.precio || 0);
+    
+    // Crear clave única: titulo + id del acompañamiento (si existe)
+    const itemKey = acompanamiento 
+      ? `${item.titulo}_${acompanamiento.id}` 
+      : item.titulo;
+    
+    const existingItemIndex = this.items.findIndex(i => {
+      const existingKey = i.acompanamientoId 
+        ? `${i.titulo}_${i.acompanamientoId}` 
+        : i.titulo;
+      return existingKey === itemKey;
+    });
     
     if (existingItemIndex !== -1) {
       // Crear nuevo array para forzar reactividad
@@ -25,7 +44,10 @@ class CartStore {
     } else {
       this.items = [...this.items, {
         ...item,
-        cantidad: 1
+        cantidad: 1,
+        precio: precio,
+        acompanamiento: acompanamiento ? acompanamiento.nombre : null,
+        acompanamientoId: acompanamiento ? acompanamiento.id : null
       }];
     }
   }
@@ -40,21 +62,37 @@ class CartStore {
 
   /**
    * Actualiza la cantidad de un item
-   * @param {string} titulo - Título del item
+   * @param {string} itemKey - Clave única del item (titulo o titulo_acompanamientoId)
    * @param {number} cantidad - Nueva cantidad
    */
-  updateQuantity(titulo, cantidad) {
+  updateQuantity(itemKey, cantidad) {
     if (cantidad <= 0) {
-      this.removeItem(titulo);
+      this.removeItemByKey(itemKey);
       return;
     }
     
     // Crear nuevo array para forzar reactividad
     this.items = this.items.map(item => {
-      if (item.titulo === titulo) {
+      const currentKey = item.acompanamientoId 
+        ? `${item.titulo}_${item.acompanamientoId}` 
+        : item.titulo;
+      if (currentKey === itemKey) {
         return { ...item, cantidad };
       }
       return item;
+    });
+  }
+  
+  /**
+   * Elimina un item del carrito por clave única
+   * @param {string} itemKey - Clave única del item
+   */
+  removeItemByKey(itemKey) {
+    this.items = this.items.filter(item => {
+      const currentKey = item.acompanamientoId 
+        ? `${item.titulo}_${item.acompanamientoId}` 
+        : item.titulo;
+      return currentKey !== itemKey;
     });
   }
 
@@ -95,6 +133,9 @@ class CartStore {
     
     this.items.forEach((item, index) => {
       message += `${index + 1}. ${item.titulo}`;
+      if (item.acompanamiento) {
+        message += ` (${item.acompanamiento})`;
+      }
       if (item.cantidad > 1) {
         message += ` x${item.cantidad}`;
       }
