@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   description: 'Gestiona tu menú digital y deja que las ventas fluyan. Diseño 100% personalizado, carrito de compras integrado y recepción de pedidos por WhatsApp.',
   keywords: 'menú digital, carta digital, restaurante, QR code, pedidos online, WhatsApp',
   authors: [{ name: 'MiCartaPro' }],
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     title: 'MiCartaPro — Tu Menú Digital, Sin Complicaciones',
     description: 'Gestiona tu menú digital y deja que las ventas fluyan.',
