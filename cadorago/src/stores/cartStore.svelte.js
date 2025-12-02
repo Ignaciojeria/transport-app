@@ -168,7 +168,9 @@ class CartStore {
    * Limpia el carrito
    */
   clear() {
+    // Asignar nuevo array vacío - esto debería activar la reactividad en Svelte 5
     this.items = [];
+    // Guardar en localStorage inmediatamente
     this.saveToStorage();
   }
 

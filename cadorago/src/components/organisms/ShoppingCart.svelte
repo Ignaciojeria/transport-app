@@ -13,6 +13,8 @@
   const total = $derived(cartStore.getTotal());
   const totalItems = $derived(cartStore.getTotalItems());
   
+  let showClearConfirm = $state(false);
+  
   function handleQuantityChange(titulo, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
     cartStore.updateQuantity(titulo, quantity);
@@ -28,9 +30,16 @@
   }
   
   function handleClearCart() {
-    if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
-      cartStore.clear();
-    }
+    showClearConfirm = true;
+  }
+  
+  function confirmClearCart() {
+    cartStore.clear();
+    showClearConfirm = false;
+  }
+  
+  function cancelClearCart() {
+    showClearConfirm = false;
   }
 </script>
 
@@ -131,4 +140,46 @@
     </div>
   {/if}
 </div>
+
+<!-- Modal de confirmación para limpiar carrito -->
+{#if showClearConfirm}
+  <div 
+    class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" 
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="clear-confirm-title"
+    tabindex="-1"
+    onclick={cancelClearCart}
+    onkeydown={(e) => {
+      if (e.key === 'Escape') {
+        cancelClearCart();
+      }
+    }}
+  >
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8" onclick={(e) => e.stopPropagation()}>
+      <h3 id="clear-confirm-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
+        ¿Vaciar carrito?
+      </h3>
+      
+      <p class="text-gray-600 mb-6">
+        ¿Estás seguro de que quieres vaciar el carrito? Esta acción no se puede deshacer.
+      </p>
+      
+      <div class="flex gap-3 sm:gap-4">
+        <button
+          onclick={cancelClearCart}
+          class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
+        >
+          Cancelar
+        </button>
+        <button
+          onclick={confirmClearCart}
+          class="flex-1 px-4 py-2 sm:py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
+        >
+          Vaciar Carrito
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
 
