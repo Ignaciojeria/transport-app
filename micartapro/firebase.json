@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "micartapro-landing",
+    "site": "micartapro",
     "public": "out",
     "ignore": [
       "firebase.json",
