@@ -3,7 +3,7 @@ import Image from 'next/image'
 
 export const metadata = {
   title: 'Refund Policy - MiCartaPro',
-  description: 'Refund policy for MiCartaPro. Learn about our refund and cancellation policies.',
+  description: 'MiCartaPro refund policy. Learn about our refund and cancellation terms.',
 }
 
 export default function RefundPage() {
@@ -26,7 +26,7 @@ export default function RefundPage() {
               href="/"
               className="text-gray-600 hover:text-blue-600 transition-colors"
             >
-              Back to home
+              Back to Home
             </Link>
           </div>
         </div>
@@ -47,7 +47,7 @@ export default function RefundPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Overview</h2>
               <p>
-                This Refund Policy ("Policy") describes the terms and conditions under which MiCartaPro ("we", "us", or "our") provides refunds for our digital menu services. By purchasing our services, you agree to this Refund Policy.
+                This Refund Policy ("Policy") outlines the terms and conditions under which MiCartaPro ("we", "our", or "the company") provides refunds for our digital menu services. By purchasing our services, you agree to the terms outlined in this Policy.
               </p>
             </section>
 
@@ -57,182 +57,165 @@ export default function RefundPage() {
                 MiCartaPro provides digital menu services including:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Customized digital menu design and development</li>
+                <li>Custom digital menu design and development</li>
                 <li>Exclusive QR code generation</li>
                 <li>Shopping cart integration</li>
                 <li>WhatsApp integration for order reception</li>
                 <li>Responsive design for all devices</li>
-                <li>First year free (promotional offer)</li>
-                <li>Monthly subscription renewal from the second year ($10 USD/month)</li>
+                <li>First year of service included in initial payment</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Initial Setup Fee</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Pricing Structure</h2>
               <p>
-                Our services require an initial setup fee of $150 USD (or equivalent in your local currency). This fee covers:
+                Our services are priced as follows:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Custom design and development of your digital menu</li>
-                <li>Logo customization</li>
-                <li>QR code generation</li>
-                <li>Initial configuration and setup</li>
-                <li>First year of service (free promotional period)</li>
+                <li><strong>Initial Setup:</strong> Starting from $150 USD (one-time payment)</li>
+                <li><strong>First Year:</strong> Included in initial payment (free promotional period)</li>
+                <li><strong>Renewal (Second Year Onwards):</strong> $10 USD per month</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Refund Eligibility</h2>
               
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.1. Refund Period</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.1. Initial Setup Fee</h3>
               <p>
-                You may request a full refund of the initial setup fee within <strong>14 days</strong> of the purchase date, provided that:
+                Refunds for the initial setup fee ($150 USD) may be requested under the following circumstances:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>The service has not been fully delivered or activated</li>
-                <li>You have not used the service extensively</li>
-                <li>The refund request is made in good faith</li>
+                <li><strong>Before Service Commencement:</strong> If you request a refund before we begin work on your digital menu, you may receive a full refund within 7 days of payment.</li>
+                <li><strong>Service Not Delivered:</strong> If we fail to deliver the agreed-upon services within the specified timeframe and you have not approved any delays, you may be eligible for a full or partial refund.</li>
+                <li><strong>Technical Issues:</strong> If the delivered service has critical technical issues that we cannot resolve within 30 days, you may be eligible for a refund.</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.2. Non-Refundable Situations</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.2. Monthly Renewal Fees</h3>
               <p>
-                Refunds will NOT be provided in the following circumstances:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>After 14 days from the purchase date</li>
-                <li>If the service has been fully delivered and activated</li>
-                <li>If you have received and used the custom design, QR code, or other deliverables</li>
-                <li>For monthly subscription fees after the service period has commenced</li>
-                <li>If the refund request is due to a change of mind after service delivery</li>
-                <li>For any additional services or customizations requested beyond the initial scope</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Monthly Subscription Refunds</h2>
-              <p>
-                Monthly subscription fees ($10 USD/month starting from the second year) are charged in advance and are generally non-refundable. However, we may consider prorated refunds in exceptional circumstances, such as:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Service unavailability for extended periods (more than 7 consecutive days) due to our fault</li>
-                <li>Technical issues that prevent you from using the service and that we are unable to resolve</li>
-                <li>Duplicate charges due to billing errors on our part</li>
-              </ul>
-              <p className="mt-4">
-                Refund requests for monthly subscriptions must be submitted within 7 days of the charge date.
+                Monthly renewal fees ($10 USD) are non-refundable once paid. However, you may cancel your subscription at any time to avoid future charges. Cancellation will take effect at the end of the current billing period.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. How to Request a Refund</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Non-Refundable Situations</h2>
               <p>
-                To request a refund, please contact us through:
+                Refunds will not be provided in the following situations:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>WhatsApp:</strong> +56957857558</li>
-                <li><strong>Email:</strong> support@micartapro.com</li>
-              </ul>
-              <p className="mt-4">
-                Your refund request must include:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Your account information or order number</li>
-                <li>The reason for the refund request</li>
-                <li>The date of purchase</li>
-                <li>Any relevant documentation or screenshots</li>
+                <li>After the service has been fully delivered and accepted by you</li>
+                <li>If you have used the service for more than 30 days after delivery</li>
+                <li>If the service was modified or customized according to your specific requirements and you have approved the final version</li>
+                <li>If you have violated our Terms and Conditions, resulting in service termination</li>
+                <li>If you request a refund due to a change of mind after the service has been delivered</li>
+                <li>For monthly renewal fees that have already been charged</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Refund Processing</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Refund Process</h2>
+              
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.1. Requesting a Refund</h3>
               <p>
-                Once we receive and approve your refund request:
+                To request a refund, you must:
+              </p>
+              <ol className="list-decimal pl-6 space-y-2">
+                <li>Contact us via WhatsApp at +56957857558 or email at support@micartapro.com</li>
+                <li>Provide your order details, including payment confirmation and service information</li>
+                <li>Clearly state the reason for your refund request</li>
+                <li>Include any relevant documentation or evidence supporting your request</li>
+              </ol>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.2. Refund Review</h3>
+              <p>
+                We will review your refund request within 5-7 business days. During this time, we may:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>We will process the refund within <strong>5-10 business days</strong></li>
+                <li>Request additional information or clarification</li>
+                <li>Investigate the circumstances of your request</li>
+                <li>Attempt to resolve any issues that may have led to the refund request</li>
+              </ul>
+
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.3. Refund Approval and Processing</h3>
+              <p>
+                If your refund request is approved:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>We will process the refund within 10-15 business days</li>
                 <li>The refund will be issued to the original payment method used for the purchase</li>
                 <li>You will receive a confirmation email once the refund has been processed</li>
-                <li>The time it takes for the refund to appear in your account depends on your payment provider (typically 3-5 business days for credit cards, 5-10 business days for bank transfers)</li>
+                <li>The refund amount will be based on the circumstances and may be partial or full</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Partial Refunds</h2>
+              <p>
+                In some cases, we may offer a partial refund instead of a full refund. This may occur when:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Work has already been completed on your project</li>
+                <li>You have used the service for a portion of the paid period</li>
+                <li>Some deliverables have been accepted and used</li>
+                <li>We determine that a partial refund is fair based on the services already rendered</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Cancellation Policy</h2>
               <p>
-                You may cancel your subscription at any time. Cancellation will take effect at the end of your current billing period. You will continue to have access to the service until the end of the paid period.
+                You may cancel your subscription at any time:
               </p>
-              <p>
-                To cancel your subscription, contact us through WhatsApp or email. No refunds will be provided for the remaining period of an active subscription unless otherwise specified in this Policy.
-              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li><strong>Monthly Subscriptions:</strong> Cancel before the next billing cycle to avoid future charges. No refunds for the current period.</li>
+                <li><strong>Service Cancellation:</strong> If you cancel during the initial setup phase, refund eligibility will be determined based on the work completed.</li>
+                <li><strong>Immediate Cancellation:</strong> Upon cancellation, your service will remain active until the end of the current billing period.</li>
+              </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Chargebacks</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Disputes and Chargebacks</h2>
               <p>
-                If you file a chargeback or dispute with your payment provider, we reserve the right to:
+                If you have a dispute regarding a charge, we encourage you to contact us directly before initiating a chargeback with your payment provider. Chargebacks may result in:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Immediately suspend or terminate your account</li>
-                <li>Dispute the chargeback with your payment provider</li>
-                <li>Provide evidence of service delivery and this Refund Policy</li>
+                <li>Immediate suspension of your account</li>
+                <li>Termination of services</li>
+                <li>Additional fees or penalties</li>
               </ul>
               <p className="mt-4">
-                We encourage you to contact us directly to resolve any issues before initiating a chargeback, as we are committed to resolving disputes amicably.
+                We are committed to resolving disputes fairly and promptly through direct communication.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Service Modifications</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Currency and Payment Method</h2>
               <p>
-                If we make significant changes to our services that materially affect your use of the service, you may be eligible for a prorated refund. We will notify you of any such changes in advance and provide options for cancellation and refund if applicable.
+                All refunds will be processed in the same currency as the original payment (USD). Refunds will be issued to the original payment method used for the purchase. Processing times may vary depending on your payment provider.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Currency and Exchange Rates</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Changes to This Policy</h2>
               <p>
-                All refunds will be processed in the same currency as the original payment. If currency conversion is required, the exchange rate at the time of the refund will apply. We are not responsible for any fees charged by your bank or payment provider for currency conversion.
+                We reserve the right to modify this Refund Policy at any time. Changes will be effective immediately upon posting on this page. We will notify you of any material changes via email or through our services.
+              </p>
+              <p>
+                Your continued use of our services after changes to this Policy constitutes acceptance of the updated terms.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Disputes and Resolution</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Contact</h2>
               <p>
-                If you are not satisfied with our refund decision, you may:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Contact us to discuss your concerns further</li>
-                <li>Request a review of your case by our management team</li>
-                <li>Seek resolution through alternative dispute resolution mechanisms as provided by applicable law</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Changes to This Policy</h2>
-              <p>
-                We reserve the right to modify this Refund Policy at any time. Changes will be effective immediately upon posting on this page. We will notify you of material changes via email or through our Services.
-              </p>
-              <p>
-                Your continued use of our Services after changes to this Policy constitutes acceptance of the modified Policy.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Contact Information</h2>
-              <p>
-                For questions about this Refund Policy or to request a refund, please contact us:
+                If you have questions about this Refund Policy or need to request a refund, please contact us:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>WhatsApp:</strong> +56957857558</li>
                 <li><strong>Email:</strong> support@micartapro.com</li>
-                <li><strong>Business Hours:</strong> Monday to Friday, 9:00 AM - 5:00 PM (Chile Time)</li>
               </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Governing Law</h2>
-              <p>
-                This Refund Policy is governed by and construed in accordance with applicable consumer protection laws and regulations. Any disputes arising from this Policy will be resolved in accordance with the laws of your jurisdiction and applicable international consumer protection standards.
+              <p className="mt-4">
+                We aim to respond to all refund requests and inquiries within 2-3 business days.
               </p>
             </section>
           </div>
@@ -242,18 +225,19 @@ export default function RefundPage() {
               href="/"
               className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
             >
-              ← Back to home
+              ← Back to Home
             </Link>
-            <Link 
-              href="/terms-en"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-            >
-              View Terms and Conditions →
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link 
+                href="/terms"
+                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View Terms and Conditions →
+              </Link>
+            </div>
           </div>
         </div>
       </div>
     </div>
   )
 }
-

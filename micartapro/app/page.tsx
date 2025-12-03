@@ -406,6 +406,10 @@ export default function LandingPage() {
               <Link href="/terms" className="hover:text-white transition-colors">
                 {t.footer.terms}
               </Link>
+              <span className="hidden sm:inline">•</span>
+              <Link href="/refund" className="hover:text-white transition-colors">
+                {t.footer.refund}
+              </Link>
             </div>
             <p>&copy; {new Date().getFullYear()} MiCartaPro. {t.footer.copyright}</p>
           </div>

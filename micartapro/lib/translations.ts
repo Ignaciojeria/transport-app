@@ -110,6 +110,7 @@ export interface Translations {
     quoteWhatsApp: string
     privacy: string
     terms: string
+    refund: string
     copyright: string
   }
 }
@@ -224,6 +225,7 @@ export const translations: Record<Language, Translations> = {
       quoteWhatsApp: 'Quote via WhatsApp',
       privacy: 'Privacy Policy',
       terms: 'Terms and Conditions',
+      refund: 'Refund Policy',
       copyright: 'All rights reserved.'
     }
   },
@@ -324,6 +326,7 @@ export const translations: Record<Language, Translations> = {
       quoteWhatsApp: 'Cotizar por WhatsApp',
       privacy: 'Política de Privacidad',
       terms: 'Términos y Condiciones',
+      refund: 'Política de Reembolso',
       copyright: 'Todos los derechos reservados.'
     }
   },
@@ -424,6 +427,7 @@ export const translations: Record<Language, Translations> = {
       quoteWhatsApp: 'Cotizar via WhatsApp',
       privacy: 'Política de Privacidade',
       terms: 'Termos e Condições',
+      refund: 'Política de Reembolso',
       copyright: 'Todos os direitos reservados.'
     }
   }
