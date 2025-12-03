@@ -4,30 +4,45 @@ import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Play, ExternalLink, Smartphone } from "lucide-react"
+import { useLanguage } from "@/lib/useLanguage"
 
 export function DemoEmbed() {
   const [showDemo, setShowDemo] = useState(false)
+  const { t, isLoading, language } = useLanguage()
+
+  if (isLoading) {
+    return (
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            🧪 Prueba MiCartaPro en vivo
+            {t.demo.title}
           </h2>
           <p className="text-xl text-gray-600 mb-4">
-            Experimenta la app como si fueras un cliente real
+            {t.demo.subtitle}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-          {/* Lado izquierdo - Información */}
+          {/* Left side - Information */}
           <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Smartphone className="h-6 w-6 text-blue-600 mr-2" />
-                  Demo Interactiva
+                  {t.demo.interactiveDemo}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -35,36 +50,36 @@ export function DemoEmbed() {
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Selecciona un plato</h4>
-                      <p className="text-gray-600 text-sm">Explora el menú y elige tu plato favorito</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.selectDish.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.selectDish.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-green-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Elige el acompañamiento</h4>
-                      <p className="text-gray-600 text-sm">Personaliza tu pedido con los acompañamientos disponibles</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.chooseSide.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.chooseSide.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-purple-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Ingresa el nombre de quien retira</h4>
-                      <p className="text-gray-600 text-sm">Completa los datos necesarios para el retiro</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.enterName.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.enterName.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-orange-600 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Selecciona la hora de retiro (formato 24 h)</h4>
-                      <p className="text-gray-600 text-sm">Indica cuándo quieres retirar tu pedido</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.selectTime.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.selectTime.description}</p>
                     </div>
                   </div>
                   <div className="flex items-start space-x-3">
                     <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                     <div>
-                      <h4 className="font-semibold text-gray-900">Envía tu pedido directamente por WhatsApp</h4>
-                      <p className="text-gray-600 text-sm">El pedido se envía automáticamente al restaurante</p>
+                      <h4 className="font-semibold text-gray-900">{t.demo.sendWhatsApp.title}</h4>
+                      <p className="text-gray-600 text-sm">{t.demo.sendWhatsApp.description}</p>
                     </div>
                   </div>
                 </div>
@@ -75,7 +90,7 @@ export function DemoEmbed() {
                     className="w-full bg-blue-600 hover:bg-blue-700"
                   >
                     <Play className="h-4 w-4 mr-2" />
-                    {showDemo ? 'Ocultar Demo' : 'Ver Demo'}
+                    {showDemo ? t.demo.hideDemo : t.demo.viewDemo}
                   </Button>
                   
                   <Button 
@@ -84,14 +99,14 @@ export function DemoEmbed() {
                     onClick={() => window.open('https://cadorago.web.app/', '_blank')}
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    Abrir en nueva pestaña
+                    {t.demo.openNewTab}
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Lado derecho - Demo embebida */}
+          {/* Right side - Embedded demo */}
           <div className="relative">
             {showDemo ? (
               <div className="relative">
@@ -114,15 +129,15 @@ export function DemoEmbed() {
                   <Smartphone className="h-8 w-8 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  Vista Previa
+                  {t.demo.preview.title}
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  Haz clic en "Ver Demo" para experimentar la aplicación completa
+                  {t.demo.preview.description}
                 </p>
                 <div className="text-sm text-gray-500">
-                  • Menú digital interactivo<br/>
-                  • Carrito de compras funcional<br/>
-                  • Integración con WhatsApp
+                  • {t.demo.preview.features.digitalMenu}<br/>
+                  • {t.demo.preview.features.shoppingCart}<br/>
+                  • {t.demo.preview.features.whatsapp}
                 </div>
               </div>
             )}
@@ -132,4 +147,3 @@ export function DemoEmbed() {
     </section>
   )
 }
-

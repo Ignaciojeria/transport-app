@@ -4,9 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
-  Menu, 
   Palette, 
   QrCode, 
   Smartphone,
@@ -15,22 +13,36 @@ import {
   Truck,
   MessageCircle,
   ArrowRight,
-  Star,
-  CheckCircle,
-  Sparkles
+  Star
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { DemoEmbed } from "@/components/DemoEmbed"
 import { openWhatsAppQuote } from "@/lib/whatsapp"
+import { useLanguage } from "@/lib/useLanguage"
+import { LanguageSelector } from "@/components/LanguageSelector"
 
 export default function LandingPage() {
+  const { language, changeLanguage, t, isLoading, availableLanguages, languageNames, languageFlags } = useLanguage()
+
+  // Show loading while language is loading
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
       <nav className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
+            <Link href="/" className="flex items-center space-x-2">
               <Image 
                 src="/logo.png" 
                 alt="MiCartaPro Logo" 
@@ -38,16 +50,23 @@ export default function LandingPage() {
                 height={72}
                 className="h-16 md:h-20 w-auto"
               />
-            </div>
+            </Link>
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#servicio" className="text-gray-600 hover:text-blue-600 transition-colors">Servicio</a>
-              <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">Beneficios</a>
-              <a href="#demo" className="text-gray-600 hover:text-blue-600 transition-colors">Demo</a>
+              <a href="#servicio" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.service}</a>
+              <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.benefits}</a>
+              <a href="#demo" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.demo}</a>
+              <LanguageSelector
+                currentLanguage={language}
+                onLanguageChange={changeLanguage}
+                availableLanguages={availableLanguages}
+                languageNames={languageNames}
+                languageFlags={languageFlags}
+              />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
                 onClick={openWhatsAppQuote}
               >
-                Cotizar
+                {t.nav.quote}
               </Button>
             </div>
           </div>
@@ -86,10 +105,10 @@ export default function LandingPage() {
                 />
               </div>
               <p className="text-3xl md:text-4xl lg:text-5xl text-gray-700 -mt-6 md:-mt-8 mb-4 font-semibold">
-                Tu Menú Digital, Sin Complicaciones
+                {t.hero.subtitle}
               </p>
               <p className="text-xl md:text-2xl text-gray-600 mb-5 max-w-3xl mx-auto">
-                Gestiona tu menú digital y deja que las ventas fluyan.
+                {t.hero.description}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-3">
                 <Button 
@@ -97,7 +116,7 @@ export default function LandingPage() {
                   className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
                   onClick={openWhatsAppQuote}
                 >
-                  Cotizar Ahora
+                  {t.hero.quoteNow}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
@@ -106,7 +125,7 @@ export default function LandingPage() {
                   className="text-lg px-8 py-3"
                   onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
                 >
-                  Ver Demo
+                  {t.hero.viewDemo}
                 </Button>
               </div>
             </motion.div>
@@ -119,10 +138,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              🚀 Nuestro Servicio
+              {t.service.title}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              En MiCartaPro lo hacemos diferente
+              {t.service.subtitle}
             </p>
           </div>
           
@@ -137,7 +156,7 @@ export default function LandingPage() {
                 <Palette className="h-8 w-8 text-blue-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                🎨 Diseño 100% personalizado
+                {t.service.customDesign}
               </h3>
             </motion.div>
             
@@ -151,7 +170,7 @@ export default function LandingPage() {
                 <Star className="h-8 w-8 text-purple-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                ✨ Logo a medida
+                {t.service.customLogo}
               </h3>
             </motion.div>
             
@@ -165,7 +184,7 @@ export default function LandingPage() {
                 <QrCode className="h-8 w-8 text-green-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                🔗 Código QR exclusivo
+                {t.service.exclusiveQR}
               </h3>
             </motion.div>
             
@@ -179,7 +198,7 @@ export default function LandingPage() {
                 <Smartphone className="h-8 w-8 text-orange-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                📱 Diseño responsivo para todos los dispositivos
+                {t.service.responsiveDesign}
               </h3>
             </motion.div>
           </div>
@@ -187,18 +206,18 @@ export default function LandingPage() {
           {/* Precio */}
           <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 md:p-12 text-center text-white">
             <h3 className="text-2xl md:text-3xl font-bold mb-4">
-              Oferta única con cupos limitados — desde $150 USD
+              {t.service.pricingTitle}
             </h3>
             <div className="space-y-2 mb-6">
-              <p className="text-xl">✅ Primer año gratis</p>
-              <p className="text-lg opacity-90">Renovación desde el segundo año: $10 USD mensuales</p>
+              <p className="text-xl">{t.service.firstYearFree}</p>
+              <p className="text-lg opacity-90">{t.service.renewalPrice}</p>
             </div>
             <Button 
               size="lg" 
               className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
               onClick={openWhatsAppQuote}
             >
-              Cotizar Ahora
+              {t.service.quoteButton}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
@@ -210,7 +229,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              🎯 Beneficios incluidos
+              {t.benefits.title}
             </h2>
           </div>
           
@@ -227,10 +246,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    💰 Cálculo de costos automático
+                    {t.benefits.autoCostCalculation.title}
                   </h3>
                   <p className="text-gray-600">
-                    Olvídate del cálculo manual. Tu carta procesa y muestra el costo total de cada plato.
+                    {t.benefits.autoCostCalculation.description}
                   </p>
                 </div>
               </div>
@@ -248,10 +267,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    🛒 Carrito de compras integrado
+                    {t.benefits.shoppingCart.title}
                   </h3>
                   <p className="text-gray-600">
-                    Permite que tus clientes armen su pedido de manera simple, ordenada y rápida.
+                    {t.benefits.shoppingCart.description}
                   </p>
                 </div>
               </div>
@@ -269,10 +288,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    🚚 Envío o retiro en tienda
+                    {t.benefits.deliveryOptions.title}
                   </h3>
                   <p className="text-gray-600">
-                    Tu carta pregunta automáticamente por los detalles necesarios para completar el pedido.
+                    {t.benefits.deliveryOptions.description}
                   </p>
                 </div>
               </div>
@@ -290,10 +309,10 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    📩 Recepción de pedidos por WhatsApp
+                    {t.benefits.whatsappOrders.title}
                   </h3>
                   <p className="text-gray-600">
-                    Recibe los pedidos de forma ordenada, clara y transparente tanto para la cocina como para tus clientes.
+                    {t.benefits.whatsappOrders.description}
                   </p>
                 </div>
               </div>
@@ -316,10 +335,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              ¿Listo para digitalizar tu menú?
+              {t.cta.title}
             </h2>
             <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Contáctanos ahora y obtén tu menú digital personalizado
+              {t.cta.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -327,7 +346,7 @@ export default function LandingPage() {
                 className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
                 onClick={openWhatsAppQuote}
               >
-                Cotizar Ahora
+                {t.cta.quoteButton}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
@@ -350,28 +369,28 @@ export default function LandingPage() {
                 />
               </div>
               <p className="text-gray-400">
-                Tu menú digital, sin complicaciones. Gestiona tu restaurante y deja que las ventas fluyan.
+                {t.footer.description}
               </p>
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Servicio</h3>
+              <h3 className="font-semibold mb-4">{t.footer.service}</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#servicio" className="hover:text-white transition-colors">Nuestro Servicio</a></li>
-                <li><a href="#beneficios" className="hover:text-white transition-colors">Beneficios</a></li>
-                <li><a href="#demo" className="hover:text-white transition-colors">Demo</a></li>
+                <li><a href="#servicio" className="hover:text-white transition-colors">{t.footer.ourService}</a></li>
+                <li><a href="#beneficios" className="hover:text-white transition-colors">{t.footer.benefits}</a></li>
+                <li><a href="#demo" className="hover:text-white transition-colors">{t.footer.demo}</a></li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-semibold mb-4">Contacto</h3>
+              <h3 className="font-semibold mb-4">{t.footer.contact}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
                   <button 
                     onClick={openWhatsAppQuote}
                     className="hover:text-white transition-colors text-left"
                   >
-                    Cotizar por WhatsApp
+                    {t.footer.quoteWhatsApp}
                   </button>
                 </li>
               </ul>
@@ -381,18 +400,17 @@ export default function LandingPage() {
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
               <Link href="/privacy" className="hover:text-white transition-colors">
-                Política de Privacidad
+                {t.footer.privacy}
               </Link>
               <span className="hidden sm:inline">•</span>
               <Link href="/terms" className="hover:text-white transition-colors">
-                Términos y Condiciones
+                {t.footer.terms}
               </Link>
             </div>
-            <p>&copy; {new Date().getFullYear()} MiCartaPro. Todos los derechos reservados.</p>
+            <p>&copy; {new Date().getFullYear()} MiCartaPro. {t.footer.copyright}</p>
           </div>
         </div>
       </footer>
     </div>
   )
 }
-

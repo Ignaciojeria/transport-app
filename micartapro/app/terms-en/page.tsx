@@ -6,7 +6,7 @@ export const metadata = {
   description: 'Terms and conditions of use for MiCartaPro. Learn about the terms governing the use of our services.',
 }
 
-export default function TermsPage() {
+export default function TermsEnPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Navigation */}
@@ -26,7 +26,7 @@ export default function TermsPage() {
               href="/"
               className="text-gray-600 hover:text-blue-600 transition-colors"
             >
-              Back to Home
+              Back to home
             </Link>
           </div>
         </div>
@@ -57,10 +57,10 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Services</h2>
               <p>
-                MiCartaPro provides digital menu services that allow restaurants to create, manage, and share digital menus with their customers. Our services include:
+                MiCartaPro provides digital menu services that enable restaurants to create, manage, and share digital menus with their customers. Our services include:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Design and development of custom digital menus</li>
+                <li>Design and development of customized digital menus</li>
                 <li>Generation of exclusive QR codes</li>
                 <li>Shopping cart integration</li>
                 <li>WhatsApp integration for order reception</li>
@@ -74,7 +74,7 @@ export default function TermsPage() {
                 To use our Services, you must:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Be at least 18 years of age or have the consent of a parent or legal guardian</li>
+                <li>Be at least 18 years of age or have parental or guardian consent</li>
                 <li>Have the legal capacity to enter into binding contracts</li>
                 <li>Not be prohibited from using our Services under applicable laws</li>
                 <li>Provide accurate and complete information when registering or using our Services</li>
@@ -94,7 +94,7 @@ export default function TermsPage() {
               </ul>
 
               <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.2. Prohibited Use</h3>
-              <p>The following is strictly prohibited:</p>
+              <p>You are strictly prohibited from:</p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>Using the Services for illegal or fraudulent activities</li>
                 <li>Attempting unauthorized access to our systems or data</li>
@@ -123,13 +123,13 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. User Content</h2>
               <p>
-                When using our Services, you may provide content, including menu information, images, text, and other materials ("User Content"). By providing User Content, you grant MiCartaPro a non-exclusive, worldwide, royalty-free, and transferable license to use, reproduce, modify, and distribute such content solely for the purpose of providing and improving our Services.
+                When using our Services, you may provide content, including menu information, images, texts, and other materials ("User Content"). By providing User Content, you grant MiCartaPro a non-exclusive, worldwide, royalty-free, and transferable license to use, reproduce, modify, and distribute such content solely for providing and improving our Services.
               </p>
               <p>
                 You are responsible for ensuring that your User Content:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Does not infringe the intellectual property rights of third parties</li>
+                <li>Does not infringe on third-party intellectual property rights</li>
                 <li>Does not contain defamatory, obscene, or illegal material</li>
                 <li>Does not violate the privacy rights of others</li>
                 <li>Complies with all applicable laws and regulations</li>
@@ -153,12 +153,12 @@ export default function TermsPage() {
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>First year:</strong> Free (promotional offer with limited availability)</li>
-                <li><strong>Renewal:</strong> $10 USD monthly from the second year</li>
+                <li><strong>Renewal:</strong> $10 USD per month starting from the second year</li>
                 <li>Prices are subject to change with prior notice</li>
                 <li>Payments are processed according to the terms agreed in the service contract</li>
               </ul>
               <p className="mt-4">
-                All prices are expressed in US dollars (USD) and may be subject to taxes according to your jurisdiction.
+                All prices are expressed in US Dollars (USD) and may be subject to taxes according to your jurisdiction.
               </p>
             </section>
 
@@ -187,7 +187,7 @@ export default function TermsPage() {
               <ul className="list-disc pl-6 space-y-2">
                 <li>Your use of the Services</li>
                 <li>Your violation of these Terms</li>
-                <li>Your violation of any law or right of third parties</li>
+                <li>Your violation of any law or rights of third parties</li>
                 <li>Your User Content</li>
               </ul>
             </section>
@@ -268,13 +268,13 @@ export default function TermsPage() {
               href="/"
               className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
             >
-              ← Back to Home
+              ← Back to home
             </Link>
             <Link 
-              href="/privacy"
+              href="/refund"
               className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
             >
-              View Privacy Policy →
+              View Refund Policy →
             </Link>
           </div>
         </div>
@@ -282,3 +282,4 @@ export default function TermsPage() {
     </div>
   )
 }
+

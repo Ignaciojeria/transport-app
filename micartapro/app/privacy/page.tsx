@@ -2,8 +2,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 export const metadata = {
-  title: 'Política de Privacidad - MiCartaPro',
-  description: 'Política de privacidad de MiCartaPro. Conoce cómo protegemos y gestionamos tus datos personales.',
+  title: 'Privacy Policy - MiCartaPro',
+  description: 'MiCartaPro privacy policy. Learn how we protect and manage your personal data.',
 }
 
 export default function PrivacyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
               href="/"
               className="text-gray-600 hover:text-blue-600 transition-colors"
             >
-              Volver al inicio
+              Back to Home
             </Link>
           </div>
         </div>
@@ -36,190 +36,190 @@ export default function PrivacyPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         <div className="bg-white rounded-lg shadow-lg p-8 md:p-12">
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            Política de Privacidad
+            Privacy Policy
           </h1>
           
           <p className="text-gray-600 mb-8">
-            <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}
+            <strong>Last updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
           <div className="prose prose-lg max-w-none space-y-8 text-gray-700">
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introducción</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
               <p>
-                MiCartaPro ("nosotros", "nuestro" o "la empresa") se compromete a proteger y respetar tu privacidad. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos tu información personal cuando utilizas nuestros servicios de menú digital.
+                MiCartaPro ("we", "our", or "the company") is committed to protecting and respecting your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our digital menu services.
               </p>
               <p>
-                Al utilizar nuestros servicios, aceptas las prácticas descritas en esta política. Si no estás de acuerdo con esta política, por favor no utilices nuestros servicios.
+                By using our services, you agree to the practices described in this policy. If you do not agree with this policy, please do not use our services.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Información que Recopilamos</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Information We Collect</h2>
               
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">2.1. Información que Proporcionas Directamente</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">2.1. Information You Provide Directly</h3>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Información de pedidos:</strong> Nombre del cliente, hora de retiro, y detalles completos del pedido cuando se envía a través de WhatsApp.</li>
-                <li><strong>Información de contacto:</strong> Número de teléfono cuando contactas a través de WhatsApp para cotizaciones o consultas.</li>
-                <li><strong>Información del restaurante:</strong> Datos proporcionados al solicitar nuestros servicios, incluyendo información de contacto y detalles del negocio.</li>
+                <li><strong>Order information:</strong> Customer name, pickup time, and complete order details when sent through WhatsApp.</li>
+                <li><strong>Contact information:</strong> Phone number when you contact us through WhatsApp for quotes or inquiries.</li>
+                <li><strong>Restaurant information:</strong> Data provided when requesting our services, including contact information and business details.</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">2.2. Información Recopilada Automáticamente</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">2.2. Automatically Collected Information</h3>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Información del carrito:</strong> Los items seleccionados se almacenan localmente en tu navegador (localStorage) para mejorar tu experiencia de usuario.</li>
-                <li><strong>Información del dispositivo:</strong> Tipo de dispositivo, sistema operativo, y navegador utilizado para acceder a nuestros servicios.</li>
-                <li><strong>Información de uso:</strong> Cómo interactúas con nuestros servicios, incluyendo páginas visitadas y tiempo de permanencia.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Base Legal para el Procesamiento (GDPR/LGPD)</h2>
-              <p>Procesamos tu información personal basándonos en las siguientes bases legales:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Consentimiento:</strong> Cuando proporcionas explícitamente tu consentimiento para el procesamiento de tus datos.</li>
-                <li><strong>Ejecución de contrato:</strong> Para procesar y gestionar pedidos de restaurantes que utilizan nuestros servicios.</li>
-                <li><strong>Interés legítimo:</strong> Para mejorar nuestros servicios, prevenir fraudes y mantener la seguridad de nuestros sistemas.</li>
-                <li><strong>Cumplimiento legal:</strong> Cuando es necesario para cumplir con obligaciones legales aplicables.</li>
+                <li><strong>Cart information:</strong> Selected items are stored locally in your browser (localStorage) to improve your user experience.</li>
+                <li><strong>Device information:</strong> Device type, operating system, and browser used to access our services.</li>
+                <li><strong>Usage information:</strong> How you interact with our services, including pages visited and time spent.</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Uso de la Información</h2>
-              <p>Utilizamos la información recopilada para los siguientes propósitos:</p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Legal Basis for Processing (GDPR/LGPD)</h2>
+              <p>We process your personal information based on the following legal bases:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Procesar y gestionar pedidos de restaurantes de manera eficiente</li>
-                <li>Mejorar y personalizar la experiencia del usuario</li>
-                <li>Responder a consultas, solicitudes de cotización y proporcionar soporte al cliente</li>
-                <li>Mantener la funcionalidad del carrito de compras y recordar tus preferencias</li>
-                <li>Desarrollar y mejorar nuestros servicios y funcionalidades</li>
-                <li>Enviar comunicaciones relacionadas con nuestros servicios (con tu consentimiento)</li>
-                <li>Cumplir con obligaciones legales y proteger nuestros derechos legales</li>
+                <li><strong>Consent:</strong> When you explicitly provide your consent for the processing of your data.</li>
+                <li><strong>Contract performance:</strong> To process and manage orders from restaurants using our services.</li>
+                <li><strong>Legitimate interest:</strong> To improve our services, prevent fraud, and maintain the security of our systems.</li>
+                <li><strong>Legal compliance:</strong> When necessary to comply with applicable legal obligations.</li>
               </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Almacenamiento y Retención de Datos</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Use of Information</h2>
+              <p>We use the collected information for the following purposes:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Process and manage restaurant orders efficiently</li>
+                <li>Improve and personalize user experience</li>
+                <li>Respond to inquiries, quote requests, and provide customer support</li>
+                <li>Maintain shopping cart functionality and remember your preferences</li>
+                <li>Develop and improve our services and features</li>
+                <li>Send communications related to our services (with your consent)</li>
+                <li>Comply with legal obligations and protect our legal rights</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Data Storage and Retention</h2>
               <p>
-                <strong>Almacenamiento Local:</strong> Los datos del carrito se almacenan localmente en tu navegador (localStorage) y no se envían a nuestros servidores hasta que decidas enviar un pedido a través de WhatsApp. Puedes limpiar estos datos en cualquier momento desde la configuración de tu navegador.
+                <strong>Local Storage:</strong> Cart data is stored locally in your browser (localStorage) and is not sent to our servers until you decide to send an order through WhatsApp. You can clear this data at any time from your browser settings.
               </p>
               <p>
-                <strong>Retención de Datos:</strong> Conservamos tu información personal solo durante el tiempo necesario para cumplir con los propósitos descritos en esta política, a menos que la ley requiera o permita un período de retención más largo.
+                <strong>Data Retention:</strong> We retain your personal information only for as long as necessary to fulfill the purposes described in this policy, unless the law requires or permits a longer retention period.
               </p>
               <p>
-                <strong>Datos de Pedidos:</strong> Los pedidos se procesan directamente a través de WhatsApp y son gestionados por el restaurante correspondiente. No almacenamos información de pedidos en nuestros servidores.
+                <strong>Order Data:</strong> Orders are processed directly through WhatsApp and are managed by the corresponding restaurant. We do not store order information on our servers.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Compartir y Divulgación de Información</h2>
-              <p>No vendemos, alquilamos ni compartimos tu información personal con terceros para sus propios fines comerciales, excepto en las siguientes circunstancias:</p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Sharing and Disclosure of Information</h2>
+              <p>We do not sell, rent, or share your personal information with third parties for their own commercial purposes, except in the following circumstances:</p>
               
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.1. Proveedores de Servicios</h3>
-              <p>Podemos compartir información con proveedores de servicios de confianza que nos ayudan a operar nuestro negocio, incluyendo:</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.1. Service Providers</h3>
+              <p>We may share information with trusted service providers who help us operate our business, including:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Proveedores de hosting y servicios en la nube</li>
-                <li>Servicios de análisis y monitoreo</li>
-                <li>Proveedores de servicios de comunicación (WhatsApp)</li>
+                <li>Hosting and cloud service providers</li>
+                <li>Analytics and monitoring services</li>
+                <li>Communication service providers (WhatsApp)</li>
               </ul>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.2. Restaurantes</h3>
-              <p>Cuando envías un pedido, la información se comparte con el restaurante correspondiente a través de WhatsApp para procesar tu pedido.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.2. Restaurants</h3>
+              <p>When you send an order, the information is shared with the corresponding restaurant through WhatsApp to process your order.</p>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.3. Requerimientos Legales</h3>
-              <p>Podemos divulgar información cuando sea requerido por ley, orden judicial, o para proteger nuestros derechos legales, propiedad o seguridad, o la de nuestros usuarios.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.3. Legal Requirements</h3>
+              <p>We may disclose information when required by law, court order, or to protect our legal rights, property, or safety, or that of our users.</p>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.4. Transferencias de Negocio</h3>
-              <p>En caso de fusión, adquisición o venta de activos, tu información puede ser transferida como parte de esa transacción.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.4. Business Transfers</h3>
+              <p>In the event of a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction.</p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Transferencias Internacionales de Datos</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. International Data Transfers</h2>
               <p>
-                Tus datos pueden ser procesados y almacenados en servidores ubicados fuera de tu país de residencia. Cuando transferimos datos internacionalmente, implementamos salvaguardas apropiadas para proteger tu información de acuerdo con esta política y las leyes aplicables de protección de datos.
+                Your data may be processed and stored on servers located outside your country of residence. When we transfer data internationally, we implement appropriate safeguards to protect your information in accordance with this policy and applicable data protection laws.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Cookies y Tecnologías Similares</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Cookies and Similar Technologies</h2>
               <p>
-                Utilizamos localStorage del navegador para almacenar temporalmente la información de tu carrito de compras. Esta información se elimina cuando limpias el almacenamiento de tu navegador o cuando utilizas la función de "Limpiar carrito" en nuestra aplicación.
+                We use browser localStorage to temporarily store your shopping cart information. This information is deleted when you clear your browser storage or when you use the "Clear cart" function in our application.
               </p>
               <p>
-                No utilizamos cookies de seguimiento de terceros ni tecnologías de rastreo invasivas.
+                We do not use third-party tracking cookies or invasive tracking technologies.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Tus Derechos (GDPR/LGPD)</h2>
-              <p>Dependiendo de tu ubicación, tienes los siguientes derechos respecto a tu información personal:</p>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Your Rights (GDPR/LGPD)</h2>
+              <p>Depending on your location, you have the following rights regarding your personal information:</p>
               
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Derecho de Acceso:</strong> Puedes solicitar una copia de la información personal que tenemos sobre ti.</li>
-                <li><strong>Derecho de Rectificación:</strong> Puedes solicitar que corrijamos cualquier información incorrecta o incompleta.</li>
-                <li><strong>Derecho de Supresión:</strong> Puedes solicitar que eliminemos tu información personal en ciertas circunstancias.</li>
-                <li><strong>Derecho a la Portabilidad:</strong> Puedes solicitar que transfiramos tu información a otro proveedor de servicios.</li>
-                <li><strong>Derecho de Oposición:</strong> Puedes oponerte al procesamiento de tu información personal en ciertas circunstancias.</li>
-                <li><strong>Derecho a Limitar el Procesamiento:</strong> Puedes solicitar que limitemos el procesamiento de tu información.</li>
-                <li><strong>Derecho a Retirar el Consentimiento:</strong> Puedes retirar tu consentimiento en cualquier momento cuando el procesamiento se base en consentimiento.</li>
-                <li><strong>Derecho a Presentar una Queja:</strong> Tienes derecho a presentar una queja ante la autoridad de protección de datos de tu jurisdicción.</li>
+                <li><strong>Right of Access:</strong> You can request a copy of the personal information we have about you.</li>
+                <li><strong>Right of Rectification:</strong> You can request that we correct any incorrect or incomplete information.</li>
+                <li><strong>Right of Erasure:</strong> You can request that we delete your personal information under certain circumstances.</li>
+                <li><strong>Right to Data Portability:</strong> You can request that we transfer your information to another service provider.</li>
+                <li><strong>Right to Object:</strong> You can object to the processing of your personal information under certain circumstances.</li>
+                <li><strong>Right to Restrict Processing:</strong> You can request that we restrict the processing of your information.</li>
+                <li><strong>Right to Withdraw Consent:</strong> You can withdraw your consent at any time when processing is based on consent.</li>
+                <li><strong>Right to Lodge a Complaint:</strong> You have the right to lodge a complaint with the data protection authority in your jurisdiction.</li>
               </ul>
               
               <p className="mt-4">
-                Para ejercer cualquiera de estos derechos, por favor contáctanos utilizando la información proporcionada en la sección de Contacto.
+                To exercise any of these rights, please contact us using the information provided in the Contact section.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Seguridad de los Datos</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Data Security</h2>
               <p>
-                Implementamos medidas de seguridad técnicas y organizativas razonables para proteger tu información personal contra acceso no autorizado, alteración, divulgación o destrucción. Estas medidas incluyen:
+                We implement reasonable technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. These measures include:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Encriptación de datos en tránsito</li>
-                <li>Almacenamiento seguro de información</li>
-                <li>Acceso restringido a información personal</li>
-                <li>Monitoreo regular de nuestros sistemas de seguridad</li>
+                <li>Encryption of data in transit</li>
+                <li>Secure storage of information</li>
+                <li>Restricted access to personal information</li>
+                <li>Regular monitoring of our security systems</li>
               </ul>
               <p className="mt-4">
-                Sin embargo, ningún método de transmisión por Internet o almacenamiento electrónico es 100% seguro. Aunque nos esforzamos por proteger tu información, no podemos garantizar su seguridad absoluta.
+                However, no method of transmission over the Internet or electronic storage is 100% secure. Although we strive to protect your information, we cannot guarantee its absolute security.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Privacidad de Menores</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Children's Privacy</h2>
               <p>
-                Nuestros servicios no están dirigidos a menores de 18 años. No recopilamos intencionalmente información personal de menores. Si descubrimos que hemos recopilado información de un menor sin el consentimiento de los padres, tomaremos medidas para eliminar esa información de nuestros sistemas.
+                Our services are not directed to children under 18 years of age. We do not knowingly collect personal information from children. If we discover that we have collected information from a child without parental consent, we will take steps to delete that information from our systems.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Cambios a esta Política de Privacidad</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Changes to this Privacy Policy</h2>
               <p>
-                Podemos actualizar esta Política de Privacidad ocasionalmente para reflejar cambios en nuestras prácticas o por razones legales, operativas o regulatorias. Te notificaremos de cualquier cambio material publicando la nueva política en esta página y actualizando la fecha de "Última actualización".
+                We may update this Privacy Policy occasionally to reflect changes in our practices or for legal, operational, or regulatory reasons. We will notify you of any material changes by posting the new policy on this page and updating the "Last updated" date.
               </p>
               <p>
-                Te recomendamos que revises esta política periódicamente para estar informado sobre cómo protegemos tu información.
+                We recommend that you review this policy periodically to stay informed about how we protect your information.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Contacto</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Contact</h2>
               <p>
-                Si tienes preguntas, inquietudes o solicitudes relacionadas con esta Política de Privacidad o el procesamiento de tu información personal, puedes contactarnos a través de:
+                If you have questions, concerns, or requests related to this Privacy Policy or the processing of your personal information, you can contact us through:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>WhatsApp:</strong> +56957857558</li>
-                <li><strong>Email:</strong> privacidad@micartapro.com</li>
+                <li><strong>Email:</strong> privacy@micartapro.com</li>
               </ul>
               <p className="mt-4">
-                Responderemos a tu solicitud dentro de un plazo razonable y de acuerdo con las leyes aplicables de protección de datos.
+                We will respond to your request within a reasonable time and in accordance with applicable data protection laws.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Jurisdicción y Ley Aplicable</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Jurisdiction and Applicable Law</h2>
               <p>
-                Esta Política de Privacidad se rige por las leyes aplicables de protección de datos en tu jurisdicción, incluyendo pero no limitado al Reglamento General de Protección de Datos (GDPR) de la Unión Europea, la Ley General de Protección de Datos (LGPD) de Brasil, y otras leyes de protección de datos aplicables.
+                This Privacy Policy is governed by applicable data protection laws in your jurisdiction, including but not limited to the European Union's General Data Protection Regulation (GDPR), Brazil's General Data Protection Law (LGPD), and other applicable data protection laws.
               </p>
             </section>
           </div>
@@ -229,13 +229,13 @@ export default function PrivacyPage() {
               href="/"
               className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
             >
-              ← Volver al inicio
+              ← Back to Home
             </Link>
             <Link 
               href="/terms"
               className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
             >
-              Ver Términos y Condiciones →
+              View Terms and Conditions →
             </Link>
           </div>
         </div>
