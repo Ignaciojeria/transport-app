@@ -57,15 +57,19 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Services</h2>
               <p>
-                MiCartaPro provides digital menu services that allow restaurants to create, manage, and share digital menus with their customers. Our services include:
+                MiCartaPro is a self-service SaaS (Software as a Service) platform that allows restaurants to create, manage, and share digital menus with their customers. Our platform provides:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Design and development of custom digital menus</li>
-                <li>Generation of exclusive QR codes</li>
-                <li>Shopping cart integration</li>
+                <li>Self-service tools for customizing digital menu designs</li>
+                <li>QR code generation functionality</li>
+                <li>Integrated shopping cart system</li>
                 <li>WhatsApp integration for order reception</li>
                 <li>Responsive design for all devices</li>
+                <li>Continuous platform improvements, new features, and updates</li>
               </ul>
+              <p className="mt-4">
+                <strong>Important:</strong> MiCartaPro is a self-service platform. We do not provide ongoing human-driven services such as custom design work, manual menu creation, or personalized consulting as part of the subscription. All plans include access to the platform and ongoing software improvements.
+              </p>
             </section>
 
             <section>
@@ -149,16 +153,33 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Pricing and Payments</h2>
               <p>
-                Our services are available starting from $150 USD with the following conditions:
+                Our services are available through a simple monthly subscription:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>First year:</strong> Free (promotional offer with limited availability)</li>
-                <li><strong>Renewal:</strong> $10 USD monthly from the second year</li>
+                <li><strong>Monthly Subscription:</strong> $15 USD per month</li>
+                <li>No setup fees or long-term commitments</li>
+                <li>Cancel anytime</li>
                 <li>Prices are subject to change with prior notice</li>
-                <li>Payments are processed according to the terms agreed in the service contract</li>
+                <li>Payments are processed by Paddle, who acts as the Merchant of Record</li>
               </ul>
               <p className="mt-4">
                 All prices are expressed in US dollars (USD) and may be subject to taxes according to your jurisdiction.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.1. Refund Policy</h2>
+              <p>
+                We offer a <strong>14-day money-back guarantee</strong> on all purchases made via Paddle.
+              </p>
+              <p>
+                If you're not satisfied with your purchase, you can request a full refund within 14 days from the date of purchase by contacting Paddle or our support team.
+              </p>
+              <p>
+                After 14 days, refunds are handled at our and Paddle's discretion.
+              </p>
+              <p className="mt-4">
+                For detailed information about our refund policy, please refer to our <Link href="/refund" className="text-blue-600 hover:text-blue-700 underline">Refund Policy</Link> page.
               </p>
             </section>
 
@@ -200,11 +221,14 @@ export default function TermsPage() {
               <ul className="list-disc pl-6 space-y-2">
                 <li>Violation of these Terms</li>
                 <li>Fraudulent or illegal use of the Services</li>
-                <li>Non-payment of applicable fees</li>
+                <li>Non-payment of applicable subscription fees</li>
                 <li>For operational or business reasons</li>
               </ul>
               <p className="mt-4">
-                You may also terminate your use of the Services at any time. Upon termination, your right to use the Services will cease immediately.
+                <strong>Subscription Cancellation:</strong> You may cancel your subscription at any time by contacting us at least 48 hours before the end of your current billing period. Your cancellation will take effect at the next payment date. Upon cancellation, your access to the Services will continue until the end of your current billing period, after which your right to use the Services will cease.
+              </p>
+              <p className="mt-4">
+                <strong>No Refunds on Unused Periods:</strong> There are no refunds on unused subscription periods. Once a subscription period has been paid, you will have access for the full period even if you cancel before the period ends.
               </p>
             </section>
 

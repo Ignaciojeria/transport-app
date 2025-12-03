@@ -97,32 +97,19 @@ export default function PricingPage() {
               <Card className="border-2 border-blue-200 shadow-2xl">
                 <CardHeader className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-t-lg p-8 md:p-12">
                   <div className="text-center">
-                    <div className="inline-block bg-white/20 backdrop-blur-sm rounded-full px-4 py-2 mb-4">
-                      <span className="text-sm font-semibold">{t.pricing.startingFrom}</span>
-                    </div>
                     <div className="mb-4">
-                      <span className="text-5xl md:text-6xl font-bold">$150</span>
+                      <span className="text-5xl md:text-6xl font-bold">$15</span>
                       <span className="text-2xl md:text-3xl text-blue-100 ml-2">USD</span>
                     </div>
-                    <p className="text-blue-100 text-lg mb-2">{t.pricing.oneTimePayment}</p>
-                    <div className="flex items-center justify-center gap-2 mt-4">
+                    <p className="text-blue-100 text-lg mb-2">{t.pricing.monthly}</p>
+                    <div className="mt-4">
                       <span className="bg-green-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                        {t.pricing.firstYearFree}
+                        {t.service.renewalPrice}
                       </span>
-                      <span className="text-blue-100 text-sm">{t.pricing.firstYear}</span>
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-8 md:p-12">
-                  {/* Renewal Info */}
-                  <div className="bg-gray-50 rounded-lg p-6 mb-8 text-center">
-                    <p className="text-gray-600 mb-2">
-                      <span className="font-semibold text-gray-900">{t.pricing.renewal}:</span> {t.pricing.fromSecondYear}
-                    </p>
-                    <p className="text-2xl font-bold text-gray-900">
-                      $10 USD <span className="text-lg font-normal text-gray-600">{t.pricing.monthly}</span>
-                    </p>
-                  </div>
 
                   {/* Features */}
                   <div className="mb-8">
@@ -165,6 +152,13 @@ export default function PricingPage() {
                         <span className="text-gray-700">{t.pricing.features.support}</span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* SaaS Description */}
+                  <div className="mb-8 bg-blue-50 rounded-lg p-6 border border-blue-100">
+                    <p className="text-gray-700 text-sm leading-relaxed text-center">
+                      {t.service.saasDescription}
+                    </p>
                   </div>
 
                   {/* CTA Button */}

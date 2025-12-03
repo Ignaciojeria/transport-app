@@ -47,172 +47,91 @@ export default function RefundPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Overview</h2>
               <p>
-                This Refund Policy ("Policy") outlines the terms and conditions under which MiCartaPro ("we", "our", or "the company") provides refunds for our digital menu services. By purchasing our services, you agree to the terms outlined in this Policy.
+                This Refund Policy outlines the terms and conditions for refunds of MiCartaPro services. Our payment processing is handled by Paddle, who acts as the Merchant of Record and authorized reseller of our Product. By purchasing our services, you agree to the terms outlined in this Policy and Paddle's Invoiced Consumer Terms and Conditions.
+              </p>
+              <p>
+                For detailed information about Paddle's refund policy, please refer to Paddle's Invoiced Consumer Terms and Conditions available at paddle.com/legal.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Service Description</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Consumer Right to Cancel</h2>
               <p>
-                MiCartaPro provides digital menu services including:
+                If you are a Consumer (purchasing for personal use) and unless the exception below applies, you have the right to cancel this Agreement and return the Product within <strong>14 days</strong> without giving any reason. The cancellation period will expire after 14 days from the day after completion of the Transaction.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Custom digital menu design and development</li>
-                <li>Exclusive QR code generation</li>
-                <li>Shopping cart integration</li>
-                <li>WhatsApp integration for order reception</li>
-                <li>Responsive design for all devices</li>
-                <li>First year of service included in initial payment</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Pricing Structure</h2>
               <p>
-                Our services are priced as follows:
+                To meet the cancellation deadline, it is sufficient that you send us your communication concerning your exercise of the cancellation right before the expiration of the 14 day period.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Initial Setup:</strong> Starting from $150 USD (one-time payment)</li>
-                <li><strong>First Year:</strong> Included in initial payment (free promotional period)</li>
-                <li><strong>Renewal (Second Year Onwards):</strong> $10 USD per month</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Refund Eligibility</h2>
-              
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.1. Initial Setup Fee</h3>
               <p>
-                Refunds for the initial setup fee ($150 USD) may be requested under the following circumstances:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Before Service Commencement:</strong> If you request a refund before we begin work on your digital menu, you may receive a full refund within 7 days of payment.</li>
-                <li><strong>Service Not Delivered:</strong> If we fail to deliver the agreed-upon services within the specified timeframe and you have not approved any delays, you may be eligible for a full or partial refund.</li>
-                <li><strong>Technical Issues:</strong> If the delivered service has critical technical issues that we cannot resolve within 30 days, you may be eligible for a refund.</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.2. Monthly Renewal Fees</h3>
-              <p>
-                Monthly renewal fees ($10 USD) are non-refundable once paid. However, you may cancel your subscription at any time to avoid future charges. Cancellation will take effect at the end of the current billing period.
+                To cancel your order, you must inform Paddle or us of your decision. To ensure immediate processing, please contact us via WhatsApp at +56957857558 or email at support@micartapro.com, or contact Paddle directly through their support channels.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Non-Refundable Situations</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Exception to the Right to Cancel</h2>
               <p>
-                Refunds will not be provided in the following situations:
+                Your right as a Consumer to cancel your order <strong>does not apply</strong> to the supply of Digital Content that you have started to download, stream or otherwise acquire and to Products which you have had the benefit of.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>After the service has been fully delivered and accepted by you</li>
-                <li>If you have used the service for more than 30 days after delivery</li>
-                <li>If the service was modified or customized according to your specific requirements and you have approved the final version</li>
-                <li>If you have violated our Terms and Conditions, resulting in service termination</li>
-                <li>If you request a refund due to a change of mind after the service has been delivered</li>
-                <li>For monthly renewal fees that have already been charged</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Refund Process</h2>
-              
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.1. Requesting a Refund</h3>
               <p>
-                To request a refund, you must:
-              </p>
-              <ol className="list-decimal pl-6 space-y-2">
-                <li>Contact us via WhatsApp at +56957857558 or email at support@micartapro.com</li>
-                <li>Provide your order details, including payment confirmation and service information</li>
-                <li>Clearly state the reason for your refund request</li>
-                <li>Include any relevant documentation or evidence supporting your request</li>
-              </ol>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.2. Refund Review</h3>
-              <p>
-                We will review your refund request within 5-7 business days. During this time, we may:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Request additional information or clarification</li>
-                <li>Investigate the circumstances of your request</li>
-                <li>Attempt to resolve any issues that may have led to the refund request</li>
-              </ul>
-
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.3. Refund Approval and Processing</h3>
-              <p>
-                If your refund request is approved:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>We will process the refund within 10-15 business days</li>
-                <li>The refund will be issued to the original payment method used for the purchase</li>
-                <li>You will receive a confirmation email once the refund has been processed</li>
-                <li>The refund amount will be based on the circumstances and may be partial or full</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Partial Refunds</h2>
-              <p>
-                In some cases, we may offer a partial refund instead of a full refund. This may occur when:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Work has already been completed on your project</li>
-                <li>You have used the service for a portion of the paid period</li>
-                <li>Some deliverables have been accepted and used</li>
-                <li>We determine that a partial refund is fair based on the services already rendered</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Cancellation Policy</h2>
-              <p>
-                You may cancel your subscription at any time:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Monthly Subscriptions:</strong> Cancel before the next billing cycle to avoid future charges. No refunds for the current period.</li>
-                <li><strong>Service Cancellation:</strong> If you cancel during the initial setup phase, refund eligibility will be determined based on the work completed.</li>
-                <li><strong>Immediate Cancellation:</strong> Upon cancellation, your service will remain active until the end of the current billing period.</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Disputes and Chargebacks</h2>
-              <p>
-                If you have a dispute regarding a charge, we encourage you to contact us directly before initiating a chargeback with your payment provider. Chargebacks may result in:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Immediate suspension of your account</li>
-                <li>Termination of services</li>
-                <li>Additional fees or penalties</li>
-              </ul>
-              <p className="mt-4">
-                We are committed to resolving disputes fairly and promptly through direct communication.
+                Since our digital menu service (MiCartaPro) is immediately made available upon purchase, by completing your purchase and accessing the service, you consent to immediate performance of this Agreement and acknowledge that you will lose your right of withdrawal from this Agreement once you have started to use the service.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Currency and Payment Method</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Effect of Cancellation</h2>
               <p>
-                All refunds will be processed in the same currency as the original payment (USD). Refunds will be issued to the original payment method used for the purchase. Processing times may vary depending on your payment provider.
+                If you cancel this Agreement as permitted above, we will reimburse to you all payments received from you.
+              </p>
+              <p>
+                We will make the reimbursement without undue delay, and not later than 14 days after the day on which we are informed about your decision to cancel this Agreement.
+              </p>
+              <p>
+                We will make the reimbursement using the same means of payment as you used for the initial transaction and you will not incur any fees as a result of the reimbursement.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Changes to This Policy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Refund Policy</h2>
               <p>
-                We reserve the right to modify this Refund Policy at any time. Changes will be effective immediately upon posting on this page. We will notify you of any material changes via email or through our services.
+                Refunds are provided at the sole discretion of Paddle and on a case-by-case basis and may be refused. Paddle will refuse a refund request if they find evidence of fraud, refund abuse, or other manipulative behaviour that entitles Paddle to counterclaim the refund.
               </p>
               <p>
-                Your continued use of our services after changes to this Policy constitutes acceptance of the updated terms.
+                This does not affect your rights as a Consumer in relation to Products which are not as described, faulty or not fit for purpose.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Contact</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Subscriptions</h2>
+              <p>
+                Our services are provided on a subscription basis ("Paid Subscriptions"). Paid Subscriptions automatically renew until cancelled.
+              </p>
+              <p>
+                <strong>Important:</strong> In respect of subscription services, your right to cancel is only present following the initial subscription and not upon each automatic renewal.
+              </p>
+              <p>
+                If you wish to cancel your subscription, please contact us at least 48 hours before the end of the current billing period. Please make sure you provide your order number and the email address used to purchase the Product. Your cancellation will take effect at the next payment date.
+              </p>
+              <p>
+                <strong>There are no refunds on unused subscription periods.</strong>
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Payment Processing</h2>
+              <p>
+                All payments are processed by Paddle, who acts as the Merchant of Record. Paddle handles all payment transactions, refunds, and related customer service inquiries. For questions about payment processing, please refer to Paddle's terms and conditions at paddle.com/legal.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Contact</h2>
               <p>
                 If you have questions about this Refund Policy or need to request a refund, please contact us:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li><strong>WhatsApp:</strong> +56957857558</li>
                 <li><strong>Email:</strong> support@micartapro.com</li>
+                <li><strong>Paddle Support:</strong> You can also contact Paddle directly through their support channels</li>
               </ul>
               <p className="mt-4">
                 We aim to respond to all refund requests and inquiries within 2-3 business days.

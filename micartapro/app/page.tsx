@@ -203,6 +203,15 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
+          {/* SaaS Description */}
+          <div className="mb-12 max-w-3xl mx-auto">
+            <div className="bg-blue-50 rounded-lg p-6 border border-blue-100">
+              <p className="text-gray-700 text-center leading-relaxed">
+                {t.service.saasDescription}
+              </p>
+            </div>
+          </div>
+
           {/* Precio */}
           <Link href="/pricing" className="block group">
             <motion.div 
