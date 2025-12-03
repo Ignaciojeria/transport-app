@@ -204,23 +204,45 @@ export default function LandingPage() {
           </div>
 
           {/* Precio */}
-          <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 md:p-12 text-center text-white">
-            <h3 className="text-2xl md:text-3xl font-bold mb-4">
-              {t.service.pricingTitle}
-            </h3>
-            <div className="space-y-2 mb-6">
-              <p className="text-xl">{t.service.firstYearFree}</p>
-              <p className="text-lg opacity-90">{t.service.renewalPrice}</p>
-            </div>
-            <Button 
-              size="lg" 
-              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-              onClick={openWhatsAppQuote}
+          <Link href="/pricing" className="block group">
+            <motion.div 
+              className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl p-8 md:p-12 text-center text-white cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {t.service.quoteButton}
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">
+                {t.service.pricingTitle}
+              </h3>
+              <div className="space-y-2 mb-6">
+                <p className="text-xl">{t.service.firstYearFree}</p>
+                <p className="text-lg opacity-90">{t.service.renewalPrice}</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    openWhatsAppQuote()
+                  }}
+                >
+                  {t.service.quoteButton}
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="bg-white border-2 border-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    window.location.href = '/pricing'
+                  }}
+                >
+                  {t.service.viewPricing}
+                </Button>
+              </div>
+            </motion.div>
+          </Link>
         </div>
       </section>
 

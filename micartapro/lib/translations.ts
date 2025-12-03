@@ -30,6 +30,43 @@ export interface Translations {
     firstYearFree: string
     renewalPrice: string
     quoteButton: string
+    viewPricing: string
+  }
+  
+  // Pricing Section
+  pricing: {
+    title: string
+    subtitle: string
+    startingFrom: string
+    oneTimePayment: string
+    firstYear: string
+    firstYearFree: string
+    renewal: string
+    monthly: string
+    fromSecondYear: string
+    features: {
+      customDesign: string
+      customLogo: string
+      exclusiveQR: string
+      responsiveDesign: string
+      shoppingCart: string
+      whatsappIntegration: string
+      costCalculation: string
+      deliveryOptions: string
+      support: string
+    }
+    cta: {
+      title: string
+      subtitle: string
+      quoteButton: string
+    }
+    faq: {
+      title: string
+      questions: Array<{
+        question: string
+        answer: string
+      }>
+    }
   }
   
   // Benefits Section
@@ -152,7 +189,8 @@ export const translations: Record<Language, Translations> = {
       pricingTitle: 'Limited-time offer — starting from $150 USD',
       firstYearFree: '✅ First year free',
       renewalPrice: 'Renewal from the second year: $10 USD monthly',
-      quoteButton: 'Quote Now'
+      quoteButton: 'Quote Now',
+      viewPricing: 'View Full Pricing'
     },
     benefits: {
       title: '🎯 Included Benefits',
@@ -215,6 +253,58 @@ export const translations: Record<Language, Translations> = {
       subtitle: 'Contact us now and get your personalized digital menu',
       quoteButton: 'Quote Now'
     },
+    pricing: {
+      title: 'Simple, Transparent Pricing',
+      subtitle: 'Choose the perfect plan for your restaurant',
+      startingFrom: 'Starting from',
+      oneTimePayment: 'One-time payment',
+      firstYear: 'First Year',
+      firstYearFree: 'FREE',
+      renewal: 'Renewal',
+      monthly: 'per month',
+      fromSecondYear: 'From the second year',
+      features: {
+        customDesign: '100% Custom Design',
+        customLogo: 'Custom Logo',
+        exclusiveQR: 'Exclusive QR Code',
+        responsiveDesign: 'Responsive Design for All Devices',
+        shoppingCart: 'Integrated Shopping Cart',
+        whatsappIntegration: 'WhatsApp Integration',
+        costCalculation: 'Automatic Cost Calculation',
+        deliveryOptions: 'Delivery or In-Store Pickup',
+        support: 'Customer Support'
+      },
+      cta: {
+        title: 'Ready to Get Started?',
+        subtitle: 'Contact us now and get your personalized digital menu',
+        quoteButton: 'Get a Quote'
+      },
+      faq: {
+        title: 'Frequently Asked Questions',
+        questions: [
+          {
+            question: 'What is included in the initial payment?',
+            answer: 'The initial payment of $150 USD includes the complete setup of your digital menu, custom design, logo integration, QR code generation, and the first year of service completely free.'
+          },
+          {
+            question: 'When do I start paying the monthly fee?',
+            answer: 'The monthly fee of $10 USD starts from the second year. The first year is completely free as part of our promotional offer.'
+          },
+          {
+            question: 'Can I cancel my subscription?',
+            answer: 'Yes, you can cancel your subscription at any time. The cancellation will take effect at the end of your current billing period. Please see our Refund Policy for more details.'
+          },
+          {
+            question: 'What payment methods do you accept?',
+            answer: 'We accept various payment methods. Contact us via WhatsApp to discuss payment options that work best for you.'
+          },
+          {
+            question: 'Is there a setup fee?',
+            answer: 'The initial payment of $150 USD covers the complete setup and first year of service. There are no additional setup fees.'
+          }
+        ]
+      }
+    },
     footer: {
       description: 'Your digital menu, without complications. Manage your restaurant and let sales flow.',
       service: 'Service',
@@ -253,7 +343,8 @@ export const translations: Record<Language, Translations> = {
       pricingTitle: 'Oferta única con cupos limitados — desde $150 USD',
       firstYearFree: '✅ Primer año gratis',
       renewalPrice: 'Renovación desde el segundo año: $10 USD mensuales',
-      quoteButton: 'Cotizar Ahora'
+      quoteButton: 'Cotizar Ahora',
+      viewPricing: 'Ver Precios Completos'
     },
     benefits: {
       title: '🎯 Beneficios incluidos',
@@ -316,6 +407,58 @@ export const translations: Record<Language, Translations> = {
       subtitle: 'Contáctanos ahora y obtén tu menú digital personalizado',
       quoteButton: 'Cotizar Ahora'
     },
+    pricing: {
+      title: 'Precios Simples y Transparentes',
+      subtitle: 'Elige el plan perfecto para tu restaurante',
+      startingFrom: 'Desde',
+      oneTimePayment: 'Pago único',
+      firstYear: 'Primer Año',
+      firstYearFree: 'GRATIS',
+      renewal: 'Renovación',
+      monthly: 'por mes',
+      fromSecondYear: 'Desde el segundo año',
+      features: {
+        customDesign: 'Diseño 100% Personalizado',
+        customLogo: 'Logo a Medida',
+        exclusiveQR: 'Código QR Exclusivo',
+        responsiveDesign: 'Diseño Responsivo para Todos los Dispositivos',
+        shoppingCart: 'Carrito de Compras Integrado',
+        whatsappIntegration: 'Integración con WhatsApp',
+        costCalculation: 'Cálculo Automático de Costos',
+        deliveryOptions: 'Envío o Retiro en Tienda',
+        support: 'Soporte al Cliente'
+      },
+      cta: {
+        title: '¿Listo para Empezar?',
+        subtitle: 'Contáctanos ahora y obtén tu menú digital personalizado',
+        quoteButton: 'Obtener Cotización'
+      },
+      faq: {
+        title: 'Preguntas Frecuentes',
+        questions: [
+          {
+            question: '¿Qué está incluido en el pago inicial?',
+            answer: 'El pago inicial de $150 USD incluye la configuración completa de tu menú digital, diseño personalizado, integración de logo, generación de código QR y el primer año de servicio completamente gratis.'
+          },
+          {
+            question: '¿Cuándo empiezo a pagar la tarifa mensual?',
+            answer: 'La tarifa mensual de $10 USD comienza desde el segundo año. El primer año es completamente gratis como parte de nuestra oferta promocional.'
+          },
+          {
+            question: '¿Puedo cancelar mi suscripción?',
+            answer: 'Sí, puedes cancelar tu suscripción en cualquier momento. La cancelación tendrá efecto al final de tu período de facturación actual. Por favor, consulta nuestra Política de Reembolso para más detalles.'
+          },
+          {
+            question: '¿Qué métodos de pago aceptan?',
+            answer: 'Aceptamos varios métodos de pago. Contáctanos por WhatsApp para discutir las opciones de pago que mejor funcionen para ti.'
+          },
+          {
+            question: '¿Hay una tarifa de configuración?',
+            answer: 'El pago inicial de $150 USD cubre la configuración completa y el primer año de servicio. No hay tarifas de configuración adicionales.'
+          }
+        ]
+      }
+    },
     footer: {
       description: 'Tu menú digital, sin complicaciones. Gestiona tu restaurante y deja que las ventas fluyan.',
       service: 'Servicio',
@@ -354,7 +497,8 @@ export const translations: Record<Language, Translations> = {
       pricingTitle: 'Oferta única com vagas limitadas — a partir de $150 USD',
       firstYearFree: '✅ Primeiro ano grátis',
       renewalPrice: 'Renovação a partir do segundo ano: $10 USD mensais',
-      quoteButton: 'Cotizar Agora'
+      quoteButton: 'Cotizar Agora',
+      viewPricing: 'Ver Preços Completos'
     },
     benefits: {
       title: '🎯 Benefícios incluídos',
@@ -416,6 +560,58 @@ export const translations: Record<Language, Translations> = {
       title: 'Pronto para digitalizar seu cardápio?',
       subtitle: 'Entre em contato conosco agora e obtenha seu cardápio digital personalizado',
       quoteButton: 'Cotizar Agora'
+    },
+    pricing: {
+      title: 'Preços Simples e Transparentes',
+      subtitle: 'Escolha o plano perfeito para seu restaurante',
+      startingFrom: 'A partir de',
+      oneTimePayment: 'Pagamento único',
+      firstYear: 'Primeiro Ano',
+      firstYearFree: 'GRÁTIS',
+      renewal: 'Renovação',
+      monthly: 'por mês',
+      fromSecondYear: 'A partir do segundo ano',
+      features: {
+        customDesign: 'Design 100% Personalizado',
+        customLogo: 'Logo Sob Medida',
+        exclusiveQR: 'Código QR Exclusivo',
+        responsiveDesign: 'Design Responsivo para Todos os Dispositivos',
+        shoppingCart: 'Carrinho de Compras Integrado',
+        whatsappIntegration: 'Integração com WhatsApp',
+        costCalculation: 'Cálculo Automático de Custos',
+        deliveryOptions: 'Entrega ou Retirada na Loja',
+        support: 'Suporte ao Cliente'
+      },
+      cta: {
+        title: 'Pronto para Começar?',
+        subtitle: 'Entre em contato conosco agora e obtenha seu cardápio digital personalizado',
+        quoteButton: 'Obter Cotização'
+      },
+      faq: {
+        title: 'Perguntas Frequentes',
+        questions: [
+          {
+            question: 'O que está incluído no pagamento inicial?',
+            answer: 'O pagamento inicial de $150 USD inclui a configuração completa do seu cardápio digital, design personalizado, integração de logo, geração de código QR e o primeiro ano de serviço completamente grátis.'
+          },
+          {
+            question: 'Quando começo a pagar a taxa mensal?',
+            answer: 'A taxa mensal de $10 USD começa a partir do segundo ano. O primeiro ano é completamente grátis como parte da nossa oferta promocional.'
+          },
+          {
+            question: 'Posso cancelar minha assinatura?',
+            answer: 'Sim, você pode cancelar sua assinatura a qualquer momento. O cancelamento terá efeito no final do seu período de faturamento atual. Por favor, consulte nossa Política de Reembolso para mais detalhes.'
+          },
+          {
+            question: 'Quais métodos de pagamento vocês aceitam?',
+            answer: 'Aceitamos vários métodos de pagamento. Entre em contato conosco via WhatsApp para discutir as opções de pagamento que melhor funcionem para você.'
+          },
+          {
+            question: 'Há uma taxa de configuração?',
+            answer: 'O pagamento inicial de $150 USD cobre a configuração completa e o primeiro ano de serviço. Não há taxas de configuração adicionais.'
+          }
+        ]
+      }
     },
     footer: {
       description: 'Seu cardápio digital, sem complicações. Gerencie seu restaurante e deixe as vendas fluírem.',
