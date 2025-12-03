@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'MiCartaPro — Tu Menú Digital, Sin Complicaciones',
-  description: 'Gestiona tu menú digital y deja que las ventas fluyan. Diseño 100% personalizado, carrito de compras integrado y recepción de pedidos por WhatsApp.',
+  description: 'Self-service SaaS platform for managing your digital menu. Customizable design options, integrated shopping cart, and WhatsApp order reception.',
   keywords: 'menú digital, carta digital, restaurante, QR code, pedidos online, WhatsApp',
   authors: [{ name: 'MiCartaPro' }],
   icons: {
