@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { 
@@ -378,6 +379,15 @@ export default function LandingPage() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+              <Link href="/privacy" className="hover:text-white transition-colors">
+                Política de Privacidad
+              </Link>
+              <span className="hidden sm:inline">•</span>
+              <Link href="/terms" className="hover:text-white transition-colors">
+                Términos y Condiciones
+              </Link>
+            </div>
             <p>&copy; {new Date().getFullYear()} MiCartaPro. Todos los derechos reservados.</p>
           </div>
         </div>
