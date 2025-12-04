@@ -40,7 +40,7 @@ export default function TermsPage() {
           </h1>
           
           <p className="text-gray-600 mb-8">
-            <strong>Last updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+            <strong>Last updated:</strong> December 3, 2025
           </p>
 
           <div className="prose prose-lg max-w-none space-y-8 text-gray-700">
@@ -100,188 +100,227 @@ export default function TermsPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">4.2. Prohibited Use</h3>
               <p>The following is strictly prohibited:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Using the Services for illegal or fraudulent activities</li>
+                <li>Illegal or fraudulent activities</li>
+                <li>Publishing misleading pricing or illegal food products</li>
+                <li>Unauthorized alcohol sales where prohibited by law</li>
                 <li>Attempting unauthorized access to our systems or data</li>
-                <li>Transmitting viruses, malware, or malicious code</li>
-                <li>Reverse engineering, decompiling, or disassembling our Services</li>
-                <li>Using bots, automated scripts, or similar methods to access the Services</li>
-                <li>Copying, modifying, or distributing our Services without authorization</li>
-                <li>Using the Services to send spam or unsolicited communications</li>
-                <li>Violating the privacy or intellectual property rights of others</li>
+                <li>Transmitting viruses, malware, or harmful code</li>
+                <li>Reverse engineering, decompiling, or disassembling the Services</li>
+                <li>Using bots or automated scripts to access the platform</li>
+                <li>Copying, modifying, or distributing the Services without permission</li>
+                <li>Using the platform to send spam or unsolicited communications</li>
+                <li>Violating privacy or intellectual property rights of others</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Accounts and Registration</h2>
               <p>
-                To access certain features of our Services, you may need to create an account. You are responsible for:
+                Some features require account creation. You are responsible for:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Maintaining the confidentiality of your account credentials</li>
-                <li>All activities that occur under your account</li>
-                <li>Notifying us immediately of any unauthorized use of your account</li>
-                <li>Providing accurate and up-to-date information</li>
+                <li>Keeping login credentials confidential</li>
+                <li>All activity under your account</li>
+                <li>Notifying us of any unauthorized access</li>
+                <li>Providing accurate, up-to-date information</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. User Content</h2>
               <p>
-                When using our Services, you may provide content, including menu information, images, text, and other materials ("User Content"). By providing User Content, you grant MiCartaPro a non-exclusive, worldwide, royalty-free, and transferable license to use, reproduce, modify, and distribute such content solely for the purpose of providing and improving our Services.
+                You may upload menu information, images, text, and other content ("User Content"). By doing so, you grant MiCartaPro a non-exclusive, worldwide, royalty-free, transferable license to use, reproduce, modify, and distribute such content solely for operating and improving the Service.
               </p>
               <p>
-                You are responsible for ensuring that your User Content:
+                You are responsible for ensuring your content:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Does not infringe the intellectual property rights of third parties</li>
-                <li>Does not contain defamatory, obscene, or illegal material</li>
-                <li>Does not violate the privacy rights of others</li>
-                <li>Complies with all applicable laws and regulations</li>
+                <li>Does not infringe third-party rights</li>
+                <li>Is not defamatory, obscene, or illegal</li>
+                <li>Complies with privacy, labeling, and food safety laws</li>
+                <li>Does not violate regulations related to alcohol or consumer protection</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Intellectual Property</h2>
               <p>
-                All rights, titles, and interests in and to our Services, including but not limited to software, design, text, graphics, logos, icons, and data compilations, are the property of MiCartaPro or its licensors and are protected by international intellectual property laws.
-              </p>
-              <p>
-                You are not granted any right, title, or interest in our Services except the limited right to use in accordance with these Terms.
+                All rights in the Service, including software, design, logos, text, graphics, and assets, belong to MiCartaPro or its licensors. You receive only a limited right to use the Services under these Terms.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Pricing and Payments</h2>
-              <p>
-                Our services are available through a simple monthly subscription:
-              </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>Monthly Subscription:</strong> $15 USD per month</li>
+                <li>Subscription pricing is shown at checkout and may change with notice</li>
                 <li>No setup fees or long-term commitments</li>
                 <li>Cancel anytime</li>
-                <li>Prices are subject to change with prior notice</li>
-                <li>Payments are processed by Paddle, who acts as the Merchant of Record</li>
+                <li>Prices are in USD and may include taxes depending on your jurisdiction</li>
               </ul>
-              <p className="mt-4">
-                All prices are expressed in US dollars (USD) and may be subject to taxes according to your jurisdiction.
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.1. Payments and Merchant of Record</h2>
+              <p>
+                All payments are handled by Paddle, who acts as Merchant of Record for all transactions. Paddle manages billing, taxes, invoicing, and refunds.
+              </p>
+              <p>
+                MiCartaPro does not store or process payment information.
+              </p>
+              <p>
+                Payment inquiries and refund requests must be addressed to Paddle, either directly or through our support channel.
+              </p>
+              <p>
+                More info: <a href="https://www.paddle.com/legal" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://www.paddle.com/legal</a>
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.1. Refund Policy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.2. Refunds and Right to Cancel</h2>
               <p>
-                We offer a <strong>14-day money-back guarantee</strong> on all purchases made via Paddle.
+                Consumers may have a 14-day right to cancel under consumer protection laws. This is processed directly by Paddle.
               </p>
-              <p>
-                If you're not satisfied with your purchase, you can request a full refund within 14 days from the date of purchase by contacting Paddle or our support team.
-              </p>
-              <p>
-                After 14 days, refunds are handled at our and Paddle's discretion.
-              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Refunds are granted only at Paddle's discretion</li>
+                <li>MiCartaPro does not issue refunds directly</li>
+                <li>After 14 days, refunds are not guaranteed</li>
+                <li>No refunds for unused subscription time</li>
+              </ul>
               <p className="mt-4">
-                For detailed information about our refund policy, please refer to our <Link href="/refund" className="text-blue-600 hover:text-blue-700 underline">Refund Policy</Link> page.
+                See also: <Link href="/refund" className="text-blue-600 hover:text-blue-700 underline">Refund Policy</Link>
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Service Availability</h2>
               <p>
-                We strive to keep our Services available continuously, but we do not guarantee that the Services will be available at all times, free from interruptions or errors. We may perform scheduled or unscheduled maintenance that may result in temporary service interruptions.
+                We aim for continuous availability, but service may experience interruptions due to maintenance or technical issues. We provide no uptime guarantee.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Limitation of Liability</h2>
               <p>
-                TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, MICARTAPRO AND ITS AFFILIATES SHALL NOT BE LIABLE FOR INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS, DATA, OR USE, RESULTING FROM THE USE OR INABILITY TO USE OUR SERVICES.
+                To the fullest extent allowed by law, MiCartaPro is not liable for indirect, incidental, or consequential damages (including lost profits, data loss, or business interruptions).
               </p>
               <p>
-                Our total liability to you for any claim related to our Services shall not exceed the amount you have paid to MiCartaPro in the twelve (12) months preceding the event giving rise to the claim.
+                Maximum liability for any claim is limited to amounts paid in the last 12 months.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Indemnification</h2>
               <p>
-                You agree to indemnify, defend, and hold harmless MiCartaPro, its affiliates, directors, employees, and agents from any claim, demand, loss, liability, and expense (including attorneys' fees) arising from or related to:
+                You agree to defend and indemnify MiCartaPro against claims arising from:
               </p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>Your use of the Services</li>
-                <li>Your violation of these Terms</li>
-                <li>Your violation of any law or right of third parties</li>
-                <li>Your User Content</li>
+                <li>Violation of these Terms</li>
+                <li>Violation of laws or third-party rights</li>
+                <li>Uploading User Content</li>
               </ul>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Termination</h2>
               <p>
-                We may terminate or suspend your access to our Services immediately, without prior notice, for any reason, including but not limited to:
+                We may suspend or terminate accounts without notice if Terms are violated, fraudulent activity is detected, or fees remain unpaid.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>Violation of these Terms</li>
-                <li>Fraudulent or illegal use of the Services</li>
-                <li>Non-payment of applicable subscription fees</li>
-                <li>For operational or business reasons</li>
+              <p className="mt-4">
+                <strong>Cancellation by user:</strong>
+              </p>
+              <p>
+                You may cancel anytime by contacting support at least 48 hours before renewal. Service remains active until the end of the billing period.
+              </p>
+              <p>
+                Unused subscription time is non-refundable.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Add-On Services (Optional)</h2>
+              <p>
+                Additional services may be offered separately, such as:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mb-4">
+                <li>Custom menu design</li>
+                <li>Manual menu setup</li>
+                <li>Consultation</li>
+                <li>Migration support</li>
               </ul>
-              <p className="mt-4">
-                <strong>Subscription Cancellation:</strong> You may cancel your subscription at any time by contacting us at least 48 hours before the end of your current billing period. Your cancellation will take effect at the next payment date. Upon cancellation, your access to the Services will continue until the end of your current billing period, after which your right to use the Services will cease.
+              <p>These are:</p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Optional and not required</li>
+                <li>Billed separately (bank transfer, PayPal, invoice)</li>
+                <li>Not processed through Paddle</li>
+                <li>From $150 USD depending on complexity</li>
+                <li>Separate terms may apply</li>
+              </ul>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Third-Party Services</h2>
+              <p>
+                The platform may integrate with third-party tools such as WhatsApp. Their terms and privacy policies apply separately.
               </p>
-              <p className="mt-4">
-                <strong>No Refunds on Unused Periods:</strong> There are no refunds on unused subscription periods. Once a subscription period has been paid, you will have access for the full period even if you cancel before the period ends.
+              <p>
+                We are not responsible for third-party service behavior or data handling.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Third-Party Services</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Modifications to Terms</h2>
               <p>
-                Our Services may integrate with third-party services, including WhatsApp. Your use of these third-party services is subject to their own terms and conditions and privacy policies. We are not responsible for the privacy practices or content of third-party services.
+                We may update these Terms periodically. The "Last Updated" date will change accordingly. Continued use of the Service implies acceptance of updated Terms.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Modifications to Terms</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. Governing Law and Jurisdiction</h2>
               <p>
-                We reserve the right to modify these Terms at any time. We will notify you of material changes by posting the updated Terms on this page and updating the "Last updated" date.
+                Except where consumer law requires otherwise, these Terms are governed by the laws of England and Wales.
               </p>
               <p>
-                Your continued use of the Services after the modified Terms take effect constitutes your acceptance of the modified Terms.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">15. Governing Law and Jurisdiction</h2>
-              <p>
-                These Terms are governed by and construed in accordance with applicable laws, without giving effect to any principles of conflicts of law.
-              </p>
-              <p>
-                Any dispute arising from or related to these Terms or our Services shall be resolved exclusively in the competent courts, unless otherwise agreed through arbitration.
+                Any disputes shall be resolved in courts located in London, United Kingdom, unless arbitration or another method is mutually agreed.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">16. General Provisions</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. General Provisions</h2>
               
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">16.1. Entire Agreement</h3>
-              <p>These Terms constitute the entire agreement between you and MiCartaPro regarding the use of the Services.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">17.1. Entire Agreement</h3>
+              <p>These Terms form the complete agreement between you and MiCartaPro.</p>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">16.2. Severability</h3>
-              <p>If any provision of these Terms is found to be invalid or unenforceable, the remaining provisions will remain in full force and effect.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">17.2. Severability</h3>
+              <p>If any provision is deemed unenforceable, the remaining terms remain valid.</p>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">16.3. Waiver</h3>
-              <p>Our failure to exercise or enforce any right or provision of these Terms shall not constitute a waiver of such right or provision.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">17.3. Waiver</h3>
+              <p>Failure to enforce rights under these Terms does not waive future rights.</p>
 
-              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">16.4. Assignment</h3>
-              <p>You may not assign or transfer these Terms or your rights under these Terms without our prior written consent. We may assign these Terms without restriction.</p>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">17.4. Assignment</h3>
+              <p>You may not transfer rights under these Terms without written consent. MiCartaPro may assign these Terms freely.</p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">17. Contact</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">18. Privacy & Cookies</h2>
               <p>
-                If you have questions about these Terms and Conditions, you can contact us through:
+                Use of the Service is also governed by our Privacy Policy and Cookie Policy.
+              </p>
+              <p>
+                By using MiCartaPro, you consent to data handling described in those documents.
+              </p>
+              <p className="mt-4">
+                See: <Link href="/privacy" className="text-blue-600 hover:text-blue-700 underline">Privacy Policy</Link>
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">19. Contact</h2>
+              <p>
+                For questions regarding these Terms:
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li><strong>WhatsApp:</strong> +56957857558</li>
+                <li><strong>WhatsApp:</strong> +56 9 5785 7558</li>
                 <li><strong>Email:</strong> legal@micartapro.com</li>
               </ul>
             </section>
@@ -294,12 +333,14 @@ export default function TermsPage() {
             >
               ← Back to Home
             </Link>
-            <Link 
-              href="/privacy"
-              className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
-            >
-              View Privacy Policy →
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link 
+                href="/privacy"
+                className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium"
+              >
+                View Privacy Policy →
+              </Link>
+            </div>
           </div>
         </div>
       </div>

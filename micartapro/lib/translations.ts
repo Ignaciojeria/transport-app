@@ -61,14 +61,30 @@ export interface Translations {
       subtitle: string
       quoteButton: string
     }
-    faq: {
-      title: string
-      questions: Array<{
-        question: string
-        answer: string
-      }>
+      faq: {
+        title: string
+        questions: Array<{
+          question: string
+          answer: string
+        }>
+      }
+      additionalServices: {
+        title: string
+        subtitle: string
+        description: string
+        startingFrom: string
+        requiresQuote: string
+        note: string
+        button: string
+        servicesTitle: string
+        services: {
+          customDesign: string
+          menuSetup: string
+          consulting: string
+          migration: string
+        }
+      }
     }
-  }
   
   // Benefits Section
   benefits: {
@@ -309,6 +325,22 @@ export const translations: Record<Language, Translations> = {
             answer: 'No, there are no setup fees. Your $15 USD monthly subscription includes everything you need to get started immediately.'
           }
         ]
+      },
+      additionalServices: {
+        title: 'Add-On Services (Optional)',
+        subtitle: 'Professional services billed separately',
+        description: 'If you need professional custom design work, manual menu creation, or personalized consulting, we offer these services as optional add-ons. These services are billed separately and are NOT processed through Paddle.',
+        startingFrom: 'Starting from $150 USD',
+        requiresQuote: 'Requires a custom quote',
+        note: 'These add-on services are optional, billed separately via bank transfer, PayPal, or invoice, and are NOT included in your SaaS subscription. They are NOT processed through Paddle. Contact us for a personalized quote based on your specific needs.',
+        button: 'Request Custom Quote',
+        servicesTitle: 'Available Add-On Services:',
+        services: {
+          customDesign: 'Custom Menu Design',
+          menuSetup: 'Manual Menu Setup',
+          consulting: 'Personalized Consulting',
+          migration: 'Migration Support'
+        }
       }
     },
     footer: {
@@ -468,6 +500,22 @@ export const translations: Record<Language, Translations> = {
             answer: 'No, no hay tarifas de configuración. Tu suscripción mensual de $15 USD incluye todo lo que necesitas para comenzar inmediatamente.'
           }
         ]
+      },
+      additionalServices: {
+        title: 'Servicios Adicionales (Opcionales)',
+        subtitle: 'Servicios profesionales facturados por separado',
+        description: 'Si necesitas trabajo de diseño personalizado profesional, creación manual de menús o consultoría personalizada, ofrecemos estos servicios como complementos opcionales. Estos servicios se facturan por separado y NO se procesan a través de Paddle.',
+        startingFrom: 'Desde $150 USD',
+        requiresQuote: 'Requiere cotización personalizada',
+        note: 'Estos servicios adicionales son opcionales, se facturan por separado mediante transferencia bancaria, PayPal o factura, y NO están incluidos en tu suscripción SaaS. NO se procesan a través de Paddle. Contáctanos para una cotización personalizada según tus necesidades específicas.',
+        button: 'Solicitar Cotización Personalizada',
+        servicesTitle: 'Servicios Adicionales Disponibles:',
+        services: {
+          customDesign: 'Diseño Personalizado de Menú',
+          menuSetup: 'Configuración Manual de Menú',
+          consulting: 'Consultoría Personalizada',
+          migration: 'Soporte de Migración'
+        }
       }
     },
     footer: {
@@ -627,6 +675,22 @@ export const translations: Record<Language, Translations> = {
             answer: 'Não, não há taxas de configuração. Sua assinatura mensal de $15 USD inclui tudo que você precisa para começar imediatamente.'
           }
         ]
+      },
+      additionalServices: {
+        title: 'Serviços Adicionais (Opcionais)',
+        subtitle: 'Serviços profissionais faturados separadamente',
+        description: 'Se você precisar de trabalho de design personalizado profissional, criação manual de cardápios ou consultoria personalizada, oferecemos esses serviços como complementos opcionais. Esses serviços são faturados separadamente e NÃO são processados através da Paddle.',
+        startingFrom: 'A partir de $150 USD',
+        requiresQuote: 'Requer cotização personalizada',
+        note: 'Esses serviços adicionais são opcionais, são faturados separadamente via transferência bancária, PayPal ou fatura, e NÃO estão incluídos na sua assinatura SaaS. NÃO são processados através da Paddle. Entre em contato conosco para uma cotização personalizada com base em suas necessidades específicas.',
+        button: 'Solicitar Cotização Personalizada',
+        servicesTitle: 'Serviços Adicionais Disponíveis:',
+        services: {
+          customDesign: 'Design Personalizado de Cardápio',
+          menuSetup: 'Configuração Manual de Cardápio',
+          consulting: 'Consultoria Personalizada',
+          migration: 'Suporte de Migração'
+        }
       }
     },
     footer: {

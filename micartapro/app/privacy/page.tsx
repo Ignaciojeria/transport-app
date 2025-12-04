@@ -50,6 +50,9 @@ export default function PrivacyPage() {
                 MiCartaPro ("we", "our", or "the company") is committed to protecting and respecting your privacy. This Privacy Policy explains how we collect, use, disclose, and protect your personal information when you use our digital menu services.
               </p>
               <p>
+                <strong>Data Controller:</strong> MiCartaPro (micartapro.com) is the data controller responsible for processing your personal information in accordance with this Privacy Policy.
+              </p>
+              <p>
                 By using our services, you agree to the practices described in this policy. If you do not agree with this policy, please do not use our services.
               </p>
             </section>
@@ -112,15 +115,20 @@ export default function PrivacyPage() {
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Sharing and Disclosure of Information</h2>
-              <p>We do not sell, rent, or share your personal information with third parties for their own commercial purposes, except in the following circumstances:</p>
+              <p>
+                <strong>We never sell personal data to third parties.</strong> We do not sell, rent, or share your personal information with third parties for their own commercial purposes, except in the following circumstances:
+              </p>
               
               <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.1. Service Providers</h3>
               <p>We may share information with trusted service providers who help us operate our business, including:</p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Hosting and cloud service providers</li>
-                <li>Analytics and monitoring services</li>
+                <li>Hosting and cloud service providers (e.g., Firebase, Vercel, or similar infrastructure providers)</li>
+                <li>Payment processors (Paddle, who acts as Merchant of Record)</li>
                 <li>Communication service providers (WhatsApp)</li>
               </ul>
+              <p className="mt-4">
+                All service providers are contractually obligated to protect your information and use it only for the purposes we specify.
+              </p>
 
               <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-4">6.2. Restaurants</h3>
               <p>When you send an order, the information is shared with the corresponding restaurant through WhatsApp to process your order.</p>
@@ -133,9 +141,12 @@ export default function PrivacyPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. International Data Transfers</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. International Data Transfers and Data Storage</h2>
               <p>
-                Your data may be processed and stored on servers located outside your country of residence. When we transfer data internationally, we implement appropriate safeguards to protect your information in accordance with this policy and applicable data protection laws.
+                We may store and process data using cloud infrastructure located in the United States, Europe, or other regions depending on our provider's architecture. Your data may be processed and stored on servers located outside your country of residence.
+              </p>
+              <p>
+                When we transfer data internationally, we implement appropriate safeguards to protect your information in accordance with this policy and applicable data protection laws, including Standard Contractual Clauses (SCCs) where applicable.
               </p>
             </section>
 
@@ -165,7 +176,7 @@ export default function PrivacyPage() {
               </ul>
               
               <p className="mt-4">
-                To exercise any of these rights, please contact us using the information provided in the Contact section.
+                To exercise any of these rights, please contact us using the information provided in the Contact section. We will respond to privacy-related requests within 30 days or less, as required by applicable law.
               </p>
             </section>
 
@@ -183,6 +194,19 @@ export default function PrivacyPage() {
               <p className="mt-4">
                 However, no method of transmission over the Internet or electronic storage is 100% secure. Although we strive to protect your information, we cannot guarantee its absolute security.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10.1. Data Breach Notification</h2>
+              <p>
+                In the event of a data breach that may compromise personal information, we will:
+              </p>
+              <ul className="list-disc pl-6 space-y-2">
+                <li>Notify affected users without undue delay, and in any event within 72 hours where feasible</li>
+                <li>Notify relevant data protection authorities as required by applicable regulations (e.g., within 72 hours under GDPR)</li>
+                <li>Provide clear information about the nature of the breach, likely consequences, and measures taken to address it</li>
+                <li>Take immediate steps to contain and remediate the breach</li>
+              </ul>
             </section>
 
             <section>

@@ -80,20 +80,26 @@ export default function RefundPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Effect of Cancellation</h2>
               <p>
-                If you cancel this Agreement as permitted above, we will reimburse to you all payments received from you.
+                If you cancel this Agreement as permitted above, any eligible refunds will be processed directly by Paddle, who acts as the Merchant of Record.
               </p>
               <p>
-                We will make the reimbursement without undue delay, and not later than 14 days after the day on which we are informed about your decision to cancel this Agreement.
+                <strong>Important:</strong> Refunds are granted by Paddle at their sole discretion, in accordance with Paddle's Invoiced Consumer Terms and Conditions. MiCartaPro does not issue refunds directly.
               </p>
               <p>
-                We will make the reimbursement using the same means of payment as you used for the initial transaction and you will not incur any fees as a result of the reimbursement.
+                If Paddle approves a refund, it will be processed without undue delay, and not later than 14 days after the day on which Paddle is informed about your decision to cancel this Agreement.
+              </p>
+              <p>
+                Reimbursements will be made using the same means of payment as you used for the initial transaction and you will not incur any fees as a result of the reimbursement.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Refund Policy</h2>
               <p>
-                Refunds are provided at the sole discretion of Paddle and on a case-by-case basis and may be refused. Paddle will refuse a refund request if they find evidence of fraud, refund abuse, or other manipulative behaviour that entitles Paddle to counterclaim the refund.
+                All refunds are processed by Paddle, who acts as the Merchant of Record. Refunds are provided at the sole discretion of Paddle and on a case-by-case basis and may be refused. Paddle will refuse a refund request if they find evidence of fraud, refund abuse, or other manipulative behaviour that entitles Paddle to counterclaim the refund.
+              </p>
+              <p>
+                <strong>MiCartaPro does not issue refunds directly.</strong> All refund decisions and processing are handled exclusively by Paddle in accordance with Paddle's Invoiced Consumer Terms and Conditions.
               </p>
               <p>
                 This does not affect your rights as a Consumer in relation to Products which are not as described, faulty or not fit for purpose.
@@ -113,6 +119,23 @@ export default function RefundPage() {
               </p>
               <p>
                 <strong>There are no refunds on unused subscription periods.</strong>
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6.1. Add-On Services</h2>
+              <p>
+                We may offer optional add-on services such as custom menu design, manual menu setup, personalized consulting, or migration support. These services:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mb-4">
+                <li>Are <strong>optional</strong> and not required for use of the SaaS platform</li>
+                <li>Are <strong>billed separately</strong> via bank transfer, PayPal, or invoice</li>
+                <li>Are <strong>NOT processed through Paddle</strong> and are not part of your SaaS subscription</li>
+                <li>Require a <strong>custom quote</strong> (starting from $150 USD)</li>
+                <li>Are subject to <strong>separate terms and conditions</strong> provided at the time of quotation</li>
+              </ul>
+              <p>
+                <strong>Refund Policy for Add-On Services:</strong> Since these services are not processed through Paddle, refunds for add-on services are handled separately according to the terms agreed upon at the time of purchase. Please refer to your service agreement for specific refund terms.
               </p>
             </section>
 
