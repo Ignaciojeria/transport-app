@@ -46,173 +46,89 @@ export default function RefundPage() {
           <div className="prose prose-lg max-w-none space-y-8 text-gray-700">
             <section>
               <p>
-                MiCartaPro uses Paddle.com as our payment processor and Merchant of Record (MoR). Paddle handles payment processing, invoicing, taxes (where applicable), subscription renewals, and refund reviews under their consumer protection and legal framework.
+                MiCartaPro uses Paddle.com as our payment processor and Merchant of Record (MoR).
               </p>
               <p>
-                By completing a purchase, you agree to Paddle's Terms & Conditions and to this Refund & Subscription Policy.
+                All payments, billing and refunds for purchases made through Paddle are handled directly by Paddle in accordance with their consumer protection rules and legal terms.
+              </p>
+              <p>
+                By purchasing MiCartaPro, you agree to Paddle's Terms & Conditions and this policy.
               </p>
               <p className="mt-4">
-                📄 <strong>Paddle Terms:</strong> <a href="https://paddle.com/legal" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.com/legal</a>
+                🔗 <strong>Paddle Terms:</strong> <a href="https://paddle.com/legal" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.com/legal</a>
               </p>
               <p>
-                📄 <strong>Paddle Privacy Policy:</strong> <a href="https://paddle.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.com/privacy</a>
+                🔗 <strong>Paddle Privacy:</strong> <a href="https://paddle.com/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.com/privacy</a>
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Nature of the Product</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. 14-Day Refund Policy</h2>
               <p>
-                MiCartaPro is a subscription-based digital software service (SaaS).
-              </p>
-              <p>
-                Access to the dashboard and features is granted immediately after purchase, which constitutes delivery of digital content.
+                If you are not satisfied with your purchase, you may request a refund within 14 days of the original transaction.
               </p>
               <p>
-                Per Paddle's consumer terms:
+                Refunds are processed directly by Paddle and returned to the original payment method.
               </p>
-              <p className="italic">
-                "Where a product is digital content which is immediately made available... you consent to immediate performance and acknowledge that you will lose your right of withdrawal once access begins."
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. 14-Day Refund Guarantee (Initial Purchase Only)</h2>
-              <p>
-                We offer a 14-day money-back guarantee for first-time subscription purchases only.
-              </p>
-              <p>
-                If you are not satisfied, you may request a refund within the first 14 days — no explanation required.
-              </p>
-              <p>
-                Refunds are processed exclusively by Paddle.
-              </p>
-              <p>
-                Funds are returned to the original payment method.
-              </p>
-              <p>
-                After 14 days, the purchase becomes final.
-              </p>
-              <p>
-                ⏳ Refund requests submitted after 60 days may not be eligible, as defined by Paddle's policy.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Refund Evaluation & Limitations</h2>
-              <p>
-                Refund approvals are at Paddle's discretion, based on their policies and applicable consumer protection laws.
-              </p>
-              <p>
-                Refunds may be refused in cases of:
-              </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>evidence of service usage or benefit received</li>
-                <li>refund abuse or manipulative behavior</li>
-                <li>fraud or suspicious activity</li>
-                <li>attempts to exploit the policy</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Access Equals Delivery</h2>
-              <p>
-                Once the user logs in, accesses the dashboard, or uses the service, the product is considered delivered and consumed, and the statutory right of withdrawal may no longer apply.
-              </p>
-              <p>
-                Examples that count as access:
-              </p>
-              <ul className="list-none pl-0 space-y-2">
-                <li>✔ logging into the dashboard</li>
-                <li>✔ creating or editing menu items</li>
-                <li>✔ generating or using QR features</li>
-                <li>✔ receiving onboarding or support</li>
-                <li>✔ engaging with any core platform feature</li>
-              </ul>
               <p className="mt-4">
-                If you wish to request a refund, we recommend doing so before using the platform.
+                To request a refund you may contact:
+              </p>
+              <p>
+                <strong>MiCartaPro Support:</strong> support@micartapro.com
+              </p>
+              <p>
+                <strong>Paddle Support:</strong> <a href="https://paddle.net/support" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.net/support</a>
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Subscription Renewals & Cancellation</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Subscription Renewals</h2>
               <p>
-                Subscriptions renew automatically.
+                Subscriptions renew automatically unless cancelled.
               </p>
               <p>
-                You may cancel at any time.
+                You may cancel at any time prior to the next billing date to stop future charges.
               </p>
               <p>
-                To avoid being charged again, cancellation must be completed at least 48 hours before renewal.
+                Cancelling a subscription prevents future payments — it does not automatically generate a refund for past charges.
               </p>
-              <p>
-                Cancellation prevents future charges — it does not trigger refunds for already-charged renewals.
-              </p>
-              <p>
-                Refund eligibility applies only to the first billing, not to renewals or unused subscription time.
-              </p>
-              <p>
-                No refunds are granted for:
-              </p>
-              <ul className="list-none pl-0 space-y-2">
-                <li>✘ renewal payments already processed</li>
-                <li>✘ unused time in a current billing period</li>
-                <li>✘ change of mind after usage</li>
-                <li>✘ lack of usage by customer choice</li>
-              </ul>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Add-On Human Services (Separate Billing)</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">3. Human-Driven Add-on Services (Separate Billing)</h2>
               <p>
-                We may offer optional add-on services such as:
+                MiCartaPro may offer optional services such as:
               </p>
               <ul className="list-disc pl-6 space-y-2 mb-4">
-                <li>menu setup / customization</li>
-                <li>data import or migration</li>
-                <li>product/catalog loading</li>
-                <li>design, consulting or advanced support</li>
+                <li>Menu setup / customization</li>
+                <li>Data import / migration</li>
+                <li>Consulting or manual implementation</li>
               </ul>
-              <p>These services:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>are billed separately (Bank Transfer / PayPal / Invoice)</li>
-                <li>are not refundable through Paddle</li>
-                <li>follow their own independent service/refund terms</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Billing, Taxes & Documentation</h2>
               <p>
-                Paddle may apply local taxes (VAT/GST/consumption tax) depending on region.
-              </p>
-              <p>
-                All invoices and receipts are delivered electronically.
-              </p>
-              <p>
-                Customers are responsible for entering accurate billing information.
-              </p>
-              <p>
-                If registered for indirect tax reclaim, you may request VAT/GST refund from Paddle within 60 days from purchase, subject to jurisdictional rules.
+                These add-on services are billed separately and are not processed through Paddle, therefore refunds for these services are handled directly between MiCartaPro and the client under separate terms.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Support & Refund Requests</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Tax & Billing</h2>
               <p>
-                <strong>MiCartaPro Support:</strong>
+                Paddle may collect and remit VAT/GST or other taxes depending on your region.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>📧 support@micartapro.com</li>
-                <li>📱 +56 9 5785 7558</li>
-              </ul>
-              <p className="mt-4">
-                Refund or billing assistance via Paddle:
+              <p>
+                Invoices are issued electronically at purchase.
               </p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li>🌐 <a href="https://paddle.net/support" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.net/support</a></li>
-              </ul>
-              <p className="mt-4">
-                Paddle manages refund processing — MiCartaPro cannot issue refunds directly.
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Contact & Support</h2>
+              <p>
+                📧 Email: support@micartapro.com
+              </p>
+              <p>
+                📱 +56 9 5785 7558
+              </p>
+              <p>
+                For Paddle billing or refund requests: <a href="https://paddle.net/support" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://paddle.net/support</a>
               </p>
             </section>
           </div>
