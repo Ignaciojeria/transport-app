@@ -1,177 +1,63 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-
-interface GoogleUserInfo {
-  id: string
-  email: string
-  verified_email: boolean
-  name: string
-  given_name: string
-  family_name: string
-  picture: string
-  locale: string
-}
-
-interface GoogleExchangeResponse {
-  access_token: string
-  token_type: string
-  expires_in: number
-  refresh_token: string
-  user: GoogleUserInfo
-  error?: string
-}
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('Procesando autenticación...')
   const [isLoading, setIsLoading] = useState(true)
-  const searchParams = useSearchParams()
   const router = useRouter()
 
   useEffect(() => {
-    const processAuth = async () => {
+    const handleAuthCallback = async () => {
       try {
-        const code = searchParams.get('code')
-        const state = searchParams.get('state')
-        const error = searchParams.get('error')
-
-        console.log('🔍 Parámetros de callback recibidos:', {
-          code: code ? `${code.substring(0, 20)}...` : null,
-          state,
-          error,
-          full_url: window.location.href
-        })
+        // Supabase maneja automáticamente el callback de OAuth
+        // Solo necesitamos verificar si hay una sesión
+        const { data: { session }, error } = await supabase.auth.getSession()
 
         if (error) {
-          console.error('❌ Error en callback de Google:', error)
-          setStatus(`Error: ${error}`)
+          console.error('❌ Error obteniendo sesión:', error)
+          setStatus(`Error: ${error.message}`)
           setIsLoading(false)
-          return
-        }
-
-        if (!code) {
-          console.error('❌ Código de autorización faltante')
-          setStatus('Error: Código de autorización faltante')
-          setIsLoading(false)
-          return
-        }
-
-        // Validar state CSRF
-        const savedState = localStorage.getItem('oauth_state')
-        localStorage.removeItem('oauth_state')
-        console.log('🔍 Validando state CSRF:', { received: state, saved: savedState })
-        
-        if (state !== savedState) {
-          console.error('❌ Estado de seguridad inválido')
-          setStatus('Error: Estado de seguridad inválido')
-          setIsLoading(false)
-          return
-        }
-
-        setStatus('Intercambiando código con el backend...')
-
-        const requestBody = {
-          code: code,
-          state: state,
-          redirect_uri: window.location.origin + '/auth/callback',
-        }
-
-        console.log('🚀 Enviando request al backend:', {
-          url: 'https://einar-main-f0820bc.d2.zuplo.dev/auth/google/exchange',
-          method: 'POST',
-          body: requestBody
-        })
-
-        const backendResponse = await fetch('https://einar-main-f0820bc.d2.zuplo.dev/auth/google/exchange', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        })
-
-        console.log('📡 Respuesta del backend:', {
-          status: backendResponse.status,
-          statusText: backendResponse.statusText
-        })
-
-        if (!backendResponse.ok) {
-          const errorText = await backendResponse.text()
-          console.error('❌ Error HTTP del backend:', {
-            status: backendResponse.status,
-            statusText: backendResponse.statusText,
-            body: errorText
-          })
-          throw new Error(`Error del backend: ${backendResponse.status} ${backendResponse.statusText}`)
-        }
-
-        const result: GoogleExchangeResponse = await backendResponse.json()
-        console.log('📦 Respuesta JSON del backend:', result)
-
-        if (result.error) {
-          console.error('❌ Error en respuesta del backend:', result.error)
-          throw new Error(result.error)
-        }
-
-        if (result.access_token && result.user) {
-          setStatus(`¡Bienvenido ${result.user.name}! Redirigiendo a la aplicación...`)
-          
-          console.log('✅ Autenticación exitosa, preparando redirect:', {
-            access_token: `${result.access_token.substring(0, 20)}...`,
-            refresh_token: `${result.refresh_token.substring(0, 20)}...`,
-            user: result.user
-          })
-          
-          // Preparar datos para el fragment
-          const authData = {
-            access_token: result.access_token,
-            refresh_token: result.refresh_token,
-            token_type: result.token_type,
-            expires_in: result.expires_in,
-            user: result.user,
-            timestamp: Date.now()
-          }
-          
-          // Encodear en base64 para el fragment
-          const encodedAuth = btoa(JSON.stringify(authData))
-          
-          setIsLoading(false)
-          
-          // Redirect a la app con los datos en el fragment
           setTimeout(() => {
-            // Detectar si estamos en desarrollo local
-            const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            const baseUrl = isLocalDev ? 'http://localhost:5173' : 'https://cadorago.web.app'
-            const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
-            console.log('🚀 Redirigiendo a:', redirectUrl)
-            window.location.href = redirectUrl
-          }, 2000) // 2 segundos para mostrar el mensaje
-          
-        } else {
-          throw new Error('Respuesta incompleta del servidor')
+            router.push('/')
+          }, 3000)
+          return
         }
 
+        if (session && session.user) {
+          setStatus(`¡Bienvenido ${session.user.email}! Redirigiendo...`)
+          
+          // Esperar un momento para que el AuthProvider actualice el estado
+          setTimeout(() => {
+            // Redirigir a la página principal, que manejará la redirección final
+            router.push('/')
+          }, 1500)
+        } else {
+          setStatus('No se encontró sesión. Redirigiendo...')
+          setTimeout(() => {
+            router.push('/')
+          }, 2000)
+        }
       } catch (err: any) {
-        console.error('❌ Error en autenticación:', {
-          error: err,
-          message: err.message,
-          stack: err.stack
-        })
-        setStatus(`Error: ${err.message || 'Error desconocido durante la autenticación.'}`)
+        console.error('❌ Error en callback:', err)
+        setStatus(`Error: ${err.message || 'Error desconocido'}`)
         setIsLoading(false)
+        setTimeout(() => {
+          router.push('/')
+        }, 3000)
       }
     }
 
-    processAuth()
-  }, [searchParams, router])
+    handleAuthCallback()
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
           <div className="text-center">
-            {/* Icono de loading o éxito */}
             <div className="mb-6">
               {isLoading ? (
                 <div className="relative">
@@ -191,24 +77,20 @@ export default function AuthCallback() {
               )}
             </div>
 
-            {/* Título */}
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
               {isLoading ? 'Iniciando Sesión' : '¡Autenticación Exitosa!'}
             </h2>
 
-            {/* Estado */}
             <p className="text-gray-600 mb-6">
               {status}
             </p>
 
-            {/* Indicador de progreso */}
             {isLoading && (
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
               </div>
             )}
 
-            {/* Mensaje adicional */}
             {!isLoading && (
               <div className="text-sm text-gray-500">
                 Serás redirigido automáticamente...
@@ -217,7 +99,6 @@ export default function AuthCallback() {
           </div>
         </div>
 
-        {/* Footer info */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
             Conectando de forma segura • SSL/TLS Encriptado
@@ -227,4 +108,3 @@ export default function AuthCallback() {
     </div>
   )
 }
-

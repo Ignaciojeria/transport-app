@@ -1,87 +1,92 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-
-// Types para Google Identity Services
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: any) => void
-          prompt: (callback?: any) => void
-        }
-      }
-    }
-  }
-}
 import { motion } from 'framer-motion'
 import { ArrowRight, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
+import { useAuth } from '@/components/AuthProvider'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const { user, session, loading: authLoading, signInWithGoogle } = useAuth()
 
-  // Manejar respuesta de Google OAuth cuando regresa
+  // Redirigir si el usuario ya está autenticado
   useEffect(() => {
-    const success = searchParams.get('success')
-    const token = searchParams.get('token')
-    const errorParam = searchParams.get('error')
+    const handleSuccessfulAuth = async () => {
+      if (!authLoading && user && session) {
+        try {
+          // Obtener el access token de Supabase
+          const accessToken = session.access_token
+          
+          // Obtener información del usuario
+          const userMetadata = user.user_metadata || {}
+          const userInfo = {
+            id: user.id,
+            email: user.email || '',
+            verified_email: user.email_confirmed_at ? true : false,
+            name: userMetadata.full_name || userMetadata.name || user.email?.split('@')[0] || '',
+            given_name: userMetadata.given_name || userMetadata.name?.split(' ')[0] || '',
+            family_name: userMetadata.family_name || userMetadata.name?.split(' ').slice(1).join(' ') || '',
+            picture: userMetadata.avatar_url || userMetadata.picture || '',
+            locale: userMetadata.locale || 'es',
+          }
 
-    if (success === 'true' && token) {
-      // Autenticación exitosa
-      localStorage.setItem('auth_token', token)
-      alert('¡Autenticación exitosa!')
-      
-      // Limpiar URL
-      window.history.replaceState({}, '', '/')
-      
-      // Redirigir al dashboard cuando lo tengas
-      // router.push('/dashboard')
-    } else if (errorParam) {
-      // Error en autenticación
-      setError(`Error de autenticación: ${errorParam}`)
-      
-      // Limpiar URL
-      window.history.replaceState({}, '', '/')
+          // Preparar datos para el fragment (compatible con el flujo anterior)
+          const authData = {
+            access_token: accessToken,
+            token_type: 'Bearer',
+            expires_in: session.expires_in || 3600,
+            refresh_token: session.refresh_token || '',
+            user: userInfo,
+            timestamp: Date.now(),
+            provider: 'supabase',
+          }
+          
+          // Encodear en base64 para el fragment
+          const encodedAuth = btoa(JSON.stringify(authData))
+          
+          // Detectar si estamos en desarrollo local
+          const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          const baseUrl = isLocalDev ? 'http://localhost:5173' : 'https://cadorago.web.app'
+          const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
+          
+          console.log('🚀 Redirigiendo a:', redirectUrl)
+          window.location.href = redirectUrl
+          
+        } catch (err: any) {
+          console.error('Error en autenticación exitosa:', err)
+          setError('Error procesando autenticación')
+        }
+      }
     }
-  }, [searchParams, router])
+
+    handleSuccessfulAuth()
+  }, [user, session, authLoading])
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)
     setError('')
     
     try {
-      // Redirigir directamente a Google OAuth (más simple y elegante)
-      const clientId = '27303662337-1icetdk7186gt37lh5ruq5hu0vq1r57t.apps.googleusercontent.com'
-      const redirectUri = window.location.origin + '/auth/callback' // Frontend callback
-      const scope = 'openid profile email'
-      const state = Math.random().toString(36).substring(2, 15)
+      await signInWithGoogle()
+      // Supabase manejará la redirección automáticamente
+    } catch (err: any) {
+      console.error('Error iniciando autenticación:', err)
       
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` + 
-        `client_id=${clientId}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=code&` +
-        `scope=${encodeURIComponent(scope)}&` +
-        `state=${state}&` +
-        `access_type=offline&` +
-        `prompt=select_account`
+      // Manejar errores específicos
+      if (err.message?.includes('popup')) {
+        setError('Ventana emergente bloqueada. Por favor, permite ventanas emergentes.')
+      } else if (err.message?.includes('network')) {
+        setError('Error de conexión. Verifica tu conexión a internet.')
+      } else {
+        setError(err.message || 'Error de autenticación')
+      }
       
-      // Guardar state en localStorage para validar después
-      localStorage.setItem('oauth_state', state)
-      
-      // Redirigir a la página elegante de Google
-      window.location.href = googleAuthUrl
-      
-    } catch (err) {
-      console.error('Error iniciando OAuth:', err)
-      setError('Error de conexión')
       setIsLoading(false)
     }
   }
