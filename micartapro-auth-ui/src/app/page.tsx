@@ -52,7 +52,7 @@ export default function LoginPage() {
           
           // Detectar si estamos en desarrollo local
           const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          const baseUrl = isLocalDev ? 'http://localhost:5173' : 'https://cadorago.web.app'
+          const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
           const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
           
           console.log('🚀 Redirigiendo a:', redirectUrl)
