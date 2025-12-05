@@ -1,0 +1,15 @@
+{
+  "projects": {
+    "default": "einar-404623"
+  },
+  "targets": {
+    "einar-404623": {
+      "hosting": {
+        "micartapro-auth": [
+          "micartapro-auth"
+        ]
+      }
+    }
+  }
+}
+
