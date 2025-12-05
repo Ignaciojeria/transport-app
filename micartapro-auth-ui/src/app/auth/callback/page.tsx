@@ -29,11 +29,40 @@ export default function AuthCallback() {
         if (session && session.user) {
           setStatus(`¡Bienvenido ${session.user.email}! Redirigiendo...`)
           
-          // Esperar un momento para que el AuthProvider actualice el estado
+          // Preparar datos para el fragment
+          const userMetadata = session.user.user_metadata || {}
+          const userInfo = {
+            id: session.user.id,
+            email: session.user.email || '',
+            verified_email: session.user.email_confirmed_at ? true : false,
+            name: userMetadata.full_name || userMetadata.name || session.user.email?.split('@')[0] || '',
+            given_name: userMetadata.given_name || userMetadata.name?.split(' ')[0] || '',
+            family_name: userMetadata.family_name || userMetadata.name?.split(' ').slice(1).join(' ') || '',
+            picture: userMetadata.avatar_url || userMetadata.picture || '',
+            locale: userMetadata.locale || 'es',
+          }
+
+          const authData = {
+            access_token: session.access_token,
+            token_type: 'Bearer',
+            expires_in: session.expires_in || 3600,
+            refresh_token: session.refresh_token || '',
+            user: userInfo,
+            timestamp: Date.now(),
+            provider: 'supabase',
+          }
+          
+          const encodedAuth = btoa(JSON.stringify(authData))
+          
+          // Detectar si estamos en desarrollo local
+          const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
+          const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
+          
+          // Redirigir directamente a console después de un breve delay
           setTimeout(() => {
-            // Redirigir a la página principal, que manejará la redirección final
-            router.push('/')
-          }, 1500)
+            window.location.href = redirectUrl
+          }, 1000)
         } else {
           setStatus('No se encontró sesión. Redirigiendo...')
           setTimeout(() => {

@@ -15,9 +15,14 @@ export default function LoginPage() {
   const router = useRouter()
   const { user, session, loading: authLoading, signInWithGoogle } = useAuth()
 
-  // Redirigir si el usuario ya está autenticado
+  // Redirigir si el usuario ya está autenticado (solo si no viene del callback)
   useEffect(() => {
     const handleSuccessfulAuth = async () => {
+      // No redirigir si estamos en la página de callback
+      if (window.location.pathname === '/auth/callback') {
+        return
+      }
+      
       if (!authLoading && user && session) {
         try {
           // Obtener el access token de Supabase
@@ -57,7 +62,7 @@ export default function LoginPage() {
           
           console.log('🚀 Redirigiendo a:', redirectUrl)
           window.location.href = redirectUrl
-          
+
         } catch (err: any) {
           console.error('Error en autenticación exitosa:', err)
           setError('Error procesando autenticación')
