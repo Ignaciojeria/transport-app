@@ -177,21 +177,17 @@ export default function LoginPage() {
             transition={{ duration: 0.6 }}
             className="w-full max-w-md"
           >
-            {/* Logo móvil */}
-            <div className="flex items-center justify-center mb-8 lg:hidden">
+            {/* Logo y Título - Juntos */}
+            <div className="flex flex-col items-center mb-8">
               <Image 
                 src="/logo.png" 
                 alt="MiCartaPro Logo" 
-                width={200} 
-                height={60}
-                className="h-16 w-auto"
+                width={600} 
+                height={180}
+                className="h-48 w-auto mb-4"
                 priority
               />
-            </div>
-
-            {/* Título principal */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">
+              <h2 className="text-3xl font-bold text-gray-900 leading-tight">
                 Iniciar Sesión
               </h2>
             </div>
