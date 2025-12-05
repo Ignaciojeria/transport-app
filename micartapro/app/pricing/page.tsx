@@ -60,9 +60,9 @@ export default function PricingPage() {
               />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={openWhatsAppQuote}
+                onClick={() => window.location.href = 'https://auth.micartapro.com'}
               >
-                {t.nav.quote}
+                {t.nav.signIn}
               </Button>
             </div>
           </div>
@@ -263,9 +263,9 @@ export default function PricingPage() {
             <Button 
               size="lg" 
               className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-              onClick={openWhatsAppQuote}
+              onClick={() => window.location.href = 'https://auth.micartapro.com'}
             >
-              {t.pricing.cta.quoteButton}
+              {t.pricing.cta.startFreeButton}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </motion.div>

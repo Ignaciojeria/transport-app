@@ -64,9 +64,9 @@ export default function LandingPage() {
               />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={openWhatsAppQuote}
+                onClick={() => window.location.href = 'https://auth.micartapro.com'}
               >
-                {t.nav.quote}
+                {t.nav.signIn}
               </Button>
             </div>
           </div>
@@ -114,9 +114,9 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-                  onClick={openWhatsAppQuote}
+                  onClick={() => window.location.href = 'https://auth.micartapro.com'}
                 >
-                  {t.hero.quoteNow}
+                  {t.hero.startFree}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
@@ -232,10 +232,10 @@ export default function LandingPage() {
                   className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
                   onClick={(e) => {
                     e.preventDefault()
-                    openWhatsAppQuote()
+                    window.location.href = 'https://auth.micartapro.com'
                   }}
                 >
-                  {t.service.quoteButton}
+                  {t.service.startFreeButton}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
                 <Button 
@@ -375,9 +375,9 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-                onClick={openWhatsAppQuote}
+                onClick={() => window.location.href = 'https://auth.micartapro.com'}
               >
-                {t.cta.quoteButton}
+                {t.cta.startFreeButton}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>

@@ -6,7 +6,7 @@ export interface Translations {
     service: string
     benefits: string
     demo: string
-    quote: string
+    signIn: string
   }
   
   // Hero Section
@@ -14,7 +14,7 @@ export interface Translations {
     title: string
     subtitle: string
     description: string
-    quoteNow: string
+    startFree: string
     viewDemo: string
   }
   
@@ -29,7 +29,7 @@ export interface Translations {
     pricingTitle: string
     firstYearFree: string
     renewalPrice: string
-    quoteButton: string
+    startFreeButton: string
     viewPricing: string
     saasDescription: string
   }
@@ -59,7 +59,7 @@ export interface Translations {
     cta: {
       title: string
       subtitle: string
-      quoteButton: string
+      startFreeButton: string
     }
       faq: {
         title: string
@@ -150,7 +150,7 @@ export interface Translations {
   cta: {
     title: string
     subtitle: string
-    quoteButton: string
+    startFreeButton: string
   }
   
   // Footer
@@ -187,13 +187,13 @@ export const translations: Record<Language, Translations> = {
       service: 'Service',
       benefits: 'Benefits',
       demo: 'Demo',
-      quote: 'Quote'
+      signIn: 'Sign In'
     },
     hero: {
       title: 'MiCartaPro',
       subtitle: 'Your Digital Menu, Without Complications',
       description: 'Manage your digital menu and let sales flow.',
-      quoteNow: 'Quote Now',
+      startFree: 'Start Free',
       viewDemo: 'View Demo'
     },
     service: {
@@ -206,7 +206,7 @@ export const translations: Record<Language, Translations> = {
       pricingTitle: 'Simple monthly subscription — $15 USD per month',
       firstYearFree: '',
       renewalPrice: 'Cancel anytime, no long-term commitment',
-      quoteButton: 'Get Started',
+      startFreeButton: 'Start Free',
       viewPricing: 'View Full Pricing',
       saasDescription: 'MiCartaPro is a self-service SaaS platform that lets restaurants manage their digital menu. All plans include continuous improvements, new features, performance updates, and ongoing enhancements to the platform.'
     },
@@ -269,7 +269,7 @@ export const translations: Record<Language, Translations> = {
     cta: {
       title: 'Ready to digitize your menu?',
       subtitle: 'Contact us now and get your personalized digital menu',
-      quoteButton: 'Quote Now'
+      startFreeButton: 'Start Free'
     },
     pricing: {
       title: 'Simple, Transparent Pricing',
@@ -295,7 +295,7 @@ export const translations: Record<Language, Translations> = {
       cta: {
         title: 'Ready to Get Started?',
         subtitle: 'Contact us now and get your personalized digital menu',
-        quoteButton: 'Get a Quote'
+        startFreeButton: 'Start Free'
       },
       faq: {
         title: 'Frequently Asked Questions',
@@ -362,13 +362,13 @@ export const translations: Record<Language, Translations> = {
       service: 'Servicio',
       benefits: 'Beneficios',
       demo: 'Demo',
-      quote: 'Cotizar'
+      signIn: 'Entrar'
     },
     hero: {
       title: 'MiCartaPro',
       subtitle: 'Tu Menú Digital, Sin Complicaciones',
       description: 'Gestiona tu menú digital y deja que las ventas fluyan.',
-      quoteNow: 'Cotizar Ahora',
+      startFree: 'Inicia Gratis',
       viewDemo: 'Ver Demo'
     },
     service: {
@@ -381,7 +381,7 @@ export const translations: Record<Language, Translations> = {
       pricingTitle: 'Suscripción mensual simple — $15 USD por mes',
       firstYearFree: '',
       renewalPrice: 'Cancela en cualquier momento, sin compromiso a largo plazo',
-      quoteButton: 'Comenzar',
+      startFreeButton: 'Inicia Gratis',
       viewPricing: 'Ver Precios Completos',
       saasDescription: 'MiCartaPro es una plataforma SaaS de autoservicio que permite a los restaurantes gestionar su menú digital. Todos los planes incluyen mejoras continuas, nuevas funcionalidades, actualizaciones de rendimiento y mejoras constantes de la plataforma.'
     },
@@ -444,7 +444,7 @@ export const translations: Record<Language, Translations> = {
     cta: {
       title: '¿Listo para digitalizar tu menú?',
       subtitle: 'Contáctanos ahora y obtén tu menú digital personalizado',
-      quoteButton: 'Cotizar Ahora'
+      startFreeButton: 'Inicia Gratis'
     },
     pricing: {
       title: 'Precios Simples y Transparentes',
@@ -470,7 +470,7 @@ export const translations: Record<Language, Translations> = {
       cta: {
         title: '¿Listo para Empezar?',
         subtitle: 'Contáctanos ahora y obtén tu menú digital personalizado',
-        quoteButton: 'Obtener Cotización'
+        startFreeButton: 'Inicia Gratis'
       },
       faq: {
         title: 'Preguntas Frecuentes',
@@ -537,13 +537,13 @@ export const translations: Record<Language, Translations> = {
       service: 'Serviço',
       benefits: 'Benefícios',
       demo: 'Demo',
-      quote: 'Cotizar'
+      signIn: 'Entrar'
     },
     hero: {
       title: 'MiCartaPro',
       subtitle: 'Seu Cardápio Digital, Sem Complicações',
       description: 'Gerencie seu cardápio digital e deixe as vendas fluírem.',
-      quoteNow: 'Cotizar Agora',
+      startFree: 'Comece Grátis',
       viewDemo: 'Ver Demo'
     },
     service: {
@@ -556,7 +556,7 @@ export const translations: Record<Language, Translations> = {
       pricingTitle: 'Assinatura mensal simples — $15 USD por mês',
       firstYearFree: '',
       renewalPrice: 'Cancele a qualquer momento, sem compromisso de longo prazo',
-      quoteButton: 'Começar',
+      startFreeButton: 'Comece Grátis',
       viewPricing: 'Ver Preços Completos',
       saasDescription: 'MiCartaPro é uma plataforma SaaS de autoatendimento que permite aos restaurantes gerenciar seu cardápio digital. Todos os planos incluem melhorias contínuas, novos recursos, atualizações de desempenho e aprimoramentos constantes da plataforma.'
     },
@@ -619,7 +619,7 @@ export const translations: Record<Language, Translations> = {
     cta: {
       title: 'Pronto para digitalizar seu cardápio?',
       subtitle: 'Entre em contato conosco agora e obtenha seu cardápio digital personalizado',
-      quoteButton: 'Cotizar Agora'
+      startFreeButton: 'Comece Grátis'
     },
     pricing: {
       title: 'Preços Simples e Transparentes',
@@ -645,7 +645,7 @@ export const translations: Record<Language, Translations> = {
       cta: {
         title: 'Pronto para Começar?',
         subtitle: 'Entre em contato conosco agora e obtenha seu cardápio digital personalizado',
-        quoteButton: 'Obter Cotização'
+        startFreeButton: 'Comece Grátis'
       },
       faq: {
         title: 'Perguntas Frequentes',
