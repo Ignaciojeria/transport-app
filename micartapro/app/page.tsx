@@ -64,7 +64,7 @@ export default function LandingPage() {
               />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => window.location.href = 'https://auth.micartapro.com'}
+                onClick={() => window.location.href = `https://auth.micartapro.com?lang=${language}`}
               >
                 {t.nav.signIn}
               </Button>
@@ -114,7 +114,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-                  onClick={() => window.location.href = 'https://auth.micartapro.com'}
+                  onClick={() => window.location.href = `https://auth.micartapro.com?lang=${language}`}
                 >
                   {t.hero.startFree}
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -232,7 +232,7 @@ export default function LandingPage() {
                   className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
                   onClick={(e) => {
                     e.preventDefault()
-                    window.location.href = 'https://auth.micartapro.com'
+                    window.location.href = `https://auth.micartapro.com?lang=${language}`
                   }}
                 >
                   {t.service.startFreeButton}
@@ -375,7 +375,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-                onClick={() => window.location.href = 'https://auth.micartapro.com'}
+                onClick={() => window.location.href = `https://auth.micartapro.com?lang=${language}`}
               >
                 {t.cta.startFreeButton}
                 <ArrowRight className="ml-2 h-5 w-5" />

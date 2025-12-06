@@ -60,7 +60,7 @@ export default function PricingPage() {
               />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => window.location.href = 'https://auth.micartapro.com'}
+                onClick={() => window.location.href = `https://auth.micartapro.com?lang=${language}`}
               >
                 {t.nav.signIn}
               </Button>

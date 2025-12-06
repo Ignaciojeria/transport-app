@@ -3,11 +3,32 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useLanguage } from '@/lib/useLanguage'
 
 export default function AuthCallback() {
-  const [status, setStatus] = useState('Procesando autenticación...')
+  const [status, setStatus] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const { t, isLoading: langLoading, language } = useLanguage()
+  
+  // Initialize status with translated text
+  useEffect(() => {
+    if (!langLoading) {
+      setStatus(t.callback.processing)
+    }
+  }, [langLoading, t])
+  
+  // Show loading while language is loading
+  if (langLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -18,7 +39,7 @@ export default function AuthCallback() {
 
         if (error) {
           console.error('❌ Error obteniendo sesión:', error)
-          setStatus(`Error: ${error.message}`)
+          setStatus(t.callback.error.replace('{message}', error.message))
           setIsLoading(false)
           setTimeout(() => {
             router.push('/')
@@ -27,7 +48,7 @@ export default function AuthCallback() {
         }
 
         if (session && session.user) {
-          setStatus(`¡Bienvenido ${session.user.email}! Redirigiendo...`)
+          setStatus(t.callback.welcome.replace('{email}', session.user.email || ''))
           
           // Preparar datos para el fragment
           const userMetadata = session.user.user_metadata || {}
@@ -57,21 +78,22 @@ export default function AuthCallback() {
           // Detectar si estamos en desarrollo local
           const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
           const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
-          const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
+          // Preservar el parámetro de idioma en la redirección
+          const redirectUrl = `${baseUrl}?lang=${language}#auth=${encodedAuth}`
           
           // Redirigir directamente a console después de un breve delay
           setTimeout(() => {
             window.location.href = redirectUrl
           }, 1000)
         } else {
-          setStatus('No se encontró sesión. Redirigiendo...')
+          setStatus(t.callback.noSession)
           setTimeout(() => {
             router.push('/')
           }, 2000)
         }
       } catch (err: any) {
         console.error('❌ Error en callback:', err)
-        setStatus(`Error: ${err.message || 'Error desconocido'}`)
+        setStatus(t.callback.error.replace('{message}', err.message || 'Error desconocido'))
         setIsLoading(false)
         setTimeout(() => {
           router.push('/')
@@ -107,7 +129,7 @@ export default function AuthCallback() {
             </div>
 
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              {isLoading ? 'Iniciando Sesión' : '¡Autenticación Exitosa!'}
+              {isLoading ? t.callback.signingIn : t.callback.success}
             </h2>
 
             <p className="text-gray-600 mb-6">
@@ -122,7 +144,7 @@ export default function AuthCallback() {
 
             {!isLoading && (
               <div className="text-sm text-gray-500">
-                Serás redirigido automáticamente...
+                {t.callback.redirecting}
               </div>
             )}
           </div>
@@ -130,7 +152,7 @@ export default function AuthCallback() {
 
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            Conectando de forma segura • SSL/TLS Encriptado
+            {t.callback.secureConnection}
           </p>
         </div>
       </div>

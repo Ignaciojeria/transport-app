@@ -7,6 +7,8 @@ import { motion } from 'framer-motion'
 import { ArrowRight, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/components/AuthProvider'
+import { useLanguage } from '@/lib/useLanguage'
+import type { Language } from '@/lib/translations'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -14,6 +16,19 @@ export default function LoginPage() {
   
   const router = useRouter()
   const { user, session, loading: authLoading, signInWithGoogle } = useAuth()
+  const { t, isLoading: langLoading, language } = useLanguage()
+  
+  // Show loading while language is loading
+  if (langLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   // Redirigir si el usuario ya está autenticado (solo si no viene del callback)
   useEffect(() => {
@@ -58,14 +73,15 @@ export default function LoginPage() {
           // Detectar si estamos en desarrollo local
           const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
           const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
-          const redirectUrl = `${baseUrl}#auth=${encodedAuth}`
+          // Preservar el parámetro de idioma en la redirección
+          const redirectUrl = `${baseUrl}?lang=${language}#auth=${encodedAuth}`
           
           console.log('🚀 Redirigiendo a:', redirectUrl)
           window.location.href = redirectUrl
 
         } catch (err: any) {
           console.error('Error en autenticación exitosa:', err)
-          setError('Error procesando autenticación')
+          setError(t.errors.processingError)
         }
       }
     }
@@ -83,14 +99,14 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Error iniciando autenticación:', err)
       
-      // Manejar errores específicos
-      if (err.message?.includes('popup')) {
-        setError('Ventana emergente bloqueada. Por favor, permite ventanas emergentes.')
-      } else if (err.message?.includes('network')) {
-        setError('Error de conexión. Verifica tu conexión a internet.')
-      } else {
-        setError(err.message || 'Error de autenticación')
-      }
+          // Manejar errores específicos
+          if (err.message?.includes('popup')) {
+            setError(t.errors.popupBlocked)
+          } else if (err.message?.includes('network')) {
+            setError(t.errors.networkError)
+          } else {
+            setError(err.message || t.errors.authError)
+          }
       
       setIsLoading(false)
     }
@@ -98,7 +114,13 @@ export default function LoginPage() {
 
   const handleContactSupport = () => {
     const phoneNumber = '+56957857558'
-    const message = 'Hola! Necesito ayuda con mi cuenta de MiCartaPro.'
+    // Message will be in the current language
+    const messages: Record<Language, string> = {
+      ES: 'Hola! Necesito ayuda con mi cuenta de MiCartaPro.',
+      EN: 'Hello! I need help with my MiCartaPro account.',
+      PT: 'Olá! Preciso de ajuda com minha conta MiCartaPro.'
+    }
+    const message = messages[language] || messages.ES
     const encodedMessage = encodeURIComponent(message)
     const url = `https://wa.me/${phoneNumber.replace(/[^0-9]/g, '')}?text=${encodedMessage}`
     window.open(url, '_blank')
@@ -131,19 +153,18 @@ export default function LoginPage() {
           >
             {/* Título */}
             <div className="mb-8">
-              <h1 className="text-4xl font-bold leading-tight mb-2">MiCartaPro</h1>
-              <p className="text-blue-200 text-lg leading-relaxed">Tu menú digital, sin complicaciones</p>
+              <h1 className="text-4xl font-bold leading-tight mb-2">{t.leftPanel.title}</h1>
+              <p className="text-blue-200 text-lg leading-relaxed">{t.leftPanel.subtitle}</p>
             </div>
 
             {/* Mensaje principal */}
             <div className="space-y-6">
               <h2 className="text-3xl font-bold leading-snug">
-                Gestiona tu menú digital y deja que las ventas fluyan
+                {t.leftPanel.description}
               </h2>
               
               <p className="text-blue-100 text-xl leading-loose">
-                Crea, personaliza y comparte tu menú digital con tus clientes. 
-                Todo desde una plataforma simple e intuitiva.
+                Crea, personaliza y comparte tu menú digital con tus clientes. Todo desde una plataforma simple e intuitiva.
               </p>
 
               {/* Módulos del panel */}
@@ -154,7 +175,7 @@ export default function LoginPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                   </div>
-                  <span className="text-blue-100 text-lg leading-relaxed">Panel de control de tu menú</span>
+                  <span className="text-blue-100 text-lg leading-relaxed">{t.leftPanel.menuControl}</span>
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="bg-purple-500/20 p-3 rounded-xl backdrop-blur-sm">
@@ -162,7 +183,7 @@ export default function LoginPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                     </svg>
                   </div>
-                  <span className="text-blue-100 text-lg leading-relaxed">Plantillas y códigos QR</span>
+                  <span className="text-blue-100 text-lg leading-relaxed">{t.leftPanel.templatesQR}</span>
                 </div>
               </div>
             </div>
@@ -171,9 +192,8 @@ export default function LoginPage() {
             <div className="mt-8 relative">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 rounded-3xl blur-xl"></div>
               <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center">
-                <div className="text-5xl font-bold text-white mb-2 leading-none">24/7</div>
-                <div className="text-blue-200 text-base leading-tight">Disponible siempre</div>
-                <div className="text-blue-300 text-sm mt-1 leading-relaxed">Para tus clientes</div>
+                <div className="text-5xl font-bold text-white mb-2 leading-none">{t.leftPanel.available24_7}</div>
+                <div className="text-blue-200 text-base leading-tight">{t.leftPanel.forYourClients}</div>
               </div>
             </div>
           </motion.div>
@@ -198,7 +218,7 @@ export default function LoginPage() {
                 priority
               />
               <h2 className="text-3xl font-bold text-gray-900 leading-tight">
-                Iniciar Sesión
+                {t.login.title}
               </h2>
             </div>
 
@@ -232,7 +252,7 @@ export default function LoginPage() {
                     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                   </svg>
                   <span className="text-lg leading-relaxed">
-                    {isLoading ? 'Conectando...' : 'Iniciar sesión con Google'}
+                    {isLoading ? t.login.connecting : t.login.signInWithGoogle}
                   </span>
                   {!isLoading && <ArrowRight className="h-5 w-5" />}
                   {isLoading && (
@@ -248,31 +268,31 @@ export default function LoginPage() {
                 <div className="flex items-start space-x-3">
                   <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-blue-900 leading-tight">Acceso Seguro</p>
+                    <p className="text-sm font-medium text-blue-900 leading-tight">{t.login.secureAccess}</p>
                     <p className="text-xs text-blue-700 mt-1 leading-relaxed">
-                      Utiliza tu cuenta de Google para acceder de forma segura a tu panel de control
+                      {t.login.secureAccessDescription}
                     </p>
                   </div>
                 </div>
               </div>
 
               <p className="text-center text-sm text-gray-500 leading-relaxed">
-                ¿Tienes problemas con tu cuenta?{' '}
+                {t.login.havingIssues}{' '}
                 <span 
                   onClick={handleContactSupport}
                   className="text-blue-600 font-medium cursor-pointer hover:text-blue-700"
                 >
-                  Contactar soporte
+                  {t.login.contactSupport}
                 </span>
               </p>
             </div>
 
             {/* Footer */}
             <div className="mt-8 text-center text-sm text-gray-400">
-              <p className="leading-relaxed">© 2024 MiCartaPro. Todos los derechos reservados.</p>
+              <p className="leading-relaxed">{t.login.copyright}</p>
               <div className="flex justify-center space-x-6 mt-3">
-                <span className="hover:text-blue-600 cursor-pointer leading-relaxed">Términos de Uso</span>
-                <span className="hover:text-blue-600 cursor-pointer leading-relaxed">Política de Privacidad</span>
+                <span className="hover:text-blue-600 cursor-pointer leading-relaxed">{t.login.termsOfUse}</span>
+                <span className="hover:text-blue-600 cursor-pointer leading-relaxed">{t.login.privacyPolicy}</span>
               </div>
             </div>
           </motion.div>
