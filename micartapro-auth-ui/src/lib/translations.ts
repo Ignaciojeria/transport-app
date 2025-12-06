@@ -6,6 +6,7 @@ export interface Translations {
     title: string
     subtitle: string
     description: string
+    descriptionDetail: string
     menuControl: string
     templatesQR: string
     available24_7: string
@@ -65,6 +66,7 @@ export const translations: Record<Language, Translations> = {
       title: 'MiCartaPro',
       subtitle: 'Your Digital Menu, Without Complications',
       description: 'Manage your digital menu and let sales flow.',
+      descriptionDetail: 'Create, customize and share your digital menu with your clients. Everything from a simple and intuitive platform.',
       menuControl: 'Menu control panel',
       templatesQR: 'Templates and QR codes',
       available24_7: '24/7',
@@ -104,6 +106,7 @@ export const translations: Record<Language, Translations> = {
       title: 'MiCartaPro',
       subtitle: 'Tu Menú Digital, Sin Complicaciones',
       description: 'Gestiona tu menú digital y deja que las ventas fluyan.',
+      descriptionDetail: 'Crea, personaliza y comparte tu menú digital con tus clientes. Todo desde una plataforma simple e intuitiva.',
       menuControl: 'Panel de control de tu menú',
       templatesQR: 'Plantillas y códigos QR',
       available24_7: '24/7',
@@ -143,6 +146,7 @@ export const translations: Record<Language, Translations> = {
       title: 'MiCartaPro',
       subtitle: 'Seu Cardápio Digital, Sem Complicações',
       description: 'Gerencie seu cardápio digital e deixe as vendas fluírem.',
+      descriptionDetail: 'Crie, personalize e compartilhe seu cardápio digital com seus clientes. Tudo a partir de uma plataforma simples e intuitiva.',
       menuControl: 'Painel de controle do seu cardápio',
       templatesQR: 'Modelos e códigos QR',
       available24_7: '24/7',

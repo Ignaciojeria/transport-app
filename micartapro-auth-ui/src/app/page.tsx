@@ -17,18 +17,6 @@ export default function LoginPage() {
   const router = useRouter()
   const { user, session, loading: authLoading, signInWithGoogle } = useAuth()
   const { t, isLoading: langLoading, language } = useLanguage()
-  
-  // Show loading while language is loading
-  if (langLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
 
   // Redirigir si el usuario ya está autenticado (solo si no viene del callback)
   useEffect(() => {
@@ -126,6 +114,18 @@ export default function LoginPage() {
     window.open(url, '_blank')
   }
 
+  // Show loading while language is loading
+  if (langLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 particles-container flex flex-col">
       {/* Partículas de fondo */}
@@ -164,7 +164,7 @@ export default function LoginPage() {
               </h2>
               
               <p className="text-blue-100 text-xl leading-loose">
-                Crea, personaliza y comparte tu menú digital con tus clientes. Todo desde una plataforma simple e intuitiva.
+                {t.leftPanel.descriptionDetail}
               </p>
 
               {/* Módulos del panel */}

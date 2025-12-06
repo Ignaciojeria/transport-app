@@ -15,7 +15,9 @@ export function useLanguage() {
   // Load language from query params or localStorage
   useEffect(() => {
     const langParam = searchParams.get('lang') as Language
-    const savedLang = localStorage.getItem('preferred-language') as Language
+    const savedLang = typeof window !== 'undefined' 
+      ? localStorage.getItem('preferred-language') as Language
+      : null
     
     // Detect browser language if no param or saved language
     const detectBrowserLanguage = (): Language => {
@@ -44,7 +46,9 @@ export function useLanguage() {
 
   const changeLanguage = (newLanguage: Language) => {
     setLanguage(newLanguage)
-    localStorage.setItem('preferred-language', newLanguage)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred-language', newLanguage)
+    }
     
     // Update URL with the new language
     const params = new URLSearchParams(searchParams.toString())
