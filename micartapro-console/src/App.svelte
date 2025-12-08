@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte'
   import { initAuth, authState } from './lib/auth.svelte'
+  import MenuChat from './lib/components/MenuChat.svelte'
 
   // Usar valores derivados reactivos en el componente
   let user = $derived(authState.user)
@@ -34,37 +35,7 @@
       </div>
     </div>
   {:else if user}
-    <div class="min-h-screen p-8">
-      <div class="max-w-7xl mx-auto">
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-          <h1 class="text-2xl font-bold text-gray-900 mb-4">
-            Bienvenido a MiCartaPro Console
-          </h1>
-          <div class="space-y-2">
-            <p class="text-gray-700">
-              <strong>Email:</strong> {user.email}
-            </p>
-            <p class="text-gray-700">
-              <strong>ID:</strong> {user.id}
-            </p>
-            {#if user.user_metadata?.name}
-              <p class="text-gray-700">
-                <strong>Nombre:</strong> {user.user_metadata.name}
-              </p>
-            {/if}
-          </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow p-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-4">
-            Panel de Control
-          </h2>
-          <p class="text-gray-600">
-            Aquí puedes gestionar tu menú digital, plantillas y códigos QR.
-          </p>
-        </div>
-      </div>
-    </div>
+    <MenuChat />
   {:else}
     <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
