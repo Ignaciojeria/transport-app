@@ -1,0 +1,20 @@
+{
+    "project": "micartapro",
+    "template": {
+        "tag": "v3.0.2",
+        "url": "https://github.com/Ignaciojeria/einar-cli-fuego-template"
+    },
+    "installations": [
+        {
+            "name": "fuego",
+            "unique": "http-server",
+            "libraries": null
+        }
+    ],
+    "components": [
+        {
+            "kind": "post-controller",
+            "name": "user-created"
+        }
+    ]
+}

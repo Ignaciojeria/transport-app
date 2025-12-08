@@ -1,0 +1,143 @@
+name: 'Deploy MiCartaPro Backend (Manual)'
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      region:
+        description: 'GCP region to deploy to'
+        required: true
+        default: 'us-central1'
+        type: string
+
+jobs:
+  deploy-micartapro-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.21'
+
+      - name: Install ko
+        run: go install github.com/google/ko@latest
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Set environment variables
+        env:
+          KO_DOCKER_REPO: ${{ vars.KO_DOCKER_REPO }}
+          KO_DEFAULTBASEIMAGE: ${{ vars.KO_DEFAULTBASEIMAGE }}
+        run: |
+          echo "KO_DOCKER_REPO=$KO_DOCKER_REPO" >> $GITHUB_ENV
+          echo "KO_DEFAULTBASEIMAGE=$KO_DEFAULTBASEIMAGE" >> $GITHUB_ENV
+          echo "DEPLOY_ENVIRONMENT=${{ github.event.inputs.environment }}" >> $GITHUB_ENV
+          echo "DEPLOY_REGION=${{ github.event.inputs.region }}" >> $GITHUB_ENV
+
+      - name: Print deployment info
+        run: |
+          echo "Deploying MiCartaPro Backend to: $DEPLOY_ENVIRONMENT"
+          echo "Region: $DEPLOY_REGION"
+          echo "KO_DOCKER_REPO: $KO_DOCKER_REPO"
+          echo "KO_DEFAULTBASEIMAGE: $KO_DEFAULTBASEIMAGE"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push MiCartaPro Backend image to GCP
+        working-directory: ./micartapro-backend
+        run: |
+          IMAGE_REF=$(ko build .)
+          echo "IMAGE_REF=$IMAGE_REF" >> $GITHUB_ENV
+          echo "Built MiCartaPro Backend image: $IMAGE_REF"
+
+      - name: Build and push MiCartaPro Backend image to GitHub Container Registry
+        working-directory: ./micartapro-backend
+        env:
+          KO_DOCKER_REPO: ghcr.io/${{ github.repository }}
+        run: |
+          REPO_NAME=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          export KO_DOCKER_REPO="ghcr.io/$REPO_NAME"
+          ko build .
+          echo "Pushed MiCartaPro Backend to GitHub Container Registry"
+
+      - name: Deploy MiCartaPro Backend to Cloud Run
+        run: |
+          SERVICE_NAME="micartapro-backend"
+          if [ "$DEPLOY_ENVIRONMENT" = "staging" ]; then
+            SERVICE_NAME="micartapro-backend-staging"
+          fi
+          
+          echo "Deploying service: $SERVICE_NAME"
+          
+          gcloud run deploy "$SERVICE_NAME" \
+            --image="$IMAGE_REF" \
+            --region="$DEPLOY_REGION" \
+            --service-account="transport-app-sa@einar-404623.iam.gserviceaccount.com" \
+            --platform=managed \
+            --allow-unauthenticated \
+            --port=8080 \
+            --memory=128Mi \
+            --cpu=1 \
+            --max-instances=10 \
+            --set-env-vars="DB_STRATEGY=disabled" \
+            --set-secrets="OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
+            OPENOBSERVE_HTTP_ENDPOINT=OPENOBSERVE_HTTP_ENDPOINT:latest,\
+            OPENOBSERVE_STREAM_NAME=OPENOBSERVE_STREAM_NAME:latest,\
+            OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest"
+
+      - name: Get service URL
+        run: |
+          SERVICE_NAME="micartapro-backend"
+          if [ "$DEPLOY_ENVIRONMENT" = "staging" ]; then
+            SERVICE_NAME="micartapro-backend-staging"
+          fi
+          
+          SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
+            --region="$DEPLOY_REGION" \
+            --format="value(status.url)")
+          
+          echo "MiCartaPro Backend deployed successfully!"
+          echo "Service URL: $SERVICE_URL"
+          
+          # Set output for potential use in other jobs
+          echo "service_url=$SERVICE_URL" >> $GITHUB_OUTPUT
+
+      - name: Test health endpoint
+        run: |
+          SERVICE_NAME="micartapro-backend"
+          if [ "$DEPLOY_ENVIRONMENT" = "staging" ]; then
+            SERVICE_NAME="micartapro-backend-staging"
+          fi
+          
+          SERVICE_URL=$(gcloud run services describe "$SERVICE_NAME" \
+            --region="$DEPLOY_REGION" \
+            --format="value(status.url)")
+          
+          echo "Testing health endpoint..."
+          curl -f "$SERVICE_URL/health" || {
+            echo "❌ Health endpoint test failed"
+            exit 1
+          }
+          echo "✅ Health endpoint test passed"
+
