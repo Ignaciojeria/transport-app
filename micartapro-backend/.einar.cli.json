@@ -9,12 +9,29 @@
             "name": "fuego",
             "unique": "http-server",
             "libraries": null
+        },
+        {
+            "name": "zrok",
+            "unique": "",
+            "libraries": [
+                "github.com/openziti/zrok/environment",
+                "github.com/openziti/zrok/sdk/golang/sdk"
+            ]
+        },
+        {
+            "name": "observability",
+            "unique": "",
+            "libraries": null
         }
     ],
     "components": [
         {
             "kind": "post-controller",
             "name": "user-created"
+        },
+        {
+            "kind": "post-controller",
+            "name": "menu-generation-request"
         }
     ]
 }

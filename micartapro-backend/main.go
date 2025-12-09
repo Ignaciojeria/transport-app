@@ -1,15 +1,21 @@
 package main
 
 import (
-	_ "micartapro/app/shared/configuration"
-	"micartapro/app/shared/constants"
 	_ "embed"
 	"log"
+	_ "micartapro/app/shared/configuration"
+	"micartapro/app/shared/constants"
 	"os"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	_ "micartapro/app/shared/infrastructure/httpserver"
 	_ "micartapro/app/adapter/in/fuegoapi"
+	_ "micartapro/app/shared/infrastructure/httpserver"
+	_ "micartapro/app/shared/infrastructure/ngrok"
+
+	_ "micartapro/app/shared/infrastructure/eventprocessing"
+	_ "micartapro/app/shared/infrastructure/observability"
+	_ "micartapro/app/shared/infrastructure/observability/strategy"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 //go:embed .version

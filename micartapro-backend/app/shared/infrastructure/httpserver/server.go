@@ -1,9 +1,10 @@
 package httpserver
 
 import (
-	"micartapro/app/shared/configuration"
 	"context"
 	"fmt"
+	"micartapro/app/shared/configuration"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,8 +23,9 @@ func init() {
 }
 
 type Server struct {
-	Manager *fuego.Server
-	conf    configuration.Conf
+	Manager  *fuego.Server
+	conf     configuration.Conf
+	listener net.Listener
 }
 
 func New(conf configuration.Conf) Server {
@@ -50,6 +52,11 @@ func New(conf configuration.Conf) Server {
 
 func startAtEnd(e Server) error {
 	return e.Manager.Run()
+}
+
+// SetListener sets a custom listener for the server
+func (s *Server) SetListener(listener net.Listener) {
+	fuego.WithListener(listener)(s.Manager)
 }
 
 func (s Server) healthCheck() error {
