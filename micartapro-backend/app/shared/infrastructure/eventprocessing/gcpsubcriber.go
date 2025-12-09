@@ -57,9 +57,9 @@ func (ps *PubSubSubscriber) Start(subscriptionName string, processor MessageProc
 
 			ce := ps.convertPullMessage(subscriptionName, msg)
 
-			status, err := processor(ctx, ce)
+			status := processor(ctx, ce)
 
-			if err != nil || status >= 500 {
+			if status >= 500 {
 				msg.Nack()
 				return
 			}
@@ -74,15 +74,14 @@ func (ps *PubSubSubscriber) Start(subscriptionName string, processor MessageProc
 			)
 			time.Sleep(5 * time.Second)
 			ps.Start(subscriptionName, processor) // retry
+			return
 		}
+		// -------------------------------
+		// PUSH consumer via HTTP
+		// -------------------------------
+		path := "/subscription/" + subscriptionName
+		httpserver.WrapPostStd(ps.httpServer, path, ps.makePushHandler(subscriptionName, processor))
 	}()
-
-	// -------------------------------
-	// PUSH consumer via HTTP
-	// -------------------------------
-	path := "/subscription/" + subscriptionName
-	httpserver.WrapPostStd(ps.httpServer, path, ps.makePushHandler(subscriptionName, processor))
-
 	return nil
 }
 
@@ -91,16 +90,31 @@ func (ps *PubSubSubscriber) Start(subscriptionName string, processor MessageProc
 // ------------------------------------------------------------
 
 func (ps *PubSubSubscriber) convertPullMessage(subName string, msg *pubsub.Message) cloudevents.Event {
-	ce := cloudevents.NewEvent()
-
-	ce.SetID(msg.ID)
-	ce.SetType("google.pubsub.pull")
-	ce.SetSource("gcp.pubsub/" + subName)
-	ce.SetData(cloudevents.ApplicationJSON, msg.Data)
-
-	for k, v := range msg.Attributes {
-		ce.SetExtension(strings.ToLower(k), v)
+	// msg.Data contiene el CloudEvent completo serializado (ver gcppublisher.go línea 47)
+	// Deserializamos el CloudEvent completo desde msg.Data
+	var ce cloudevents.Event
+	if err := json.Unmarshal(msg.Data, &ce); err != nil {
+		// Si falla la deserialización, creamos un evento básico como fallback
+		logger.Warn("failed_to_unmarshal_cloudevent",
+			"subscription", subName,
+			"message_id", msg.ID,
+			"error", err.Error(),
+		)
+		ce = cloudevents.NewEvent()
+		ce.SetID(msg.ID)
+		ce.SetType("google.pubsub.pull.fallback")
+		ce.SetSource("gcp.pubsub/" + subName)
+		ce.SetData(cloudevents.ApplicationJSON, msg.Data)
+	} else {
+		// Si el CloudEvent original no tenía ID, usar el ID del mensaje Pub/Sub
+		if ce.ID() == "" {
+			ce.SetID(msg.ID)
+		}
 	}
+
+	// Nota: Las extensiones ya están en el CloudEvent deserializado desde msg.Data
+	// No necesitamos restaurarlas desde msg.Attributes para evitar duplicación/sobrescritura
+	// Los Attributes se usan principalmente para filtrado en Pub/Sub
 
 	return ce
 }
@@ -142,24 +156,33 @@ func (ps *PubSubSubscriber) handleNativePush(subName string, processor MessagePr
 		return
 	}
 
-	ce := cloudevents.NewEvent()
-	ce.SetID(envelope.Message.MessageID)
-	ce.SetType("google.pubsub.push")
-	ce.SetSource("gcp.pubsub/" + subName)
-	ce.SetData(cloudevents.ApplicationJSON, envelope.Message.Data)
-
-	for k, v := range envelope.Message.Attributes {
-		ce.SetExtension(strings.ToLower(k), v)
+	// envelope.Message.Data contiene el CloudEvent completo serializado
+	// Deserializamos el CloudEvent completo desde envelope.Message.Data
+	var ce cloudevents.Event
+	if err := json.Unmarshal(envelope.Message.Data, &ce); err != nil {
+		// Si falla la deserialización, creamos un evento básico como fallback
+		logger.Warn("failed_to_unmarshal_cloudevent_push",
+			"subscription", subName,
+			"message_id", envelope.Message.MessageID,
+			"error", err.Error(),
+		)
+		ce = cloudevents.NewEvent()
+		ce.SetID(envelope.Message.MessageID)
+		ce.SetType("google.pubsub.push.fallback")
+		ce.SetSource("gcp.pubsub/" + subName)
+		ce.SetData(cloudevents.ApplicationJSON, envelope.Message.Data)
+	} else {
+		// Si el CloudEvent original no tenía ID, usar el ID del mensaje Pub/Sub
+		if ce.ID() == "" {
+			ce.SetID(envelope.Message.MessageID)
+		}
 	}
 
-	status, err := processor(r.Context(), ce)
+	// Nota: Las extensiones ya están en el CloudEvent deserializado desde envelope.Message.Data
+	// No necesitamos restaurarlas desde envelope.Message.Attributes para evitar duplicación/sobrescritura
+	// Los Attributes se usan principalmente para filtrado en Pub/Sub
 
-	if err != nil {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	w.WriteHeader(status)
+	w.WriteHeader(processor(r.Context(), ce))
 }
 
 // ------------------------------------------------------------
@@ -188,12 +211,5 @@ func (ps *PubSubSubscriber) handleManualPush(subName string, processor MessagePr
 		}
 	}
 
-	status, err := processor(r.Context(), ce)
-
-	if err != nil {
-		w.WriteHeader(status)
-		return
-	}
-
-	w.WriteHeader(status)
+	w.WriteHeader(processor(r.Context(), ce))
 }

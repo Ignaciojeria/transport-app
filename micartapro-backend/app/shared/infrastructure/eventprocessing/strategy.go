@@ -21,7 +21,7 @@ import (
 //
 // This allows Pub/Sub, NATS JetStream, Kafka, HTTP push, etc.
 // to share the same application-level processing logic.
-type MessageProcessor func(ctx context.Context, event cloudevents.Event) (int, error)
+type MessageProcessor func(ctx context.Context, event cloudevents.Event) int
 
 // ProcessorMiddleware allows you to wrap processors with additional behavior.
 // Example use cases:
@@ -56,19 +56,15 @@ type Subscriber interface {
 	Start(subscriptionName string, processor MessageProcessor) error
 }
 
-type NewSubscriberStrategy func() Subscriber
-
 func init() {
 	ioc.Registry(
-		NewSubcriptionStrategy,
+		NewSubscriberStrategy,
 		gcp.NewClient,
 		httpserver.New)
 }
 
-func NewSubcriptionStrategy(c *pubsub.Client, s httpserver.Server) NewSubscriberStrategy {
-	return func() Subscriber {
-		return NewPubSubSubscriber(c, s)
-	}
+func NewSubscriberStrategy(c *pubsub.Client, s httpserver.Server) Subscriber {
+	return NewPubSubSubscriber(c, s)
 }
 
 // =============================================================

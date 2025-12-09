@@ -49,8 +49,26 @@ func (p *GcpPublisherManager) Publish(
 		return err
 	}
 
-	// Build attributes from CloudEvent extensions
-	attrs := map[string]string{}
+	// Build attributes for Pub/Sub filtering
+	// Incluimos campos principales del CloudEvent + extensiones para filtrado eficiente
+	attrs := make(map[string]string)
+	
+	// Campos principales del CloudEvent (útil para filtrado sin deserializar)
+	// Usamos guiones (-) siguiendo la convención CloudEvents estándar
+	if ce.Type() != "" {
+		attrs["ce-type"] = ce.Type()
+	}
+	if ce.Source() != "" {
+		attrs["ce-source"] = ce.Source()
+	}
+	if ce.Subject() != "" {
+		attrs["ce-subject"] = ce.Subject()
+	}
+	if ce.ID() != "" {
+		attrs["ce-id"] = ce.ID()
+	}
+	
+	// Extensiones del CloudEvent (para filtrado adicional)
 	for k, v := range ce.Context.GetExtensions() {
 		attrs[k] = fmt.Sprintf("%v", v)
 	}

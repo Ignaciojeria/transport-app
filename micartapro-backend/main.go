@@ -11,6 +11,7 @@ import (
 	_ "micartapro/app/shared/infrastructure/httpserver"
 	_ "micartapro/app/shared/infrastructure/ngrok"
 
+	_ "micartapro/app/adapter/in/subscriber"
 	_ "micartapro/app/shared/infrastructure/eventprocessing"
 	_ "micartapro/app/shared/infrastructure/observability"
 	_ "micartapro/app/shared/infrastructure/observability/strategy"
