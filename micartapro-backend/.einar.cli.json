@@ -32,6 +32,14 @@
         {
             "kind": "post-controller",
             "name": "menu-generation-request"
+        },
+        {
+            "kind": "usecase",
+            "name": "menu-interaction-usecase"
+        },
+        {
+            "kind": "usecase",
+            "name": "menu-interaction"
         }
     ]
 }

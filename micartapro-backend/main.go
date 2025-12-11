@@ -12,11 +12,13 @@ import (
 	_ "micartapro/app/shared/infrastructure/ngrok"
 
 	_ "micartapro/app/adapter/in/subscriber"
+	_ "micartapro/app/shared/infrastructure/ai"
 	_ "micartapro/app/shared/infrastructure/eventprocessing"
 	_ "micartapro/app/shared/infrastructure/observability"
 	_ "micartapro/app/shared/infrastructure/observability/strategy"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	_ "micartapro/app/usecase"
 )
 
 //go:embed .version

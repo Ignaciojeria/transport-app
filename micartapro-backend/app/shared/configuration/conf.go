@@ -9,12 +9,13 @@ func init() {
 }
 
 type Conf struct {
-	VERSION           string `env:"version,required"`
-	PORT              string `env:"PORT" envDefault:"8080"`
-	ENVIRONMENT       string `env:"ENVIRONMENT" envDefault:"development"`
-	PROJECT_NAME      string `env:"PROJECT_NAME,required" envDefault:"micartapro"`
-	NGROK_AUTHTOKEN   string `env:"NGROK_AUTHTOKEN"`
-	GOOGLE_PROJECT_ID string `env:"GOOGLE_PROJECT_ID"`
+	VERSION                 string `env:"version,required"`
+	PORT                    string `env:"PORT" envDefault:"8080"`
+	ENVIRONMENT             string `env:"ENVIRONMENT" envDefault:"development"`
+	PROJECT_NAME            string `env:"PROJECT_NAME,required" envDefault:"micartapro"`
+	NGROK_AUTHTOKEN         string `env:"NGROK_AUTHTOKEN"`
+	GOOGLE_PROJECT_ID       string `env:"GOOGLE_PROJECT_ID"`
+	GOOGLE_PROJECT_LOCATION string `env:"GOOGLE_PROJECT_LOCATION" envDefault:"us-central1"`
 }
 
 func NewConf() (Conf, error) {

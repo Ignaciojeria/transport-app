@@ -36,12 +36,11 @@ func NewGcpPublisherManager(c *pubsub.Client) PublisherManager {
 // =============================================================
 func (p *GcpPublisherManager) Publish(
 	ctx context.Context,
-	topic string,
-	evt DomainEvent,
+	request PublishRequest,
 ) error {
 
 	// DomainEvent → CloudEvent
-	ce := evt.ToCloudEvent()
+	ce := request.Event.ToCloudEvent(request.Source)
 
 	// Encode CloudEvent JSON
 	bytes, err := json.Marshal(ce)
@@ -52,7 +51,7 @@ func (p *GcpPublisherManager) Publish(
 	// Build attributes for Pub/Sub filtering
 	// Incluimos campos principales del CloudEvent + extensiones para filtrado eficiente
 	attrs := make(map[string]string)
-	
+
 	// Campos principales del CloudEvent (útil para filtrado sin deserializar)
 	// Usamos guiones (-) siguiendo la convención CloudEvents estándar
 	if ce.Type() != "" {
@@ -67,14 +66,14 @@ func (p *GcpPublisherManager) Publish(
 	if ce.ID() != "" {
 		attrs["ce-id"] = ce.ID()
 	}
-	
+
 	// Extensiones del CloudEvent (para filtrado adicional)
 	for k, v := range ce.Context.GetExtensions() {
 		attrs[k] = fmt.Sprintf("%v", v)
 	}
 
 	// Dynamic topic resolution (very cheap)
-	pubTopic := p.client.Publisher(topic)
+	pubTopic := p.client.Publisher(request.Topic)
 
 	// Publish message
 	_, err = pubTopic.Publish(ctx, &pubsub.Message{

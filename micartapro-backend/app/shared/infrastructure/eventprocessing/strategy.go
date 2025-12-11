@@ -71,14 +71,20 @@ func NewSubscriberStrategy(c *pubsub.Client, s httpserver.Server) Subscriber {
 // DomainEvent → Anything that can be converted to CloudEvent
 // =============================================================
 type DomainEvent interface {
-	ToCloudEvent() cloudevents.Event
+	ToCloudEvent(source string) cloudevents.Event
+}
+
+type PublishRequest struct {
+	Topic  string
+	Source string
+	Event  DomainEvent
 }
 
 // =============================================================
 // PublisherManager (vendor-neutral interface)
 // =============================================================
 type PublisherManager interface {
-	Publish(ctx context.Context, topic string, evt DomainEvent) error
+	Publish(ctx context.Context, request PublishRequest) error
 }
 
 func init() {
