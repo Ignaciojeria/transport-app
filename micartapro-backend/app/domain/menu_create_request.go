@@ -30,6 +30,7 @@ type BusinessInfo struct {
 }
 
 type MenuCreateRequest struct {
+	ID           string         `json:"id"`
 	BusinessInfo BusinessInfo   `json:"businessInfo"`
 	Menu         []MenuCategory `json:"menu"`
 }

@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"micartapro/app/adapter/out/agents"
+	"micartapro/app/adapter/out/storage"
 	"micartapro/app/domain"
+	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -17,13 +19,24 @@ func init() {
 	ioc.Registry(
 		NewMenuInteraction,
 		observability.NewObservability,
-		agents.NewMenuInteractionAgent)
+		agents.NewMenuInteractionAgent,
+		eventprocessing.NewPublisherStrategy,
+		storage.NewSearchMenuById)
 }
 
 func NewMenuInteraction(
 	obs observability.Observability,
-	menuInteractionAgent agents.MenuInteractionAgent) MenuInteraction {
+	menuInteractionAgent agents.MenuInteractionAgent,
+	publisherManager eventprocessing.PublisherManager,
+	searchMenuById storage.SearchMenuById) MenuInteraction {
 	return func(ctx context.Context, input domain.MenuInteractionRequest) (string, error) {
+
+		menu, err := searchMenuById(ctx, input.MenuID)
+		if err != nil && err != storage.ErrMenuNotFound {
+			return "", err
+		}
+		input.JsonMenu = menu
+
 		// 1. Llamar al Agente Procesador (que hace la inspección del FunctionCall)
 		agentResp, err := menuInteractionAgent(ctx, input)
 		if err != nil {
@@ -39,18 +52,22 @@ func NewMenuInteraction(
 
 		if agentResp.CommandName == "createMenu" {
 			// Caso 2: Comando. Hacemos el mapeo (la única deserialización necesaria)
-
 			var createRequest domain.MenuCreateRequest
 
 			// Mapeo directo del JSON crudo a tu objeto de dominio
 			if err := json.Unmarshal(agentResp.CommandArgs, &createRequest); err != nil {
 				return "", fmt.Errorf("error al mapear a MenuCreateRequest: %w", err)
 			}
+			createRequest.ID = input.MenuID
 
-			// 3. Ejecutar Lógica de Negocio (Guardar, Emitir Evento, etc.)
-			//menuService.ProcessCreateMenuRequest(ctx, createRequest, input.UserID)
+			if err := publisherManager.Publish(ctx, eventprocessing.PublishRequest{
+				Topic:  "micartapro.events",
+				Source: "micartapro.agent.menu.interaction",
+				Event:  createRequest,
+			}); err != nil {
+				return "", fmt.Errorf("error al publicar evento de creación de menú: %w", err)
+			}
 
-			// 4. Retornar mensaje de éxito al usuario
 			return "¡Menú creado exitosamente! Se ha notificado a todos los servicios.", nil
 		}
 

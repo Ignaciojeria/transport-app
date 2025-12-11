@@ -43,10 +43,14 @@ func NewPubSubSubscriber(c *pubsub.Client, s httpserver.Server) Subscriber {
 // Start: sets up both PULL and PUSH handling
 // ------------------------------------------------------------
 
-func (ps *PubSubSubscriber) Start(subscriptionName string, processor MessageProcessor) error {
+type ReceiveSettings struct {
+	MaxOutstandingMessages int
+}
+
+func (ps *PubSubSubscriber) Start(subscriptionName string, processor MessageProcessor, receiveSettings ReceiveSettings) error {
 
 	sub := ps.client.Subscriber(subscriptionName)
-	sub.ReceiveSettings.MaxOutstandingMessages = 10
+	sub.ReceiveSettings.MaxOutstandingMessages = receiveSettings.MaxOutstandingMessages
 
 	// -------------------------------
 	// PULL consumer
@@ -73,7 +77,7 @@ func (ps *PubSubSubscriber) Start(subscriptionName string, processor MessageProc
 				"error", err.Error(),
 			)
 			time.Sleep(5 * time.Second)
-			ps.Start(subscriptionName, processor) // retry
+			ps.Start(subscriptionName, processor, receiveSettings) // retry
 			return
 		}
 		// -------------------------------

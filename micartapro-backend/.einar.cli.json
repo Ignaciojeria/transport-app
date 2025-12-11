@@ -40,6 +40,10 @@
         {
             "kind": "usecase",
             "name": "menu-interaction"
+        },
+        {
+            "kind": "usecase",
+            "name": "menu-interaction-create"
         }
     ]
 }

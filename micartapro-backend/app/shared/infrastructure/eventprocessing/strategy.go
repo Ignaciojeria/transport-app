@@ -53,7 +53,7 @@ func ApplyMiddlewares(
 }
 
 type Subscriber interface {
-	Start(subscriptionName string, processor MessageProcessor) error
+	Start(subscriptionName string, processor MessageProcessor, receiveSettings ReceiveSettings) error
 }
 
 func init() {

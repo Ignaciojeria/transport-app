@@ -17,10 +17,11 @@ type MenuPreferences struct {
 }
 
 type MenuInteractionRequest struct {
+	MenuID          string          `json:"menuId"`
 	Message         string          `json:"message"`
 	History         []ChatMessage   `json:"history,omitempty"`
 	MenuPreferences MenuPreferences `json:"menuPreferences,omitempty"`
-	JsonMenu        map[string]interface{}
+	JsonMenu        MenuCreateRequest
 }
 
 func (m MenuInteractionRequest) ToCloudEvent(source string) cloudevents.Event {
