@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"micartapro/app/adapter/out/storage"
 	"micartapro/app/domain"
 	"micartapro/app/shared/infrastructure/observability"
 
@@ -12,13 +13,23 @@ type MenuInteractionCreate func(ctx context.Context, input domain.MenuCreateRequ
 
 func init() {
 	ioc.Registry(NewMenuInteractionCreate,
-		observability.NewObservability)
+		observability.NewObservability,
+		storage.NewSaveMenu,
+	)
 }
 
 func NewMenuInteractionCreate(
-	observability observability.Observability) MenuInteractionCreate {
+	observability observability.Observability,
+	saveMenu storage.SaveMenu) MenuInteractionCreate {
 	return func(ctx context.Context, input domain.MenuCreateRequest) error {
 		observability.Logger.Info("menu_interaction_create", "input", input)
+		spanCtx, span := observability.Tracer.Start(ctx, "menu_interaction_create")
+		defer span.End()
+		err := saveMenu(spanCtx, input)
+		if err != nil {
+			observability.Logger.Error("error_saving_menu", "error", err)
+			return err
+		}
 		return nil
 	}
 }
