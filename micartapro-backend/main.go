@@ -17,8 +17,9 @@ import (
 	_ "micartapro/app/shared/infrastructure/observability"
 	_ "micartapro/app/shared/infrastructure/observability/strategy"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	_ "micartapro/app/usecase"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 //go:embed .version

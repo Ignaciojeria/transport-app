@@ -16,6 +16,7 @@ type Conf struct {
 	NGROK_AUTHTOKEN         string `env:"NGROK_AUTHTOKEN"`
 	GOOGLE_PROJECT_ID       string `env:"GOOGLE_PROJECT_ID"`
 	GOOGLE_PROJECT_LOCATION string `env:"GOOGLE_PROJECT_LOCATION" envDefault:"us-central1"`
+	SUPABASE_JWKS_URL       string `env:"SUPABASE_JWKS_URL" envDefault:"https://rbpdhapfcljecofrscnj.supabase.co/auth/v1/.well-known/jwks"`
 }
 
 func NewConf() (Conf, error) {
