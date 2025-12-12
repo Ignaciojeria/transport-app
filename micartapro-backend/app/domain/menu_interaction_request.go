@@ -8,19 +8,19 @@ import (
 )
 
 type ChatMessage struct {
-	Role    string `json:"role"` // "user" | "assistant" | "system"
-	Content string `json:"content"`
+	Role    string
+	Content string
 }
 
 type MenuPreferences struct {
-	Language string `json:"language"`
+	Language string
 }
 
 type MenuInteractionRequest struct {
-	MenuID          string          `json:"menuId"`
-	Message         string          `json:"message"`
-	History         []ChatMessage   `json:"history,omitempty"`
-	MenuPreferences MenuPreferences `json:"menuPreferences,omitempty"`
+	MenuID          string `json:"menuId"`
+	Message         string `json:"message"`
+	History         []ChatMessage
+	MenuPreferences MenuPreferences
 	JsonMenu        MenuCreateRequest
 }
 
