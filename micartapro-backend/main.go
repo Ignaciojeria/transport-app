@@ -17,6 +17,10 @@ import (
 	_ "micartapro/app/shared/infrastructure/observability"
 	_ "micartapro/app/shared/infrastructure/observability/strategy"
 
+	_ "micartapro/app/shared/infrastructure/auth"
+
+	_ "micartapro/app/adapter/out/agents"
+	_ "micartapro/app/adapter/out/storage"
 	_ "micartapro/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
