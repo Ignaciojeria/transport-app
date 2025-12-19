@@ -6,12 +6,13 @@ require (
 	cloud.google.com/go/pubsub/v2 v2.3.0
 	cloud.google.com/go/storage v1.58.0
 	github.com/Ignaciojeria/einar-ioc/v2 v2.4.0
+	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/alpkeskin/gotoon v0.1.1
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/go-fuego/fuego v0.18.8
-	github.com/go-resty/resty/v2 v2.17.0
 	github.com/go-slog/otelslog v0.3.0
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/hellofresh/health-go/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0
@@ -41,8 +42,6 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.54.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.54.0 // indirect
-	github.com/MicahParks/keyfunc v1.9.0 // indirect
-	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20251022180443-0feb69152e9f // indirect
@@ -61,8 +60,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.26.0 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
-	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
