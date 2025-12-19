@@ -1,9 +1,9 @@
 package observability
 
 import (
+	"log/slog"
 	"micartapro/app/shared/configuration"
 	"micartapro/app/shared/infrastructure/observability/strategy"
-	"log/slog"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
