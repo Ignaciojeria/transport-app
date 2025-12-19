@@ -14,7 +14,7 @@ type Conf struct {
 	ENVIRONMENT             string `env:"ENVIRONMENT" envDefault:"development"`
 	PROJECT_NAME            string `env:"PROJECT_NAME,required" envDefault:"micartapro"`
 	NGROK_AUTHTOKEN         string `env:"NGROK_AUTHTOKEN"`
-	GOOGLE_PROJECT_ID       string `env:"GOOGLE_PROJECT_ID"`
+	GOOGLE_PROJECT_ID       string `env:"GOOGLE_PROJECT_ID" envDefault:"einar-404623"`
 	GOOGLE_PROJECT_LOCATION string `env:"GOOGLE_PROJECT_LOCATION" envDefault:"us-central1"`
 	SUPABASE_JWKS_URL       string `env:"SUPABASE_JWKS_URL" envDefault:"https://rbpdhapfcljecofrscnj.supabase.co/auth/v1/.well-known/jwks.json"`
 }
