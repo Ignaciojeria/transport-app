@@ -2,7 +2,7 @@
     "project": "micartapro",
     "template": {
         "tag": "v3.0.2",
-        "url": "https://github.com/Ignaciojeria/einar-cli-fuego-template"
+        "url": "https://einar-cli-fuego-template"
     },
     "installations": [
         {

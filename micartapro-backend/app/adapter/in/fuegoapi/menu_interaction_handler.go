@@ -27,9 +27,13 @@ func menuInteractionHandler(
 	s httpserver.Server,
 	obs observability.Observability,
 	publisherManager eventprocessing.PublisherManager,
-	supabaseTokenValidator auth.SupabaseTokenValidator) {
+	supabaseTokenValidator auth.SupabaseTokenValidator,
+) {
 	fuego.Post(s.Manager, "/menu/interaction",
 		func(c fuego.ContextWithBody[domain.MenuInteractionRequest]) (any, error) {
+			spanCtx, span := obs.Tracer.Start(c.Context(), "menuInteractionHandler")
+			defer span.End()
+
 			token := c.Header("Authorization")
 			token = strings.TrimPrefix(token, "Bearer ")
 			_, err := supabaseTokenValidator.ValidateJWT(token)
@@ -40,8 +44,6 @@ func menuInteractionHandler(
 					Status: http.StatusUnauthorized,
 				}
 			}
-			spanCtx, span := obs.Tracer.Start(c.Context(), "menuInteractionRequest")
-			defer span.End()
 			body, err := c.Body()
 			if err != nil {
 				return nil, fuego.HTTPError{
@@ -50,19 +52,25 @@ func menuInteractionHandler(
 					Status: http.StatusInternalServerError,
 				}
 			}
-			err = publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+			if err := body.Validate(); err != nil {
+				return nil, fuego.HTTPError{
+					Title:  "error validating request body",
+					Detail: err.Error(),
+					Status: http.StatusBadRequest,
+				}
+			}
+			if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
 				Topic:  "micartapro.events",
 				Source: "micartapro.api.menu.interaction",
 				Event:  body,
-			})
-			if err != nil {
+			}); err != nil {
 				return nil, fuego.HTTPError{
 					Title:  "error publishing event",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
-			obs.Logger.InfoContext(spanCtx, "menuInteractionRequest", "requestBody", body)
+			obs.Logger.InfoContext(spanCtx, "menuInteractionRequest published", "requestBody", body)
 			return http.StatusOK, nil
 		}, option.Summary("menuInteractionRequest"))
 }

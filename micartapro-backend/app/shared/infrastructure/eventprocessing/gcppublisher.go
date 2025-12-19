@@ -7,6 +7,7 @@ import (
 	"micartapro/app/shared/infrastructure/eventprocessing/gcp"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"go.opentelemetry.io/otel/trace"
 
 	"cloud.google.com/go/pubsub/v2"
 )
@@ -42,6 +43,12 @@ func (p *GcpPublisherManager) Publish(
 	// DomainEvent → CloudEvent
 	ce := request.Event.ToCloudEvent(request.Source)
 
+	span := trace.SpanFromContext(ctx)
+	sc := span.SpanContext()
+	if sc.IsValid() {
+		ce.SetExtension("trace_id", sc.TraceID().String())
+		ce.SetExtension("span_id", sc.SpanID().String())
+	}
 	// Encode CloudEvent JSON
 	bytes, err := json.Marshal(ce)
 	if err != nil {
