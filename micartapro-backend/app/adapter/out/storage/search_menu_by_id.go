@@ -25,17 +25,17 @@ func init() {
 
 func NewSearchMenuById(obs observability.Observability, gcs *storage.Client) SearchMenuById {
 	return func(ctx context.Context, menuID string) (domain.MenuCreateRequest, error) {
-		obs.Logger.Info("search_menu_by_id", "menuID", menuID)
+		obs.Logger.InfoContext(ctx, "search_menu_by_id", "menuID", menuID)
 		bucket := gcs.Bucket("micartapro-menus")
 		objectPath := "menus/" + menuID + ".json"
 		object := bucket.Object(objectPath)
-		obs.Logger.Info("searching_object", "objectPath", objectPath)
+		obs.Logger.InfoContext(ctx, "searching_object", "objectPath", objectPath)
 
 		reader, err := object.NewReader(ctx)
 		if err != nil {
-			obs.Logger.Error("error_reading_object", "error", err, "objectPath", objectPath)
+			obs.Logger.ErrorContext(ctx, "error_reading_object", "error", err, "objectPath", objectPath)
 			if errors.Is(err, storage.ErrObjectNotExist) {
-				obs.Logger.Warn("menu_not_found", "menuID", menuID, "objectPath", objectPath)
+				obs.Logger.WarnContext(ctx, "menu_not_found", "menuID", menuID, "objectPath", objectPath)
 				return domain.MenuCreateRequest{}, ErrMenuNotFound
 			}
 			return domain.MenuCreateRequest{}, err
@@ -44,7 +44,7 @@ func NewSearchMenuById(obs observability.Observability, gcs *storage.Client) Sea
 
 		var menu domain.MenuCreateRequest
 		if err := json.NewDecoder(reader).Decode(&menu); err != nil {
-			obs.Logger.Error("error_decoding_menu", "error", err)
+			obs.Logger.ErrorContext(ctx, "error_decoding_menu", "error", err)
 			return domain.MenuCreateRequest{}, err
 		}
 

@@ -29,8 +29,10 @@ func newPullAllEvents(
 	menuInteraction usecase.MenuInteraction,
 	menuInteractionCreate usecase.MenuInteractionCreate) eventprocessing.MessageProcessor {
 	subscriptionName := "micartapro.events-sub"
-
 	processor := func(ctx context.Context, event cloudevents.Event) int {
+
+		spanCtx, span := obs.Tracer.Start(contextFromCloudEvent(ctx, event), "pull_all_events")
+		defer span.End()
 
 		var input interface{}
 		if err := event.DataAs(&input); err != nil {
@@ -40,7 +42,8 @@ func newPullAllEvents(
 			// Invalid payload → ACK (no retry)
 			return http.StatusAccepted
 		}
-		obs.Logger.Info("unmarshalled_cloudevent",
+
+		obs.Logger.InfoContext(spanCtx, "unmarshalled_cloudevent",
 			"event", event,
 		)
 
@@ -52,7 +55,7 @@ func newPullAllEvents(
 					"error", err.Error(),
 				)
 			}
-			_, err := menuInteraction(ctx, request)
+			_, err := menuInteraction(spanCtx, request)
 			if err != nil {
 				obs.Logger.Error("error_processing_menu_interaction",
 					"error", err.Error(),
@@ -66,7 +69,7 @@ func newPullAllEvents(
 					"error", err.Error(),
 				)
 			}
-			err := menuInteractionCreate(ctx, request)
+			err := menuInteractionCreate(spanCtx, request)
 			if err != nil {
 				obs.Logger.Error("error_processing_menu_create",
 					"error", err.Error(),
