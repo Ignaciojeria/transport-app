@@ -2,54 +2,53 @@
  * Servicio de datos del restaurante Cadorago
  */
 export const restaurantData = {
-  "contacto": {
-    "whatssap": "+56957857558"
+  "id": "f8679ed4-1b19-49ff-9d97-0b51967a86bd",
+  "businessInfo": {
+    "businessName": "cadorago",
+    "whatsapp": "+56957857558",
+    "businessHours": [
+      "Lunes a Martes: 9h a 16h",
+      "Miércoles, Jueves, Sábado y Domingo: hasta las 20h",
+      "Viernes: Cerrado"
+    ]
   },
-  "horariosDeAtencion": [
-    "lunes a viernes de 9:00 a 16:00 horas"
-  ],
-  "carta": [
+  "menu": [
     {
-      "titulo": "Colaciones Diarias",
+      "title": "Menú",
       "items": [
         {
-          "titulo": "Pescado frito",
-          "descripcion": "",
-          "acompanamientos": [
-            { "id": "pescado_porcion_sola", "nombre": "Porción sola", "precio": 2800 },
-            { "id": "pescado_arroz", "nombre": "Arroz", "precio": 4200 },
-            { "id": "pescado_pure", "nombre": "Puré", "precio": 4200 },
-            { "id": "pescado_papas_fritas", "nombre": "Papas fritas", "precio": 4200 },
-            { "id": "pescado_arroz_papas", "nombre": "Arroz + papas fritas", "precio": 5400 },
-            { "id": "pescado_ensalada_chica", "nombre": "Ensalada chica", "precio": 3800 },
-            { "id": "pescado_ensalada_grande", "nombre": "Ensalada grande", "precio": 5400 }
+          "title": "Pollo a la plancha",
+          "sides": [
+            { "name": "Con puré", "price": 3000 },
+            { "name": "Con arroz", "price": 3000 }
           ]
         },
         {
-          "titulo": "Lomito de cerdo al horno",
-          "descripcion": "",
-          "acompanamientos": [
-            { "id": "lomito_porcion_sola", "nombre": "Porción sola", "precio": 2800 },
-            { "id": "lomito_arroz", "nombre": "Arroz", "precio": 4200 },
-            { "id": "lomito_pure", "nombre": "Puré", "precio": 4200 },
-            { "id": "lomito_papas_fritas", "nombre": "Papas fritas", "precio": 4200 },
-            { "id": "lomito_arroz_papas", "nombre": "Arroz + papas fritas", "precio": 5400 },
-            { "id": "lomito_ensalada_chica", "nombre": "Ensalada chica", "precio": 3800 },
-            { "id": "lomito_ensalada_grande", "nombre": "Ensalada grande", "precio": 5400 }
+          "title": "Completo italiano",
+          "price": 2500
+        },
+        {
+          "title": "Hamburguesa",
+          "sides": [
+            { "name": "Sola", "price": 4100 }
           ]
         },
         {
-          "titulo": "Pollo a la plancha",
-          "descripcion": "",
-          "acompanamientos": [
-            { "id": "pollo_porcion_sola", "nombre": "Porción sola", "precio": 2800 },
-            { "id": "pollo_arroz", "nombre": "Arroz", "precio": 4200 },
-            { "id": "pollo_pure", "nombre": "Puré", "precio": 4200 },
-            { "id": "pollo_papas_fritas", "nombre": "Papas fritas", "precio": 4200 },
-            { "id": "pollo_arroz_papas", "nombre": "Arroz + papas fritas", "precio": 5400 },
-            { "id": "pollo_ensalada_chica", "nombre": "Ensalada chica", "precio": 3800 },
-            { "id": "pollo_ensalada_grande", "nombre": "Ensalada grande", "precio": 4200 }
-          ]
+          "title": "chacareros",
+          "price": 7000
+        }
+      ]
+    },
+    {
+      "title": "Postres",
+      "items": [
+        {
+          "title": "mote con huesillo",
+          "price": 4000
+        },
+        {
+          "title": "leche asada",
+          "price": 3000
         }
       ]
     }

@@ -15,17 +15,17 @@
   
   let showClearConfirm = $state(false);
   
-  function handleQuantityChange(titulo, event) {
+  function handleQuantityChange(title, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
-    cartStore.updateQuantity(titulo, quantity);
+    cartStore.updateQuantity(title, quantity);
   }
   
-  function handleRemoveItem(titulo) {
-    cartStore.removeItem(titulo);
+  function handleRemoveItem(title) {
+    cartStore.removeItem(title);
   }
   
   function handleSendOrder() {
-    const url = cartStore.generateWhatsAppMessage(restaurantData.contacto.whatssap);
+    const url = cartStore.generateWhatsAppMessage(restaurantData.businessInfo.whatsapp);
     window.open(url, '_blank');
   }
   
@@ -75,16 +75,16 @@
           <div class="flex justify-between items-start gap-4 mb-3">
             <div class="flex-1">
               <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">
-                {cartItem.titulo}
+                {cartItem.title}
               </h3>
-              {#if cartItem.descripción}
+              {#if cartItem.description}
                 <p class="text-sm sm:text-base text-gray-600">
-                  {cartItem.descripción}
+                  {cartItem.description}
                 </p>
               {/if}
             </div>
             <button
-              onclick={() => handleRemoveItem(cartItem.titulo)}
+              onclick={() => handleRemoveItem(cartItem.title)}
               class="text-red-600 hover:text-red-800 text-xl font-bold"
               aria-label="Eliminar item"
             >
@@ -94,15 +94,15 @@
           
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-3 sm:gap-4">
-              <label for="quantity-{cartItem.titulo}" class="text-sm sm:text-base text-gray-700 font-medium">
+              <label for="quantity-{cartItem.title}" class="text-sm sm:text-base text-gray-700 font-medium">
                 Cantidad:
               </label>
               <input
-                id="quantity-{cartItem.titulo}"
+                id="quantity-{cartItem.title}"
                 type="number"
                 min="1"
                 value={cartItem.cantidad}
-                oninput={(e) => handleQuantityChange(cartItem.titulo, e)}
+                oninput={(e) => handleQuantityChange(cartItem.title, e)}
                 class="w-16 sm:w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm sm:text-base"
               />
             </div>

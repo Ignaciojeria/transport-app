@@ -3,7 +3,7 @@
   
   /** @type {Object} - Sección del menú */
   export let section = {
-    titulo: '',
+    title: '',
     items: []
   };
   
@@ -13,7 +13,7 @@
 
 <div class={`${className}`}>
   <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-6 sm:mb-8 capitalize">
-    {section.titulo}
+    {section.title}
   </h2>
   <div class="space-y-4 sm:space-y-5 lg:space-y-6">
     {#each section.items as item}

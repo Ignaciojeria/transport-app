@@ -70,15 +70,15 @@
   function handleQuantityChange(cartItem, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
     const itemKey = cartItem.acompanamientoId 
-      ? `${cartItem.titulo}_${cartItem.acompanamientoId}` 
-      : cartItem.titulo;
+      ? `${cartItem.title}_${cartItem.acompanamientoId}` 
+      : cartItem.title;
     cartStore.updateQuantity(itemKey, quantity);
   }
   
   function handleRemoveItem(cartItem) {
     const itemKey = cartItem.acompanamientoId 
-      ? `${cartItem.titulo}_${cartItem.acompanamientoId}` 
-      : cartItem.titulo;
+      ? `${cartItem.title}_${cartItem.acompanamientoId}` 
+      : cartItem.title;
     cartStore.removeItemByKey(itemKey);
   }
   
@@ -112,7 +112,7 @@
     const horaConZona = `${horaFormateada} (${timeZoneName()})`;
     
     const url = cartStore.generateWhatsAppMessage(
-      restaurantData.contacto.whatssap,
+      restaurantData.businessInfo.whatsapp,
       nombreRetiro.trim(),
       horaConZona
     );
@@ -212,14 +212,14 @@
                 <div class="flex justify-between items-start gap-4 mb-3">
                   <div class="flex-1">
                     <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-1">
-                      {cartItem.titulo}
+                      {cartItem.title}
                       {#if cartItem.acompanamiento}
                         <span class="text-sm font-normal text-gray-600">({cartItem.acompanamiento})</span>
                       {/if}
                     </h3>
-                    {#if cartItem.descripcion}
+                    {#if cartItem.description}
                       <p class="text-xs sm:text-sm text-gray-600">
-                        {cartItem.descripcion}
+                        {cartItem.description}
                       </p>
                     {/if}
                   </div>
@@ -234,11 +234,11 @@
                 
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-2 sm:gap-3">
-                    <label for="quantity-{cartItem.titulo}" class="text-xs sm:text-sm text-gray-700 font-medium">
+                    <label for="quantity-{cartItem.title}" class="text-xs sm:text-sm text-gray-700 font-medium">
                       Cantidad:
                     </label>
                     <input
-                      id="quantity-{cartItem.titulo}"
+                      id="quantity-{cartItem.title}"
                       type="number"
                       min="1"
                       value={cartItem.cantidad}

@@ -6,10 +6,10 @@
   
   const { 
     item = {
-      titulo: '',
-      descripcion: '',
-      precio: 0,
-      acompanamientos: null
+      title: '',
+      description: '',
+      price: 0,
+      sides: null
     },
     className = ''
   } = $props();
@@ -17,11 +17,11 @@
   let showAcompanamientoModal = $state(false);
   let selectedAcompanamiento = $state(null);
   
-  const hasAcompanamientos = $derived(item.acompanamientos && item.acompanamientos.length > 0);
-  const displayPrice = $derived(hasAcompanamientos ? null : (item.precio || 0));
+  const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
+  const displayPrice = $derived(hasAcompanamientos ? null : (item.price || 0));
   
   // Verificar si el item está en el carrito (necesita verificar por clave única)
-  const cartItems = $derived(cartStore.items.filter(i => i.titulo === item.titulo));
+  const cartItems = $derived(cartStore.items.filter(i => i.title === item.title));
   const totalQuantity = $derived(cartItems.reduce((sum, i) => sum + i.cantidad, 0));
   const isInCart = $derived(totalQuantity > 0);
   
@@ -49,8 +49,8 @@
     if (cartItems.length > 0) {
       const lastItem = cartItems[cartItems.length - 1];
       const itemKey = lastItem.acompanamientoId 
-        ? `${lastItem.titulo}_${lastItem.acompanamientoId}` 
-        : lastItem.titulo;
+        ? `${lastItem.title}_${lastItem.acompanamientoId}` 
+        : lastItem.title;
       
       if (lastItem.cantidad > 1) {
         cartStore.updateQuantity(itemKey, lastItem.cantidad - 1);
@@ -110,8 +110,8 @@
 >
   <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6 lg:gap-8">
     <div class="flex-1 min-w-0">
-      <MenuItemTitle title={item.titulo} />
-      <MenuItemDescription description={item.descripcion || ''} />
+      <MenuItemTitle title={item.title} />
+      <MenuItemDescription description={item.description || ''} />
       {#if hasAcompanamientos}
         <p class="text-sm sm:text-base text-gray-500 mt-2 italic">
           Selecciona un acompañamiento
@@ -193,11 +193,11 @@
         Selecciona un acompañamiento
       </h3>
       <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-        {item.titulo}
+        {item.title}
       </p>
       
       <div class="space-y-3 sm:space-y-4" onclick={(e) => e.stopPropagation()}>
-        {#each item.acompanamientos as acompanamiento}
+        {#each item.sides as acompanamiento}
           <button
             type="button"
             onclick={(e) => handleSelectAcompanamiento(acompanamiento, e)}
@@ -205,9 +205,9 @@
           >
             <div class="flex justify-between items-center">
               <span class="font-medium text-gray-800 text-sm sm:text-base">
-                {acompanamiento.nombre}
+                {acompanamiento.name}
               </span>
-              <Price price={acompanamiento.precio} className="text-base sm:text-lg" />
+              <Price price={acompanamiento.price} className="text-base sm:text-lg" />
             </div>
           </button>
         {/each}

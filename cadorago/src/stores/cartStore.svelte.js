@@ -53,26 +53,26 @@ class CartStore {
   /**
    * Agrega un item al carrito
    * @param {Object} item - Item del menú a agregar
-   * @param {Object} acompanamiento - Acompañamiento seleccionado (opcional)
+   * @param {Object} side - Side seleccionado (opcional)
    */
-  addItem(item, acompanamiento = null) {
-    // Si tiene acompañamientos, debe tener uno seleccionado
-    if (item.acompanamientos && item.acompanamientos.length > 0 && !acompanamiento) {
+  addItem(item, side = null) {
+    // Si tiene sides, debe tener uno seleccionado
+    if (item.sides && item.sides.length > 0 && !side) {
       throw new Error('Debe seleccionar un acompañamiento');
     }
     
-    // Determinar precio: usar precio del acompañamiento si existe, sino el precio del item
-    const precio = acompanamiento ? acompanamiento.precio : (item.precio || 0);
+    // Determinar precio: usar precio del side si existe, sino el precio del item
+    const precio = side ? side.price : (item.price || 0);
     
-    // Crear clave única: titulo + id del acompañamiento (si existe)
-    const itemKey = acompanamiento 
-      ? `${item.titulo}_${acompanamiento.id}` 
-      : item.titulo;
+    // Crear clave única: title + name del side (si existe)
+    const itemKey = side 
+      ? `${item.title}_${side.name}` 
+      : item.title;
     
     const existingItemIndex = this.items.findIndex(i => {
       const existingKey = i.acompanamientoId 
-        ? `${i.titulo}_${i.acompanamientoId}` 
-        : i.titulo;
+        ? `${i.title}_${i.acompanamientoId}` 
+        : i.title;
       return existingKey === itemKey;
     });
     
@@ -89,8 +89,8 @@ class CartStore {
         ...item,
         cantidad: 1,
         precio: precio,
-        acompanamiento: acompanamiento ? acompanamiento.nombre : null,
-        acompanamientoId: acompanamiento ? acompanamiento.id : null
+        acompanamiento: side ? side.name : null,
+        acompanamientoId: side ? side.name : null
       }];
     }
     
@@ -100,16 +100,16 @@ class CartStore {
 
   /**
    * Elimina un item del carrito
-   * @param {string} titulo - Título del item a eliminar
+   * @param {string} title - Título del item a eliminar
    */
-  removeItem(titulo) {
-    this.items = this.items.filter(item => item.titulo !== titulo);
+  removeItem(title) {
+    this.items = this.items.filter(item => item.title !== title);
     this.saveToStorage();
   }
 
   /**
    * Actualiza la cantidad de un item
-   * @param {string} itemKey - Clave única del item (titulo o titulo_acompanamientoId)
+   * @param {string} itemKey - Clave única del item (title o title_acompanamientoId)
    * @param {number} cantidad - Nueva cantidad
    */
   updateQuantity(itemKey, cantidad) {
@@ -121,8 +121,8 @@ class CartStore {
     // Crear nuevo array para forzar reactividad
     this.items = this.items.map(item => {
       const currentKey = item.acompanamientoId 
-        ? `${item.titulo}_${item.acompanamientoId}` 
-        : item.titulo;
+        ? `${item.title}_${item.acompanamientoId}` 
+        : item.title;
       if (currentKey === itemKey) {
         return { ...item, cantidad };
       }
@@ -139,8 +139,8 @@ class CartStore {
   removeItemByKey(itemKey) {
     this.items = this.items.filter(item => {
       const currentKey = item.acompanamientoId 
-        ? `${item.titulo}_${item.acompanamientoId}` 
-        : item.titulo;
+        ? `${item.title}_${item.acompanamientoId}` 
+        : item.title;
       return currentKey !== itemKey;
     });
     this.saveToStorage();
@@ -185,7 +185,7 @@ class CartStore {
     let message = "¡Hola! Me gustaría hacer el siguiente pedido:\n\n";
     
     this.items.forEach((item, index) => {
-      message += `${index + 1}. ${item.titulo}`;
+      message += `${index + 1}. ${item.title}`;
       if (item.acompanamiento) {
         message += ` (${item.acompanamiento})`;
       }

@@ -21,7 +21,7 @@
           <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-6 sm:mb-8">
             Horarios de Atención
           </h2>
-          <HorariosSection horarios={restaurantData.horariosDeAtencion} />
+          <HorariosSection horarios={restaurantData.businessInfo.businessHours} />
         </div>
         
         <!-- Contacto -->
@@ -29,7 +29,7 @@
           <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-6 sm:mb-8">
             Contacto
           </h2>
-          <ContactSection whatsapp={restaurantData.contacto.whatssap} />
+          <ContactSection whatsapp={restaurantData.businessInfo.whatsapp} />
         </div>
       </div>
       
@@ -38,7 +38,7 @@
         <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800 mb-8 sm:mb-10 lg:mb-12">
           Nuestra Carta
         </h2>
-        <CartaSection carta={restaurantData.carta} />
+        <CartaSection carta={restaurantData.menu} />
       </div>
     </div>
   </section>
