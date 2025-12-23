@@ -72,5 +72,5 @@ func menuInteractionHandler(
 			}
 			obs.Logger.InfoContext(spanCtx, "menuInteractionRequest published", "requestBody", body)
 			return http.StatusOK, nil
-		}, option.Summary("menuInteractionRequest"))
+		}, option.Summary("menuInteractionRequest"), option.Header("Idempotency-Key", "01KCW67YKSV455GBVDT88S4072"))
 }

@@ -25,7 +25,6 @@ type MenuPreferences struct {
 }
 
 type MenuInteractionRequest struct {
-	MessageID       string `json:"messageId" example:"ULID()=01G65Z755AFWAKHE12NY0CQ9FH"`
 	Message         string `json:"message" example:"Actualiza el precio del Pollo con papas fritas a $7.500"`
 	MenuID          string `json:"menuId" example:"ULID()=01G65Z755AFWAKHE12NY0CQ9FH"`
 	History         []ChatMessage
@@ -50,10 +49,6 @@ func (m MenuInteractionRequest) MenuToon() string {
 
 func (m MenuInteractionRequest) Validate() error {
 	var problems []string
-
-	if _, err := ulid.ParseStrict(m.MessageID); err != nil {
-		problems = append(problems, "messageId must be a valid ULID")
-	}
 
 	if _, err := ulid.ParseStrict(m.MenuID); err != nil {
 		problems = append(problems, "menuId must be a valid ULID")
