@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"micartapro/app/shared/configuration"
 	"micartapro/app/shared/infrastructure/observability"
+	"micartapro/app/shared/sharedcontext"
 	"net"
 	"net/http"
 	"os"
@@ -52,6 +53,7 @@ func New(conf configuration.Conf, requestLoggerMiddleware RequestLoggerMiddlewar
 	fuego.WithoutLogger()(s)
 
 	fuego.Use(s, requestLoggerMiddleware)
+	fuego.Use(s, NewIdempotencyKeyMiddleware())
 	server.healthCheck()
 	return server
 }
@@ -165,4 +167,20 @@ func clientIP(r *http.Request) string {
 	}
 
 	return r.RemoteAddr
+}
+
+type IdempotencyKeyMiddleware func(http.Handler) http.Handler
+
+func NewIdempotencyKeyMiddleware() IdempotencyKeyMiddleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			if idempotencyKey := r.Header.Get("Idempotency-Key"); idempotencyKey != "" {
+				ctx = sharedcontext.WithIdempotencyKey(ctx, idempotencyKey)
+			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }

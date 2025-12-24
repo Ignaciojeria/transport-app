@@ -7,6 +7,7 @@ import (
 	"micartapro/app/domain"
 	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
+	"micartapro/app/shared/sharedcontext"
 
 	"cloud.google.com/go/storage"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -22,7 +23,8 @@ func init() {
 
 func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu {
 	return func(ctx context.Context, menu domain.MenuCreateRequest) error {
-		obs.Logger.Info("save_menu", "menu", menu)
+		idempotencyKey, _ := sharedcontext.IdempotencyKeyFromContext(ctx)
+		obs.Logger.InfoContext(ctx, "save_menu", "menu", menu, "idempotencyKey", idempotencyKey)
 		bucket := gcs.Bucket("micartapro-menus")
 		objectPath := "menus/" + menu.ID + ".json"
 		object := bucket.Object(objectPath)

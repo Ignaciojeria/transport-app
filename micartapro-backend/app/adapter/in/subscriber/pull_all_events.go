@@ -10,6 +10,7 @@ import (
 	"micartapro/app/domain"
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
+	"micartapro/app/shared/sharedcontext"
 	"micartapro/app/usecase"
 )
 
@@ -31,7 +32,9 @@ func newPullAllEvents(
 	subscriptionName := "micartapro.events-sub"
 	processor := func(ctx context.Context, event cloudevents.Event) int {
 
-		spanCtx, span := obs.Tracer.Start(contextFromCloudEvent(ctx, event), "pull_all_events")
+		ctx = sharedcontext.ContextFromCloudEvent(ctx, event)
+
+		spanCtx, span := obs.Tracer.Start(ctx, "pull_all_events")
 		defer span.End()
 
 		var input interface{}

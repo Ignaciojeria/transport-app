@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"micartapro/app/shared/constants"
 	"micartapro/app/shared/infrastructure/eventprocessing/gcp"
+	"micartapro/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"go.opentelemetry.io/otel/trace"
@@ -46,8 +48,13 @@ func (p *GcpPublisherManager) Publish(
 	span := trace.SpanFromContext(ctx)
 	sc := span.SpanContext()
 	if sc.IsValid() {
-		ce.SetExtension("trace_id", sc.TraceID().String())
-		ce.SetExtension("span_id", sc.SpanID().String())
+		ce.SetExtension(constants.CloudEventExtensionTraceID, sc.TraceID().String())
+		ce.SetExtension(constants.CloudEventExtensionSpanID, sc.SpanID().String())
+	}
+
+	// Agregar idempotency key del contexto como extensión del CloudEvent
+	if idempotencyKey, ok := sharedcontext.IdempotencyKeyFromContext(ctx); ok {
+		ce.SetExtension(constants.CloudEventExtensionIdempotencyKey, idempotencyKey)
 	}
 	// Encode CloudEvent JSON
 	bytes, err := json.Marshal(ce)
