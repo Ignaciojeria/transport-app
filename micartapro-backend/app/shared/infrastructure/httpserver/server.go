@@ -18,6 +18,7 @@ import (
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
+	"github.com/oklog/ulid/v2"
 )
 
 func init() {
@@ -177,6 +178,11 @@ func NewIdempotencyKeyMiddleware() IdempotencyKeyMiddleware {
 			ctx := r.Context()
 
 			if idempotencyKey := r.Header.Get("Idempotency-Key"); idempotencyKey != "" {
+				// Validar que el idempotency key sea un ULID válido
+				if _, err := ulid.ParseStrict(idempotencyKey); err != nil {
+					http.Error(w, "Idempotency-Key must be a valid ULID", http.StatusBadRequest)
+					return
+				}
 				ctx = sharedcontext.WithIdempotencyKey(ctx, idempotencyKey)
 			}
 
