@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useLanguage } from '@/lib/useLanguage'
+import { getOrCreateMenuId } from '@/lib/menuId'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('')
@@ -37,6 +38,15 @@ export default function AuthCallback() {
 
         if (session && session.user) {
           setStatus(t.callback.welcome.replace('{email}', session.user.email || ''))
+          
+          // Obtener o crear menuID para el usuario
+          try {
+            const menuId = await getOrCreateMenuId(session.user.id)
+            console.log('✅ MenuID procesado:', menuId)
+          } catch (menuError) {
+            console.error('⚠️ Error al obtener/crear menuID (continuando de todas formas):', menuError)
+            // No bloqueamos el flujo si falla la creación del menuID
+          }
           
           // Preparar datos para el fragment
           const userMetadata = session.user.user_metadata || {}
