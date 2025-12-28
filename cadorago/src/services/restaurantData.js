@@ -3,6 +3,8 @@
  */
 export const restaurantData = {
   "id": "f8679ed4-1b19-49ff-9d97-0b51967a86bd",
+  "coverImage":"https://storage.googleapis.com/micartapro-menus/menus/01KCW67YKSV455GBVDT88S4072/gallery/portadav2.webp",
+  "footerImage":"https://storage.googleapis.com/micartapro-menus/menus/01KCW67YKSV455GBVDT88S4072/gallery/logov2.webp",
   "businessInfo": {
     "businessName": "cadorago",
     "whatsapp": "+56957857558",

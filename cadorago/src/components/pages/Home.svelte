@@ -12,7 +12,7 @@
 
 <HeroTemplate>
   <!-- Sección de información del restaurante -->
-  <section class="-mt-28 sm:-mt-36 lg:-mt-44 px-2 sm:px-4 lg:px-12">
+  <section class="px-2 sm:px-4 lg:px-12 pt-8 sm:pt-12 lg:pt-16">
     <div class="max-w-[1600px] mx-auto space-y-12 sm:space-y-16 lg:space-y-20">
       <!-- Horarios y Contacto en grid para breakpoints grandes -->
       <div class="grid grid-cols-1 min-[1180px]:grid-cols-2 gap-8 sm:gap-12 lg:gap-16">
