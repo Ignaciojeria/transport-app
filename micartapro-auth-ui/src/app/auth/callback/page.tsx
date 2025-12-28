@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useLanguage } from '@/lib/useLanguage'
 import { getOrCreateMenuId } from '@/lib/menuId'
+import '@/lib/diagnoseMenuId' // Cargar función de diagnóstico en window
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('')
@@ -39,14 +40,34 @@ export default function AuthCallback() {
         if (session && session.user) {
           setStatus(t.callback.welcome.replace('{email}', session.user.email || ''))
           
-          // Obtener o crear menuID para el usuario
+          // Obtener o crear menuID para el usuario (si no existe, se crea automáticamente)
+          // CRÍTICO: Si falla, NO redirigir - el usuario debe tener un menuID para continuar
+          let menuId: string
           try {
-            const menuId = await getOrCreateMenuId(session.user.id)
-            console.log('✅ MenuID procesado:', menuId)
-          } catch (menuError) {
-            console.error('⚠️ Error al obtener/crear menuID (continuando de todas formas):', menuError)
-            // No bloqueamos el flujo si falla la creación del menuID
+            // Pequeño delay para asegurar que la sesión esté lista
+            await new Promise(resolve => setTimeout(resolve, 100))
+            
+            console.log('🔄 Obteniendo o creando menuID para usuario:', session.user.id)
+            setStatus('Creando tu menú...')
+            menuId = await getOrCreateMenuId(session.user.id)
+            console.log('✅ MenuID obtenido/creado exitosamente:', menuId)
+          } catch (menuError: any) {
+            // Si falla la creación del menuID, NO continuar con la redirección
+            console.error('❌ Error crítico al obtener/crear menuID:', {
+              message: menuError?.message,
+              error: menuError
+            })
+            setStatus(`Error al crear tu menú: ${menuError?.message || 'Error desconocido'}`)
+            setIsLoading(false)
+            // NO redirigir - mostrar error y opción de reintentar
+            setTimeout(() => {
+              router.push('/')
+            }, 5000)
+            return // Salir de la función, no continuar con la redirección
           }
+          
+          // Solo continuar si el menuID se creó/obtuvo exitosamente
+          setStatus('Redirigiendo...')
           
           // Preparar datos para el fragment
           const userMetadata = session.user.user_metadata || {}

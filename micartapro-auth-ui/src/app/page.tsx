@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/components/AuthProvider'
 import { useLanguage } from '@/lib/useLanguage'
 import type { Language } from '@/lib/translations'
-import { getOrCreateMenuId } from '@/lib/menuId'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -29,14 +28,8 @@ export default function LoginPage() {
       
       if (!authLoading && user && session) {
         try {
-          // Obtener o crear menuID para el usuario
-          try {
-            const menuId = await getOrCreateMenuId(user.id)
-            console.log('✅ MenuID procesado:', menuId)
-          } catch (menuError) {
-            console.error('⚠️ Error al obtener/crear menuID (continuando de todas formas):', menuError)
-            // No bloqueamos el flujo si falla la creación del menuID
-          }
+          // NOTA: No creamos menuID aquí porque ya se crea en el callback
+          // Solo redirigimos si el usuario ya está autenticado
           
           // Obtener el access token de Supabase
           const accessToken = session.access_token
