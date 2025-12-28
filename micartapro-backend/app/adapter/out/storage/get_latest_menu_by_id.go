@@ -55,7 +55,7 @@ func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) 
 			}
 			it := bucket.Objects(ctx, query)
 
-			// Encontrar el último objeto (ULID más reciente lexicográficamente)
+			// Encontrar el último objeto (UUIDv7 más reciente lexicográficamente)
 			for {
 				attrs, err := it.Next()
 				if err == iterator.Done {
@@ -72,7 +72,7 @@ func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) 
 					continue
 				}
 
-				// Comparar lexicográficamente para encontrar el último ULID
+				// Comparar lexicográficamente para encontrar el último UUIDv7
 				if latestObjectName == "" || filename > latestObjectName {
 					latestObjectName = filename
 				}

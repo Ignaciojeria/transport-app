@@ -88,6 +88,7 @@ func (p *GcpPublisherManager) Publish(
 
 	// Dynamic topic resolution (very cheap)
 	pubTopic := p.client.Publisher(request.Topic)
+	pubTopic.EnableMessageOrdering = true
 
 	// Publish message
 	_, err = pubTopic.Publish(ctx, &pubsub.Message{

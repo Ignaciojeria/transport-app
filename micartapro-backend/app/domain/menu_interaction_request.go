@@ -8,7 +8,7 @@ import (
 
 	"github.com/alpkeskin/gotoon"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
-	"github.com/oklog/ulid/v2"
+	"github.com/google/uuid"
 )
 
 var (
@@ -26,7 +26,7 @@ type MenuPreferences struct {
 
 type MenuInteractionRequest struct {
 	Message         string `json:"message" example:"Actualiza el precio del Pollo con papas fritas a $7.500"`
-	MenuID          string `json:"menuId" example:"ULID()=01G65Z755AFWAKHE12NY0CQ9FH"`
+	MenuID          string `json:"menuId" example:"01890a5d-ac96-7748-b800-303931383939"`
 	History         []ChatMessage
 	MenuPreferences MenuPreferences
 	JsonMenu        MenuCreateRequest
@@ -50,8 +50,11 @@ func (m MenuInteractionRequest) MenuToon() string {
 func (m MenuInteractionRequest) Validate() error {
 	var problems []string
 
-	if _, err := ulid.ParseStrict(m.MenuID); err != nil {
-		problems = append(problems, "menuId must be a valid ULID")
+	parsedUUID, err := uuid.Parse(m.MenuID)
+	if err != nil {
+		problems = append(problems, "menuId must be a valid UUIDv7")
+	} else if parsedUUID.Version() != 7 {
+		problems = append(problems, "menuId must be a UUIDv7")
 	}
 
 	if len(problems) > 0 {
