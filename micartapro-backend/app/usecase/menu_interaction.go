@@ -21,17 +21,17 @@ func init() {
 		observability.NewObservability,
 		agents.NewMenuInteractionAgent,
 		eventprocessing.NewPublisherStrategy,
-		storage.NewSearchMenuById)
+		storage.NewGetLatestMenuById)
 }
 
 func NewMenuInteraction(
 	obs observability.Observability,
 	menuInteractionAgent agents.MenuInteractionAgent,
 	publisherManager eventprocessing.PublisherManager,
-	searchMenuById storage.SearchMenuById) MenuInteraction {
+	getLatestMenuById storage.GetLatestMenuById) MenuInteraction {
 	return func(ctx context.Context, input domain.MenuInteractionRequest) (string, error) {
 
-		menu, err := searchMenuById(ctx, input.MenuID)
+		menu, err := getLatestMenuById(ctx, input.MenuID)
 		if err != nil && err != storage.ErrMenuNotFound {
 			return "", err
 		}

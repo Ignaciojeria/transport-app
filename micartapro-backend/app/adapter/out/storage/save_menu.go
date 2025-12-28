@@ -26,7 +26,7 @@ func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu 
 		idempotencyKey, _ := sharedcontext.IdempotencyKeyFromContext(ctx)
 		obs.Logger.InfoContext(ctx, "save_menu", "menu", menu, "idempotencyKey", idempotencyKey)
 		bucket := gcs.Bucket("micartapro-menus")
-		objectPath := "menus/" + menu.ID + ".json"
+		objectPath := "menus/" + menu.ID + "/" + idempotencyKey + ".json"
 		object := bucket.Object(objectPath)
 		// Upsert: si ya existe, lo sobrescribe.
 		writer := object.NewWriter(ctx)
@@ -46,6 +46,25 @@ func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu 
 
 		if err := writer.Close(); err != nil {
 			obs.Logger.Error("error_closing_writer", "error", err, "objectPath", objectPath)
+			return err
+		}
+
+		// Actualizar latest.json para apuntar al último archivo guardado
+		latestPath := "menus/" + menu.ID + "/latest.json"
+		latestObject := bucket.Object(latestPath)
+		latestWriter := latestObject.NewWriter(ctx)
+		latestWriter.ContentType = "application/json"
+		latestWriter.CacheControl = "no-cache, max-age=0"
+
+		latestData := map[string]string{"filename": idempotencyKey + ".json"}
+		if err := json.NewEncoder(latestWriter).Encode(latestData); err != nil {
+			latestWriter.Close()
+			obs.Logger.Error("error_encoding_latest", "error", err, "latestPath", latestPath)
+			return err
+		}
+
+		if err := latestWriter.Close(); err != nil {
+			obs.Logger.Error("error_closing_latest_writer", "error", err, "latestPath", latestPath)
 			return err
 		}
 

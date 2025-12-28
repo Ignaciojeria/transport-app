@@ -75,9 +75,10 @@ type DomainEvent interface {
 }
 
 type PublishRequest struct {
-	Topic  string
-	Source string
-	Event  DomainEvent
+	Topic       string
+	Source      string
+	OrderingKey string // Optional: para control de orden en cola
+	Event       DomainEvent
 }
 
 // =============================================================

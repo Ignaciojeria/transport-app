@@ -29,7 +29,7 @@ func newPullAllEvents(
 	obs observability.Observability,
 	menuInteraction usecase.MenuInteraction,
 	menuInteractionCreate usecase.MenuInteractionCreate) eventprocessing.MessageProcessor {
-	subscriptionName := "micartapro.events-sub"
+	subscriptionName := "micartapro.events.v2"
 	processor := func(ctx context.Context, event cloudevents.Event) int {
 
 		ctx = sharedcontext.ContextFromCloudEvent(ctx, event)

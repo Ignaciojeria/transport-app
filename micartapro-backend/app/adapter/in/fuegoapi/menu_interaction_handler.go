@@ -60,9 +60,10 @@ func menuInteractionHandler(
 				}
 			}
 			if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
-				Topic:  "micartapro.events",
-				Source: "micartapro.api.menu.interaction",
-				Event:  body,
+				Topic:       "micartapro.events",
+				Source:      "micartapro.api.menu.interaction",
+				OrderingKey: body.MenuID,
+				Event:       body,
 			}); err != nil {
 				return nil, fuego.HTTPError{
 					Title:  "error publishing event",

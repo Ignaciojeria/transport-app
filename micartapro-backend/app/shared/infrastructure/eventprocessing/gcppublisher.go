@@ -91,8 +91,9 @@ func (p *GcpPublisherManager) Publish(
 
 	// Publish message
 	_, err = pubTopic.Publish(ctx, &pubsub.Message{
-		Data:       bytes,
-		Attributes: attrs,
+		Data:        bytes,
+		Attributes:  attrs,
+		OrderingKey: request.OrderingKey,
 	}).Get(ctx)
 
 	return err
