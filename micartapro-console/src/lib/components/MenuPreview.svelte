@@ -122,7 +122,7 @@
     </div>
 
     <!-- WebView con iframe -->
-    <div class="flex-1 overflow-hidden bg-white">
+    <div class="flex-1 overflow-hidden bg-white iframe-container">
       <iframe
         src={menuUrl}
         class="w-full h-full border-0"
@@ -138,6 +138,18 @@
 <style>
   iframe {
     display: block;
+  }
+  
+  /* Fix para scroll en iframes en mobile */
+  .iframe-container {
+    touch-action: pan-y pan-x;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  .iframe-container iframe {
+    touch-action: auto;
+    pointer-events: auto;
   }
 </style>
 

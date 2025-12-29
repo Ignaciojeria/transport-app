@@ -110,7 +110,7 @@ export function DemoEmbed() {
           <div className="relative">
             {showDemo ? (
               <div className="relative">
-                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden iframe-container">
                   <iframe 
                     src="https://cadorago.web.app/" 
                     width="100%" 

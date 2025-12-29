@@ -268,3 +268,15 @@
   }
 }
 
+/* Fix para scroll en iframes en mobile */
+.iframe-container {
+  touch-action: pan-y pan-x;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+.iframe-container iframe {
+  touch-action: auto;
+  pointer-events: auto;
+}
+

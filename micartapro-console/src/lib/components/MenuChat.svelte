@@ -161,6 +161,12 @@
             timestamp: new Date()
           }
           messages = [...messages, successMessage]
+          
+          // Abrir automáticamente la vista previa para mostrar los cambios
+          if (!menuUrl) {
+            menuUrl = generateMenuUrl(userId, menuId)
+          }
+          showPreview = true
         } catch (pollError: any) {
           console.error('Error en polling:', pollError)
           
@@ -402,7 +408,7 @@
       </div>
 
       <!-- Contenido del Modal -->
-      <div class="flex-1 overflow-hidden">
+      <div class="flex-1 overflow-hidden iframe-container">
         {#if menuUrl}
           <iframe
             src={menuUrl}
@@ -441,6 +447,18 @@
     #messages-container {
       padding-bottom: 6rem;
     }
+  }
+  
+  /* Fix para scroll en iframes en mobile */
+  .iframe-container {
+    touch-action: pan-y pan-x;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+  }
+  
+  .iframe-container iframe {
+    touch-action: auto;
+    pointer-events: auto;
   }
 </style>
 
