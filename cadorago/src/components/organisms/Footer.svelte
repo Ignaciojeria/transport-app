@@ -17,9 +17,6 @@
           class="h-64 w-auto"
         />
       {/if}
-      <p class="text-2xl sm:text-3xl lg:text-4xl font-semibold italic text-gray-800 -mt-4 sm:-mt-6">
-        Buen provecho 😊
-      </p>
     </div>
   </div>
 </footer>

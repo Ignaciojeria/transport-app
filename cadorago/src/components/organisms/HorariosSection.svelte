@@ -1,19 +1,28 @@
 <script>
-  /** @type {string[]} - Array de horarios de atención */
-  export let horarios = [];
+  const { horarios = [], className = '' } = $props();
   
-  /** @type {string} - Additional custom classes */
-  export let className = '';
+  // Filtrar horarios que tengan contenido (no vacíos)
+  const horariosConContenido = $derived(
+    horarios?.filter(h => h && typeof h === 'string' && h.trim().length > 0) || []
+  );
+  
+  const tieneHorarios = $derived(horariosConContenido.length > 0);
 </script>
 
 <section class={`${className}`}>
-  <ul class="space-y-2 sm:space-y-3 list-none">
-    {#each horarios as horario}
-      <li class="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed flex items-start">
-        <span class="mr-2 sm:mr-3 flex-shrink-0">•</span>
-        <span>{horario}</span>
-      </li>
-    {/each}
-  </ul>
+  {#if tieneHorarios}
+    <ul class="space-y-2 sm:space-y-3 list-none">
+      {#each horariosConContenido as horario}
+        <li class="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed flex items-start">
+          <span class="mr-2 sm:mr-3 flex-shrink-0">•</span>
+          <span>{horario}</span>
+        </li>
+      {/each}
+    </ul>
+  {:else}
+    <p class="text-lg sm:text-xl lg:text-2xl text-gray-500 italic">
+      No especificado
+    </p>
+  {/if}
 </section>
 
