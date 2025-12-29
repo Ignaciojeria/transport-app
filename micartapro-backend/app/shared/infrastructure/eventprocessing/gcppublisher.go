@@ -56,6 +56,12 @@ func (p *GcpPublisherManager) Publish(
 	if idempotencyKey, ok := sharedcontext.IdempotencyKeyFromContext(ctx); ok {
 		ce.SetExtension(constants.CloudEventExtensionIdempotencyKey, idempotencyKey)
 	}
+
+	// Agregar user ID del contexto como extensión del CloudEvent
+	if userID, ok := sharedcontext.UserIDFromContext(ctx); ok {
+		ce.SetExtension(constants.CloudEventExtensionUserID, userID)
+	}
+
 	// Encode CloudEvent JSON
 	bytes, err := json.Marshal(ce)
 	if err != nil {

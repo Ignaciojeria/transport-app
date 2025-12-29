@@ -6,6 +6,7 @@ import (
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
+	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -29,8 +30,9 @@ func userMenusInsertedWebhook(
 		func(c fuego.ContextWithBody[events.UserMenusInsertedWebhook]) (any, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "userMenusInsertedWebhook")
 			defer span.End()
-
 			requestBody, _ := c.Body()
+			spanCtx = sharedcontext.WithIdempotencyKey(spanCtx, requestBody.Record.MenuID)
+			spanCtx = sharedcontext.WithUserID(spanCtx, requestBody.Record.UserID)
 			requestBody.CreatedAtToISO8601()
 			obs.Logger.Info("userMenusInsertedWebhook request received", "requestBody", requestBody)
 
@@ -48,8 +50,8 @@ func userMenusInsertedWebhook(
 			}
 			obs.Logger.InfoContext(spanCtx, "userMenusInsertedWebhook event published", "requestBody", requestBody)
 			return http.StatusOK, nil
-		}, 
-		option.Summary("userMenusInsertedWebhook"), 
-		option.Tags("webhooks"), 
+		},
+		option.Summary("userMenusInsertedWebhook"),
+		option.Tags("webhooks"),
 		option.Middleware(validateSupabaseWebhookSecretMiddleware))
 }

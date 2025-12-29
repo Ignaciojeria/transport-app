@@ -7,4 +7,5 @@ const (
 	CloudEventExtensionIdempotencyKey = "idempotencykey"
 	CloudEventExtensionTraceID        = "traceid"
 	CloudEventExtensionSpanID         = "spanid"
+	CloudEventExtensionUserID         = "userid"
 )

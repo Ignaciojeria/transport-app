@@ -24,9 +24,14 @@ func init() {
 func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu {
 	return func(ctx context.Context, menu events.MenuCreateRequest) error {
 		idempotencyKey, _ := sharedcontext.IdempotencyKeyFromContext(ctx)
-		obs.Logger.InfoContext(ctx, "save_menu", "menu", menu, "idempotencyKey", idempotencyKey)
+		userID, ok := sharedcontext.UserIDFromContext(ctx)
+		if !ok || userID == "" {
+			obs.Logger.Error("user_id_not_found_in_context", "error", "userID is required but not found in context")
+			return nil // o podrías retornar un error si prefieres
+		}
+		obs.Logger.InfoContext(ctx, "save_menu", "menu", menu, "idempotencyKey", idempotencyKey, "userID", userID)
 		bucket := gcs.Bucket("micartapro-menus")
-		objectPath := "menus/" + menu.ID + "/" + idempotencyKey + ".json"
+		objectPath := userID + "/menus/" + menu.ID + "/" + idempotencyKey + ".json"
 		object := bucket.Object(objectPath)
 		// Upsert: si ya existe, lo sobrescribe.
 		writer := object.NewWriter(ctx)
@@ -50,7 +55,7 @@ func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu 
 		}
 
 		// Actualizar latest.json para apuntar al último archivo guardado
-		latestPath := "menus/" + menu.ID + "/latest.json"
+		latestPath := userID + "/menus/" + menu.ID + "/latest.json"
 		latestObject := bucket.Object(latestPath)
 		latestWriter := latestObject.NewWriter(ctx)
 		latestWriter.ContentType = "application/json"

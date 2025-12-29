@@ -9,6 +9,7 @@ import (
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
+	"micartapro/app/shared/sharedcontext"
 
 	"cloud.google.com/go/storage"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -27,9 +28,14 @@ func init() {
 
 func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) GetLatestMenuById {
 	return func(ctx context.Context, menuID string) (events.MenuCreateRequest, error) {
-		obs.Logger.InfoContext(ctx, "get_latest_menu_by_id", "menuID", menuID)
+		userID, ok := sharedcontext.UserIDFromContext(ctx)
+		if !ok || userID == "" {
+			obs.Logger.ErrorContext(ctx, "user_id_not_found_in_context", "error", "userID is required but not found in context")
+			return events.MenuCreateRequest{}, errors.New("userID is required but not found in context")
+		}
+		obs.Logger.InfoContext(ctx, "get_latest_menu_by_id", "menuID", menuID, "userID", userID)
 		bucket := gcs.Bucket("micartapro-menus")
-		prefix := "menus/" + menuID + "/"
+		prefix := userID + "/menus/" + menuID + "/"
 		latestPath := prefix + "latest.json"
 
 		// Intentar leer latest.json para obtener el nombre del último archivo

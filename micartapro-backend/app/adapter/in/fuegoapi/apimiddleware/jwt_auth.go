@@ -2,6 +2,7 @@ package apimiddleware
 
 import (
 	"micartapro/app/shared/infrastructure/auth"
+	"micartapro/app/shared/sharedcontext"
 	"net/http"
 	"strings"
 
@@ -28,13 +29,19 @@ func NewJWTAuthMiddleware(tokenValidator auth.SupabaseTokenValidator) JWTAuthMid
 				return
 			}
 
-			_, err := tokenValidator.ValidateJWT(token)
+			claims, err := tokenValidator.ValidateJWT(token)
 			if err != nil {
 				http.Error(w, "error validating token: "+err.Error(), http.StatusUnauthorized)
 				return
 			}
 
-			next.ServeHTTP(w, r)
+			// Extraer el userId de las claims (en Supabase está en "sub")
+			ctx := r.Context()
+			if sub, ok := claims["sub"].(string); ok && sub != "" {
+				ctx = sharedcontext.WithUserID(ctx, sub)
+			}
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

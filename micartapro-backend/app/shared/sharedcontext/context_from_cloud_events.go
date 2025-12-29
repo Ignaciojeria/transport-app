@@ -10,8 +10,10 @@ import (
 )
 
 type idempotencyKeyContextKey struct{}
+type userIDContextKey struct{}
 
 var idempotencyKeyKey = &idempotencyKeyContextKey{}
+var userIDKey = &userIDContextKey{}
 
 func ContextFromCloudEvent(
 	ctx context.Context,
@@ -47,6 +49,11 @@ func ContextFromCloudEvent(
 		ctx = context.WithValue(ctx, idempotencyKeyKey, idempotencyKeyStr)
 	}
 
+	// Restaurar user ID del CloudEvent al contexto
+	if userIDStr, ok := event.Extensions()[constants.CloudEventExtensionUserID].(string); ok && userIDStr != "" {
+		ctx = context.WithValue(ctx, userIDKey, userIDStr)
+	}
+
 	return ctx
 }
 
@@ -63,4 +70,19 @@ func IdempotencyKeyFromContext(ctx context.Context) (string, bool) {
 		return "", false
 	}
 	return key, true
+}
+
+// WithUserID agrega el user ID al contexto.
+func WithUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, userIDKey, userID)
+}
+
+// UserIDFromContext extrae el user ID del contexto.
+// Retorna el valor del user ID y un bool indicando si existe.
+func UserIDFromContext(ctx context.Context) (string, bool) {
+	userID, ok := ctx.Value(userIDKey).(string)
+	if !ok || userID == "" {
+		return "", false
+	}
+	return userID, true
 }
