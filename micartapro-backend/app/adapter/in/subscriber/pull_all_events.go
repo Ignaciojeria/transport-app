@@ -20,7 +20,9 @@ func init() {
 		eventprocessing.NewSubscriberStrategy,
 		observability.NewObservability,
 		usecase.NewOnMenuInteractionRequest,
-		usecase.NewOnMenuCreateRequest)
+		usecase.NewOnMenuCreateRequest,
+		usecase.NewOnUserMenusInsertedWebhook,
+	)
 }
 
 // Pull all events from the event bus
@@ -28,7 +30,8 @@ func newPullAllEvents(
 	sub eventprocessing.Subscriber,
 	obs observability.Observability,
 	onMenuInteractionRequest usecase.OnMenuInteractionRequest,
-	onMenuCreateRequest usecase.OnMenuCreateRequest) eventprocessing.MessageProcessor {
+	onMenuCreateRequest usecase.OnMenuCreateRequest,
+	onUserMenusInsertedWebhook usecase.OnUserMenusInsertedWebhook) eventprocessing.MessageProcessor {
 	subscriptionName := "micartapro.events.v2"
 	processor := func(ctx context.Context, event cloudevents.Event) int {
 
@@ -75,6 +78,21 @@ func newPullAllEvents(
 			err := onMenuCreateRequest(spanCtx, request)
 			if err != nil {
 				obs.Logger.Error("error_processing_menu_create",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventUserMenusInsertedWebhook:
+			var request events.UserMenusInsertedWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onUserMenusInsertedWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_user_menus_inserted_webhook",
 					"error", err.Error(),
 				)
 				return http.StatusInternalServerError

@@ -60,6 +60,10 @@
         {
             "kind": "post-controller",
             "name": "user-menus-insert-webhook2"
+        },
+        {
+            "kind": "usecase",
+            "name": "on-user-menus-inserted-webhook"
         }
     ]
 }

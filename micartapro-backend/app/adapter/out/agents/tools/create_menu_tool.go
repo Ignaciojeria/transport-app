@@ -43,6 +43,16 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 					// ¡CLAVE! Usamos el Schema de Categoría para cada ítem del array.
 					Items: menuCategorySchema,
 				},
+				// 3. coverImage: Imagen de portada del menú
+				"coverImage": {
+					Type:        genai.TypeString,
+					Description: "URL de la imagen de portada del menú digital.",
+				},
+				// 4. footerImage: Imagen del footer/logo del menú
+				"footerImage": {
+					Type:        genai.TypeString,
+					Description: "URL de la imagen del footer o logo del menú digital.",
+				},
 			},
 			// Los requeridos son las estructuras complejas que encapsulan todo
 			//Required: []string{"businessInfo", "menu"},

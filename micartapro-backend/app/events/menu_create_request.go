@@ -31,6 +31,8 @@ type BusinessInfo struct {
 
 type MenuCreateRequest struct {
 	ID           string         `json:"id"`
+	CoverImage   string         `json:"coverImage"`
+	FooterImage  string         `json:"footerImage"`
 	BusinessInfo BusinessInfo   `json:"businessInfo"`
 	Menu         []MenuCategory `json:"menu"`
 }
