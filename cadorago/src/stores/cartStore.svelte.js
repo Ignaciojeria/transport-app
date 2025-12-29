@@ -179,10 +179,26 @@ class CartStore {
    * @param {string} whatsappNumber - Número de WhatsApp
    * @param {string} nombreRetiro - Nombre de quien va a retirar
    * @param {string} horaRetiro - Hora de retiro
+   * @param {string} lang - Idioma ('ES', 'PT', 'EN')
+   * @param {object} translations - Objeto con las traducciones de WhatsApp
    * @returns {string} URL de WhatsApp con el mensaje
    */
-  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '') {
-    let message = "¡Hola! Me gustaría hacer el siguiente pedido:\n\n";
+  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', lang = 'ES', translations = null) {
+    // Si no se pasan traducciones, usar valores por defecto en español
+    const t = translations || {
+      greeting: "¡Hola! Me gustaría hacer el siguiente pedido:\n\n",
+      each: "c/u",
+      itemTotal: "Total",
+      orderTotal: "Total",
+      pickupInfoLabel: "Información de retiro:\n",
+      pickupNameLabel: "👤 Nombre:",
+      pickupTimeLabel: "🕐 Hora de retiro:"
+    };
+    
+    // Determinar locale para formateo de números
+    const locale = lang === 'PT' ? 'pt-BR' : lang === 'EN' ? 'en-US' : 'es-CL';
+    
+    let message = t.greeting;
     
     this.items.forEach((item, index) => {
       message += `${index + 1}. ${item.title}`;
@@ -192,27 +208,27 @@ class CartStore {
       if (item.cantidad > 1) {
         message += ` x${item.cantidad}`;
       }
-      message += ` - $${item.precio.toLocaleString('es-CL')}`;
+      message += ` - $${item.precio.toLocaleString(locale)}`;
       if (item.cantidad > 1) {
-        message += ` c/u (Total: $${(item.precio * item.cantidad).toLocaleString('es-CL')})`;
+        message += ` ${t.each} (${t.itemTotal}: $${(item.precio * item.cantidad).toLocaleString(locale)})`;
       }
       message += "\n";
     });
     
-    message += `\n*Total: $${this.getTotal().toLocaleString('es-CL')}*\n\n`;
+    message += `\n*${t.orderTotal}: $${this.getTotal().toLocaleString(locale)}*\n\n`;
     
     if (nombreRetiro || horaRetiro) {
-      message += "Información de retiro:\n";
+      message += t.pickupInfoLabel;
       if (nombreRetiro) {
-        message += `👤 Nombre: ${nombreRetiro}\n`;
+        message += `${t.pickupNameLabel} ${nombreRetiro}\n`;
       }
       if (horaRetiro) {
-        message += `🕐 Hora de retiro: ${horaRetiro}\n`;
+        message += `${t.pickupTimeLabel} ${horaRetiro}\n`;
       }
       message += "\n";
     }
     
-    message += "Gracias!";
+    message += lang === 'EN' ? 'Thank you!' : lang === 'PT' ? 'Obrigado!' : 'Gracias!';
     
     const encodedMessage = encodeURIComponent(message);
     const phoneNumber = whatsappNumber.replace(/[^0-9]/g, '');

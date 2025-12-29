@@ -32,16 +32,24 @@ export async function getLatestMenuId(userId: string): Promise<string | null> {
  * Genera la URL de la carta del restaurante
  * @param userId - ID del usuario
  * @param menuId - ID del menú
+ * @param lang - Idioma opcional ('ES', 'PT', 'EN')
  * @returns URL completa de la carta
  */
-export function generateMenuUrl(userId: string, menuId: string): string {
+export function generateMenuUrl(userId: string, menuId: string, lang?: string): string {
   const baseUrl = typeof window !== 'undefined' 
     ? window.location.origin.includes('localhost')
       ? 'http://localhost:5173'
       : 'https://cadorago.web.app'
     : 'https://cadorago.web.app'
   
-  return `${baseUrl}/?userID=${userId}&menuID=${menuId}`
+  let url = `${baseUrl}/?userID=${userId}&menuID=${menuId}`
+  
+  // Agregar parámetro de idioma si se proporciona
+  if (lang && ['ES', 'PT', 'EN'].includes(lang)) {
+    url += `&lang=${lang}`
+  }
+  
+  return url
 }
 
 /**

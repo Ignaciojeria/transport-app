@@ -3,8 +3,10 @@
   import Price from '../atoms/Price.svelte';
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
+  import { t, language } from '../../lib/useLanguage';
   
   const restaurantData = $derived(restaurantDataStore.value);
+  const currentLanguage = $derived($language);
   
   // Valores derivados reactivos
   const items = $derived(cartStore.items);
@@ -99,12 +101,12 @@
   
   function handleConfirmOrder() {
     if (!nombreRetiro.trim() || !horaRetiro.trim()) {
-      alert('Por favor completa todos los campos');
+      alert($t.cart.completeFields);
       return;
     }
     
     if (!validateTime(horaRetiro)) {
-      alert('Por favor ingresa una hora válida (formato: HH:MM, ejemplo: 14:30)');
+      alert($t.cart.invalidTime);
       return;
     }
     
@@ -114,7 +116,9 @@
     const url = cartStore.generateWhatsAppMessage(
       restaurantData?.businessInfo?.whatsapp || '',
       nombreRetiro.trim(),
-      horaConZona
+      horaConZona,
+      currentLanguage,
+      $t.whatsapp
     );
     window.open(url, '_blank');
     showOrderForm = false;
@@ -163,16 +167,16 @@
             </svg>
             <div class="text-left">
               <p class="text-sm sm:text-base font-semibold text-gray-800">
-                Tu pedido
+                {$t.cart.yourOrder}
               </p>
               <p class="text-xs sm:text-sm text-gray-600">
-                {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                {totalItems} {totalItems === 1 ? $t.cart.item : $t.cart.items}
               </p>
             </div>
           </button>
           
           <div class="text-right">
-            <p class="text-xs sm:text-sm text-gray-600 mb-1">Total</p>
+            <p class="text-xs sm:text-sm text-gray-600 mb-1">{$t.cart.total}</p>
             <Price price={total} className="text-lg sm:text-xl lg:text-2xl font-bold" />
           </div>
         </div>
@@ -182,12 +186,12 @@
           <button
             onclick={handleClearCart}
             class="px-3 py-2 sm:px-4 sm:py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center gap-2"
-            aria-label="Limpiar pedido"
+            aria-label={$t.cart.clearOrder}
           >
             <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-            <span class="hidden sm:inline text-sm font-medium">Limpiar</span>
+            <span class="hidden sm:inline text-sm font-medium">{$t.cart.clearOrder}</span>
           </button>
           
           <button
@@ -196,7 +200,7 @@
             aria-label="Enviar pedido por WhatsApp"
           >
             <WhatsAppIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span>Pedir por WhatsApp</span>
+            <span>{$t.cart.orderWhatsApp}</span>
           </button>
         </div>
       </div>
@@ -235,7 +239,7 @@
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-2 sm:gap-3">
                     <label for="quantity-{cartItem.title}" class="text-xs sm:text-sm text-gray-700 font-medium">
-                      Cantidad:
+                      {$t.cart.quantity}
                     </label>
                     <input
                       id="quantity-{cartItem.title}"
@@ -283,19 +287,19 @@
   >
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8">
       <h3 id="order-form-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
-        Información de Retiro
+        {$t.cart.pickupInfo}
       </h3>
       
       <div class="space-y-4 sm:space-y-5" onclick={(e) => e.stopPropagation()}>
         <div>
           <label for="nombre-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-            Nombre de quien va a retirar *
+            {$t.cart.pickupName}
           </label>
           <input
             id="nombre-retiro"
             type="text"
             bind:value={nombreRetiro}
-            placeholder="Ej: Juan Pérez"
+            placeholder={$t.cart.timeFormatExample}
             class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />
@@ -303,19 +307,19 @@
         
         <div>
           <label for="hora-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-            Hora de retiro * <span class="text-xs text-gray-500 font-normal">({timeZoneName()})</span>
+            {$t.cart.pickupTime} <span class="text-xs text-gray-500 font-normal">({timeZoneName()})</span>
           </label>
           <input
             id="hora-retiro"
             type="text"
             value={horaRetiro}
             oninput={handleTimeInput}
-            placeholder="Ej: 14:30"
+            placeholder={$t.cart.timeFormatExample}
             maxlength="5"
             class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />
-          <p class="text-xs text-gray-500 mt-1">Formato: HH:MM (24 horas, ejemplo: 14:30 para 2:30 PM)</p>
+          <p class="text-xs text-gray-500 mt-1">{$t.cart.timeFormat}</p>
         </div>
       </div>
       
@@ -324,14 +328,14 @@
           onclick={handleCancelOrder}
           class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
         >
-          Cancelar
+          {$t.cart.cancel}
         </button>
         <button
           onclick={handleConfirmOrder}
           class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
         >
           <WhatsAppIcon className="w-5 h-5" />
-          <span>Enviar Pedido</span>
+          <span>{$t.cart.sendOrder}</span>
         </button>
       </div>
     </div>
@@ -355,11 +359,11 @@
   >
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8" onclick={(e) => e.stopPropagation()}>
       <h3 id="clear-confirm-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
-        ¿Vaciar carrito?
+        {$t.cart.confirmClear}
       </h3>
       
       <p class="text-gray-600 mb-6">
-        ¿Estás seguro de que quieres vaciar el carrito? Esta acción no se puede deshacer.
+        {$t.cart.confirmClearMessage}
       </p>
       
       <div class="flex gap-3 sm:gap-4">
@@ -367,13 +371,13 @@
           onclick={cancelClearCart}
           class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
         >
-          Cancelar
+          {$t.cart.no}
         </button>
         <button
           onclick={confirmClearCart}
           class="flex-1 px-4 py-2 sm:py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
         >
-          Vaciar Carrito
+          {$t.cart.yes}
         </button>
       </div>
     </div>

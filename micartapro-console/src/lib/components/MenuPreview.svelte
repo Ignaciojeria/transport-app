@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, generateMenuUrl } from '../menuUtils'
-  import { t as tStore } from '../useLanguage'
+  import { t as tStore, language } from '../useLanguage'
 
   let menuUrl = $state<string | null>(null)
   let loading = $state(true)
@@ -11,6 +11,7 @@
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
+  const currentLanguage = $derived($language)
 
   onMount(async () => {
     if (!userId) {
@@ -28,7 +29,7 @@
         return
       }
 
-      menuUrl = generateMenuUrl(userId, menuId)
+      menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
       loading = false
     } catch (err: any) {
       console.error('Error cargando menú:', err)

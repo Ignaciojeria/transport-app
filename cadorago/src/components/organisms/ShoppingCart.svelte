@@ -3,10 +3,12 @@
   import Price from '../atoms/Price.svelte';
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
+  import { t, language } from '../../lib/useLanguage';
   
   const { className = '' } = $props();
   
   const restaurantData = $derived(restaurantDataStore.value);
+  const currentLanguage = $derived($language);
   
   // Valores derivados reactivos
   const items = $derived(cartStore.items);
@@ -25,7 +27,13 @@
   }
   
   function handleSendOrder() {
-    const url = cartStore.generateWhatsAppMessage(restaurantData?.businessInfo?.whatsapp || '');
+    const url = cartStore.generateWhatsAppMessage(
+      restaurantData?.businessInfo?.whatsapp || '',
+      '',
+      '',
+      currentLanguage,
+      $t.whatsapp
+    );
     window.open(url, '_blank');
   }
   
@@ -46,15 +54,15 @@
 <div class={`bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-6 sm:p-8 lg:p-10 ${className}`}>
   <div class="flex justify-between items-center mb-6 sm:mb-8">
     <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">
-      Carrito de Compras
+      {$t.cart.shoppingCart}
     </h2>
     {#if items.length > 0}
       <button
         onclick={handleClearCart}
         class="text-sm text-red-600 hover:text-red-800 font-medium"
-        aria-label="Vaciar carrito"
+        aria-label={$t.cart.clearOrder}
       >
-        Vaciar
+        {$t.cart.clear}
       </button>
     {/if}
   </div>
@@ -62,10 +70,10 @@
   {#if cartStore.items.length === 0}
     <div class="text-center py-8 sm:py-12">
       <p class="text-lg sm:text-xl text-gray-600">
-        Tu carrito está vacío
+        {$t.cart.emptyCart}
       </p>
       <p class="text-sm sm:text-base text-gray-500 mt-2">
-        Agrega items del menú para comenzar
+        {$t.cart.emptyCartMessage}
       </p>
     </div>
   {:else}
@@ -95,7 +103,7 @@
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-3 sm:gap-4">
               <label for="quantity-{cartItem.title}" class="text-sm sm:text-base text-gray-700 font-medium">
-                Cantidad:
+                {$t.cart.quantity}
               </label>
               <input
                 id="quantity-{cartItem.title}"
@@ -124,7 +132,7 @@
     <div class="border-t border-gray-300 pt-6 sm:pt-8">
       <div class="flex justify-between items-center mb-6 sm:mb-8">
         <span class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
-          Total:
+          {$t.cart.total}:
         </span>
         <Price price={total} className="text-xl sm:text-2xl lg:text-3xl" />
       </div>
@@ -135,7 +143,7 @@
         aria-label="Enviar pedido por WhatsApp"
       >
         <WhatsAppIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8" />
-        <span>Enviar Pedido por WhatsApp</span>
+        <span>{$t.cart.sendOrderWhatsApp}</span>
       </button>
     </div>
   {/if}
@@ -158,11 +166,11 @@
   >
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8" onclick={(e) => e.stopPropagation()}>
       <h3 id="clear-confirm-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">
-        ¿Vaciar carrito?
+        {$t.cart.confirmClear}
       </h3>
       
       <p class="text-gray-600 mb-6">
-        ¿Estás seguro de que quieres vaciar el carrito? Esta acción no se puede deshacer.
+        {$t.cart.confirmClearMessage}
       </p>
       
       <div class="flex gap-3 sm:gap-4">
@@ -170,13 +178,13 @@
           onclick={cancelClearCart}
           class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
         >
-          Cancelar
+          {$t.cart.no}
         </button>
         <button
           onclick={confirmClearCart}
           class="flex-1 px-4 py-2 sm:py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
         >
-          Vaciar Carrito
+          {$t.cart.yes}
         </button>
       </div>
     </div>

@@ -6,7 +6,7 @@
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists } from '../menuUtils'
   import { API_BASE_URL } from '../config'
-  import { t as tStore } from '../useLanguage'
+  import { t as tStore, language } from '../useLanguage'
 
   interface ChatMessage {
     id: string
@@ -28,6 +28,7 @@
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
   const session = $derived(authState.session)
+  const currentLanguage = $derived($language)
 
   // Función para obtener mensajes de bienvenida
   function getWelcomeMessages() {
@@ -49,6 +50,14 @@
 
   onMount(async () => {
     messages = getWelcomeMessages()
+    
+    // Actualizar menuUrl cuando cambie el idioma
+    $effect(() => {
+      if (menuUrl && userId && menuId) {
+        // Reconstruir la URL con el idioma actual
+        menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+      }
+    })
     
     // Cargar menuID al montar el componente
     if (userId) {
@@ -97,7 +106,7 @@
       try {
         const menuId = await getLatestMenuId(userId)
         if (menuId) {
-          menuUrl = generateMenuUrl(userId, menuId)
+          menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
         }
       } catch (err) {
         console.error('Error cargando menú:', err)
@@ -208,7 +217,7 @@
           
           // Abrir automáticamente la vista previa para mostrar los cambios
           if (!menuUrl) {
-            menuUrl = generateMenuUrl(userId, menuId)
+            menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
           }
           showPreview = true
         } catch (pollError: any) {

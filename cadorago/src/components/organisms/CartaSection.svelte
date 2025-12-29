@@ -1,5 +1,6 @@
 <script>
   import MenuSection from '../molecules/MenuSection.svelte';
+  import { t } from '../../lib/useLanguage';
   
   const { carta = [], className = '' } = $props();
   
@@ -27,7 +28,7 @@
     {/each}
   {:else}
     <p class="text-lg sm:text-xl lg:text-2xl text-gray-500 italic">
-      No hay elementos
+      {$t.menu.noItems}
     </p>
   {/if}
 </section>

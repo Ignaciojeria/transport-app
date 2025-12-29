@@ -1,4 +1,6 @@
 <script>
+  import { t } from '../../lib/useLanguage';
+  
   const { horarios = [], className = '' } = $props();
   
   // Filtrar horarios que tengan contenido (no vacíos)
@@ -21,7 +23,7 @@
     </ul>
   {:else}
     <p class="text-lg sm:text-xl lg:text-2xl text-gray-500 italic">
-      No especificado
+      {$t.hours.notSpecified}
     </p>
   {/if}
 </section>
