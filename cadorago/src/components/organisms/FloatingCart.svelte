@@ -2,9 +2,9 @@
   import { cartStore } from '../../stores/cartStore.svelte.js';
   import Price from '../atoms/Price.svelte';
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
-  import { getRestaurantData } from '../../services/restaurantData.js';
+  import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   
-  const restaurantData = getRestaurantData();
+  const restaurantData = $derived(restaurantDataStore.value);
   
   // Valores derivados reactivos
   const items = $derived(cartStore.items);
@@ -112,7 +112,7 @@
     const horaConZona = `${horaFormateada} (${timeZoneName()})`;
     
     const url = cartStore.generateWhatsAppMessage(
-      restaurantData.businessInfo.whatsapp,
+      restaurantData?.businessInfo?.whatsapp || '',
       nombreRetiro.trim(),
       horaConZona
     );

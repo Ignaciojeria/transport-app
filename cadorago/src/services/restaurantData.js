@@ -1,67 +1,66 @@
 /**
  * Servicio de datos del restaurante Cadorago
  */
-export const restaurantData = {
-  "id": "f8679ed4-1b19-49ff-9d97-0b51967a86bd",
-  "coverImage":"https://storage.googleapis.com/micartapro-menus/menus/01KCW67YKSV455GBVDT88S4072/gallery/portadav2.webp",
-  "footerImage":"https://storage.googleapis.com/micartapro-menus/menus/01KCW67YKSV455GBVDT88S4072/gallery/logov2.webp",
-  "businessInfo": {
-    "businessName": "cadorago",
-    "whatsapp": "+56957857558",
-    "businessHours": [
-      "Lunes a Martes: 9h a 16h",
-      "Miércoles, Jueves, Sábado y Domingo: hasta las 20h",
-      "Viernes: Cerrado"
-    ]
-  },
-  "menu": [
-    {
-      "title": "Menú",
-      "items": [
-        {
-          "title": "Pollo a la plancha",
-          "sides": [
-            { "name": "Con puré", "price": 3000 },
-            { "name": "Con arroz", "price": 3000 }
-          ]
-        },
-        {
-          "title": "Completo italiano",
-          "price": 2500
-        },
-        {
-          "title": "Hamburguesa",
-          "sides": [
-            { "name": "Sola", "price": 4100 }
-          ]
-        },
-        {
-          "title": "chacareros",
-          "price": 7000
-        }
-      ]
-    },
-    {
-      "title": "Postres",
-      "items": [
-        {
-          "title": "mote con huesillo",
-          "price": 4000
-        },
-        {
-          "title": "leche asada",
-          "price": 3000
-        }
-      ]
-    }
-  ]
-};
+const BASE_URL = "https://storage.googleapis.com/micartapro-menus";
+
 
 /**
- * Obtiene los datos del restaurante
- * @returns {Object} Datos del restaurante
+ * Obtiene el nombre del archivo desde latest.json
+ * @param {string} userID - ID del usuario
+ * @param {string} menuID - ID del menú
+ * @returns {Promise<string>} Nombre del archivo JSON
  */
-export function getRestaurantData() {
-  return restaurantData;
+async function getLatestFilename(userID, menuID) {
+  const latestUrl = `${BASE_URL}/${userID}/menus/${menuID}/latest.json`;
+  const response = await fetch(latestUrl);
+  
+  if (!response.ok) {
+    throw new Error(`Error al obtener latest.json: ${response.status} ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.filename;
+}
+
+/**
+ * Obtiene los datos del restaurante desde Google Cloud Storage
+ * @param {string} userID - ID del usuario
+ * @param {string} menuID - ID del menú
+ * @returns {Promise<Object>} Datos del restaurante
+ */
+export async function fetchRestaurantData(userID, menuID) {
+  try {
+    // Primero obtenemos el nombre del archivo desde latest.json
+    const filename = await getLatestFilename(userID, menuID);
+    
+    // Luego obtenemos los datos del restaurante desde el archivo referenciado
+    const dataUrl = `${BASE_URL}/${userID}/menus/${menuID}/${filename}`;
+    const response = await fetch(dataUrl);
+    
+    if (!response.ok) {
+      throw new Error(`Error al obtener datos del restaurante: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error al cargar datos del restaurante:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtiene los parámetros userID y menuID desde la URL
+ * @returns {{userID: string | null, menuID: string | null}}
+ */
+export function getUrlParams() {
+  if (typeof window === 'undefined') {
+    return { userID: null, menuID: null };
+  }
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  return {
+    userID: urlParams.get('userID'),
+    menuID: urlParams.get('menuID')
+  };
 }
 
