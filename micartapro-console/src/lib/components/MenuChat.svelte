@@ -196,9 +196,23 @@
     setTimeout(() => {
       const container = document.getElementById('messages-container')
       if (container) {
-        container.scrollTop = container.scrollHeight
+        // Scroll suave al final, con un pequeño offset para asegurar visibilidad
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        })
       }
     }, 100)
+  }
+  
+  // Función para hacer scroll cuando el teclado aparece en móviles
+  function handleInputFocus() {
+    // En móviles, hacer scroll para asegurar que el input sea visible
+    if (window.innerWidth <= 768) {
+      setTimeout(() => {
+        scrollToBottom()
+      }, 300) // Esperar a que el teclado aparezca
+    }
   }
 
   $effect(() => {
@@ -258,7 +272,7 @@
   <!-- Messages Container -->
   <div 
     id="messages-container"
-    class="flex-1 overflow-y-auto px-4 py-6 space-y-6"
+    class="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6 space-y-6"
   >
     {#if messages.length === 0}
       <div class="flex flex-col items-center justify-center h-full text-center px-4">
@@ -354,9 +368,9 @@
   </div>
 
   <!-- Chat Input -->
-  <div class="border-t border-gray-200 bg-white px-4 py-3">
+  <div class="border-t border-gray-200 bg-white px-4 py-3 sticky bottom-0 z-10 safe-area-inset-bottom">
     <div class="max-w-3xl mx-auto">
-      <ChatInput onSend={handleSendMessage} disabled={isLoading} />
+      <ChatInput onSend={handleSendMessage} disabled={isLoading} onFocus={handleInputFocus} />
     </div>
   </div>
 </div>
@@ -414,6 +428,19 @@
 <style>
   #messages-container {
     scroll-behavior: smooth;
+  }
+  
+  /* Safe area para dispositivos con notch */
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0.75rem);
+  }
+  
+  /* Asegurar que el input sea visible en móviles */
+  @media (max-width: 768px) {
+    /* Aumentar padding inferior en móviles para que el input no oculte contenido */
+    #messages-container {
+      padding-bottom: 6rem;
+    }
   }
 </style>
 

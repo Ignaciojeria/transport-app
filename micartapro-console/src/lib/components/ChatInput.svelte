@@ -1,8 +1,14 @@
 <script lang="ts">
-  let { onSend, disabled = false }: { onSend: (message: string) => void, disabled?: boolean } = $props()
+  let { onSend, disabled = false, onFocus }: { onSend: (message: string) => void, disabled?: boolean, onFocus?: () => void } = $props()
 
   let inputValue = $state('')
   let textareaRef: HTMLTextAreaElement
+  
+  function handleFocus() {
+    if (onFocus) {
+      onFocus()
+    }
+  }
 
   function handleSubmit() {
     if (inputValue.trim() && !disabled) {
@@ -39,6 +45,7 @@
     bind:value={inputValue}
     onkeydown={handleKeyDown}
     oninput={adjustTextareaHeight}
+    onfocus={handleFocus}
     placeholder="Escribe tu menú y precios aquí..."
     disabled={disabled}
     class="flex-1 resize-none border-0 focus:ring-0 focus:outline-none py-3 px-4 text-gray-900 placeholder-gray-400 bg-transparent max-h-[200px] overflow-y-auto"
