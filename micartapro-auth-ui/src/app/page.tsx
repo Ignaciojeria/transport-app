@@ -20,6 +20,9 @@ export default function LoginPage() {
 
   // Redirigir si el usuario ya está autenticado (solo si no viene del callback)
   useEffect(() => {
+    // No ejecutar hasta que el idioma esté cargado
+    if (langLoading) return
+
     const handleSuccessfulAuth = async () => {
       // No redirigir si estamos en la página de callback
       if (window.location.pathname === '/auth/callback') {
@@ -28,6 +31,20 @@ export default function LoginPage() {
       
       if (!authLoading && user && session) {
         try {
+          // Leer el idioma directamente del query param o localStorage para asegurar que esté actualizado
+          const urlParams = new URLSearchParams(window.location.search)
+          const langParam = urlParams.get('lang') as Language
+          const savedLang = typeof window !== 'undefined' 
+            ? localStorage.getItem('preferred-language') as Language
+            : null
+          
+          // Determinar el idioma a usar (prioridad: query param > localStorage > language del hook)
+          const currentLanguage = (langParam && ['EN', 'ES', 'PT'].includes(langParam))
+            ? langParam
+            : (savedLang && ['EN', 'ES', 'PT'].includes(savedLang))
+            ? savedLang
+            : language
+
           // NOTA: No creamos menuID aquí porque ya se crea en el callback
           // Solo redirigimos si el usuario ya está autenticado
           
@@ -64,9 +81,10 @@ export default function LoginPage() {
           // Detectar si estamos en desarrollo local
           const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
           const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
-          // Preservar el parámetro de idioma en la redirección
-          const redirectUrl = `${baseUrl}?lang=${language}#auth=${encodedAuth}`
+          // Preservar el parámetro de idioma en la redirección (usar currentLanguage que leímos directamente)
+          const redirectUrl = `${baseUrl}?lang=${currentLanguage}#auth=${encodedAuth}`
           
+          console.log('🌐 Idioma detectado:', currentLanguage)
           console.log('🚀 Redirigiendo a:', redirectUrl)
           window.location.href = redirectUrl
 
@@ -78,7 +96,7 @@ export default function LoginPage() {
     }
 
     handleSuccessfulAuth()
-  }, [user, session, authLoading])
+  }, [user, session, authLoading, language, langLoading])
 
   const handleGoogleLogin = async () => {
     setIsLoading(true)

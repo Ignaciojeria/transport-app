@@ -16,6 +16,7 @@ import { motion } from "framer-motion"
 import { useLanguage } from "@/lib/useLanguage"
 import { LanguageSelector } from "@/components/LanguageSelector"
 import { openWhatsAppQuote } from "@/lib/whatsapp"
+import { getAuthUiUrl } from "@/lib/utils"
 
 export default function PricingPage() {
   const { language, changeLanguage, t, isLoading, availableLanguages, languageNames, languageFlags } = useLanguage()
@@ -60,7 +61,7 @@ export default function PricingPage() {
               />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => window.location.href = `https://auth.micartapro.com?lang=${language}`}
+                onClick={() => window.location.href = `${getAuthUiUrl()}?lang=${language}`}
               >
                 {t.nav.signIn}
               </Button>
@@ -263,7 +264,7 @@ export default function PricingPage() {
             <Button 
               size="lg" 
               className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-              onClick={() => window.location.href = 'https://auth.micartapro.com'}
+              onClick={() => window.location.href = `${getAuthUiUrl()}?lang=${language}`}
             >
               {t.pricing.cta.startFreeButton}
               <ArrowRight className="ml-2 h-5 w-5" />

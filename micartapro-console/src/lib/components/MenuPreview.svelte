@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, generateMenuUrl } from '../menuUtils'
+  import { t as tStore } from '../useLanguage'
 
   let menuUrl = $state<string | null>(null)
   let loading = $state(true)
@@ -13,7 +14,7 @@
 
   onMount(async () => {
     if (!userId) {
-      error = 'Usuario no autenticado'
+      error = $tStore.preview.error
       loading = false
       return
     }
@@ -22,7 +23,7 @@
       const menuId = await getLatestMenuId(userId)
       
       if (!menuId) {
-        error = 'No se encontró un menú para este usuario. Crea uno primero.'
+        error = $tStore.preview.errorNoMenu
         loading = false
         return
       }
@@ -31,7 +32,7 @@
       loading = false
     } catch (err: any) {
       console.error('Error cargando menú:', err)
-      error = err.message || 'Error al cargar el menú'
+      error = err.message || $tStore.preview.errorLoading
       loading = false
     }
   })
@@ -61,7 +62,7 @@
     <div class="flex-1 flex items-center justify-center">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-        <p class="text-gray-600">Cargando tu carta...</p>
+        <p class="text-gray-600">{$tStore.preview.loading}</p>
       </div>
     </div>
   {:else if error}
@@ -72,7 +73,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">Error</h3>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">{$tStore.preview.error}</h3>
         <p class="text-gray-600 mb-4">{error}</p>
       </div>
     </div>
@@ -80,42 +81,42 @@
     <!-- Header con enlace -->
     <div class="bg-white border-b border-gray-200 px-4 py-3">
       <div class="max-w-4xl mx-auto">
-        <h2 class="text-lg font-semibold text-gray-900 mb-3">Tu Carta Digital</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">{$tStore.preview.title}</h2>
         
         <!-- Enlace compartible -->
         <div class="flex items-center gap-2">
           <div class="flex-1 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-            <p class="text-xs text-gray-500 mb-1">Enlace de tu carta:</p>
+            <p class="text-xs text-gray-500 mb-1">{$tStore.preview.linkLabel}</p>
             <p class="text-sm text-gray-900 font-mono break-all">{menuUrl}</p>
           </div>
           
           <button
             onclick={copyToClipboard}
             class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
-            title="Copiar enlace"
+            title={$tStore.preview.copyButton}
           >
             {#if copySuccess}
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              <span class="text-sm">¡Copiado!</span>
+              <span class="text-sm">{$tStore.preview.copied}</span>
             {:else}
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              <span class="text-sm">Copiar</span>
+              <span class="text-sm">{$tStore.preview.copyButton}</span>
             {/if}
           </button>
           
           <button
             onclick={openInNewTab}
             class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
-            title="Abrir en nueva pestaña"
+            title={$tStore.preview.openButton}
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>
-            <span class="text-sm">Abrir</span>
+            <span class="text-sm">{$tStore.preview.openButton}</span>
           </button>
         </div>
       </div>

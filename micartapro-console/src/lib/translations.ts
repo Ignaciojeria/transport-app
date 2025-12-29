@@ -1,0 +1,209 @@
+export type Language = 'EN' | 'ES' | 'PT'
+
+export interface Translations {
+  // App.svelte
+  app: {
+    loading: string
+    notAuthenticated: string
+    pleaseSignIn: string
+    signInLink: string
+  }
+  
+  // MenuChat.svelte
+  chat: {
+    welcomeTitle: string
+    welcomeSubtitle: string
+    previewButton: string
+    previewTitle: string
+    copyLink: string
+    linkCopied: string
+    loadingPreview: string
+    placeholder: string
+    sendButton: string
+    
+    // Quick actions
+    createMenu: string
+    organizeDishes: string
+    viewPrices: string
+    moreOptions: string
+    
+    // Messages
+    welcomeMessage1: string
+    welcomeMessage2: string
+    errorNoSession: string
+    errorNoMenu: string
+    errorProcessing: string
+    errorPolling: string
+    successUpdated: string
+    
+    // Quick action messages (sent to backend)
+    createMenuMessage: string
+    organizeDishesMessage: string
+    viewPricesMessage: string
+    moreOptionsMessage: string
+  }
+  
+  // MenuPreview.svelte
+  preview: {
+    loading: string
+    error: string
+    errorNoMenu: string
+    errorLoading: string
+    title: string
+    linkLabel: string
+    copyButton: string
+    copied: string
+    openButton: string
+  }
+}
+
+export const translations: Record<Language, Translations> = {
+  ES: {
+    app: {
+      loading: 'Cargando...',
+      notAuthenticated: 'No autenticado',
+      pleaseSignIn: 'Por favor, inicia sesión en',
+      signInLink: 'micartapro-auth-ui'
+    },
+    chat: {
+      welcomeTitle: '¿En qué puedo ayudarte?',
+      welcomeSubtitle: 'Escribe tu menú y precios, y yo armaré tu carta digital',
+      previewButton: 'Vista Previa',
+      previewTitle: 'Vista Previa de tu Carta',
+      copyLink: 'Copiar enlace',
+      linkCopied: '¡Copiado!',
+      loadingPreview: 'Cargando vista previa...',
+      placeholder: 'Escribe tu menú y precios aquí...',
+      sendButton: 'Enviar',
+      createMenu: 'Crear menú',
+      organizeDishes: 'Organizar platos',
+      viewPrices: 'Ver precios',
+      moreOptions: 'Más',
+      welcomeMessage1: '¡Hola! 👋 Soy tu asistente para crear menús digitales. Puedo ayudarte a armar tu carta de manera profesional.',
+      welcomeMessage2: 'Simplemente escribe tu menú y precios, y yo me encargaré de organizarlo y formatearlo para crear una carta atractiva.',
+      errorNoSession: 'Error: No hay sesión activa. Por favor, inicia sesión nuevamente.',
+      errorNoMenu: 'Error: No se encontró un menú. Por favor, crea un menú primero.',
+      errorProcessing: 'Error al procesar tu mensaje: {message}',
+      errorPolling: 'El mensaje fue procesado, pero hubo un problema al verificar la actualización: {message}',
+      successUpdated: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
+      createMenuMessage: 'Quiero crear un menú para un restaurante',
+      organizeDishesMessage: 'Necesito ayuda para organizar mis platos',
+      viewPricesMessage: '¿Cómo funciona el sistema de precios?',
+      moreOptionsMessage: 'Más opciones'
+    },
+    preview: {
+      loading: 'Cargando tu carta...',
+      error: 'Error',
+      errorNoMenu: 'No se encontró un menú para este usuario. Crea uno primero.',
+      errorLoading: 'Error al cargar el menú',
+      title: 'Tu Carta Digital',
+      linkLabel: 'Enlace de tu carta:',
+      copyButton: 'Copiar',
+      copied: '¡Copiado!',
+      openButton: 'Abrir'
+    }
+  },
+  PT: {
+    app: {
+      loading: 'Carregando...',
+      notAuthenticated: 'Não autenticado',
+      pleaseSignIn: 'Por favor, faça login em',
+      signInLink: 'micartapro-auth-ui'
+    },
+    chat: {
+      welcomeTitle: 'Como posso ajudá-lo?',
+      welcomeSubtitle: 'Escreva seu cardápio e preços, e eu criarei sua carta digital',
+      previewButton: 'Visualizar',
+      previewTitle: 'Visualização da sua Carta',
+      copyLink: 'Copiar link',
+      linkCopied: 'Copiado!',
+      loadingPreview: 'Carregando visualização...',
+      placeholder: 'Escreva seu cardápio e preços aqui...',
+      sendButton: 'Enviar',
+      createMenu: 'Criar cardápio',
+      organizeDishes: 'Organizar pratos',
+      viewPrices: 'Ver preços',
+      moreOptions: 'Mais',
+      welcomeMessage1: 'Olá! 👋 Sou seu assistente para criar cardápios digitais. Posso ajudá-lo a criar sua carta de forma profissional.',
+      welcomeMessage2: 'Simplesmente escreva seu cardápio e preços, e eu me encarregarei de organizá-los e formatá-los para criar uma carta atraente.',
+      errorNoSession: 'Erro: Não há sessão ativa. Por favor, faça login novamente.',
+      errorNoMenu: 'Erro: Nenhum cardápio encontrado. Por favor, crie um primeiro.',
+      errorProcessing: 'Erro ao processar sua mensagem: {message}',
+      errorPolling: 'A mensagem foi processada, mas houve um problema ao verificar a atualização: {message}',
+      successUpdated: 'Sua carta foi atualizada com sucesso! O cardápio foi salvo com as alterações solicitadas.',
+      createMenuMessage: 'Quero criar um cardápio para um restaurante',
+      organizeDishesMessage: 'Preciso de ajuda para organizar meus pratos',
+      viewPricesMessage: 'Como funciona o sistema de preços?',
+      moreOptionsMessage: 'Mais opções'
+    },
+    preview: {
+      loading: 'Carregando sua carta...',
+      error: 'Erro',
+      errorNoMenu: 'Nenhum cardápio encontrado para este usuário. Crie um primeiro.',
+      errorLoading: 'Erro ao carregar o cardápio',
+      title: 'Sua Carta Digital',
+      linkLabel: 'Link da sua carta:',
+      copyButton: 'Copiar',
+      copied: 'Copiado!',
+      openButton: 'Abrir'
+    }
+  },
+  EN: {
+    app: {
+      loading: 'Loading...',
+      notAuthenticated: 'Not authenticated',
+      pleaseSignIn: 'Please sign in at',
+      signInLink: 'micartapro-auth-ui'
+    },
+    chat: {
+      welcomeTitle: 'How can I help you?',
+      welcomeSubtitle: 'Write your menu and prices, and I will create your digital menu',
+      previewButton: 'Preview',
+      previewTitle: 'Preview of your Menu',
+      copyLink: 'Copy link',
+      linkCopied: 'Copied!',
+      loadingPreview: 'Loading preview...',
+      placeholder: 'Write your menu and prices here...',
+      sendButton: 'Send',
+      createMenu: 'Create menu',
+      organizeDishes: 'Organize dishes',
+      viewPrices: 'View prices',
+      moreOptions: 'More',
+      welcomeMessage1: 'Hello! 👋 I am your assistant for creating digital menus. I can help you create your menu professionally.',
+      welcomeMessage2: 'Simply write your menu and prices, and I will take care of organizing and formatting them to create an attractive menu.',
+      errorNoSession: 'Error: No active session. Please sign in again.',
+      errorNoMenu: 'Error: No menu found. Please create one first.',
+      errorProcessing: 'Error processing your message: {message}',
+      errorPolling: 'The message was processed, but there was a problem verifying the update: {message}',
+      successUpdated: 'Your menu has been successfully updated! The menu has been saved with the requested changes.',
+      createMenuMessage: 'I want to create a menu for a restaurant',
+      organizeDishesMessage: 'I need help organizing my dishes',
+      viewPricesMessage: 'How does the pricing system work?',
+      moreOptionsMessage: 'More options'
+    },
+    preview: {
+      loading: 'Loading your menu...',
+      error: 'Error',
+      errorNoMenu: 'No menu found for this user. Create one first.',
+      errorLoading: 'Error loading menu',
+      title: 'Your Digital Menu',
+      linkLabel: 'Your menu link:',
+      copyButton: 'Copy',
+      copied: 'Copied!',
+      openButton: 'Open'
+    }
+  }
+}
+
+export const languageNames: Record<Language, string> = {
+  ES: 'Español',
+  PT: 'Português',
+  EN: 'English'
+}
+
+export const languageFlags: Record<Language, string> = {
+  ES: '🇪🇸',
+  PT: '🇧🇷',
+  EN: '🇺🇸'
+}
+

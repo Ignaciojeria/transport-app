@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useLanguage } from '@/lib/useLanguage'
+import { Language } from '@/lib/translations'
 import { getOrCreateMenuId } from '@/lib/menuId'
 import '@/lib/diagnoseMenuId' // Cargar función de diagnóstico en window
 
@@ -21,8 +22,25 @@ export default function AuthCallback() {
   }, [langLoading, t])
 
   useEffect(() => {
+    // No ejecutar hasta que el idioma esté cargado
+    if (langLoading) return
+
     const handleAuthCallback = async () => {
       try {
+        // Leer el idioma directamente del query param o localStorage para asegurar que esté actualizado
+        const urlParams = new URLSearchParams(window.location.search)
+        const langParam = urlParams.get('lang') as Language
+        const savedLang = typeof window !== 'undefined' 
+          ? localStorage.getItem('preferred-language') as Language
+          : null
+        
+        // Determinar el idioma a usar (prioridad: query param > localStorage > language del hook)
+        const currentLanguage = (langParam && ['EN', 'ES', 'PT'].includes(langParam))
+          ? langParam
+          : (savedLang && ['EN', 'ES', 'PT'].includes(savedLang))
+          ? savedLang
+          : language
+
         // Supabase maneja automáticamente el callback de OAuth
         // Solo necesitamos verificar si hay una sesión
         const { data: { session }, error } = await supabase.auth.getSession()
@@ -97,8 +115,11 @@ export default function AuthCallback() {
           // Detectar si estamos en desarrollo local
           const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
           const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
-          // Preservar el parámetro de idioma en la redirección
-          const redirectUrl = `${baseUrl}?lang=${language}#auth=${encodedAuth}`
+          // Preservar el parámetro de idioma en la redirección (usar currentLanguage que leímos directamente)
+          const redirectUrl = `${baseUrl}?lang=${currentLanguage}#auth=${encodedAuth}`
+          
+          console.log('🌐 Idioma detectado:', currentLanguage)
+          console.log('🚀 Redirigiendo a:', redirectUrl)
           
           // Redirigir directamente a console después de un breve delay
           setTimeout(() => {
@@ -121,7 +142,7 @@ export default function AuthCallback() {
     }
 
     handleAuthCallback()
-  }, [router, t, language])
+  }, [router, t, language, langLoading])
 
   // Show loading while language is loading
   if (langLoading) {

@@ -6,6 +6,7 @@
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated } from '../menuUtils'
   import { API_BASE_URL } from '../config'
+  import { t as tStore } from '../useLanguage'
 
   interface ChatMessage {
     id: string
@@ -20,28 +21,32 @@
   let showPreview = $state(false)
   let menuUrl = $state<string | null>(null)
   let menuId = $state<string | null>(null)
+  let copySuccess = $state(false)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
   const session = $derived(authState.session)
 
-  const welcomeMessages = [
-    {
-      id: 'welcome-1',
-      role: 'assistant' as const,
-      content: '¡Hola! 👋 Soy tu asistente para crear menús digitales. Puedo ayudarte a armar tu carta de manera profesional.',
-      timestamp: new Date()
-    },
-    {
-      id: 'welcome-2',
-      role: 'assistant' as const,
-      content: 'Simplemente escribe tu menú y precios, y yo me encargaré de organizarlo y formatearlo para crear una carta atractiva.',
-      timestamp: new Date()
-    }
-  ]
+  // Función para obtener mensajes de bienvenida
+  function getWelcomeMessages() {
+    return [
+      {
+        id: 'welcome-1',
+        role: 'assistant' as const,
+        content: $tStore.chat.welcomeMessage1,
+        timestamp: new Date()
+      },
+      {
+        id: 'welcome-2',
+        role: 'assistant' as const,
+        content: $tStore.chat.welcomeMessage2,
+        timestamp: new Date()
+      }
+    ]
+  }
 
   onMount(async () => {
-    messages = [...welcomeMessages]
+    messages = getWelcomeMessages()
     
     // Cargar menuID al montar el componente
     if (userId) {
@@ -76,15 +81,28 @@
     showPreview = true
   }
 
+  function copyToClipboard() {
+    if (!menuUrl) return
+
+    navigator.clipboard.writeText(menuUrl).then(() => {
+      copySuccess = true
+      setTimeout(() => {
+        copySuccess = false
+      }, 2000)
+    }).catch((err) => {
+      console.error('Error copiando al portapapeles:', err)
+    })
+  }
+
   async function handleSendMessage(content: string) {
     if (!content.trim() || isLoading) return
 
     // Validar que tenemos los datos necesarios
-    if (!session?.access_token) {
+      if (!session?.access_token) {
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'Error: No hay sesión activa. Por favor, inicia sesión nuevamente.',
+        content: $tStore.chat.errorNoSession,
         timestamp: new Date()
       }
       messages = [...messages, errorMessage]
@@ -95,7 +113,7 @@
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: 'Error: No se encontró un menú. Por favor, crea un menú primero.',
+        content: $tStore.chat.errorNoMenu,
         timestamp: new Date()
       }
       messages = [...messages, errorMessage]
@@ -157,7 +175,7 @@
           const successMessage: ChatMessage = {
             id: `success-${Date.now()}`,
             role: 'assistant',
-            content: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
+            content: $tStore.chat.successUpdated,
             timestamp: new Date()
           }
           messages = [...messages, successMessage]
@@ -174,7 +192,7 @@
           const errorMessage: ChatMessage = {
             id: `poll-error-${Date.now()}`,
             role: 'assistant',
-            content: `El mensaje fue procesado, pero hubo un problema al verificar la actualización: ${pollError.message || 'Error desconocido'}`,
+            content: $tStore.chat.errorPolling.replace('{message}', pollError.message || 'Error desconocido'),
             timestamp: new Date()
           }
           messages = [...messages, errorMessage]
@@ -188,7 +206,7 @@
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: `Error al procesar tu mensaje: ${error.message || 'Error desconocido'}`,
+        content: $tStore.chat.errorProcessing.replace('{message}', error.message || 'Error desconocido'),
         timestamp: new Date()
       }
       messages = [...messages, errorMessage]
@@ -260,7 +278,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
         </svg>
-        <span class="text-xs font-medium hidden sm:inline">Vista Previa</span>
+        <span class="text-xs font-medium hidden sm:inline">{$tStore.chat.previewButton}</span>
       </button>
       <button class="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="Perfil">
         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,10 +307,10 @@
             </svg>
           </div>
           <h2 class="text-2xl font-bold text-gray-900 mb-2">
-            ¿En qué puedo ayudarte?
+            {$tStore.chat.welcomeTitle}
           </h2>
           <p class="text-gray-600 mb-8">
-            Escribe tu menú y precios, y yo armaré tu carta digital
+            {$tStore.chat.welcomeSubtitle}
           </p>
         </div>
 
@@ -300,50 +318,50 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl">
           <button 
             class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage('Quiero crear un menú para un restaurante')}
+            onclick={() => handleSendMessage($tStore.chat.createMenuMessage)}
           >
             <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-green-200 transition-colors">
               <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <p class="text-sm font-medium text-gray-900">Crear menú</p>
+            <p class="text-sm font-medium text-gray-900">{$tStore.chat.createMenu}</p>
           </button>
 
           <button 
             class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage('Necesito ayuda para organizar mis platos')}
+            onclick={() => handleSendMessage($tStore.chat.organizeDishesMessage)}
           >
             <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-orange-200 transition-colors">
               <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p class="text-sm font-medium text-gray-900">Organizar platos</p>
+            <p class="text-sm font-medium text-gray-900">{$tStore.chat.organizeDishes}</p>
           </button>
 
           <button 
             class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage('¿Cómo funciona el sistema de precios?')}
+            onclick={() => handleSendMessage($tStore.chat.viewPricesMessage)}
           >
             <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
               <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p class="text-sm font-medium text-gray-900">Ver precios</p>
+            <p class="text-sm font-medium text-gray-900">{$tStore.chat.viewPrices}</p>
           </button>
 
           <button 
             class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage('Más opciones')}
+            onclick={() => handleSendMessage($tStore.chat.moreOptionsMessage)}
           >
             <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-purple-200 transition-colors">
               <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
               </svg>
             </div>
-            <p class="text-sm font-medium text-gray-900">Más</p>
+            <p class="text-sm font-medium text-gray-900">{$tStore.chat.moreOptions}</p>
           </button>
         </div>
       </div>
@@ -394,8 +412,27 @@
       onclick={(e) => e.stopPropagation()}
     >
       <!-- Header del Modal -->
-      <div class="flex items-center justify-between p-4 border-b border-gray-200">
-        <h2 class="text-lg font-semibold text-gray-900">Vista Previa de tu Carta</h2>
+      <div class="flex items-center justify-between p-4 border-b border-gray-200 gap-4">
+        <h2 class="text-lg font-semibold text-gray-900 flex-1">{$tStore.chat.previewTitle}</h2>
+        {#if menuUrl}
+          <button
+            onclick={copyToClipboard}
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap"
+            title={$tStore.chat.copyLink}
+          >
+            {#if copySuccess}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm">{$tStore.chat.linkCopied}</span>
+            {:else}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span class="text-sm">{$tStore.chat.copyLink}</span>
+            {/if}
+          </button>
+        {/if}
         <button
           onclick={() => showPreview = false}
           class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -422,7 +459,7 @@
           <div class="flex items-center justify-center h-full">
             <div class="text-center">
               <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-              <p class="text-gray-600">Cargando vista previa...</p>
+              <p class="text-gray-600">{$tStore.chat.loadingPreview}</p>
             </div>
           </div>
         {/if}
