@@ -17,6 +17,7 @@ import (
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
+	"github.com/rs/cors"
 )
 
 func init() {
@@ -31,7 +32,16 @@ type Server struct {
 }
 
 func New(conf configuration.Conf, requestLoggerMiddleware RequestLoggerMiddleware) Server {
-	s := fuego.NewServer(fuego.WithAddr(":" + conf.PORT))
+	// CORS debe ir antes del logger para manejar preflight requests
+	corsMiddleware := NewCORSMiddleware()
+
+	s := fuego.NewServer(
+		fuego.WithAddr(":"+conf.PORT),
+		fuego.WithGlobalMiddlewares(
+			corsMiddleware,
+			requestLoggerMiddleware,
+		),
+	)
 	server := Server{
 		Manager: s,
 		conf:    conf,
@@ -50,8 +60,6 @@ func New(conf configuration.Conf, requestLoggerMiddleware RequestLoggerMiddlewar
 		cancel()
 	}()
 	fuego.WithoutLogger()(s)
-
-	fuego.Use(s, requestLoggerMiddleware)
 	server.healthCheck()
 	return server
 }
@@ -165,4 +173,38 @@ func clientIP(r *http.Request) string {
 	}
 
 	return r.RemoteAddr
+}
+
+type CORSMiddleware func(http.Handler) http.Handler
+
+func NewCORSMiddleware() CORSMiddleware {
+	// Configurar CORS con la librería rs/cors
+	// En desarrollo, permitir todos los orígenes usando AllowOriginFunc
+	c := cors.New(cors.Options{
+		// Permitir cualquier origen en desarrollo
+		AllowOriginFunc: func(origin string) bool {
+			// Permitir todos los orígenes en desarrollo
+			return true
+		},
+		AllowedMethods: []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodDelete,
+			http.MethodOptions,
+			http.MethodPatch,
+		},
+		AllowedHeaders: []string{
+			"Content-Type",
+			"Authorization",
+			"Idempotency-Key",
+			"X-Requested-With",
+		},
+		AllowCredentials: true,
+		MaxAge:           3600,
+		// Habilitar debug para ver qué está pasando
+		Debug: false,
+	})
+
+	return c.Handler
 }

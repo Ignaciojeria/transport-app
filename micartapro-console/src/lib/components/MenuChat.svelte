@@ -1,7 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { v7 as uuidv7 } from 'uuid'
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
+  import { authState } from '../auth.svelte'
+  import { getLatestMenuId, generateMenuUrl } from '../menuUtils'
+  import { API_BASE_URL } from '../config'
 
   interface ChatMessage {
     id: string
@@ -13,6 +17,13 @@
   let messages: ChatMessage[] = $state([])
   let isLoading = $state(false)
   let logoError = $state(false)
+  let showPreview = $state(false)
+  let menuUrl = $state<string | null>(null)
+  let menuId = $state<string | null>(null)
+
+  const user = $derived(authState.user)
+  const userId = $derived(user?.id || '')
+  const session = $derived(authState.session)
 
   const welcomeMessages = [
     {
@@ -29,12 +40,67 @@
     }
   ]
 
-  onMount(() => {
+  onMount(async () => {
     messages = [...welcomeMessages]
+    
+    // Cargar menuID al montar el componente
+    if (userId) {
+      try {
+        const id = await getLatestMenuId(userId)
+        if (id) {
+          menuId = id
+        }
+      } catch (err) {
+        console.error('Error cargando menuID:', err)
+      }
+    }
   })
 
-  function handleSendMessage(content: string) {
+  async function togglePreview() {
+    if (showPreview) {
+      showPreview = false
+      return
+    }
+
+    if (!menuUrl && userId) {
+      try {
+        const menuId = await getLatestMenuId(userId)
+        if (menuId) {
+          menuUrl = generateMenuUrl(userId, menuId)
+        }
+      } catch (err) {
+        console.error('Error cargando menú:', err)
+      }
+    }
+    
+    showPreview = true
+  }
+
+  async function handleSendMessage(content: string) {
     if (!content.trim() || isLoading) return
+
+    // Validar que tenemos los datos necesarios
+    if (!session?.access_token) {
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Error: No hay sesión activa. Por favor, inicia sesión nuevamente.',
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
+      return
+    }
+
+    if (!menuId) {
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Error: No se encontró un menú. Por favor, crea un menú primero.',
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
+      return
+    }
 
     // Agregar mensaje del usuario
     const userMessage: ChatMessage = {
@@ -45,25 +111,57 @@
     }
     messages = [...messages, userMessage]
 
-    // Simular procesamiento
+    // Mostrar indicador de carga
     isLoading = true
-    
-    // Simular respuesta del asistente (aquí iría la lógica real de procesamiento)
-    setTimeout(() => {
+
+    try {
+      // Generar idempotency key (UUID v7)
+      const idempotencyKey = uuidv7()
+
+      // Enviar POST al backend
+      const response = await fetch(`${API_BASE_URL}/menu/interaction`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Idempotency-Key': idempotencyKey,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          menuId: menuId,
+          message: content.trim()
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Error del servidor: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
+      // Agregar respuesta del asistente
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: generateResponse(content),
+        content: data.message || data.response || 'He procesado tu mensaje. Tu carta ha sido actualizada.',
         timestamp: new Date()
       }
       messages = [...messages, assistantMessage]
-      isLoading = false
-    }, 1000)
-  }
 
-  function generateResponse(userInput: string): string {
-    // Lógica temporal - aquí iría la integración con el backend
-    return `He recibido tu menú. Estoy procesando la información para crear tu carta digital. Pronto tendrás una vista previa de cómo se verá.`
+    } catch (error: any) {
+      console.error('Error enviando mensaje:', error)
+      
+      // Mostrar error al usuario
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: `Error al procesar tu mensaje: ${error.message || 'Error desconocido'}`,
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
+    } finally {
+      isLoading = false
+    }
   }
 
   function scrollToBottom() {
@@ -105,6 +203,18 @@
       {/if}
     </div>
     <div class="flex items-center gap-1">
+      <button 
+        onclick={togglePreview}
+        class="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2 {showPreview ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}"
+        aria-label="Ver vista previa"
+        title="Ver vista previa de tu carta"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span class="text-xs font-medium hidden sm:inline">Vista Previa</span>
+      </button>
       <button class="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="Perfil">
         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -223,6 +333,56 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de Vista Previa -->
+{#if showPreview}
+  <div 
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+    onclick={() => showPreview = false}
+    role="dialog"
+    aria-modal="true"
+  >
+    <div 
+      class="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] flex flex-col"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <!-- Header del Modal -->
+      <div class="flex items-center justify-between p-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Vista Previa de tu Carta</h2>
+        <button
+          onclick={() => showPreview = false}
+          class="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Cerrar"
+        >
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Contenido del Modal -->
+      <div class="flex-1 overflow-hidden">
+        {#if menuUrl}
+          <iframe
+            src={menuUrl}
+            class="w-full h-full border-0"
+            title="Vista previa de la carta"
+            loading="lazy"
+            allow="camera; microphone; geolocation; autoplay; clipboard-write"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
+          />
+        {:else}
+          <div class="flex items-center justify-center h-full">
+            <div class="text-center">
+              <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+              <p class="text-gray-600">Cargando vista previa...</p>
+            </div>
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   #messages-container {
