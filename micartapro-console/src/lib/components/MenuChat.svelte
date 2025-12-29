@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore } from '../useLanguage'
 
@@ -22,6 +22,8 @@
   let menuUrl = $state<string | null>(null)
   let menuId = $state<string | null>(null)
   let copySuccess = $state(false)
+  let menuReady = $state(false)
+  let checkingMenu = $state(false)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -54,9 +56,33 @@
         const id = await getLatestMenuId(userId)
         if (id) {
           menuId = id
+          
+          // Hacer polling para validar que el menú exista en GCS
+          checkingMenu = true
+          const exists = await pollUntilMenuExists(userId, id)
+          
+          if (exists) {
+            menuReady = true
+          } else {
+            // Si no se encontró después de todos los intentos, mostrar mensaje
+            const errorMessage: ChatMessage = {
+              id: `menu-not-found-${Date.now()}`,
+              role: 'assistant',
+              content: $tStore.chat.errorNoMenu,
+              timestamp: new Date()
+            }
+            messages = [...messages, errorMessage]
+          }
+          
+          checkingMenu = false
+        } else {
+          // No hay menuId en la base de datos
+          menuReady = false
         }
       } catch (err) {
         console.error('Error cargando menuID:', err)
+        checkingMenu = false
+        menuReady = false
       }
     }
   })
@@ -394,7 +420,16 @@
   <!-- Chat Input -->
   <div class="border-t border-gray-200 bg-white px-4 py-3 sticky bottom-0 z-10 safe-area-inset-bottom">
     <div class="max-w-3xl mx-auto">
-      <ChatInput onSend={handleSendMessage} disabled={isLoading} onFocus={handleInputFocus} />
+      {#if checkingMenu}
+        <div class="flex items-center justify-center py-8">
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+            <p class="text-gray-600 text-sm">{$tStore.chat.checkingMenu}</p>
+          </div>
+        </div>
+      {/if}
+      
+      <ChatInput onSend={handleSendMessage} disabled={isLoading || !menuReady || checkingMenu} onFocus={handleInputFocus} />
     </div>
   </div>
 </div>

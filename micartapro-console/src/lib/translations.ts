@@ -32,6 +32,7 @@ export interface Translations {
     welcomeMessage2: string
     errorNoSession: string
     errorNoMenu: string
+    checkingMenu: string
     errorProcessing: string
     errorPolling: string
     successUpdated: string
@@ -83,6 +84,7 @@ export const translations: Record<Language, Translations> = {
       welcomeMessage2: 'Simplemente escribe tu menú y precios, y yo me encargaré de organizarlo y formatearlo para crear una carta atractiva.',
       errorNoSession: 'Error: No hay sesión activa. Por favor, inicia sesión nuevamente.',
       errorNoMenu: 'Error: No se encontró un menú. Por favor, crea un menú primero.',
+      checkingMenu: 'Verificando que tu menú esté listo...',
       errorProcessing: 'Error al procesar tu mensaje: {message}',
       errorPolling: 'El mensaje fue procesado, pero hubo un problema al verificar la actualización: {message}',
       successUpdated: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
@@ -128,6 +130,7 @@ export const translations: Record<Language, Translations> = {
       welcomeMessage2: 'Simplesmente escreva seu cardápio e preços, e eu me encarregarei de organizá-los e formatá-los para criar uma carta atraente.',
       errorNoSession: 'Erro: Não há sessão ativa. Por favor, faça login novamente.',
       errorNoMenu: 'Erro: Nenhum cardápio encontrado. Por favor, crie um primeiro.',
+      checkingMenu: 'Verificando se seu cardápio está pronto...',
       errorProcessing: 'Erro ao processar sua mensagem: {message}',
       errorPolling: 'A mensagem foi processada, mas houve um problema ao verificar a atualização: {message}',
       successUpdated: 'Sua carta foi atualizada com sucesso! O cardápio foi salvo com as alterações solicitadas.',
@@ -173,6 +176,7 @@ export const translations: Record<Language, Translations> = {
       welcomeMessage2: 'Simply write your menu and prices, and I will take care of organizing and formatting them to create an attractive menu.',
       errorNoSession: 'Error: No active session. Please sign in again.',
       errorNoMenu: 'Error: No menu found. Please create one first.',
+      checkingMenu: 'Checking that your menu is ready...',
       errorProcessing: 'Error processing your message: {message}',
       errorPolling: 'The message was processed, but there was a problem verifying the update: {message}',
       successUpdated: 'Your menu has been successfully updated! The menu has been saved with the requested changes.',

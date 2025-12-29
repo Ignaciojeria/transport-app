@@ -128,3 +128,51 @@ export async function pollUntilMenuUpdated(
   throw new Error(`Timeout: No se pudo obtener el menú actualizado después de ${maxAttempts} intentos`)
 }
 
+/**
+ * Hace polling para verificar que el menú exista en GCS (verificando latest.json)
+ * Útil cuando el usuario se registra por primera vez y el menú se está creando
+ * @param userId - ID del usuario
+ * @param menuId - ID del menú
+ * @param maxAttempts - Número máximo de intentos (default: 30)
+ * @param intervalMs - Intervalo entre intentos en milisegundos (default: 2000)
+ * @returns true si el menú existe, false si no se encontró después de todos los intentos
+ */
+export async function pollUntilMenuExists(
+  userId: string,
+  menuId: string,
+  maxAttempts: number = 30,
+  intervalMs: number = 2000
+): Promise<boolean> {
+  let attempts = 0
+  
+  while (attempts < maxAttempts) {
+    try {
+      const latest = await getLatestJson(userId, menuId)
+      
+      if (latest && latest.filename) {
+        // El menú existe
+        return true
+      }
+      
+      // Esperar antes del siguiente intento
+      await new Promise(resolve => setTimeout(resolve, intervalMs))
+      attempts++
+    } catch (error: any) {
+      // Si es 404, el menú aún no existe, continuar intentando
+      if (error.message?.includes('404')) {
+        await new Promise(resolve => setTimeout(resolve, intervalMs))
+        attempts++
+        continue
+      }
+      
+      // Otro error, loguear pero continuar intentando
+      console.error(`Error en intento ${attempts + 1}:`, error)
+      await new Promise(resolve => setTimeout(resolve, intervalMs))
+      attempts++
+    }
+  }
+  
+  // No se encontró el menú después de todos los intentos
+  return false
+}
+
