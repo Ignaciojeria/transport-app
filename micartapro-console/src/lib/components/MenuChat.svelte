@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated } from '../menuUtils'
   import { API_BASE_URL } from '../config'
 
   interface ChatMessage {
@@ -139,14 +139,41 @@
 
       const data = await response.json()
 
-      // Agregar respuesta del asistente
-      const assistantMessage: ChatMessage = {
+      // Agregar respuesta inicial del asistente
+      const initialMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
-        content: data.message || data.response || 'He procesado tu mensaje. Tu carta ha sido actualizada.',
+        content: data.message || data.response || 'Procesando tu mensaje...',
         timestamp: new Date()
       }
-      messages = [...messages, assistantMessage]
+      messages = [...messages, initialMessage]
+
+      // Iniciar polling para esperar la actualización del menú
+      if (userId && menuId) {
+        try {
+          const updatedMenu = await pollUntilMenuUpdated(userId, menuId, idempotencyKey)
+          
+          // Agregar mensaje de confirmación con el menú actualizado
+          const successMessage: ChatMessage = {
+            id: `success-${Date.now()}`,
+            role: 'assistant',
+            content: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
+            timestamp: new Date()
+          }
+          messages = [...messages, successMessage]
+        } catch (pollError: any) {
+          console.error('Error en polling:', pollError)
+          
+          // Agregar mensaje de error del polling
+          const errorMessage: ChatMessage = {
+            id: `poll-error-${Date.now()}`,
+            role: 'assistant',
+            content: `El mensaje fue procesado, pero hubo un problema al verificar la actualización: ${pollError.message || 'Error desconocido'}`,
+            timestamp: new Date()
+          }
+          messages = [...messages, errorMessage]
+        }
+      }
 
     } catch (error: any) {
       console.error('Error enviando mensaje:', error)

@@ -11,8 +11,12 @@ const BASE_URL = "https://storage.googleapis.com/micartapro-menus";
  * @returns {Promise<string>} Nombre del archivo JSON
  */
 async function getLatestFilename(userID, menuID) {
-  const latestUrl = `${BASE_URL}/${userID}/menus/${menuID}/latest.json`;
-  const response = await fetch(latestUrl);
+  // Agregar timestamp para evitar cache y asegurar obtener la versión más reciente
+  const timestamp = Date.now();
+  const latestUrl = `${BASE_URL}/${userID}/menus/${menuID}/latest.json?t=${timestamp}`;
+  const response = await fetch(latestUrl, {
+    cache: 'no-store' // Evitar cache del navegador
+  });
   
   if (!response.ok) {
     throw new Error(`Error al obtener latest.json: ${response.status} ${response.statusText}`);
@@ -34,8 +38,12 @@ export async function fetchRestaurantData(userID, menuID) {
     const filename = await getLatestFilename(userID, menuID);
     
     // Luego obtenemos los datos del restaurante desde el archivo referenciado
-    const dataUrl = `${BASE_URL}/${userID}/menus/${menuID}/${filename}`;
-    const response = await fetch(dataUrl);
+    // Agregar timestamp para evitar cache y asegurar obtener la versión más reciente
+    const timestamp = Date.now();
+    const dataUrl = `${BASE_URL}/${userID}/menus/${menuID}/${filename}?t=${timestamp}`;
+    const response = await fetch(dataUrl, {
+      cache: 'no-store' // Evitar cache del navegador
+    });
     
     if (!response.ok) {
       throw new Error(`Error al obtener datos del restaurante: ${response.status} ${response.statusText}`);

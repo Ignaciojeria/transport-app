@@ -1,5 +1,7 @@
 import { supabase } from './supabase'
 
+const STORAGE_BASE_URL = "https://storage.googleapis.com/micartapro-menus"
+
 /**
  * Obtiene el menuID más reciente del usuario autenticado
  * @returns El menuID o null si no existe
@@ -40,5 +42,89 @@ export function generateMenuUrl(userId: string, menuId: string): string {
     : 'https://cadorago.web.app'
   
   return `${baseUrl}/?userID=${userId}&menuID=${menuId}`
+}
+
+/**
+ * Obtiene el contenido de latest.json desde Google Cloud Storage
+ * @param userId - ID del usuario
+ * @param menuId - ID del menú
+ * @returns El objeto latest.json con el campo filename
+ */
+async function getLatestJson(userId: string, menuId: string): Promise<{ filename: string } | null> {
+  try {
+    const latestUrl = `${STORAGE_BASE_URL}/${userId}/menus/${menuId}/latest.json`
+    const response = await fetch(latestUrl, {
+      cache: 'no-store' // Evitar caché para obtener siempre la versión más reciente
+    })
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null
+      }
+      throw new Error(`Error al obtener latest.json: ${response.status} ${response.statusText}`)
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error obteniendo latest.json:', error)
+    throw error
+  }
+}
+
+/**
+ * Hace polling de latest.json hasta que el idempotencyKey coincida
+ * @param userId - ID del usuario
+ * @param menuId - ID del menú
+ * @param idempotencyKey - Clave de idempotencia a esperar
+ * @param maxAttempts - Número máximo de intentos (default: 60)
+ * @param intervalMs - Intervalo entre intentos en milisegundos (default: 2000)
+ * @returns El menú actualizado cuando el idempotencyKey coincide
+ */
+export async function pollUntilMenuUpdated(
+  userId: string,
+  menuId: string,
+  idempotencyKey: string,
+  maxAttempts: number = 60,
+  intervalMs: number = 2000
+): Promise<any> {
+  let attempts = 0
+  
+  while (attempts < maxAttempts) {
+    try {
+      const latest = await getLatestJson(userId, menuId)
+      
+      if (latest && latest.filename) {
+        // El filename en latest.json es "idempotencyKey.json", necesitamos extraer solo el idempotencyKey
+        const filenameWithoutExt = latest.filename.replace('.json', '')
+        
+        if (filenameWithoutExt === idempotencyKey) {
+          // Coincide! Obtener el menú actualizado
+          const menuUrl = `${STORAGE_BASE_URL}/${userId}/menus/${menuId}/${latest.filename}`
+          const response = await fetch(menuUrl, {
+            cache: 'no-store'
+          })
+          
+          if (!response.ok) {
+            throw new Error(`Error al obtener menú actualizado: ${response.status} ${response.statusText}`)
+          }
+          
+          const menuData = await response.json()
+          return menuData
+        }
+      }
+      
+      // Esperar antes del siguiente intento
+      await new Promise(resolve => setTimeout(resolve, intervalMs))
+      attempts++
+    } catch (error) {
+      console.error(`Error en intento ${attempts + 1}:`, error)
+      // Continuar intentando a menos que sea un error crítico
+      await new Promise(resolve => setTimeout(resolve, intervalMs))
+      attempts++
+    }
+  }
+  
+  throw new Error(`Timeout: No se pudo obtener el menú actualizado después de ${maxAttempts} intentos`)
 }
 
