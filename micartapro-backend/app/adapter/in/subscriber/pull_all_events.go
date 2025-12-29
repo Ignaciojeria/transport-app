@@ -7,7 +7,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
-	"micartapro/app/domain"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
@@ -19,16 +19,16 @@ func init() {
 		newPullAllEvents,
 		eventprocessing.NewSubscriberStrategy,
 		observability.NewObservability,
-		usecase.NewMenuInteraction,
-		usecase.NewMenuInteractionCreate)
+		usecase.NewOnMenuInteractionRequest,
+		usecase.NewOnMenuCreateRequest)
 }
 
 // Pull all events from the event bus
 func newPullAllEvents(
 	sub eventprocessing.Subscriber,
 	obs observability.Observability,
-	menuInteraction usecase.MenuInteraction,
-	menuInteractionCreate usecase.MenuInteractionCreate) eventprocessing.MessageProcessor {
+	onMenuInteractionRequest usecase.OnMenuInteractionRequest,
+	onMenuCreateRequest usecase.OnMenuCreateRequest) eventprocessing.MessageProcessor {
 	subscriptionName := "micartapro.events.v2"
 	processor := func(ctx context.Context, event cloudevents.Event) int {
 
@@ -51,28 +51,28 @@ func newPullAllEvents(
 		)
 
 		switch event.Type() {
-		case domain.EventMenuInteractionRequested:
-			var request domain.MenuInteractionRequest
+		case events.EventMenuInteractionRequested:
+			var request events.MenuInteractionRequest
 			if err := event.DataAs(&request); err != nil {
 				obs.Logger.Error("failed_to_deserialize_cloudevent",
 					"error", err.Error(),
 				)
 			}
-			_, err := menuInteraction(spanCtx, request)
+			_, err := onMenuInteractionRequest(spanCtx, request)
 			if err != nil {
 				obs.Logger.Error("error_processing_menu_interaction",
 					"error", err.Error(),
 				)
 				return http.StatusInternalServerError
 			}
-		case domain.EventMenuCreateRequested:
-			var request domain.MenuCreateRequest
+		case events.EventMenuCreateRequested:
+			var request events.MenuCreateRequest
 			if err := event.DataAs(&request); err != nil {
 				obs.Logger.Error("failed_to_deserialize_cloudevent",
 					"error", err.Error(),
 				)
 			}
-			err := menuInteractionCreate(spanCtx, request)
+			err := onMenuCreateRequest(spanCtx, request)
 			if err != nil {
 				obs.Logger.Error("error_processing_menu_create",
 					"error", err.Error(),

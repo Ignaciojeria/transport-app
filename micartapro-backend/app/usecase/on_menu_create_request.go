@@ -3,27 +3,27 @@ package usecase
 import (
 	"context"
 	"micartapro/app/adapter/out/storage"
-	"micartapro/app/domain"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type MenuInteractionCreate func(ctx context.Context, input domain.MenuCreateRequest) error
+type OnMenuCreateRequest func(ctx context.Context, input events.MenuCreateRequest) error
 
 func init() {
-	ioc.Registry(NewMenuInteractionCreate,
+	ioc.Registry(NewOnMenuCreateRequest,
 		observability.NewObservability,
 		storage.NewSaveMenu,
 	)
 }
 
-func NewMenuInteractionCreate(
+func NewOnMenuCreateRequest(
 	observability observability.Observability,
-	saveMenu storage.SaveMenu) MenuInteractionCreate {
-	return func(ctx context.Context, input domain.MenuCreateRequest) error {
-		observability.Logger.Info("menu_interaction_create", "input", input)
-		spanCtx, span := observability.Tracer.Start(ctx, "menu_interaction_create")
+	saveMenu storage.SaveMenu) OnMenuCreateRequest {
+	return func(ctx context.Context, input events.MenuCreateRequest) error {
+		observability.Logger.Info("on_menu_create_request", "input", input)
+		spanCtx, span := observability.Tracer.Start(ctx, "on_menu_create_request")
 		defer span.End()
 		err := saveMenu(spanCtx, input)
 		if err != nil {

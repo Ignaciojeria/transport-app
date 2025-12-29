@@ -2,7 +2,7 @@
     "project": "micartapro",
     "template": {
         "tag": "v3.0.2",
-        "url": "https://einar-cli-fuego-template"
+        "url": "https://github.com/Ignaciojeria/einar-cli-fuego-template"
     },
     "installations": [
         {
@@ -52,6 +52,14 @@
         {
             "kind": "usecase",
             "name": "menu-interaction-create"
+        },
+        {
+            "kind": "post-controller",
+            "name": "user-menus-insert-webhook"
+        },
+        {
+            "kind": "post-controller",
+            "name": "user-menus-insert-webhook2"
         }
     ]
 }

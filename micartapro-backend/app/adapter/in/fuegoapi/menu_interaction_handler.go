@@ -1,17 +1,17 @@
 package fuegoapi
 
 import (
-	"micartapro/app/domain"
-	"micartapro/app/shared/infrastructure/auth"
+	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"net/http"
-	"strings"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
+	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
@@ -20,30 +20,22 @@ func init() {
 		httpserver.New,
 		observability.NewObservability,
 		eventprocessing.NewPublisherStrategy,
-		auth.NewSupabaseTokenValidator,
+		apimiddleware.NewIdempotencyKeyMiddleware,
+		apimiddleware.NewJWTAuthMiddleware,
 	)
 }
 func menuInteractionHandler(
 	s httpserver.Server,
 	obs observability.Observability,
 	publisherManager eventprocessing.PublisherManager,
-	supabaseTokenValidator auth.SupabaseTokenValidator,
+	idempotencyKeyMiddleware apimiddleware.IdempotencyKeyMiddleware,
+	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 ) {
 	fuego.Post(s.Manager, "/menu/interaction",
-		func(c fuego.ContextWithBody[domain.MenuInteractionRequest]) (any, error) {
+		func(c fuego.ContextWithBody[events.MenuInteractionRequest]) (any, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "menuInteractionHandler")
 			defer span.End()
 
-			token := c.Header("Authorization")
-			token = strings.TrimPrefix(token, "Bearer ")
-			_, err := supabaseTokenValidator.ValidateJWT(token)
-			if err != nil {
-				return nil, fuego.HTTPError{
-					Title:  "error validating token",
-					Detail: err.Error(),
-					Status: http.StatusUnauthorized,
-				}
-			}
 			body, err := c.Body()
 			if err != nil {
 				return nil, fuego.HTTPError{
@@ -73,5 +65,10 @@ func menuInteractionHandler(
 			}
 			obs.Logger.InfoContext(spanCtx, "menuInteractionRequest published", "requestBody", body)
 			return http.StatusOK, nil
-		}, option.Summary("menuInteractionRequest"), option.Header("Idempotency-Key", "01KCW67YKSV455GBVDT88S4072"))
+		},
+		option.Summary("menuInteractionRequest"),
+		option.Tags("agents"),
+		option.Header("Idempotency-Key", "uuidv7", param.Required()),
+		option.Middleware(idempotencyKeyMiddleware),
+		option.Middleware(jwtAuthMiddleware))
 }

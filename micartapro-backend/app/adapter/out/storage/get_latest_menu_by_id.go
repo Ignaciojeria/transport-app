@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	"micartapro/app/domain"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 
@@ -17,7 +17,7 @@ import (
 
 var ErrMenuNotFound = errors.New("menu not found")
 
-type GetLatestMenuById func(ctx context.Context, menuID string) (domain.MenuCreateRequest, error)
+type GetLatestMenuById func(ctx context.Context, menuID string) (events.MenuCreateRequest, error)
 
 func init() {
 	ioc.Registry(NewGetLatestMenuById,
@@ -26,7 +26,7 @@ func init() {
 }
 
 func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) GetLatestMenuById {
-	return func(ctx context.Context, menuID string) (domain.MenuCreateRequest, error) {
+	return func(ctx context.Context, menuID string) (events.MenuCreateRequest, error) {
 		obs.Logger.InfoContext(ctx, "get_latest_menu_by_id", "menuID", menuID)
 		bucket := gcs.Bucket("micartapro-menus")
 		prefix := "menus/" + menuID + "/"
@@ -63,7 +63,7 @@ func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) 
 				}
 				if err != nil {
 					obs.Logger.ErrorContext(ctx, "error_listing_objects", "error", err, "prefix", prefix)
-					return domain.MenuCreateRequest{}, err
+					return events.MenuCreateRequest{}, err
 				}
 
 				// Extraer el nombre del archivo (sin la extensión .json)
@@ -81,7 +81,7 @@ func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) 
 
 		if latestObjectName == "" {
 			obs.Logger.WarnContext(ctx, "menu_not_found", "menuID", menuID, "prefix", prefix)
-			return domain.MenuCreateRequest{}, ErrMenuNotFound
+			return events.MenuCreateRequest{}, ErrMenuNotFound
 		}
 
 		// Leer el último objeto encontrado
@@ -94,16 +94,16 @@ func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) 
 			obs.Logger.ErrorContext(ctx, "error_reading_object", "error", err, "objectPath", objectPath)
 			if errors.Is(err, storage.ErrObjectNotExist) {
 				obs.Logger.WarnContext(ctx, "menu_not_found", "menuID", menuID, "objectPath", objectPath)
-				return domain.MenuCreateRequest{}, ErrMenuNotFound
+				return events.MenuCreateRequest{}, ErrMenuNotFound
 			}
-			return domain.MenuCreateRequest{}, err
+			return events.MenuCreateRequest{}, err
 		}
 		defer reader.Close()
 
-		var menu domain.MenuCreateRequest
+		var menu events.MenuCreateRequest
 		if err := json.NewDecoder(reader).Decode(&menu); err != nil {
 			obs.Logger.ErrorContext(ctx, "error_decoding_menu", "error", err)
-			return domain.MenuCreateRequest{}, err
+			return events.MenuCreateRequest{}, err
 		}
 
 		obs.Logger.Info("menu_found_successfully", "menuID", menuID, "objectPath", objectPath)

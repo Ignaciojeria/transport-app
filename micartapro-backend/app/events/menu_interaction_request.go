@@ -1,4 +1,4 @@
-package domain
+package events
 
 import (
 	"errors"
@@ -34,7 +34,7 @@ type MenuInteractionRequest struct {
 
 func (m MenuInteractionRequest) ToCloudEvent(source string) cloudevents.Event {
 	event := cloudevents.NewEvent()
-	event.SetSubject("menu.interaction.request")
+	event.SetSubject("menu.interaction.request") //struct name
 	event.SetType(EventMenuInteractionRequested)
 	event.SetSource(source)
 	event.SetData(cloudevents.ApplicationJSON, m)

@@ -7,14 +7,14 @@ import (
 
 	"micartapro/app/adapter/out/agents/prompt"
 	"micartapro/app/adapter/out/agents/tools"
-	"micartapro/app/domain"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/ai"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"google.golang.org/genai"
 )
 
-type MenuInteractionAgent func(ctx context.Context, req domain.MenuInteractionRequest) (AgentResponse, error)
+type MenuInteractionAgent func(ctx context.Context, req events.MenuInteractionRequest) (AgentResponse, error)
 
 func init() {
 	ioc.Registry(NewMenuInteractionAgent, ai.NewClient)
@@ -25,7 +25,7 @@ func NewMenuInteractionAgent(client *genai.Client) MenuInteractionAgent {
 
 	menuTools := tools.GetAllMenuTools()
 
-	return func(ctx context.Context, req domain.MenuInteractionRequest) (AgentResponse, error) {
+	return func(ctx context.Context, req events.MenuInteractionRequest) (AgentResponse, error) {
 
 		// 1. Construir el Prompt Completo y el Historial
 		menuJSON := req.MenuToon()

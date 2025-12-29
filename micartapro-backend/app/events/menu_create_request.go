@@ -1,4 +1,4 @@
-package domain
+package events
 
 import (
 	"time"
@@ -37,7 +37,7 @@ type MenuCreateRequest struct {
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
 	event := cloudevents.NewEvent()
-	event.SetSubject("menu.create.request")
+	event.SetSubject("menu.create.request") //struct name
 	event.SetType(EventMenuCreateRequested)
 	event.SetSource(source)
 	event.SetData(cloudevents.ApplicationJSON, c)

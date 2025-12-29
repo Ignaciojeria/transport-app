@@ -6,30 +6,30 @@ import (
 	"fmt"
 	"micartapro/app/adapter/out/agents"
 	"micartapro/app/adapter/out/storage"
-	"micartapro/app/domain"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type MenuInteraction func(ctx context.Context, input domain.MenuInteractionRequest) (string, error)
+type OnMenuInteractionRequest func(ctx context.Context, input events.MenuInteractionRequest) (string, error)
 
 func init() {
 	ioc.Registry(
-		NewMenuInteraction,
+		NewOnMenuInteractionRequest,
 		observability.NewObservability,
 		agents.NewMenuInteractionAgent,
 		eventprocessing.NewPublisherStrategy,
 		storage.NewGetLatestMenuById)
 }
 
-func NewMenuInteraction(
+func NewOnMenuInteractionRequest(
 	obs observability.Observability,
 	menuInteractionAgent agents.MenuInteractionAgent,
 	publisherManager eventprocessing.PublisherManager,
-	getLatestMenuById storage.GetLatestMenuById) MenuInteraction {
-	return func(ctx context.Context, input domain.MenuInteractionRequest) (string, error) {
+	getLatestMenuById storage.GetLatestMenuById) OnMenuInteractionRequest {
+	return func(ctx context.Context, input events.MenuInteractionRequest) (string, error) {
 
 		menu, err := getLatestMenuById(ctx, input.MenuID)
 		if err != nil && err != storage.ErrMenuNotFound {
@@ -52,7 +52,7 @@ func NewMenuInteraction(
 
 		if agentResp.CommandName == "createMenu" {
 			// Caso 2: Comando. Hacemos el mapeo (la única deserialización necesaria)
-			var createRequest domain.MenuCreateRequest
+			var createRequest events.MenuCreateRequest
 
 			// Mapeo directo del JSON crudo a tu objeto de dominio
 			if err := json.Unmarshal(agentResp.CommandArgs, &createRequest); err != nil {
