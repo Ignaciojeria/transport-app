@@ -106,6 +106,7 @@ jobs:
             --max-instances=10 \
             --set-env-vars="DB_STRATEGY=disabled" \
             --set-secrets="OPENOBSERVE_AUTHORIZATION=OPENOBSERVE_AUTHORIZATION:latest,\
+            SUPABASE_WEBHOOK_SECRET=SUPABASE_WEBHOOK_SECRET:latest,\
             OPENOBSERVE_HTTP_ENDPOINT=OPENOBSERVE_HTTP_ENDPOINT:latest,\
             OPENOBSERVE_STREAM_NAME=OPENOBSERVE_STREAM_NAME:latest,\
             OBSERVABILITY_STRATEGY=OBSERVABILITY_STRATEGY:latest"

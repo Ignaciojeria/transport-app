@@ -48,7 +48,7 @@ func (r *UserMenusInsertedWebhook) CreatedAtToISO8601() {
 	r.Record.CreatedAt = t.UTC().Format(time.RFC3339Nano)
 }
 
-func (r *UserMenusInsertedWebhook) ToCloudEvent(source string) cloudevents.Event {
+func (r UserMenusInsertedWebhook) ToCloudEvent(source string) cloudevents.Event {
 	event := cloudevents.NewEvent()
 	event.SetSubject("user.menus.inserted.webhook") //struct name
 	event.SetType(EventUserMenusInsertedWebhook)
