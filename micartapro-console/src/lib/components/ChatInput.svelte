@@ -46,6 +46,11 @@
   }
 
   function handleBlur(e: FocusEvent) {
+    // Si hay texto, no llamar onBlur (el usuario está escribiendo)
+    if (inputValue.trim().length > 0) {
+      return
+    }
+    
     // En móvil, el blur puede ser temporal cuando aparece el teclado
     // Esperar más tiempo para verificar si realmente perdió el focus
     const isMobile = window.innerWidth <= 768
@@ -54,11 +59,10 @@
     setTimeout(() => {
       // Verificar si el textarea realmente perdió el focus
       const hasFocus = document.activeElement === textareaRef
-      const hasText = inputValue.trim().length > 0
       
       // Solo llamar onBlur si realmente perdió el focus y no hay texto
       // En móvil, también verificar que no sea un blur temporal del teclado
-      if (!hasFocus && !hasText) {
+      if (!hasFocus && !inputValue.trim()) {
         // En móvil, verificar una vez más después de un pequeño delay adicional
         if (isMobile) {
           setTimeout(() => {

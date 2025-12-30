@@ -328,6 +328,7 @@
     showExamples = true
     currentExampleType = type
     messages = []
+    messageSent = false // Asegurar que el flag esté en false
     
     // En móvil, esperar un poco más para que el teclado se abra correctamente
     setTimeout(() => {
@@ -380,6 +381,17 @@
       return
     }
     
+    // Si hay sugerencias mostrándose, mantenerlas visibles (no desaparecer al perder focus)
+    // Solo desaparecerán cuando se envíe el prompt
+    if (showExamples && currentExampleType) {
+      return
+    }
+    
+    // NO resetear si hay mensajes en el chat (el usuario ya está en una conversación)
+    if (messages.length > 0) {
+      return
+    }
+    
     // En móvil, esperar más tiempo para detectar si el teclado se cerró realmente
     const delay = window.innerWidth <= 768 ? 500 : 200
     
@@ -390,9 +402,12 @@
       
       if (!isStillFocused && textarea && !textarea.value?.trim()) {
         // Solo resetear si realmente perdió el focus y no hay texto
-        showExamples = false
-        currentExampleType = null
-        messages = []
+        // Y solo si no hay sugerencias mostrándose
+        if (!showExamples) {
+          showExamples = false
+          currentExampleType = null
+          messages = []
+        }
       }
     }, delay)
   }
@@ -463,50 +478,48 @@
           </p>
         </div>
 
-        {#if !showExamples}
-          <!-- Botones seleccionables -->
-          <div class="flex flex-col gap-3 w-full">
-            <button 
-              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
-              onclick={() => handleButtonClick('address')}
-            >
-              <span class="text-2xl">📍</span>
-              <span class="text-base font-normal text-gray-900">{$tStore.chat.updateAddress}</span>
-            </button>
+        <!-- Botones seleccionables - siempre visibles cuando no hay mensajes -->
+        <div class="flex flex-col gap-3 w-full">
+          <button 
+            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            onclick={() => handleButtonClick('address')}
+          >
+            <span class="text-2xl">📍</span>
+            <span class="text-base font-normal text-gray-900">{$tStore.chat.updateAddress}</span>
+          </button>
 
-            <button 
-              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
-              onclick={() => handleButtonClick('dishes')}
-            >
-              <span class="text-2xl">🍽️</span>
-              <span class="text-base font-normal text-gray-900">{$tStore.chat.addDishes}</span>
-            </button>
+          <button 
+            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            onclick={() => handleButtonClick('dishes')}
+          >
+            <span class="text-2xl">🍽️</span>
+            <span class="text-base font-normal text-gray-900">{$tStore.chat.addDishes}</span>
+          </button>
 
-            <button 
-              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
-              onclick={() => handleButtonClick('desserts')}
-            >
-              <span class="text-2xl">🍰</span>
-              <span class="text-base font-normal text-gray-900">{$tStore.chat.addDesserts}</span>
-            </button>
+          <button 
+            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            onclick={() => handleButtonClick('desserts')}
+          >
+            <span class="text-2xl">🍰</span>
+            <span class="text-base font-normal text-gray-900">{$tStore.chat.addDesserts}</span>
+          </button>
 
-            <button 
-              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
-              onclick={() => handleButtonClick('price')}
-            >
-              <span class="text-2xl">💰</span>
-              <span class="text-base font-normal text-gray-900">{$tStore.chat.updatePrice}</span>
-            </button>
+          <button 
+            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            onclick={() => handleButtonClick('price')}
+          >
+            <span class="text-2xl">💰</span>
+            <span class="text-base font-normal text-gray-900">{$tStore.chat.updatePrice}</span>
+          </button>
 
-            <button 
-              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
-              onclick={() => handleButtonClick('delete')}
-            >
-              <span class="text-2xl">🗑️</span>
-              <span class="text-base font-normal text-gray-900">{$tStore.chat.deleteItem}</span>
-            </button>
-          </div>
-        {/if}
+          <button 
+            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            onclick={() => handleButtonClick('delete')}
+          >
+            <span class="text-2xl">🗑️</span>
+            <span class="text-base font-normal text-gray-900">{$tStore.chat.deleteItem}</span>
+          </button>
+        </div>
       </div>
     {:else}
       <div class="max-w-3xl mx-auto space-y-6 pt-4">
@@ -619,7 +632,7 @@
             loading="lazy"
             allow="camera; microphone; geolocation; autoplay; clipboard-write"
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
-          />
+          ></iframe>
         {:else}
           <div class="flex items-center justify-center h-full">
             <div class="text-center">
