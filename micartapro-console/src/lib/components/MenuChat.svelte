@@ -302,6 +302,14 @@
   
   // Función para hacer scroll cuando el teclado aparece en móviles
   function handleInputFocus() {
+    // Si hay ejemplos mostrándose, mantenerlos visibles cuando se hace focus
+    if (showExamples && currentExampleType) {
+      // Asegurar que los ejemplos sigan visibles
+      setTimeout(() => {
+        scrollToBottom()
+      }, 100)
+    }
+    
     // En móviles, hacer scroll para asegurar que el input sea visible
     if (window.innerWidth <= 768) {
       setTimeout(() => {
@@ -315,8 +323,15 @@
     currentExampleType = type
     messages = []
     
+    // En móvil, esperar un poco más para que el teclado se abra correctamente
     setTimeout(() => {
       chatInputRef?.focus()
+      // Forzar focus nuevamente después de un pequeño delay para móviles
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          chatInputRef?.focus()
+        }, 300)
+      }
     }, 100)
   }
 
@@ -353,15 +368,21 @@
   }
 
   function handleInputBlur() {
-    // Si el input pierde el focus y no hay texto, volver a mostrar los botones
+    // En móvil, esperar más tiempo para detectar si el teclado se cerró realmente
+    const delay = window.innerWidth <= 768 ? 500 : 200
+    
     setTimeout(() => {
       const textarea = chatInputRef?.textareaRef
-      if (textarea && !textarea.value?.trim()) {
+      // Verificar si el textarea todavía tiene focus (en algunos móviles el blur puede ser temporal)
+      const isStillFocused = document.activeElement === textarea
+      
+      if (!isStillFocused && textarea && !textarea.value?.trim()) {
+        // Solo resetear si realmente perdió el focus y no hay texto
         showExamples = false
         currentExampleType = null
         messages = []
       }
-    }, 200) // Pequeño delay para permitir que otros eventos se procesen
+    }, delay)
   }
 
   function resetToOptions() {

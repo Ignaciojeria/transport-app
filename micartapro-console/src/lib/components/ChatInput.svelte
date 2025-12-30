@@ -45,10 +45,36 @@
     }
   }
 
-  function handleBlur() {
-    if (onBlur) {
-      onBlur()
-    }
+  function handleBlur(e: FocusEvent) {
+    // En móvil, el blur puede ser temporal cuando aparece el teclado
+    // Esperar más tiempo para verificar si realmente perdió el focus
+    const isMobile = window.innerWidth <= 768
+    const delay = isMobile ? 600 : 200
+    
+    setTimeout(() => {
+      // Verificar si el textarea realmente perdió el focus
+      const hasFocus = document.activeElement === textareaRef
+      const hasText = inputValue.trim().length > 0
+      
+      // Solo llamar onBlur si realmente perdió el focus y no hay texto
+      // En móvil, también verificar que no sea un blur temporal del teclado
+      if (!hasFocus && !hasText) {
+        // En móvil, verificar una vez más después de un pequeño delay adicional
+        if (isMobile) {
+          setTimeout(() => {
+            if (document.activeElement !== textareaRef && !inputValue.trim()) {
+              if (onBlur) {
+                onBlur()
+              }
+            }
+          }, 200)
+        } else {
+          if (onBlur) {
+            onBlur()
+          }
+        }
+      }
+    }, delay)
   }
 
   function handleSubmit() {
