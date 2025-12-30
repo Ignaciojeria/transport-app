@@ -30,6 +30,47 @@
   const session = $derived(authState.session)
   const currentLanguage = $derived($language)
 
+  async function handleUpgradeToPro() {
+    try {
+      const checkoutUrl = 'https://micartapro-backend-27303662337.us-central1.run.app/checkout'
+      
+      // Hacer fetch con el token para obtener la URL de checkout
+      const response = await fetch(checkoutUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token || ''}`,
+        },
+        credentials: 'include',
+        redirect: 'manual' // No seguir el redirect automáticamente
+      })
+
+      // Si hay un redirect, obtener la URL del header Location
+      if (response.status === 302 || response.status === 301) {
+        const redirectUrl = response.headers.get('Location')
+        if (redirectUrl) {
+          window.open(redirectUrl, '_blank')
+          return
+        }
+      }
+
+      // Si no hay redirect, intentar obtener la URL de la respuesta
+      if (response.ok) {
+        const data = await response.json()
+        if (data.checkout_url) {
+          window.open(data.checkout_url, '_blank')
+          return
+        }
+      }
+
+      // Fallback: abrir la URL directamente
+      window.open(checkoutUrl, '_blank')
+    } catch (error) {
+      console.error('Error al abrir checkout:', error)
+      // Fallback: abrir la URL directamente en caso de error
+      window.open('https://micartapro-backend-27303662337.us-central1.run.app/checkout', '_blank')
+    }
+  }
+
   // Función para obtener mensajes de bienvenida
   function getWelcomeMessages() {
     return [
@@ -315,15 +356,17 @@
         </svg>
         <span class="text-xs font-medium hidden sm:inline">{$tStore.chat.previewButton}</span>
       </button>
-      <button class="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="Perfil">
-        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-        </svg>
-      </button>
-      <button class="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="Nueva conversación">
-        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-        </svg>
+      <button 
+        onclick={handleUpgradeToPro}
+        class="upgrade-button px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg relative overflow-hidden flex items-center gap-1.5"
+        aria-label="Upgrade to Pro"
+      >
+        <span class="relative z-10 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          UPGRADE TO PRO
+        </span>
       </button>
     </div>
   </header>
@@ -540,6 +583,50 @@
   .iframe-container iframe {
     touch-action: auto;
     pointer-events: auto;
+  }
+
+  /* Upgrade Button Animations */
+  .upgrade-button {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .upgrade-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 10px rgba(147, 51, 234, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 20px rgba(147, 51, 234, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), 0 0 40px rgba(147, 51, 234, 0.3);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      left: -100%;
+    }
+    100% {
+      left: 100%;
+    }
+  }
+
+  .upgrade-button:hover {
+    transform: scale(1.05);
+    animation: pulse-glow 1s ease-in-out infinite;
   }
 </style>
 
