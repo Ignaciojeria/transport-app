@@ -5,7 +5,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { 
-  Palette, 
   QrCode, 
   Smartphone,
   Calculator,
@@ -16,11 +15,26 @@ import {
   Star
 } from "lucide-react"
 import { motion } from "framer-motion"
-import { DemoEmbed } from "@/components/DemoEmbed"
 import { openWhatsAppQuote } from "@/lib/whatsapp"
 import { useLanguage } from "@/lib/useLanguage"
 import { LanguageSelector } from "@/components/LanguageSelector"
 import { getAuthUiUrl } from "@/lib/utils"
+
+// Helper function to highlight AI agent text
+function highlightAIAgent(text: string) {
+  const patterns = [
+    /(AI agent)/gi,
+    /(agente de IA)/gi,
+    /(agente de IA)/gi
+  ]
+  
+  let result = text
+  patterns.forEach(pattern => {
+    result = result.replace(pattern, '<strong class="font-bold text-blue-600">$1</strong>')
+  })
+  
+  return result
+}
 
 export default function LandingPage() {
   const { language, changeLanguage, t, isLoading, availableLanguages, languageNames, languageFlags } = useLanguage()
@@ -55,7 +69,6 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center space-x-8">
               <a href="#servicio" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.service}</a>
               <a href="#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.benefits}</a>
-              <a href="#demo" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.demo}</a>
               <LanguageSelector
                 currentLanguage={language}
                 onLanguageChange={changeLanguage}
@@ -108,9 +121,10 @@ export default function LandingPage() {
               <p className="text-3xl md:text-4xl lg:text-5xl text-gray-700 -mt-6 md:-mt-8 mb-4 font-semibold">
                 {t.hero.subtitle}
               </p>
-              <p className="text-xl md:text-2xl text-gray-600 mb-5 max-w-3xl mx-auto">
-                {t.hero.description}
-              </p>
+              <p 
+                className="text-xl md:text-2xl text-gray-600 mb-5 max-w-3xl mx-auto"
+                dangerouslySetInnerHTML={{ __html: highlightAIAgent(t.hero.description) }}
+              />
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-3">
                 <Button 
                   size="lg" 
@@ -119,14 +133,6 @@ export default function LandingPage() {
                 >
                   {t.hero.startFree}
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="text-lg px-8 py-3"
-                  onClick={() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })}
-                >
-                  {t.hero.viewDemo}
                 </Button>
               </div>
             </motion.div>
@@ -146,39 +152,26 @@ export default function LandingPage() {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="text-center"
             >
-              <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Palette className="h-8 w-8 text-blue-600" />
+              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Star className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                {t.service.customDesign}
-              </h3>
+              <h3 
+                className="text-xl font-semibold text-gray-900 mb-4"
+                dangerouslySetInnerHTML={{ __html: highlightAIAgent(t.service.customLogo) }}
+              />
             </motion.div>
             
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-center"
-            >
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Star className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                {t.service.customLogo}
-              </h3>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
               className="text-center"
             >
               <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -353,11 +346,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Demo Section */}
-      <div id="demo">
-        <DemoEmbed />
-      </div>
-
       {/* CTA Section */}
       <section className="py-20 bg-blue-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -400,9 +388,10 @@ export default function LandingPage() {
                   className="h-12 w-auto"
                 />
               </div>
-              <p className="text-gray-400">
-                {t.footer.description}
-              </p>
+              <p 
+                className="text-gray-400"
+                dangerouslySetInnerHTML={{ __html: highlightAIAgent(t.footer.description) }}
+              />
             </div>
             
             <div>
@@ -410,7 +399,6 @@ export default function LandingPage() {
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#servicio" className="hover:text-white transition-colors">{t.footer.ourService}</a></li>
                 <li><a href="#beneficios" className="hover:text-white transition-colors">{t.footer.benefits}</a></li>
-                <li><a href="#demo" className="hover:text-white transition-colors">{t.footer.demo}</a></li>
               </ul>
             </div>
             

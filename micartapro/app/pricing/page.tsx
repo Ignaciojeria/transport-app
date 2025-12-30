@@ -18,6 +18,23 @@ import { LanguageSelector } from "@/components/LanguageSelector"
 import { openWhatsAppQuote } from "@/lib/whatsapp"
 import { getAuthUiUrl } from "@/lib/utils"
 
+// Helper function to highlight AI agent text
+function highlightAIAgent(text: string) {
+  const patterns = [
+    /(AI agent)/gi,
+    /(AI Agent)/gi,
+    /(agente de IA)/gi,
+    /(Agente de IA)/gi
+  ]
+  
+  let result = text
+  patterns.forEach(pattern => {
+    result = result.replace(pattern, '<strong class="font-bold text-blue-600">$1</strong>')
+  })
+  
+  return result
+}
+
 export default function PricingPage() {
   const { language, changeLanguage, t, isLoading, availableLanguages, languageNames, languageFlags } = useLanguage()
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null)
@@ -51,7 +68,6 @@ export default function PricingPage() {
             <div className="hidden md:flex items-center space-x-8">
               <Link href="/#servicio" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.service}</Link>
               <Link href="/#beneficios" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.benefits}</Link>
-              <Link href="/#demo" className="text-gray-600 hover:text-blue-600 transition-colors">{t.nav.demo}</Link>
               <LanguageSelector
                 currentLanguage={language}
                 onLanguageChange={changeLanguage}
@@ -118,11 +134,10 @@ export default function PricingPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="flex items-start space-x-3">
                         <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{t.pricing.features.customDesign}</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
-                        <span className="text-gray-700">{t.pricing.features.customLogo}</span>
+                        <span 
+                          className="text-gray-700"
+                          dangerouslySetInnerHTML={{ __html: highlightAIAgent(t.pricing.features.customLogo) }}
+                        />
                       </div>
                       <div className="flex items-start space-x-3">
                         <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
@@ -343,7 +358,6 @@ export default function PricingPage() {
               <ul className="space-y-2 text-gray-400">
                 <li><Link href="/#servicio" className="hover:text-white transition-colors">{t.footer.ourService}</Link></li>
                 <li><Link href="/#beneficios" className="hover:text-white transition-colors">{t.footer.benefits}</Link></li>
-                <li><Link href="/#demo" className="hover:text-white transition-colors">{t.footer.demo}</Link></li>
               </ul>
             </div>
             

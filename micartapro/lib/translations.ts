@@ -192,7 +192,7 @@ export const translations: Record<Language, Translations> = {
     hero: {
       title: 'MiCartaPro',
       subtitle: 'Your Digital Menu, Without Complications',
-      description: 'Manage your digital menu and let sales flow.',
+      description: 'Manage your digital menu with our AI agent and let sales flow.',
       startFree: 'Start Free',
       viewDemo: 'View Demo'
     },
@@ -200,8 +200,8 @@ export const translations: Record<Language, Translations> = {
       title: '🚀 Our Service',
       subtitle: 'Self-service SaaS platform for managing your digital menu',
       customDesign: '🎨 Customizable design options',
-      customLogo: '✨ Upload your own logo',
-      exclusiveQR: '🔗 Generate your QR code',
+      customLogo: '✨ AI agent captures requests to modify the menu',
+      exclusiveQR: '🔗 Generate link to your digital menu',
       responsiveDesign: '📱 Responsive design for all devices',
       pricingTitle: 'Simple monthly subscription — $15 USD per month',
       firstYearFree: '',
@@ -283,8 +283,8 @@ export const translations: Record<Language, Translations> = {
       fromSecondYear: '',
       features: {
         customDesign: 'Customizable Design Options',
-        customLogo: 'Upload Your Own Logo',
-        exclusiveQR: 'Generate Your QR Code',
+        customLogo: 'AI Agent Captures Requests to Modify the Menu',
+        exclusiveQR: 'Generate Link to Your Digital Menu',
         responsiveDesign: 'Responsive Design for All Devices',
         shoppingCart: 'Integrated Shopping Cart',
         whatsappIntegration: 'WhatsApp Integration',
@@ -344,7 +344,7 @@ export const translations: Record<Language, Translations> = {
       }
     },
     footer: {
-      description: 'Your digital menu, without complications. Manage your restaurant and let sales flow.',
+      description: 'Your digital menu, without complications. Manage your menu with our AI agent and let sales flow.',
       service: 'Service',
       ourService: 'Our Service',
       benefits: 'Benefits',
@@ -367,7 +367,7 @@ export const translations: Record<Language, Translations> = {
     hero: {
       title: 'MiCartaPro',
       subtitle: 'Tu Menú Digital, Sin Complicaciones',
-      description: 'Gestiona tu menú digital y deja que las ventas fluyan.',
+      description: 'Gestiona tu menú digital con nuestro agente de IA y deja que las ventas fluyan.',
       startFree: 'Inicia Gratis',
       viewDemo: 'Ver Demo'
     },
@@ -375,8 +375,8 @@ export const translations: Record<Language, Translations> = {
       title: '🚀 Nuestro Servicio',
       subtitle: 'Plataforma SaaS de autoservicio para gestionar tu menú digital',
       customDesign: '🎨 Opciones de diseño personalizables',
-      customLogo: '✨ Sube tu propio logo',
-      exclusiveQR: '🔗 Genera tu código QR',
+      customLogo: '✨ Agente de IA captura solicitudes para modificar la carta',
+      exclusiveQR: '🔗 Genera link a tu carta digital',
       responsiveDesign: '📱 Diseño responsivo para todos los dispositivos',
       pricingTitle: 'Suscripción mensual simple — $15 USD por mes',
       firstYearFree: '',
@@ -458,8 +458,8 @@ export const translations: Record<Language, Translations> = {
       fromSecondYear: '',
       features: {
         customDesign: 'Opciones de Diseño Personalizables',
-        customLogo: 'Sube Tu Propio Logo',
-        exclusiveQR: 'Genera Tu Código QR',
+        customLogo: 'Agente de IA Captura Solicitudes para Modificar la Carta',
+        exclusiveQR: 'Genera Link a Tu Carta Digital',
         responsiveDesign: 'Diseño Responsivo para Todos los Dispositivos',
         shoppingCart: 'Carrito de Compras Integrado',
         whatsappIntegration: 'Integración con WhatsApp',
@@ -519,7 +519,7 @@ export const translations: Record<Language, Translations> = {
       }
     },
     footer: {
-      description: 'Tu menú digital, sin complicaciones. Gestiona tu restaurante y deja que las ventas fluyan.',
+      description: 'Tu menú digital, sin complicaciones. Gestiona tu carta con nuestro agente de IA y deja que las ventas fluyan.',
       service: 'Servicio',
       ourService: 'Nuestro Servicio',
       benefits: 'Beneficios',
@@ -542,7 +542,7 @@ export const translations: Record<Language, Translations> = {
     hero: {
       title: 'MiCartaPro',
       subtitle: 'Seu Cardápio Digital, Sem Complicações',
-      description: 'Gerencie seu cardápio digital e deixe as vendas fluírem.',
+      description: 'Gerencie seu cardápio digital com nosso agente de IA e deixe as vendas fluírem.',
       startFree: 'Comece Grátis',
       viewDemo: 'Ver Demo'
     },
@@ -550,8 +550,8 @@ export const translations: Record<Language, Translations> = {
       title: '🚀 Nosso Serviço',
       subtitle: 'Plataforma SaaS de autoatendimento para gerenciar seu cardápio digital',
       customDesign: '🎨 Opções de design personalizáveis',
-      customLogo: '✨ Envie seu próprio logo',
-      exclusiveQR: '🔗 Gere seu código QR',
+      customLogo: '✨ Agente de IA captura solicitações para modificar o cardápio',
+      exclusiveQR: '🔗 Gere link para seu cardápio digital',
       responsiveDesign: '📱 Design responsivo para todos os dispositivos',
       pricingTitle: 'Assinatura mensal simples — $15 USD por mês',
       firstYearFree: '',
@@ -633,8 +633,8 @@ export const translations: Record<Language, Translations> = {
       fromSecondYear: '',
       features: {
         customDesign: 'Opções de Design Personalizáveis',
-        customLogo: 'Envie Seu Próprio Logo',
-        exclusiveQR: 'Gere Seu Código QR',
+        customLogo: 'Agente de IA Captura Solicitações para Modificar o Cardápio',
+        exclusiveQR: 'Gere Link para Seu Cardápio Digital',
         responsiveDesign: 'Design Responsivo para Todos os Dispositivos',
         shoppingCart: 'Carrinho de Compras Integrado',
         whatsappIntegration: 'Integração com WhatsApp',
@@ -694,7 +694,7 @@ export const translations: Record<Language, Translations> = {
       }
     },
     footer: {
-      description: 'Seu cardápio digital, sem complicações. Gerencie seu restaurante e deixe as vendas fluírem.',
+      description: 'Seu cardápio digital, sem complicações. Gerencie seu cardápio com nosso agente de IA e deixe as vendas fluírem.',
       service: 'Serviço',
       ourService: 'Nosso Serviço',
       benefits: 'Benefícios',
