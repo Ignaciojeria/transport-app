@@ -22,26 +22,27 @@ export interface Translations {
     sendButton: string
     
     // Quick actions
-    createMenu: string
-    organizeDishes: string
-    viewPrices: string
-    moreOptions: string
+    updateAddress: string
+    addDishes: string
+    addDesserts: string
+    updatePrice: string
+    deleteItem: string
     
     // Messages
-    welcomeMessage1: string
-    welcomeMessage2: string
     errorNoSession: string
     errorNoMenu: string
     checkingMenu: string
     errorProcessing: string
     errorPolling: string
     successUpdated: string
+    exploreOptions: string
     
     // Quick action messages (sent to backend)
-    createMenuMessage: string
-    organizeDishesMessage: string
-    viewPricesMessage: string
-    moreOptionsMessage: string
+    updateAddressMessage: string
+    addDishesMessage: string
+    addDessertsMessage: string
+    updatePriceMessage: string
+    deleteItemMessage: string
   }
   
   // MenuPreview.svelte
@@ -76,22 +77,23 @@ export const translations: Record<Language, Translations> = {
       loadingPreview: 'Cargando vista previa...',
       placeholder: 'Escribe tu menú y precios aquí...',
       sendButton: 'Enviar',
-      createMenu: 'Crear menú',
-      organizeDishes: 'Organizar platos',
-      viewPrices: 'Ver precios',
-      moreOptions: 'Más',
-      welcomeMessage1: '¡Hola! 👋 Soy tu asistente para crear menús digitales. Puedo ayudarte a armar tu carta de manera profesional.',
-      welcomeMessage2: 'Simplemente escribe tu menú y precios, y yo me encargaré de organizarlo y formatearlo para crear una carta atractiva.',
+      updateAddress: 'Actualiza la dirección de mi carta',
+      addDishes: 'Agrega uno o varios platos a mi carta',
+      addDesserts: 'Agrega uno o varios postres a mi carta',
+      updatePrice: 'Actualiza el precio de uno de mis platos',
+      deleteItem: 'Elimina un item de mi carta',
       errorNoSession: 'Error: No hay sesión activa. Por favor, inicia sesión nuevamente.',
       errorNoMenu: 'Error: No se encontró un menú. Por favor, crea un menú primero.',
       checkingMenu: 'Verificando que tu menú esté listo...',
       errorProcessing: 'Error al procesar tu mensaje: {message}',
       errorPolling: 'El mensaje fue procesado, pero hubo un problema al verificar la actualización: {message}',
       successUpdated: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
-      createMenuMessage: 'Quiero crear un menú para un restaurante',
-      organizeDishesMessage: 'Necesito ayuda para organizar mis platos',
-      viewPricesMessage: '¿Cómo funciona el sistema de precios?',
-      moreOptionsMessage: 'Más opciones'
+      exploreOptions: 'Explorar opciones',
+      updateAddressMessage: 'Actualiza la dirección de mi carta',
+      addDishesMessage: 'Agrega uno o varios platos a mi carta',
+      addDessertsMessage: 'Agrega uno o varios postres a mi carta',
+      updatePriceMessage: 'Actualiza el precio de uno de mis platos',
+      deleteItemMessage: 'Elimina un item de mi carta'
     },
     preview: {
       loading: 'Cargando tu carta...',
@@ -134,6 +136,7 @@ export const translations: Record<Language, Translations> = {
       errorProcessing: 'Erro ao processar sua mensagem: {message}',
       errorPolling: 'A mensagem foi processada, mas houve um problema ao verificar a atualização: {message}',
       successUpdated: 'Sua carta foi atualizada com sucesso! O cardápio foi salvo com as alterações solicitadas.',
+      exploreOptions: 'Explorar opções',
       createMenuMessage: 'Quero criar um cardápio para um restaurante',
       organizeDishesMessage: 'Preciso de ajuda para organizar meus pratos',
       viewPricesMessage: 'Como funciona o sistema de preços?',
@@ -168,22 +171,23 @@ export const translations: Record<Language, Translations> = {
       loadingPreview: 'Loading preview...',
       placeholder: 'Write your menu and prices here...',
       sendButton: 'Send',
-      createMenu: 'Create menu',
-      organizeDishes: 'Organize dishes',
-      viewPrices: 'View prices',
-      moreOptions: 'More',
-      welcomeMessage1: 'Hello! 👋 I am your assistant for creating digital menus. I can help you create your menu professionally.',
-      welcomeMessage2: 'Simply write your menu and prices, and I will take care of organizing and formatting them to create an attractive menu.',
+      updateAddress: 'Update my menu address',
+      addDishes: 'Add one or more dishes to my menu',
+      addDesserts: 'Add one or more desserts to my menu',
+      updatePrice: 'Update the price of one of my dishes',
+      deleteItem: 'Delete an item from my menu',
       errorNoSession: 'Error: No active session. Please sign in again.',
       errorNoMenu: 'Error: No menu found. Please create one first.',
       checkingMenu: 'Checking that your menu is ready...',
       errorProcessing: 'Error processing your message: {message}',
       errorPolling: 'The message was processed, but there was a problem verifying the update: {message}',
       successUpdated: 'Your menu has been successfully updated! The menu has been saved with the requested changes.',
-      createMenuMessage: 'I want to create a menu for a restaurant',
-      organizeDishesMessage: 'I need help organizing my dishes',
-      viewPricesMessage: 'How does the pricing system work?',
-      moreOptionsMessage: 'More options'
+      exploreOptions: 'Explore options',
+      updateAddressMessage: 'Update my menu address',
+      addDishesMessage: 'Add one or more dishes to my menu',
+      addDessertsMessage: 'Add one or more desserts to my menu',
+      updatePriceMessage: 'Update the price of one of my dishes',
+      deleteItemMessage: 'Delete an item from my menu'
     },
     preview: {
       loading: 'Loading your menu...',

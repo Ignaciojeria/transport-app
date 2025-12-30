@@ -1,14 +1,53 @@
 <script lang="ts">
   import { t as tStore } from '../useLanguage'
   
-  let { onSend, disabled = false, onFocus }: { onSend: (message: string) => void, disabled?: boolean, onFocus?: () => void } = $props()
+  let { onSend, disabled = false, onFocus, onBlur, initialValue = '' }: { 
+    onSend: (message: string) => void, 
+    disabled?: boolean, 
+    onFocus?: () => void,
+    onBlur?: () => void,
+    initialValue?: string
+  } = $props()
 
-  let inputValue = $state('')
+  let inputValue = $state(initialValue)
   let textareaRef: HTMLTextAreaElement
+  
+  // Exponer función para establecer el valor desde el componente padre
+  export function setValue(value: string) {
+    inputValue = value
+    if (textareaRef) {
+      adjustTextareaHeight()
+      textareaRef.focus()
+    }
+  }
+  
+  // Exponer función para hacer focus en el input
+  export function focus() {
+    if (textareaRef) {
+      textareaRef.focus()
+    }
+  }
+  
+  // Exponer referencia al textarea para que el padre pueda acceder al valor
+  export { textareaRef }
+  
+  
+  // Actualizar cuando cambie initialValue
+  $effect(() => {
+    if (initialValue) {
+      inputValue = initialValue
+    }
+  })
   
   function handleFocus() {
     if (onFocus) {
       onFocus()
+    }
+  }
+
+  function handleBlur() {
+    if (onBlur) {
+      onBlur()
     }
   }
 
@@ -41,33 +80,40 @@
   })
 </script>
 
-<div class="relative flex items-end gap-2 bg-white rounded-2xl border border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all">
-  <textarea
-    bind:this={textareaRef}
-    bind:value={inputValue}
-    onkeydown={handleKeyDown}
-    oninput={adjustTextareaHeight}
-    onfocus={handleFocus}
-    placeholder={$tStore.chat.placeholder}
-    disabled={disabled}
-    class="flex-1 resize-none border-0 focus:ring-0 focus:outline-none py-3 px-4 text-gray-900 placeholder-gray-400 bg-transparent max-h-[200px] overflow-y-auto"
-    rows="1"
-  ></textarea>
+<div class="relative">
+  <!-- Efecto de brillo con gradiente (estilo AnimatedChat) -->
+  <div class="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-2xl blur-sm opacity-30"></div>
+  <div class="relative bg-white rounded-2xl border-2 border-transparent p-1">
+    <div class="flex items-center gap-2 px-4 py-3 bg-white rounded-xl">
+      <!-- Textarea -->
+      <textarea
+        bind:this={textareaRef}
+        bind:value={inputValue}
+        onkeydown={handleKeyDown}
+        oninput={adjustTextareaHeight}
+        onfocus={handleFocus}
+        onblur={handleBlur}
+        placeholder={$tStore.chat.placeholder}
+        disabled={disabled}
+        class="flex-1 resize-none border-0 focus:ring-0 focus:outline-none text-gray-900 placeholder-gray-400 bg-transparent max-h-[200px] overflow-y-auto text-base"
+        rows="1"
+      ></textarea>
 
-  <div class="flex items-center pr-2 pb-2">
-    <button
-      type="button"
-      onclick={handleSubmit}
-      disabled={disabled || !inputValue.trim()}
-      class="p-1.5 rounded-lg transition-colors {disabled || !inputValue.trim() 
-        ? 'text-gray-300 cursor-not-allowed' 
-        : 'text-blue-600 hover:bg-blue-50'}"
-      title="Enviar"
-    >
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-      </svg>
-    </button>
+      <!-- Botón de enviar (triángulo) - solo visible cuando hay texto -->
+      {#if inputValue.trim()}
+        <button
+          type="button"
+          onclick={handleSubmit}
+          disabled={disabled}
+          class="p-2 rounded-lg transition-colors flex-shrink-0 bg-gray-800 hover:bg-gray-700 text-white"
+          title="Enviar"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+        </button>
+      {/if}
+    </div>
   </div>
 </div>
 

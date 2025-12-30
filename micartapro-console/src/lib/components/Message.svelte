@@ -1,12 +1,15 @@
 <script lang="ts">
+  import { t as tStore } from '../useLanguage'
+  
   interface Message {
     id: string
     role: 'user' | 'assistant'
     content: string
     timestamp: Date
+    showExploreButton?: boolean
   }
 
-  let { message }: { message: Message } = $props()
+  let { message, onExploreOptions }: { message: Message, onExploreOptions?: () => void } = $props()
 </script>
 
 <div class="flex items-start gap-3 {message.role === 'user' ? 'flex-row-reverse' : ''}">
@@ -33,6 +36,14 @@
       px-4 py-3 max-w-[85%] inline-block
     ">
       <p class="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+      {#if message.showExploreButton && onExploreOptions}
+        <button
+          onclick={onExploreOptions}
+          class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+        >
+          {$tStore.chat.exploreOptions}
+        </button>
+      {/if}
     </div>
     <p class="text-xs text-gray-500 mt-1 {message.role === 'user' ? 'text-right' : 'text-left'}">
       {new Date(message.timestamp).toLocaleTimeString('es-ES', { 

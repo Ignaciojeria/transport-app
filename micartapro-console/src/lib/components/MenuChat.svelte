@@ -13,6 +13,7 @@
     role: 'user' | 'assistant'
     content: string
     timestamp: Date
+    showExploreButton?: boolean
   }
 
   let messages: ChatMessage[] = $state([])
@@ -24,9 +25,19 @@
   let copySuccess = $state(false)
   let menuReady = $state(false)
   let checkingMenu = $state(false)
+  let chatInputRef: any = $state(null)
+  let showExamples = $state(false)
+  let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | null = $state(null)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
+  const userName = $derived(
+    user?.user_metadata?.name || 
+    user?.user_metadata?.full_name || 
+    user?.email?.split('@')[0] || 
+    'Usuario'
+  )
+  const userPicture = $derived(user?.user_metadata?.picture || user?.user_metadata?.avatar_url || null)
   const session = $derived(authState.session)
   const currentLanguage = $derived($language)
 
@@ -71,26 +82,9 @@
     }
   }
 
-  // Función para obtener mensajes de bienvenida
-  function getWelcomeMessages() {
-    return [
-      {
-        id: 'welcome-1',
-        role: 'assistant' as const,
-        content: $tStore.chat.welcomeMessage1,
-        timestamp: new Date()
-      },
-      {
-        id: 'welcome-2',
-        role: 'assistant' as const,
-        content: $tStore.chat.welcomeMessage2,
-        timestamp: new Date()
-      }
-    ]
-  }
-
   onMount(async () => {
-    messages = getWelcomeMessages()
+    // No mostrar mensajes inicialmente, solo los botones
+    messages = []
     
     // Actualizar menuUrl cuando cambie el idioma
     $effect(() => {
@@ -252,7 +246,8 @@
             id: `success-${Date.now()}`,
             role: 'assistant',
             content: $tStore.chat.successUpdated,
-            timestamp: new Date()
+            timestamp: new Date(),
+            showExploreButton: true // Marcar que este mensaje debe mostrar el botón
           }
           messages = [...messages, successMessage]
           
@@ -315,6 +310,67 @@
     }
   }
 
+  function handleButtonClick(type: 'address' | 'dishes' | 'desserts' | 'price' | 'delete') {
+    showExamples = true
+    currentExampleType = type
+    messages = []
+    
+    setTimeout(() => {
+      chatInputRef?.focus()
+    }, 100)
+  }
+
+  function getExampleMessages(): string[] {
+    switch (currentExampleType) {
+      case 'address':
+        return [
+          'Cambia la dirección a Avenida Siempre Viva 3151',
+          'Actualiza la dirección del restaurante a Calle Principal 123'
+        ]
+      case 'dishes':
+        return [
+          'En la categoría "Platos Principales" añade empanadas de pollo a 3000 pesos',
+          'Agrega pasta carbonara a 8500 pesos en la sección de platos principales'
+        ]
+      case 'desserts':
+        return [
+          'En la categoría "Postres" añade torta de chocolate a 4500 pesos',
+          'Agrega helado de vainilla a 2500 pesos en postres'
+        ]
+      case 'price':
+        return [
+          'Cambia el precio de las empanadas a 3500 pesos',
+          'Actualiza el precio del plato principal "Pasta Carbonara" a 9000 pesos'
+        ]
+      case 'delete':
+        return [
+          'Elimina las empanadas de pollo del menú',
+          'Quita el plato "Pasta Carbonara" de la carta'
+        ]
+      default:
+        return []
+    }
+  }
+
+  function handleInputBlur() {
+    // Si el input pierde el focus y no hay texto, volver a mostrar los botones
+    setTimeout(() => {
+      const textarea = chatInputRef?.textareaRef
+      if (textarea && !textarea.value?.trim()) {
+        showExamples = false
+        currentExampleType = null
+        messages = []
+      }
+    }, 200) // Pequeño delay para permitir que otros eventos se procesen
+  }
+
+  function resetToOptions() {
+    // Resetear para mostrar los botones de opciones nuevamente
+    showExamples = false
+    currentExampleType = null
+    messages = []
+  }
+
   $effect(() => {
     if (messages.length > 0) {
       scrollToBottom()
@@ -323,130 +379,115 @@
 </script>
 
 <div class="flex flex-col h-screen bg-white">
-  <!-- Header -->
-  <header class="border-b border-gray-200 bg-white px-2 flex items-center justify-between" style="padding-top: 0px; padding-bottom: 0px; min-height: auto;">
-    <div class="flex items-center gap-1">
-      <button class="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="Menú">
-        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-      {#if !logoError}
-        <img 
-          src="/logo.png" 
-          alt="MiCartaPro Logo" 
-          class="h-16 md:h-20 w-auto"
-          style="margin: 0;"
-          onerror={() => logoError = true}
-        />
-      {:else}
-        <h1 class="text-2xl font-semibold text-gray-900" style="margin: 0; line-height: 1;">MiCartaPro</h1>
-      {/if}
-    </div>
-    <div class="flex items-center gap-1">
+  <!-- Header estilo Gemini -->
+  <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
+    <button class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Menú">
+      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <h1 class="text-lg font-medium text-gray-900">MiCartaPro</h1>
+    <div class="flex items-center gap-2">
       <button 
         onclick={togglePreview}
-        class="p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2 {showPreview ? 'bg-blue-50 text-blue-600' : 'text-gray-600'}"
+        class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
         aria-label="Ver vista previa"
         title="Ver vista previa de tu carta"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
         </svg>
-        <span class="text-xs font-medium hidden sm:inline">{$tStore.chat.previewButton}</span>
       </button>
-      <button 
-        onclick={handleUpgradeToPro}
-        class="upgrade-button px-3 py-1.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white text-xs font-semibold rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg relative overflow-hidden flex items-center gap-1.5"
-        aria-label="Upgrade to Pro"
-      >
-        <span class="relative z-10 flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-          Unlock Pro
-        </span>
-      </button>
+      {#if userPicture}
+        <img 
+          src={userPicture} 
+          alt={userName}
+          class="w-8 h-8 rounded-full"
+        />
+      {:else}
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+          {userName.charAt(0).toUpperCase()}
+        </div>
+      {/if}
     </div>
   </header>
 
   <!-- Messages Container -->
   <div 
     id="messages-container"
-    class="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6 space-y-6"
+    class="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6"
   >
     {#if messages.length === 0}
-      <div class="flex flex-col items-center justify-center h-full text-center px-4">
-        <div class="mb-6">
-          <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-2">
-            {$tStore.chat.welcomeTitle}
+      <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
+        <!-- Saludo personalizado estilo Gemini -->
+        <div class="mt-8 mb-6 text-center">
+          <h2 class="text-2xl font-normal text-gray-900 mb-2">
+            Hola, {userName}
           </h2>
-          <p class="text-gray-600 mb-8">
-            {$tStore.chat.welcomeSubtitle}
+          <p class="text-lg text-gray-600">
+            ¿Qué quieres en tu carta?
           </p>
         </div>
 
-        <!-- Quick action buttons -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full max-w-2xl">
-          <button 
-            class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage($tStore.chat.createMenuMessage)}
-          >
-            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-green-200 transition-colors">
-              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            <p class="text-sm font-medium text-gray-900">{$tStore.chat.createMenu}</p>
-          </button>
+        {#if !showExamples}
+          <!-- Botones seleccionables -->
+          <div class="flex flex-col gap-3 w-full">
+            <button 
+              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+              onclick={() => handleButtonClick('address')}
+            >
+              <span class="text-2xl">📍</span>
+              <span class="text-base font-normal text-gray-900">{$tStore.chat.updateAddress}</span>
+            </button>
 
-          <button 
-            class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage($tStore.chat.organizeDishesMessage)}
-          >
-            <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-orange-200 transition-colors">
-              <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <p class="text-sm font-medium text-gray-900">{$tStore.chat.organizeDishes}</p>
-          </button>
+            <button 
+              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+              onclick={() => handleButtonClick('dishes')}
+            >
+              <span class="text-2xl">🍽️</span>
+              <span class="text-base font-normal text-gray-900">{$tStore.chat.addDishes}</span>
+            </button>
 
-          <button 
-            class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage($tStore.chat.viewPricesMessage)}
-          >
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-blue-200 transition-colors">
-              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <p class="text-sm font-medium text-gray-900">{$tStore.chat.viewPrices}</p>
-          </button>
+            <button 
+              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+              onclick={() => handleButtonClick('desserts')}
+            >
+              <span class="text-2xl">🍰</span>
+              <span class="text-base font-normal text-gray-900">{$tStore.chat.addDesserts}</span>
+            </button>
 
-          <button 
-            class="p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left group"
-            onclick={() => handleSendMessage($tStore.chat.moreOptionsMessage)}
-          >
-            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mb-2 group-hover:bg-purple-200 transition-colors">
-              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </div>
-            <p class="text-sm font-medium text-gray-900">{$tStore.chat.moreOptions}</p>
-          </button>
-        </div>
+            <button 
+              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+              onclick={() => handleButtonClick('price')}
+            >
+              <span class="text-2xl">💰</span>
+              <span class="text-base font-normal text-gray-900">{$tStore.chat.updatePrice}</span>
+            </button>
+
+            <button 
+              class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+              onclick={() => handleButtonClick('delete')}
+            >
+              <span class="text-2xl">🗑️</span>
+              <span class="text-base font-normal text-gray-900">{$tStore.chat.deleteItem}</span>
+            </button>
+          </div>
+        {:else}
+          <!-- Ejemplos no seleccionables -->
+          <div class="flex flex-col gap-2 w-full">
+            {#each getExampleMessages() as example}
+              <div class="text-base font-normal text-gray-900 py-2">
+                {example}
+              </div>
+            {/each}
+          </div>
+        {/if}
       </div>
     {:else}
-      <div class="max-w-3xl mx-auto space-y-6">
+      <div class="max-w-3xl mx-auto space-y-6 pt-4">
         {#each messages as message (message.id)}
-          <Message message={message} />
+          <Message message={message} onExploreOptions={resetToOptions} />
         {/each}
 
         {#if isLoading}
@@ -481,7 +522,7 @@
         </div>
       {/if}
       
-      <ChatInput onSend={handleSendMessage} disabled={isLoading || !menuReady || checkingMenu} onFocus={handleInputFocus} />
+      <ChatInput bind:this={chatInputRef} onSend={handleSendMessage} disabled={isLoading || !menuReady || checkingMenu} onFocus={handleInputFocus} onBlur={handleInputBlur} />
     </div>
   </div>
 </div>
@@ -583,50 +624,6 @@
   .iframe-container iframe {
     touch-action: auto;
     pointer-events: auto;
-  }
-
-  /* Upgrade Button Animations */
-  .upgrade-button {
-    animation: pulse-glow 2s ease-in-out infinite;
-  }
-
-  .upgrade-button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
-    animation: shimmer 3s infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% {
-      box-shadow: 0 0 10px rgba(147, 51, 234, 0.5), 0 0 20px rgba(59, 130, 246, 0.3);
-    }
-    50% {
-      box-shadow: 0 0 20px rgba(147, 51, 234, 0.8), 0 0 30px rgba(59, 130, 246, 0.5), 0 0 40px rgba(147, 51, 234, 0.3);
-    }
-  }
-
-  @keyframes shimmer {
-    0% {
-      left: -100%;
-    }
-    100% {
-      left: 100%;
-    }
-  }
-
-  .upgrade-button:hover {
-    transform: scale(1.05);
-    animation: pulse-glow 1s ease-in-out infinite;
   }
 </style>
 
