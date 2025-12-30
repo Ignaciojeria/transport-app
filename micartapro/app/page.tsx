@@ -19,6 +19,7 @@ import { openWhatsAppQuote } from "@/lib/whatsapp"
 import { useLanguage } from "@/lib/useLanguage"
 import { LanguageSelector } from "@/components/LanguageSelector"
 import { getAuthUiUrl } from "@/lib/utils"
+import { AnimatedChat } from "@/components/AnimatedChat"
 
 // Helper function to highlight AI agent text
 function highlightAIAgent(text: string) {
@@ -135,6 +136,16 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
+              
+              {/* Animated Chat */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="mt-12"
+              >
+                <AnimatedChat />
+              </motion.div>
             </motion.div>
           </div>
         </div>

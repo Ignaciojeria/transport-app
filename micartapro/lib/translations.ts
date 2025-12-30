@@ -167,6 +167,17 @@ export interface Translations {
     refund: string
     copyright: string
   }
+  
+  // Chat Examples
+  chatExamples: {
+    title: string
+    subtitle: string
+    chatTitle: string
+    chatSubtitle: string
+    placeholder: string
+    response: string
+    messages: string[]
+  }
 }
 
 export const languageNames: Record<Language, string> = {
@@ -355,6 +366,22 @@ export const translations: Record<Language, Translations> = {
       terms: 'Terms and Conditions',
       refund: 'Refund Policy',
       copyright: 'All rights reserved.'
+    },
+    chatExamples: {
+      title: 'Example Instructions',
+      subtitle: 'This is how you can modify your menu with our AI agent',
+      chatTitle: 'AI Agent',
+      chatSubtitle: 'Online • Responds instantly',
+      placeholder: 'Start creating...',
+      response: 'Done! Changes applied successfully.',
+      messages: [
+        'Add chicken empanadas to the menu at $3,000 pesos',
+        'Modify the contact number on the menu',
+        'Business hours are Monday to Friday from 9 AM to 8 PM',
+        'Update the price of pizza to $8,500 pesos',
+        'Add a new category called "Desserts"',
+        'Change the restaurant address'
+      ]
     }
   },
   ES: {
@@ -530,6 +557,22 @@ export const translations: Record<Language, Translations> = {
       terms: 'Términos y Condiciones',
       refund: 'Política de Reembolso',
       copyright: 'Todos los derechos reservados.'
+    },
+    chatExamples: {
+      title: 'Ejemplos de Instrucciones',
+      subtitle: 'Así es como puedes modificar tu menú con nuestro agente de IA',
+      chatTitle: 'Agente de IA',
+      chatSubtitle: 'En línea • Responde al instante',
+      placeholder: 'Empieza a crear...',
+      response: '¡Listo! Cambios aplicados exitosamente.',
+      messages: [
+        'Añade al menú empanadas de pollo a 3000 pesos',
+        'Modifica el número de contacto del menú',
+        'Los horarios de atención son de lunes a viernes de 9 am a 8 pm',
+        'Actualiza el precio de la pizza a 8500 pesos',
+        'Añade una nueva categoría llamada "Postres"',
+        'Cambia la dirección del restaurante'
+      ]
     }
   },
   PT: {
@@ -705,6 +748,22 @@ export const translations: Record<Language, Translations> = {
       terms: 'Termos e Condições',
       refund: 'Política de Reembolso',
       copyright: 'Todos os direitos reservados.'
+    },
+    chatExamples: {
+      title: 'Exemplos de Instruções',
+      subtitle: 'É assim que você pode modificar seu cardápio com nosso agente de IA',
+      chatTitle: 'Agente de IA',
+      chatSubtitle: 'Online • Responde instantaneamente',
+      placeholder: 'Comece a criar...',
+      response: 'Pronto! Alterações aplicadas com sucesso.',
+      messages: [
+        'Adicione ao cardápio empadas de frango a 3000 pesos',
+        'Modifique o número de contato do cardápio',
+        'Os horários de atendimento são de segunda a sexta das 9h às 20h',
+        'Atualize o preço da pizza para 8500 pesos',
+        'Adicione uma nova categoria chamada "Sobremesas"',
+        'Altere o endereço do restaurante'
+      ]
     }
   }
 }
