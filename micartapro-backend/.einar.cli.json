@@ -64,6 +64,14 @@
         {
             "kind": "usecase",
             "name": "on-user-menus-inserted-webhook"
+        },
+        {
+            "kind": "get-controller",
+            "name": "creem-checkout"
+        },
+        {
+            "kind": "resty-client",
+            "name": "get-creem-checkout-url"
         }
     ]
 }

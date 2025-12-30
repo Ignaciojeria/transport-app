@@ -11,11 +11,13 @@ require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cloudevents/sdk-go/v2 v2.16.2
 	github.com/go-fuego/fuego v0.18.8
+	github.com/go-resty/resty/v2 v2.17.1
 	github.com/go-slog/otelslog v0.3.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/google/uuid v1.6.0
 	github.com/hellofresh/health-go/v5 v5.5.5
 	github.com/joho/godotenv v1.5.1
+	github.com/rs/cors v1.11.1
 	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.15.0
@@ -86,7 +88,6 @@ require (
 	github.com/oasdiff/yaml3 v0.0.0-20250309153720-d2182401db90 // indirect
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
-	github.com/rs/cors v1.11.1 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

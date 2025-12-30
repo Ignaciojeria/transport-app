@@ -18,7 +18,7 @@ func NewOnUserMenusInsertedWebhook(publisherManager eventprocessing.PublisherMan
 	return func(ctx context.Context, wh events.UserMenusInsertedWebhook) error {
 		menuCreateRequest := events.MenuCreateRequest{
 			ID:         wh.Record.MenuID,
-			CoverImage: "https://storage.googleapis.com/micartapro-menus/core/micartapro-cover.webp",
+			CoverImage: "https://storage.googleapis.com/micartapro-menus/menus/01KCW67YKSV455GBVDT88S4072/gallery/micartapro-cover-40.webp",
 			BusinessInfo: events.BusinessInfo{
 				BusinessName:  "cadorago",
 				Whatsapp:      "+56957857558",

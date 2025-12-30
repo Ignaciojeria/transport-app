@@ -24,6 +24,8 @@ import (
 	_ "micartapro/app/usecase"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	_ "micartapro/app/adapter/out/restyclient"
+	_ "micartapro/app/shared/infrastructure/httpresty"
 )
 
 //go:embed .version
