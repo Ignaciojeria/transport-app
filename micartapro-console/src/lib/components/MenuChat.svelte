@@ -28,6 +28,7 @@
   let chatInputRef: any = $state(null)
   let showExamples = $state(false)
   let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | null = $state(null)
+  let messageSent = $state(false) // Flag para indicar que se envió un mensaje
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -166,6 +167,11 @@
 
   async function handleSendMessage(content: string) {
     if (!content.trim() || isLoading) return
+
+    // Ocultar sugerencias cuando se envía un mensaje
+    showExamples = false
+    currentExampleType = null
+    messageSent = true // Marcar que se envió un mensaje
 
     // Validar que tenemos los datos necesarios
       if (!session?.access_token) {
@@ -368,6 +374,12 @@
   }
 
   function handleInputBlur() {
+    // Si se acaba de enviar un mensaje, no resetear
+    if (messageSent) {
+      messageSent = false // Resetear el flag
+      return
+    }
+    
     // En móvil, esperar más tiempo para detectar si el teclado se cerró realmente
     const delay = window.innerWidth <= 768 ? 500 : 200
     
@@ -494,15 +506,6 @@
               <span class="text-base font-normal text-gray-900">{$tStore.chat.deleteItem}</span>
             </button>
           </div>
-        {:else}
-          <!-- Ejemplos no seleccionables -->
-          <div class="flex flex-col gap-2 w-full">
-            {#each getExampleMessages() as example}
-              <div class="text-base font-normal text-gray-900 py-2">
-                {example}
-              </div>
-            {/each}
-          </div>
         {/if}
       </div>
     {:else}
@@ -532,8 +535,8 @@
   </div>
 
   <!-- Chat Input -->
-  <div class="border-t border-gray-200 bg-white px-4 py-3 sticky bottom-0 z-10 safe-area-inset-bottom">
-    <div class="max-w-3xl mx-auto">
+  <div class="border-t border-gray-200 bg-white sticky bottom-0 z-10 safe-area-inset-bottom">
+    <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">
           <div class="text-center">
@@ -544,6 +547,19 @@
       {/if}
       
       <ChatInput bind:this={chatInputRef} onSend={handleSendMessage} disabled={isLoading || !menuReady || checkingMenu} onFocus={handleInputFocus} onBlur={handleInputBlur} />
+      
+      <!-- Sugerencias justo debajo del input -->
+      {#if showExamples && currentExampleType}
+        <div class="mt-3 px-2">
+          <div class="flex flex-col gap-2">
+            {#each getExampleMessages() as example}
+              <div class="text-sm font-normal text-gray-600 py-1.5">
+                {example}
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
