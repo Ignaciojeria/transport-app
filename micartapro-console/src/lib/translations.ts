@@ -27,6 +27,7 @@ export interface Translations {
     addDesserts: string
     updatePrice: string
     deleteItem: string
+    updateWhatsApp: string
     
     // Messages
     errorNoSession: string
@@ -36,6 +37,7 @@ export interface Translations {
     errorPolling: string
     successUpdated: string
     exploreOptions: string
+    examplesLabel: string
     
     // Quick action messages (sent to backend)
     updateAddressMessage: string
@@ -43,6 +45,7 @@ export interface Translations {
     addDessertsMessage: string
     updatePriceMessage: string
     deleteItemMessage: string
+    updateWhatsAppMessage: string
   }
   
   // MenuPreview.svelte
@@ -75,13 +78,14 @@ export const translations: Record<Language, Translations> = {
       copyLink: 'Copiar enlace',
       linkCopied: '¡Copiado!',
       loadingPreview: 'Cargando vista previa...',
-      placeholder: 'Escribe tu menú y precios aquí...',
+      placeholder: 'Escribe tu solicitud aquí...',
       sendButton: 'Enviar',
       updateAddress: 'Actualiza la dirección de mi carta',
       addDishes: 'Agrega uno o varios platos a mi carta',
       addDesserts: 'Agrega uno o varios postres a mi carta',
       updatePrice: 'Actualiza el precio de uno de mis platos',
       deleteItem: 'Elimina un item de mi carta',
+      updateWhatsApp: 'Actualiza mi número de WhatsApp',
       errorNoSession: 'Error: No hay sesión activa. Por favor, inicia sesión nuevamente.',
       errorNoMenu: 'Error: No se encontró un menú. Por favor, crea un menú primero.',
       checkingMenu: 'Verificando que tu menú esté listo...',
@@ -89,11 +93,14 @@ export const translations: Record<Language, Translations> = {
       errorPolling: 'El mensaje fue procesado, pero hubo un problema al verificar la actualización: {message}',
       successUpdated: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
       exploreOptions: 'Explorar opciones',
+      examplesLabel: 'Ejemplos:',
+      examplesLabel: 'Ejemplos:',
       updateAddressMessage: 'Actualiza la dirección de mi carta',
       addDishesMessage: 'Agrega uno o varios platos a mi carta',
       addDessertsMessage: 'Agrega uno o varios postres a mi carta',
       updatePriceMessage: 'Actualiza el precio de uno de mis platos',
-      deleteItemMessage: 'Elimina un item de mi carta'
+      deleteItemMessage: 'Elimina un item de mi carta',
+      updateWhatsAppMessage: 'Actualiza mi número de WhatsApp'
     },
     preview: {
       loading: 'Cargando tu carta...',
@@ -122,8 +129,14 @@ export const translations: Record<Language, Translations> = {
       copyLink: 'Copiar link',
       linkCopied: 'Copiado!',
       loadingPreview: 'Carregando visualização...',
-      placeholder: 'Escreva seu cardápio e preços aqui...',
+      placeholder: 'Escreva sua solicitação aqui...',
       sendButton: 'Enviar',
+      updateAddress: 'Atualize o endereço da minha carta',
+      addDishes: 'Adicione um ou vários pratos à minha carta',
+      addDesserts: 'Adicione uma ou várias sobremesas à minha carta',
+      updatePrice: 'Atualize o preço de um dos meus pratos',
+      deleteItem: 'Exclua um item da minha carta',
+      updateWhatsApp: 'Atualize meu número do WhatsApp',
       createMenu: 'Criar cardápio',
       organizeDishes: 'Organizar pratos',
       viewPrices: 'Ver preços',
@@ -137,6 +150,13 @@ export const translations: Record<Language, Translations> = {
       errorPolling: 'A mensagem foi processada, mas houve um problema ao verificar a atualização: {message}',
       successUpdated: 'Sua carta foi atualizada com sucesso! O cardápio foi salvo com as alterações solicitadas.',
       exploreOptions: 'Explorar opções',
+      examplesLabel: 'Exemplos:',
+      updateAddressMessage: 'Atualize o endereço da minha carta',
+      addDishesMessage: 'Adicione um ou vários pratos à minha carta',
+      addDessertsMessage: 'Adicione uma ou várias sobremesas à minha carta',
+      updatePriceMessage: 'Atualize o preço de um dos meus pratos',
+      deleteItemMessage: 'Exclua um item da minha carta',
+      updateWhatsAppMessage: 'Atualize meu número do WhatsApp',
       createMenuMessage: 'Quero criar um cardápio para um restaurante',
       organizeDishesMessage: 'Preciso de ajuda para organizar meus pratos',
       viewPricesMessage: 'Como funciona o sistema de preços?',
@@ -169,13 +189,14 @@ export const translations: Record<Language, Translations> = {
       copyLink: 'Copy link',
       linkCopied: 'Copied!',
       loadingPreview: 'Loading preview...',
-      placeholder: 'Write your menu and prices here...',
+      placeholder: 'Write your request here...',
       sendButton: 'Send',
       updateAddress: 'Update my menu address',
       addDishes: 'Add one or more dishes to my menu',
       addDesserts: 'Add one or more desserts to my menu',
       updatePrice: 'Update the price of one of my dishes',
       deleteItem: 'Delete an item from my menu',
+      updateWhatsApp: 'Update my WhatsApp number',
       errorNoSession: 'Error: No active session. Please sign in again.',
       errorNoMenu: 'Error: No menu found. Please create one first.',
       checkingMenu: 'Checking that your menu is ready...',
@@ -183,11 +204,13 @@ export const translations: Record<Language, Translations> = {
       errorPolling: 'The message was processed, but there was a problem verifying the update: {message}',
       successUpdated: 'Your menu has been successfully updated! The menu has been saved with the requested changes.',
       exploreOptions: 'Explore options',
+      examplesLabel: 'Examples:',
       updateAddressMessage: 'Update my menu address',
       addDishesMessage: 'Add one or more dishes to my menu',
       addDessertsMessage: 'Add one or more desserts to my menu',
       updatePriceMessage: 'Update the price of one of my dishes',
-      deleteItemMessage: 'Delete an item from my menu'
+      deleteItemMessage: 'Delete an item from my menu',
+      updateWhatsAppMessage: 'Update my WhatsApp number'
     },
     preview: {
       loading: 'Loading your menu...',

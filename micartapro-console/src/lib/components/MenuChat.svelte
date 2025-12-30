@@ -27,7 +27,7 @@
   let checkingMenu = $state(false)
   let chatInputRef: any = $state(null)
   let showExamples = $state(false)
-  let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | null = $state(null)
+  let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | 'whatsapp' | null = $state(null)
   let messageSent = $state(false) // Flag para indicar que se envió un mensaje
 
   const user = $derived(authState.user)
@@ -324,7 +324,7 @@
     }
   }
 
-  function handleButtonClick(type: 'address' | 'dishes' | 'desserts' | 'price' | 'delete') {
+  function handleButtonClick(type: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | 'whatsapp') {
     showExamples = true
     currentExampleType = type
     messages = []
@@ -369,6 +369,21 @@
           'Elimina las empanadas de pollo del menú',
           'Quita el plato "Pasta Carbonara" de la carta'
         ]
+      case 'whatsapp':
+        const lang = currentLanguage
+        if (lang === 'ES') {
+          return [
+            'Cambia el número de WhatsApp a +56912345678'
+          ]
+        } else if (lang === 'PT') {
+          return [
+            'Mude o número do WhatsApp para +5511987654321'
+          ]
+        } else {
+          return [
+            'Change the WhatsApp number to +15551234567'
+          ]
+        }
       default:
         return []
     }
@@ -482,6 +497,14 @@
         <div class="flex flex-col gap-3 w-full">
           <button 
             class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            onclick={() => handleButtonClick('whatsapp')}
+          >
+            <span class="text-2xl">📱</span>
+            <span class="text-base font-normal text-gray-900">{$tStore.chat.updateWhatsApp}</span>
+          </button>
+
+          <button 
+            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
             onclick={() => handleButtonClick('address')}
           >
             <span class="text-2xl">📍</span>
@@ -564,6 +587,7 @@
       <!-- Sugerencias justo debajo del input -->
       {#if showExamples && currentExampleType}
         <div class="mt-3 px-2">
+          <p class="text-xs text-gray-500 mb-2">{$tStore.chat.examplesLabel}</p>
           <div class="flex flex-col gap-2">
             {#each getExampleMessages() as example}
               <div class="text-sm font-normal text-gray-600 py-1.5">
