@@ -375,12 +375,12 @@ export const translations: Record<Language, Translations> = {
       placeholder: 'Start creating...',
       response: 'Done! Changes applied successfully.',
       messages: [
-        'Add chicken empanadas to the menu at $3,000 pesos',
-        'Modify the contact number on the menu',
-        'Business hours are Monday to Friday from 9 AM to 8 PM',
-        'Update the price of pizza to $8,500 pesos',
-        'Add a new category called "Desserts"',
-        'Change the restaurant address'
+        'In the "Main Dishes" category, add chicken empanadas at $8.50',
+        'Change the restaurant address to 123 Main Street, New York',
+        'In the "Beverages" category, add Coca Cola at $2.50',
+        'Update the contact number to +1 555 123 4567',
+        'In the "Desserts" category, add chocolate cake at $6.99',
+        'Change the business hours to Monday to Friday from 9 AM to 8 PM'
       ]
     }
   },
@@ -566,12 +566,12 @@ export const translations: Record<Language, Translations> = {
       placeholder: 'Empieza a crear...',
       response: '¡Listo! Cambios aplicados exitosamente.',
       messages: [
-        'Añade al menú empanadas de pollo a 3000 pesos',
-        'Modifica el número de contacto del menú',
-        'Los horarios de atención son de lunes a viernes de 9 am a 8 pm',
-        'Actualiza el precio de la pizza a 8500 pesos',
-        'Añade una nueva categoría llamada "Postres"',
-        'Cambia la dirección del restaurante'
+        'En la categoría "Platos Principales" añade empanadas de pollo a 3000 pesos',
+        'Cambia la dirección del restaurante a Avenida Siempre Viva 3151',
+        'En la categoría "Bebidas" añade Coca Cola a 1500 pesos',
+        'Actualiza el número de contacto a +56 9 1234 5678',
+        'En la categoría "Postres" añade torta de chocolate a 4500 pesos',
+        'Cambia los horarios de atención a lunes a viernes de 9 am a 8 pm'
       ]
     }
   },
@@ -757,12 +757,12 @@ export const translations: Record<Language, Translations> = {
       placeholder: 'Comece a criar...',
       response: 'Pronto! Alterações aplicadas com sucesso.',
       messages: [
-        'Adicione ao cardápio empadas de frango a 3000 pesos',
-        'Modifique o número de contato do cardápio',
-        'Os horários de atendimento são de segunda a sexta das 9h às 20h',
-        'Atualize o preço da pizza para 8500 pesos',
-        'Adicione uma nova categoria chamada "Sobremesas"',
-        'Altere o endereço do restaurante'
+        'Na categoria "Pratos Principais" adicione empadas de frango a R$ 18,90',
+        'Altere o endereço do restaurante para Avenida Siempre Viva 3151',
+        'Na categoria "Bebidas" adicione Coca Cola a R$ 5,50',
+        'Atualize o número de contato para +55 11 98765 4321',
+        'Na categoria "Sobremesas" adicione bolo de chocolate a R$ 12,90',
+        'Altere os horários de atendimento para segunda a sexta das 9h às 20h'
       ]
     }
   }

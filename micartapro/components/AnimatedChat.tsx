@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useLanguage } from '@/lib/useLanguage'
-import { Search, Sparkles } from 'lucide-react'
 
 export function AnimatedChat() {
   const { t, isLoading } = useLanguage()
@@ -52,7 +51,6 @@ export function AnimatedChat() {
         <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 rounded-2xl blur-sm opacity-30"></div>
         <div className="relative bg-white rounded-2xl border-2 border-transparent p-1">
           <div className="flex items-center px-6 py-5 bg-white rounded-xl">
-            <Search className="h-6 w-6 text-gray-400 mr-4 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <span className="text-gray-400 text-lg">
                 {displayedText || t.chatExamples.placeholder}
