@@ -21,7 +21,7 @@ func init() {
 }
 
 func NewMenuInteractionAgent(client *genai.Client) MenuInteractionAgent {
-	const modelName = "gemini-3-flash-preview"
+	const modelName = "gemini-2.5-pro"
 
 	menuTools := tools.GetAllMenuTools()
 
