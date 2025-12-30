@@ -2,11 +2,13 @@ package subscriber
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
+	"micartapro/app/adapter/out/storage"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
@@ -62,12 +64,23 @@ func newPullAllEvents(
 				)
 			}
 			_, err := onMenuInteractionRequest(spanCtx, request)
-			if err != nil {
-				obs.Logger.Error("error_processing_menu_interaction",
-					"error", err.Error(),
-				)
-				return http.StatusInternalServerError
+			if err == nil {
+				break
 			}
+
+			// Si el error es "menu_not_found", hacer ACK (no reintentar)
+			if errors.Is(err, storage.ErrMenuNotFound) {
+				obs.Logger.WarnContext(spanCtx, "menu_not_found_ack",
+					"error", err.Error(),
+					"menuID", request.MenuID,
+				)
+				return http.StatusAccepted
+			}
+
+			obs.Logger.Error("error_processing_menu_interaction",
+				"error", err.Error(),
+			)
+			return http.StatusInternalServerError
 		case events.EventMenuCreateRequested:
 			var request events.MenuCreateRequest
 			if err := event.DataAs(&request); err != nil {
