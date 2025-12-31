@@ -37,14 +37,10 @@ func NewGetCreemCheckoutUrl(cli *resty.Client, conf configuration.Conf) GetCreem
 		url := conf.CREEM_DNS + "/v1/checkouts"
 
 		// Determinar la URL de éxito según el entorno
-		successURL := conf.CREEM_SUCCESS_URL
-		if conf.ENVIRONMENT == "development" {
-			successURL = "http://localhost:5174?payment=success"
-		}
 
 		req := creemCheckoutRequest{
 			ProductID:  conf.CREEM_PRODUCT_ID,
-			SuccessURL: successURL,
+			SuccessURL: conf.CREEM_SUCCESS_URL,
 		}
 
 		resp, err := cli.R().
