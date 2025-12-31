@@ -299,7 +299,7 @@
             id="nombre-retiro"
             type="text"
             bind:value={nombreRetiro}
-            placeholder={$t.cart.timeFormatExample}
+            placeholder={$t.cart.nameFormatExample}
             class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
             required
           />

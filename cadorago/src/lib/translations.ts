@@ -43,6 +43,7 @@ export interface Translations {
     completeFields: string
     invalidTime: string
     timeFormatExample: string
+    nameFormatExample: string
     shoppingCart: string
     emptyCart: string
     emptyCartMessage: string
@@ -99,6 +100,7 @@ export const translations: Record<Language, Translations> = {
       completeFields: 'Por favor completa todos los campos',
       invalidTime: 'Por favor ingresa una hora válida (formato: HH:MM, ejemplo: 14:30)',
       timeFormatExample: 'Ej: 14:30',
+      nameFormatExample: 'Ej: Juan Perez',
       shoppingCart: 'Carrito de Compras',
       emptyCart: 'Tu carrito está vacío',
       emptyCartMessage: 'Agrega items del menú para comenzar',
@@ -151,6 +153,7 @@ export const translations: Record<Language, Translations> = {
       completeFields: 'Por favor, preencha todos os campos',
       invalidTime: 'Por favor, insira uma hora válida (formato: HH:MM, exemplo: 14:30)',
       timeFormatExample: 'Ex: 14:30',
+      nameFormatExample: 'Ex: João Silva',
       shoppingCart: 'Carrinho de Compras',
       emptyCart: 'Seu carrinho está vazio',
       emptyCartMessage: 'Adicione itens do cardápio para começar',
@@ -203,6 +206,7 @@ export const translations: Record<Language, Translations> = {
       completeFields: 'Please complete all fields',
       invalidTime: 'Please enter a valid time (format: HH:MM, example: 14:30)',
       timeFormatExample: 'Ex: 14:30',
+      nameFormatExample: 'Ex: John Doe',
       shoppingCart: 'Shopping Cart',
       emptyCart: 'Your cart is empty',
       emptyCartMessage: 'Add items from the menu to get started',

@@ -6,6 +6,7 @@
   import CartaSection from '../organisms/CartaSection.svelte';
   import FloatingCart from '../organisms/FloatingCart.svelte';
   import Footer from '../organisms/Footer.svelte';
+  import MetaTags from '../organisms/MetaTags.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { initLanguage, t } from '../../lib/useLanguage';
   
@@ -17,6 +18,8 @@
     initLanguage();
   });
 </script>
+
+<MetaTags />
 
 <HeroTemplate>
   {#if loading}
