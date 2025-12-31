@@ -3,11 +3,19 @@
   import { initAuth, authState } from './lib/auth.svelte'
   import { initLanguage, t as tStore, loading as langLoadingStore } from './lib/useLanguage'
   import MenuChat from './lib/components/MenuChat.svelte'
+  import PaymentSuccess from './lib/components/PaymentSuccess.svelte'
 
   // Usar valores derivados reactivos en el componente
   let user = $derived(authState.user)
   let session = $derived(authState.session)
   let authLoading = $derived(authState.loading)
+
+  // Detectar si estamos en la página de éxito de pago
+  let isPaymentSuccess = $derived(() => {
+    if (typeof window === 'undefined') return false
+    const urlParams = new URLSearchParams(window.location.search)
+    return urlParams.get('payment') === 'success' || urlParams.get('success') === 'true'
+  })
 
   onMount(() => {
     initLanguage()
@@ -29,7 +37,10 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-  {#if authLoading || $langLoadingStore}
+  {#if isPaymentSuccess()}
+    <!-- Página de éxito de pago -->
+    <PaymentSuccess />
+  {:else if authLoading || $langLoadingStore}
     <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>

@@ -72,6 +72,15 @@ export interface Translations {
     copied: string
     openButton: string
   }
+  
+  // PaymentSuccess.svelte
+  paymentSuccess: {
+    title: string
+    subtitle: string
+    message: string
+    redirecting: string
+    goToConsole: string
+  }
 }
 
 export const translations: Record<Language, Translations> = {
@@ -135,6 +144,13 @@ export const translations: Record<Language, Translations> = {
       copyButton: 'Copiar',
       copied: '¡Copiado!',
       openButton: 'Abrir'
+    },
+    paymentSuccess: {
+      title: '¡Pago Exitoso! 🎉',
+      subtitle: '¡Bienvenido a Pro!',
+      message: 'Tu suscripción Pro ha sido activada. Ahora puedes disfrutar de todas las funciones premium.',
+      redirecting: 'Redirigiendo a la consola...',
+      goToConsole: 'Ir a la consola'
     }
   },
   PT: {
@@ -207,6 +223,13 @@ export const translations: Record<Language, Translations> = {
       copyButton: 'Copiar',
       copied: 'Copiado!',
       openButton: 'Abrir'
+    },
+    paymentSuccess: {
+      title: 'Pagamento Bem-sucedido! 🎉',
+      subtitle: 'Bem-vindo ao Pro!',
+      message: 'Sua assinatura Pro foi ativada. Agora você pode desfrutar de todos os recursos premium.',
+      redirecting: 'Redirecionando para o console...',
+      goToConsole: 'Ir para o console'
     }
   },
   EN: {
@@ -269,6 +292,13 @@ export const translations: Record<Language, Translations> = {
       copyButton: 'Copy',
       copied: 'Copied!',
       openButton: 'Open'
+    },
+    paymentSuccess: {
+      title: 'Payment Successful! 🎉',
+      subtitle: 'Welcome to Pro!',
+      message: 'Your Pro subscription has been activated. You can now enjoy all premium features.',
+      redirecting: 'Redirecting to console...',
+      goToConsole: 'Go to console'
     }
   }
 }

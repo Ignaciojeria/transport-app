@@ -21,7 +21,7 @@ type Conf struct {
 	CREEM_PRODUCT_ID        string `env:"CREEM_PRODUCT_ID" envDefault:""`
 	CREEM_API_KEY           string `env:"CREEM_API_KEY" envDefault:""`
 	CREEM_DNS               string `env:"CREEM_DNS" envDefault:""`
-	CREEM_SUCCESS_URL       string `env:"CREEM_SUCCESS_URL" envDefault:"https://micartapro.com"`
+	CREEM_SUCCESS_URL       string `env:"CREEM_SUCCESS_URL" envDefault:"https://console.micartapro.com?payment=success"`
 }
 
 func NewConf() (Conf, error) {
