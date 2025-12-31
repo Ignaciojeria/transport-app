@@ -54,7 +54,7 @@
     showUpgradeModal = false
     
     try {
-      const checkoutUrl = 'https://micartapro-backend-27303662337.us-central1.run.app/checkout'
+      const checkoutUrl = `${API_BASE_URL}/checkout`
       
       // Hacer fetch con el token para obtener la URL de checkout
       const response = await fetch(checkoutUrl, {
@@ -89,7 +89,7 @@
     } catch (error) {
       console.error('Error al abrir checkout:', error)
       // Fallback: abrir la URL directamente en caso de error
-      window.open('https://micartapro-backend-27303662337.us-central1.run.app/checkout', '_blank')
+      window.open(`${API_BASE_URL}/checkout`, '_blank')
     }
   }
 

@@ -40,7 +40,7 @@ func NewGetCreemCheckoutUrl(cli *resty.Client, conf configuration.Conf) GetCreem
 
 		req := creemCheckoutRequest{
 			ProductID:  conf.CREEM_PRODUCT_ID,
-			SuccessURL: conf.CREEM_SUCCESS_URL,
+			SuccessURL: conf.CREEM_SUCCESS_URL + "?payment=success",
 		}
 
 		resp, err := cli.R().
