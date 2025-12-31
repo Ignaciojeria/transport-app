@@ -593,7 +593,7 @@
         </div>
       {/if}
       
-      <ChatInput bind:this={chatInputRef} onSend={handleSendMessage} disabled={isLoading || !menuReady || checkingMenu} onFocus={handleInputFocus} onBlur={handleInputBlur} />
+      <ChatInput bind:this={chatInputRef} onSend={handleSendMessage} disabled={isLoading || checkingMenu} onFocus={handleInputFocus} onBlur={handleInputBlur} />
       
       <!-- Sugerencias justo debajo del input -->
       {#if showExamples && currentExampleType}
