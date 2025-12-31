@@ -5,69 +5,15 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
-    <script>
-      // Leer parámetros de la URL para meta tags (antes de que se cargue el JavaScript)
-      (function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const coverImage = urlParams.get('coverImage');
-        const businessName = urlParams.get('businessName') || 'Carta Digital';
-        const currentUrl = window.location.href;
-        const description = `Menú digital de ${businessName}. Explora nuestra carta y realiza tu pedido.`;
-        
-        // Actualizar título
-        document.title = `${businessName} - Carta Digital`;
-        
-        // Función para actualizar o crear meta tag
-        function setMetaTag(property, content, isProperty = false) {
-          let meta = document.querySelector(isProperty ? `meta[property="${property}"]` : `meta[name="${property}"]`);
-          if (meta) {
-            meta.setAttribute('content', content);
-          } else {
-            meta = document.createElement('meta');
-            if (isProperty) {
-              meta.setAttribute('property', property);
-            } else {
-              meta.setAttribute('name', property);
-            }
-            meta.setAttribute('content', content);
-            document.head.appendChild(meta);
-          }
-        }
-        
-        // Actualizar meta tags
-        setMetaTag('description', description);
-        setMetaTag('og:type', 'website', true);
-        setMetaTag('og:url', currentUrl, true);
-        setMetaTag('og:title', businessName, true);
-        setMetaTag('og:description', description, true);
-        
-        if (coverImage) {
-          setMetaTag('og:image', coverImage, true);
-          setMetaTag('og:image:type', 'image/webp', true);
-          setMetaTag('og:image:width', '1200', true);
-          setMetaTag('og:image:height', '630', true);
-        }
-        
-        setMetaTag('twitter:card', 'summary_large_image');
-        setMetaTag('twitter:title', businessName);
-        setMetaTag('twitter:description', description);
-        
-        if (coverImage) {
-          setMetaTag('twitter:image', coverImage);
-        }
-      })();
-    </script>
-    
-    <!-- Meta tags básicos (se actualizarán dinámicamente) -->
+    <!-- Meta tags básicos -->
     <title>Carta Digital</title>
     <meta name="description" content="Menú digital interactivo. Explora nuestra carta y realiza tu pedido." />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="" />
     <meta property="og:title" content="Carta Digital" />
     <meta property="og:description" content="Menú digital interactivo. Explora nuestra carta y realiza tu pedido." />
-    <meta property="og:image" content="" />
+    <meta property="og:image" content="https://storage.googleapis.com/micartapro-menus/core/nanobanana-3-1.webp" />
     <meta property="og:image:type" content="image/webp" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -76,7 +22,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Carta Digital" />
     <meta name="twitter:description" content="Menú digital interactivo. Explora nuestra carta y realiza tu pedido." />
-    <meta name="twitter:image" content="" />
+    <meta name="twitter:image" content="https://storage.googleapis.com/micartapro-menus/core/nanobanana-3-1.webp" />
   </head>
   <body>
     <div id="app"></div>
