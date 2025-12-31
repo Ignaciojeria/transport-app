@@ -40,6 +40,15 @@ export interface Translations {
     successUpdated: string
     exploreOptions: string
     examplesLabel: string
+    trialDaysRemaining: string
+    trialDaysRemainingLabel: string
+    upgradeModalTitle: string
+    upgradeModalMessage: string
+    upgradeModalBenefits: string
+    upgradeModalContribution: string
+    upgradeToPro: string
+    continueWithoutPayment: string
+    close: string
     
     // Quick action messages (sent to backend)
     updateAddressMessage: string
@@ -98,7 +107,15 @@ export const translations: Record<Language, Translations> = {
       successUpdated: '¡Tu carta ha sido actualizada exitosamente! El menú se ha guardado con los cambios solicitados.',
       exploreOptions: 'Explorar opciones',
       examplesLabel: 'Ejemplos:',
-      examplesLabel: 'Ejemplos:',
+      trialDaysRemaining: '{days} días restantes',
+      trialDaysRemainingLabel: 'Días de prueba restantes',
+      upgradeModalTitle: '¡Actualiza a Pro!',
+      upgradeModalMessage: 'Te quedan {days} días de prueba. Actualiza a Pro para seguir disfrutando de todos los beneficios.',
+      upgradeModalBenefits: 'Con Pro obtienes: acceso ilimitado, sin límites de edición, soporte prioritario y más.',
+      upgradeModalContribution: 'Tu pago contribuye al crecimiento y mejora continua de la plataforma.',
+      upgradeToPro: 'Actualizar a Pro',
+      continueWithoutPayment: 'Continuar sin pagar',
+      close: 'Cerrar',
       updateAddressMessage: 'Actualiza la dirección de mi carta',
       addDishesMessage: 'Agrega uno o varios platos a mi carta',
       addDessertsMessage: 'Agrega uno o varios postres a mi carta',
@@ -157,6 +174,15 @@ export const translations: Record<Language, Translations> = {
       successUpdated: 'Sua carta foi atualizada com sucesso! O cardápio foi salvo com as alterações solicitadas.',
       exploreOptions: 'Explorar opções',
       examplesLabel: 'Exemplos:',
+      trialDaysRemaining: '{days} dias restantes',
+      trialDaysRemainingLabel: 'Dias de teste restantes',
+      upgradeModalTitle: 'Atualize para Pro!',
+      upgradeModalMessage: 'Você tem {days} dias de teste restantes. Atualize para Pro para continuar aproveitando todos os benefícios.',
+      upgradeModalBenefits: 'Com Pro você obtém: acesso ilimitado, sem limites de edição, suporte prioritário e muito mais.',
+      upgradeModalContribution: 'Seu pagamento contribui para o crescimento e melhoria contínua da plataforma.',
+      upgradeToPro: 'Atualizar para Pro',
+      continueWithoutPayment: 'Continuar sem pagar',
+      close: 'Fechar',
       updateAddressMessage: 'Atualize o endereço da minha carta',
       addDishesMessage: 'Adicione um ou vários pratos à minha carta',
       addDessertsMessage: 'Adicione uma ou várias sobremesas à minha carta',
@@ -213,6 +239,15 @@ export const translations: Record<Language, Translations> = {
       successUpdated: 'Your menu has been successfully updated! The menu has been saved with the requested changes.',
       exploreOptions: 'Explore options',
       examplesLabel: 'Examples:',
+      trialDaysRemaining: '{days} days remaining',
+      trialDaysRemainingLabel: 'Trial days remaining',
+      upgradeModalTitle: 'Upgrade to Pro!',
+      upgradeModalMessage: 'You have {days} trial days remaining. Upgrade to Pro to continue enjoying all the benefits.',
+      upgradeModalBenefits: 'With Pro you get: unlimited access, no editing limits, priority support, and more.',
+      upgradeModalContribution: 'Your payment contributes to the growth and continuous improvement of the platform.',
+      upgradeToPro: 'Upgrade to Pro',
+      continueWithoutPayment: 'Continue without payment',
+      close: 'Close',
       updateAddressMessage: 'Update my menu address',
       addDishesMessage: 'Add one or more dishes to my menu',
       addDessertsMessage: 'Add one or more desserts to my menu',

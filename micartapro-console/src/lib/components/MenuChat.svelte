@@ -29,6 +29,7 @@
   let showExamples = $state(false)
   let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | 'whatsapp' | null = $state(null)
   let messageSent = $state(false) // Flag para indicar que se envió un mensaje
+  let showUpgradeModal = $state(false) // Modal de upgrade al copiar link
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -41,8 +42,16 @@
   const userPicture = $derived(user?.user_metadata?.picture || user?.user_metadata?.avatar_url || null)
   const session = $derived(authState.session)
   const currentLanguage = $derived($language)
+  
+  // Días restantes del trial (hardcoded por el momento)
+  const trialDaysRemaining = $derived(() => {
+    return 15 // Fijo por el momento
+  })
 
   async function handleUpgradeToPro() {
+    // Cerrar el modal antes de redirigir
+    showUpgradeModal = false
+    
     try {
       const checkoutUrl = 'https://micartapro-backend-27303662337.us-central1.run.app/checkout'
       
@@ -160,6 +169,8 @@
       setTimeout(() => {
         copySuccess = false
       }, 2000)
+      // Mostrar modal de upgrade después de copiar
+      showUpgradeModal = true
     }).catch((err) => {
       console.error('Error copiando al portapapeles:', err)
     })
@@ -615,7 +626,14 @@
     >
       <!-- Header del Modal -->
       <div class="flex items-center justify-between p-4 border-b border-gray-200 gap-4">
-        <h2 class="text-lg font-semibold text-gray-900 flex-1">{$tStore.chat.previewTitle}</h2>
+        <div class="flex-1">
+          <h2 class="text-lg font-semibold text-gray-900">{$tStore.chat.previewTitle}</h2>
+          {#if trialDaysRemaining() > 0}
+            <p class="text-sm text-gray-600 mt-1">
+              {$tStore.chat.trialDaysRemainingLabel}: <span class="font-semibold text-blue-600">{trialDaysRemaining()}</span>
+            </p>
+          {/if}
+        </div>
         {#if menuUrl}
           <button
             onclick={copyToClipboard}
@@ -665,6 +683,98 @@
             </div>
           </div>
         {/if}
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Modal de Upgrade al copiar link -->
+{#if showUpgradeModal}
+  <div 
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+    onclick={() => showUpgradeModal = false}
+    role="dialog"
+    aria-modal="true"
+  >
+    <div 
+      class="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <!-- Decorative gradient background -->
+      <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10"></div>
+      
+      <!-- Close button -->
+      <button
+        onclick={() => showUpgradeModal = false}
+        class="absolute top-4 right-4 p-2 hover:bg-white/50 rounded-full transition-colors z-10"
+        aria-label={$tStore.chat.close}
+      >
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      
+      <div class="relative p-8">
+        <!-- Header -->
+        <div class="text-center mb-6">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-2">{$tStore.chat.upgradeModalTitle}</h3>
+          <p class="text-lg text-gray-700">
+            {$tStore.chat.upgradeModalMessage.replace('{days}', trialDaysRemaining().toString())}
+          </p>
+        </div>
+        
+        <!-- Benefits -->
+        <div class="bg-white/60 backdrop-blur-sm rounded-xl p-5 mb-6 border border-gray-200/50">
+          <h4 class="text-sm font-semibold text-gray-900 mb-3">{$tStore.chat.upgradeModalBenefits}</h4>
+          <div class="space-y-2">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm text-gray-700">Acceso ilimitado a todas las funciones</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm text-gray-700">Sin límites de edición</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm text-gray-700">Soporte prioritario</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Contribution message -->
+        <div class="bg-blue-50/80 rounded-xl p-4 mb-6 border border-blue-200/50">
+          <p class="text-sm text-blue-900 text-center">
+            💙 {$tStore.chat.upgradeModalContribution}
+          </p>
+        </div>
+        
+        <!-- Action buttons -->
+        <div class="space-y-3">
+          <button
+            onclick={handleUpgradeToPro}
+            class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+          >
+            {$tStore.chat.upgradeToPro}
+          </button>
+          <button
+            onclick={() => showUpgradeModal = false}
+            class="w-full px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 rounded-xl transition-colors font-medium border border-gray-300"
+          >
+            {$tStore.chat.continueWithoutPayment}
+          </button>
+        </div>
       </div>
     </div>
   </div>
