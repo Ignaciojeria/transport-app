@@ -11,6 +11,8 @@ export interface Translations {
   
   // MenuChat.svelte
   chat: {
+    greeting: string
+    greetingQuestion: string
     welcomeTitle: string
     welcomeSubtitle: string
     previewButton: string
@@ -71,6 +73,8 @@ export const translations: Record<Language, Translations> = {
       signInLink: 'micartapro-auth-ui'
     },
     chat: {
+      greeting: 'Hola',
+      greetingQuestion: '¿Qué quieres en tu carta?',
       welcomeTitle: '¿En qué puedo ayudarte?',
       welcomeSubtitle: 'Escribe tu menú y precios, y yo armaré tu carta digital',
       previewButton: 'Vista Previa',
@@ -122,6 +126,8 @@ export const translations: Record<Language, Translations> = {
       signInLink: 'micartapro-auth-ui'
     },
     chat: {
+      greeting: 'Olá',
+      greetingQuestion: 'O que você quer no seu cardápio?',
       welcomeTitle: 'Como posso ajudá-lo?',
       welcomeSubtitle: 'Escreva seu cardápio e preços, e eu criarei sua carta digital',
       previewButton: 'Visualizar',
@@ -182,6 +188,8 @@ export const translations: Record<Language, Translations> = {
       signInLink: 'micartapro-auth-ui'
     },
     chat: {
+      greeting: 'Hello',
+      greetingQuestion: 'What do you want in your menu?',
       welcomeTitle: 'How can I help you?',
       welcomeSubtitle: 'Write your menu and prices, and I will create your digital menu',
       previewButton: 'Preview',

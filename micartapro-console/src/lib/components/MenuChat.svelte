@@ -486,10 +486,10 @@
         <!-- Saludo personalizado estilo Gemini -->
         <div class="mt-8 mb-6 text-center">
           <h2 class="text-2xl font-normal text-gray-900 mb-2">
-            Hola, {userName}
+            {$tStore.chat.greeting}, {userName}
           </h2>
           <p class="text-lg text-gray-600">
-            ¿Qué quieres en tu carta?
+            {$tStore.chat.greetingQuestion}
           </p>
         </div>
 
