@@ -19,6 +19,7 @@ export interface Translations {
     previewTitle: string
     copyLink: string
     linkCopied: string
+    shareLink: string
     loadingPreview: string
     placeholder: string
     sendButton: string
@@ -90,6 +91,7 @@ export const translations: Record<Language, Translations> = {
       previewTitle: 'Vista Previa de tu Carta',
       copyLink: 'Copiar enlace',
       linkCopied: '¡Copiado!',
+      shareLink: 'Compartir enlace',
       loadingPreview: 'Cargando vista previa...',
       placeholder: 'Escribe tu solicitud aquí...',
       sendButton: 'Enviar',
@@ -151,6 +153,7 @@ export const translations: Record<Language, Translations> = {
       previewTitle: 'Visualização da sua Carta',
       copyLink: 'Copiar link',
       linkCopied: 'Copiado!',
+      shareLink: 'Compartilhar link',
       loadingPreview: 'Carregando visualização...',
       placeholder: 'Escreva sua solicitação aqui...',
       sendButton: 'Enviar',
@@ -222,6 +225,7 @@ export const translations: Record<Language, Translations> = {
       previewTitle: 'Preview of your Menu',
       copyLink: 'Copy link',
       linkCopied: 'Copied!',
+      shareLink: 'Share link',
       loadingPreview: 'Loading preview...',
       placeholder: 'Write your request here...',
       sendButton: 'Send',
