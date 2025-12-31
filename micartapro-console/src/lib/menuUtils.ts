@@ -3,6 +3,37 @@ import { supabase } from './supabase'
 const STORAGE_BASE_URL = "https://storage.googleapis.com/micartapro-menus"
 
 /**
+ * Obtiene los datos del restaurante desde Google Cloud Storage
+ * @param userId - ID del usuario
+ * @param menuId - ID del menú
+ * @returns Promise con los datos del restaurante o null si hay error
+ */
+export async function fetchRestaurantData(userId: string, menuId: string): Promise<any | null> {
+  try {
+    // Obtener latest.json
+    const latest = await getLatestJson(userId, menuId)
+    if (!latest || !latest.filename) {
+      return null
+    }
+    
+    // Obtener los datos del restaurante
+    const menuUrl = `${STORAGE_BASE_URL}/${userId}/menus/${menuId}/${latest.filename}`
+    const response = await fetch(menuUrl, {
+      cache: 'no-store'
+    })
+    
+    if (!response.ok) {
+      return null
+    }
+    
+    return await response.json()
+  } catch (error) {
+    console.error('Error obteniendo datos del restaurante:', error)
+    return null
+  }
+}
+
+/**
  * Obtiene el menuID más reciente del usuario autenticado
  * @returns El menuID o null si no existe
  */
@@ -33,9 +64,17 @@ export async function getLatestMenuId(userId: string): Promise<string | null> {
  * @param userId - ID del usuario
  * @param menuId - ID del menú
  * @param lang - Idioma opcional ('ES', 'PT', 'EN')
+ * @param coverImage - URL de la imagen de portada (opcional)
+ * @param businessName - Nombre del negocio (opcional)
  * @returns URL completa de la carta
  */
-export function generateMenuUrl(userId: string, menuId: string, lang?: string): string {
+export function generateMenuUrl(
+  userId: string, 
+  menuId: string, 
+  lang?: string,
+  coverImage?: string,
+  businessName?: string
+): string {
   const baseUrl = typeof window !== 'undefined' 
     ? window.location.origin.includes('localhost')
       ? 'http://localhost:5173'
@@ -47,6 +86,15 @@ export function generateMenuUrl(userId: string, menuId: string, lang?: string): 
   // Agregar parámetro de idioma si se proporciona
   if (lang && ['ES', 'PT', 'EN'].includes(lang)) {
     url += `&lang=${lang}`
+  }
+  
+  // Agregar parámetros de meta tags si se proporcionan
+  if (coverImage) {
+    url += `&coverImage=${encodeURIComponent(coverImage)}`
+  }
+  
+  if (businessName) {
+    url += `&businessName=${encodeURIComponent(businessName)}`
   }
   
   return url

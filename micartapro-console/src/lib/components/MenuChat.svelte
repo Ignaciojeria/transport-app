@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, fetchRestaurantData } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
 
@@ -100,8 +100,19 @@
     // Actualizar menuUrl cuando cambie el idioma
     $effect(() => {
       if (menuUrl && userId && menuId) {
-        // Reconstruir la URL con el idioma actual
-        menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+        // Reconstruir la URL con el idioma actual y datos del restaurante
+        const currentUserId = userId
+        const currentMenuId = menuId
+        if (currentUserId && currentMenuId) {
+          fetchRestaurantData(currentUserId, currentMenuId).then((restaurantData) => {
+            const coverImage = restaurantData?.coverImage || ''
+            const businessName = restaurantData?.businessInfo?.businessName || ''
+            menuUrl = generateMenuUrl(currentUserId, currentMenuId, currentLanguage, coverImage, businessName)
+          }).catch((err) => {
+            console.error('Error obteniendo datos del restaurante:', err)
+            menuUrl = generateMenuUrl(currentUserId, currentMenuId, currentLanguage)
+          })
+        }
       }
     })
     
@@ -148,34 +159,62 @@
       return
     }
 
-    if (!menuUrl && userId) {
+    if (!menuUrl && userId && menuId) {
       try {
-        const menuId = await getLatestMenuId(userId)
-        if (menuId) {
-          menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
-        }
+        // Obtener datos del restaurante para incluir en la URL
+        const restaurantData = await fetchRestaurantData(userId, menuId)
+        const coverImage = restaurantData?.coverImage || ''
+        const businessName = restaurantData?.businessInfo?.businessName || ''
+        
+        menuUrl = generateMenuUrl(userId, menuId, currentLanguage, coverImage, businessName)
       } catch (err) {
         console.error('Error cargando menú:', err)
+        // Fallback sin datos adicionales
+        menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
       }
     }
     
     showPreview = true
   }
 
-  function copyToClipboard() {
-    if (!menuUrl) return
+  async function copyToClipboard() {
+    if (!menuUrl || !userId || !menuId) return
 
-    navigator.clipboard.writeText(menuUrl).then(() => {
-      copySuccess = true
-      linkWasCopied = true // Marcar que el enlace fue copiado
-      setTimeout(() => {
-        copySuccess = false
-      }, 2000)
-      // Mostrar modal de upgrade después de copiar
-      showUpgradeModal = true
-    }).catch((err) => {
-      console.error('Error copiando al portapapeles:', err)
-    })
+    try {
+      // Obtener datos del restaurante para incluir en la URL
+      const restaurantData = await fetchRestaurantData(userId, menuId)
+      const coverImage = restaurantData?.coverImage || ''
+      const businessName = restaurantData?.businessInfo?.businessName || ''
+      
+      // Generar URL con los datos del restaurante
+      const urlWithMeta = generateMenuUrl(userId, menuId, currentLanguage, coverImage, businessName)
+      menuUrl = urlWithMeta // Actualizar también el estado
+      
+      navigator.clipboard.writeText(urlWithMeta).then(() => {
+        copySuccess = true
+        linkWasCopied = true // Marcar que el enlace fue copiado
+        setTimeout(() => {
+          copySuccess = false
+        }, 2000)
+        // Mostrar modal de upgrade después de copiar
+        showUpgradeModal = true
+      }).catch((err) => {
+        console.error('Error copiando al portapapeles:', err)
+      })
+    } catch (err) {
+      console.error('Error obteniendo datos del restaurante:', err)
+      // Fallback: copiar URL sin datos adicionales
+      navigator.clipboard.writeText(menuUrl).then(() => {
+        copySuccess = true
+        linkWasCopied = true
+        setTimeout(() => {
+          copySuccess = false
+        }, 2000)
+        showUpgradeModal = true
+      }).catch((err) => {
+        console.error('Error copiando al portapapeles:', err)
+      })
+    }
   }
 
   function shareOnWhatsApp() {
@@ -291,7 +330,16 @@
           
           // Abrir automáticamente la vista previa para mostrar los cambios
           if (!menuUrl) {
-            menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+            // Obtener datos del restaurante para incluir en la URL
+            try {
+              const restaurantData = await fetchRestaurantData(userId, menuId)
+              const coverImage = restaurantData?.coverImage || ''
+              const businessName = restaurantData?.businessInfo?.businessName || ''
+              menuUrl = generateMenuUrl(userId, menuId, currentLanguage, coverImage, businessName)
+            } catch (err) {
+              console.error('Error obteniendo datos del restaurante:', err)
+              menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+            }
           }
           showPreview = true
         } catch (pollError: any) {
