@@ -46,6 +46,9 @@ export interface Translations {
     upgradeModalTitle: string
     upgradeModalMessage: string
     upgradeModalBenefits: string
+    upgradeModalBenefit1: string
+    upgradeModalBenefit2: string
+    upgradeModalBenefit3: string
     upgradeModalContribution: string
     upgradeToPro: string
     continueWithoutPayment: string
@@ -123,8 +126,11 @@ export const translations: Record<Language, Translations> = {
       upgradeModalTitle: '¡Actualiza a Pro!',
       upgradeModalMessage: 'Te quedan {days} días de prueba. Actualiza a Pro para seguir disfrutando de todos los beneficios.',
       upgradeModalBenefits: 'Con Pro obtienes: acceso ilimitado, sin límites de edición, soporte prioritario y más.',
+      upgradeModalBenefit1: 'Acceso ilimitado a todas las funciones',
+      upgradeModalBenefit2: 'Sin límites de edición',
+      upgradeModalBenefit3: 'Soporte prioritario',
       upgradeModalContribution: 'Tu pago contribuye al crecimiento y mejora continua de la plataforma.',
-      upgradeToPro: 'Actualizar a Pro',
+      upgradeToPro: 'Actualizar a Pro - 14 días gratuitos',
       continueWithoutPayment: 'Continuar sin pagar',
       close: 'Cerrar',
       updateAddressMessage: 'Actualiza la dirección de mi carta',
@@ -198,8 +204,11 @@ export const translations: Record<Language, Translations> = {
       upgradeModalTitle: 'Atualize para Pro!',
       upgradeModalMessage: 'Você tem {days} dias de teste restantes. Atualize para Pro para continuar aproveitando todos os benefícios.',
       upgradeModalBenefits: 'Com Pro você obtém: acesso ilimitado, sem limites de edição, suporte prioritário e muito mais.',
+      upgradeModalBenefit1: 'Acesso ilimitado a todas as funções',
+      upgradeModalBenefit2: 'Sem limites de edição',
+      upgradeModalBenefit3: 'Suporte prioritário',
       upgradeModalContribution: 'Seu pagamento contribui para o crescimento e melhoria contínua da plataforma.',
-      upgradeToPro: 'Atualizar para Pro',
+      upgradeToPro: 'Atualizar para Pro - 14 dias grátis',
       continueWithoutPayment: 'Continuar sem pagar',
       close: 'Fechar',
       updateAddressMessage: 'Atualize o endereço da minha carta',
@@ -271,8 +280,11 @@ export const translations: Record<Language, Translations> = {
       upgradeModalTitle: 'Upgrade to Pro!',
       upgradeModalMessage: 'You have {days} trial days remaining. Upgrade to Pro to continue enjoying all the benefits.',
       upgradeModalBenefits: 'With Pro you get: unlimited access, no editing limits, priority support, and more.',
+      upgradeModalBenefit1: 'Unlimited access to all features',
+      upgradeModalBenefit2: 'No editing limits',
+      upgradeModalBenefit3: 'Priority support',
       upgradeModalContribution: 'Your payment contributes to the growth and continuous improvement of the platform.',
-      upgradeToPro: 'Upgrade to Pro',
+      upgradeToPro: 'Upgrade to Pro - 14 days free',
       continueWithoutPayment: 'Continue without payment',
       close: 'Close',
       updateAddressMessage: 'Update my menu address',
