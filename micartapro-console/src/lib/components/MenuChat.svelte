@@ -53,43 +53,67 @@
     // Cerrar el modal antes de redirigir
     showUpgradeModal = false
     
+    // Validar que el token esté disponible
+    if (!session?.access_token) {
+      console.error('Error: No hay token de autenticación disponible')
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: $tStore.chat.errorNoSession,
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
+      return
+    }
+    
     try {
       const checkoutUrl = `${API_BASE_URL}/checkout`
       
-      // Hacer fetch con el token para obtener la URL de checkout
+      // Hacer fetch con el token de Supabase para obtener la URL de checkout
       const response = await fetch(checkoutUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${session?.access_token || ''}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         credentials: 'include',
-        redirect: 'manual' // No seguir el redirect automáticamente
       })
 
-      // Si hay un redirect, obtener la URL del header Location
-      if (response.status === 302 || response.status === 301) {
-        const redirectUrl = response.headers.get('Location')
-        if (redirectUrl) {
-          window.open(redirectUrl, '_blank')
-          return
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Error del servidor:', response.status, errorText)
+        const errorMessage: ChatMessage = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: `Error al obtener la URL de checkout: ${response.status} ${response.statusText}`,
+          timestamp: new Date()
         }
+        messages = [...messages, errorMessage]
+        return
       }
 
-      // Si no hay redirect, intentar obtener la URL de la respuesta
-      if (response.ok) {
-        const data = await response.json()
-        if (data.checkout_url) {
-          window.open(data.checkout_url, '_blank')
-          return
+      // El backend devuelve un JSON con checkout_url
+      const data = await response.json()
+      if (data.checkout_url) {
+        window.open(data.checkout_url, '_blank')
+      } else {
+        console.error('No se recibió checkout_url en la respuesta:', data)
+        const errorMessage: ChatMessage = {
+          id: `error-${Date.now()}`,
+          role: 'assistant',
+          content: 'Error: No se recibió la URL de checkout del servidor',
+          timestamp: new Date()
         }
+        messages = [...messages, errorMessage]
       }
-
-      // Fallback: abrir la URL directamente
-      window.open(checkoutUrl, '_blank')
     } catch (error) {
       console.error('Error al abrir checkout:', error)
-      // Fallback: abrir la URL directamente en caso de error
-      window.open(`${API_BASE_URL}/checkout`, '_blank')
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: $tStore.chat.errorProcessing.replace('{message}', error instanceof Error ? error.message : 'Error desconocido'),
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
     }
   }
 

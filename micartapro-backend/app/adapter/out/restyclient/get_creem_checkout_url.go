@@ -11,11 +11,12 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-type GetCreemCheckoutUrl func(ctx context.Context) (creemCheckoutResponse, error)
+type GetCreemCheckoutUrl func(ctx context.Context, userID string) (creemCheckoutResponse, error)
 
 type creemCheckoutRequest struct {
-	ProductID  string `json:"product_id"`
-	SuccessURL string `json:"success_url"`
+	ProductID  string            `json:"product_id"`
+	SuccessURL string            `json:"success_url"`
+	Metadata   map[string]string `json:"metadata,omitempty"`
 }
 
 type creemCheckoutResponse struct {
@@ -33,14 +34,15 @@ func init() {
 	ioc.Registry(NewGetCreemCheckoutUrl, httpresty.NewClient, configuration.NewConf)
 }
 func NewGetCreemCheckoutUrl(cli *resty.Client, conf configuration.Conf) GetCreemCheckoutUrl {
-	return func(ctx context.Context) (creemCheckoutResponse, error) {
+	return func(ctx context.Context, userID string) (creemCheckoutResponse, error) {
 		url := conf.CREEM_DNS + "/v1/checkouts"
-
-		// Determinar la URL de éxito según el entorno
 
 		req := creemCheckoutRequest{
 			ProductID:  conf.CREEM_PRODUCT_ID,
 			SuccessURL: conf.CREEM_SUCCESS_URL + "?payment=success",
+			Metadata: map[string]string{
+				"user_id": userID,
+			},
 		}
 
 		resp, err := cli.R().
