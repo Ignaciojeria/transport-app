@@ -72,6 +72,14 @@
         {
             "kind": "resty-client",
             "name": "get-creem-checkout-url"
+        },
+        {
+            "kind": "post-controller",
+            "name": "creem-subscription-trialing-webhook"
+        },
+        {
+            "kind": "usecase",
+            "name": "on-creem-subscription-trialing-webhook"
         }
     ]
 }
