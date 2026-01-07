@@ -101,6 +101,21 @@
     horaRetiro = formatTimeInput(value);
   }
   
+  function handleTimeKeyDown(event) {
+    // Permitir teclas de control (backspace, delete, tab, escape, enter, etc.)
+    if (event.key === 'Backspace' || event.key === 'Delete' || event.key === 'Tab' || 
+        event.key === 'Escape' || event.key === 'Enter' || event.key === 'ArrowLeft' || 
+        event.key === 'ArrowRight' || event.key === 'ArrowUp' || event.key === 'ArrowDown' ||
+        (event.ctrlKey || event.metaKey) && (event.key === 'a' || event.key === 'c' || event.key === 'v' || event.key === 'x')) {
+      return;
+    }
+    
+    // Solo permitir números
+    if (!/[0-9]/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+  
   async function handleConfirmOrder() {
     if (!nombreRetiro.trim() || !horaRetiro.trim()) {
       alert($t.cart.completeFields);
@@ -326,9 +341,11 @@
           </label>
           <input
             id="hora-retiro"
-            type="text"
+            type="tel"
+            inputmode="numeric"
             value={horaRetiro}
             oninput={handleTimeInput}
+            onkeydown={handleTimeKeyDown}
             placeholder={$t.cart.timeFormatExample}
             maxlength="5"
             class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
