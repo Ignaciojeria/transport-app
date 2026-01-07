@@ -21,9 +21,14 @@
   const displayPrice = $derived(hasAcompanamientos ? null : (item.price || 0));
   
   // Verificar si el item está en el carrito (necesita verificar por clave única)
-  const cartItems = $derived(cartStore.items.filter(i => i.title === item.title));
-  const totalQuantity = $derived(cartItems.reduce((sum, i) => sum + i.cantidad, 0));
-  const isInCart = $derived(totalQuantity > 0);
+  const isInCart = $derived.by(() => {
+    const items = cartStore.items;
+    const matchingItems = items.filter(i => i.title === item.title);
+    return matchingItems.reduce((sum, i) => sum + i.cantidad, 0) > 0;
+  });
+  
+  const cartItems = $derived.by(() => cartStore.items.filter(i => i.title === item.title));
+  const totalQuantity = $derived.by(() => cartItems.reduce((sum, i) => sum + i.cantidad, 0));
   
   function handleAddToCart(event) {
     event.stopPropagation();
@@ -60,13 +65,15 @@
     }
   }
   
-  function handleItemClick() {
+  function handleItemClick(event) {
+    // Evitar que se active si se hace clic en los botones de cantidad
+    if (event.target.closest('button')) {
+      return;
+    }
+    
+    // Si el item no está en el carrito, agregarlo
     if (!isInCart) {
-      if (hasAcompanamientos) {
-        showAcompanamientoModal = true;
-      } else {
-        cartStore.addItem(item);
-      }
+      handleAddToCart(event);
     }
   }
   
@@ -97,69 +104,83 @@
 </script>
 
 <div 
+  class={`rounded-lg p-4 sm:p-5 mb-4 sm:mb-5 transition-all cursor-pointer hover:shadow-md ${isInCart ? 'bg-gray-100 border-2 border-gray-400' : 'bg-gray-50 border border-gray-200 hover:border-gray-300'} ${className}`}
   onclick={handleItemClick}
-  class={`bg-[#E8E4D9] rounded-lg p-6 sm:p-7 lg:p-8 cursor-pointer hover:bg-[#DDD9CE] transition-colors relative ${className}`}
   role="button"
   tabindex="0"
   onkeydown={(e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      handleItemClick();
+      handleItemClick(e);
     }
   }}
 >
-  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 sm:gap-6 lg:gap-8">
+  <div class="flex items-start gap-4">
     <div class="flex-1 min-w-0">
-      <MenuItemTitle title={item.title} />
-      <MenuItemDescription description={item.description || ''} />
+      <div class="flex items-center gap-2 mb-2">
+        {#if isInCart}
+          <svg class="w-5 h-5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        {/if}
+        <MenuItemTitle title={item.title} className="text-base sm:text-lg font-bold text-gray-900" />
+      </div>
+      {#if item.description}
+        <MenuItemDescription description={item.description} className="text-sm text-gray-700 mb-2" />
+      {/if}
       {#if hasAcompanamientos}
-        <p class="text-sm sm:text-base text-gray-500 mt-2 italic">
+        <p class="text-xs sm:text-sm text-gray-600 mb-2">
           Selecciona un acompañamiento
         </p>
       {/if}
-    </div>
-    <div class="flex items-center justify-between sm:justify-end gap-3 sm:gap-4 lg:gap-6 flex-shrink-0">
       {#if displayPrice}
-        <div class="flex-shrink-0">
-          <Price price={displayPrice} />
-        </div>
+        <Price price={displayPrice} />
       {/if}
-      
+      {#if isInCart && displayPrice && totalQuantity > 0}
+        <p class="text-sm text-gray-600 mt-1">
+          Total: <Price price={(item.price || 0) * totalQuantity} className="font-bold" />
+        </p>
+      {/if}
+    </div>
+    <!-- Imagen vacía a la derecha (estilo Uber Eats) -->
+    <div class="flex-shrink-0 relative">
+      <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+        <svg class="w-12 h-12 sm:w-14 sm:h-14 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <!-- Controles de cantidad sobre la imagen (esquina inferior derecha) -->
       {#if isInCart}
-        <!-- Controles de cantidad cuando está en el carrito -->
-        <div class="flex items-center gap-1.5 sm:gap-2 lg:gap-3 flex-shrink-0">
+        <div class="absolute -bottom-2 -right-2 flex items-center gap-1 bg-white rounded-full shadow-lg border border-gray-200 p-1">
           <button
             onclick={handleDecrement}
-            class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
+            class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
             aria-label="Disminuir cantidad"
           >
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
             </svg>
           </button>
-          
-          <span class="w-6 sm:w-8 lg:w-10 xl:w-12 text-center font-bold text-base sm:text-lg lg:text-xl xl:text-2xl text-gray-800">
+          <span class="w-6 text-center font-semibold text-sm text-gray-700">
             {totalQuantity}
           </span>
-          
           <button
             onclick={handleIncrement}
-            class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors shadow-md hover:shadow-lg"
+            class="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
             aria-label="Aumentar cantidad"
           >
-            <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
           </button>
         </div>
       {:else}
-        <!-- Botón de agregar cuando no está en el carrito -->
         <button
           onclick={handleAddToCart}
-          class="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 bg-gray-800 hover:bg-gray-900 text-white rounded-full flex items-center justify-center transition-colors flex-shrink-0 shadow-md hover:shadow-lg"
+          class="absolute -bottom-2 -right-2 w-8 h-8 bg-white hover:bg-gray-50 rounded-full shadow-lg border border-gray-300 flex items-center justify-center transition-colors"
           aria-label="Agregar al carrito"
         >
-          <svg class="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
           </svg>
         </button>

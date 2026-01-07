@@ -21,13 +21,13 @@
   const tieneElementos = $derived(seccionesConContenido.length > 0);
 </script>
 
-<section class={`space-y-8 ${className}`}>
+<section class={`space-y-10 sm:space-y-12 ${className}`}>
   {#if tieneElementos}
     {#each seccionesConContenido as section}
       <MenuSection {section} />
     {/each}
   {:else}
-    <p class="text-lg sm:text-xl lg:text-2xl text-gray-500 italic">
+    <p class="text-base sm:text-lg text-gray-500">
       {$t.menu.noItems}
     </p>
   {/if}

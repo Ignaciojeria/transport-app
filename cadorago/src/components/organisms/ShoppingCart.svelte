@@ -79,7 +79,7 @@
   {:else}
     <div class="space-y-4 sm:space-y-5 lg:space-y-6 mb-6 sm:mb-8">
       {#each items as cartItem}
-        <div class="bg-[#E8E4D9] rounded-lg p-4 sm:p-5 lg:p-6">
+        <div class="bg-gray-50 rounded-lg p-4 sm:p-5 lg:p-6 border border-gray-200">
           <div class="flex justify-between items-start gap-4 mb-3">
             <div class="flex-1">
               <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">

@@ -12,7 +12,7 @@
   }).format(price);
 </script>
 
-<span class={`font-semibold text-gray-800 text-lg sm:text-xl lg:text-2xl ${className}`}>
+<span class={`font-bold text-gray-900 text-base sm:text-lg ${className}`}>
   {formattedPrice}
 </span>
 

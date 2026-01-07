@@ -146,7 +146,7 @@
 </script>
 
 {#if items.length > 0}
-  <div class="fixed bottom-0 left-0 right-0 z-50 bg-[#E8E4D9] shadow-2xl border-t-2 border-gray-300">
+  <div class="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-2xl border-t-2 border-gray-300">
     <!-- Resumen compacto (siempre visible cuando hay items) -->
     <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-5">
       <div class="flex items-center justify-between gap-4">
@@ -212,7 +212,7 @@
         <div class="pt-4 sm:pt-6 max-h-[60vh] overflow-y-auto">
           <div class="space-y-3 sm:space-y-4">
             {#each items as cartItem}
-              <div class="bg-[#E8E4D9] rounded-lg p-4 sm:p-5">
+              <div class="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
                 <div class="flex justify-between items-start gap-4 mb-3">
                   <div class="flex-1">
                     <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-1">
