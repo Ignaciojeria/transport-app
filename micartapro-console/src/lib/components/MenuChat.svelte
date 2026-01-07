@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, fetchEntitlement, calculateTrialDaysRemaining, type Entitlement } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
 
@@ -31,6 +31,7 @@
   let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | 'whatsapp' | null = $state(null)
   let messageSent = $state(false) // Flag para indicar que se envió un mensaje
   let showUpgradeModal = $state(false) // Modal de upgrade al copiar link
+  let entitlement = $state<Entitlement | null>(null) // Entitlement del usuario
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -44,10 +45,12 @@
   const session = $derived(authState.session)
   const currentLanguage = $derived($language)
   
-  // Días restantes del trial (hardcoded por el momento)
-  const trialDaysRemaining = $derived(() => {
-    return 15 // Fijo por el momento
-  })
+  // Días restantes del trial calculados desde el entitlement
+  const trialDaysRemaining = $derived(
+    entitlement && entitlement.status === 'trialing' 
+      ? calculateTrialDaysRemaining(entitlement.ends_at)
+      : null
+  )
 
   async function handleUpgradeToPro() {
     // Cerrar el modal antes de redirigir
@@ -180,23 +183,58 @@
       }
     }
     
+    // Cargar entitlement cuando se abre el modal
+    if (userId && !entitlement) {
+      try {
+        entitlement = await fetchEntitlement(userId)
+      } catch (err) {
+        console.error('Error cargando entitlement:', err)
+      }
+    }
+    
     showPreview = true
   }
 
-  function copyToClipboard() {
+  async function copyToClipboard() {
     if (!menuUrl) return
 
-    navigator.clipboard.writeText(menuUrl).then(() => {
+    // Siempre recargar entitlement para obtener la versión más reciente
+    if (userId) {
+      try {
+        entitlement = await fetchEntitlement(userId)
+      } catch (err) {
+        console.error('Error cargando entitlement:', err)
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(menuUrl)
       copySuccess = true
       linkWasCopied = true // Marcar que el enlace fue copiado
       setTimeout(() => {
         copySuccess = false
       }, 2000)
-      // Mostrar modal de upgrade después de copiar
-      showUpgradeModal = true
-    }).catch((err) => {
+      
+      // Mostrar modal de upgrade SOLO si el usuario está en trial (status === 'trialing')
+      // NO mostrar si el status es 'active' o si tiene access=true (premium activo)
+      console.log('Entitlement al copiar:', entitlement)
+      console.log('Status:', entitlement?.status, 'Access:', entitlement?.access)
+      
+      // Solo mostrar si está explícitamente en trial
+      const isInTrial = entitlement && entitlement.status === 'trialing'
+      const hasPremium = entitlement && (entitlement.status === 'active' || entitlement.access === true)
+      
+      if (isInTrial && !hasPremium) {
+        console.log('Mostrando modal de upgrade - usuario en trial')
+        showUpgradeModal = true
+      } else {
+        // Usuario tiene premium (active) o no hay entitlement, no mostrar modal
+        console.log('NO mostrando modal - isInTrial:', isInTrial, 'hasPremium:', hasPremium)
+        showUpgradeModal = false
+      }
+    } catch (err) {
       console.error('Error copiando al portapapeles:', err)
-    })
+    }
   }
 
   function shareOnWhatsApp() {
@@ -673,6 +711,11 @@
       <div class="flex items-center justify-between p-3 md:p-4 border-b border-gray-200 gap-2 md:gap-4">
         <div class="flex-1 min-w-0">
           <h2 class="text-base md:text-lg font-semibold text-gray-900 truncate">{$tStore.chat.previewTitle}</h2>
+          {#if trialDaysRemaining !== null && entitlement?.status === 'trialing'}
+            <p class="text-xs md:text-sm text-gray-600 mt-1">
+              {$tStore.chat.trialDaysRemaining.replace('{days}', trialDaysRemaining.toString())}
+            </p>
+          {/if}
         </div>
         {#if menuUrl}
           {#if linkWasCopied}

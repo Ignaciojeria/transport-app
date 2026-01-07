@@ -215,3 +215,61 @@ export async function pollUntilMenuExists(
   return false
 }
 
+
+export interface Entitlement {
+  v: number
+  user_id: string
+  plan: string
+  status: string
+  access: boolean
+  starts_at: string
+  ends_at: string
+}
+
+export async function fetchEntitlement(userId: string): Promise<Entitlement | null> {
+  try {
+    // Agregar timestamp para evitar cache y asegurar obtener la versión más reciente
+    const timestamp = Date.now()
+    const entitlementUrl = STORAGE_BASE_URL + '/' + userId + '/entitlement.json?t=' + timestamp
+    const response = await fetch(entitlementUrl, {
+      cache: 'no-store' // Evitar cache del navegador
+    })
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null
+      }
+      console.error('Error al obtener entitlement.json: ' + response.status + ' ' + response.statusText)
+      return null
+    }
+    
+    const data = await response.json()
+    return data
+  } catch (error) {
+    console.error('Error obteniendo entitlement.json:', error)
+    return null
+  }
+}
+
+export function calculateTrialDaysRemaining(endsAt: string | null | undefined): number | null {
+  if (!endsAt) {
+    return null
+  }
+  
+  try {
+    const endDate = new Date(endsAt)
+    const now = new Date()
+    
+    // Calcular la diferencia en milisegundos
+    const diffMs = endDate.getTime() - now.getTime()
+    
+    // Convertir a días (redondear hacia arriba para mostrar días completos)
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+    
+    // Si ya expiró, retornar 0
+    return Math.max(0, diffDays)
+  } catch (error) {
+    console.error('Error calculando días restantes:', error)
+    return null
+  }
+}
