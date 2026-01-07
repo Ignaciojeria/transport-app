@@ -2,6 +2,7 @@
   import { cartStore } from '../../stores/cartStore.svelte.js';
   import Price from '../atoms/Price.svelte';
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
+  import OrderLoader from '../atoms/OrderLoader.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
   
@@ -16,6 +17,7 @@
   let isExpanded = $state(false);
   let showOrderForm = $state(false);
   let showClearConfirm = $state(false);
+  let showOrderLoader = $state(false);
   let nombreRetiro = $state('');
   let horaRetiro = $state('');
   
@@ -99,7 +101,7 @@
     horaRetiro = formatTimeInput(value);
   }
   
-  function handleConfirmOrder() {
+  async function handleConfirmOrder() {
     if (!nombreRetiro.trim() || !horaRetiro.trim()) {
       alert($t.cart.completeFields);
       return;
@@ -120,10 +122,23 @@
       currentLanguage,
       $t.whatsapp
     );
-    window.open(url, '_blank');
+    
+    // Mostrar loader
     showOrderForm = false;
+    showOrderLoader = true;
+    
+    // Esperar 4 segundos antes de redirigir
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Redirigir a WhatsApp
+    window.open(url, '_blank');
+    
+    // Cerrar loader, limpiar formulario y carrito
+    showOrderLoader = false;
     nombreRetiro = '';
     horaRetiro = '';
+    cartStore.clear();
+    isExpanded = false;
   }
   
   function handleClearCart() {
@@ -340,6 +355,11 @@
       </div>
     </div>
   </div>
+{/if}
+
+<!-- Loader de preparación de pedido -->
+{#if showOrderLoader}
+  <OrderLoader message={$t.cart.preparingOrder} redirectingMessage={$t.cart.redirectingWhatsApp} />
 {/if}
 
 <!-- Modal de confirmación para limpiar carrito -->

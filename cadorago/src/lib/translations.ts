@@ -45,10 +45,12 @@ export interface Translations {
     timeFormatExample: string
     nameFormatExample: string
     shoppingCart: string
-    emptyCart: string
-    emptyCartMessage: string
-    clear: string
-  }
+      emptyCart: string
+      emptyCartMessage: string
+      clear: string
+      preparingOrder: string
+      redirectingWhatsApp: string
+    }
   
   // WhatsApp messages
   whatsapp: {
@@ -104,7 +106,9 @@ export const translations: Record<Language, Translations> = {
       shoppingCart: 'Carrito de Compras',
       emptyCart: 'Tu carrito está vacío',
       emptyCartMessage: 'Agrega items del menú para comenzar',
-      clear: 'Vaciar'
+      clear: 'Vaciar',
+      preparingOrder: 'Preparando tu pedido...',
+      redirectingWhatsApp: 'Redirigiendo a WhatsApp...'
     },
     whatsapp: {
       greeting: '¡Hola! Me gustaría hacer el siguiente pedido:\n\n',
@@ -157,7 +161,9 @@ export const translations: Record<Language, Translations> = {
       shoppingCart: 'Carrinho de Compras',
       emptyCart: 'Seu carrinho está vazio',
       emptyCartMessage: 'Adicione itens do cardápio para começar',
-      clear: 'Limpar'
+      clear: 'Limpar',
+      preparingOrder: 'Preparando seu pedido...',
+      redirectingWhatsApp: 'Redirecionando para o WhatsApp...'
     },
     whatsapp: {
       greeting: 'Olá! Gostaria de fazer o seguinte pedido:\n\n',
@@ -210,7 +216,9 @@ export const translations: Record<Language, Translations> = {
       shoppingCart: 'Shopping Cart',
       emptyCart: 'Your cart is empty',
       emptyCartMessage: 'Add items from the menu to get started',
-      clear: 'Clear'
+      clear: 'Clear',
+      preparingOrder: 'Preparing your order...',
+      redirectingWhatsApp: 'Redirecting to WhatsApp...'
     },
     whatsapp: {
       greeting: 'Hello! I would like to place the following order:\n\n',
