@@ -34,9 +34,9 @@ func NewSaveBillingEvent(supabase *supabase.Client) SaveBillingEvent {
 			record["user_id"] = billingEvent.UserID.String()
 		}
 
-		// Hacer upsert usando (provider, provider_event_id) como clave única para idempotencia
+		// Hacer upsert usando provider_event_id como clave única para idempotencia
 		_, _, err := supabase.From("billing_events").
-			Upsert(record, "provider,provider_event_id", "", "").
+			Upsert(record, "provider_event_id", "", "").
 			Execute()
 
 		return err

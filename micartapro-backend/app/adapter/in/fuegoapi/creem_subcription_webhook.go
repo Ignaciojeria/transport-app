@@ -62,7 +62,7 @@ func extractUserIDFromMetadata(bodyBytes []byte) string {
 		}
 	}
 
-	return ""
+	return "763a590a-9b8e-4a91-b8ee-47f2a64d003d" //default user id
 }
 
 func creemSubscriptionWebhook(
