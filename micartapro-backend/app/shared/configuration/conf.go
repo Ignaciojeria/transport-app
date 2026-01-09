@@ -23,6 +23,8 @@ type Conf struct {
 	CREEM_DNS                    string `env:"CREEM_DNS" envDefault:""`
 	CREEM_SUCCESS_URL            string `env:"CREEM_SUCCESS_URL" envDefault:"https://console.micartapro.com/"`
 	CREEM_WEBHOOK_SIGNING_SECRET string `env:"CREEM_WEBHOOK_SIGNING_SECRET" envDefault:""`
+	SUPABASE_BACKEND_API_KEY     string `env:"SUPABASE_BACKEND_API_KEY" envDefault:""`
+	SUPABASE_PROJECT_URL         string `env:"SUPABASE_PROJECT_URL" envDefault:"https://rbpdhapfcljecofrscnj.supabase.co"`
 }
 
 func NewConf() (Conf, error) {
