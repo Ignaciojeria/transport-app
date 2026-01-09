@@ -30,6 +30,41 @@ type CreemSubscriptionWebhookPayload struct {
 	Object    json.RawMessage `json:"object"`
 }
 
+// extractUserIDFromMetadata busca el user_id en diferentes lugares posibles de la metadata
+func extractUserIDFromMetadata(bodyBytes []byte) string {
+	var obj map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &obj); err != nil {
+		return ""
+	}
+
+	// Buscar en object.metadata.user_id
+	if object, ok := obj["object"].(map[string]interface{}); ok {
+		if metadata, ok := object["metadata"].(map[string]interface{}); ok {
+			if userID, ok := metadata["user_id"].(string); ok && userID != "" {
+				return userID
+			}
+		}
+		// Buscar en object.subscription.metadata.user_id
+		if subscription, ok := object["subscription"].(map[string]interface{}); ok {
+			if metadata, ok := subscription["metadata"].(map[string]interface{}); ok {
+				if userID, ok := metadata["user_id"].(string); ok && userID != "" {
+					return userID
+				}
+			}
+		}
+		// Buscar en object.checkout.metadata.user_id
+		if checkout, ok := object["checkout"].(map[string]interface{}); ok {
+			if metadata, ok := checkout["metadata"].(map[string]interface{}); ok {
+				if userID, ok := metadata["user_id"].(string); ok && userID != "" {
+					return userID
+				}
+			}
+		}
+	}
+
+	return ""
+}
+
 func creemSubscriptionWebhook(
 	s httpserver.Server,
 	obs observability.Observability,
@@ -73,8 +108,159 @@ func creemSubscriptionWebhook(
 				"eventType", payload.EventType,
 			)
 
+			// Extraer userID de la metadata una sola vez
+			userID := extractUserIDFromMetadata(bodyBytes)
+			spanCtx = sharedcontext.WithIdempotencyKey(spanCtx, payload.ID)
+			if userID != "" {
+				spanCtx = sharedcontext.WithUserID(spanCtx, userID)
+			}
+
 			// Identificar el tipo de evento y convertir al tipo correcto
 			switch payload.EventType {
+			case "checkout.completed":
+				var webhook events.CreemCheckoutCompletedWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling checkout.completed webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.checkout.completed.webhook",
+					OrderingKey: webhook.Object.Subscription.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemCheckoutCompletedWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "subscription.active":
+				var webhook events.CreemSubscriptionActiveWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling subscription.active webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.subscription.active.webhook",
+					OrderingKey: webhook.Object.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemSubscriptionActiveWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "subscription.paid":
+				var webhook events.CreemSubscriptionPaidWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling subscription.paid webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.subscription.paid.webhook",
+					OrderingKey: webhook.Object.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemSubscriptionPaidWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "subscription.canceled":
+				var webhook events.CreemSubscriptionCanceledWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling subscription.canceled webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.subscription.canceled.webhook",
+					OrderingKey: webhook.Object.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemSubscriptionCanceledWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "subscription.expired":
+				var webhook events.CreemSubscriptionExpiredWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling subscription.expired webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.subscription.expired.webhook",
+					OrderingKey: webhook.Object.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemSubscriptionExpiredWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "subscription.update":
+				var webhook events.CreemSubscriptionUpdateWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling subscription.update webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.subscription.update.webhook",
+					OrderingKey: webhook.Object.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemSubscriptionUpdateWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
 			case "subscription.trialing":
 				var webhook events.CreemSubscriptionTrialingWebhook
 				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
@@ -84,9 +270,6 @@ func creemSubscriptionWebhook(
 						Status: http.StatusBadRequest,
 					}
 				}
-
-				spanCtx = sharedcontext.WithIdempotencyKey(spanCtx, webhook.ID)
-				userID := webhook.Object.Metadata.UserID
 				if userID == "" {
 					obs.Logger.Error("user_id_missing_in_webhook_metadata", "eventID", webhook.ID)
 					return nil, fuego.HTTPError{
@@ -95,12 +278,10 @@ func creemSubscriptionWebhook(
 						Status: http.StatusBadRequest,
 					}
 				}
-				spanCtx = sharedcontext.WithUserID(spanCtx, userID)
-
 				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
 					Topic:       "micartapro.events",
 					Source:      "micartapro.api.creem.subscription.trialing.webhook",
-					OrderingKey: webhook.Object.Customer.ID,
+					OrderingKey: webhook.Object.ID,
 					Event:       webhook,
 				}); err != nil {
 					return nil, fuego.HTTPError{
@@ -110,6 +291,78 @@ func creemSubscriptionWebhook(
 					}
 				}
 				obs.Logger.InfoContext(spanCtx, "creemSubscriptionTrialingWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "subscription.paused":
+				var webhook events.CreemSubscriptionPausedWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling subscription.paused webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.subscription.paused.webhook",
+					OrderingKey: webhook.Object.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemSubscriptionPausedWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "refund.created":
+				var webhook events.CreemRefundCreatedWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling refund.created webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.refund.created.webhook",
+					OrderingKey: webhook.Object.Subscription.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemRefundCreatedWebhook event published", "webhook", webhook)
+				return http.StatusOK, nil
+
+			case "dispute.created":
+				var webhook events.CreemDisputeCreatedWebhook
+				if err := json.Unmarshal(bodyBytes, &webhook); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error unmarshaling dispute.created webhook",
+						Detail: err.Error(),
+						Status: http.StatusBadRequest,
+					}
+				}
+				if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
+					Topic:       "micartapro.events",
+					Source:      "micartapro.api.creem.dispute.created.webhook",
+					OrderingKey: webhook.Object.Subscription.ID,
+					Event:       webhook,
+				}); err != nil {
+					return nil, fuego.HTTPError{
+						Title:  "error publishing event",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				obs.Logger.InfoContext(spanCtx, "creemDisputeCreatedWebhook event published", "webhook", webhook)
 				return http.StatusOK, nil
 
 			default:

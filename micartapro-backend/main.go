@@ -21,11 +21,15 @@ import (
 
 	_ "micartapro/app/adapter/out/agents"
 	_ "micartapro/app/adapter/out/storage"
-	_ "micartapro/app/usecase"
+	_ "micartapro/app/usecase/billing"
+	_ "micartapro/app/usecase/creem"
+	_ "micartapro/app/usecase/menu"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	_ "micartapro/app/adapter/out/restyclient"
 	_ "micartapro/app/shared/infrastructure/httpresty"
+	_ "micartapro/app/shared/infrastructure/supabasecli"
+
+	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
 //go:embed .version

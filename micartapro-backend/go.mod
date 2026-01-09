@@ -89,6 +89,12 @@ require (
 	github.com/perimeterx/marshmallow v1.1.5 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
+	github.com/supabase-community/functions-go v0.0.0-20220927045802-22373e6cb51d // indirect
+	github.com/supabase-community/gotrue-go v1.2.0 // indirect
+	github.com/supabase-community/postgrest-go v0.0.11 // indirect
+	github.com/supabase-community/storage-go v0.7.0 // indirect
+	github.com/supabase-community/supabase-go v0.0.4 // indirect
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.38.0 // indirect

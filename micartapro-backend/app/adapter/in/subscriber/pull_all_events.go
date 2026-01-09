@@ -13,7 +13,8 @@ import (
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
-	"micartapro/app/usecase"
+	"micartapro/app/usecase/creem"
+	"micartapro/app/usecase/menu"
 )
 
 func init() {
@@ -21,10 +22,19 @@ func init() {
 		newPullAllEvents,
 		eventprocessing.NewSubscriberStrategy,
 		observability.NewObservability,
-		usecase.NewOnMenuInteractionRequest,
-		usecase.NewOnMenuCreateRequest,
-		usecase.NewOnUserMenusInsertedWebhook,
-		usecase.NewOnCreemSubscriptionTrialingWebhook,
+		menu.NewOnMenuInteractionRequest,
+		menu.NewOnMenuCreateRequest,
+		menu.NewOnUserMenusInsertedWebhook,
+		creem.NewOnCreemSubscriptionTrialingWebhook,
+		creem.NewOnCreemCheckoutCompletedWebhook,
+		creem.NewOnCreemSubscriptionActiveWebhook,
+		creem.NewOnCreemSubscriptionPaidWebhook,
+		creem.NewOnCreemSubscriptionCanceledWebhook,
+		creem.NewOnCreemSubscriptionExpiredWebhook,
+		creem.NewOnCreemSubscriptionUpdateWebhook,
+		creem.NewOnCreemSubscriptionPausedWebhook,
+		creem.NewOnCreemRefundCreatedWebhook,
+		creem.NewOnCreemDisputeCreatedWebhook,
 	)
 }
 
@@ -32,10 +42,19 @@ func init() {
 func newPullAllEvents(
 	sub eventprocessing.Subscriber,
 	obs observability.Observability,
-	onMenuInteractionRequest usecase.OnMenuInteractionRequest,
-	onMenuCreateRequest usecase.OnMenuCreateRequest,
-	onUserMenusInsertedWebhook usecase.OnUserMenusInsertedWebhook,
-	onCreemSubscriptionTrialingWebhook usecase.OnCreemSubscriptionTrialingWebhook) eventprocessing.MessageProcessor {
+	onMenuInteractionRequest menu.OnMenuInteractionRequest,
+	onMenuCreateRequest menu.OnMenuCreateRequest,
+	onUserMenusInsertedWebhook menu.OnUserMenusInsertedWebhook,
+	onCreemSubscriptionTrialingWebhook creem.OnCreemSubscriptionTrialingWebhook,
+	onCreemCheckoutCompletedWebhook creem.OnCreemCheckoutCompletedWebhook,
+	onCreemSubscriptionActiveWebhook creem.OnCreemSubscriptionActiveWebhook,
+	onCreemSubscriptionPaidWebhook creem.OnCreemSubscriptionPaidWebhook,
+	onCreemSubscriptionCanceledWebhook creem.OnCreemSubscriptionCanceledWebhook,
+	onCreemSubscriptionExpiredWebhook creem.OnCreemSubscriptionExpiredWebhook,
+	onCreemSubscriptionUpdateWebhook creem.OnCreemSubscriptionUpdateWebhook,
+	onCreemSubscriptionPausedWebhook creem.OnCreemSubscriptionPausedWebhook,
+	onCreemRefundCreatedWebhook creem.OnCreemRefundCreatedWebhook,
+	onCreemDisputeCreatedWebhook creem.OnCreemDisputeCreatedWebhook) eventprocessing.MessageProcessor {
 	subscriptionName := "micartapro.events.v2"
 	processor := func(ctx context.Context, event cloudevents.Event) int {
 
@@ -123,6 +142,141 @@ func newPullAllEvents(
 			err := onCreemSubscriptionTrialingWebhook(spanCtx, request)
 			if err != nil {
 				obs.Logger.Error("error_processing_creem_subscription_trialing_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemCheckoutCompletedWebhook:
+			var request events.CreemCheckoutCompletedWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemCheckoutCompletedWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_checkout_completed_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemSubscriptionActiveWebhook:
+			var request events.CreemSubscriptionActiveWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemSubscriptionActiveWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_subscription_active_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemSubscriptionPaidWebhook:
+			var request events.CreemSubscriptionPaidWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemSubscriptionPaidWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_subscription_paid_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemSubscriptionCanceledWebhook:
+			var request events.CreemSubscriptionCanceledWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemSubscriptionCanceledWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_subscription_canceled_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemSubscriptionExpiredWebhook:
+			var request events.CreemSubscriptionExpiredWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemSubscriptionExpiredWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_subscription_expired_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemSubscriptionUpdateWebhook:
+			var request events.CreemSubscriptionUpdateWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemSubscriptionUpdateWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_subscription_update_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemSubscriptionPausedWebhook:
+			var request events.CreemSubscriptionPausedWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemSubscriptionPausedWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_subscription_paused_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemRefundCreatedWebhook:
+			var request events.CreemRefundCreatedWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemRefundCreatedWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_refund_created_webhook",
+					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventCreemDisputeCreatedWebhook:
+			var request events.CreemDisputeCreatedWebhook
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+			}
+			err := onCreemDisputeCreatedWebhook(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_creem_dispute_created_webhook",
 					"error", err.Error(),
 				)
 				return http.StatusInternalServerError

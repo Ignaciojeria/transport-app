@@ -7,74 +7,76 @@ import (
 )
 
 type CreemSubscriptionTrialingWebhook struct {
-	ID        string                          `json:"id" example:"evt_1NX6xlPtWIgAx7NtUegwO8"`
+	ID        string                          `json:"id" example:"evt_2ciAM8ABYtj0pVueeJPxUZ"`
 	EventType string                          `json:"eventType" example:"subscription.trialing"`
-	CreatedAt int64                           `json:"created_at" example:"1767404212202"`
+	CreatedAt int64                           `json:"created_at" example:"1739963911073"`
 	Object    CreemSubscriptionTrialingObject `json:"object"`
 }
 
 type CreemSubscriptionTrialingProduct struct {
-	ID                string `json:"id" example:"prod_amLs4z3rWJvj4ZC6xf8if"`
-	Object            string `json:"object" example:"product"`
-	Name              string `json:"name" example:"micartapro"`
-	Description       string `json:"description" example:"Create and manage digital menus in seconds using AI. Easily update prices, items, and descriptions, and share your menu instantly via link."`
-	ImageURL          string `json:"image_url" example:"https://nucn5fajkcc6sgrd.public.blob.vercel-storage.com/micartapro-cover-r2Jp8LoV97OjyqZJ5HAhtZFNdlGKuP.png"`
-	Price             int    `json:"price" example:"1500"`
-	Currency          string `json:"currency" example:"USD"`
+	ID                string `json:"id" example:"prod_3kpf0ZdpcfsSCQ3kDiwg9m"`
+	Name              string `json:"name" example:"trail"`
+	Description       string `json:"description" example:"asdfasf"`
+	ImageURL          any    `json:"image_url" example:"null"`
+	Price             int    `json:"price" example:"1100"`
+	Currency          string `json:"currency" example:"EUR"`
 	BillingType       string `json:"billing_type" example:"recurring"`
 	BillingPeriod     string `json:"billing_period" example:"every-month"`
 	Status            string `json:"status" example:"active"`
 	TaxMode           string `json:"tax_mode" example:"exclusive"`
 	TaxCategory       string `json:"tax_category" example:"saas"`
-	DefaultSuccessURL any    `json:"default_success_url" example:"null"`
-	CreatedAt         string `json:"created_at" example:"2025-12-30T00:47:53.004Z"`
-	UpdatedAt         string `json:"updated_at" example:"2025-12-30T00:47:53.004Z"`
+	DefaultSuccessURL string `json:"default_success_url" example:""`
+	CreatedAt         string `json:"created_at" example:"2025-02-19T11:18:07.570Z"`
+	UpdatedAt         string `json:"updated_at" example:"2025-02-19T11:18:07.570Z"`
 	Mode              string `json:"mode" example:"test"`
 }
 
 type CreemSubscriptionTrialingCustomer struct {
-	ID        string `json:"id" example:"cust_2HMB2DRr4gNDtKdodcx509"`
+	ID        string `json:"id" example:"cust_4fpU8kYkQmI1XKBwU2qeME"`
 	Object    string `json:"object" example:"customer"`
-	Email     string `json:"email" example:"ignaciovl.j@gmail.com"`
-	Name      string `json:"name" example:"Ignacio Jeria"`
-	Country   string `json:"country" example:"CL"`
-	CreatedAt string `json:"created_at" example:"2025-12-30T02:12:54.604Z"`
-	UpdatedAt string `json:"updated_at" example:"2025-12-30T02:12:54.604Z"`
+	Email     string `json:"email" example:"customer@emaildomain"`
+	Name      string `json:"name" example:"Alec Erasmus"`
+	Country   string `json:"country" example:"NL"`
+	CreatedAt string `json:"created_at" example:"2024-11-07T23:21:11.763Z"`
+	UpdatedAt string `json:"updated_at" example:"2024-11-07T23:21:11.763Z"`
 	Mode      string `json:"mode" example:"test"`
 }
 
 type CreemSubscriptionTrialingItems struct {
 	Object    string `json:"object" example:"subscription_item"`
-	ID        string `json:"id" example:"sitem_a1RP5Ou3cWV0J4h0iaBcN"`
-	ProductID string `json:"product_id" example:"prod_amLs4z3rWJvj4ZC6xf8if"`
-	PriceID   string `json:"price_id" example:"pprice_3IYhTKGGR5fZLxjjyFqbZK"`
+	ID        string `json:"id" example:"sitem_1xbHCmIM61DHGRBCFn0W1L"`
+	ProductID string `json:"product_id" example:"prod_3kpf0ZdpcfsSCQ3kDiwg9m"`
+	PriceID   string `json:"price_id" example:"pprice_517h9CebmM3P079bGAXHnE"`
 	Units     int    `json:"units" example:"1"`
-	CreatedAt string `json:"created_at" example:"2026-01-03T01:36:52.124Z"`
-	UpdatedAt string `json:"updated_at" example:"2026-01-03T01:36:52.124Z"`
+	CreatedAt string `json:"created_at" example:"2025-02-19T11:18:30.690Z"`
+	UpdatedAt string `json:"updated_at" example:"2025-02-19T11:18:30.690Z"`
 	Mode      string `json:"mode" example:"test"`
 }
+
 type CreemSubscriptionTrialingMetadata struct {
 	UserID string `json:"user_id" example:"763a590a-9b8e-4a91-b8ee-47f2a64d003d"`
 }
+
 type CreemSubscriptionTrialingObject struct {
-	ID                     string                            `json:"id" example:"sub_6FjNokyn7Zvl9TxtogTo3q"`
+	ID                     string                            `json:"id" example:"sub_dxiauR8zZOwULx5QM70wJ"`
 	Object                 string                            `json:"object" example:"subscription"`
 	Product                CreemSubscriptionTrialingProduct  `json:"product"`
 	Customer               CreemSubscriptionTrialingCustomer `json:"customer"`
 	Items                  []CreemSubscriptionTrialingItems  `json:"items"`
 	CollectionMethod       string                            `json:"collection_method" example:"charge_automatically"`
 	Status                 string                            `json:"status" example:"trialing"`
-	CurrentPeriodStartDate string                            `json:"current_period_start_date" example:"2026-01-03T01:36:48.000Z"`
-	CurrentPeriodEndDate   string                            `json:"current_period_end_date" example:"2026-01-17T01:36:48.000Z"`
+	CurrentPeriodStartDate string                            `json:"current_period_start_date" example:"2025-02-19T11:18:25.000Z"`
+	CurrentPeriodEndDate   string                            `json:"current_period_end_date" example:"2025-02-26T11:18:25.000Z"`
 	CanceledAt             any                               `json:"canceled_at" example:"null"`
-	CreatedAt              string                            `json:"created_at" example:"2026-01-03T01:36:52.097Z"`
-	UpdatedAt              string                            `json:"updated_at" example:"2026-01-03T01:36:52.097Z"`
+	CreatedAt              string                            `json:"created_at" example:"2025-02-19T11:18:30.674Z"`
+	UpdatedAt              string                            `json:"updated_at" example:"2025-02-19T11:18:30.674Z"`
 	Metadata               CreemSubscriptionTrialingMetadata `json:"metadata"`
+	Mode                   string                            `json:"mode" example:"test"`
 }
 
 func (c CreemSubscriptionTrialingWebhook) ToCloudEvent(source string) cloudevents.Event {
 	event := cloudevents.NewEvent()
-	event.SetSubject("creem.subscription.trialing.webhook") //struct name
+	event.SetSubject("creem.subscription.trialing.webhook")
 	event.SetType(EventCreemSubscriptionTrialingWebhook)
 	event.SetSource(source)
 	event.SetData(cloudevents.ApplicationJSON, c)
