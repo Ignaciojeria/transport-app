@@ -41,6 +41,10 @@ export async function fetchRestaurantData(userID, menuID) {
     // Agregar timestamp para evitar cache y asegurar obtener la versión más reciente
     const timestamp = Date.now();
     const dataUrl = `${BASE_URL}/${userID}/menus/${menuID}/${filename}?t=${timestamp}`;
+    
+    // Mostrar la URL en la consola
+    console.log('📦 URL del storage:', dataUrl);
+    
     const response = await fetch(dataUrl, {
       cache: 'no-store' // Evitar cache del navegador
     });

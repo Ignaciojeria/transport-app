@@ -2,7 +2,9 @@
   import MenuItemTitle from '../atoms/MenuItemTitle.svelte';
   import MenuItemDescription from '../atoms/MenuItemDescription.svelte';
   import Price from '../atoms/Price.svelte';
+  import QuantitySelector from './QuantitySelector.svelte';
   import { cartStore } from '../../stores/cartStore.svelte.js';
+  import { getPriceFromPricing, getPricingLimits } from '../../services/menuData.js';
   
   const { 
     item = {
@@ -15,25 +17,63 @@
   } = $props();
   
   let showAcompanamientoModal = $state(false);
+  let showQuantityModal = $state(false);
   let selectedAcompanamiento = $state(null);
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
-  const displayPrice = $derived(hasAcompanamientos ? null : (item.price || 0));
+  
+  // Detectar el modo de pricing
+  const pricingMode = $derived(item.pricing?.mode || 'UNIT');
+  const needsQuantitySelector = $derived(
+    pricingMode === 'WEIGHT' || 
+    pricingMode === 'VOLUME' || 
+    pricingMode === 'LENGTH' || 
+    pricingMode === 'AREA'
+  );
+  
+  // El precio puede venir directamente (formato antiguo) o desde pricing (formato nuevo)
+  const displayPrice = $derived(
+    hasAcompanamientos 
+      ? null 
+      : (item.price || (item.pricing?.pricePerUnit || 0))
+  );
   
   // Verificar si el item está en el carrito (necesita verificar por clave única)
   const isInCart = $derived.by(() => {
     const items = cartStore.items;
     const matchingItems = items.filter(i => i.title === item.title);
-    return matchingItems.reduce((sum, i) => sum + i.cantidad, 0) > 0;
+    return matchingItems.reduce((sum, i) => sum + (i.customQuantity || i.cantidad), 0) > 0;
   });
   
   const cartItems = $derived.by(() => cartStore.items.filter(i => i.title === item.title));
-  const totalQuantity = $derived.by(() => cartItems.reduce((sum, i) => sum + i.cantidad, 0));
+  const totalQuantity = $derived.by(() => {
+    return cartItems.reduce((sum, i) => {
+      // Para items con cantidad personalizada, sumar la cantidad
+      if (i.customQuantity) {
+        return sum + i.customQuantity;
+      }
+      return sum + i.cantidad;
+    }, 0);
+  });
+  
+  // Calcular precio total para items en el carrito
+  const totalPrice = $derived.by(() => {
+    return cartItems.reduce((sum, cartItem) => {
+      if (cartItem.customQuantity && cartItem.pricing) {
+        // Calcular precio según cantidad personalizada
+        return sum + getPriceFromPricing(cartItem.pricing, cartItem.customQuantity);
+      }
+      // Precio normal
+      return sum + (cartItem.precio * cartItem.cantidad);
+    }, 0);
+  });
   
   function handleAddToCart(event) {
     event.stopPropagation();
     if (hasAcompanamientos) {
       showAcompanamientoModal = true;
+    } else if (needsQuantitySelector) {
+      showQuantityModal = true;
     } else {
       cartStore.addItem(item);
     }
@@ -43,9 +83,20 @@
     event.stopPropagation();
     if (hasAcompanamientos) {
       showAcompanamientoModal = true;
+    } else if (needsQuantitySelector) {
+      showQuantityModal = true;
     } else {
       cartStore.addItem(item);
     }
+  }
+  
+  function handleQuantityConfirm(quantity) {
+    cartStore.addItemWithQuantity(item, quantity);
+    showQuantityModal = false;
+  }
+  
+  function handleQuantityCancel() {
+    showQuantityModal = false;
   }
   
   function handleDecrement(event) {
@@ -133,12 +184,23 @@
           Selecciona un acompañamiento
         </p>
       {/if}
-      {#if displayPrice}
+      {#if displayPrice && !needsQuantitySelector}
         <Price price={displayPrice} />
+      {:else if needsQuantitySelector}
+        <p class="text-xs sm:text-sm text-gray-600 mb-2">
+          Precio por {item.pricing?.unit === 'GRAM' ? 'gramo' : item.pricing?.unit === 'KILOGRAM' ? 'kg' : item.pricing?.unit?.toLowerCase() || 'unidad'}
+        </p>
+        {#if item.pricing}
+          <Price price={item.pricing.pricePerUnit} />
+          <span class="text-xs text-gray-500"> / {item.pricing.baseUnit || 1} {item.pricing.unit === 'GRAM' ? 'g' : item.pricing.unit === 'KILOGRAM' ? 'kg' : item.pricing.unit?.toLowerCase() || ''}</span>
+        {/if}
       {/if}
-      {#if isInCart && displayPrice && totalQuantity > 0}
+      {#if isInCart && totalQuantity > 0}
         <p class="text-sm text-gray-600 mt-1">
-          Total: <Price price={(item.price || 0) * totalQuantity} className="font-bold" />
+          {#if needsQuantitySelector}
+            <span class="text-xs text-gray-500">{totalQuantity} {item.pricing?.unit === 'GRAM' ? 'g' : item.pricing?.unit === 'KILOGRAM' ? 'kg' : item.pricing?.unit?.toLowerCase() || ''} - </span>
+          {/if}
+          Total: <Price price={totalPrice} className="font-bold" />
         </p>
       {/if}
     </div>
@@ -161,8 +223,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
             </svg>
           </button>
-          <span class="w-6 text-center font-semibold text-sm text-gray-700">
-            {totalQuantity}
+          <span class="w-6 text-center font-semibold text-sm text-gray-700" title={needsQuantitySelector ? `${totalQuantity} ${item.pricing?.unit === 'GRAM' ? 'g' : item.pricing?.unit === 'KILOGRAM' ? 'kg' : ''}` : ''}>
+            {needsQuantitySelector ? '✏️' : totalQuantity}
           </span>
           <button
             onclick={handleIncrement}
@@ -188,6 +250,54 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de selección de cantidad (WEIGHT/VOLUME/etc) -->
+{#if showQuantityModal}
+  <div 
+    class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" 
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="quantity-modal-title"
+    tabindex="-1"
+    onclick={handleQuantityCancel}
+    onkeydown={(e) => {
+      if (e.key === 'Escape') {
+        handleQuantityCancel();
+      }
+    }}
+  >
+    <div 
+      class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8 max-h-[80vh] overflow-y-auto"
+      role="document"
+      onclick={(e) => e.stopPropagation()}
+      onkeydown={(e) => e.stopPropagation()}
+    >
+      <h3 id="quantity-modal-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+        {item.title}
+      </h3>
+      {#if item.description}
+        <p class="text-sm text-gray-600 mb-4 sm:mb-6">
+          {item.description}
+        </p>
+      {/if}
+      
+      {#if item.pricing}
+        {@const limits = getPricingLimits(item.pricing)}
+        {@const unitLabel = item.pricing.unit === 'GRAM' ? 'g' : item.pricing.unit === 'KILOGRAM' ? 'kg' : item.pricing.unit === 'MILLILITER' ? 'ml' : item.pricing.unit === 'LITER' ? 'L' : item.pricing.unit === 'METER' ? 'm' : item.pricing.unit === 'SQUARE_METER' ? 'm²' : ''}
+        <QuantitySelector
+          pricing={item.pricing}
+          min={limits.min}
+          max={limits.max}
+          step={limits.step}
+          value={limits.min}
+          unit={unitLabel}
+          onConfirm={handleQuantityConfirm}
+          onCancel={handleQuantityCancel}
+        />
+      {/if}
+    </div>
+  </div>
+{/if}
 
 <!-- Modal de selección de acompañamiento -->
 {#if showAcompanamientoModal}
