@@ -22,19 +22,12 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 			Type: genai.TypeObject,
 			Properties: map[string]*genai.Schema{
 
-				// 1. businessInfo: Agrupa los datos del negocio y reutiliza el Schema de Contacto
+				// 1. businessInfo: Agrupa los datos del negocio y reutiliza el Schema de Contacto completo
 				"businessInfo": {
 					Type:        genai.TypeObject,
 					Description: "Información del negocio: nombre, contacto de WhatsApp y horario de atención, extraída del prompt del usuario.",
-					Properties: map[string]*genai.Schema{
-						// businessName (antes era un argumento individual)
-						"businessName": {Type: genai.TypeString, Description: "El nombre oficial del negocio."},
-						// whatsapp (reutilizamos la definición del Schema de Contacto)
-						"whatsapp": contactSchema.Properties["whatsapp"],
-						// businessHours (reutilizamos la definición del Schema de Contacto)
-						"businessHours": contactSchema.Properties["businessHours"],
-					},
-					//Required: []string{"businessName", "whatsapp"}, // businessHours puede ser opcional si el usuario no lo menciona
+					Properties:  contactSchema.Properties,
+					Required:    contactSchema.Required,
 				},
 				// 2. menuItemsStructure: Reemplaza el TypeString por la estructura de la carta (Array de Categorías)
 				"menu": {
@@ -52,6 +45,12 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 				"footerImage": {
 					Type:        genai.TypeString,
 					Description: "URL de la imagen del footer o logo del menú digital.",
+				},
+				// 5. deliveryOptions: Opciones de envío/retiro disponibles
+				"deliveryOptions": {
+					Type:        genai.TypeArray,
+					Description: "Lista opcional de opciones de envío/retiro disponibles (PICKUP o DELIVERY).",
+					Items:       schema.GetDeliveryOptionSchema(),
 				},
 			},
 			// Los requeridos son las estructuras complejas que encapsulan todo

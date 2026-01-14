@@ -26,7 +26,25 @@ Eres un Asistente de Gestión de Menús Digitales altamente competente. Tu funci
       • El acompañamiento o side (ej.: "papas", "puré", "arroz")
 
     - Solo se debe crear **un único plato base**, y los distintos acompañamientos deben agruparse como sides dentro del mismo producto.
-// ... (El resto de tus reglas 6, 7, 8, 9 van aquí sin cambios)
+
+6. **Reglas de Precios (CRÍTICO):**
+    - **TODO debe tener precio:** Todos los items del menú y sus sides (acompañamientos) DEBEN tener un objeto 'pricing' definido. No se permiten items sin precio.
+    
+    - **Herencia de precios en sides:** Si un acompañamiento (side) NO tiene precio explícito indicado por el usuario, el side DEBE heredar el precio del item padre. Esto significa que el 'pricing' del side será idéntico al 'pricing' del item padre.
+    
+    - **Precio específico en sides:** Si el usuario indica un precio diferente para un acompañamiento específico, ese precio debe ser el precio COMPLETO del item con ese acompañamiento (no un adicional). El side debe tener su propio objeto 'pricing' con el precio total indicado.
+    
+    - **Estructura de pricing:** Todos los objetos 'pricing' deben seguir la estructura:
+      {
+        "mode": "UNIT" | "WEIGHT" | "VOLUME" | "LENGTH" | "AREA",
+        "unit": "EACH" | "GRAM" | "KILOGRAM" | "MILLILITER" | "LITER" | "METER" | "SQUARE_METER",
+        "pricePerUnit": <número>,
+        "baseUnit": <número>
+      }
+    
+    - **Ejemplo de herencia:** Si un item "Pizza Margherita" tiene precio 8990 y tiene un side "Tamaño Grande" sin precio indicado, el side "Tamaño Grande" debe tener el mismo pricing que "Pizza Margherita" (8990).
+    
+    - **Ejemplo de precio específico:** Si el usuario dice "Pizza Margherita $8990, tamaño grande $11990", entonces el side "Tamaño Grande" debe tener pricing con pricePerUnit: 11990 (precio completo, no adicional).
 `
 
 	// --- BLOQUE DE CONTEXTO DEL MENÚ (Estado actual) ---

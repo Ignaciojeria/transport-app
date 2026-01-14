@@ -4,25 +4,54 @@ import (
 	"google.golang.org/genai"
 )
 
-// MenuInteractionResponse devuelve un schema para la estructura de respuesta de interacción con el menú
 func MenuInteractionResponse() *genai.Schema {
-	// Schema para un side (acompañamiento)
+
+	// --- UnitOfMeasure enum ---
+	unitSchema := &genai.Schema{
+		Type: genai.TypeString,
+		Enum: []string{
+			"EACH",
+			"GRAM",
+			"KILOGRAM",
+			"MILLILITER",
+			"LITER",
+		},
+	}
+
+	// --- PricingMode enum ---
+	modeSchema := &genai.Schema{
+		Type: genai.TypeString,
+		Enum: []string{
+			"UNIT",
+			"WEIGHT",
+			"VOLUME",
+		},
+	}
+
+	// --- Pricing schema ---
+	pricingSchema := &genai.Schema{
+		Type: genai.TypeObject,
+		Properties: map[string]*genai.Schema{
+			"mode":         modeSchema,
+			"unit":         unitSchema,
+			"pricePerUnit": {Type: genai.TypeNumber},
+			"baseUnit":     {Type: genai.TypeNumber},
+		},
+		Required: []string{"mode", "unit", "pricePerUnit"},
+	}
+
+	// --- Side ---
 	sideSchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
-			"id":    {Type: genai.TypeString},
-			"name":  {Type: genai.TypeString},
-			"price": {Type: genai.TypeNumber},
+			"id":      {Type: genai.TypeString},
+			"name":    {Type: genai.TypeString},
+			"pricing": pricingSchema,
 		},
-		Required: []string{"id", "name", "price"},
+		Required: []string{"id", "name", "pricing"},
 	}
 
-	// Schema para un item del menú
-	// Nota: Un item puede tener:
-	// - title (requerido)
-	// - description (opcional, puede estar vacío)
-	// - sides (opcional, array de acompañamientos con precios)
-	// - price (opcional, precio directo cuando no hay sides)
+	// --- MenuItem ---
 	menuItemSchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -32,12 +61,12 @@ func MenuInteractionResponse() *genai.Schema {
 				Type:  genai.TypeArray,
 				Items: sideSchema,
 			},
-			"price": {Type: genai.TypeNumber},
+			"pricing": pricingSchema,
 		},
-		Required: []string{"title"},
+		Required: []string{"title", "pricing"},
 	}
 
-	// Schema para una categoría del menú
+	// --- MenuCategory ---
 	menuCategorySchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -50,7 +79,7 @@ func MenuInteractionResponse() *genai.Schema {
 		Required: []string{"title", "items"},
 	}
 
-	// Schema para contact
+	// --- Contact ---
 	contactSchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -59,7 +88,7 @@ func MenuInteractionResponse() *genai.Schema {
 		Required: []string{"whatsapp"},
 	}
 
-	// Schema raíz del menú completo
+	// --- Root ---
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
