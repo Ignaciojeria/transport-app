@@ -1,6 +1,7 @@
 /**
  * Store del carrito de compras usando Svelte 5 runes
  */
+import { getPriceFromPricing } from '../services/menuData.js';
 
 const STORAGE_KEY = 'cadorago_cart';
 
@@ -62,7 +63,13 @@ class CartStore {
     }
     
     // Determinar precio: usar precio del side si existe, sino el precio del item
-    const precio = side ? side.price : (item.price || 0);
+    // El precio puede venir directamente (formato antiguo) o desde pricing (formato nuevo)
+    let precio = 0;
+    if (side) {
+      precio = side.price || (side.pricing?.pricePerUnit || 0);
+    } else {
+      precio = item.price || (item.pricing?.pricePerUnit || 0);
+    }
     
     // Crear clave única: title + name del side (si existe)
     const itemKey = side 
@@ -91,6 +98,58 @@ class CartStore {
         precio: precio,
         acompanamiento: side ? side.name : null,
         acompanamientoId: side ? side.name : null
+      }];
+    }
+    
+    // Guardar en localStorage después de modificar
+    this.saveToStorage();
+  }
+
+  /**
+   * Agrega un item al carrito con cantidad personalizada (para WEIGHT, VOLUME, etc.)
+   * @param {Object} item - Item del menú a agregar
+   * @param {number} quantity - Cantidad personalizada
+   */
+  addItemWithQuantity(item, quantity) {
+    if (!item.pricing) {
+      throw new Error('El item debe tener pricing para usar cantidad personalizada');
+    }
+    
+    if (quantity <= 0) {
+      throw new Error('La cantidad debe ser mayor a 0');
+    }
+    
+    // Calcular precio según la cantidad y el modo de pricing
+    const precio = getPriceFromPricing(item.pricing, quantity);
+    
+    // Crear clave única: title + cantidad (para permitir múltiples cantidades diferentes)
+    const itemKey = `${item.title}_${quantity}`;
+    
+    // Verificar si ya existe un item con la misma cantidad
+    const existingItemIndex = this.items.findIndex(i => {
+      const existingKey = i.customQuantity 
+        ? `${i.title}_${i.customQuantity}` 
+        : i.title;
+      return existingKey === itemKey;
+    });
+    
+    if (existingItemIndex !== -1) {
+      // Si existe, incrementar cantidad (pero esto es raro para items con cantidad personalizada)
+      // Mejor agregar como nuevo item
+      this.items = [...this.items, {
+        ...item,
+        cantidad: 1,
+        customQuantity: quantity,
+        precio: precio,
+        pricing: item.pricing // Mantener el pricing original para recálculos
+      }];
+    } else {
+      this.items = [...this.items, {
+        ...item,
+        cantidad: 1,
+        customQuantity: quantity,
+        precio: precio,
+        pricing: item.pricing // Mantener el pricing original para recálculos
       }];
     }
     
@@ -152,6 +211,11 @@ class CartStore {
    */
   getTotal() {
     return this.items.reduce((total, item) => {
+      // Si tiene cantidad personalizada y pricing, calcular precio dinámicamente
+      if (item.customQuantity && item.pricing) {
+        return total + getPriceFromPricing(item.pricing, item.customQuantity);
+      }
+      // Precio normal
       return total + (item.precio * item.cantidad);
     }, 0);
   }
@@ -161,7 +225,13 @@ class CartStore {
    * @returns {number} Cantidad total de items
    */
   getTotalItems() {
-    return this.items.reduce((total, item) => total + item.cantidad, 0);
+    return this.items.reduce((total, item) => {
+      // Para items con cantidad personalizada, sumar la cantidad personalizada
+      if (item.customQuantity) {
+        return total + item.customQuantity;
+      }
+      return total + item.cantidad;
+    }, 0);
   }
 
   /**
@@ -205,12 +275,28 @@ class CartStore {
       if (item.acompanamiento) {
         message += ` (${item.acompanamiento})`;
       }
-      if (item.cantidad > 1) {
-        message += ` x${item.cantidad}`;
-      }
-      message += ` - $${item.precio.toLocaleString(locale)}`;
-      if (item.cantidad > 1) {
-        message += ` ${t.each} (${t.itemTotal}: $${(item.precio * item.cantidad).toLocaleString(locale)})`;
+      
+      // Manejar cantidad personalizada (WEIGHT, VOLUME, etc.)
+      if (item.customQuantity) {
+        const unitLabel = item.pricing?.unit === 'GRAM' ? 'g' : 
+                         item.pricing?.unit === 'KILOGRAM' ? 'kg' :
+                         item.pricing?.unit === 'MILLILITER' ? 'ml' :
+                         item.pricing?.unit === 'LITER' ? 'L' :
+                         item.pricing?.unit === 'METER' ? 'm' :
+                         item.pricing?.unit === 'SQUARE_METER' ? 'm²' : '';
+        message += ` (${item.customQuantity}${unitLabel})`;
+        
+        // Calcular precio para cantidad personalizada
+        const itemPrice = getPriceFromPricing(item.pricing, item.customQuantity);
+        message += ` - $${itemPrice.toLocaleString(locale)}`;
+      } else {
+        if (item.cantidad > 1) {
+          message += ` x${item.cantidad}`;
+        }
+        message += ` - $${item.precio.toLocaleString(locale)}`;
+        if (item.cantidad > 1) {
+          message += ` ${t.each} (${t.itemTotal}: $${(item.precio * item.cantidad).toLocaleString(locale)})`;
+        }
       }
       message += "\n";
     });

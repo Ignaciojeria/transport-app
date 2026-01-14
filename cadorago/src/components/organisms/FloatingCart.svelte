@@ -5,6 +5,7 @@
   import OrderLoader from '../atoms/OrderLoader.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
+  import { getPriceFromPricing } from '../../services/menuData.js';
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currentLanguage = $derived($language);
@@ -242,6 +243,23 @@
         <div class="pt-4 sm:pt-6 max-h-[60vh] overflow-y-auto">
           <div class="space-y-3 sm:space-y-4">
             {#each items as cartItem}
+              {@const unitLabel = cartItem.customQuantity && cartItem.pricing
+                ? (cartItem.pricing.unit === 'GRAM' ? 'g' : 
+                   cartItem.pricing.unit === 'KILOGRAM' ? 'kg' :
+                   cartItem.pricing.unit === 'MILLILITER' ? 'ml' :
+                   cartItem.pricing.unit === 'LITER' ? 'L' :
+                   cartItem.pricing.unit === 'METER' ? 'm' :
+                   cartItem.pricing.unit === 'SQUARE_METER' ? 'm²' : '')
+                : ''}
+              {@const needsDecimals = cartItem.customQuantity && cartItem.pricing
+                ? (cartItem.pricing.unit === 'KILOGRAM' || 
+                   cartItem.pricing.unit === 'LITER' ||
+                   cartItem.pricing.unit === 'METER' ||
+                   cartItem.pricing.unit === 'SQUARE_METER')
+                : false}
+              {@const itemPrice = cartItem.customQuantity && cartItem.pricing 
+                ? getPriceFromPricing(cartItem.pricing, cartItem.customQuantity)
+                : (cartItem.precio * cartItem.cantidad)}
               <div class="bg-gray-50 rounded-lg p-4 sm:p-5 border border-gray-200">
                 <div class="flex justify-between items-start gap-4 mb-3">
                   <div class="flex-1">
@@ -271,20 +289,26 @@
                     <label for="quantity-{cartItem.title}" class="text-xs sm:text-sm text-gray-700 font-medium">
                       {$t.cart.quantity}
                     </label>
-                    <input
-                      id="quantity-{cartItem.title}"
-                      type="number"
-                      min="1"
-                      value={cartItem.cantidad}
-                      oninput={(e) => handleQuantityChange(cartItem, e)}
-                      class="w-14 sm:w-16 px-2 py-1 border border-gray-300 rounded text-center text-xs sm:text-sm"
-                    />
+                    {#if cartItem.customQuantity && cartItem.pricing}
+                      <span class="text-sm sm:text-base font-semibold text-gray-800">
+                        {needsDecimals ? cartItem.customQuantity.toFixed(1) : cartItem.customQuantity} {unitLabel}
+                      </span>
+                    {:else}
+                      <input
+                        id="quantity-{cartItem.title}"
+                        type="number"
+                        min="1"
+                        value={cartItem.cantidad}
+                        oninput={(e) => handleQuantityChange(cartItem, e)}
+                        class="w-14 sm:w-16 px-2 py-1 border border-gray-300 rounded text-center text-xs sm:text-sm"
+                      />
+                    {/if}
                   </div>
                   <div class="text-right">
                     <p class="text-sm sm:text-base text-gray-800 font-semibold">
-                      ${(cartItem.precio * cartItem.cantidad).toLocaleString('es-CL')}
+                      ${itemPrice.toLocaleString('es-CL')}
                     </p>
-                    {#if cartItem.cantidad > 1}
+                    {#if !cartItem.customQuantity && cartItem.cantidad > 1}
                       <p class="text-xs text-gray-500">
                         ${cartItem.precio.toLocaleString('es-CL')} c/u
                       </p>
