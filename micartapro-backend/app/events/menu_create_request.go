@@ -6,16 +6,57 @@ import (
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
+/*
+	UNITS
+*/
+
+type UnitOfMeasure string
+
+const (
+	UnitEach        UnitOfMeasure = "EACH"
+	UnitGram        UnitOfMeasure = "GRAM"
+	UnitKilogram    UnitOfMeasure = "KILOGRAM"
+	UnitMilliliter  UnitOfMeasure = "MILLILITER"
+	UnitLiter       UnitOfMeasure = "LITER"
+	UnitMeter       UnitOfMeasure = "METER"
+	UnitSquareMeter UnitOfMeasure = "SQUARE_METER"
+)
+
+/*
+	PRICING
+*/
+
+type PricingMode string
+
+const (
+	PricingUnit   PricingMode = "UNIT"
+	PricingWeight PricingMode = "WEIGHT"
+	PricingVolume PricingMode = "VOLUME"
+	PricingLength PricingMode = "LENGTH"
+	PricingArea   PricingMode = "AREA"
+)
+
+type Pricing struct {
+	Mode         PricingMode   `json:"mode"`
+	Unit         UnitOfMeasure `json:"unit"`
+	PricePerUnit float64       `json:"pricePerUnit"`
+	BaseUnit     float64       `json:"baseUnit"`
+}
+
+/*
+	MENU MODELS
+*/
+
 type Side struct {
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	Name    string  `json:"name"`
+	Pricing Pricing `json:"pricing"`
 }
 
 type MenuItem struct {
 	Title       string  `json:"title"`
 	Description string  `json:"description,omitempty"`
 	Sides       []Side  `json:"sides,omitempty"`
-	Price       float64 `json:"price,omitempty"`
+	Pricing     Pricing `json:"pricing"`
 }
 
 type MenuCategory struct {
@@ -23,23 +64,62 @@ type MenuCategory struct {
 	Items []MenuItem `json:"items"`
 }
 
+/*
+	BUSINESS
+*/
+
 type BusinessInfo struct {
 	BusinessName  string   `json:"businessName"`
 	Whatsapp      string   `json:"whatsapp"`
 	BusinessHours []string `json:"businessHours"`
 }
 
+/*
+	DELIVERY OPTIONS
+*/
+
+type DeliveryOptionType string
+
+const (
+	DeliveryOptionPickup   DeliveryOptionType = "PICKUP"
+	DeliveryOptionDelivery DeliveryOptionType = "DELIVERY"
+)
+
+type TimeRequestType string
+
+const (
+	TimeRequestExact  TimeRequestType = "EXACT"
+	TimeRequestWindow TimeRequestType = "WINDOW"
+)
+
+type TimeWindow struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type DeliveryOption struct {
+	Type            DeliveryOptionType `json:"type"`
+	RequireTime     bool               `json:"requireTime"`
+	TimeRequestType TimeRequestType    `json:"timeRequestType,omitempty"`
+	TimeWindows     []TimeWindow       `json:"timeWindows,omitempty"`
+}
+
+/*
+	EVENT
+*/
+
 type MenuCreateRequest struct {
-	ID           string         `json:"id"`
-	CoverImage   string         `json:"coverImage"`
-	FooterImage  string         `json:"footerImage"`
-	BusinessInfo BusinessInfo   `json:"businessInfo"`
-	Menu         []MenuCategory `json:"menu"`
+	ID              string           `json:"id"`
+	CoverImage      string           `json:"coverImage"`
+	FooterImage     string           `json:"footerImage"`
+	BusinessInfo    BusinessInfo     `json:"businessInfo"`
+	Menu            []MenuCategory   `json:"menu"`
+	DeliveryOptions []DeliveryOption `json:"deliveryOptions,omitempty"`
 }
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
 	event := cloudevents.NewEvent()
-	event.SetSubject("menu.create.request") //struct name
+	event.SetSubject("menu.create.request")
 	event.SetType(EventMenuCreateRequested)
 	event.SetSource(source)
 	event.SetData(cloudevents.ApplicationJSON, c)

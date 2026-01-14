@@ -7,10 +7,17 @@ func GetSideSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
-			"id":    {Type: genai.TypeString, Description: "Identificador único (UUID) del acompañamiento."},
-			"name":  {Type: genai.TypeString, Description: "Nombre del acompañamiento (ej. 'Extra de tocino')."},
-			"price": {Type: genai.TypeNumber, Description: "Precio en número entero o flotante."},
+			"name": {
+				Type:        genai.TypeString,
+				Description: "Nombre del acompañamiento (ej. 'Extra de tocino').",
+			},
+			"pricing": {
+				Type:        genai.TypeObject,
+				Description: "Estructura de pricing del acompañamiento.",
+				Properties:  GetPricingSchema().Properties,
+				Required:    GetPricingSchema().Required,
+			},
 		},
-		Required: []string{"name", "price"},
+		Required: []string{"name", "pricing"},
 	}
 }
