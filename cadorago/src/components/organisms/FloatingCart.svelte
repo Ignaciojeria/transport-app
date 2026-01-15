@@ -415,7 +415,9 @@
         fullDeliveryAddress += `, ${addressNumber.trim()}`;
       }
       if (addressNotes.trim()) {
-        fullDeliveryAddress += `\n📝 Indicaciones: ${addressNotes.trim()}`;
+        // Normalizar el emoji para asegurar codificación consistente
+        const notesEmoji = '📝'.normalize('NFC');
+        fullDeliveryAddress += `\n${notesEmoji} Indicaciones: ${addressNotes.trim()}`;
       }
     }
     

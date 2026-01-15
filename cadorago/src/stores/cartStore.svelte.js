@@ -327,7 +327,11 @@ class CartStore {
     
     message += lang === 'EN' ? 'Thank you!' : lang === 'PT' ? 'Obrigado!' : 'Gracias!';
     
-    const encodedMessage = encodeURIComponent(message);
+    // Codificar el mensaje correctamente para WhatsApp
+    // Normalizar el mensaje para asegurar codificación UTF-8 consistente
+    // Esto previene problemas intermitentes con emojis
+    const normalizedMessage = message.normalize('NFC'); // Normalizar a NFC (Canonical Composition)
+    const encodedMessage = encodeURIComponent(normalizedMessage);
     const phoneNumber = whatsappNumber.replace(/[^0-9]/g, '');
     return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
   }
