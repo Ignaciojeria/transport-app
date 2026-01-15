@@ -138,9 +138,9 @@
   
   function handleNextStep() {
     if (deliveryStep === 1 && deliveryType === 'DELIVERY') {
-      // Validar que haya una dirección seleccionada
-      if (!selectedAddress && !deliveryAddress.trim()) {
-        alert('Por favor selecciona una dirección del mapa o ingresa una dirección válida');
+      // Validar que haya una dirección seleccionada de las sugerencias
+      if (!selectedAddress) {
+        alert('Por favor selecciona una dirección de las sugerencias para ver el mapa y continuar');
         return;
       }
       deliveryStep = 2;
@@ -909,7 +909,7 @@
         {#if deliveryType === 'DELIVERY' && deliveryStep === 1}
           <button
             onclick={handleNextStep}
-            disabled={!selectedAddress && !deliveryAddress.trim()}
+            disabled={!selectedAddress}
             class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
           >
             {$t.cart.next}
