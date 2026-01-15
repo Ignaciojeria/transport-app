@@ -6,6 +6,7 @@
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
   import { getPriceFromPricing } from '../../services/menuData.js';
+  import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currentLanguage = $derived($language);
@@ -15,12 +16,26 @@
   const total = $derived(cartStore.getTotal());
   const totalItems = $derived(cartStore.getTotalItems());
   
+  // Opciones de delivery disponibles
+  const deliveryOptions = $derived(restaurantData?.deliveryOptions || []);
+  const hasDelivery = $derived(deliveryOptions.some(opt => opt.type === 'DELIVERY'));
+  const hasPickup = $derived(deliveryOptions.some(opt => opt.type === 'PICKUP'));
+  
   let isExpanded = $state(false);
   let showOrderForm = $state(false);
   let showClearConfirm = $state(false);
   let showOrderLoader = $state(false);
+  let deliveryType = $state(null); // 'DELIVERY' | 'PICKUP' | null
+  let deliveryStep = $state(1); // 1: dirección, 2: datos personales
   let nombreRetiro = $state('');
   let horaRetiro = $state('');
+  let deliveryAddress = $state('');
+  let addressNumber = $state(''); // Número de casa/departamento
+  let addressNotes = $state(''); // Indicaciones adicionales
+  let addressSuggestions = $state([]);
+  let showSuggestions = $state(false);
+  let searchingAddress = $state(false);
+  let selectedAddress = $state(null);
   
   // Obtener zona horaria
   const timeZone = $derived(Intl.DateTimeFormat().resolvedOptions().timeZone);
@@ -88,13 +103,106 @@
   }
   
   function handleSendOrderClick() {
+    // Si solo hay una opción, seleccionarla automáticamente
+    if (hasDelivery && !hasPickup) {
+      deliveryType = 'DELIVERY';
+    } else if (hasPickup && !hasDelivery) {
+      deliveryType = 'PICKUP';
+    }
     showOrderForm = true;
   }
   
   function handleCancelOrder() {
     showOrderForm = false;
+    deliveryType = null;
+    deliveryStep = 1;
     nombreRetiro = '';
     horaRetiro = '';
+    deliveryAddress = '';
+    addressNumber = '';
+    addressNotes = '';
+    addressSuggestions = [];
+    showSuggestions = false;
+    selectedAddress = null;
+  }
+  
+  function handleNextStep() {
+    if (deliveryStep === 1 && deliveryType === 'DELIVERY') {
+      // Validar que haya una dirección seleccionada
+      if (!selectedAddress && !deliveryAddress.trim()) {
+        alert('Por favor selecciona una dirección del mapa o ingresa una dirección válida');
+        return;
+      }
+      deliveryStep = 2;
+    }
+  }
+  
+  function handleBackStep() {
+    if (deliveryStep === 2) {
+      deliveryStep = 1;
+    }
+  }
+  
+  // Autocompletado de direcciones
+  let addressInputTimeout;
+  async function handleAddressInput(event) {
+    const value = event.target.value;
+    deliveryAddress = value;
+    selectedAddress = null;
+    
+    if (value.length < 3) {
+      addressSuggestions = [];
+      showSuggestions = false;
+      return;
+    }
+    
+    // Debounce para evitar demasiadas llamadas
+    clearTimeout(addressInputTimeout);
+    addressInputTimeout = setTimeout(async () => {
+      searchingAddress = true;
+      try {
+        const suggestions = await autocompleteAddress(value);
+        addressSuggestions = suggestions;
+        showSuggestions = suggestions.length > 0;
+      } catch (error) {
+        console.error('Error en autocompletado:', error);
+        addressSuggestions = [];
+        showSuggestions = false;
+      } finally {
+        searchingAddress = false;
+      }
+    }, 300);
+  }
+  
+  function selectAddress(suggestion) {
+    deliveryAddress = suggestion.display_name;
+    selectedAddress = suggestion;
+    addressSuggestions = [];
+    showSuggestions = false;
+    // No avanzar automáticamente, dejar que el usuario vea el mapa
+  }
+  
+  // Generar URL del mapa estático para la dirección seleccionada
+  const selectedAddressMapUrl = $derived.by(() => {
+    if (!selectedAddress) {
+      console.log('No hay selectedAddress');
+      return null;
+    }
+    if (!selectedAddress.lat || !selectedAddress.lon) {
+      console.log('selectedAddress sin lat/lon:', selectedAddress);
+      return null;
+    }
+    // Usar la función del servicio para generar la URL correctamente
+    const url = getStaticMapUrl(selectedAddress.lat, selectedAddress.lon, 800, 400);
+    console.log('URL del mapa generada:', url);
+    return url;
+  });
+  
+  function handleAddressBlur() {
+    // Esperar un poco antes de ocultar sugerencias para permitir el click
+    setTimeout(() => {
+      showSuggestions = false;
+    }, 200);
   }
   
   function handleTimeInput(event) {
@@ -118,23 +226,80 @@
   }
   
   async function handleConfirmOrder() {
-    if (!nombreRetiro.trim() || !horaRetiro.trim()) {
+    // Validar tipo de entrega
+    if (!deliveryType) {
+      alert($t.cart.selectDeliveryType);
+      return;
+    }
+    
+    // Validar nombre
+    if (!nombreRetiro.trim()) {
       alert($t.cart.completeFields);
       return;
     }
     
-    if (!validateTime(horaRetiro)) {
-      alert($t.cart.invalidTime);
-      return;
+    // Validar según el tipo
+    if (deliveryType === 'PICKUP') {
+      if (!horaRetiro.trim()) {
+        alert($t.cart.completeFields);
+        return;
+      }
+      
+      if (!validateTime(horaRetiro)) {
+        alert($t.cart.invalidTime);
+        return;
+      }
+    } else if (deliveryType === 'DELIVERY') {
+      // Validar que estemos en el paso 2
+      if (deliveryStep === 1) {
+        handleNextStep();
+        return;
+      }
+      
+      if (!deliveryAddress.trim()) {
+        alert($t.cart.completeFields);
+        return;
+      }
+      
+      // Si no hay dirección seleccionada, intentar geocodificar
+      if (!selectedAddress) {
+        try {
+          searchingAddress = true;
+          selectedAddress = await geocodeAddress(deliveryAddress);
+        } catch (error) {
+          alert($t.cart.addressNotFound);
+          searchingAddress = false;
+          return;
+        } finally {
+          searchingAddress = false;
+        }
+      }
     }
     
-    const horaFormateada = formatTimeForMessage(horaRetiro);
-    const horaConZona = `${horaFormateada} (${timeZoneName()})`;
+    const horaFormateada = deliveryType === 'PICKUP' && horaRetiro 
+      ? formatTimeForMessage(horaRetiro)
+      : null;
+    const horaConZona = horaFormateada 
+      ? `${horaFormateada} (${timeZoneName()})`
+      : null;
+    
+    // Construir dirección completa para DELIVERY
+    let fullDeliveryAddress = null;
+    if (deliveryType === 'DELIVERY' && selectedAddress) {
+      fullDeliveryAddress = selectedAddress.display_name || deliveryAddress;
+      if (addressNumber.trim()) {
+        fullDeliveryAddress += `, ${addressNumber.trim()}`;
+      }
+      if (addressNotes.trim()) {
+        fullDeliveryAddress += `\n📝 Indicaciones: ${addressNotes.trim()}`;
+      }
+    }
     
     const url = cartStore.generateWhatsAppMessage(
       restaurantData?.businessInfo?.whatsapp || '',
       nombreRetiro.trim(),
       horaConZona,
+      fullDeliveryAddress,
       currentLanguage,
       $t.whatsapp
     );
@@ -143,7 +308,7 @@
     showOrderForm = false;
     showOrderLoader = true;
     
-    // Esperar 4 segundos antes de redirigir
+    // Esperar 2 segundos antes de redirigir
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Redirigir a WhatsApp
@@ -151,8 +316,16 @@
     
     // Cerrar loader, limpiar formulario y carrito
     showOrderLoader = false;
+    deliveryType = null;
+    deliveryStep = 1;
     nombreRetiro = '';
     horaRetiro = '';
+    deliveryAddress = '';
+    addressNumber = '';
+    addressNotes = '';
+    addressSuggestions = [];
+    showSuggestions = false;
+    selectedAddress = null;
     cartStore.clear();
     isExpanded = false;
   }
@@ -324,7 +497,7 @@
   </div>
 {/if}
 
-<!-- Modal de información de retiro -->
+<!-- Modal de información de entrega/retiro -->
 {#if showOrderForm}
   <div 
     class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" 
@@ -339,60 +512,284 @@
       }
     }}
   >
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
       <h3 id="order-form-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
-        {$t.cart.pickupInfo}
+        {deliveryType === 'DELIVERY' 
+          ? (deliveryStep === 1 ? $t.cart.step1Title : $t.cart.step2Title)
+          : deliveryType === 'PICKUP' 
+          ? $t.cart.pickupInfo 
+          : 'Información del Pedido'}
       </h3>
       
+      <!-- Indicador de pasos para DELIVERY -->
+      {#if deliveryType === 'DELIVERY'}
+        <div class="flex items-center justify-center mb-6">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors {deliveryStep >= 1 ? 'bg-green-500 text-white shadow-md' : 'bg-gray-200 text-gray-600'}">
+                1
+              </div>
+              <span class="text-sm font-medium {deliveryStep >= 1 ? 'text-green-600' : 'text-gray-500'}">{$t.cart.step1Label}</span>
+            </div>
+            <div class="w-16 h-1 rounded-full transition-colors {deliveryStep >= 2 ? 'bg-green-500' : 'bg-gray-200'}"></div>
+            <div class="flex items-center gap-2">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-colors {deliveryStep >= 2 ? 'bg-green-500 text-white shadow-md' : 'bg-gray-200 text-gray-600'}">
+                2
+              </div>
+              <span class="text-sm font-medium {deliveryStep >= 2 ? 'text-green-600' : 'text-gray-500'}">{$t.cart.step2Label}</span>
+            </div>
+          </div>
+        </div>
+      {/if}
+      
       <div class="space-y-4 sm:space-y-5" onclick={(e) => e.stopPropagation()}>
-        <div>
-          <label for="nombre-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-            {$t.cart.pickupName}
-          </label>
-          <input
-            id="nombre-retiro"
-            type="text"
-            bind:value={nombreRetiro}
-            placeholder={$t.cart.nameFormatExample}
-            class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
-            required
-          />
-        </div>
+        <!-- Selección de tipo de entrega (si hay ambas opciones) -->
+        {#if hasDelivery && hasPickup && !deliveryType}
+          <div>
+            <label class="block text-sm sm:text-base font-medium text-gray-700 mb-3">
+              {$t.cart.deliveryType}
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onclick={() => deliveryType = 'DELIVERY'}
+                class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'DELIVERY' ? 'border-green-500 bg-green-50' : ''}"
+              >
+                📦 {$t.cart.delivery}
+              </button>
+              <button
+                type="button"
+                onclick={() => deliveryType = 'PICKUP'}
+                class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'PICKUP' ? 'border-green-500 bg-green-50' : ''}"
+              >
+                🏪 {$t.cart.pickup}
+              </button>
+            </div>
+          </div>
+        {/if}
         
-        <div>
-          <label for="hora-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-            {$t.cart.pickupTime} <span class="text-xs text-gray-500 font-normal">({timeZoneName()})</span>
-          </label>
-          <input
-            id="hora-retiro"
-            type="tel"
-            inputmode="numeric"
-            value={horaRetiro}
-            oninput={handleTimeInput}
-            onkeydown={handleTimeKeyDown}
-            placeholder={$t.cart.timeFormatExample}
-            maxlength="5"
-            class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
-            required
-          />
-          <p class="text-xs text-gray-500 mt-1">{$t.cart.timeFormat}</p>
-        </div>
+        <!-- PASO 1: Dirección de entrega (solo DELIVERY) -->
+        {#if deliveryType === 'DELIVERY' && deliveryStep === 1}
+          <div class="space-y-4">
+            <div class="relative">
+              <label for="delivery-address" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.deliveryAddress}
+              </label>
+              <input
+                id="delivery-address"
+                type="text"
+                value={deliveryAddress}
+                oninput={handleAddressInput}
+                onblur={handleAddressBlur}
+                onfocus={() => showSuggestions = addressSuggestions.length > 0}
+                placeholder={$t.cart.deliveryAddressPlaceholder}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+              {#if searchingAddress}
+                <p class="text-xs text-gray-500 mt-1">{$t.cart.searchingAddress}</p>
+              {/if}
+              {#if showSuggestions && addressSuggestions.length > 0}
+                <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                  {#each addressSuggestions as suggestion}
+                    <button
+                      type="button"
+                      onclick={() => selectAddress(suggestion)}
+                      class="w-full text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
+                    >
+                      <div class="flex items-start gap-3 p-3">
+                        {#if suggestion.mapUrl}
+                          <div class="flex-shrink-0 w-24 h-20 rounded overflow-hidden border border-gray-200">
+                            <img 
+                              src={suggestion.mapUrl} 
+                              alt="Mapa de ubicación"
+                              class="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        {/if}
+                        <div class="flex-1 min-w-0">
+                          <p class="text-sm text-gray-800 font-medium leading-tight">
+                            {suggestion.display_name}
+                          </p>
+                        </div>
+                      </div>
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+            
+            <!-- Mapa con pin cuando hay dirección seleccionada -->
+            {#if selectedAddress}
+              <div class="mt-6">
+                <label class="block text-sm sm:text-base font-medium text-gray-700 mb-3">
+                  {$t.cart.confirmAddress}
+                </label>
+                {#if selectedAddressMapUrl}
+                  <div class="w-full rounded-lg overflow-hidden border-2 border-green-500 shadow-lg bg-gray-100">
+                    <img 
+                      src={selectedAddressMapUrl} 
+                      alt="Mapa de ubicación seleccionada"
+                      class="w-full h-auto"
+                      onerror={(e) => {
+                        console.error('Error cargando mapa. URL:', selectedAddressMapUrl);
+                        console.error('selectedAddress:', selectedAddress);
+                        if (e.target && e.target instanceof HTMLImageElement) {
+                          e.target.style.display = 'none';
+                        }
+                      }}
+                      onload={() => {
+                        console.log('✅ Mapa cargado correctamente');
+                      }}
+                    />
+                  </div>
+                {:else}
+                  <div class="w-full h-64 bg-gray-200 rounded-lg border-2 border-gray-300 flex items-center justify-center">
+                    <p class="text-gray-500">Generando mapa...</p>
+                  </div>
+                {/if}
+                <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p class="text-sm sm:text-base text-gray-800 font-medium">
+                    📍 {selectedAddress.display_name}
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">
+                    Lat: {selectedAddress.lat}, Lon: {selectedAddress.lon}
+                  </p>
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/if}
+        
+        <!-- PASO 2: Información de contacto (solo DELIVERY paso 2) -->
+        {#if deliveryType === 'DELIVERY' && deliveryStep === 2}
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                Dirección confirmada
+              </label>
+              <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p class="text-sm text-gray-800 font-medium">{selectedAddress?.display_name || deliveryAddress}</p>
+              </div>
+            </div>
+            
+            <div>
+              <label for="nombre-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                Nombre para la entrega *
+              </label>
+              <input
+                id="nombre-retiro"
+                type="text"
+                bind:value={nombreRetiro}
+                placeholder={$t.cart.nameFormatExample}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label for="address-number" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.addressNumber}
+              </label>
+              <input
+                id="address-number"
+                type="text"
+                bind:value={addressNumber}
+                placeholder={$t.cart.addressNumberPlaceholder}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+            </div>
+            
+            <div>
+              <label for="address-notes" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.addressNotes}
+              </label>
+              <textarea
+                id="address-notes"
+                bind:value={addressNotes}
+                placeholder={$t.cart.addressNotesPlaceholder}
+                rows="3"
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
+              ></textarea>
+            </div>
+          </div>
+        {/if}
+        
+        <!-- Formulario PICKUP (sin pasos) -->
+        {#if deliveryType === 'PICKUP'}
+          <div class="space-y-4">
+            <div>
+              <label for="nombre-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.pickupName}
+              </label>
+              <input
+                id="nombre-retiro"
+                type="text"
+                bind:value={nombreRetiro}
+                placeholder={$t.cart.nameFormatExample}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label for="hora-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.pickupTime} <span class="text-xs text-gray-500 font-normal">({timeZoneName()})</span>
+              </label>
+              <input
+                id="hora-retiro"
+                type="tel"
+                inputmode="numeric"
+                value={horaRetiro}
+                oninput={handleTimeInput}
+                onkeydown={handleTimeKeyDown}
+                placeholder={$t.cart.timeFormatExample}
+                maxlength="5"
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+              <p class="text-xs text-gray-500 mt-1">{$t.cart.timeFormat}</p>
+            </div>
+          </div>
+        {/if}
       </div>
       
       <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8" onclick={(e) => e.stopPropagation()}>
-        <button
-          onclick={handleCancelOrder}
-          class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
-        >
-          {$t.cart.cancel}
-        </button>
-        <button
-          onclick={handleConfirmOrder}
-          class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
-        >
-          <WhatsAppIcon className="w-5 h-5" />
-          <span>{$t.cart.sendOrder}</span>
-        </button>
+        {#if deliveryType === 'DELIVERY' && deliveryStep === 2}
+          <button
+            onclick={handleBackStep}
+            class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
+          >
+            {$t.cart.back}
+          </button>
+        {:else}
+          <button
+            onclick={handleCancelOrder}
+            class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
+          >
+            {$t.cart.cancel}
+          </button>
+        {/if}
+        
+        {#if deliveryType === 'DELIVERY' && deliveryStep === 1}
+          <button
+            onclick={handleNextStep}
+            disabled={!selectedAddress && !deliveryAddress.trim()}
+            class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
+          >
+            {$t.cart.next}
+          </button>
+        {:else}
+          <button
+            onclick={handleConfirmOrder}
+            disabled={searchingAddress}
+            class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
+          >
+            <WhatsAppIcon className="w-5 h-5" />
+            <span>{$t.cart.sendOrder}</span>
+          </button>
+        {/if}
       </div>
     </div>
   </div>

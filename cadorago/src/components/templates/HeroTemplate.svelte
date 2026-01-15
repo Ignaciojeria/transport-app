@@ -13,7 +13,7 @@
   <section class="w-full">
     <BrandHero />
   </section>
-  
+   
   <!-- Contenedor para el contenido adicional con padding -->
   <div class="container mx-auto px-2 sm:px-4 lg:px-12 pt-2 sm:pt-4 pb-4 sm:pb-8 lg:pb-16 max-w-[1600px]">
     <!-- Slot for additional content -->

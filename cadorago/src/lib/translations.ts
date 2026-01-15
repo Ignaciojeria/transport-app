@@ -44,6 +44,25 @@ export interface Translations {
     invalidTime: string
     timeFormatExample: string
     nameFormatExample: string
+    deliveryType: string
+    delivery: string
+    pickup: string
+      deliveryAddress: string
+      deliveryAddressPlaceholder: string
+      searchingAddress: string
+      addressNotFound: string
+      selectDeliveryType: string
+      addressNumber: string
+      addressNumberPlaceholder: string
+      addressNotes: string
+      addressNotesPlaceholder: string
+      confirmAddress: string
+      next: string
+      back: string
+      step1Title: string
+      step2Title: string
+      step1Label: string
+      step2Label: string
     shoppingCart: string
       emptyCart: string
       emptyCartMessage: string
@@ -108,7 +127,26 @@ export const translations: Record<Language, Translations> = {
       emptyCartMessage: 'Agrega items del menú para comenzar',
       clear: 'Vaciar',
       preparingOrder: 'Preparando tu pedido...',
-      redirectingWhatsApp: 'Redirigiendo a WhatsApp...'
+      redirectingWhatsApp: 'Redirigiendo a WhatsApp...',
+      deliveryType: 'Tipo de entrega',
+      delivery: 'Envío a domicilio',
+      pickup: 'Retiro en tienda',
+      deliveryAddress: 'Dirección de envío *',
+      deliveryAddressPlaceholder: 'Ej: Av. Providencia 123, Santiago',
+      searchingAddress: 'Buscando dirección...',
+      addressNotFound: 'No se encontró la dirección. Intenta con otra.',
+      selectDeliveryType: 'Selecciona el tipo de entrega',
+      addressNumber: 'Número de casa/departamento',
+      addressNumberPlaceholder: 'Ej: 123, Depto 4B',
+      addressNotes: 'Indicaciones adicionales (opcional)',
+      addressNotesPlaceholder: 'Ej: Portón azul, timbre 2',
+      confirmAddress: 'Confirmar dirección',
+      next: 'Siguiente',
+      back: 'Atrás',
+      step1Title: 'Paso 1: Dirección de entrega',
+      step2Title: 'Paso 2: Información de contacto',
+      step1Label: 'Dirección',
+      step2Label: 'Contacto'
     },
     whatsapp: {
       greeting: '¡Hola! Me gustaría hacer el siguiente pedido:\n\n',
@@ -163,7 +201,26 @@ export const translations: Record<Language, Translations> = {
       emptyCartMessage: 'Adicione itens do cardápio para começar',
       clear: 'Limpar',
       preparingOrder: 'Preparando seu pedido...',
-      redirectingWhatsApp: 'Redirecionando para o WhatsApp...'
+      redirectingWhatsApp: 'Redirecionando para o WhatsApp...',
+      deliveryType: 'Tipo de entrega',
+      delivery: 'Entrega em domicílio',
+      pickup: 'Retirada na loja',
+      deliveryAddress: 'Endereço de entrega *',
+      deliveryAddressPlaceholder: 'Ex: Av. Paulista 123, São Paulo',
+      searchingAddress: 'Buscando endereço...',
+      addressNotFound: 'Endereço não encontrado. Tente outro.',
+      selectDeliveryType: 'Selecione o tipo de entrega',
+      addressNumber: 'Número da casa/apartamento',
+      addressNumberPlaceholder: 'Ex: 123, Apt 4B',
+      addressNotes: 'Instruções adicionais (opcional)',
+      addressNotesPlaceholder: 'Ex: Portão azul, interfone 2',
+      confirmAddress: 'Confirmar endereço',
+      next: 'Próximo',
+      back: 'Voltar',
+      step1Title: 'Passo 1: Endereço de entrega',
+      step2Title: 'Passo 2: Informações de contato',
+      step1Label: 'Endereço',
+      step2Label: 'Contato'
     },
     whatsapp: {
       greeting: 'Olá! Gostaria de fazer o seguinte pedido:\n\n',
@@ -218,7 +275,26 @@ export const translations: Record<Language, Translations> = {
       emptyCartMessage: 'Add items from the menu to get started',
       clear: 'Clear',
       preparingOrder: 'Preparing your order...',
-      redirectingWhatsApp: 'Redirecting to WhatsApp...'
+      redirectingWhatsApp: 'Redirecting to WhatsApp...',
+      deliveryType: 'Delivery type',
+      delivery: 'Home delivery',
+      pickup: 'Store pickup',
+      deliveryAddress: 'Delivery address *',
+      deliveryAddressPlaceholder: 'Ex: 123 Main St, New York',
+      searchingAddress: 'Searching address...',
+      addressNotFound: 'Address not found. Try another one.',
+      selectDeliveryType: 'Select delivery type',
+      addressNumber: 'House/apartment number',
+      addressNumberPlaceholder: 'Ex: 123, Apt 4B',
+      addressNotes: 'Additional instructions (optional)',
+      addressNotesPlaceholder: 'Ex: Blue gate, buzzer 2',
+      confirmAddress: 'Confirm address',
+      next: 'Next',
+      back: 'Back',
+      step1Title: 'Step 1: Delivery address',
+      step2Title: 'Step 2: Contact information',
+      step1Label: 'Address',
+      step2Label: 'Contact'
     },
     whatsapp: {
       greeting: 'Hello! I would like to place the following order:\n\n',

@@ -248,12 +248,13 @@ class CartStore {
    * Genera el mensaje para WhatsApp con el pedido
    * @param {string} whatsappNumber - Número de WhatsApp
    * @param {string} nombreRetiro - Nombre de quien va a retirar
-   * @param {string} horaRetiro - Hora de retiro
+   * @param {string} horaRetiro - Hora de retiro (solo para PICKUP)
+   * @param {string} deliveryAddress - Dirección de entrega (solo para DELIVERY)
    * @param {string} lang - Idioma ('ES', 'PT', 'EN')
    * @param {object} translations - Objeto con las traducciones de WhatsApp
    * @returns {string} URL de WhatsApp con el mensaje
    */
-  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', lang = 'ES', translations = null) {
+  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', deliveryAddress = null, lang = 'ES', translations = null) {
     // Si no se pasan traducciones, usar valores por defecto en español
     const t = translations || {
       greeting: "¡Hola! Me gustaría hacer el siguiente pedido:\n\n",
@@ -303,7 +304,17 @@ class CartStore {
     
     message += `\n*${t.orderTotal}: $${this.getTotal().toLocaleString(locale)}*\n\n`;
     
-    if (nombreRetiro || horaRetiro) {
+    // Información de entrega o retiro
+    if (deliveryAddress) {
+      // DELIVERY
+      message += lang === 'EN' ? '📦 Delivery Information:\n' : lang === 'PT' ? '📦 Informações de Entrega:\n' : '📦 Información de Envío:\n';
+      if (nombreRetiro) {
+        message += `${t.pickupNameLabel} ${nombreRetiro}\n`;
+      }
+      message += `📍 ${lang === 'EN' ? 'Address' : lang === 'PT' ? 'Endereço' : 'Dirección'}: ${deliveryAddress}\n`;
+      message += "\n";
+    } else if (nombreRetiro || horaRetiro) {
+      // PICKUP
       message += t.pickupInfoLabel;
       if (nombreRetiro) {
         message += `${t.pickupNameLabel} ${nombreRetiro}\n`;
