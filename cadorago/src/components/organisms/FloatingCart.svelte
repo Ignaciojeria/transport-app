@@ -7,6 +7,7 @@
   import { t, language } from '../../lib/useLanguage';
   import { getPriceFromPricing } from '../../services/menuData.js';
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
+  import InteractiveMap from '../atoms/InteractiveMap.svelte';
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currentLanguage = $derived($language);
@@ -202,8 +203,8 @@
       console.log('selectedAddress sin lat/lon:', selectedAddress);
       return null;
     }
-    // Usar la función del servicio para generar la URL correctamente
-    const url = getStaticMapUrl(selectedAddress.lat, selectedAddress.lon, 800, 400);
+    // Usar zoom 18 para ver la dirección más de cerca
+    const url = getStaticMapUrl(selectedAddress.lat, selectedAddress.lon, 800, 400, 18);
     console.log('URL del mapa generada:', url);
     return url;
   });
@@ -643,35 +644,20 @@
               {/if}
             </div>
             
-            <!-- Mapa con pin cuando hay dirección seleccionada -->
-            {#if selectedAddress}
+            <!-- Mapa interactivo con pin cuando hay dirección seleccionada -->
+            {#if selectedAddress && selectedAddress.lat && selectedAddress.lon}
+              {@const mapLat = Number(selectedAddress.lat)}
+              {@const mapLon = Number(selectedAddress.lon)}
               <div class="mt-4 sm:mt-6">
                 <label class="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                   {$t.cart.confirmAddress}
                 </label>
-                {#if selectedAddressMapUrl}
-                  <div class="w-full rounded-lg sm:rounded-lg overflow-hidden border-2 border-green-500 shadow-lg bg-gray-100">
-                    <img 
-                      src={selectedAddressMapUrl} 
-                      alt="Mapa de ubicación seleccionada"
-                      class="w-full h-auto"
-                      onerror={(e) => {
-                        console.error('Error cargando mapa. URL:', selectedAddressMapUrl);
-                        console.error('selectedAddress:', selectedAddress);
-                        if (e.target && e.target instanceof HTMLImageElement) {
-                          e.target.style.display = 'none';
-                        }
-                      }}
-                      onload={() => {
-                        console.log('✅ Mapa cargado correctamente');
-                      }}
-                    />
-                  </div>
-                {:else}
-                  <div class="w-full h-64 sm:h-64 bg-gray-200 rounded-lg border-2 border-gray-300 flex items-center justify-center">
-                    <p class="text-gray-500">Generando mapa...</p>
-                  </div>
-                {/if}
+                <InteractiveMap 
+                  lat={mapLat} 
+                  lon={mapLon} 
+                  zoom={18}
+                  height="400px"
+                />
                 <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <p class="text-sm sm:text-base text-gray-800 font-medium">
                     📍 {selectedAddress.display_name}

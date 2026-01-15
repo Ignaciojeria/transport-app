@@ -50,11 +50,12 @@ export async function geocodeAddress(address) {
  * @param {number} height - Alto del mapa (default: 150)
  * @returns {string} URL del mapa estático
  */
-export function getStaticMapUrl(lat, lon, width = 200, height = 150) {
+export function getStaticMapUrl(lat, lon, width = 200, height = 150, zoom = 18) {
   if (!lat || !lon || isNaN(lat) || isNaN(lon)) return '';
   
-  // Formato: https://maps.locationiq.com/v3/staticmap?key=YOUR_API_KEY&center=lat,lon&zoom=15&size=widthxheight&markers=icon:small-red-cutout|lat,lon
-  const url = `${LOCATIONIQ_STATIC_MAPS_URL}?key=${LOCATIONIQ_API_KEY}&center=${lat},${lon}&zoom=16&size=${width}x${height}&markers=icon:small-red-cutout|${lat},${lon}`;
+  // Formato: https://maps.locationiq.com/v3/staticmap?key=YOUR_API_KEY&center=lat,lon&zoom=18&size=widthxheight&markers=icon:small-red-cutout|lat,lon
+  // Zoom 18 es más cercano que 16, ideal para ver direcciones específicas
+  const url = `${LOCATIONIQ_STATIC_MAPS_URL}?key=${LOCATIONIQ_API_KEY}&center=${lat},${lon}&zoom=${zoom}&size=${width}x${height}&markers=icon:small-red-cutout|${lat},${lon}`;
   console.log('Generando URL del mapa:', url);
   return url;
 }
