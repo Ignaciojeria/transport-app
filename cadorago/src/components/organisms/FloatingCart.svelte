@@ -155,9 +155,12 @@
   
   // Autocompletado de direcciones
   let addressInputTimeout;
+  let originalAddressInput = $state(''); // Guardar el texto original del usuario
+  
   async function handleAddressInput(event) {
     const value = event.target.value;
     deliveryAddress = value;
+    originalAddressInput = value; // Guardar el texto original
     selectedAddress = null;
     
     if (value.length < 3) {
@@ -184,9 +187,120 @@
     }, 300);
   }
   
+  /**
+   * Extrae números de una dirección (número de casa, departamento, etc.)
+   * @param {string} address - Dirección a analizar
+   * @returns {string} Números extraídos o cadena vacía
+   */
+  function extractAddressNumber(address) {
+    if (!address) return '';
+    
+    // Buscar patrones comunes de números en direcciones chilenas:
+    // - "inglaterra 59" -> "59"
+    // - "inglaterra 59, la florida" -> "59"
+    // - "calle 123, depto 45" -> "123, depto 45"
+    // - "calle 123-45" -> "123-45"
+    // - "calle 123 a" -> "123"
+    
+    // Buscar el primer número que aparece después del nombre de la calle
+    // Patrón: palabra(s) + número + (opcional: letra, guión, coma, más números)
+    const streetNumberPattern = /\b(\d+[a-z]?)\b/i;
+    const match = address.match(streetNumberPattern);
+    
+    if (match) {
+      const numberPart = match[1];
+      const numberIndex = address.indexOf(numberPart);
+      
+      // Obtener todo lo que viene después del número hasta el final o hasta una coma que indique comuna
+      const afterNumber = address.substring(numberIndex + numberPart.length).trim();
+      
+      // Si hay texto después del número que parece ser parte de la dirección (depto, casa, etc.)
+      if (afterNumber) {
+        const deptoPattern = /^[,]?\s*(depto|departamento|casa|block|torre|piso|oficina)\s*[:\s]*(\d+[a-z]?)/i;
+        const deptoMatch = afterNumber.match(deptoPattern);
+        if (deptoMatch) {
+          return `${numberPart}, ${deptoMatch[1]} ${deptoMatch[2]}`;
+        }
+        
+        // Si hay un guión seguido de más números (ej: "123-45")
+        const hyphenPattern = /^[-]\s*(\d+[a-z]?)/i;
+        const hyphenMatch = afterNumber.match(hyphenPattern);
+        if (hyphenMatch) {
+          return `${numberPart}-${hyphenMatch[1]}`;
+        }
+      }
+      
+      return numberPart;
+    }
+    
+    return '';
+  }
+  
+  /**
+   * Combina la dirección normalizada de LocationIQ con el número extraído del input original
+   * @param {string} normalizedAddress - Dirección normalizada de LocationIQ
+   * @param {string} originalInput - Texto original que escribió el usuario
+   * @returns {string} Dirección combinada
+   */
+  function combineAddressWithNumber(normalizedAddress, originalInput) {
+    if (!normalizedAddress) return originalInput;
+    if (!originalInput) return normalizedAddress;
+    
+    const extractedNumber = extractAddressNumber(originalInput);
+    if (!extractedNumber) {
+      return normalizedAddress;
+    }
+    
+    // Verificar si la dirección normalizada ya contiene el número
+    const normalizedLower = normalizedAddress.toLowerCase();
+    const numberLower = extractedNumber.toLowerCase();
+    
+    // Extraer solo el número base (sin letras adicionales) para comparación
+    const baseNumber = extractedNumber.match(/\d+/)?.[0] || '';
+    
+    // Si el número ya está en la dirección normalizada, no duplicarlo
+    if (baseNumber && normalizedLower.includes(baseNumber)) {
+      // Verificar si el número está en el contexto correcto (no como parte de un código postal)
+      const numberIndex = normalizedLower.indexOf(baseNumber);
+      const beforeNumber = normalizedLower.substring(Math.max(0, numberIndex - 10), numberIndex);
+      const afterNumber = normalizedLower.substring(numberIndex + baseNumber.length, numberIndex + baseNumber.length + 10);
+      
+      // Si el número está precedido por palabras comunes de calles, asumimos que ya está incluido
+      if (/calle|avenida|pasaje|plaza|boulevard|route|street|avenue/i.test(beforeNumber) || 
+          /^[\s,]/i.test(afterNumber)) {
+        return normalizedAddress;
+      }
+    }
+    
+    // Combinar: tomar la calle de la dirección normalizada y agregar el número
+    // LocationIQ generalmente devuelve: "Calle, Comuna, Región, País"
+    // Queremos: "Calle [número], Comuna, Región, País"
+    
+    // Buscar la primera coma para insertar el número antes de la comuna
+    const firstCommaIndex = normalizedAddress.indexOf(',');
+    if (firstCommaIndex > 0) {
+      const streetName = normalizedAddress.substring(0, firstCommaIndex).trim();
+      const rest = normalizedAddress.substring(firstCommaIndex);
+      
+      // Insertar el número después del nombre de la calle
+      return `${streetName} ${extractedNumber}${rest}`;
+    }
+    
+    // Si no hay coma, simplemente agregar el número al final
+    return `${normalizedAddress} ${extractedNumber}`;
+  }
+  
   function selectAddress(suggestion) {
-    deliveryAddress = suggestion.display_name;
-    selectedAddress = suggestion;
+    // Combinar la dirección normalizada con el número del input original
+    const combinedAddress = combineAddressWithNumber(suggestion.display_name, originalAddressInput);
+    deliveryAddress = combinedAddress;
+    
+    // Actualizar el display_name en la sugerencia para mantener consistencia
+    selectedAddress = {
+      ...suggestion,
+      display_name: combinedAddress
+    };
+    
     addressSuggestions = [];
     showSuggestions = false;
     // No avanzar automáticamente, dejar que el usuario vea el mapa
