@@ -25,6 +25,7 @@
   let showOrderForm = $state(false);
   let showClearConfirm = $state(false);
   let showOrderLoader = $state(false);
+  let orderViewTransition = $state(false); // Controla la transición de la vista
   let deliveryType = $state(null); // 'DELIVERY' | 'PICKUP' | null
   let deliveryStep = $state(1); // 1: dirección, 2: datos personales
   let nombreRetiro = $state('');
@@ -110,20 +111,29 @@
       deliveryType = 'PICKUP';
     }
     showOrderForm = true;
+    // Activar transición después de un pequeño delay para suavidad
+    setTimeout(() => {
+      orderViewTransition = true;
+    }, 10);
   }
   
   function handleCancelOrder() {
-    showOrderForm = false;
-    deliveryType = null;
-    deliveryStep = 1;
-    nombreRetiro = '';
-    horaRetiro = '';
-    deliveryAddress = '';
-    addressNumber = '';
-    addressNotes = '';
-    addressSuggestions = [];
-    showSuggestions = false;
-    selectedAddress = null;
+    // Primero ocultar la vista con transición
+    orderViewTransition = false;
+    // Luego limpiar después de la animación
+    setTimeout(() => {
+      showOrderForm = false;
+      deliveryType = null;
+      deliveryStep = 1;
+      nombreRetiro = '';
+      horaRetiro = '';
+      deliveryAddress = '';
+      addressNumber = '';
+      addressNotes = '';
+      addressSuggestions = [];
+      showSuggestions = false;
+      selectedAddress = null;
+    }, 300); // Duración de la transición
   }
   
   function handleNextStep() {
@@ -500,26 +510,39 @@
 <!-- Modal de información de entrega/retiro -->
 {#if showOrderForm}
   <div 
-    class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" 
+    class="fixed inset-0 bg-white z-[60] transition-transform duration-300 ease-in-out {orderViewTransition ? 'translate-x-0' : 'translate-x-full'}"
     role="dialog"
     aria-modal="true"
     aria-labelledby="order-form-title"
     tabindex="-1"
-    onclick={handleCancelOrder}
     onkeydown={(e) => {
       if (e.key === 'Escape') {
         handleCancelOrder();
       }
     }}
   >
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-      <h3 id="order-form-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
-        {deliveryType === 'DELIVERY' 
-          ? (deliveryStep === 1 ? $t.cart.step1Title : $t.cart.step2Title)
-          : deliveryType === 'PICKUP' 
-          ? $t.cart.pickupInfo 
-          : 'Información del Pedido'}
-      </h3>
+    <div class="h-full w-full overflow-y-auto">
+      <div class="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
+        <!-- Header con botón de cerrar -->
+        <div class="flex items-center justify-between mb-6 sm:mb-8 sticky top-0 bg-white z-10 pb-4 border-b border-gray-200 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
+          <button
+            onclick={handleCancelOrder}
+            class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Cerrar"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h3 id="order-form-title" class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">
+            {deliveryType === 'DELIVERY' 
+              ? (deliveryStep === 1 ? $t.cart.step1Title : $t.cart.step2Title)
+              : deliveryType === 'PICKUP' 
+              ? $t.cart.pickupInfo 
+              : 'Información del Pedido'}
+          </h3>
+          <div class="w-10"></div> <!-- Spacer para centrar el título -->
+        </div>
       
       <!-- Indicador de pasos para DELIVERY -->
       {#if deliveryType === 'DELIVERY'}
@@ -622,12 +645,12 @@
             
             <!-- Mapa con pin cuando hay dirección seleccionada -->
             {#if selectedAddress}
-              <div class="mt-6">
+              <div class="mt-4 sm:mt-6">
                 <label class="block text-sm sm:text-base font-medium text-gray-700 mb-3">
                   {$t.cart.confirmAddress}
                 </label>
                 {#if selectedAddressMapUrl}
-                  <div class="w-full rounded-lg overflow-hidden border-2 border-green-500 shadow-lg bg-gray-100">
+                  <div class="w-full rounded-lg sm:rounded-lg overflow-hidden border-2 border-green-500 shadow-lg bg-gray-100">
                     <img 
                       src={selectedAddressMapUrl} 
                       alt="Mapa de ubicación seleccionada"
@@ -645,16 +668,13 @@
                     />
                   </div>
                 {:else}
-                  <div class="w-full h-64 bg-gray-200 rounded-lg border-2 border-gray-300 flex items-center justify-center">
+                  <div class="w-full h-64 sm:h-64 bg-gray-200 rounded-lg border-2 border-gray-300 flex items-center justify-center">
                     <p class="text-gray-500">Generando mapa...</p>
                   </div>
                 {/if}
                 <div class="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
                   <p class="text-sm sm:text-base text-gray-800 font-medium">
                     📍 {selectedAddress.display_name}
-                  </p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    Lat: {selectedAddress.lat}, Lon: {selectedAddress.lon}
                   </p>
                 </div>
               </div>
@@ -790,6 +810,7 @@
             <span>{$t.cart.sendOrder}</span>
           </button>
         {/if}
+      </div>
       </div>
     </div>
   </div>
