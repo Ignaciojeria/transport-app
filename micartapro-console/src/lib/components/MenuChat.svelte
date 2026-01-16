@@ -32,6 +32,7 @@
   let messageSent = $state(false) // Flag para indicar que se envió un mensaje
   let showUpgradeModal = $state(false) // Modal de upgrade al copiar link
   let entitlement = $state<Entitlement | null>(null) // Entitlement del usuario
+  let iframeKey = $state(0) // Key para forzar recarga del iframe cuando el menú se actualiza
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -377,10 +378,12 @@
           }
           messages = [...messages, successMessage]
           
+          // Actualizar la URL del menú y forzar recarga del iframe
+          menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+          // Incrementar iframeKey para forzar recarga del iframe
+          iframeKey++
+          
           // Abrir automáticamente la vista previa para mostrar los cambios
-          if (!menuUrl) {
-            menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
-          }
           showPreview = true
         } catch (pollError: any) {
           console.error('Error en polling:', pollError)
@@ -769,14 +772,16 @@
     <!-- Contenido del Preview -->
     <div class="flex-1 overflow-hidden iframe-container">
       {#if menuUrl}
-        <iframe
-          src={menuUrl}
-          class="w-full h-full border-0"
-          title="Vista previa de la carta"
-          loading="lazy"
-          allow="camera; microphone; geolocation; autoplay; clipboard-write"
-          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
-        ></iframe>
+        {#key iframeKey}
+          <iframe
+            src={menuUrl}
+            class="w-full h-full border-0"
+            title="Vista previa de la carta"
+            loading="lazy"
+            allow="camera; microphone; geolocation; autoplay; clipboard-write"
+            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
+          ></iframe>
+        {/key}
       {:else}
         <div class="flex items-center justify-center h-full">
           <div class="text-center">
