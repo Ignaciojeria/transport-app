@@ -237,8 +237,37 @@
     }
   }
 
-  function shareOnWhatsApp() {
+  async function shareOnWhatsApp() {
     if (!menuUrl) return
+
+    // Copiar al portapapeles primero
+    try {
+      await navigator.clipboard.writeText(menuUrl)
+      copySuccess = true
+      linkWasCopied = true
+      setTimeout(() => {
+        copySuccess = false
+      }, 2000)
+      
+      // Cargar entitlement para verificar si mostrar modal de upgrade
+      if (userId && !entitlement) {
+        try {
+          entitlement = await fetchEntitlement(userId)
+        } catch (err) {
+          console.error('Error cargando entitlement:', err)
+        }
+      }
+      
+      // Mostrar modal de upgrade SOLO si el usuario está en trial
+      const isInTrial = entitlement && entitlement.status === 'trialing'
+      const hasPremium = entitlement && (entitlement.status === 'active' || entitlement.access === true)
+      
+      if (isInTrial && !hasPremium) {
+        showUpgradeModal = true
+      }
+    } catch (err) {
+      console.error('Error copiando al portapapeles:', err)
+    }
 
     // Mensaje por defecto según el idioma
     let message = ''
@@ -532,46 +561,50 @@
   })
 </script>
 
-<div class="flex flex-col h-screen bg-white">
-  <!-- Header estilo Gemini -->
-  <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
-    <button class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Menú">
-      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-      </svg>
-    </button>
-    <h1 class="text-lg font-medium text-gray-900">MiCartaPro</h1>
-    <div class="flex items-center gap-2">
-      <button 
-        onclick={togglePreview}
-        class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
-        aria-label="Ver vista previa"
-        title="Ver vista previa de tu carta"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+<div class="flex flex-col h-screen bg-white relative overflow-hidden">
+  <!-- Vista de Chat (oculta cuando showPreview es true) -->
+  <div 
+    class="flex flex-col h-full transition-transform duration-300 ease-in-out {showPreview ? '-translate-x-full' : 'translate-x-0'}"
+  >
+    <!-- Header estilo Gemini -->
+    <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
+      <button class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Menú">
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      {#if userPicture}
-        <img 
-          src={userPicture} 
-          alt={userName}
-          class="w-8 h-8 rounded-full"
-        />
-      {:else}
-        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
-          {userName.charAt(0).toUpperCase()}
-        </div>
-      {/if}
-    </div>
-  </header>
+      <h1 class="text-lg font-medium text-gray-900">MiCartaPro</h1>
+      <div class="flex items-center gap-2">
+        <button 
+          onclick={togglePreview}
+          class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
+          aria-label="Ver vista previa"
+          title="Ver vista previa de tu carta"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+          </svg>
+        </button>
+        {#if userPicture}
+          <img 
+            src={userPicture} 
+            alt={userName}
+            class="w-8 h-8 rounded-full"
+          />
+        {:else}
+          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+            {userName.charAt(0).toUpperCase()}
+          </div>
+        {/if}
+      </div>
+    </header>
 
-  <!-- Messages Container -->
-  <div 
-    id="messages-container"
-    class="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6"
-  >
+    <!-- Messages Container -->
+    <div 
+      id="messages-container"
+      class="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6"
+    >
     {#if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
         <!-- Saludo personalizado estilo Gemini -->
@@ -659,10 +692,10 @@
         {/if}
       </div>
     {/if}
-  </div>
+    </div>
 
-  <!-- Chat Input -->
-  <div class="border-t border-gray-200 bg-white sticky bottom-0 z-10 safe-area-inset-bottom">
+    <!-- Chat Input -->
+    <div class="border-t border-gray-200 bg-white sticky bottom-0 z-10 safe-area-inset-bottom">
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">
@@ -689,105 +722,72 @@
         </div>
       {/if}
     </div>
-  </div>
-</div>
-
-<!-- Modal de Vista Previa -->
-{#if showPreview}
-  <div 
-    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-    onclick={() => {
-      showPreview = false
-      linkWasCopied = false // Resetear cuando se cierra el modal
-    }}
-    role="dialog"
-    aria-modal="true"
-  >
-    <div 
-      class="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[75vh] md:h-[90vh] flex flex-col"
-      onclick={(e) => e.stopPropagation()}
-    >
-      <!-- Header del Modal -->
-      <div class="flex items-center justify-between p-3 md:p-4 border-b border-gray-200 gap-2 md:gap-4">
-        <div class="flex-1 min-w-0">
-          <h2 class="text-base md:text-lg font-semibold text-gray-900 truncate">{$tStore.chat.previewTitle}</h2>
-          {#if trialDaysRemaining !== null && entitlement?.status === 'trialing'}
-            <p class="text-xs md:text-sm text-gray-600 mt-1">
-              {$tStore.chat.trialDaysRemaining.replace('{days}', trialDaysRemaining.toString())}
-            </p>
-          {/if}
-        </div>
-        {#if menuUrl}
-          {#if linkWasCopied}
-            <!-- Botón de compartir en WhatsApp después de copiar -->
-            <button
-              onclick={shareOnWhatsApp}
-              class="px-3 py-1.5 md:px-4 md:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1.5 md:gap-2 whitespace-nowrap"
-              title={$tStore.chat.shareLink}
-            >
-              <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-              </svg>
-              <span class="text-xs md:text-sm">{$tStore.chat.shareLink}</span>
-            </button>
-          {:else}
-            <!-- Botón de copiar (antes de copiar) -->
-            <button
-              onclick={copyToClipboard}
-              class="px-3 py-1.5 md:px-4 md:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-1.5 md:gap-2 whitespace-nowrap"
-              title={$tStore.chat.copyLink}
-            >
-              {#if copySuccess}
-                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span class="text-xs md:text-sm">{$tStore.chat.linkCopied}</span>
-              {:else}
-                <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span class="text-xs md:text-sm">{$tStore.chat.copyLink}</span>
-              {/if}
-            </button>
-          {/if}
-        {/if}
-        <button
-          onclick={() => {
-            showPreview = false
-            linkWasCopied = false // Resetear cuando se cierra el modal
-          }}
-          class="p-1.5 md:p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
-          aria-label="Cerrar"
-        >
-          <svg class="w-4 h-4 md:w-5 md:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Contenido del Modal -->
-      <div class="flex-1 overflow-hidden iframe-container">
-        {#if menuUrl}
-          <iframe
-            src={menuUrl}
-            class="w-full h-full border-0"
-            title="Vista previa de la carta"
-            loading="lazy"
-            allow="camera; microphone; geolocation; autoplay; clipboard-write"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
-          ></iframe>
-        {:else}
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-              <p class="text-gray-600">{$tStore.chat.loadingPreview}</p>
-            </div>
-          </div>
-        {/if}
-      </div>
     </div>
   </div>
-{/if}
+
+  <!-- Vista de Preview (se muestra cuando showPreview es true) -->
+  <div 
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {showPreview ? 'translate-x-0' : 'translate-x-full'}"
+  >
+    <!-- Header del Preview -->
+    <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
+      <button
+        onclick={() => {
+          showPreview = false
+          linkWasCopied = false
+        }}
+        class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        aria-label="Volver"
+      >
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <div class="flex-1 min-w-0 px-2">
+        <h2 class="text-base md:text-lg font-semibold text-gray-900 truncate text-center">{$tStore.chat.previewTitle}</h2>
+        {#if trialDaysRemaining !== null && entitlement?.status === 'trialing'}
+          <p class="text-xs md:text-sm text-gray-600 mt-1 text-center">
+            {$tStore.chat.trialDaysRemaining.replace('{days}', trialDaysRemaining.toString())}
+          </p>
+        {/if}
+      </div>
+      {#if menuUrl}
+        <!-- Botón de compartir en WhatsApp directamente -->
+        <button
+          onclick={shareOnWhatsApp}
+          class="px-3 py-1.5 md:px-4 md:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1.5 md:gap-2 whitespace-nowrap"
+          title={$tStore.chat.shareLink}
+        >
+          <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          <span class="text-xs md:text-sm hidden md:inline">{$tStore.chat.shareLink}</span>
+        </button>
+      {/if}
+    </header>
+
+    <!-- Contenido del Preview -->
+    <div class="flex-1 overflow-hidden iframe-container">
+      {#if menuUrl}
+        <iframe
+          src={menuUrl}
+          class="w-full h-full border-0"
+          title="Vista previa de la carta"
+          loading="lazy"
+          allow="camera; microphone; geolocation; autoplay; clipboard-write"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
+        ></iframe>
+      {:else}
+        <div class="flex items-center justify-center h-full">
+          <div class="text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+            <p class="text-gray-600">{$tStore.chat.loadingPreview}</p>
+          </div>
+        </div>
+      {/if}
+    </div>
+  </div>
+</div>
 
 <!-- Modal de Upgrade al copiar link -->
 {#if showUpgradeModal}
@@ -900,6 +900,11 @@
   .iframe-container iframe {
     touch-action: auto;
     pointer-events: auto;
+  }
+  
+  /* Transición de vista para el preview */
+  .transition-transform {
+    will-change: transform;
   }
 </style>
 
