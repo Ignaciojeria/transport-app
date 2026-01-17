@@ -1,7 +1,7 @@
 /**
  * Store reactivo para los datos del restaurante usando Svelte 5 runes
  */
-import { getUrlParams, fetchRestaurantData } from '../services/restaurantData.js';
+import { getUrlParams, getSlugFromUrl, fetchRestaurantData, fetchRestaurantDataBySlug } from '../services/restaurantData.js';
 import { adaptMenuData, DEFAULT_TEST_MENU } from '../services/menuData.js';
 
 /**
@@ -55,15 +55,26 @@ class RestaurantDataStore {
         // Usar el menú por defecto para /test
         this.data = adaptMenuData(DEFAULT_TEST_MENU);
       } else {
-        // Cargar desde storage como antes
-        const { userID, menuID } = getUrlParams();
+        // Intentar obtener el slug desde la URL (ruta /m/{slug})
+        const slug = getSlugFromUrl();
         
-        if (!userID || !menuID) {
-          throw new Error('Los parámetros userID y menuID son requeridos en la URL (ej: ?userID=xxx&menuID=yyy)');
+        if (slug) {
+          // Usar el endpoint del backend con el slug
+          console.log('🔍 Usando slug para obtener menú:', slug);
+          const rawData = await fetchRestaurantDataBySlug(slug);
+          this.data = adaptMenuData(rawData);
+        } else {
+          // Fallback: usar el método anterior con userID y menuID (query params)
+          const { userID, menuID } = getUrlParams();
+          
+          if (!userID || !menuID) {
+            throw new Error('Se requiere un slug en la URL (ej: /m/mi-restaurante) o los parámetros userID y menuID (ej: ?userID=xxx&menuID=yyy)');
+          }
+          
+          console.log('📦 Usando método legacy con userID y menuID');
+          const rawData = await fetchRestaurantData(userID, menuID);
+          this.data = adaptMenuData(rawData);
         }
-        
-        const rawData = await fetchRestaurantData(userID, menuID);
-        this.data = adaptMenuData(rawData);
       }
     } catch (err) {
       this.error = err.message || 'Error al cargar los datos del restaurante';

@@ -3,6 +3,12 @@
  */
 const BASE_URL = "https://storage.googleapis.com/micartapro-menus";
 
+// URL del backend de micartapro
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8082'
+    : 'https://micartapro-backend-27303662337.us-central1.run.app');
+
 
 /**
  * Obtiene el nombre del archivo desde latest.json
@@ -61,7 +67,26 @@ export async function fetchRestaurantData(userID, menuID) {
 }
 
 /**
- * Obtiene los parámetros userID y menuID desde la URL
+ * Obtiene el slug desde la URL (ruta /m/{slug})
+ * @returns {string | null} Slug del menú
+ */
+export function getSlugFromUrl() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  
+  const pathname = window.location.pathname;
+  // Buscar patrón /m/{slug}
+  const match = pathname.match(/^\/m\/([^\/]+)/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  
+  return null;
+}
+
+/**
+ * Obtiene los parámetros userID y menuID desde la URL (query params)
  * @returns {{userID: string | null, menuID: string | null}}
  */
 export function getUrlParams() {
@@ -76,3 +101,35 @@ export function getUrlParams() {
   };
 }
 
+/**
+ * Obtiene los datos del restaurante desde el backend usando el slug
+ * @param {string} slug - Slug del menú
+ * @returns {Promise<Object>} Datos del restaurante
+ */
+export async function fetchRestaurantDataBySlug(slug) {
+  try {
+    const apiUrl = `${API_BASE_URL}/menu/slug/${encodeURIComponent(slug)}`;
+    
+    console.log('📦 Obteniendo menú desde backend:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      cache: 'no-store', // Evitar cache del navegador
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error(`Menú no encontrado para el slug: ${slug}`);
+      }
+      throw new Error(`Error al obtener datos del restaurante: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error al cargar datos del restaurante desde backend:', error);
+    throw error;
+  }
+}
