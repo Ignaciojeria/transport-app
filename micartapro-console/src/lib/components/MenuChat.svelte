@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, fetchEntitlement, calculateTrialDaysRemaining, type Entitlement } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, fetchEntitlement, calculateTrialDaysRemaining, getMenuSlug, createMenuSlug, generateSlugUrl, type Entitlement } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
 
@@ -33,6 +33,12 @@
   let showUpgradeModal = $state(false) // Modal de upgrade al copiar link
   let entitlement = $state<Entitlement | null>(null) // Entitlement del usuario
   let iframeKey = $state(0) // Key para forzar recarga del iframe cuando el menú se actualiza
+  let showSlugModal = $state(false) // Modal para crear slug
+  let businessName = $state('') // Nombre del negocio
+  let slugPreview = $state('') // Preview del slug
+  let isCreatingSlug = $state(false) // Estado de carga al crear slug
+  let showConfetti = $state(false) // Mostrar confeti
+  let confettiParticles = $state<Array<{left: number, delay: number, color: string}>>([]) // Partículas de confeti
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -238,47 +244,193 @@
     }
   }
 
-  async function shareOnWhatsApp() {
-    if (!menuUrl) return
+  // Generar slug desde el nombre del negocio
+  function generateSlugFromName(name: string): string {
+    return name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Eliminar acentos
+      .replace(/[^a-z0-9\s-]/g, '') // Eliminar caracteres especiales
+      .trim()
+      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+      .replace(/-+/g, '-') // Reemplazar múltiples guiones con uno solo
+      .replace(/^-|-$/g, '') // Eliminar guiones al inicio y final
+  }
 
-    // Copiar al portapapeles primero
+  // Actualizar preview del slug cuando cambia el nombre
+  $effect(() => {
+    if (businessName.trim()) {
+      slugPreview = generateSlugFromName(businessName)
+    } else {
+      slugPreview = ''
+    }
+  })
+
+  async function shareOnWhatsApp() {
+    if (!menuId || !session?.access_token) {
+      alert('No se puede compartir: falta información del menú')
+      return
+    }
+
     try {
-      await navigator.clipboard.writeText(menuUrl)
-      copySuccess = true
-      linkWasCopied = true
-      setTimeout(() => {
-        copySuccess = false
-      }, 2000)
+      // Verificar si existe un slug para este menú
+      const existingSlug = await getMenuSlug(menuId, session.access_token)
       
-      // Cargar entitlement para verificar si mostrar modal de upgrade
-      if (userId && !entitlement) {
-        try {
-          entitlement = await fetchEntitlement(userId)
-        } catch (err) {
-          console.error('Error cargando entitlement:', err)
-        }
+      if (!existingSlug) {
+        // No existe slug, mostrar modal para crear uno
+        businessName = ''
+        slugPreview = ''
+        showSlugModal = true
+        return
       }
-      
-      // Mostrar modal de upgrade SOLO si el usuario está en trial
-      const isInTrial = entitlement && entitlement.status === 'trialing'
-      const hasPremium = entitlement && (entitlement.status === 'active' || entitlement.access === true)
-      
-      if (isInTrial && !hasPremium) {
-        showUpgradeModal = true
-      }
+
+      // Si ya existe slug, proceder directamente a compartir
+      await proceedWithShare(existingSlug)
     } catch (err) {
-      console.error('Error copiando al portapapeles:', err)
+      console.error('Error compartiendo:', err)
+      alert(
+        currentLanguage === 'ES'
+          ? 'Error al compartir el menú. Intenta nuevamente.'
+          : currentLanguage === 'PT'
+          ? 'Erro ao compartilhar o cardápio. Tente novamente.'
+          : 'Error sharing menu. Please try again.'
+      )
+    }
+  }
+
+  async function createSlugAndShare() {
+    if (!menuId || !session?.access_token) {
+      return
+    }
+
+    if (!businessName.trim()) {
+      const lang = currentLanguage
+      alert(
+        lang === 'ES'
+          ? 'Por favor ingresa el nombre de tu negocio'
+          : lang === 'PT'
+          ? 'Por favor, insira o nome do seu negócio'
+          : 'Please enter your business name'
+      )
+      return
+    }
+
+    if (!slugPreview) {
+      const lang = currentLanguage
+      alert(
+        lang === 'ES'
+          ? 'El nombre del negocio no genera un slug válido'
+          : lang === 'PT'
+          ? 'O nome do negócio não gera um slug válido'
+          : 'Business name does not generate a valid slug'
+      )
+      return
+    }
+
+    isCreatingSlug = true
+
+    try {
+      const slug = await createMenuSlug(menuId, slugPreview, session.access_token)
+      
+      if (!slug) {
+        const lang = currentLanguage
+        alert(
+          lang === 'ES'
+            ? 'Error al crear el slug. Intenta nuevamente.'
+            : lang === 'PT'
+            ? 'Erro ao criar o slug. Tente novamente.'
+            : 'Error creating slug. Please try again.'
+        )
+        isCreatingSlug = false
+        return
+      }
+
+      // Generar partículas de confeti
+      confettiParticles = Array.from({ length: 50 }, () => ({
+        left: Math.random() * 100,
+        delay: Math.random() * 0.5,
+        color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'][Math.floor(Math.random() * 7)]
+      }))
+      
+      // Mostrar confeti
+      showConfetti = true
+      setTimeout(() => {
+        showConfetti = false
+        confettiParticles = []
+      }, 3000)
+
+      // Cerrar modal después de un breve delay
+      setTimeout(() => {
+        showSlugModal = false
+        businessName = ''
+        slugPreview = ''
+        isCreatingSlug = false
+      }, 1500)
+
+      // Proceder a compartir
+      await proceedWithShare(slug)
+    } catch (error: any) {
+      isCreatingSlug = false
+      const lang = currentLanguage
+      if (error.message === 'SLUG_EXISTS') {
+        alert(
+          lang === 'ES'
+            ? 'Este slug ya está en uso por otro menú. Por favor, elige otro nombre.'
+            : lang === 'PT'
+            ? 'Este slug já está em uso por outro cardápio. Por favor, escolha outro nome.'
+            : 'This slug is already in use by another menu. Please choose another name.'
+        )
+      } else {
+        alert(
+          lang === 'ES'
+            ? 'Error al crear el slug. Intenta nuevamente.'
+            : lang === 'PT'
+            ? 'Erro ao criar o slug. Tente novamente.'
+            : 'Error creating slug. Please try again.'
+        )
+      }
+    }
+  }
+
+  async function proceedWithShare(slug: string) {
+    const lang = currentLanguage
+
+    // Generar URL con el slug
+    const shareUrl = generateSlugUrl(slug, currentLanguage)
+
+    // Copiar al portapapeles
+    await navigator.clipboard.writeText(shareUrl)
+    copySuccess = true
+    linkWasCopied = true
+    setTimeout(() => {
+      copySuccess = false
+    }, 2000)
+    
+    // Cargar entitlement para verificar si mostrar modal de upgrade
+    if (userId && !entitlement) {
+      try {
+        entitlement = await fetchEntitlement(userId)
+      } catch (err) {
+        console.error('Error cargando entitlement:', err)
+      }
+    }
+    
+    // Mostrar modal de upgrade SOLO si el usuario está en trial
+    const isInTrial = entitlement && entitlement.status === 'trialing'
+    const hasPremium = entitlement && (entitlement.status === 'active' || entitlement.access === true)
+    
+    if (isInTrial && !hasPremium) {
+      showUpgradeModal = true
     }
 
     // Mensaje por defecto según el idioma
     let message = ''
-    const lang = currentLanguage
     if (lang === 'ES') {
-      message = `¡Mira mi carta digital! ${menuUrl}`
+      message = `¡Mira mi carta digital! ${shareUrl}`
     } else if (lang === 'PT') {
-      message = `Confira meu cardápio digital! ${menuUrl}`
+      message = `Confira meu cardápio digital! ${shareUrl}`
     } else {
-      message = `Check out my digital menu! ${menuUrl}`
+      message = `Check out my digital menu! ${shareUrl}`
     }
 
     const encodedMessage = encodeURIComponent(message)
@@ -792,6 +944,135 @@
       {/if}
     </div>
   </div>
+
+  <!-- Vista de Crear Slug (se muestra cuando showSlugModal es true) -->
+  <div 
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {showSlugModal ? 'translate-x-0' : 'translate-x-full'}"
+  >
+    <!-- Confeti -->
+    {#if showConfetti}
+      <div class="absolute inset-0 pointer-events-none overflow-hidden z-50">
+        {#each confettiParticles as particle, i}
+          <div 
+            class="absolute confetti"
+            style="left: {particle.left}%; animation-delay: {particle.delay}s; background: {particle.color};"
+          ></div>
+        {/each}
+      </div>
+    {/if}
+
+    <!-- Header -->
+    <header class="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
+      <button
+        onclick={() => {
+          if (!isCreatingSlug) {
+            showSlugModal = false
+            businessName = ''
+            slugPreview = ''
+          }
+        }}
+        disabled={isCreatingSlug}
+        class="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Volver"
+      >
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h2 class="text-lg font-semibold text-gray-900 flex-1 text-center">
+        {currentLanguage === 'ES' 
+          ? 'Crea tu enlace personalizado'
+          : currentLanguage === 'PT'
+          ? 'Crie seu link personalizado'
+          : 'Create your custom link'}
+      </h2>
+      <div class="w-9"></div> <!-- Spacer para centrar -->
+    </header>
+
+    <!-- Contenido -->
+    <div class="flex-1 overflow-y-auto px-4 py-6">
+      <div class="max-w-md mx-auto">
+        <!-- Icono y descripción -->
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full mb-4">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          </div>
+          <p class="text-gray-600 text-base">
+            {currentLanguage === 'ES'
+              ? 'Indica el nombre de tu negocio para generar tu enlace único'
+              : currentLanguage === 'PT'
+              ? 'Indique o nome do seu negócio para gerar seu link único'
+              : 'Enter your business name to generate your unique link'}
+          </p>
+        </div>
+
+        <!-- Input del nombre -->
+        <div class="mb-6">
+          <label for="business-name-input" class="block text-sm font-medium text-gray-700 mb-2">
+            {currentLanguage === 'ES'
+              ? 'Nombre de tu negocio'
+              : currentLanguage === 'PT'
+              ? 'Nome do seu negócio'
+              : 'Business name'}
+          </label>
+          <input
+            id="business-name-input"
+            type="text"
+            bind:value={businessName}
+            placeholder={currentLanguage === 'ES' ? 'Ej: Mi Restaurante' : currentLanguage === 'PT' ? 'Ex: Meu Restaurante' : 'Ex: My Restaurant'}
+            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-base transition-all"
+            disabled={isCreatingSlug}
+            onkeydown={(e) => {
+              if (e.key === 'Enter' && !isCreatingSlug && businessName.trim()) {
+                createSlugAndShare()
+              }
+            }}
+          />
+        </div>
+
+        <!-- Preview de la URL -->
+        <div class="mb-8">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            {currentLanguage === 'ES'
+              ? 'Tu enlace será:'
+              : currentLanguage === 'PT'
+              ? 'Seu link será:'
+              : 'Your link will be:'}
+          </label>
+          <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
+            <p class="text-sm text-gray-800 font-mono break-all font-semibold">
+              {slugPreview 
+                ? `catalogo.micartapro.com/m/${slugPreview}`
+                : currentLanguage === 'ES'
+                  ? 'Ingresa el nombre de tu negocio...'
+                  : currentLanguage === 'PT'
+                  ? 'Digite o nome do seu negócio...'
+                  : 'Enter your business name...'}
+            </p>
+          </div>
+        </div>
+
+        <!-- Botón de acción -->
+        <button
+          onclick={createSlugAndShare}
+          disabled={isCreatingSlug || !businessName.trim() || !slugPreview}
+          class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-base shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+        >
+          {#if isCreatingSlug}
+            <div class="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+            <span>{currentLanguage === 'ES' ? 'Creando...' : currentLanguage === 'PT' ? 'Criando...' : 'Creating...'}</span>
+          {:else}
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span>{currentLanguage === 'ES' ? 'Crear y Compartir' : currentLanguage === 'PT' ? 'Criar e Compartilhar' : 'Create & Share'}</span>
+          {/if}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal de Upgrade al copiar link -->
@@ -910,6 +1191,27 @@
   /* Transición de vista para el preview */
   .transition-transform {
     will-change: transform;
+  }
+
+  /* Animación de confeti */
+  .confetti {
+    width: 10px;
+    height: 10px;
+    position: absolute;
+    top: -10px;
+    animation: confetti-fall 3s linear forwards;
+    border-radius: 2px;
+  }
+
+  @keyframes confetti-fall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
   }
 </style>
 

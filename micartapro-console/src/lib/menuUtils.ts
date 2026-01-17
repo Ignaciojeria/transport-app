@@ -273,3 +273,151 @@ export function calculateTrialDaysRemaining(endsAt: string | null | undefined): 
     return null
   }
 }
+
+/**
+ * Obtiene el slug activo para un menu_id
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @returns El slug activo o null si no existe
+ */
+export async function getMenuSlug(menuId: string, accessToken: string): Promise<string | null> {
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabaseUrl = 'https://rbpdhapfcljecofrscnj.supabase.co'
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
+    
+    // Crear cliente autenticado con el token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    })
+    
+    const { data, error } = await supabase
+      .from('menu_slugs')
+      .select('slug')
+      .eq('menu_id', menuId)
+      .eq('is_active', true)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No se encontró ningún registro
+        return null
+      }
+      console.error('Error obteniendo slug:', error)
+      return null
+    }
+
+    return data?.slug || null
+  } catch (error) {
+    console.error('Error en getMenuSlug:', error)
+    return null
+  }
+}
+
+/**
+ * Crea un nuevo slug para un menu_id
+ * @param menuId - ID del menú
+ * @param slug - Slug a crear
+ * @param accessToken - Token de autenticación
+ * @returns El slug creado o null si hubo error
+ */
+export async function createMenuSlug(menuId: string, slug: string, accessToken: string): Promise<string | null> {
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabaseUrl = 'https://rbpdhapfcljecofrscnj.supabase.co'
+    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
+    
+    // Crear cliente autenticado con el token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    })
+    
+    // Verificar si el slug ya existe
+    const { data: existing, error: checkError } = await supabase
+      .from('menu_slugs')
+      .select('id, menu_id')
+      .eq('slug', slug)
+      .maybeSingle()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('Error verificando slug:', checkError)
+      return null
+    }
+
+    if (existing) {
+      // El slug ya existe
+      if (existing.menu_id === menuId) {
+        // Es el mismo menú, activar el slug si no está activo
+        const { error: updateError } = await supabase
+          .from('menu_slugs')
+          .update({ is_active: true })
+          .eq('slug', slug)
+          .eq('menu_id', menuId)
+        
+        if (updateError) {
+          console.error('Error activando slug:', updateError)
+          return null
+        }
+        return slug
+      } else {
+        // El slug existe para otro menú
+        throw new Error('SLUG_EXISTS')
+      }
+    }
+
+    // Desactivar otros slugs del mismo menú
+    await supabase
+      .from('menu_slugs')
+      .update({ is_active: false })
+      .eq('menu_id', menuId)
+
+    // Crear el nuevo slug
+    const { data, error } = await supabase
+      .from('menu_slugs')
+      .insert({
+        menu_id: menuId,
+        slug: slug,
+        is_active: true
+      })
+      .select('slug')
+      .single()
+
+    if (error) {
+      console.error('Error creando slug:', error)
+      return null
+    }
+
+    return data?.slug || null
+  } catch (error) {
+    if (error instanceof Error && error.message === 'SLUG_EXISTS') {
+      throw error
+    }
+    console.error('Error en createMenuSlug:', error)
+    return null
+  }
+}
+
+/**
+ * Genera una URL usando el slug
+ * @param slug - Slug del menú
+ * @param lang - Idioma opcional
+ * @returns URL completa con el slug
+ */
+export function generateSlugUrl(slug: string, lang?: string): string {
+  let url = `https://catalogo.micartapro.com/m/${slug}`
+  
+  // Agregar parámetro de idioma si se proporciona
+  if (lang && ['ES', 'PT', 'EN'].includes(lang)) {
+    url += `?lang=${lang}`
+  }
+  
+  return url
+}
