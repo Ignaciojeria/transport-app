@@ -906,23 +906,11 @@
           </p>
         {/if}
       </div>
-      {#if menuUrl}
-        <!-- Botón de compartir en WhatsApp directamente -->
-        <button
-          onclick={shareOnWhatsApp}
-          class="px-3 py-1.5 md:px-4 md:py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors flex items-center gap-1.5 md:gap-2 whitespace-nowrap"
-          title={$tStore.chat.shareLink}
-        >
-          <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-          <span class="text-xs md:text-sm hidden md:inline">{$tStore.chat.shareLink}</span>
-        </button>
-      {/if}
+      <div class="w-9"></div> <!-- Spacer para centrar -->
     </header>
 
     <!-- Contenido del Preview -->
-    <div class="flex-1 overflow-hidden iframe-container">
+    <div class="flex-1 overflow-hidden iframe-container relative">
       {#if menuUrl}
         {#key iframeKey}
           <iframe
@@ -940,6 +928,22 @@
             <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
             <p class="text-gray-600">{$tStore.chat.loadingPreview}</p>
           </div>
+        </div>
+      {/if}
+
+      <!-- Botón flotante de compartir -->
+      {#if menuUrl}
+        <div class="absolute bottom-4 left-0 right-0 flex justify-center px-4 z-10">
+          <button
+            onclick={shareOnWhatsApp}
+            class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center gap-2 transform hover:scale-105"
+            title={$tStore.chat.shareLink}
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span>{currentLanguage === 'ES' ? 'Compartir Carta' : currentLanguage === 'PT' ? 'Compartilhar Cardápio' : 'Share Menu'}</span>
+          </button>
         </div>
       {/if}
     </div>
