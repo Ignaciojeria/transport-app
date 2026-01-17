@@ -950,7 +950,7 @@
   </div>
 
 <!-- Botón flotante de compartir (fixed fuera del contenedor para móviles) -->
-{#if menuUrl && showPreview}
+{#if menuUrl && showPreview && !showSlugModal}
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl md:hidden">
     <button
       onclick={shareOnWhatsApp}
