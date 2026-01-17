@@ -80,6 +80,10 @@
         {
             "kind": "usecase",
             "name": "on-creem-subscription-trialing-webhook"
+        },
+        {
+            "kind": "get-controller",
+            "name": "search-menu-by-id"
         }
     ]
 }
