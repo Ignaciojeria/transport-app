@@ -932,9 +932,9 @@
       {/if}
     </div>
 
-    <!-- Botón flotante de compartir (fixed en la parte inferior de la pantalla) -->
-    {#if menuUrl && showPreview}
-      <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl">
+    <!-- Botón flotante de compartir (barra fija dentro del contenedor para desktop) -->
+    {#if menuUrl}
+      <div class="hidden md:block bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 safe-area-inset-bottom shadow-lg">
         <button
           onclick={shareOnWhatsApp}
           class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
@@ -948,6 +948,22 @@
       </div>
     {/if}
   </div>
+
+<!-- Botón flotante de compartir (fixed fuera del contenedor para móviles) -->
+{#if menuUrl && showPreview}
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl md:hidden">
+    <button
+      onclick={shareOnWhatsApp}
+      class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
+      title={$tStore.chat.shareLink}
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+      </svg>
+      <span>{currentLanguage === 'ES' ? 'Compartir Carta' : currentLanguage === 'PT' ? 'Compartilhar Cardápio' : 'Share Menu'}</span>
+    </button>
+  </div>
+{/if}
 
   <!-- Vista de Crear Slug (se muestra cuando showSlugModal es true) -->
   <div 
