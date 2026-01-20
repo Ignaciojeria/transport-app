@@ -252,9 +252,10 @@ class CartStore {
    * @param {string} deliveryAddress - Dirección de entrega (solo para DELIVERY)
    * @param {string} lang - Idioma ('ES', 'PT', 'EN')
    * @param {object} translations - Objeto con las traducciones de WhatsApp
+   * @param {number} orderNumber - Número de orden (opcional)
    * @returns {string} URL de WhatsApp con el mensaje
    */
-  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', deliveryAddress = null, lang = 'ES', translations = null) {
+  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', deliveryAddress = null, lang = 'ES', translations = null, orderNumber = null) {
     // Si no se pasan traducciones, usar valores por defecto en español
     const t = translations || {
       greeting: "¡Hola! Me gustaría hacer el siguiente pedido:\n\n",
@@ -303,6 +304,15 @@ class CartStore {
     });
     
     message += `\n*${t.orderTotal}: $${this.getTotal().toLocaleString(locale)}*\n\n`;
+    
+    // Agregar número de orden si está disponible
+    if (orderNumber !== null) {
+      message += lang === 'EN' 
+        ? `📋 Order Number: ${orderNumber}\n\n`
+        : lang === 'PT'
+        ? `📋 Número do Pedido: ${orderNumber}\n\n`
+        : `📋 Número de Orden: ${orderNumber}\n\n`;
+    }
     
     // Información de entrega o retiro
     if (deliveryAddress) {

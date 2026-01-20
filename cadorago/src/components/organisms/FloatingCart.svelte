@@ -7,6 +7,7 @@
   import { t, language } from '../../lib/useLanguage';
   import { getPriceFromPricing } from '../../services/menuData.js';
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
+  import { getSlugFromUrl, getUrlParams } from '../../services/restaurantData.js';
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currentLanguage = $derived($language);
@@ -348,6 +349,153 @@
       event.preventDefault();
     }
   }
+
+  /**
+   * Obtiene el menuId desde la URL o los datos del restaurante
+   * @returns {string | null} ID del menú
+   */
+  function getMenuId() {
+    // Intentar obtener desde los datos del restaurante (viene del backend)
+    if (restaurantData?.id) {
+      return restaurantData.id;
+    }
+    
+    // Fallback: intentar obtener desde URL params (método legacy)
+    const { menuID } = getUrlParams();
+    if (menuID) {
+      return menuID;
+    }
+    
+    // Si se está usando slug, el id debería venir en restaurantData
+    // Si no está, intentar obtener desde el slug (último recurso)
+    const slug = getSlugFromUrl();
+    if (slug) {
+      console.warn('No se pudo obtener el menuId. El backend debería devolver el id del menú.');
+    }
+    
+    return null;
+  }
+
+  /**
+   * Convierte la hora de retiro a formato ISO para la API
+   * @param {string} horaRetiro - Hora en formato HH:MM
+   * @returns {string} Fecha en formato ISO
+   */
+  function formatRequestedTime(horaRetiro) {
+    if (!horaRetiro) return null;
+    
+    const [hours, minutes] = horaRetiro.split(':');
+    const now = new Date();
+    const requestedDate = new Date();
+    requestedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+    
+    // Si la hora ya pasó hoy, asumir que es para mañana
+    if (requestedDate < now) {
+      requestedDate.setDate(requestedDate.getDate() + 1);
+    }
+    
+    return requestedDate.toISOString();
+  }
+
+  /**
+   * Envía la orden a la API de micartapro-backend
+   * @returns {Promise<number>} Número de orden
+   */
+  async function sendOrderToAPI() {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+      (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:8082'
+        : 'https://micartapro-backend-27303662337.us-central1.run.app');
+    
+    const menuId = getMenuId();
+    if (!menuId) {
+      throw new Error('No se pudo obtener el ID del menú');
+    }
+
+    // Mapear items del carrito al formato de la API
+    const items = cartStore.items.map(item => {
+      const pricing = item.pricing || {};
+      const pricingMode = pricing.mode === 'WEIGHT' || pricing.mode === 'VOLUME' || pricing.mode === 'LENGTH' || pricing.mode === 'AREA' 
+        ? pricing.mode 
+        : 'UNIT';
+      
+      const unit = pricing.unit || 'EACH';
+      const quantity = item.customQuantity || item.cantidad;
+      
+      // Calcular precios
+      let unitPrice = 0;
+      let totalPrice = 0;
+      
+      if (item.customQuantity && item.pricing) {
+        // Para items con cantidad personalizada
+        unitPrice = pricing.pricePerUnit || 0;
+        totalPrice = getPriceFromPricing(item.pricing, item.customQuantity);
+      } else {
+        // Para items normales
+        unitPrice = item.precio || 0;
+        totalPrice = item.precio * item.cantidad;
+      }
+
+      return {
+        productName: item.title + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
+        pricingMode: pricingMode,
+        unit: unit,
+        quantity: quantity,
+        unitPrice: unitPrice,
+        totalPrice: totalPrice
+      };
+    });
+
+    // Calcular totales
+    const subtotal = cartStore.getTotal();
+    const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0; // Asumiendo fee fijo, ajustar según necesidad
+    const total = subtotal + deliveryFee;
+
+    // Construir fecha/hora solicitada
+    let requestedTime = null;
+    if (deliveryType === 'PICKUP' && horaRetiro) {
+      requestedTime = formatRequestedTime(horaRetiro);
+    } else if (deliveryType === 'DELIVERY') {
+      // Para delivery, usar fecha/hora actual + tiempo estimado (ej: 1 hora)
+      const now = new Date();
+      now.setHours(now.getHours() + 1);
+      requestedTime = now.toISOString();
+    }
+
+    const orderData = {
+      businessInfo: {
+        businessName: restaurantData?.businessInfo?.businessName || 'cadorago',
+        whatsapp: restaurantData?.businessInfo?.whatsapp || ''
+      },
+      items: items,
+      totals: {
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        total: total,
+        currency: 'CLP'
+      },
+      fulfillment: {
+        type: deliveryType,
+        requestedTime: requestedTime
+      }
+    };
+
+    const response = await fetch(`${API_BASE_URL}/menu/${menuId}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(orderData)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Error al crear la orden: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    return result.orderNumber;
+  }
   
   async function handleConfirmOrder() {
     // Validar tipo de entrega
@@ -421,18 +569,32 @@
       }
     }
     
+    // Mostrar loader
+    showOrderForm = false;
+    showOrderLoader = true;
+    
+    let orderNumber = null;
+    try {
+      // Enviar orden a la API
+      orderNumber = await sendOrderToAPI();
+    } catch (error) {
+      console.error('Error al enviar orden a la API:', error);
+      alert('Error al procesar la orden. Por favor, intenta nuevamente.');
+      showOrderLoader = false;
+      showOrderForm = true;
+      return;
+    }
+    
+    // Generar mensaje de WhatsApp con el número de orden
     const url = cartStore.generateWhatsAppMessage(
       restaurantData?.businessInfo?.whatsapp || '',
       nombreRetiro.trim(),
       horaConZona,
       fullDeliveryAddress,
       currentLanguage,
-      $t.whatsapp
+      $t.whatsapp,
+      orderNumber
     );
-    
-    // Mostrar loader
-    showOrderForm = false;
-    showOrderLoader = true;
     
     // Esperar 2 segundos antes de redirigir
     await new Promise(resolve => setTimeout(resolve, 2000));
