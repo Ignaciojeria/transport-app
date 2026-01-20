@@ -19,6 +19,7 @@
   let showAcompanamientoModal = $state(false);
   let showQuantityModal = $state(false);
   let selectedAcompanamiento = $state(null);
+  let acompanamientoViewTransition = $state(false); // Controla la transición de la vista
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
   
@@ -30,6 +31,19 @@
     pricingMode === 'LENGTH' || 
     pricingMode === 'AREA'
   );
+  
+  // Calcular el precio más económico de los acompañamientos
+  const minSidePrice = $derived.by(() => {
+    if (!hasAcompanamientos || !item.sides || item.sides.length === 0) {
+      return null;
+    }
+    
+    const prices = item.sides.map(side => {
+      return side.price || (side.pricing?.pricePerUnit || 0);
+    });
+    
+    return Math.min(...prices);
+  });
   
   // El precio puede venir directamente (formato antiguo) o desde pricing (formato nuevo)
   const displayPrice = $derived(
@@ -72,6 +86,10 @@
     event.stopPropagation();
     if (hasAcompanamientos) {
       showAcompanamientoModal = true;
+      // Activar transición después de un pequeño delay para suavidad
+      setTimeout(() => {
+        acompanamientoViewTransition = true;
+      }, 10);
     } else if (needsQuantitySelector) {
       showQuantityModal = true;
     } else {
@@ -83,6 +101,10 @@
     event.stopPropagation();
     if (hasAcompanamientos) {
       showAcompanamientoModal = true;
+      // Activar transición después de un pequeño delay para suavidad
+      setTimeout(() => {
+        acompanamientoViewTransition = true;
+      }, 10);
     } else if (needsQuantitySelector) {
       showQuantityModal = true;
     } else {
@@ -137,8 +159,13 @@
     // Agregar directamente al carrito al seleccionar el acompañamiento
     try {
       cartStore.addItem(item, acompanamiento);
-      showAcompanamientoModal = false;
-      selectedAcompanamiento = null;
+      // Primero ocultar la vista con transición
+      acompanamientoViewTransition = false;
+      // Luego limpiar después de la animación
+      setTimeout(() => {
+        showAcompanamientoModal = false;
+        selectedAcompanamiento = null;
+      }, 300); // Duración de la transición
     } catch (error) {
       console.error('Error al agregar item:', error);
       alert('Error al agregar el item: ' + error.message);
@@ -149,8 +176,13 @@
     if (event) {
       event.stopPropagation();
     }
-    showAcompanamientoModal = false;
-    selectedAcompanamiento = null;
+    // Primero ocultar la vista con transición
+    acompanamientoViewTransition = false;
+    // Luego limpiar después de la animación
+    setTimeout(() => {
+      showAcompanamientoModal = false;
+      selectedAcompanamiento = null;
+    }, 300); // Duración de la transición
   }
 </script>
 
@@ -181,8 +213,13 @@
       {/if}
       {#if hasAcompanamientos}
         <p class="text-xs sm:text-sm text-gray-600 mb-2">
-          Selecciona un acompañamiento
+          Selecciona una opción
         </p>
+        {#if minSidePrice !== null}
+          <p class="text-sm sm:text-base text-gray-800 font-semibold">
+            Desde <Price price={minSidePrice} />
+          </p>
+        {/if}
       {/if}
       {#if displayPrice && !needsQuantitySelector}
         <Price price={displayPrice} />
@@ -299,59 +336,79 @@
   </div>
 {/if}
 
-<!-- Modal de selección de acompañamiento -->
+<!-- Vista de selección de acompañamiento con view transition -->
 {#if showAcompanamientoModal}
   <div 
-    class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" 
+    class="fixed inset-0 bg-white z-[100] transition-transform duration-300 ease-in-out {acompanamientoViewTransition ? 'translate-x-0' : 'translate-x-full'}"
     role="dialog"
     aria-modal="true"
     aria-labelledby="acompanamiento-modal-title"
     tabindex="-1"
-    onclick={handleCancelAcompanamiento}
     onkeydown={(e) => {
       if (e.key === 'Escape') {
         handleCancelAcompanamiento();
       }
     }}
   >
-    <div 
-      class="bg-white rounded-lg shadow-xl max-w-md w-full p-6 sm:p-8 max-h-[80vh] overflow-y-auto"
-      role="document"
-      onclick={(e) => e.stopPropagation()}
-      onkeydown={(e) => e.stopPropagation()}
-    >
-      <h3 id="acompanamiento-modal-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">
-        Selecciona un acompañamiento
-      </h3>
-      <p class="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-        {item.title}
-      </p>
-      
-      <div class="space-y-3 sm:space-y-4" onclick={(e) => e.stopPropagation()}>
-        {#each item.sides as acompanamiento}
+    <div class="h-full w-full overflow-y-auto">
+      <div class="max-w-2xl mx-auto p-4 sm:p-6 md:p-8">
+        <!-- Header con botón de cerrar -->
+        <div class="flex items-center justify-between mb-6 sm:mb-8 sticky top-0 bg-white z-10 pb-4 border-b border-gray-200 -mx-4 sm:-mx-6 md:-mx-8 px-4 sm:px-6 md:px-8">
           <button
-            type="button"
-            onclick={(e) => handleSelectAcompanamiento(acompanamiento, e)}
-            class="w-full text-left p-4 rounded-lg border-2 border-gray-300 hover:border-gray-800 hover:bg-gray-50 transition-colors"
+            onclick={handleCancelAcompanamiento}
+            class="p-2 text-gray-500 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            aria-label="Cerrar"
           >
-            <div class="flex justify-between items-center">
-              <span class="font-medium text-gray-800 text-sm sm:text-base">
-                {acompanamiento.name}
-              </span>
-              <Price price={acompanamiento.price} className="text-base sm:text-lg" />
-            </div>
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
-        {/each}
-      </div>
-      
-      <div class="flex gap-3 sm:gap-4 mt-6 sm:mt-8">
-        <button
-          type="button"
-          onclick={handleCancelAcompanamiento}
-          class="flex-1 px-4 py-2 sm:py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors font-medium text-sm sm:text-base"
-        >
-          Cancelar
-        </button>
+          <h3 id="acompanamiento-modal-title" class="text-xl sm:text-2xl font-bold text-gray-800 flex-1 text-center">
+            Selecciona una opción
+          </h3>
+          <div class="w-10"></div> <!-- Spacer para centrar el título -->
+        </div>
+        
+        <!-- Información del item -->
+        <div class="mb-6">
+          <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
+            {item.title}
+          </h4>
+          {#if item.description}
+            <p class="text-sm sm:text-base text-gray-600">
+              {item.description}
+            </p>
+          {/if}
+        </div>
+        
+        <!-- Lista de acompañamientos -->
+        <div class="space-y-3 sm:space-y-4">
+          {#each item.sides as acompanamiento}
+            <button
+              type="button"
+              onclick={(e) => handleSelectAcompanamiento(acompanamiento, e)}
+              class="w-full text-left p-4 sm:p-5 rounded-lg border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all duration-200 active:scale-[0.98]"
+            >
+              <div class="flex items-center gap-4">
+                <!-- Imagen vacía (estilo Uber Eats) -->
+                <div class="flex-shrink-0">
+                  <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
+                    <svg class="w-10 h-10 sm:w-12 sm:h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <!-- Información del acompañamiento -->
+                <div class="flex-1 flex justify-between items-center">
+                  <span class="font-medium text-gray-800 text-base sm:text-lg">
+                    {acompanamiento.name}
+                  </span>
+                  <Price price={acompanamiento.price} className="text-lg sm:text-xl font-semibold" />
+                </div>
+              </div>
+            </button>
+          {/each}
+        </div>
       </div>
     </div>
   </div>

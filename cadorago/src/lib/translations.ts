@@ -87,9 +87,9 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   ES: {
     home: {
-      loading: 'Cargando datos del restaurante...',
+      loading: 'Cargando catálogo...',
       errorLoading: 'Error al cargar los datos',
-      ourMenu: 'Nuestra Carta',
+      ourMenu: 'Catálogo',
       businessHours: 'Horarios de Atención',
       contact: 'Contacto'
     },

@@ -6,7 +6,7 @@
   const businessName = $derived(restaurantData?.businessInfo?.businessName || 'Carta Digital');
   const description = $derived(
     restaurantData?.businessInfo?.description || 
-    `Menú digital de ${businessName}. Explora nuestra carta y realiza tu pedido.`
+    `Menú digital de ${businessName}. Explora nuestro catálogo y realiza tu pedido.`
   );
   
   // URL actual
