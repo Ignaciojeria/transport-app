@@ -3,7 +3,7 @@ package prompt
 import "fmt"
 
 // MenuInteractionPrompt construye el prompt completo que se envía a Gemini.
-func MenuInteractionPrompt(toonMenu string, userInstructions string) string {
+func MenuInteractionPrompt(toonMenu string, userInstructions string, photoUrl string) string {
 
 	// --- INSTRUCCIONES DEL SISTEMA ---
 	systemInstructions := `
@@ -85,6 +85,17 @@ Eres un Asistente de Gestión de Menús Digitales altamente competente. Tu funci
 %s
 `, userInstructions)
 
+	// --- BLOQUE DE FOTO (si está presente) ---
+	var photoBlock string
+	if photoUrl != "" {
+		photoBlock = fmt.Sprintf(`
+**[FOTO_ADJUNTA]**
+El usuario ha adjuntado una foto con la siguiente URL: %s
+Esta foto puede contener información relevante sobre productos, precios, descripciones o cualquier otro detalle del menú que debas considerar al procesar la solicitud.
+Analiza la imagen cuidadosamente y utiliza la información visual para completar o mejorar la solicitud del usuario.
+`, photoUrl)
+	}
+
 	// Concatenación final
-	return systemInstructions + menuContextBlock + userPromptBlock
+	return systemInstructions + menuContextBlock + userPromptBlock + photoBlock
 }

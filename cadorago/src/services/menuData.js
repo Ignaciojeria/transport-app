@@ -110,10 +110,12 @@ export function adaptMenuData(menuData) {
       description: item.description || '',
       price: getPriceFromPricing(item.pricing),
       pricing: item.pricing, // Mantener el pricing original para uso futuro
+      photoUrl: item.photoUrl || '', // Incluir photoUrl del item
       sides: (item.sides || []).map(side => ({
         name: side.name || '',
         price: getPriceFromPricing(side.pricing),
-        pricing: side.pricing // Mantener el pricing original
+        pricing: side.pricing, // Mantener el pricing original
+        photoUrl: side.photoUrl || '' // Incluir photoUrl del side
       }))
     }))
   }));

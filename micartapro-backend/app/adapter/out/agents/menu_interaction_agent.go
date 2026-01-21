@@ -29,7 +29,7 @@ func NewMenuInteractionAgent(client *genai.Client) MenuInteractionAgent {
 
 		// 1. Construir el Prompt Completo y el Historial
 		menuJSON := req.MenuToon()
-		fullPrompt := prompt.MenuInteractionPrompt(menuJSON, req.Message)
+		fullPrompt := prompt.MenuInteractionPrompt(menuJSON, req.Message, req.PhotoUrl)
 
 		var contents []*genai.Content
 		for _, msg := range req.History {

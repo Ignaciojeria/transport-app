@@ -26,6 +26,7 @@ type MenuPreferences struct {
 
 type MenuInteractionRequest struct {
 	Message         string `json:"message" example:"Actualiza el precio del Pollo con papas fritas a $7.500"`
+	PhotoUrl        string `json:"photoUrl" example:"https://example.com/photo.jpg"`
 	MenuID          string `json:"menuId" example:"01890a5d-ac96-7748-b800-303931383939"`
 	History         []ChatMessage
 	MenuPreferences MenuPreferences

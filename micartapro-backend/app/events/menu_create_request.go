@@ -48,8 +48,9 @@ type Pricing struct {
 */
 
 type Side struct {
-	Name    string  `json:"name"`
-	Pricing Pricing `json:"pricing"`
+	Name     string  `json:"name"`
+	Pricing  Pricing `json:"pricing"`
+	PhotoUrl string  `json:"photoUrl,omitempty"`
 }
 
 type MenuItem struct {
@@ -57,6 +58,7 @@ type MenuItem struct {
 	Description string  `json:"description,omitempty"`
 	Sides       []Side  `json:"sides,omitempty"`
 	Pricing     Pricing `json:"pricing"`
+	PhotoUrl    string  `json:"photoUrl,omitempty"`
 }
 
 type MenuCategory struct {

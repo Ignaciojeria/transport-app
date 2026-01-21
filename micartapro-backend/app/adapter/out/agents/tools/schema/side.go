@@ -17,6 +17,10 @@ func GetSideSchema() *genai.Schema {
 				Properties:  GetPricingSchema().Properties,
 				Required:    GetPricingSchema().Required,
 			},
+			"photoUrl": {
+				Type:        genai.TypeString,
+				Description: "URL opcional de la imagen del acompañamiento. Debe ser una URL pública accesible.",
+			},
 		},
 		Required: []string{"name", "pricing"},
 	}

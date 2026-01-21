@@ -7,6 +7,14 @@
   import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, fetchEntitlement, calculateTrialDaysRemaining, getMenuSlug, createMenuSlug, generateSlugUrl, type Entitlement } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
+  import { supabase } from '../supabase'
+  import { resizeImage } from '../utils/imageResize'
+
+  interface MenuChatProps {
+    onMenuClick?: () => void
+  }
+
+  let { onMenuClick }: MenuChatProps = $props()
 
   interface ChatMessage {
     id: string
@@ -14,6 +22,8 @@
     content: string
     timestamp: Date
     showExploreButton?: boolean
+    imageUrl?: string
+    isPreview?: boolean // Indica si es un preview pendiente de enviar
   }
 
   let messages: ChatMessage[] = $state([])
@@ -39,6 +49,11 @@
   let isCreatingSlug = $state(false) // Estado de carga al crear slug
   let showConfetti = $state(false) // Mostrar confeti
   let confettiParticles = $state<Array<{left: number, delay: number, color: string}>>([]) // Partículas de confeti
+  let showCamera = $state(false) // Mostrar cámara para tomar foto
+  let stream: MediaStream | null = $state(null) // Stream de la cámara
+  let videoRef: HTMLVideoElement | null = $state(null) // Referencia al video
+  let uploadingPhoto = $state(false) // Estado de subida de foto
+  let pendingPhotoUrl = $state<string | null>(null) // URL de la foto pendiente de enviar
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -439,6 +454,7 @@
   }
 
   async function handleSendMessage(content: string) {
+    // Solo permitir enviar si hay texto escrito
     if (!content.trim() || isLoading) return
 
     // Ocultar sugerencias cuando se envía un mensaje
@@ -469,14 +485,24 @@
       return
     }
 
-    // Agregar mensaje del usuario
+    // Guardar la URL de la foto antes de limpiarla
+    const photoUrlToSend = pendingPhotoUrl
+
+    // Remover el preview de la foto del chat
+    messages = messages.filter(msg => !msg.isPreview)
+
+    // Agregar mensaje del usuario (con foto si existe)
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: content.trim(),
-      timestamp: new Date()
+      content: content.trim() || (photoUrlToSend ? '📸 Foto' : ''),
+      timestamp: new Date(),
+      imageUrl: photoUrlToSend || undefined
     }
     messages = [...messages, userMessage]
+
+    // Limpiar la foto pendiente
+    pendingPhotoUrl = null
 
     // Mostrar indicador de carga
     isLoading = true
@@ -484,6 +510,17 @@
     try {
       // Generar idempotency key (UUID v7)
       const idempotencyKey = uuidv7()
+
+      // Preparar el body del request
+      const requestBody: any = {
+        menuId: menuId,
+        message: content.trim() || ''
+      }
+
+      // Agregar photoUrl si existe
+      if (photoUrlToSend) {
+        requestBody.photoUrl = photoUrlToSend
+      }
 
       // Enviar POST al backend
       const response = await fetch(`${API_BASE_URL}/menu/interaction`, {
@@ -494,10 +531,7 @@
           'Content-Type': 'application/json'
         },
         credentials: 'include',
-        body: JSON.stringify({
-          menuId: menuId,
-          message: content.trim()
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (!response.ok) {
@@ -709,6 +743,226 @@
     messages = []
   }
 
+  // Bucket de Supabase Storage para las fotos
+  const BUCKET_NAME = 'menu-photos'
+
+  function handleTakePhoto() {
+    // Abrir cámara directamente
+    startCamera()
+  }
+
+  function handleUploadPhoto() {
+    // Abrir selector de archivo
+    const input = document.getElementById('photo-file-input') as HTMLInputElement
+    if (input) {
+      input.click()
+    }
+  }
+
+  async function startCamera() {
+    try {
+      // Solicitar acceso a la cámara
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
+      
+      stream = mediaStream
+      showCamera = true
+      
+      // Esperar un momento para que el DOM se actualice
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Esperar a que el video esté listo
+      if (videoRef) {
+        videoRef.srcObject = mediaStream
+        
+        // Esperar a que el video esté cargado y reproduciéndose
+        await new Promise((resolve, reject) => {
+          if (!videoRef) {
+            reject(new Error('Video ref no disponible'))
+            return
+          }
+          
+          const onLoadedMetadata = () => {
+            videoRef?.removeEventListener('loadedmetadata', onLoadedMetadata)
+            videoRef?.play()
+              .then(() => {
+                setTimeout(resolve, 200)
+              })
+              .catch(reject)
+          }
+          
+          videoRef.addEventListener('loadedmetadata', onLoadedMetadata)
+          
+          setTimeout(() => {
+            videoRef?.removeEventListener('loadedmetadata', onLoadedMetadata)
+            reject(new Error('Timeout esperando video'))
+          }, 5000)
+        })
+      }
+    } catch (error) {
+      console.error('Error accediendo a la cámara:', error)
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'No se pudo acceder a la cámara. Asegúrate de dar permisos de cámara.',
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
+      stopCamera()
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+      stream = null
+    }
+    if (videoRef) {
+      videoRef.srcObject = null
+    }
+    showCamera = false
+  }
+
+  function capturePhoto() {
+    if (!videoRef) return
+
+    if (videoRef.readyState !== videoRef.HAVE_ENOUGH_DATA) {
+      return
+    }
+
+    if (videoRef.videoWidth === 0 || videoRef.videoHeight === 0) {
+      return
+    }
+
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = videoRef.videoWidth
+      canvas.height = videoRef.videoHeight
+      
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+
+      ctx.drawImage(videoRef, 0, 0, canvas.width, canvas.height)
+      
+      canvas.toBlob(async (blob) => {
+        if (!blob) return
+
+        const file = new File([blob], `photo-${Date.now()}.jpg`, {
+          type: 'image/jpeg',
+          lastModified: Date.now()
+        })
+
+        stopCamera()
+        await uploadAndSendPhoto(file)
+      }, 'image/jpeg', 0.9)
+    } catch (error) {
+      console.error('Error capturando foto:', error)
+      stopCamera()
+    }
+  }
+
+  async function handleFileSelect(event: Event) {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+    
+    if (!file || !file.type.startsWith('image/')) return
+    
+    await uploadAndSendPhoto(file)
+    
+    // Resetear el input
+    if (target) target.value = ''
+  }
+
+  function handlePastePhoto(file: File) {
+    // Procesar el archivo pegado de la misma manera que un archivo seleccionado
+    uploadAndSendPhoto(file)
+  }
+
+  async function uploadAndSendPhoto(file: File) {
+    if (!userId) return
+
+    uploadingPhoto = true
+
+    try {
+      // Redimensionar la imagen
+      const resizedBlob = await resizeImage(file, 400, 400, 0.8)
+
+      // Generar nombre único para el archivo
+      const fileExt = file.name.split('.').pop() || 'jpg'
+      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      
+      // Subir a Supabase Storage
+      const { error } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(fileName, resizedBlob, {
+          contentType: resizedBlob.type,
+          upsert: false
+        })
+
+      if (error) {
+        throw error
+      }
+
+      // Obtener la URL pública de la imagen
+      const { data: urlData } = supabase.storage
+        .from(BUCKET_NAME)
+        .getPublicUrl(fileName)
+
+      const publicUrl = urlData.publicUrl
+      
+      // Imprimir la URL en la consola
+      console.log('✅ Foto subida exitosamente!')
+      console.log('📸 URL de la foto:', publicUrl)
+
+      // Guardar la URL de la foto pendiente (no enviar mensaje todavía)
+      pendingPhotoUrl = publicUrl
+
+      // Mostrar preview de la foto en el chat
+      const photoPreview: ChatMessage = {
+        id: `photo-preview-${Date.now()}`,
+        role: 'user',
+        content: '📸 Foto lista para enviar',
+        timestamp: new Date(),
+        imageUrl: publicUrl,
+        isPreview: true
+      }
+      messages = [...messages, photoPreview]
+
+      // Agregar mensaje del asistente preguntando a qué parte del catálogo pertenece
+      const questionMessage: ChatMessage = {
+        id: `question-${Date.now()}`,
+        role: 'assistant',
+        content: '¿A qué parte de tu catálogo pertenece esta foto?',
+        timestamp: new Date()
+      }
+      messages = [...messages, questionMessage]
+
+    } catch (error) {
+      console.error('Error subiendo foto:', error)
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: 'Error al subir la foto. Intenta de nuevo.',
+        timestamp: new Date()
+      }
+      messages = [...messages, errorMessage]
+    } finally {
+      uploadingPhoto = false
+    }
+  }
+
+  // Limpiar cámara al desmontar
+  $effect(() => {
+    return () => {
+      stopCamera()
+    }
+  })
+
   $effect(() => {
     if (messages.length > 0) {
       scrollToBottom()
@@ -723,11 +977,17 @@
   >
     <!-- Header estilo Gemini -->
     <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
-      <button class="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Menú">
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Botón hamburguesa para móvil -->
+      <button 
+        onclick={onMenuClick}
+        class="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors" 
+        aria-label="Abrir menú"
+      >
+        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
+      <div class="hidden md:block w-9"></div> <!-- Spacer para desktop -->
       <h1 class="text-lg font-medium text-gray-900">MiCartaPro</h1>
       <div class="flex items-center gap-2">
         <button 
@@ -829,7 +1089,7 @@
           <Message message={message} onExploreOptions={resetToOptions} />
         {/each}
 
-        {#if isLoading}
+        {#if isLoading || uploadingPhoto}
           <div class="flex items-start gap-3">
             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -861,7 +1121,56 @@
         </div>
       {/if}
       
-      <ChatInput bind:this={chatInputRef} onSend={handleSendMessage} disabled={isLoading || checkingMenu} onFocus={handleInputFocus} onBlur={handleInputBlur} />
+      <!-- Preview de foto pendiente -->
+      {#if pendingPhotoUrl}
+        <div class="mb-2 px-2">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-3">
+            <img 
+              src={pendingPhotoUrl} 
+              alt="Foto pendiente" 
+              class="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+            />
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-700 mb-1">Foto lista para enviar</p>
+              <p class="text-xs text-gray-500 truncate">{pendingPhotoUrl}</p>
+            </div>
+            <button
+              onclick={() => {
+                pendingPhotoUrl = null
+                messages = messages.filter(msg => !msg.isPreview)
+              }}
+              class="p-1 text-gray-400 hover:text-red-600 transition-colors flex-shrink-0"
+              title="Eliminar foto"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      {/if}
+
+      <ChatInput 
+        bind:this={chatInputRef} 
+        onSend={handleSendMessage} 
+        disabled={isLoading || checkingMenu || uploadingPhoto} 
+        onFocus={handleInputFocus} 
+        onBlur={handleInputBlur}
+        onTakePhoto={handleTakePhoto}
+        onUploadPhoto={handleUploadPhoto}
+        onPastePhoto={handlePastePhoto}
+        hasPendingPhoto={!!pendingPhotoUrl}
+      />
+      
+      <!-- Input oculto para subir archivo -->
+      <input
+        id="photo-file-input"
+        type="file"
+        accept="image/*"
+        onchange={handleFileSelect}
+        class="hidden"
+        disabled={uploadingPhoto}
+      />
       
       <!-- Sugerencias justo debajo del input -->
       {#if showExamples && currentExampleType}
@@ -1233,5 +1542,49 @@
       opacity: 0;
     }
   }
+
+  /* Modal de cámara */
+  .camera-modal {
+    z-index: 9999;
+  }
 </style>
+
+<!-- Modal de cámara (si se quiere usar cámara directa en desktop) -->
+{#if showCamera}
+  <div class="fixed inset-0 bg-black z-50 flex items-center justify-center camera-modal">
+    <div class="relative w-full max-w-2xl aspect-video bg-black">
+      <video
+        bind:this={videoRef}
+        autoplay
+        playsinline
+        muted
+        class="w-full h-full object-cover"
+        aria-label="Vista previa de la cámara"
+      ></video>
+      
+      <!-- Controles de cámara -->
+      <div class="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-6 z-10">
+        <button
+          onclick={stopCamera}
+          class="px-4 py-2 bg-red-600/90 backdrop-blur-sm text-white rounded-full font-semibold hover:bg-red-700 transition-colors flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          Cancelar
+        </button>
+        
+        <button
+          onclick={capturePhoto}
+          class="w-20 h-20 bg-white rounded-full border-4 border-gray-200 hover:border-gray-300 transition-colors flex items-center justify-center shadow-2xl"
+          aria-label="Tomar foto"
+        >
+          <div class="w-16 h-16 bg-white rounded-full border-2 border-gray-400"></div>
+        </button>
+        
+        <div class="w-20"></div> <!-- Spacer para centrar el botón de captura -->
+      </div>
+    </div>
+  </div>
+{/if}
 

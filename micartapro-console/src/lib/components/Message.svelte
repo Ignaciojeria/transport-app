@@ -7,6 +7,8 @@
     content: string
     timestamp: Date
     showExploreButton?: boolean
+    imageUrl?: string
+    isPreview?: boolean
   }
 
   let { message, onExploreOptions }: { message: Message, onExploreOptions?: () => void } = $props()
@@ -30,11 +32,22 @@
   <div class="flex-1 {message.role === 'user' ? 'flex justify-end' : ''}">
     <div class="
       {message.role === 'user' 
-        ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm' 
+        ? message.isPreview
+          ? 'bg-blue-100 border-2 border-blue-300 border-dashed text-gray-700 rounded-2xl rounded-tr-sm' 
+          : 'bg-blue-600 text-white rounded-2xl rounded-tr-sm'
         : 'bg-gray-50 text-gray-900 rounded-2xl rounded-tl-sm'
       } 
       px-4 py-3 max-w-[85%] inline-block
     ">
+      {#if message.imageUrl}
+        <div class="mb-2">
+          <img 
+            src={message.imageUrl} 
+            alt={message.isPreview ? "Foto pendiente" : "Foto enviada"} 
+            class="max-w-full max-h-64 rounded-lg object-contain"
+          />
+        </div>
+      {/if}
       <p class="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
       {#if message.showExploreButton && onExploreOptions}
         <button
