@@ -25,6 +25,23 @@ func NewOnUserMenusInsertedWebhook(publisherManager eventprocessing.PublisherMan
 				BusinessHours: []string{},
 			},
 			Menu: []events.MenuCategory{},
+			DeliveryOptions: []events.DeliveryOption{
+				{
+					Type:        events.DeliveryOptionDelivery,
+					RequireTime: false,
+				},
+				{
+					Type:            events.DeliveryOptionPickup,
+					RequireTime:     true,
+					TimeRequestType: events.TimeRequestWindow,
+					TimeWindows: []events.TimeWindow{
+						{
+							Start: "09:00",
+							End:   "23:59",
+						},
+					},
+				},
+			},
 		}
 
 		err := publisherManager.Publish(ctx, eventprocessing.PublishRequest{
