@@ -6,6 +6,7 @@
   import PaymentSuccess from './lib/components/PaymentSuccess.svelte'
   import Sidebar from './lib/components/Sidebar.svelte'
   import PhotoUpload from './lib/components/PhotoUpload.svelte'
+  import MenuHistory from './lib/components/MenuHistory.svelte'
 
   // Usar valores derivados reactivos en el componente
   let user = $derived(authState.user)
@@ -109,6 +110,8 @@
       <div class="flex-1 md:ml-64 overflow-auto bg-gray-50">
         {#if activeSection === 'menu'}
           <MenuChat onMenuClick={toggleSidebar} />
+        {:else if activeSection === 'historial'}
+          <MenuHistory onMenuClick={toggleSidebar} />
         {:else if activeSection === 'galeria'}
           <PhotoUpload onMenuClick={toggleSidebar} />
         {/if}

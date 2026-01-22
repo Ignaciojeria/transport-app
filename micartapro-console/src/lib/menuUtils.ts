@@ -587,6 +587,70 @@ export function generateSlugUrl(slug: string, lang?: string): string {
 }
 
 /**
+ * Obtiene todas las versiones de un menú ordenadas por número de versión (descendente)
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @returns Array de versiones con id, version_number, created_at
+ */
+export async function getMenuVersions(
+  menuId: string,
+  accessToken: string
+): Promise<Array<{ id: string; version_number: number; created_at: string; content?: any }>> {
+  try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
+    const { data, error } = await supabase
+      .from('menu_versions')
+      .select('id, version_number, created_at, content')
+      .eq('menu_id', menuId)
+      .order('version_number', { ascending: false })
+    
+    if (error) {
+      console.error('Error obteniendo versiones del menú:', error)
+      return []
+    }
+    
+    return data || []
+  } catch (error) {
+    console.error('Error en getMenuVersions:', error)
+    return []
+  }
+}
+
+/**
+ * Obtiene el current_version_id de un menú
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @returns ID de la versión actual o null
+ */
+export async function getCurrentVersionId(
+  menuId: string,
+  accessToken: string
+): Promise<string | null> {
+  try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
+    const { data, error } = await supabase
+      .from('menus')
+      .select('current_version_id')
+      .eq('id', menuId)
+      .single()
+    
+    if (error) {
+      console.error('Error obteniendo current_version_id:', error)
+      return null
+    }
+    
+    return data?.current_version_id || null
+  } catch (error) {
+    console.error('Error en getCurrentVersionId:', error)
+    return null
+  }
+}
+
+/**
  * Actualiza el current_version_id de un menú en Supabase
  * @param menuId - ID del menú
  * @param versionId - ID de la versión a activar
