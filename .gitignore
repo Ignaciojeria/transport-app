@@ -32,3 +32,6 @@ node_modules
 .next
 *.tsbuildinfo
 .next
+
+
+SUPABASE_SETUP_COMPLETE.sql

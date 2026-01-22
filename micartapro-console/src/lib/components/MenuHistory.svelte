@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getMenuVersions, getCurrentVersionId, updateCurrentVersionId, generateMenuUrlFromSlug, getMenuSlug } from '../menuUtils'
+  import { getLatestMenuId, getMenuVersions, getCurrentVersionId, updateCurrentVersionId, generateMenuUrlFromSlug, getMenuSlug, updateVersionName, updateVersionFavorite } from '../menuUtils'
   import { language } from '../useLanguage'
 
   interface MenuHistoryProps {
@@ -14,6 +14,8 @@
     id: string
     version_number: number
     created_at: string
+    name: string | null
+    is_favorite: boolean
     content?: any
   }
 
@@ -27,6 +29,8 @@
   let activatingVersionId = $state<string | null>(null)
   let menuSlug = $state<string | null>(null)
   let iframeKey = $state(0) // Key para forzar recarga del iframe
+  let editingNameId = $state<string | null>(null) // ID de la versión cuyo nombre se está editando
+  let editingName = $state<string>('') // Nombre temporal mientras se edita
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -64,8 +68,21 @@
         getCurrentVersionId(menuId, session.access_token)
       ])
 
-      versions = versionsData
       currentVersionId = currentId
+      
+      // Ordenar versiones: primero la activa, luego favoritas, luego el resto
+      versions = versionsData.sort((a, b) => {
+        // 1. La versión activa siempre primero
+        if (a.id === currentId && b.id !== currentId) return -1
+        if (b.id === currentId && a.id !== currentId) return 1
+        
+        // 2. Si ambas son activas o ninguna es activa, ordenar por favoritas
+        if (a.is_favorite && !b.is_favorite) return -1
+        if (!a.is_favorite && b.is_favorite) return 1
+        
+        // 3. Si ambas tienen el mismo estado de favorito, ordenar por número de versión (descendente)
+        return b.version_number - a.version_number
+      })
     } catch (err: any) {
       console.error('Error cargando versiones:', err)
       error = err.message || 'Error al cargar el historial'
@@ -142,6 +159,80 @@
     })
   }
 
+  function startEditingName(version: MenuVersion) {
+    editingNameId = version.id
+    editingName = version.name || ''
+  }
+
+  function cancelEditingName() {
+    editingNameId = null
+    editingName = ''
+  }
+
+  async function saveVersionName(versionId: string) {
+    if (!session?.access_token) {
+      alert('No hay sesión activa')
+      return
+    }
+
+    try {
+      console.log('💾 Guardando nombre de versión:', { versionId, name: editingName })
+      const success = await updateVersionName(versionId, editingName, session.access_token)
+      
+      if (success) {
+        console.log('✅ Nombre guardado exitosamente')
+        // Actualizar el nombre en la lista local
+        versions = versions.map(v => 
+          v.id === versionId ? { ...v, name: editingName.trim() || null } : v
+        )
+        editingNameId = null
+        editingName = ''
+      } else {
+        console.error('❌ Error al guardar el nombre')
+        alert('Error al guardar el nombre. Revisa la consola para más detalles.')
+      }
+    } catch (err: any) {
+      console.error('❌ Error guardando nombre:', err)
+      alert('Error al guardar el nombre: ' + err.message)
+    }
+  }
+
+  async function toggleFavorite(versionId: string, currentFavorite: boolean) {
+    if (!session?.access_token) {
+      alert('No hay sesión activa')
+      return
+    }
+
+    try {
+      const newFavoriteState = !currentFavorite
+      console.log('💾 Actualizando favorito:', { versionId, newFavoriteState })
+      const success = await updateVersionFavorite(versionId, newFavoriteState, session.access_token)
+      
+      if (success) {
+        console.log('✅ Favorito actualizado exitosamente')
+        // Actualizar el estado de favorito en la lista local
+        versions = versions.map(v => 
+          v.id === versionId ? { ...v, is_favorite: newFavoriteState } : v
+        )
+        // Reordenar después de cambiar favorito
+        const currentId = currentVersionId
+        versions = versions.sort((a, b) => {
+          if (a.id === currentId && b.id !== currentId) return -1
+          if (b.id === currentId && a.id !== currentId) return 1
+          if (a.is_favorite && !b.is_favorite) return -1
+          if (!a.is_favorite && b.is_favorite) return 1
+          return b.version_number - a.version_number
+        })
+      } else {
+        console.error('❌ Error al actualizar favorito')
+        alert('Error al actualizar favorito. Revisa la consola para más detalles.')
+      }
+    } catch (err: any) {
+      console.error('❌ Error actualizando favorito:', err)
+      alert('Error al actualizar favorito: ' + err.message)
+    }
+  }
+
   onMount(() => {
     loadVersions()
   })
@@ -205,16 +296,81 @@
       <div class="max-w-4xl mx-auto space-y-4">
         {#each versions as version (version.id)}
           <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
-            <div class="flex items-start justify-between">
+            <div class="flex items-start justify-between gap-3">
               <div class="flex-1">
                 <div class="flex items-center gap-3 mb-2">
-                  <h3 class="text-lg font-semibold text-gray-900">
-                    Versión {version.version_number}
-                  </h3>
-                  {#if version.id === currentVersionId}
-                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                      Activa
-                    </span>
+                  {#if editingNameId === version.id}
+                    <!-- Modo edición de nombre -->
+                    <div class="flex-1 flex items-center gap-2">
+                      <input
+                        type="text"
+                        bind:value={editingName}
+                        placeholder="Nombre de la versión..."
+                        class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        onkeydown={(e) => {
+                          if (e.key === 'Enter') {
+                            saveVersionName(version.id)
+                          } else if (e.key === 'Escape') {
+                            cancelEditingName()
+                          }
+                        }}
+                        autofocus
+                      />
+                      <button
+                        onclick={() => saveVersionName(version.id)}
+                        class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors"
+                        title="Guardar"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                      <button
+                        onclick={cancelEditingName}
+                        class="px-3 py-1.5 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg text-sm transition-colors"
+                        title="Cancelar"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  {:else}
+                    <!-- Modo visualización -->
+                    <h3 class="text-lg font-semibold text-gray-900">
+                      {version.name || `Versión ${version.version_number}`}
+                    </h3>
+                    {#if version.id === currentVersionId}
+                      <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                        Activa
+                      </span>
+                    {/if}
+                    <!-- Botón de favorito -->
+                    <button
+                      onclick={() => toggleFavorite(version.id, version.is_favorite)}
+                      class="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                      title={version.is_favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                    >
+                      {#if version.is_favorite}
+                        <svg class="w-5 h-5 text-red-500 fill-current" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      {:else}
+                        <svg class="w-5 h-5 text-gray-400 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                      {/if}
+                    </button>
+                    <!-- Botón para editar nombre -->
+                    <button
+                      onclick={() => startEditingName(version)}
+                      class="p-1.5 hover:bg-gray-100 rounded-full transition-colors"
+                      title="Editar nombre"
+                    >
+                      <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
                   {/if}
                 </div>
                 <p class="text-sm text-gray-500 mb-3">

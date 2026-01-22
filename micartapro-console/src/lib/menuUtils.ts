@@ -590,19 +590,19 @@ export function generateSlugUrl(slug: string, lang?: string): string {
  * Obtiene todas las versiones de un menú ordenadas por número de versión (descendente)
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
- * @returns Array de versiones con id, version_number, created_at
+ * @returns Array de versiones con id, version_number, created_at, name, is_favorite
  */
 export async function getMenuVersions(
   menuId: string,
   accessToken: string
-): Promise<Array<{ id: string; version_number: number; created_at: string; content?: any }>> {
+): Promise<Array<{ id: string; version_number: number; created_at: string; name: string | null; is_favorite: boolean; content?: any }>> {
   try {
     // Usar cliente autenticado reutilizable
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
     
     const { data, error } = await supabase
       .from('menu_versions')
-      .select('id, version_number, created_at, content')
+      .select('id, version_number, created_at, name, is_favorite, content')
       .eq('menu_id', menuId)
       .order('version_number', { ascending: false })
     
@@ -615,6 +615,106 @@ export async function getMenuVersions(
   } catch (error) {
     console.error('Error en getMenuVersions:', error)
     return []
+  }
+}
+
+/**
+ * Actualiza el nombre de una versión del menú
+ * @param versionId - ID de la versión
+ * @param name - Nuevo nombre para la versión
+ * @param accessToken - Token de autenticación
+ * @returns true si se actualizó correctamente, false si hubo error
+ */
+export async function updateVersionName(
+  versionId: string,
+  name: string,
+  accessToken: string
+): Promise<boolean> {
+  try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
+    console.log('🔄 Actualizando nombre de versión:', { versionId, name: name.trim() || null })
+    
+    const { data, error } = await supabase
+      .from('menu_versions')
+      .update({ name: name.trim() || null })
+      .eq('id', versionId)
+      .select('id, name')
+    
+    if (error) {
+      console.error('❌ Error actualizando nombre de versión:', error)
+      console.error('❌ Detalles del error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      // Si es un error 406 o PGRST301, probablemente es un problema de RLS
+      if (error.code === 'PGRST301' || error.message?.includes('406') || error.message?.includes('permission') || error.message?.includes('denied')) {
+        console.error('⚠️ Error de permisos (RLS): La tabla menu_versions requiere una política RLS para UPDATE.')
+        console.error('📋 Solución: Ejecuta el SQL para agregar la política "Users can update their own menu versions" en el SQL Editor de Supabase.')
+      }
+      
+      return false
+    }
+    
+    console.log('✅ Nombre de versión actualizado correctamente:', data)
+    return true
+  } catch (error) {
+    console.error('❌ Error en updateVersionName:', error)
+    return false
+  }
+}
+
+/**
+ * Actualiza el estado de favorito de una versión del menú
+ * @param versionId - ID de la versión
+ * @param isFavorite - Nuevo estado de favorito
+ * @param accessToken - Token de autenticación
+ * @returns true si se actualizó correctamente, false si hubo error
+ */
+export async function updateVersionFavorite(
+  versionId: string,
+  isFavorite: boolean,
+  accessToken: string
+): Promise<boolean> {
+  try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
+    console.log('🔄 Actualizando favorito de versión:', { versionId, isFavorite })
+    
+    const { data, error } = await supabase
+      .from('menu_versions')
+      .update({ is_favorite: isFavorite })
+      .eq('id', versionId)
+      .select('id, is_favorite')
+    
+    if (error) {
+      console.error('❌ Error actualizando favorito de versión:', error)
+      console.error('❌ Detalles del error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      // Si es un error 406 o PGRST301, probablemente es un problema de RLS
+      if (error.code === 'PGRST301' || error.message?.includes('406') || error.message?.includes('permission') || error.message?.includes('denied')) {
+        console.error('⚠️ Error de permisos (RLS): La tabla menu_versions requiere una política RLS para UPDATE.')
+        console.error('📋 Solución: Ejecuta el SQL para agregar la política "Users can update their own menu versions" en el SQL Editor de Supabase.')
+      }
+      
+      return false
+    }
+    
+    console.log('✅ Favorito de versión actualizado correctamente:', data)
+    return true
+  } catch (error) {
+    console.error('❌ Error en updateVersionFavorite:', error)
+    return false
   }
 }
 
