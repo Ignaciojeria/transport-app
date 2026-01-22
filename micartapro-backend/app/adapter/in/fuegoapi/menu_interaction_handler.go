@@ -6,12 +6,14 @@ import (
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
+	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
+	"github.com/google/uuid"
 )
 
 func init() {
@@ -51,6 +53,16 @@ func menuInteractionHandler(
 					Status: http.StatusBadRequest,
 				}
 			}
+
+			// Generar version_id si no viene en el contexto
+			var versionID string
+			if existingVersionID, ok := sharedcontext.VersionIDFromContext(spanCtx); ok && existingVersionID != "" {
+				versionID = existingVersionID
+			} else {
+				versionID = uuid.New().String()
+				spanCtx = sharedcontext.WithVersionID(spanCtx, versionID)
+			}
+
 			if err := publisherManager.Publish(spanCtx, eventprocessing.PublishRequest{
 				Topic:       "micartapro.events",
 				Source:      "micartapro.api.menu.interaction",
@@ -63,8 +75,8 @@ func menuInteractionHandler(
 					Status: http.StatusInternalServerError,
 				}
 			}
-			obs.Logger.InfoContext(spanCtx, "menuInteractionRequest published", "requestBody", body)
-			return http.StatusOK, nil
+			obs.Logger.InfoContext(spanCtx, "menuInteractionRequest published", "requestBody", body, "versionID", versionID)
+			return map[string]string{"versionId": versionID}, nil
 		},
 		option.Summary("menuInteractionRequest"),
 		option.Tags("agents"),

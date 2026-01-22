@@ -1,12 +1,10 @@
 package fuegoapi
 
 import (
-	"micartapro/app/adapter/out/storage"
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
-	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -20,16 +18,14 @@ func init() {
 		searchMenuById,
 		httpserver.New,
 		observability.NewObservability,
-		supabaserepo.NewGetMenuSlugBySlug,
-		storage.NewGetLatestMenuById,
+		supabaserepo.NewGetMenuBySlug,
 	)
 }
 
 func searchMenuById(
 	s httpserver.Server,
 	obs observability.Observability,
-	getMenuSlugBySlug supabaserepo.GetMenuSlugBySlug,
-	getLatestMenuById storage.GetLatestMenuById,
+	getMenuBySlug supabaserepo.GetMenuBySlug,
 ) {
 	fuego.Get(s.Manager, "/menu/slug/{slug}",
 		func(c fuego.ContextNoBody) (events.MenuCreateRequest, error) {
@@ -46,46 +42,28 @@ func searchMenuById(
 				}
 			}
 
-			// Obtener user_id y menu_id desde el slug
-			slugInfo, err := getMenuSlugBySlug(spanCtx, slug)
+			// Obtener el version_id opcional del query parameter
+			versionID := c.QueryParam("version_id")
+
+			// Obtener el menú desde Supabase usando el slug y opcionalmente el version_id
+			menu, err := getMenuBySlug(spanCtx, slug, versionID)
 			if err != nil {
-				if err == supabaserepo.ErrSlugNotFound {
+				if err == supabaserepo.ErrMenuNotFound {
 					return events.MenuCreateRequest{}, fuego.HTTPError{
 						Title:  "menu not found",
 						Detail: "menu with the provided slug was not found",
 						Status: http.StatusNotFound,
 					}
 				}
-				obs.Logger.ErrorContext(spanCtx, "error getting menu slug", "error", err)
+				obs.Logger.ErrorContext(spanCtx, "error getting menu from supabase", "error", err)
 				return events.MenuCreateRequest{}, fuego.HTTPError{
-					Title:  "error getting menu slug",
+					Title:  "error getting menu",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
 				}
 			}
 
-			// Agregar user_id al contexto para que GetLatestMenuById pueda usarlo
-			spanCtx = sharedcontext.WithUserID(spanCtx, slugInfo.UserID)
-
-			// Obtener el menú desde el storage
-			menu, err := getLatestMenuById(spanCtx, slugInfo.MenuID)
-			if err != nil {
-				if err == storage.ErrMenuNotFound {
-					return events.MenuCreateRequest{}, fuego.HTTPError{
-						Title:  "menu not found",
-						Detail: "menu was not found in storage",
-						Status: http.StatusNotFound,
-					}
-				}
-				obs.Logger.ErrorContext(spanCtx, "error getting menu from storage", "error", err)
-				return events.MenuCreateRequest{}, fuego.HTTPError{
-					Title:  "error getting menu from storage",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
-
-			obs.Logger.InfoContext(spanCtx, "menu found successfully", "slug", slug, "menuID", slugInfo.MenuID)
+			obs.Logger.InfoContext(spanCtx, "menu found successfully", "slug", slug, "menuID", menu.ID, "versionID", versionID)
 			return menu, nil
 		},
 		option.Summary("searchMenuById"),

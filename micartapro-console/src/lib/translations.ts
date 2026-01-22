@@ -61,7 +61,13 @@ export interface Translations {
     updatePriceMessage: string
     deleteItemMessage: string
     updateWhatsAppMessage: string
-  }
+      useThisMenu: string
+      activating: string
+      discardMenuTitle: string
+      discardMenuMessage: string
+      discardMenuConfirm: string
+      discardMenuCancel: string
+    }
   
   // MenuPreview.svelte
   preview: {
@@ -138,7 +144,13 @@ export const translations: Record<Language, Translations> = {
       addDessertsMessage: 'Agrega uno o varios postres a mi carta',
       updatePriceMessage: 'Actualiza el precio de uno de mis platos',
       deleteItemMessage: 'Elimina un item de mi carta',
-      updateWhatsAppMessage: 'Actualiza mi número de WhatsApp'
+      updateWhatsAppMessage: 'Actualiza mi número de WhatsApp',
+      useThisMenu: 'Usar este menú',
+      activating: 'Activando...',
+      discardMenuTitle: '¿Descartar este menú?',
+      discardMenuMessage: 'Tienes un menú pendiente de aceptar. Si retrocedes, este menú no se activará.',
+      discardMenuConfirm: 'Sí, descartar',
+      discardMenuCancel: 'Cancelar'
     },
     preview: {
       loading: 'Cargando tu carta...',
@@ -217,6 +229,12 @@ export const translations: Record<Language, Translations> = {
       updatePriceMessage: 'Atualize o preço de um dos meus pratos',
       deleteItemMessage: 'Exclua um item da minha carta',
       updateWhatsAppMessage: 'Atualize meu número do WhatsApp',
+      useThisMenu: 'Usar este cardápio',
+      activating: 'Ativando...',
+      discardMenuTitle: 'Descartar este cardápio?',
+      discardMenuMessage: 'Você tem um cardápio pendente de aceitar. Se voltar, este cardápio não será ativado.',
+      discardMenuConfirm: 'Sim, descartar',
+      discardMenuCancel: 'Cancelar',
       createMenuMessage: 'Quero criar um cardápio para um restaurante',
       organizeDishesMessage: 'Preciso de ajuda para organizar meus pratos',
       viewPricesMessage: 'Como funciona o sistema de preços?',
@@ -292,7 +310,13 @@ export const translations: Record<Language, Translations> = {
       addDessertsMessage: 'Add one or more desserts to my menu',
       updatePriceMessage: 'Update the price of one of my dishes',
       deleteItemMessage: 'Delete an item from my menu',
-      updateWhatsAppMessage: 'Update my WhatsApp number'
+      updateWhatsAppMessage: 'Update my WhatsApp number',
+      useThisMenu: 'Use this menu',
+      activating: 'Activating...',
+      discardMenuTitle: 'Discard this menu?',
+      discardMenuMessage: 'You have a menu pending acceptance. If you go back, this menu will not be activated.',
+      discardMenuConfirm: 'Yes, discard',
+      discardMenuCancel: 'Cancel'
     },
     preview: {
       loading: 'Loading your menu...',

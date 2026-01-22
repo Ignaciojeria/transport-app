@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, fetchEntitlement, calculateTrialDaysRemaining, getMenuSlug, createMenuSlug, generateSlugUrl, type Entitlement } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, fetchEntitlement, calculateTrialDaysRemaining, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, type Entitlement } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -24,6 +24,7 @@
     showExploreButton?: boolean
     imageUrl?: string
     isPreview?: boolean // Indica si es un preview pendiente de enviar
+    pendingVersionId?: string // ID de la versión pendiente de activar
   }
 
   let messages: ChatMessage[] = $state([])
@@ -54,6 +55,10 @@
   let videoRef: HTMLVideoElement | null = $state(null) // Referencia al video
   let uploadingPhoto = $state(false) // Estado de subida de foto
   let pendingPhotoUrl = $state<string | null>(null) // URL de la foto pendiente de enviar
+  let isActivatingVersion = $state(false) // Estado de activación de versión
+  let versionActivated = $state(false) // Flag para saber si la versión ya fue activada
+  let showDiscardModal = $state(false) // Modal de confirmación para descartar menú
+  let pendingNavigation: (() => void) | null = $state(null) // Callback para ejecutar después de confirmar descarte
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -142,64 +147,215 @@
     }
   }
 
-  onMount(async () => {
+  // Función para verificar si hay un menú pendiente
+  function hasPendingMenu(): boolean {
+    const hasPending = messages.some(msg => msg.pendingVersionId && !versionActivated)
+    console.log('🔍 hasPendingMenu - resultado:', hasPending, {
+      messages: messages.map(m => ({ id: m.id, pendingVersionId: m.pendingVersionId })),
+      versionActivated
+    })
+    return hasPending
+  }
+
+  // Función para manejar la navegación hacia atrás
+  function handleBackNavigation(event?: PopStateEvent) {
+    if (hasPendingMenu()) {
+      // Prevenir la navegación por defecto volviendo a la misma página
+      if (event) {
+        // Volver a la misma página para interceptar el retroceso
+        window.history.pushState(null, '', window.location.href)
+      }
+      
+      // Mostrar modal de confirmación
+      showDiscardModal = true
+      pendingNavigation = async () => {
+        // Limpiar el pendingVersionId del mensaje
+        messages = messages.map(msg => ({
+          ...msg,
+          pendingVersionId: undefined
+        }))
+        versionActivated = false
+        showDiscardModal = false
+        pendingNavigation = null
+        
+        // Actualizar menuUrl para que no incluya version_id (mostrar versión actual)
+        if (menuId && session?.access_token) {
+          try {
+            const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+            if (url) {
+              menuUrl = url
+              // Forzar recarga del iframe
+              iframeKey++
+            }
+          } catch (err) {
+            console.error('Error actualizando URL del menú después de descartar:', err)
+          }
+        }
+        
+        // Ejecutar la navegación después de limpiar
+        setTimeout(() => {
+          window.history.back()
+        }, 100)
+      }
+    }
+  }
+
+  // Función para confirmar descarte
+  async function confirmDiscard() {
+    if (pendingNavigation) {
+      await pendingNavigation()
+      pendingNavigation = null
+    }
+  }
+
+  // Función para cancelar descarte
+  function cancelDiscard() {
+    showDiscardModal = false
+    pendingNavigation = null
+  }
+
+  onMount(() => {
     // No mostrar mensajes inicialmente, solo los botones
     messages = []
     
+    // Agregar un estado inicial al historial para poder interceptar el retroceso
+    window.history.pushState(null, '', window.location.href)
+    
+    // Listener para detectar navegación hacia atrás
+    const handlePopState = (event: PopStateEvent) => {
+      handleBackNavigation(event)
+    }
+    
+    // Listener para detectar cierre de página/pestaña
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (hasPendingMenu()) {
+        event.preventDefault()
+        event.returnValue = '' // Chrome requiere returnValue
+        return '' // Algunos navegadores requieren return
+      }
+    }
+    
+    window.addEventListener('popstate', handlePopState)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    
     // Actualizar menuUrl cuando cambie el idioma
     $effect(() => {
-      if (menuUrl && userId && menuId) {
+      if (menuUrl && userId && menuId && session?.access_token) {
         // Reconstruir la URL con el idioma actual
-        menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+        // Extraer version_id de la URL actual si existe
+        const currentUrl = new URL(menuUrl)
+        const currentVersionId = currentUrl.searchParams.get('version_id')
+        generateMenuUrl(menuId, session.access_token, currentLanguage, currentVersionId || undefined)
+          .then(newUrl => {
+            if (newUrl) {
+              menuUrl = newUrl
+            }
+          })
+          .catch(err => {
+            console.error('Error actualizando URL del menú:', err)
+          })
       }
     })
     
     // Cargar menuID al montar el componente
-    if (userId) {
-      try {
-        const id = await getLatestMenuId(userId)
-        if (id) {
-          menuId = id
-          
-          // Hacer polling para validar que el menú exista en GCS
-          checkingMenu = true
-          const exists = await pollUntilMenuExists(userId, id)
-          
-          if (exists) {
-            menuReady = true
-          } else {
-            // Si no se encontró después de todos los intentos, mostrar mensaje
-            const errorMessage: ChatMessage = {
-              id: `menu-not-found-${Date.now()}`,
-              role: 'assistant',
-              content: $tStore.chat.errorNoMenu,
-              timestamp: new Date()
+    ;(async () => {
+      if (userId) {
+        try {
+          const id = await getLatestMenuId(userId)
+          if (id) {
+            menuId = id
+            
+            // Hacer polling para validar que el menú exista en GCS
+            checkingMenu = true
+            const exists = await pollUntilMenuExists(userId, id)
+            
+            if (exists) {
+              menuReady = true
+            } else {
+              // Si no se encontró después de todos los intentos, mostrar mensaje
+              const errorMessage: ChatMessage = {
+                id: `menu-not-found-${Date.now()}`,
+                role: 'assistant',
+                content: $tStore.chat.errorNoMenu,
+                timestamp: new Date()
+              }
+              messages = [...messages, errorMessage]
             }
-            messages = [...messages, errorMessage]
+            
+            checkingMenu = false
+          } else {
+            // No hay menuId en la base de datos
+            menuReady = false
           }
-          
+        } catch (err) {
+          console.error('Error cargando menuID:', err)
           checkingMenu = false
-        } else {
-          // No hay menuId en la base de datos
           menuReady = false
         }
-      } catch (err) {
-        console.error('Error cargando menuID:', err)
-        checkingMenu = false
-        menuReady = false
       }
+    })()
+    
+    // Cleanup al desmontar
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+      window.removeEventListener('beforeunload', handleBeforeUnload)
     }
   })
 
   async function togglePreview() {
     if (showPreview) {
+      // Verificar si hay un menú pendiente
+      const hasPending = hasPendingMenu()
+      console.log('🔍 togglePreview - Cerrando vista previa. hasPendingMenu:', hasPending)
+      console.log('🔍 togglePreview - messages:', messages.map(m => ({ id: m.id, pendingVersionId: m.pendingVersionId })))
+      console.log('🔍 togglePreview - versionActivated:', versionActivated)
+      
+      // Si hay un menú pendiente, mostrar modal de confirmación
+      if (hasPending) {
+        console.log('⚠️ togglePreview - Mostrando modal de descarte')
+        showDiscardModal = true
+        pendingNavigation = async () => {
+          console.log('✅ togglePreview - Confirmando descarte')
+          // Limpiar el pendingVersionId del mensaje
+          messages = messages.map(msg => ({
+            ...msg,
+            pendingVersionId: undefined
+          }))
+          versionActivated = false
+          showDiscardModal = false
+          pendingNavigation = null
+          
+          // Actualizar menuUrl para que no incluya version_id (mostrar versión actual)
+          if (menuId && session?.access_token) {
+            try {
+              const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+              if (url) {
+                menuUrl = url
+                // Forzar recarga del iframe
+                iframeKey++
+              }
+            } catch (err) {
+              console.error('Error actualizando URL del menú después de descartar:', err)
+            }
+          }
+          
+          // Cerrar la vista previa
+          showPreview = false
+        }
+        return
+      }
+      // Si no hay menú pendiente, cerrar directamente
+      console.log('✅ togglePreview - No hay menú pendiente, cerrando directamente')
       showPreview = false
       return
     }
 
-    if (!menuUrl && userId && menuId) {
+    if (!menuUrl && userId && menuId && session?.access_token) {
       try {
-        menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+        const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+        if (url) {
+          menuUrl = url
+        }
       } catch (err) {
         console.error('Error cargando menú:', err)
       }
@@ -280,6 +436,92 @@
       slugPreview = ''
     }
   })
+
+  async function handleUseThisMenu(versionId: string) {
+    console.log('🚀 handleUseThisMenu llamado con:', { versionId, menuId, hasAccessToken: !!session?.access_token })
+    
+    if (!menuId || !session?.access_token || !versionId) {
+      console.error('❌ Faltan parámetros:', { menuId, hasAccessToken: !!session?.access_token, versionId })
+      const lang = currentLanguage
+      alert(
+        lang === 'ES'
+          ? 'No se puede activar: falta información del menú'
+          : lang === 'PT'
+          ? 'Não é possível ativar: falta informação do cardápio'
+          : 'Cannot activate: missing menu information'
+      )
+      return
+    }
+
+    isActivatingVersion = true
+
+    try {
+      console.log('🔄 Iniciando actualización de current_version_id:', { menuId, versionId, accessTokenLength: session.access_token.length })
+      const success = await updateCurrentVersionId(menuId, versionId, session.access_token)
+      console.log('📊 Resultado de updateCurrentVersionId:', success)
+      
+      if (success) {
+        versionActivated = true
+        
+        // Actualizar el mensaje para quitar el botón "Usar este menú"
+        messages = messages.map(msg => {
+          if (msg.pendingVersionId === versionId) {
+            return {
+              ...msg,
+              pendingVersionId: undefined,
+              content: currentLanguage === 'ES' 
+                ? '✅ Menú actualizado y activado. Ya puedes compartirlo.'
+                : currentLanguage === 'PT'
+                ? '✅ Cardápio atualizado e ativado. Agora você pode compartilhar.'
+                : '✅ Menu updated and activated. You can now share it.'
+            }
+          }
+          return msg
+        })
+
+        // Actualizar la URL del menú para mostrar la versión activada (sin version_id, usa current_version_id)
+        if (userId && menuId && session?.access_token) {
+          const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+          if (url) {
+            menuUrl = url
+          }
+        }
+        
+        // Forzar recarga del iframe para mostrar la versión activada
+        iframeKey++
+        
+        // Mostrar mensaje de éxito
+        const lang = currentLanguage
+        const successMsg = lang === 'ES'
+          ? '¡Menú activado exitosamente!'
+          : lang === 'PT'
+          ? 'Cardápio ativado com sucesso!'
+          : 'Menu activated successfully!'
+        
+        const activatedMessage: ChatMessage = {
+          id: `activated-${Date.now()}`,
+          role: 'assistant',
+          content: successMsg,
+          timestamp: new Date()
+        }
+        messages = [...messages, activatedMessage]
+      } else {
+        throw new Error('Failed to update version')
+      }
+    } catch (error: any) {
+      console.error('Error activando versión:', error)
+      const lang = currentLanguage
+      alert(
+        lang === 'ES'
+          ? 'Error al activar el menú. Intenta nuevamente.'
+          : lang === 'PT'
+          ? 'Erro ao ativar o cardápio. Tente novamente.'
+          : 'Error activating menu. Please try again.'
+      )
+    } finally {
+      isActivatingVersion = false
+    }
+  }
 
   async function shareOnWhatsApp() {
     if (!menuId || !session?.access_token) {
@@ -539,6 +781,10 @@
       }
 
       const data = await response.json()
+      console.log('📥 Respuesta completa del backend:', JSON.stringify(data, null, 2))
+      console.log('📥 versionId recibido:', data.versionId)
+      console.log('📥 Tipo de data.versionId:', typeof data.versionId)
+      console.log('📥 data.versionId es truthy?', !!data.versionId)
 
       // Agregar respuesta inicial del asistente
       const initialMessage: ChatMessage = {
@@ -549,30 +795,49 @@
       }
       messages = [...messages, initialMessage]
 
-      // Iniciar polling para esperar la actualización del menú
-      if (userId && menuId) {
+      // Iniciar polling para esperar la actualización del menú usando versionID
+      if (data.versionId && session?.access_token) {
+        console.log('✅ Entrando en bloque con versionId, iniciando polling...')
         try {
-          const updatedMenu = await pollUntilMenuUpdated(userId, menuId, idempotencyKey)
+          // Usar el versionID retornado para consultar directamente Supabase
+          // Aumentamos los intentos a 120 (2 minutos) para procesos que pueden tardar más
+          const updatedMenu = await pollUntilVersionExists(data.versionId, session.access_token, 120, 1000)
           
           // Agregar mensaje de confirmación con el menú actualizado
+          // Incluir el versionId pendiente para mostrar el botón "Usar este menú"
+          console.log('✅ Creando mensaje de éxito con versionId:', data.versionId)
+          console.log('✅ Tipo de versionId:', typeof data.versionId)
+          console.log('✅ versionId es válido?', !!data.versionId && data.versionId.length > 0)
+          
           const successMessage: ChatMessage = {
             id: `success-${Date.now()}`,
             role: 'assistant',
             content: $tStore.chat.successUpdated,
             timestamp: new Date(),
-            showExploreButton: true // Marcar que este mensaje debe mostrar el botón
+            pendingVersionId: data.versionId // Versión pendiente de activar
           }
+          console.log('✅ Mensaje de éxito creado:', JSON.stringify(successMessage, null, 2))
           messages = [...messages, successMessage]
+          console.log('✅ Total de mensajes después de agregar éxito:', messages.length)
+          console.log('✅ Último mensaje tiene pendingVersionId:', messages[messages.length - 1].pendingVersionId)
+          console.log('✅ Valor exacto de pendingVersionId:', messages[messages.length - 1].pendingVersionId)
+          versionActivated = false // Resetear el flag cuando hay nueva versión
           
           // Actualizar la URL del menú y forzar recarga del iframe
-          menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
-          // Incrementar iframeKey para forzar recarga del iframe
-          iframeKey++
+          // Incluir version_id en la URL para mostrar la versión específica (interacción)
+          if (userId && menuId && session?.access_token) {
+            const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, data.versionId)
+            if (url) {
+              menuUrl = url
+            }
+            // Incrementar iframeKey para forzar recarga del iframe
+            iframeKey++
+          }
           
           // Abrir automáticamente la vista previa para mostrar los cambios
           showPreview = true
         } catch (pollError: any) {
-          console.error('Error en polling:', pollError)
+          console.error('❌ Error en polling:', pollError)
           
           // Agregar mensaje de error del polling
           const errorMessage: ChatMessage = {
@@ -582,6 +847,49 @@
             timestamp: new Date()
           }
           messages = [...messages, errorMessage]
+        }
+      } else {
+        console.log('⚠️ No hay versionId o access_token. versionId:', data.versionId, 'access_token:', !!session?.access_token)
+        // Fallback: si no viene versionId, usar el método anterior (GCS)
+        if (userId && menuId) {
+          try {
+            const updatedMenu = await pollUntilMenuUpdated(userId, menuId, idempotencyKey)
+            
+            // Agregar mensaje de confirmación con el menú actualizado
+            // Nota: En el fallback no tenemos versionId, así que no podemos mostrar el botón "Usar este menú"
+            const successMessage: ChatMessage = {
+              id: `success-${Date.now()}`,
+              role: 'assistant',
+              content: $tStore.chat.successUpdated,
+              timestamp: new Date(),
+              showExploreButton: true
+            }
+            messages = [...messages, successMessage]
+            versionActivated = false // Resetear el flag
+            
+            // Actualizar la URL del menú y forzar recarga del iframe
+            // Sin version_id para mostrar la versión actual (visualización simple)
+            if (session?.access_token) {
+              const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+              if (url) {
+                menuUrl = url
+              }
+            }
+            iframeKey++
+            
+            // Abrir automáticamente la vista previa para mostrar los cambios
+            showPreview = true
+          } catch (pollError: any) {
+            console.error('Error en polling (fallback):', pollError)
+            
+            const errorMessage: ChatMessage = {
+              id: `poll-error-${Date.now()}`,
+              role: 'assistant',
+              content: $tStore.chat.errorPolling.replace('{message}', pollError.message || 'Error desconocido'),
+              timestamp: new Date()
+            }
+            messages = [...messages, errorMessage]
+          }
         }
       }
 
@@ -1086,7 +1394,10 @@
     {:else}
       <div class="max-w-3xl mx-auto space-y-6 pt-4">
         {#each messages as message (message.id)}
-          <Message message={message} onExploreOptions={resetToOptions} />
+          <Message 
+            message={message} 
+            onExploreOptions={resetToOptions}
+          />
         {/each}
 
         {#if isLoading || uploadingPhoto}
@@ -1197,8 +1508,8 @@
     <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
       <button
         onclick={() => {
-          showPreview = false
           linkWasCopied = false
+          togglePreview()
         }}
         class="p-2 hover:bg-gray-100 rounded-full transition-colors"
         aria-label="Volver"
@@ -1241,37 +1552,93 @@
       {/if}
     </div>
 
-    <!-- Botón flotante de compartir (barra fija dentro del contenedor para desktop) -->
+    <!-- Botón flotante: "Usar este menú" o "Compartir" según el estado -->
     {#if menuUrl}
-      <div class="hidden md:block bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 safe-area-inset-bottom shadow-lg">
-        <button
-          onclick={shareOnWhatsApp}
-          class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
-          title={$tStore.chat.shareLink}
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-          </svg>
-          <span>{currentLanguage === 'ES' ? 'Compartir Carta' : currentLanguage === 'PT' ? 'Compartilhar Cardápio' : 'Share Menu'}</span>
-        </button>
-      </div>
+      {@const pendingVersion = messages.find(msg => msg.pendingVersionId && !versionActivated)}
+      {#if pendingVersion}
+        {console.log('🔍 Botón "Usar este menú" visible - pendingVersion:', { id: pendingVersion.id, pendingVersionId: pendingVersion.pendingVersionId, versionActivated })}
+        <!-- Debug: {console.log('🔍 Botón "Usar este menú" - pendingVersion:', pendingVersion)} -->
+        <!-- Botón "Usar este menú" cuando hay versión pendiente (desktop) -->
+        <div class="hidden md:block bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 safe-area-inset-bottom shadow-lg">
+          <button
+            onclick={() => {
+              console.log('🔘 Click en "Usar este menú" - pendingVersionId:', pendingVersion.pendingVersionId)
+              handleUseThisMenu(pendingVersion.pendingVersionId!)
+            }}
+            disabled={isActivatingVersion}
+            class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
+            title={$tStore.chat.useThisMenu || 'Usar este menú'}
+          >
+            {#if isActivatingVersion}
+              <div class="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+              <span>{$tStore.chat.activating || 'Activando...'}</span>
+            {:else}
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>{$tStore.chat.useThisMenu || 'Usar este menú'}</span>
+            {/if}
+          </button>
+        </div>
+      {:else}
+        <!-- Botón "Compartir" cuando no hay versión pendiente (desktop) -->
+        <div class="hidden md:block bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 safe-area-inset-bottom shadow-lg">
+          <button
+            onclick={shareOnWhatsApp}
+            class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
+            title={$tStore.chat.shareLink}
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+            <span>{currentLanguage === 'ES' ? 'Compartir Carta' : currentLanguage === 'PT' ? 'Compartilhar Cardápio' : 'Share Menu'}</span>
+          </button>
+        </div>
+      {/if}
     {/if}
   </div>
 
-<!-- Botón flotante de compartir (fixed fuera del contenedor para móviles) -->
+<!-- Botón flotante: "Usar este menú" o "Compartir" según el estado (móviles) -->
 {#if menuUrl && showPreview && !showSlugModal}
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl md:hidden">
-    <button
-      onclick={shareOnWhatsApp}
-      class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
-      title={$tStore.chat.shareLink}
-    >
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-      </svg>
-      <span>{currentLanguage === 'ES' ? 'Compartir Carta' : currentLanguage === 'PT' ? 'Compartilhar Cardápio' : 'Share Menu'}</span>
-    </button>
-  </div>
+  {@const pendingVersion = messages.find(msg => msg.pendingVersionId && !versionActivated)}
+      {#if pendingVersion}
+        <!-- Botón "Usar este menú" cuando hay versión pendiente (móvil) -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl md:hidden">
+          <button
+            onclick={() => {
+              console.log('🔘 Click en "Usar este menú" (móvil) - pendingVersionId:', pendingVersion.pendingVersionId)
+              handleUseThisMenu(pendingVersion.pendingVersionId!)
+            }}
+        disabled={isActivatingVersion}
+        class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
+        title={$tStore.chat.useThisMenu || 'Usar este menú'}
+      >
+        {#if isActivatingVersion}
+          <div class="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent"></div>
+          <span>{$tStore.chat.activating || 'Activando...'}</span>
+        {:else}
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{$tStore.chat.useThisMenu || 'Usar este menú'}</span>
+        {/if}
+      </button>
+    </div>
+  {:else}
+    <!-- Botón "Compartir" cuando no hay versión pendiente (móvil) -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl md:hidden">
+      <button
+        onclick={shareOnWhatsApp}
+        class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-3"
+        title={$tStore.chat.shareLink}
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+        <span>{currentLanguage === 'ES' ? 'Compartir Carta' : currentLanguage === 'PT' ? 'Compartilhar Cardápio' : 'Share Menu'}</span>
+      </button>
+    </div>
+  {/if}
 {/if}
 
   <!-- Vista de Crear Slug (se muestra cuando showSlugModal es true) -->
@@ -1480,6 +1847,47 @@
             class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
           >
             {$tStore.chat.upgradeToPro}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Modal de confirmación para descartar menú -->
+{#if showDiscardModal}
+  <div 
+    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[70] flex items-center justify-center p-4"
+    onclick={cancelDiscard}
+    role="dialog"
+    aria-modal="true"
+  >
+    <div 
+      class="relative bg-white rounded-xl md:rounded-2xl shadow-2xl w-full max-w-md"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <!-- Header -->
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-xl font-bold text-gray-900">{$tStore.chat.discardMenuTitle}</h3>
+      </div>
+      
+      <!-- Content -->
+      <div class="p-6">
+        <p class="text-gray-700 mb-6">{$tStore.chat.discardMenuMessage}</p>
+        
+        <!-- Action buttons -->
+        <div class="flex gap-3">
+          <button
+            onclick={cancelDiscard}
+            class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors font-medium"
+          >
+            {$tStore.chat.discardMenuCancel}
+          </button>
+          <button
+            onclick={confirmDiscard}
+            class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium"
+          >
+            {$tStore.chat.discardMenuConfirm}
           </button>
         </div>
       </div>

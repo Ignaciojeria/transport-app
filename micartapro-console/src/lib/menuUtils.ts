@@ -1,6 +1,52 @@
 import { supabase } from './supabase'
 
 const STORAGE_BASE_URL = "https://storage.googleapis.com/micartapro-menus"
+const SUPABASE_URL = 'https://rbpdhapfcljecofrscnj.supabase.co'
+
+// Cache de clientes de Supabase autenticados para evitar múltiples instancias
+const authenticatedClientsCache = new Map<string, any>()
+
+/**
+ * Obtiene o crea un cliente de Supabase autenticado con el token proporcionado
+ * Reutiliza clientes existentes para evitar múltiples instancias
+ * @param accessToken - Token de autenticación
+ * @returns Cliente de Supabase autenticado
+ */
+async function getAuthenticatedSupabaseClient(accessToken: string) {
+  // Si ya existe un cliente para este token, reutilizarlo
+  if (authenticatedClientsCache.has(accessToken)) {
+    return authenticatedClientsCache.get(accessToken)
+  }
+  
+  // Crear nuevo cliente solo si no existe
+  const { createClient } = await import('@supabase/supabase-js')
+  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
+  
+  const client = createClient(SUPABASE_URL, supabaseAnonKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    },
+    auth: {
+      autoRefreshToken: false, // Desactivar auto-refresh para evitar conflictos
+      persistSession: false, // No persistir sesión para clientes autenticados manualmente
+      detectSessionInUrl: false // No detectar sesión en URL
+    }
+  })
+  
+  // Guardar en cache (limitar a 10 clientes para evitar memory leak)
+  if (authenticatedClientsCache.size >= 10) {
+    // Eliminar el más antiguo (FIFO)
+    const firstKey = authenticatedClientsCache.keys().next().value
+    if (firstKey) {
+      authenticatedClientsCache.delete(firstKey)
+    }
+  }
+  
+  authenticatedClientsCache.set(accessToken, client)
+  return client
+}
 
 /**
  * Obtiene los datos del restaurante desde Google Cloud Storage
@@ -60,27 +106,72 @@ export async function getLatestMenuId(userId: string): Promise<string | null> {
 }
 
 /**
- * Genera la URL de la carta del restaurante
- * @param userId - ID del usuario
- * @param menuId - ID del menú
+ * Genera la URL de la carta del restaurante usando slug
+ * @param slug - Slug del menú
  * @param lang - Idioma opcional ('ES', 'PT', 'EN')
+ * @param versionId - ID de la versión opcional. Si se proporciona, se usa esa versión específica (para interacciones)
  * @returns URL completa de la carta
  */
-export function generateMenuUrl(userId: string, menuId: string, lang?: string): string {
+export function generateMenuUrlFromSlug(slug: string, lang?: string, versionId?: string): string {
   const baseUrl = typeof window !== 'undefined' 
     ? window.location.origin.includes('localhost')
       ? 'http://localhost:5173'
-      : 'https://cadorago.web.app'
-    : 'https://cadorago.web.app'
+      : 'https://catalogo.micartapro.com'
+    : 'https://catalogo.micartapro.com'
   
-  let url = `${baseUrl}/?userID=${userId}&menuID=${menuId}`
+  let url = `${baseUrl}/m/${slug}`
   
-  // Agregar parámetro de idioma si se proporciona
+  // Construir query parameters
+  const params = new URLSearchParams()
+  
+  // Agregar version_id si se proporciona (para interacciones)
+  if (versionId) {
+    params.append('version_id', versionId)
+  }
+  
+  // Agregar idioma si se proporciona
   if (lang && ['ES', 'PT', 'EN'].includes(lang)) {
-    url += `&lang=${lang}`
+    params.append('lang', lang)
+  }
+  
+  // Agregar query string si hay parámetros
+  const queryString = params.toString()
+  if (queryString) {
+    url += `?${queryString}`
   }
   
   return url
+}
+
+/**
+ * Genera la URL de la carta del restaurante (obtiene el slug automáticamente)
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @param lang - Idioma opcional ('ES', 'PT', 'EN')
+ * @param versionId - ID de la versión opcional. Si se proporciona, se usa esa versión específica (para interacciones)
+ * @returns Promise con la URL completa de la carta o null si no se encuentra el slug
+ */
+export async function generateMenuUrl(
+  menuId: string, 
+  accessToken: string, 
+  lang?: string, 
+  versionId?: string
+): Promise<string | null> {
+  try {
+    // Obtener el slug del menú
+    const slug = await getMenuSlug(menuId, accessToken)
+    
+    if (!slug) {
+      console.warn('⚠️ No se encontró slug para el menú:', menuId)
+      return null
+    }
+    
+    // Generar URL usando el slug
+    return generateMenuUrlFromSlug(slug, lang, versionId)
+  } catch (error) {
+    console.error('Error generando URL del menú:', error)
+    return null
+  }
 }
 
 /**
@@ -165,6 +256,99 @@ export async function pollUntilMenuUpdated(
   }
   
   throw new Error(`Timeout: No se pudo obtener el menú actualizado después de ${maxAttempts} intentos`)
+}
+
+/**
+ * Hace polling en Supabase hasta que la versión del menú exista
+ * @param versionID - ID de la versión del menú
+ * @param accessToken - Token de autenticación
+ * @param maxAttempts - Número máximo de intentos (default: 120 - ~120 segundos)
+ * @param intervalMs - Intervalo entre intentos en milisegundos (default: 1000)
+ * @returns El contenido del menú cuando la versión existe
+ */
+export async function pollUntilVersionExists(
+  versionID: string,
+  accessToken: string,
+  maxAttempts: number = 120,
+  intervalMs: number = 1000
+): Promise<any> {
+  try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
+    let attempts = 0
+    
+    while (attempts < maxAttempts) {
+      try {
+        const { data, error } = await supabase
+          .from('menu_versions')
+          .select('content')
+          .eq('id', versionID)
+          .single()
+        
+        if (!error && data && data.content) {
+          // Versión encontrada, retornar el contenido
+          return data.content
+        }
+        
+        // Si es error de "no encontrado", continuar polling
+        if (error?.code === 'PGRST116') {
+          await new Promise(resolve => setTimeout(resolve, intervalMs))
+          attempts++
+          continue
+        }
+        
+        // Otro error, loguear y lanzar
+        if (error) {
+          console.error('Error de Supabase:', error)
+          // Si es un error 406, probablemente es un problema de RLS
+          // El 406 puede venir en el mensaje o en el código de error
+          const errorMessage = error.message || ''
+          const errorCode = error.code || ''
+          const errorDetails = error.details || ''
+          
+          if (errorMessage.includes('406') || errorCode.includes('406') || errorDetails.includes('406')) {
+            throw new Error(
+              `❌ Error de permisos (RLS): La tabla menu_versions requiere políticas RLS.\n\n` +
+              `📋 Solución: Ejecuta el SQL en RLS_POLICIES_MENU_VERSIONS.sql en el SQL Editor de Supabase.\n\n` +
+              `Detalle técnico: ${errorMessage || errorDetails || errorCode}`
+            )
+          }
+          
+          // Si es un error de permisos genérico
+          if (errorMessage.includes('permission') || errorMessage.includes('denied') || errorCode === 'PGRST301') {
+            throw new Error(
+              `❌ Error de permisos: Verifica que existan políticas RLS para menu_versions.\n\n` +
+              `Ejecuta: RLS_POLICIES_MENU_VERSIONS.sql en Supabase SQL Editor.\n\n` +
+              `Detalle: ${errorMessage}`
+            )
+          }
+          
+          throw new Error(`Error consultando versión: ${errorMessage || errorCode || 'Error desconocido'}`)
+        }
+        
+        // Esperar antes del siguiente intento
+        await new Promise(resolve => setTimeout(resolve, intervalMs))
+        attempts++
+      } catch (error: any) {
+        // Si es un error de "no encontrado", continuar intentando
+        if (error?.message?.includes('PGRST116') || error?.code === 'PGRST116') {
+          await new Promise(resolve => setTimeout(resolve, intervalMs))
+          attempts++
+          continue
+        }
+        
+        console.error(`Error en intento ${attempts + 1}:`, error)
+        await new Promise(resolve => setTimeout(resolve, intervalMs))
+        attempts++
+      }
+    }
+    
+    throw new Error(`Timeout: No se pudo obtener la versión ${versionID} después de ${maxAttempts} intentos`)
+  } catch (error) {
+    console.error('Error creando cliente de Supabase:', error)
+    throw error
+  }
 }
 
 /**
@@ -282,18 +466,8 @@ export function calculateTrialDaysRemaining(endsAt: string | null | undefined): 
  */
 export async function getMenuSlug(menuId: string, accessToken: string): Promise<string | null> {
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseUrl = 'https://rbpdhapfcljecofrscnj.supabase.co'
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
-    
-    // Crear cliente autenticado con el token
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }
-    })
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
     
     const { data, error } = await supabase
       .from('menu_slugs')
@@ -327,18 +501,8 @@ export async function getMenuSlug(menuId: string, accessToken: string): Promise<
  */
 export async function createMenuSlug(menuId: string, slug: string, accessToken: string): Promise<string | null> {
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabaseUrl = 'https://rbpdhapfcljecofrscnj.supabase.co'
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
-    
-    // Crear cliente autenticado con el token
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      }
-    })
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
     
     // Verificar si el slug ya existe
     const { data: existing, error: checkError } = await supabase
@@ -420,4 +584,97 @@ export function generateSlugUrl(slug: string, lang?: string): string {
   }
   
   return url
+}
+
+/**
+ * Actualiza el current_version_id de un menú en Supabase
+ * @param menuId - ID del menú
+ * @param versionId - ID de la versión a activar
+ * @param accessToken - Token de autenticación
+ * @returns true si se actualizó correctamente, false si hubo error
+ */
+export async function updateCurrentVersionId(
+  menuId: string,
+  versionId: string,
+  accessToken: string
+): Promise<boolean> {
+  try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
+    console.log('🔄 Actualizando current_version_id en tabla menus (Supabase):', { menuId, versionId })
+    console.log('🔄 URL Supabase:', SUPABASE_URL)
+    console.log('🔄 Tabla: menus')
+    console.log('🔄 Operación: UPDATE current_version_id')
+    
+    // Verificar primero que el menú existe y pertenece al usuario
+    const { data: menuData, error: checkError } = await supabase
+      .from('menus')
+      .select('id, user_id, current_version_id')
+      .eq('id', menuId)
+      .single()
+    
+    if (checkError) {
+      console.error('❌ Error verificando menú antes de actualizar:', checkError)
+      
+      // Si es un error 406 o PGRST301, probablemente es un problema de RLS para SELECT
+      if (checkError.code === 'PGRST301' || checkError.message?.includes('406') || checkError.message?.includes('permission') || checkError.message?.includes('denied')) {
+        console.error('⚠️ Error de permisos (RLS): La tabla menus requiere una política RLS para SELECT.')
+        console.error('📋 Solución: Ejecuta el SQL en RLS_POLICIES_MENUS_UPDATE.sql en el SQL Editor de Supabase.')
+        console.error('📋 El SQL creará las políticas: "Users can view their own menus" (SELECT) y "Users can update their own menu current_version_id" (UPDATE)')
+      }
+      
+      // Si es PGRST116, el menú no existe o no tiene permisos para verlo
+      if (checkError.code === 'PGRST116') {
+        console.error('⚠️ Menú no encontrado o sin permisos para verlo. Verifica:')
+        console.error('   1. Que el menuId sea correcto:', menuId)
+        console.error('   2. Que exista una política RLS para SELECT en la tabla menus')
+        console.error('   3. Que el menú pertenezca al usuario autenticado')
+      }
+      
+      return false
+    }
+    
+    if (!menuData) {
+      console.error('❌ Menú no encontrado:', menuId)
+      return false
+    }
+    
+    console.log('✅ Menú encontrado:', menuData)
+    console.log('🔄 current_version_id actual:', menuData.current_version_id)
+    console.log('🔄 current_version_id nuevo:', versionId)
+    
+    // Actualizar current_version_id en la tabla menus
+    const { data, error } = await supabase
+      .from('menus')
+      .update({ current_version_id: versionId })
+      .eq('id', menuId)
+      .select('id, current_version_id')
+
+    if (error) {
+      console.error('❌ Error actualizando current_version_id en tabla menus:', error)
+      console.error('❌ Detalles del error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      })
+      
+      // Si es un error 406 o PGRST301, probablemente es un problema de RLS
+      if (error.code === 'PGRST301' || error.message?.includes('406') || error.message?.includes('permission') || error.message?.includes('denied')) {
+        console.error('⚠️ Error de permisos (RLS): La tabla menus requiere una política RLS para UPDATE.')
+        console.error('📋 Solución: Ejecuta el SQL en RLS_POLICIES_MENUS_UPDATE.sql en el SQL Editor de Supabase.')
+        console.error('📋 El SQL creará la política: "Users can update their own menu current_version_id"')
+      }
+      
+      return false
+    }
+
+    console.log('✅ current_version_id actualizado correctamente en tabla menus:', data)
+    console.log('✅ Verificación: El menú ahora tiene current_version_id =', data[0]?.current_version_id)
+    return true
+  } catch (error) {
+    console.error('❌ Error en updateCurrentVersionId:', error)
+    return false
+  }
 }

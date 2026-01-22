@@ -62,6 +62,11 @@ func (p *GcpPublisherManager) Publish(
 		ce.SetExtension(constants.CloudEventExtensionUserID, userID)
 	}
 
+	// Agregar version ID del contexto como extensión del CloudEvent
+	if versionID, ok := sharedcontext.VersionIDFromContext(ctx); ok {
+		ce.SetExtension(constants.CloudEventExtensionVersionID, versionID)
+	}
+
 	// Encode CloudEvent JSON
 	bytes, err := json.Marshal(ce)
 	if err != nil {

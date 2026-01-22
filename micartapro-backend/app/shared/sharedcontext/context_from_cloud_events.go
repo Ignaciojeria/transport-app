@@ -11,9 +11,11 @@ import (
 
 type idempotencyKeyContextKey struct{}
 type userIDContextKey struct{}
+type versionIDContextKey struct{}
 
 var idempotencyKeyKey = &idempotencyKeyContextKey{}
 var userIDKey = &userIDContextKey{}
+var versionIDKey = &versionIDContextKey{}
 
 func ContextFromCloudEvent(
 	ctx context.Context,
@@ -54,6 +56,11 @@ func ContextFromCloudEvent(
 		ctx = context.WithValue(ctx, userIDKey, userIDStr)
 	}
 
+	// Restaurar version ID del CloudEvent al contexto
+	if versionIDStr, ok := event.Extensions()[constants.CloudEventExtensionVersionID].(string); ok && versionIDStr != "" {
+		ctx = context.WithValue(ctx, versionIDKey, versionIDStr)
+	}
+
 	return ctx
 }
 
@@ -85,4 +92,19 @@ func UserIDFromContext(ctx context.Context) (string, bool) {
 		return "", false
 	}
 	return userID, true
+}
+
+// WithVersionID agrega el version ID al contexto.
+func WithVersionID(ctx context.Context, versionID string) context.Context {
+	return context.WithValue(ctx, versionIDKey, versionID)
+}
+
+// VersionIDFromContext extrae el version ID del contexto.
+// Retorna el valor del version ID y un bool indicando si existe.
+func VersionIDFromContext(ctx context.Context) (string, bool) {
+	versionID, ok := ctx.Value(versionIDKey).(string)
+	if !ok || versionID == "" {
+		return "", false
+	}
+	return versionID, true
 }

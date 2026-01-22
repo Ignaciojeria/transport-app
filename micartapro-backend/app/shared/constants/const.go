@@ -8,4 +8,5 @@ const (
 	CloudEventExtensionTraceID        = "traceid"
 	CloudEventExtensionSpanID         = "spanid"
 	CloudEventExtensionUserID         = "userid"
+	CloudEventExtensionVersionID      = "versionid"
 )

@@ -11,11 +11,18 @@
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
+  const session = $derived(authState.session)
   const currentLanguage = $derived($language)
 
   onMount(async () => {
     if (!userId) {
       error = $tStore.preview.error
+      loading = false
+      return
+    }
+
+    if (!session?.access_token) {
+      error = 'No hay sesión activa'
       loading = false
       return
     }
@@ -29,7 +36,12 @@
         return
       }
 
-      menuUrl = generateMenuUrl(userId, menuId, currentLanguage)
+      const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+      if (url) {
+        menuUrl = url
+      } else {
+        error = 'No se pudo generar la URL del menú. Verifica que el menú tenga un slug configurado.'
+      }
       loading = false
     } catch (err: any) {
       console.error('Error cargando menú:', err)

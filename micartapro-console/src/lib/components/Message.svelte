@@ -9,9 +9,13 @@
     showExploreButton?: boolean
     imageUrl?: string
     isPreview?: boolean
+    pendingVersionId?: string
   }
 
-  let { message, onExploreOptions }: { message: Message, onExploreOptions?: () => void } = $props()
+  let { message, onExploreOptions }: { 
+    message: Message, 
+    onExploreOptions?: () => void
+  } = $props()
 </script>
 
 <div class="flex items-start gap-3 {message.role === 'user' ? 'flex-row-reverse' : ''}">
