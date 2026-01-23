@@ -52,6 +52,12 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 					Description: "Lista opcional de opciones de envío/retiro disponibles (PICKUP o DELIVERY).",
 					Items:       schema.GetDeliveryOptionSchema(),
 				},
+				// 6. imageGenerationRequests: Solicitudes de generación de imágenes
+				"imageGenerationRequests": {
+					Type:        genai.TypeArray,
+					Description: "Lista opcional de solicitudes de generación de imágenes para items o sides que requieren imagen. Solo incluir cuando el usuario solicita explícitamente generar o cambiar una imagen.",
+					Items:       schema.GetImageGenerationRequestSchema(),
+				},
 			},
 			// Los requeridos son las estructuras complejas que encapsulan todo
 			//Required: []string{"businessInfo", "menu"},

@@ -20,6 +20,8 @@ import (
 	_ "micartapro/app/shared/infrastructure/auth"
 
 	_ "micartapro/app/adapter/out/agents"
+	_ "micartapro/app/adapter/out/imagegenerator"
+	_ "micartapro/app/adapter/out/imageuploader"
 	_ "micartapro/app/adapter/out/storage"
 	_ "micartapro/app/usecase/billing"
 	_ "micartapro/app/usecase/creem"

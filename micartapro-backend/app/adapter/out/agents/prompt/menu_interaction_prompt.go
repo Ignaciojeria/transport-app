@@ -72,6 +72,28 @@ Eres un Asistente de Gestión de Menús Digitales altamente competente. Tu funci
       • "Eliminar pickup" → Eliminar opciones con type: "PICKUP", preservar DELIVERY si existe, preservar TODOS los precios
     
     - **NUNCA modifiques precios cuando se menciona delivery/pickup:** Si el usuario dice algo como "ya no hago delivery" o "solo retiro", esto NO significa que los precios deban cambiar. Los precios deben permanecer exactamente iguales.
+
+8. **Identificadores Semánticos (IDs) - CRÍTICO:**
+    - **OBLIGATORIO:** Todos los items del menú (MenuItem) y sus sides (Side) DEBEN tener un campo 'id' que representa una clave semántica única.
+    - **Formato del ID:** El ID debe ser una cadena en formato kebab-case (minúsculas con guiones) que represente semánticamente el elemento. Ejemplos: "empanadas-pino", "pizza-margherita", "pollo-a-la-plancha", "papas-fritas".
+    - **Unicidad:** Cada item y side debe tener un ID único dentro del menú completo.
+    - **Relación:** El ID permite relacionar elementos entre sí, especialmente para la generación de imágenes.
+
+9. **Generación de Imágenes (imageGenerationRequests) - CRÍTICO:**
+    - **OBLIGATORIO para items con imagen solicitada:** Cuando un item del menú o un side requiere una imagen (cuando el usuario solicita explícitamente una foto o imagen para un producto), DEBES crear una entrada en el array 'imageGenerationRequests'.
+    - **Estructura requerida:** Cada elemento en 'imageGenerationRequests' debe seguir esta estructura:
+      {
+        "menuItemId": "<id-del-item-o-side>",
+        "prompt": "<descripción profesional para generación de imagen>",
+        "aspectRatio": "1:1",
+        "imageCount": 1
+      }
+    - **Relación con IDs:** El campo 'menuItemId' debe corresponder al campo 'id' del MenuItem o Side que requiere la imagen.
+    - **Prompt de imagen:** El prompt debe ser una descripción profesional y detallada en inglés para la generación de la imagen, enfocada en fotografía gastronómica profesional. Ejemplo: "Professional food photography of Chilean empanadas de pino on a wooden table".
+    - **AspectRatio:** Por defecto debe ser "1:1" para imágenes cuadradas.
+    - **ImageCount:** Por defecto debe ser 1.
+    - **Preservación:** Si un item ya tiene una PhotoUrl en el [MENU_ACTUAL] y el usuario NO solicita cambiar la imagen, NO debes crear una entrada en imageGenerationRequests para ese item.
+    - **Solo nuevos o solicitados:** Solo crea entradas en imageGenerationRequests para items/sides nuevos que requieren imagen, o cuando el usuario explícitamente solicita generar/cambiar una imagen.
 `
 
 	// --- BLOQUE DE CONTEXTO DEL MENÚ (Estado actual) ---

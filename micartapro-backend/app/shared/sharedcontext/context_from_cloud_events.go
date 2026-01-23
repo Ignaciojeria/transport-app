@@ -12,10 +12,12 @@ import (
 type idempotencyKeyContextKey struct{}
 type userIDContextKey struct{}
 type versionIDContextKey struct{}
+type jwtTokenContextKey struct{}
 
 var idempotencyKeyKey = &idempotencyKeyContextKey{}
 var userIDKey = &userIDContextKey{}
 var versionIDKey = &versionIDContextKey{}
+var jwtTokenKey = &jwtTokenContextKey{}
 
 func ContextFromCloudEvent(
 	ctx context.Context,
@@ -107,4 +109,19 @@ func VersionIDFromContext(ctx context.Context) (string, bool) {
 		return "", false
 	}
 	return versionID, true
+}
+
+// WithJWTToken agrega el JWT token al contexto.
+func WithJWTToken(ctx context.Context, token string) context.Context {
+	return context.WithValue(ctx, jwtTokenKey, token)
+}
+
+// JWTTokenFromContext extrae el JWT token del contexto.
+// Retorna el valor del token y un bool indicando si existe.
+func JWTTokenFromContext(ctx context.Context) (string, bool) {
+	token, ok := ctx.Value(jwtTokenKey).(string)
+	if !ok || token == "" {
+		return "", false
+	}
+	return token, true
 }

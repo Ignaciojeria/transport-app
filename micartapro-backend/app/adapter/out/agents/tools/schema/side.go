@@ -7,6 +7,10 @@ func GetSideSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
+			"id": {
+				Type:        genai.TypeString,
+				Description: "Identificador semántico único del side en formato kebab-case (ej. 'papas-fritas', 'tamaño-grande').",
+			},
 			"name": {
 				Type:        genai.TypeString,
 				Description: "Nombre del acompañamiento (ej. 'Extra de tocino').",
@@ -22,6 +26,6 @@ func GetSideSchema() *genai.Schema {
 				Description: "URL opcional de la imagen del acompañamiento. Debe ser una URL pública accesible.",
 			},
 		},
-		Required: []string{"name", "pricing"},
+		Required: []string{"id", "name", "pricing"},
 	}
 }

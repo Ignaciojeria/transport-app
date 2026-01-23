@@ -41,6 +41,9 @@ func NewJWTAuthMiddleware(tokenValidator auth.SupabaseTokenValidator) JWTAuthMid
 				ctx = sharedcontext.WithUserID(ctx, sub)
 			}
 
+			// Guardar el token en el contexto para uso posterior (ej. Storage API)
+			ctx = sharedcontext.WithJWTToken(ctx, token)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

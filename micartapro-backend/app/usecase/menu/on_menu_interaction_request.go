@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
+
 	"micartapro/app/adapter/out/agents"
+	"micartapro/app/adapter/out/imagegenerator"
+	"micartapro/app/adapter/out/imageuploader"
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
@@ -12,6 +16,7 @@ import (
 	"micartapro/app/shared/sharedcontext"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 )
 
 type OnMenuInteractionRequest func(ctx context.Context, input events.MenuInteractionRequest) (string, error)
@@ -22,14 +27,18 @@ func init() {
 		observability.NewObservability,
 		agents.NewMenuInteractionAgent,
 		eventprocessing.NewPublisherStrategy,
-		supabaserepo.NewGetMenuById)
+		supabaserepo.NewGetMenuById,
+		imagegenerator.NewImageGenerator,
+		imageuploader.NewImageUploader)
 }
 
 func NewOnMenuInteractionRequest(
 	obs observability.Observability,
 	menuInteractionAgent agents.MenuInteractionAgent,
 	publisherManager eventprocessing.PublisherManager,
-	getMenuById supabaserepo.GetMenuById) OnMenuInteractionRequest {
+	getMenuById supabaserepo.GetMenuById,
+	generateImage imagegenerator.GenerateImage,
+	uploadImage imageuploader.UploadImage) OnMenuInteractionRequest {
 	return func(ctx context.Context, input events.MenuInteractionRequest) (string, error) {
 
 		// 1. Verificar y propagar el versionID del contexto para guardar la nueva versión generada
@@ -92,6 +101,18 @@ func NewOnMenuInteractionRequest(
 			}
 			createRequest.ID = input.MenuID
 
+			// Procesar imágenes si hay solicitudes de generación
+			if len(createRequest.ImageGenerationRequests) > 0 {
+				obs.Logger.InfoContext(ctx, "processing_image_generation_requests", "count", len(createRequest.ImageGenerationRequests))
+				
+				if err := processImageGenerationRequests(ctx, obs, &createRequest, generateImage, uploadImage); err != nil {
+					obs.Logger.ErrorContext(ctx, "error_processing_image_generation", "error", err)
+					return "", fmt.Errorf("error al procesar generación de imágenes: %w", err)
+				}
+				
+				obs.Logger.InfoContext(ctx, "image_generation_completed", "count", len(createRequest.ImageGenerationRequests))
+			}
+
 			if err := publisherManager.Publish(ctx, eventprocessing.PublishRequest{
 				Topic:  "micartapro.events",
 				Source: "micartapro.agent.menu.interaction",
@@ -106,5 +127,121 @@ func NewOnMenuInteractionRequest(
 		// ... manejar otros comandos
 
 		return "Lo siento, no pude entender la acción solicitada.", nil
+	}
+}
+
+// processImageGenerationRequests procesa todas las solicitudes de generación de imágenes en paralelo
+func processImageGenerationRequests(
+	ctx context.Context,
+	obs observability.Observability,
+	createRequest *events.MenuCreateRequest,
+	generateImage imagegenerator.GenerateImage,
+	uploadImage imageuploader.UploadImage,
+) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(createRequest.ImageGenerationRequests))
+	
+	// Mapa para almacenar las URLs generadas por menuItemId
+	imageURLs := make(map[string]string)
+	var mu sync.Mutex
+
+	for _, imgReq := range createRequest.ImageGenerationRequests {
+		wg.Add(1)
+		go func(req events.ImageGenerationRequest) {
+			defer wg.Done()
+
+			spanCtx, span := obs.Tracer.Start(ctx, "process_single_image")
+			defer span.End()
+
+			obs.Logger.InfoContext(spanCtx, "generating_image_for_item", "menuItemId", req.MenuItemID, "prompt", req.Prompt)
+
+			// 1. Generar la imagen
+			imageBytes, err := generateImage(spanCtx, req.Prompt, req.AspectRatio, req.ImageCount)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_generating_image", "error", err, "menuItemId", req.MenuItemID)
+				errChan <- fmt.Errorf("error generando imagen para %s: %w", req.MenuItemID, err)
+				return
+			}
+
+			// 2. Crear nombre de archivo único
+			fileName := fmt.Sprintf("%s-%s.png", req.MenuItemID, uuid.New().String()[:8])
+
+			// 3. Subir la imagen a Supabase Storage
+			publicURL, err := uploadImage(spanCtx, imageBytes, fileName)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_uploading_image", "error", err, "menuItemId", req.MenuItemID)
+				errChan <- fmt.Errorf("error subiendo imagen para %s: %w", req.MenuItemID, err)
+				return
+			}
+
+			// 4. Guardar la URL en el mapa
+			mu.Lock()
+			imageURLs[req.MenuItemID] = publicURL
+			mu.Unlock()
+
+			obs.Logger.InfoContext(spanCtx, "image_processed_successfully", "menuItemId", req.MenuItemID, "publicURL", publicURL)
+		}(imgReq)
+	}
+
+	// Esperar a que todas las goroutines terminen
+	wg.Wait()
+	close(errChan)
+
+	// Verificar si hubo errores
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	// 5. Actualizar el menú con las URLs de las imágenes
+	updateMenuWithImageURLs(createRequest, imageURLs, obs, ctx)
+
+	return nil
+}
+
+// updateMenuWithImageURLs actualiza el menú asignando las URLs de las imágenes a los items/sides correspondientes
+func updateMenuWithImageURLs(
+	createRequest *events.MenuCreateRequest,
+	imageURLs map[string]string,
+	obs observability.Observability,
+	ctx context.Context,
+) {
+	for menuItemID, imageURL := range imageURLs {
+		// Buscar el item o side en el menú
+		found := false
+		
+		// Buscar en items
+		for i := range createRequest.Menu {
+			for j := range createRequest.Menu[i].Items {
+				if createRequest.Menu[i].Items[j].ID == menuItemID {
+					createRequest.Menu[i].Items[j].PhotoUrl = imageURL
+					obs.Logger.InfoContext(ctx, "image_url_assigned_to_item", "menuItemId", menuItemID, "imageURL", imageURL)
+					found = true
+					break
+				}
+				
+				// Buscar en sides del item
+				for k := range createRequest.Menu[i].Items[j].Sides {
+					if createRequest.Menu[i].Items[j].Sides[k].ID == menuItemID {
+						createRequest.Menu[i].Items[j].Sides[k].PhotoUrl = imageURL
+						obs.Logger.InfoContext(ctx, "image_url_assigned_to_side", "menuItemId", menuItemID, "imageURL", imageURL)
+						found = true
+						break
+					}
+				}
+				
+				if found {
+					break
+				}
+			}
+			if found {
+				break
+			}
+		}
+		
+		if !found {
+			obs.Logger.WarnContext(ctx, "menu_item_not_found_for_image", "menuItemId", menuItemID)
+		}
 	}
 }

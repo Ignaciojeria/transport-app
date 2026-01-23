@@ -48,12 +48,14 @@ type Pricing struct {
 */
 
 type Side struct {
+	ID       string  `json:"id"`
 	Name     string  `json:"name"`
 	Pricing  Pricing `json:"pricing"`
 	PhotoUrl string  `json:"photoUrl,omitempty"`
 }
 
 type MenuItem struct {
+	ID          string  `json:"id"`
 	Title       string  `json:"title"`
 	Description string  `json:"description,omitempty"`
 	Sides       []Side  `json:"sides,omitempty"`
@@ -107,16 +109,28 @@ type DeliveryOption struct {
 }
 
 /*
+	IMAGE GENERATION
+*/
+
+type ImageGenerationRequest struct {
+	MenuItemID string  `json:"menuItemId"`
+	Prompt     string  `json:"prompt"`
+	AspectRatio string `json:"aspectRatio"`
+	ImageCount  int    `json:"imageCount"`
+}
+
+/*
 	EVENT
 */
 
 type MenuCreateRequest struct {
-	ID              string           `json:"id"`
-	CoverImage      string           `json:"coverImage"`
-	FooterImage     string           `json:"footerImage"`
-	BusinessInfo    BusinessInfo     `json:"businessInfo"`
-	Menu            []MenuCategory   `json:"menu"`
-	DeliveryOptions []DeliveryOption `json:"deliveryOptions,omitempty"`
+	ID                    string                   `json:"id"`
+	CoverImage            string                   `json:"coverImage"`
+	FooterImage           string                   `json:"footerImage"`
+	BusinessInfo          BusinessInfo             `json:"businessInfo"`
+	Menu                  []MenuCategory           `json:"menu"`
+	DeliveryOptions       []DeliveryOption         `json:"deliveryOptions,omitempty"`
+	ImageGenerationRequests []ImageGenerationRequest `json:"imageGenerationRequests,omitempty"`
 }
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {

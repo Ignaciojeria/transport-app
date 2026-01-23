@@ -7,6 +7,10 @@ func GetMenuItemSchema() *genai.Schema {
 	return &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
+			"id": {
+				Type:        genai.TypeString,
+				Description: "Identificador semántico único del item en formato kebab-case (ej. 'empanadas-pino', 'pizza-margherita').",
+			},
 			"title": {
 				Type:        genai.TypeString,
 				Description: "Nombre del producto (ej. 'Hamburguesa Clásica').",
@@ -32,6 +36,6 @@ func GetMenuItemSchema() *genai.Schema {
 				Description: "URL opcional de la imagen del producto. Debe ser una URL pública accesible.",
 			},
 		},
-		Required: []string{"title", "pricing"},
+		Required: []string{"id", "title", "pricing"},
 	}
 }
