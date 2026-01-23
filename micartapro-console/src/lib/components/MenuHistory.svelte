@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getMenuVersions, getCurrentVersionId, updateCurrentVersionId, generateMenuUrlFromSlug, getMenuSlug, updateVersionName, updateVersionFavorite } from '../menuUtils'
+  import { getLatestMenuId, getMenuVersions, getCurrentVersionId, updateCurrentVersionId, generateMenuUrl, updateVersionName, updateVersionFavorite } from '../menuUtils'
   import { language } from '../useLanguage'
 
   interface MenuHistoryProps {
@@ -27,7 +27,7 @@
   let previewVersionId = $state<string | null>(null)
   let previewUrl = $state<string | null>(null)
   let activatingVersionId = $state<string | null>(null)
-  let menuSlug = $state<string | null>(null)
+  let menuId = $state<string | null>(null)
   let iframeKey = $state(0) // Key para forzar recarga del iframe
   let editingNameId = $state<string | null>(null) // ID de la versión cuyo nombre se está editando
   let editingName = $state<string>('') // Nombre temporal mientras se edita
@@ -49,18 +49,14 @@
       error = null
 
       // Obtener menuId
-      const menuId = await getLatestMenuId(userId, session.access_token)
-      if (!menuId) {
+      const currentMenuId = await getLatestMenuId(userId, session.access_token)
+      if (!currentMenuId) {
         error = 'No se encontró un menú'
         loading = false
         return
       }
 
-      // Obtener slug para generar URLs de preview
-      const slug = await getMenuSlug(menuId, session.access_token)
-      if (slug) {
-        menuSlug = slug
-      }
+      menuId = currentMenuId
 
       // Obtener versiones y versión actual en paralelo
       const [versionsData, currentId] = await Promise.all([
@@ -92,15 +88,26 @@
   }
 
   async function previewVersion(versionId: string) {
-    if (!menuSlug) {
-      alert('No se puede previsualizar: falta el slug del menú')
+    if (!menuId || !session?.access_token) {
+      alert('No se puede previsualizar: falta información del menú')
       return
     }
 
-    previewVersionId = versionId
-    previewUrl = generateMenuUrlFromSlug(menuSlug, currentLanguage, versionId)
-    showPreview = true
-    iframeKey++ // Forzar recarga del iframe
+    try {
+      previewVersionId = versionId
+      // Generar URL usando menuId directamente (no requiere slug)
+      const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
+      if (url) {
+        previewUrl = url
+        showPreview = true
+        iframeKey++ // Forzar recarga del iframe
+      } else {
+        alert('No se pudo generar la URL de previsualización')
+      }
+    } catch (err: any) {
+      console.error('Error generando URL de previsualización:', err)
+      alert('Error al generar la URL de previsualización: ' + err.message)
+    }
   }
 
   function closePreview() {

@@ -23,7 +23,7 @@
 </script>
 
 <div 
-  class="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 z-40 shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 {isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col overflow-y-auto"
+  class="w-64 bg-gray-900 text-white h-screen h-[100dvh] fixed left-0 top-0 z-40 shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 {isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col"
 >
   <div class="p-6 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
     <h2 class="text-xl font-bold text-white">MiCartaPro</h2>
@@ -39,7 +39,7 @@
     </button>
   </div>
   
-  <nav class="px-4 py-4 flex-1 min-h-0">
+  <nav class="px-4 py-4 flex-1 overflow-y-auto min-h-0">
     <button
       onclick={() => onSectionChange('menu')}
       class={`w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 ${
@@ -83,8 +83,8 @@
     </button>
   </nav>
   
-  <!-- Botón de cerrar sesión al final -->
-  <div class="p-4 border-t border-gray-700 flex-shrink-0">
+  <!-- Botón de cerrar sesión al final - siempre visible -->
+  <div class="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-900">
     <button
       onclick={handleSignOut}
       class="w-full flex items-center p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white"
