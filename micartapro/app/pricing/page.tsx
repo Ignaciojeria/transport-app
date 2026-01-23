@@ -115,7 +115,7 @@ export default function PricingPage() {
                 <CardHeader className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-t-lg p-8 md:p-12">
                   <div className="text-center">
                     <div className="mb-4">
-                      <span className="text-5xl md:text-6xl font-bold">$15</span>
+                      <span className="text-5xl md:text-6xl font-bold">$3.5</span>
                       <span className="text-2xl md:text-3xl text-blue-100 ml-2">USD</span>
                     </div>
                     <p className="text-blue-100 text-lg mb-2">{t.pricing.monthly}</p>

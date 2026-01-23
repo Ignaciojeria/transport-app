@@ -417,6 +417,14 @@ export default function LandingPage() {
               <h3 className="font-semibold mb-4">{t.footer.contact}</h3>
               <ul className="space-y-2 text-gray-400">
                 <li>
+                  <a 
+                    href="mailto:support@micartapro.com"
+                    className="hover:text-white transition-colors"
+                  >
+                    📧 support@micartapro.com
+                  </a>
+                </li>
+                <li>
                   <button 
                     onClick={openWhatsAppQuote}
                     className="hover:text-white transition-colors text-left"
