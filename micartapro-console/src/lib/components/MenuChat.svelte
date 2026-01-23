@@ -1198,7 +1198,7 @@
     <!-- Messages Container -->
     <div 
       id="messages-container"
-      class="flex-1 overflow-y-auto px-4 py-6 min-h-0 pb-24 md:pb-6"
+      class="flex-1 overflow-y-auto px-4 py-6 min-h-0"
     >
     {#if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
@@ -1293,7 +1293,7 @@
     </div>
 
     <!-- Chat Input -->
-    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10 md:relative fixed bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto" style="bottom: env(safe-area-inset-bottom, 0);">
+    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10 sticky bottom-0 md:relative" style="bottom: env(safe-area-inset-bottom, 0);">
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">
