@@ -90,6 +90,23 @@ export interface Translations {
     redirecting: string
     goToConsole: string
   }
+  
+  // Sidebar.svelte
+  sidebar: {
+    aiAssistant: string
+    history: string
+    gallery: string
+    qrCode: string
+    myPlan: string
+    signOut: string
+    closeMenu: string
+    confirmSignOut: string
+    errorNoSession: string
+    errorNoActiveSubscription: string
+    errorGettingPortal: string
+    errorNoPortalUrl: string
+    errorAccessingPortal: string
+  }
 }
 
 export const translations: Record<Language, Translations> = {
@@ -169,6 +186,21 @@ export const translations: Record<Language, Translations> = {
       message: 'Tu suscripción Pro ha sido activada. Ahora puedes disfrutar de todas las funciones premium.',
       redirecting: 'Redirigiendo a la consola...',
       goToConsole: 'Ir a la consola'
+    },
+    sidebar: {
+      aiAssistant: 'Asistente IA',
+      history: 'Historial',
+      gallery: 'Galería',
+      qrCode: 'Código QR',
+      myPlan: 'Mi Plan',
+      signOut: 'Cerrar sesión',
+      closeMenu: 'Cerrar menú',
+      confirmSignOut: '¿Estás seguro de que deseas cerrar sesión?',
+      errorNoSession: 'No hay sesión activa. Por favor, inicia sesión nuevamente.',
+      errorNoActiveSubscription: 'No se encontró una suscripción activa. Por favor, activa tu plan primero.',
+      errorGettingPortal: 'Error al obtener el portal del consumidor. Por favor, intenta de nuevo.',
+      errorNoPortalUrl: 'No se recibió la URL del portal. Por favor, intenta de nuevo.',
+      errorAccessingPortal: 'Error al acceder al portal del consumidor. Por favor, intenta de nuevo.'
     }
   },
   PT: {
@@ -257,6 +289,21 @@ export const translations: Record<Language, Translations> = {
       message: 'Sua assinatura Pro foi ativada. Agora você pode desfrutar de todos os recursos premium.',
       redirecting: 'Redirecionando para o console...',
       goToConsole: 'Ir para o console'
+    },
+    sidebar: {
+      aiAssistant: 'Assistente IA',
+      history: 'Histórico',
+      gallery: 'Galeria',
+      qrCode: 'Código QR',
+      myPlan: 'Meu Plano',
+      signOut: 'Sair',
+      closeMenu: 'Fechar menu',
+      confirmSignOut: 'Tem certeza de que deseja sair?',
+      errorNoSession: 'Não há sessão ativa. Por favor, faça login novamente.',
+      errorNoActiveSubscription: 'Nenhuma assinatura ativa encontrada. Por favor, ative seu plano primeiro.',
+      errorGettingPortal: 'Erro ao obter o portal do consumidor. Por favor, tente novamente.',
+      errorNoPortalUrl: 'A URL do portal não foi recebida. Por favor, tente novamente.',
+      errorAccessingPortal: 'Erro ao acessar o portal do consumidor. Por favor, tente novamente.'
     }
   },
   EN: {
@@ -335,6 +382,21 @@ export const translations: Record<Language, Translations> = {
       message: 'Your Pro subscription has been activated. You can now enjoy all premium features.',
       redirecting: 'Redirecting to console...',
       goToConsole: 'Go to console'
+    },
+    sidebar: {
+      aiAssistant: 'AI Assistant',
+      history: 'History',
+      gallery: 'Gallery',
+      qrCode: 'QR Code',
+      myPlan: 'My Plan',
+      signOut: 'Sign Out',
+      closeMenu: 'Close menu',
+      confirmSignOut: 'Are you sure you want to sign out?',
+      errorNoSession: 'No active session. Please sign in again.',
+      errorNoActiveSubscription: 'No active subscription found. Please activate your plan first.',
+      errorGettingPortal: 'Error getting customer portal. Please try again.',
+      errorNoPortalUrl: 'Portal URL was not received. Please try again.',
+      errorAccessingPortal: 'Error accessing customer portal. Please try again.'
     }
   }
 }
