@@ -1359,10 +1359,10 @@
       <!-- Sugerencias justo debajo del input -->
       {#if showExamples && currentExampleType}
         <div class="mt-3 px-2">
-          <p class="text-xs text-gray-500 mb-2">{$tStore.chat.examplesLabel}</p>
-          <div class="flex flex-col gap-2">
+          <p class="text-xs text-gray-500 mb-2 md:text-xs">{$tStore.chat.examplesLabel}</p>
+          <div class="flex flex-col gap-1.5 md:gap-2">
             {#each getExampleMessages() as example}
-              <div class="text-sm font-normal text-gray-600 py-1.5">
+              <div class="text-xs md:text-sm font-normal text-gray-600 py-1 md:py-1.5">
                 {example}
               </div>
             {/each}
