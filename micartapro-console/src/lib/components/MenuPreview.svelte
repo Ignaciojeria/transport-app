@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrlFromMenuId, getCurrentVersionId } from '../menuUtils'
   import { t as tStore, language } from '../useLanguage'
 
   let menuUrl = $state<string | null>(null)
@@ -28,7 +28,7 @@
     }
 
     try {
-      const menuId = await getLatestMenuId(userId)
+      const menuId = await getLatestMenuId(userId, session.access_token)
       
       if (!menuId) {
         error = $tStore.preview.errorNoMenu
@@ -36,11 +36,16 @@
         return
       }
 
-      const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+      // Obtener la versión actual para incluirla en la URL
+      // El frontend de cadorago hará GET al endpoint del backend /menu/{menuId}?version_id=...
+      const currentVersionId = await getCurrentVersionId(menuId, session.access_token)
+      
+      // Generar URL usando menuId directamente (el frontend de cadorago hará el GET al backend)
+      const url = generateMenuUrlFromMenuId(menuId, currentLanguage, currentVersionId || undefined)
       if (url) {
         menuUrl = url
       } else {
-        error = 'No se pudo generar la URL del menú. Verifica que el menú tenga un slug configurado.'
+        error = 'No se pudo generar la URL del menú.'
       }
       loading = false
     } catch (err: any) {

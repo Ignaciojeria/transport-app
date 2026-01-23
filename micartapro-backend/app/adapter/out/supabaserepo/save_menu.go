@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/supabasecli"
@@ -96,17 +97,41 @@ func NewSaveMenu(supabase *supabase.Client) SaveMenu {
 			return fmt.Errorf("error marshaling menu content: %w", err)
 		}
 
-		// 3. Crear nueva versión del menú
-		// Usar version_id del contexto si existe, sino crear uno nuevo
+		// 3. Verificar si ya existe una versión con este menu_id y version_number
+		var existingVersion []struct {
+			ID string `json:"id"`
+		}
+
+		data, _, err = supabase.From("menu_versions").
+			Select("id", "", false).
+			Eq("menu_id", menuID.String()).
+			Eq("version_number", strconv.Itoa(nextVersionNumber)).
+			Execute()
+
 		var versionID uuid.UUID
-		if versionIDStr, ok := sharedcontext.VersionIDFromContext(ctx); ok && versionIDStr != "" {
-			var err error
-			versionID, err = uuid.Parse(versionIDStr)
-			if err != nil {
-				return fmt.Errorf("invalid version_id format from context: %w", err)
+		if err == nil && len(data) > 0 {
+			// Ya existe una versión con este menu_id y version_number
+			if err := json.Unmarshal(data, &existingVersion); err == nil && len(existingVersion) > 0 {
+				// Usar el ID existente
+				versionID, err = uuid.Parse(existingVersion[0].ID)
+				if err != nil {
+					return fmt.Errorf("invalid existing version_id format: %w", err)
+				}
 			}
-		} else {
-			versionID = uuid.New()
+		}
+
+		// 4. Si no existe, crear un nuevo version_id
+		// Usar version_id del contexto si existe y no hay versión existente, sino crear uno nuevo
+		if versionID == (uuid.UUID{}) {
+			if versionIDStr, ok := sharedcontext.VersionIDFromContext(ctx); ok && versionIDStr != "" {
+				var err error
+				versionID, err = uuid.Parse(versionIDStr)
+				if err != nil {
+					return fmt.Errorf("invalid version_id format from context: %w", err)
+				}
+			} else {
+				versionID = uuid.New()
+			}
 		}
 		
 		versionRecord := map[string]interface{}{
@@ -116,19 +141,45 @@ func NewSaveMenu(supabase *supabase.Client) SaveMenu {
 			"content":        json.RawMessage(menuContentBytes),
 		}
 
-		// 4. Insertar la nueva versión usando Upsert con la clave única (menu_id, version_number)
-		// Esto asegura que no se dupliquen versiones
+		// 5. Hacer upsert usando id como clave primaria
+		// Si ya existe una versión con ese id, se actualizará
+		// Si no existe, se insertará nueva
 		_, _, err = supabase.From("menu_versions").
-			Upsert(versionRecord, "menu_id,version_number", "", "").
+			Upsert(versionRecord, "id", "", "").
 			Execute()
 
 		if err != nil {
 			return fmt.Errorf("error upserting menu version: %w", err)
 		}
 
-		// 5. Solo actualizar current_version_id si es un menú nuevo (primera versión)
-		// Para menús existentes, la versión quedará como borrador hasta que se confirme con otro endpoint
-		if isNewMenu {
+		// 5. Verificar si el menú tiene current_version_id
+		// Si no tiene (es null o vacío), actualizarlo con la nueva versión
+		var currentMenu []struct {
+			CurrentVersionID *string `json:"current_version_id"`
+		}
+
+		data, _, err = supabase.From("menus").
+			Select("current_version_id", "", false).
+			Eq("id", menuID.String()).
+			Execute()
+
+		if err != nil {
+			return fmt.Errorf("error querying menu for current_version_id: %w", err)
+		}
+
+		shouldUpdateCurrentVersion := isNewMenu
+		if !isNewMenu && len(data) > 0 {
+			if err := json.Unmarshal(data, &currentMenu); err == nil && len(currentMenu) > 0 {
+				// Si current_version_id es null o vacío, actualizarlo
+				if currentMenu[0].CurrentVersionID == nil || *currentMenu[0].CurrentVersionID == "" {
+					shouldUpdateCurrentVersion = true
+				}
+			}
+		}
+
+		// 6. Actualizar current_version_id si es necesario
+		// Para menús nuevos o menús existentes sin current_version_id
+		if shouldUpdateCurrentVersion {
 			updateRecord := map[string]interface{}{
 				"current_version_id": versionID.String(),
 			}

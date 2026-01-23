@@ -366,10 +366,15 @@
       return menuID;
     }
     
-    // Si se está usando slug, el id debería venir en restaurantData
-    // Si no está, intentar obtener desde el slug (último recurso)
-    const slug = getSlugFromUrl();
-    if (slug) {
+    // Si se está usando slug o menuId, el id debería venir en restaurantData
+    // Si no está, intentar obtener desde la URL (último recurso)
+    const urlData = getSlugFromUrl();
+    if (urlData && urlData.value) {
+      // Si es un menuId, usarlo directamente
+      if (urlData.isMenuId) {
+        return urlData.value;
+      }
+      // Si es un slug, el id debería venir en restaurantData
       console.warn('No se pudo obtener el menuId. El backend debería devolver el id del menú.');
     }
     

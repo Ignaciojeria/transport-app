@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { API_BASE_URL } from './config'
 
 const STORAGE_BASE_URL = "https://storage.googleapis.com/micartapro-menus"
 const SUPABASE_URL = 'https://rbpdhapfcljecofrscnj.supabase.co'
@@ -22,6 +23,27 @@ async function getAuthenticatedSupabaseClient(accessToken: string) {
   const { createClient } = await import('@supabase/supabase-js')
   const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
   
+  // Usar un storage key único para evitar conflictos con el cliente principal
+  // El storage key debe ser único por cliente para evitar el warning de múltiples instancias
+  // Usamos un hash del token para crear una clave única pero estable
+  const tokenHash = accessToken.substring(0, 16).replace(/[^a-zA-Z0-9]/g, '')
+  const uniqueStorageKey = `sb-auth-${tokenHash}`
+  
+  // Crear un storage personalizado que use una clave única para aislar este cliente
+  // del cliente principal de Supabase, evitando conflictos de storage
+  const customStorage = {
+    getItem: (key: string) => {
+      // Usar una clave única para este cliente
+      return localStorage.getItem(`${uniqueStorageKey}-${key}`)
+    },
+    setItem: (key: string, value: string) => {
+      localStorage.setItem(`${uniqueStorageKey}-${key}`, value)
+    },
+    removeItem: (key: string) => {
+      localStorage.removeItem(`${uniqueStorageKey}-${key}`)
+    }
+  }
+  
   const client = createClient(SUPABASE_URL, supabaseAnonKey, {
     global: {
       headers: {
@@ -31,7 +53,8 @@ async function getAuthenticatedSupabaseClient(accessToken: string) {
     auth: {
       autoRefreshToken: false, // Desactivar auto-refresh para evitar conflictos
       persistSession: false, // No persistir sesión para clientes autenticados manualmente
-      detectSessionInUrl: false // No detectar sesión en URL
+      detectSessionInUrl: false, // No detectar sesión en URL
+      storage: customStorage // Storage personalizado con clave única para evitar conflictos
     }
   })
   
@@ -81,10 +104,15 @@ export async function fetchRestaurantData(userId: string, menuId: string): Promi
 
 /**
  * Obtiene el menuID más reciente del usuario autenticado
+ * @param userId - ID del usuario
+ * @param accessToken - Token de autenticación
  * @returns El menuID o null si no existe
  */
-export async function getLatestMenuId(userId: string): Promise<string | null> {
+export async function getLatestMenuId(userId: string, accessToken: string): Promise<string | null> {
   try {
+    // Usar cliente autenticado reutilizable
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    
     const { data, error } = await supabase
       .from('user_menus')
       .select('menu_id, created_at')
@@ -94,13 +122,57 @@ export async function getLatestMenuId(userId: string): Promise<string | null> {
       .single()
 
     if (error) {
-      console.error('Error obteniendo menuID:', error)
+      // PRIMERO verificar si es un error de permisos/RLS (406, PGRST301, etc.)
+      // Estos errores tienen prioridad sobre "no encontrado" porque indican un problema de configuración
+      const isPermissionError = 
+        error.code === 'PGRST301' || 
+        error.code === '42P01' || 
+        error.code === '42501' ||
+        error.message?.includes('406') || 
+        error.message?.includes('permission') || 
+        error.message?.includes('denied') || 
+        error.message?.includes('does not exist') ||
+        error.message?.includes('row-level security') ||
+        error.details?.includes('406') ||
+        error.hint?.includes('RLS')
+      
+      if (isPermissionError) {
+        console.error('⚠️ Error de permisos o tabla no existe:')
+        console.error('   - La tabla user_menus no existe, o')
+        console.error('   - Las políticas RLS no están configuradas correctamente')
+        console.error('📋 Solución: Ejecuta el archivo SUPABASE_SETUP_COMPLETE.sql en el SQL Editor de Supabase')
+        console.error('   Este archivo crea la tabla user_menus y configura las políticas RLS necesarias')
+        console.error('❌ Detalles del error:')
+        console.error('   Código:', error.code)
+        console.error('   Mensaje:', error.message)
+        console.error('   Detalles:', error.details)
+        console.error('   Hint:', error.hint)
+        return null
+      }
+      
+      // Si es PGRST116, significa que no se encontró ningún registro (normal si el usuario no tiene menú)
+      if (error.code === 'PGRST116') {
+        console.log('ℹ️ Usuario no tiene menú registrado aún')
+        return null
+      }
+      
+      // Otro tipo de error
+      console.error('❌ Error obteniendo menuID:', error)
+      console.error('   Código:', error.code)
+      console.error('   Mensaje:', error.message)
+      console.error('   Detalles:', error.details)
+      console.error('   Hint:', error.hint)
+      
       return null
     }
 
     return data?.menu_id || null
   } catch (err) {
-    console.error('Error en getLatestMenuId:', err)
+    console.error('❌ Error en getLatestMenuId:', err)
+    if (err instanceof Error) {
+      console.error('   Mensaje:', err.message)
+      console.error('   Stack:', err.stack)
+    }
     return null
   }
 }
@@ -144,12 +216,76 @@ export function generateMenuUrlFromSlug(slug: string, lang?: string, versionId?:
 }
 
 /**
+ * Genera la URL del endpoint del backend para obtener el menú
+ * @param menuId - ID del menú
+ * @param versionId - ID de la versión opcional. Si se proporciona, se usa esa versión específica
+ * @returns URL completa del endpoint del backend
+ */
+export function generateBackendMenuUrl(menuId: string, versionId?: string): string {
+  let url = `${API_BASE_URL}/menu/${encodeURIComponent(menuId)}`
+  
+  // Construir query parameters
+  const params = new URLSearchParams()
+  
+  // Agregar version_id si se proporciona
+  if (versionId) {
+    params.append('version_id', versionId)
+  }
+  
+  // Agregar query string si hay parámetros
+  const queryString = params.toString()
+  if (queryString) {
+    url += `?${queryString}`
+  }
+  
+  return url
+}
+
+/**
+ * Genera la URL de la carta del restaurante usando menu_id directamente
+ * @param menuId - ID del menú
+ * @param lang - Idioma opcional ('ES', 'PT', 'EN')
+ * @param versionId - ID de la versión opcional. Si se proporciona, se usa esa versión específica (para interacciones)
+ * @returns URL completa de la carta usando menu_id
+ */
+export function generateMenuUrlFromMenuId(menuId: string, lang?: string, versionId?: string): string {
+  const baseUrl = typeof window !== 'undefined' 
+    ? window.location.origin.includes('localhost')
+      ? 'http://localhost:5173'
+      : 'https://catalogo.micartapro.com'
+    : 'https://catalogo.micartapro.com'
+  
+  let url = `${baseUrl}/m/${menuId}`
+  
+  // Construir query parameters
+  const params = new URLSearchParams()
+  
+  // Agregar version_id si se proporciona (para interacciones)
+  if (versionId) {
+    params.append('version_id', versionId)
+  }
+  
+  // Agregar idioma si se proporciona
+  if (lang && ['ES', 'PT', 'EN'].includes(lang)) {
+    params.append('lang', lang)
+  }
+  
+  // Agregar query string si hay parámetros
+  const queryString = params.toString()
+  if (queryString) {
+    url += `?${queryString}`
+  }
+  
+  return url
+}
+
+/**
  * Genera la URL de la carta del restaurante (obtiene el slug automáticamente)
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
  * @param lang - Idioma opcional ('ES', 'PT', 'EN')
  * @param versionId - ID de la versión opcional. Si se proporciona, se usa esa versión específica (para interacciones)
- * @returns Promise con la URL completa de la carta o null si no se encuentra el slug
+ * @returns Promise con la URL completa de la carta. Si no hay slug, usa menu_id directamente
  */
 export async function generateMenuUrl(
   menuId: string, 
@@ -158,19 +294,21 @@ export async function generateMenuUrl(
   versionId?: string
 ): Promise<string | null> {
   try {
-    // Obtener el slug del menú
+    // Intentar obtener el slug del menú
     const slug = await getMenuSlug(menuId, accessToken)
     
-    if (!slug) {
-      console.warn('⚠️ No se encontró slug para el menú:', menuId)
-      return null
+    if (slug) {
+      // Si hay slug, generar URL usando el slug
+      return generateMenuUrlFromSlug(slug, lang, versionId)
     }
     
-    // Generar URL usando el slug
-    return generateMenuUrlFromSlug(slug, lang, versionId)
-  } catch (error) {
-    console.error('Error generando URL del menú:', error)
-    return null
+    // Si no hay slug (normal en menús nuevos), usar menu_id directamente
+    // No es un error, es esperado cuando se crea un menú por primera vez
+    return generateMenuUrlFromMenuId(menuId, lang, versionId)
+  } catch (error: any) {
+    // Si hay un error (como 406 cuando no hay slug o políticas RLS), usar menu_id directamente
+    // Esto es normal cuando se crea un menú por primera vez
+    return generateMenuUrlFromMenuId(menuId, lang, versionId)
   }
 }
 
@@ -400,63 +538,6 @@ export async function pollUntilMenuExists(
 }
 
 
-export interface Entitlement {
-  v: number
-  user_id: string
-  plan: string
-  status: string
-  access: boolean
-  starts_at: string
-  ends_at: string
-}
-
-export async function fetchEntitlement(userId: string): Promise<Entitlement | null> {
-  try {
-    // Agregar timestamp para evitar cache y asegurar obtener la versión más reciente
-    const timestamp = Date.now()
-    const entitlementUrl = STORAGE_BASE_URL + '/' + userId + '/entitlement.json?t=' + timestamp
-    const response = await fetch(entitlementUrl, {
-      cache: 'no-store' // Evitar cache del navegador
-    })
-    
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null
-      }
-      console.error('Error al obtener entitlement.json: ' + response.status + ' ' + response.statusText)
-      return null
-    }
-    
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error('Error obteniendo entitlement.json:', error)
-    return null
-  }
-}
-
-export function calculateTrialDaysRemaining(endsAt: string | null | undefined): number | null {
-  if (!endsAt) {
-    return null
-  }
-  
-  try {
-    const endDate = new Date(endsAt)
-    const now = new Date()
-    
-    // Calcular la diferencia en milisegundos
-    const diffMs = endDate.getTime() - now.getTime()
-    
-    // Convertir a días (redondear hacia arriba para mostrar días completos)
-    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
-    
-    // Si ya expiró, retornar 0
-    return Math.max(0, diffDays)
-  } catch (error) {
-    console.error('Error calculando días restantes:', error)
-    return null
-  }
-}
 
 /**
  * Obtiene el slug activo para un menu_id
@@ -474,19 +555,26 @@ export async function getMenuSlug(menuId: string, accessToken: string): Promise<
       .select('slug')
       .eq('menu_id', menuId)
       .eq('is_active', true)
-      .single()
+      .maybeSingle() // Usar maybeSingle() en lugar de single() para manejar cuando no hay slug
 
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No se encontró ningún registro
+      // Manejar errores comunes cuando no hay slug (menú nuevo)
+      if (error.code === 'PGRST116' || error.code === '406' || error.message?.includes('406')) {
+        // No se encontró ningún registro o error 406 (Not Acceptable) - es normal cuando no hay slug
         return null
       }
       console.error('Error obteniendo slug:', error)
       return null
     }
 
+    // Si no hay data, significa que no existe slug para este menú (normal en menús nuevos)
     return data?.slug || null
-  } catch (error) {
+  } catch (error: any) {
+    // Manejar errores 406 específicamente (Not Acceptable - común cuando no hay políticas RLS o no hay slug)
+    if (error?.code === '406' || error?.message?.includes('406') || error?.status === 406) {
+      // Es normal que no haya slug cuando se crea un menú por primera vez
+      return null
+    }
     console.error('Error en getMenuSlug:', error)
     return null
   }

@@ -48,14 +48,20 @@ func NewGetMenuById(supabase *supabase.Client, obs observability.Observability) 
 			return events.MenuCreateRequest{}, ErrMenuNotFound
 		}
 
-		// 2. SIEMPRE usar el current_version_id del menú para obtener el contenido desde menu_versions
-		// No usamos el versionID proporcionado, siempre usamos la versión actual del menú
-		// Esto asegura que el contexto del prompt siempre tenga la versión actual del menú
-		if menuResult[0].CurrentVersionID == nil || *menuResult[0].CurrentVersionID == "" {
-			return events.MenuCreateRequest{}, fmt.Errorf("menu has no current version")
+		// 2. Determinar qué versión usar: si se proporciona version_id, usarlo; si no, usar current_version_id
+		var targetVersionID string
+		if versionID != "" {
+			// Validar que el version_id proporcionado pertenezca al menú
+			targetVersionID = versionID
+			obs.Logger.InfoContext(ctx, "using provided version_id to get content", "menuID", menuID, "versionID", targetVersionID)
+		} else {
+			// Usar la versión actual si no se especifica una versión
+			if menuResult[0].CurrentVersionID == nil || *menuResult[0].CurrentVersionID == "" {
+				return events.MenuCreateRequest{}, fmt.Errorf("menu has no current version")
+			}
+			targetVersionID = *menuResult[0].CurrentVersionID
+			obs.Logger.InfoContext(ctx, "using current_version_id from menu to get content", "menuID", menuID, "currentVersionID", targetVersionID)
 		}
-		targetVersionID := *menuResult[0].CurrentVersionID
-		obs.Logger.InfoContext(ctx, "using current_version_id from menu to get content", "menuID", menuID, "currentVersionID", targetVersionID)
 
 		// 3. Obtener el contenido del menú desde menu_versions usando el version_id determinado
 		// Este es el contenido que se pasará al prompt para que el agente conozca el menú anterior

@@ -15,29 +15,29 @@ import (
 
 func init() {
 	ioc.Registry(
-		searchMenuById,
+		searchMenuBySlug,
 		httpserver.New,
 		observability.NewObservability,
-		supabaserepo.NewGetMenuById,
+		supabaserepo.NewGetMenuBySlug,
 	)
 }
 
-func searchMenuById(
+func searchMenuBySlug(
 	s httpserver.Server,
 	obs observability.Observability,
-	getMenuById supabaserepo.GetMenuById,
+	getMenuBySlug supabaserepo.GetMenuBySlug,
 ) {
-	fuego.Get(s.Manager, "/menu/{menuId}",
+	fuego.Get(s.Manager, "/menu/slug/{slug}",
 		func(c fuego.ContextNoBody) (events.MenuCreateRequest, error) {
-			spanCtx, span := obs.Tracer.Start(c.Context(), "searchMenuById")
+			spanCtx, span := obs.Tracer.Start(c.Context(), "searchMenuBySlug")
 			defer span.End()
 
-			// Obtener el menu_id del parámetro de ruta
-			menuID := c.PathParam("menuId")
-			if menuID == "" {
+			// Obtener el slug del parámetro de ruta
+			slug := c.PathParam("slug")
+			if slug == "" {
 				return events.MenuCreateRequest{}, fuego.HTTPError{
-					Title:  "menuId is required",
-					Detail: "menuId parameter is required",
+					Title:  "slug is required",
+					Detail: "slug parameter is required",
 					Status: http.StatusBadRequest,
 				}
 			}
@@ -45,17 +45,17 @@ func searchMenuById(
 			// Obtener el version_id opcional del query parameter
 			versionID := c.QueryParam("version_id")
 
-			// Obtener el menú desde Supabase usando el menu_id
-			menu, err := getMenuById(spanCtx, menuID, versionID)
+			// Obtener el menú desde Supabase usando el slug y opcionalmente el version_id
+			menu, err := getMenuBySlug(spanCtx, slug, versionID)
 			if err != nil {
 				if err == supabaserepo.ErrMenuNotFound {
 					return events.MenuCreateRequest{}, fuego.HTTPError{
 						Title:  "menu not found",
-						Detail: "menu with the provided menu_id was not found",
+						Detail: "menu with the provided slug was not found",
 						Status: http.StatusNotFound,
 					}
 				}
-				obs.Logger.ErrorContext(spanCtx, "error getting menu from supabase by menu_id", "error", err)
+				obs.Logger.ErrorContext(spanCtx, "error getting menu from supabase", "error", err)
 				return events.MenuCreateRequest{}, fuego.HTTPError{
 					Title:  "error getting menu",
 					Detail: err.Error(),
@@ -63,10 +63,10 @@ func searchMenuById(
 				}
 			}
 
-			obs.Logger.InfoContext(spanCtx, "menu found successfully by menu_id", "menuID", menuID, "versionID", versionID)
+			obs.Logger.InfoContext(spanCtx, "menu found successfully", "slug", slug, "menuID", menu.ID, "versionID", versionID)
 			return menu, nil
 		},
-		option.Summary("searchMenuById"),
+		option.Summary("searchMenuBySlug"),
 		option.Tags("menu"),
-		option.Path("menuId", "string", param.Required()))
+		option.Path("slug", "string", param.Required()))
 }

@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, fetchEntitlement, calculateTrialDaysRemaining, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, type Entitlement } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -41,8 +41,6 @@
   let showExamples = $state(false)
   let currentExampleType: 'address' | 'dishes' | 'desserts' | 'price' | 'delete' | 'whatsapp' | null = $state(null)
   let messageSent = $state(false) // Flag para indicar que se envió un mensaje
-  let showUpgradeModal = $state(false) // Modal de upgrade al copiar link
-  let entitlement = $state<Entitlement | null>(null) // Entitlement del usuario
   let iframeKey = $state(0) // Key para forzar recarga del iframe cuando el menú se actualiza
   let showSlugModal = $state(false) // Modal para crear slug
   let businessName = $state('') // Nombre del negocio
@@ -72,80 +70,7 @@
   const session = $derived(authState.session)
   const currentLanguage = $derived($language)
   
-  // Días restantes del trial calculados desde el entitlement
-  const trialDaysRemaining = $derived(
-    entitlement && entitlement.status === 'trialing' 
-      ? calculateTrialDaysRemaining(entitlement.ends_at)
-      : null
-  )
 
-  async function handleUpgradeToPro() {
-    // Cerrar el modal antes de redirigir
-    showUpgradeModal = false
-    
-    // Validar que el token esté disponible
-    if (!session?.access_token) {
-      console.error('Error: No hay token de autenticación disponible')
-      const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: $tStore.chat.errorNoSession,
-        timestamp: new Date()
-      }
-      messages = [...messages, errorMessage]
-      return
-    }
-    
-    try {
-      const checkoutUrl = `${API_BASE_URL}/checkout`
-      
-      // Hacer fetch con el token de Supabase para obtener la URL de checkout
-      const response = await fetch(checkoutUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error('Error del servidor:', response.status, errorText)
-        const errorMessage: ChatMessage = {
-          id: `error-${Date.now()}`,
-          role: 'assistant',
-          content: `Error al obtener la URL de checkout: ${response.status} ${response.statusText}`,
-          timestamp: new Date()
-        }
-        messages = [...messages, errorMessage]
-        return
-      }
-
-      // El backend devuelve un JSON con checkout_url
-      const data = await response.json()
-      if (data.checkout_url) {
-        window.open(data.checkout_url, '_blank')
-      } else {
-        console.error('No se recibió checkout_url en la respuesta:', data)
-        const errorMessage: ChatMessage = {
-          id: `error-${Date.now()}`,
-          role: 'assistant',
-          content: 'Error: No se recibió la URL de checkout del servidor',
-          timestamp: new Date()
-        }
-        messages = [...messages, errorMessage]
-      }
-    } catch (error) {
-      console.error('Error al abrir checkout:', error)
-      const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: $tStore.chat.errorProcessing.replace('{message}', error instanceof Error ? error.message : 'Error desconocido'),
-        timestamp: new Date()
-      }
-      messages = [...messages, errorMessage]
-    }
-  }
 
   // Función para verificar si hay un menú pendiente
   function hasPendingMenu(): boolean {
@@ -259,9 +184,9 @@
     
     // Cargar menuID al montar el componente
     ;(async () => {
-      if (userId) {
+      if (userId && session?.access_token) {
         try {
-          const id = await getLatestMenuId(userId)
+          const id = await getLatestMenuId(userId, session.access_token)
           if (id) {
             menuId = id
             
@@ -361,29 +286,11 @@
       }
     }
     
-    // Cargar entitlement cuando se abre el modal
-    if (userId && !entitlement) {
-      try {
-        entitlement = await fetchEntitlement(userId)
-      } catch (err) {
-        console.error('Error cargando entitlement:', err)
-      }
-    }
-    
     showPreview = true
   }
 
   async function copyToClipboard() {
     if (!menuUrl) return
-
-    // Siempre recargar entitlement para obtener la versión más reciente
-    if (userId) {
-      try {
-        entitlement = await fetchEntitlement(userId)
-      } catch (err) {
-        console.error('Error cargando entitlement:', err)
-      }
-    }
 
     try {
       await navigator.clipboard.writeText(menuUrl)
@@ -392,24 +299,6 @@
       setTimeout(() => {
         copySuccess = false
       }, 2000)
-      
-      // Mostrar modal de upgrade SOLO si el usuario está en trial (status === 'trialing')
-      // NO mostrar si el status es 'active' o si tiene access=true (premium activo)
-      console.log('Entitlement al copiar:', entitlement)
-      console.log('Status:', entitlement?.status, 'Access:', entitlement?.access)
-      
-      // Solo mostrar si está explícitamente en trial
-      const isInTrial = entitlement && entitlement.status === 'trialing'
-      const hasPremium = entitlement && (entitlement.status === 'active' || entitlement.access === true)
-      
-      if (isInTrial && !hasPremium) {
-        console.log('Mostrando modal de upgrade - usuario en trial')
-        showUpgradeModal = true
-      } else {
-        // Usuario tiene premium (active) o no hay entitlement, no mostrar modal
-        console.log('NO mostrando modal - isInTrial:', isInTrial, 'hasPremium:', hasPremium)
-        showUpgradeModal = false
-      }
     } catch (err) {
       console.error('Error copiando al portapapeles:', err)
     }
@@ -662,23 +551,6 @@
     setTimeout(() => {
       copySuccess = false
     }, 2000)
-    
-    // Cargar entitlement para verificar si mostrar modal de upgrade
-    if (userId && !entitlement) {
-      try {
-        entitlement = await fetchEntitlement(userId)
-      } catch (err) {
-        console.error('Error cargando entitlement:', err)
-      }
-    }
-    
-    // Mostrar modal de upgrade SOLO si el usuario está en trial
-    const isInTrial = entitlement && entitlement.status === 'trialing'
-    const hasPremium = entitlement && (entitlement.status === 'active' || entitlement.access === true)
-    
-    if (isInTrial && !hasPremium) {
-      showUpgradeModal = true
-    }
 
     // Mensaje por defecto según el idioma
     let message = ''
@@ -1520,11 +1392,6 @@
       </button>
       <div class="flex-1 min-w-0 px-2">
         <h2 class="text-base md:text-lg font-semibold text-gray-900 truncate text-center">{$tStore.chat.previewTitle}</h2>
-        {#if trialDaysRemaining !== null && entitlement?.status === 'trialing'}
-          <p class="text-xs md:text-sm text-gray-600 mt-1 text-center">
-            {$tStore.chat.trialDaysRemaining.replace('{days}', trialDaysRemaining.toString())}
-          </p>
-        {/if}
       </div>
       <div class="w-9"></div> <!-- Spacer para centrar -->
     </header>
@@ -1770,89 +1637,6 @@
     </div>
   </div>
 </div>
-
-<!-- Modal de Upgrade al copiar link -->
-{#if showUpgradeModal}
-  <div 
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
-    onclick={() => showUpgradeModal = false}
-    role="dialog"
-    aria-modal="true"
-  >
-    <div 
-      class="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 rounded-xl md:rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-      onclick={(e) => e.stopPropagation()}
-    >
-      <!-- Decorative gradient background -->
-      <div class="absolute top-0 left-0 right-0 h-32 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-indigo-500/10"></div>
-      
-      <!-- Close button -->
-      <button
-        onclick={() => showUpgradeModal = false}
-        class="absolute top-4 right-4 p-2 hover:bg-white/50 rounded-full transition-colors z-10"
-        aria-label={$tStore.chat.close}
-      >
-        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      
-      <div class="relative p-5 md:p-8">
-        <!-- Header -->
-        <div class="text-center mb-4 md:mb-6">
-          <div class="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full mb-3 md:mb-4">
-            <svg class="w-6 h-6 md:w-8 md:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h3 class="text-xl md:text-2xl font-bold text-gray-900 mb-2">{$tStore.chat.upgradeModalTitle}</h3>
-        </div>
-        
-        <!-- Benefits -->
-        <div class="bg-white/60 backdrop-blur-sm rounded-xl p-5 mb-6 border border-gray-200/50">
-          <h4 class="text-sm font-semibold text-gray-900 mb-3">{$tStore.chat.upgradeModalBenefits}</h4>
-          <div class="space-y-2">
-            <div class="flex items-start gap-2">
-              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-gray-700">{$tStore.chat.upgradeModalBenefit1}</span>
-            </div>
-            <div class="flex items-start gap-2">
-              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-gray-700">{$tStore.chat.upgradeModalBenefit2}</span>
-            </div>
-            <div class="flex items-start gap-2">
-              <svg class="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              <span class="text-sm text-gray-700">{$tStore.chat.upgradeModalBenefit3}</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Contribution message -->
-        <div class="bg-blue-50/80 rounded-xl p-4 mb-6 border border-blue-200/50">
-          <p class="text-sm text-blue-900 text-center">
-            💙 {$tStore.chat.upgradeModalContribution}
-          </p>
-        </div>
-        
-        <!-- Action button -->
-        <div>
-          <button
-            onclick={handleUpgradeToPro}
-            class="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
-          >
-            {$tStore.chat.upgradeToPro}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-{/if}
 
 <!-- Modal de confirmación para descartar menú -->
 {#if showDiscardModal}

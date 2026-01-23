@@ -1,7 +1,7 @@
 /**
  * Store reactivo para los datos del restaurante usando Svelte 5 runes
  */
-import { getSlugFromUrl, getVersionIdFromUrl, fetchRestaurantDataBySlug } from '../services/restaurantData.js';
+import { getSlugFromUrl, getVersionIdFromUrl, fetchRestaurantDataBySlug, fetchRestaurantDataById } from '../services/restaurantData.js';
 import { adaptMenuData, DEFAULT_TEST_MENU } from '../services/menuData.js';
 
 /**
@@ -55,11 +55,11 @@ class RestaurantDataStore {
         // Usar el menú por defecto para /test
         this.data = adaptMenuData(DEFAULT_TEST_MENU);
       } else {
-        // Intentar obtener el slug desde la URL (ruta /m/{slug})
-        const slug = getSlugFromUrl();
+        // Intentar obtener el slug o menuId desde la URL (ruta /m/{slug} o /m/{menuId})
+        const urlData = getSlugFromUrl();
         
-        if (!slug) {
-          throw new Error('Se requiere un slug en la URL (ej: /m/mi-restaurante)');
+        if (!urlData || !urlData.value) {
+          throw new Error('Se requiere un slug o menuId en la URL (ej: /m/mi-restaurante o /m/019be861-4f12-767f-a371-075d291277a8)');
         }
         
         // Obtener version_id opcional desde la URL (query param)
@@ -67,14 +67,26 @@ class RestaurantDataStore {
         // Si no está presente, se usa la versión actual (visualización simple)
         const versionId = getVersionIdFromUrl();
         
-        if (versionId) {
-          console.log('🔍 Obteniendo menú con version_id específico (interacción):', { slug, versionId });
+        let rawData;
+        
+        // Si es un menuId (UUID), usar el endpoint por menuId
+        if (urlData.isMenuId) {
+          if (versionId) {
+            console.log('🔍 Obteniendo menú por menuId con version_id específico (interacción):', { menuId: urlData.value, versionId });
+          } else {
+            console.log('🔍 Obteniendo menú por menuId versión actual (visualización simple):', urlData.value);
+          }
+          rawData = await fetchRestaurantDataById(urlData.value, versionId);
         } else {
-          console.log('🔍 Obteniendo menú versión actual (visualización simple):', slug);
+          // Si es un slug, usar el endpoint por slug
+          if (versionId) {
+            console.log('🔍 Obteniendo menú por slug con version_id específico (interacción):', { slug: urlData.value, versionId });
+          } else {
+            console.log('🔍 Obteniendo menú por slug versión actual (visualización simple):', urlData.value);
+          }
+          rawData = await fetchRestaurantDataBySlug(urlData.value, versionId);
         }
         
-        // Usar siempre el endpoint del backend con el slug
-        const rawData = await fetchRestaurantDataBySlug(slug, versionId);
         this.data = adaptMenuData(rawData);
       }
     } catch (err) {

@@ -49,7 +49,7 @@
       error = null
 
       // Obtener menuId
-      const menuId = await getLatestMenuId(userId)
+      const menuId = await getLatestMenuId(userId, session.access_token)
       if (!menuId) {
         error = 'No se encontró un menú'
         loading = false
@@ -119,10 +119,15 @@
       return
     }
 
+    if (!session?.access_token) {
+      alert('No hay sesión activa')
+      return
+    }
+
     try {
       activatingVersionId = versionId
 
-      const menuId = await getLatestMenuId(userId)
+      const menuId = await getLatestMenuId(userId, session.access_token)
       if (!menuId) {
         alert('No se encontró un menú')
         return
