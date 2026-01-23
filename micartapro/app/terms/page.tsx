@@ -162,29 +162,29 @@ export default function TermsPage() {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.1. Payments and Merchant of Record</h2>
               <p>
-                All payments are handled by Paddle, who acts as Merchant of Record for all transactions. Paddle manages billing, taxes, invoicing, and refunds.
+                All payments are handled by our payment processor, who acts as Merchant of Record for all transactions. Our payment processor manages billing, taxes, invoicing, and refunds.
               </p>
               <p>
                 MiCartaPro does not store or process payment information.
               </p>
               <p>
-                Payment inquiries and refund requests must be addressed to Paddle, either directly or through our support channel.
-              </p>
-              <p>
-                More info: <a href="https://www.paddle.com/legal" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 underline">https://www.paddle.com/legal</a>
+                Payment inquiries and refund requests must be addressed through our support channel at support@micartapro.com.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.2. Refunds and Right to Cancel</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8.2. Cancellation and Refunds</h2>
               <p>
-                Consumers may have a 14-day right to cancel under consumer protection laws. This is processed directly by Paddle.
+                You can cancel your subscription at any time when you find it convenient. There are no cancellation fees or penalties.
+              </p>
+              <p>
+                When you cancel, your subscription will remain active until the end of your current billing period. Cancellation prevents future charges but does not generate refunds for past payments.
               </p>
               <ul className="list-disc pl-6 space-y-2">
-                <li>Refunds are granted only at Paddle's discretion</li>
-                <li>MiCartaPro does not issue refunds directly</li>
-                <li>After 14 days, refunds are not guaranteed</li>
+                <li>We do not offer a money-back guarantee</li>
+                <li>Refund requests are handled at our discretion on a case-by-case basis</li>
                 <li>No refunds for unused subscription time</li>
+                <li>All refunds, if granted, are processed by our payment processor</li>
               </ul>
               <p className="mt-4">
                 See also: <Link href="/refund" className="text-blue-600 hover:text-blue-700 underline">Refund Policy</Link>
@@ -252,7 +252,7 @@ export default function TermsPage() {
               <ul className="list-disc pl-6 space-y-2">
                 <li>Optional and not required</li>
                 <li>Billed separately (bank transfer, PayPal, invoice)</li>
-                <li>Not processed through Paddle</li>
+                <li>Not processed through our standard payment processor</li>
                 <li>From $150 USD depending on complexity</li>
                 <li>Separate terms may apply</li>
               </ul>

@@ -321,15 +321,15 @@ export const translations: Record<Language, Translations> = {
           },
           {
             question: 'Can I cancel my subscription?',
-            answer: 'Yes, you can cancel your subscription at any time. The cancellation will take effect at the end of your current billing period. We offer a 14-day money-back guarantee on all purchases made via Paddle. Please see our Refund Policy for more details.'
+            answer: 'Yes, you can cancel your subscription at any time when you find it convenient. The cancellation will take effect at the end of your current billing period, and you will continue to have access to the service until then. Please see our Refund Policy for more details.'
           },
           {
             question: 'What is your refund policy?',
-            answer: 'We offer a 14-day money-back guarantee on all purchases made via Paddle. If you\'re not satisfied with your purchase, you can request a full refund within 14 days from the date of purchase by contacting Paddle or our support team. After 14 days, refunds are handled at our and Paddle\'s discretion.'
+            answer: 'We do not offer a money-back guarantee. However, you can cancel your subscription at any time when you find it convenient. Cancellation prevents future charges but does not generate refunds for past payments. Refund requests are handled at our discretion on a case-by-case basis.'
           },
           {
             question: 'What payment methods do you accept?',
-            answer: 'All payments are processed by Paddle, who acts as the Merchant of Record. Paddle accepts various payment methods including credit cards and other standard payment options.'
+            answer: 'All payments are processed by our payment processor, who acts as the Merchant of Record. We accept various payment methods including credit cards and other standard payment options.'
           },
           {
             question: 'Is there a setup fee?',
@@ -340,10 +340,10 @@ export const translations: Record<Language, Translations> = {
       additionalServices: {
         title: 'Add-On Services (Optional)',
         subtitle: 'Professional services billed separately',
-        description: 'If you need professional custom design work, manual menu creation, or personalized consulting, we offer these services as optional add-ons. These services are billed separately and are NOT processed through Paddle.',
+        description: 'If you need professional custom design work, manual menu creation, or personalized consulting, we offer these services as optional add-ons. These services are billed separately and are NOT processed through our standard payment processor.',
         startingFrom: 'Starting from $150 USD',
         requiresQuote: 'Requires a custom quote',
-        note: 'These add-on services are optional, billed separately via bank transfer, PayPal, or invoice, and are NOT included in your SaaS subscription. They are NOT processed through Paddle. Contact us for a personalized quote based on your specific needs.',
+        note: 'These add-on services are optional, billed separately via bank transfer, PayPal, or invoice, and are NOT included in your SaaS subscription. They are NOT processed through our standard payment processor. Contact us for a personalized quote based on your specific needs.',
         button: 'Request Custom Quote',
         servicesTitle: 'Available Add-On Services:',
         services: {
@@ -512,15 +512,15 @@ export const translations: Record<Language, Translations> = {
           },
           {
             question: '¿Puedo cancelar mi suscripción?',
-            answer: 'Sí, puedes cancelar tu suscripción en cualquier momento. La cancelación tendrá efecto al final de tu período de facturación actual. Ofrecemos una garantía de reembolso de 14 días en todas las compras realizadas a través de Paddle. Por favor, consulta nuestra Política de Reembolso para más detalles.'
+            answer: 'Sí, puedes cancelar tu suscripción en cualquier momento cuando lo estimes conveniente. La cancelación tendrá efecto al final de tu período de facturación actual, y continuarás teniendo acceso al servicio hasta entonces. Por favor, consulta nuestra Política de Reembolso para más detalles.'
           },
           {
             question: '¿Cuál es su política de reembolso?',
-            answer: 'Ofrecemos una garantía de reembolso de 14 días en todas las compras realizadas a través de Paddle. Si no estás satisfecho con tu compra, puedes solicitar un reembolso completo dentro de los 14 días posteriores a la fecha de compra contactando a Paddle o a nuestro equipo de soporte. Después de 14 días, los reembolsos se manejan a nuestra discreción y la de Paddle.'
+            answer: 'No ofrecemos una garantía de reembolso. Sin embargo, puedes cancelar tu suscripción en cualquier momento cuando lo estimes conveniente. La cancelación previene cargos futuros pero no genera reembolsos por pagos pasados. Las solicitudes de reembolso se manejan a nuestra discreción caso por caso.'
           },
           {
             question: '¿Qué métodos de pago aceptan?',
-            answer: 'Todos los pagos son procesados por Paddle, quien actúa como Merchant of Record. Paddle acepta varios métodos de pago incluyendo tarjetas de crédito y otras opciones de pago estándar.'
+            answer: 'Todos los pagos son procesados por nuestro procesador de pagos, quien actúa como Merchant of Record. Aceptamos varios métodos de pago incluyendo tarjetas de crédito y otras opciones de pago estándar.'
           },
           {
             question: '¿Hay una tarifa de configuración?',
@@ -531,10 +531,10 @@ export const translations: Record<Language, Translations> = {
       additionalServices: {
         title: 'Servicios Adicionales (Opcionales)',
         subtitle: 'Servicios profesionales facturados por separado',
-        description: 'Si necesitas trabajo de diseño personalizado profesional, creación manual de menús o consultoría personalizada, ofrecemos estos servicios como complementos opcionales. Estos servicios se facturan por separado y NO se procesan a través de Paddle.',
+        description: 'Si necesitas trabajo de diseño personalizado profesional, creación manual de menús o consultoría personalizada, ofrecemos estos servicios como complementos opcionales. Estos servicios se facturan por separado y NO se procesan a través de nuestro procesador de pagos estándar.',
         startingFrom: 'Desde $150 USD',
         requiresQuote: 'Requiere cotización personalizada',
-        note: 'Estos servicios adicionales son opcionales, se facturan por separado mediante transferencia bancaria, PayPal o factura, y NO están incluidos en tu suscripción SaaS. NO se procesan a través de Paddle. Contáctanos para una cotización personalizada según tus necesidades específicas.',
+        note: 'Estos servicios adicionales son opcionales, se facturan por separado mediante transferencia bancaria, PayPal o factura, y NO están incluidos en tu suscripción SaaS. NO se procesan a través de nuestro procesador de pagos estándar. Contáctanos para una cotización personalizada según tus necesidades específicas.',
         button: 'Solicitar Cotización Personalizada',
         servicesTitle: 'Servicios Adicionales Disponibles:',
         services: {
@@ -703,15 +703,15 @@ export const translations: Record<Language, Translations> = {
           },
           {
             question: 'Posso cancelar minha assinatura?',
-            answer: 'Sim, você pode cancelar sua assinatura a qualquer momento. O cancelamento terá efeito no final do seu período de faturamento atual. Oferecemos uma garantia de reembolso de 14 dias em todas as compras realizadas através da Paddle. Por favor, consulte nossa Política de Reembolso para mais detalhes.'
+            answer: 'Sim, você pode cancelar sua assinatura a qualquer momento quando achar conveniente. O cancelamento terá efeito no final do seu período de faturamento atual, e você continuará tendo acesso ao serviço até então. Por favor, consulte nossa Política de Reembolso para mais detalhes.'
           },
           {
             question: 'Qual é sua política de reembolso?',
-            answer: 'Oferecemos uma garantia de reembolso de 14 dias em todas as compras realizadas através da Paddle. Se você não estiver satisfeito com sua compra, pode solicitar um reembolso completo dentro de 14 dias a partir da data de compra entrando em contato com a Paddle ou nossa equipe de suporte. Após 14 dias, os reembolsos são tratados a nosso critério e da Paddle.'
+            answer: 'Não oferecemos uma garantia de reembolso. No entanto, você pode cancelar sua assinatura a qualquer momento quando achar conveniente. O cancelamento impede cobranças futuras, mas não gera reembolsos por pagamentos passados. As solicitações de reembolso são tratadas a nosso critério caso a caso.'
           },
           {
             question: 'Quais métodos de pagamento vocês aceitam?',
-            answer: 'Todos os pagamentos são processados pela Paddle, que atua como Merchant of Record. A Paddle aceita vários métodos de pagamento, incluindo cartões de crédito e outras opções de pagamento padrão.'
+            answer: 'Todos os pagamentos são processados pelo nosso processador de pagamentos, que atua como Merchant of Record. Aceitamos vários métodos de pagamento, incluindo cartões de crédito e outras opções de pagamento padrão.'
           },
           {
             question: 'Há uma taxa de configuração?',
@@ -722,10 +722,10 @@ export const translations: Record<Language, Translations> = {
       additionalServices: {
         title: 'Serviços Adicionais (Opcionais)',
         subtitle: 'Serviços profissionais faturados separadamente',
-        description: 'Se você precisar de trabalho de design personalizado profissional, criação manual de cardápios ou consultoria personalizada, oferecemos esses serviços como complementos opcionais. Esses serviços são faturados separadamente e NÃO são processados através da Paddle.',
+        description: 'Se você precisar de trabalho de design personalizado profissional, criação manual de cardápios ou consultoria personalizada, oferecemos esses serviços como complementos opcionais. Esses serviços são faturados separadamente e NÃO são processados através do nosso processador de pagamentos padrão.',
         startingFrom: 'A partir de $150 USD',
         requiresQuote: 'Requer cotização personalizada',
-        note: 'Esses serviços adicionais são opcionais, são faturados separadamente via transferência bancária, PayPal ou fatura, e NÃO estão incluídos na sua assinatura SaaS. NÃO são processados através da Paddle. Entre em contato conosco para uma cotização personalizada com base em suas necessidades específicas.',
+        note: 'Esses serviços adicionais são opcionais, são faturados separadamente via transferência bancária, PayPal ou fatura, e NÃO estão incluídos na sua assinatura SaaS. NÃO são processados através do nosso processador de pagamentos padrão. Entre em contato conosco para uma cotização personalizada com base em suas necessidades específicas.',
         button: 'Solicitar Cotização Personalizada',
         servicesTitle: 'Serviços Adicionais Disponíveis:',
         services: {

@@ -123,7 +123,7 @@ export default function PrivacyPage() {
               <p>We may share information with trusted service providers who help us operate our business, including:</p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>Hosting and cloud service providers (e.g., Firebase, Vercel, or similar infrastructure providers)</li>
-                <li>Payment processors (Paddle, who acts as Merchant of Record)</li>
+                <li>Payment processors (who act as Merchant of Record)</li>
                 <li>Communication service providers (WhatsApp)</li>
               </ul>
               <p className="mt-4">
