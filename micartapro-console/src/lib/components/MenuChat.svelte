@@ -1198,8 +1198,7 @@
     <!-- Messages Container -->
     <div 
       id="messages-container"
-      class="flex-1 overflow-y-auto px-4 py-6 min-h-0"
-      style="padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));"
+      class="flex-1 overflow-y-auto px-4 py-6 min-h-0 pb-24 md:pb-6"
     >
     {#if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
@@ -1293,8 +1292,11 @@
     {/if}
     </div>
 
-    <!-- Chat Input -->
-    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10" style="padding-bottom: max(3.5rem, calc(3.5rem + env(safe-area-inset-bottom, 0px)));">
+    <!-- Chat Input - fixed en móvil para siempre visible -->
+    <div 
+      class="border-t border-gray-200 bg-white z-10 md:relative md:flex-shrink-0 fixed bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto"
+      style="padding-bottom: env(safe-area-inset-bottom, 0);"
+    >
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">

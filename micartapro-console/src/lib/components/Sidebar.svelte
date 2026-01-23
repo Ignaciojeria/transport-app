@@ -39,7 +39,7 @@
     </button>
   </div>
   
-  <nav class="px-4 py-4 flex-1 overflow-y-auto min-h-0">
+  <nav class="px-4 py-4 flex-1 overflow-y-auto min-h-0 pb-24 md:pb-4">
     <button
       onclick={() => onSectionChange('menu')}
       class={`w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 ${
@@ -83,16 +83,21 @@
     </button>
   </nav>
   
-  <!-- Botón de cerrar sesión al final - siempre visible -->
-  <div class="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-900" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom, 0px)));">
-    <button
-      onclick={handleSignOut}
-      class="w-full flex items-center p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white"
-    >
-      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-      </svg>
-      <span class="text-sm font-medium">Cerrar sesión</span>
-    </button>
+  <!-- Botón de cerrar sesión al final - fixed en móvil, normal en desktop -->
+  <div 
+    class="md:flex-shrink-0 md:relative md:border-t md:border-gray-700 md:bg-gray-900 md:p-4 fixed bottom-0 left-0 w-64 border-t border-gray-700 bg-gray-900 z-50 md:z-auto"
+    style="padding-bottom: env(safe-area-inset-bottom, 0);"
+  >
+    <div class="p-4">
+      <button
+        onclick={handleSignOut}
+        class="w-full flex items-center p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white"
+      >
+        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+        <span class="text-sm font-medium">Cerrar sesión</span>
+      </button>
+    </div>
   </div>
 </div>
