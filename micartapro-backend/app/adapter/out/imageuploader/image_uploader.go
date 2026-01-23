@@ -34,8 +34,9 @@ func NewImageUploader(obs observability.Observability, conf configuration.Conf, 
 
 		obs.Logger.InfoContext(spanCtx, "uploading_image", "fileName", fileName, "size_bytes", len(imageBytes), "userID", userID)
 
-		// Construir la ruta del archivo: userID/menu-photos/filename
-		filePath := fmt.Sprintf("%s/menu-photos/%s", userID, fileName)
+		// Construir la ruta del archivo: userID/filename (igual que en micartapro-console)
+		// El bucket ya se llama "menu-photos", no necesitamos incluirlo en el path
+		filePath := fmt.Sprintf("%s/%s", userID, fileName)
 
 		// Subir la imagen al bucket "menu-photos" usando HTTP directo
 		// Esto nos da control total sobre los headers de autenticación, igual que en save_menu_order.go
