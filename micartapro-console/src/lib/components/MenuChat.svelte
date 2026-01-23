@@ -1457,7 +1457,7 @@
     </header>
 
     <!-- Contenido del Preview -->
-    <div class="flex-1 overflow-hidden iframe-container relative" style="padding-bottom: {menuUrl ? '90px' : '0'};">
+    <div class="flex-1 overflow-hidden iframe-container relative min-h-0">
       {#if menuUrl}
         {#key iframeKey}
           <iframe
@@ -1841,8 +1841,9 @@
 {/if}
 
   <!-- Vista Promocional de Suscripción (se muestra cuando showSubscriptionPromo es true) -->
+  {#if showSubscriptionPromo}
   <div 
-    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out z-30 {showSubscriptionPromo ? 'translate-x-0' : 'translate-x-full'}"
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out z-30 translate-x-0"
   >
     <!-- Header -->
     <header class="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between flex-shrink-0">
@@ -1933,4 +1934,5 @@
       </div>
     </div>
   </div>
+  {/if}
 
