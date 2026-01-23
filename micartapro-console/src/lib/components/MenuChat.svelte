@@ -1153,10 +1153,11 @@
 <div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
   <!-- Vista de Chat (oculta cuando showPreview es true) -->
   <div 
-    class="flex flex-col h-full transition-transform duration-300 ease-in-out {showPreview ? '-translate-x-full' : 'translate-x-0'}"
+    class="flex flex-col h-full transition-transform duration-300 ease-in-out {showPreview ? '-translate-x-full' : 'translate-x-0'} overflow-y-auto"
+    style="max-height: 100dvh;"
   >
     <!-- Header estilo Gemini -->
-    <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between">
+    <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 sticky top-0 z-20 bg-white">
       <!-- Botón hamburguesa para móvil -->
       <button 
         onclick={onMenuClick}
@@ -1198,7 +1199,7 @@
     <!-- Messages Container -->
     <div 
       id="messages-container"
-      class="flex-1 overflow-y-auto px-4 py-6 min-h-0"
+      class="flex-1 px-4 py-6 min-h-0"
     >
     {#if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
@@ -1293,7 +1294,7 @@
     </div>
 
     <!-- Chat Input -->
-    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10 sticky bottom-0 md:relative" style="bottom: env(safe-area-inset-bottom, 0);">
+    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10 md:relative sticky bottom-0" style="bottom: env(safe-area-inset-bottom, 0px); background: white; position: -webkit-sticky; position: sticky;">
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">
