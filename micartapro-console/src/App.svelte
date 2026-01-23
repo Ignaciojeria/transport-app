@@ -71,6 +71,16 @@
         console.error('Error decodificando fragment:', e)
       }
     }
+    
+    // Si no hay usuario autenticado, redirigir a auth-ui
+    // Esto se ejecuta después de que initAuth termine de cargar
+    setTimeout(() => {
+      if (!user && !authLoading) {
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
+        window.location.replace(authUiUrl)
+      }
+    }, 100)
   })
 </script>
 
@@ -121,20 +131,11 @@
       </div>
     </div>
   {:else}
+    <!-- Vista de no autenticado - redirigir automáticamente a auth-ui -->
     <div class="flex items-center justify-center min-h-screen">
       <div class="text-center">
-        <h1 class="text-2xl font-bold text-gray-900 mb-4">
-          {$tStore.app.notAuthenticated}
-        </h1>
-        <p class="text-gray-600 mb-4">
-          {$tStore.app.pleaseSignIn}{' '}
-          <a 
-            href="http://localhost:3003" 
-            class="text-blue-600 hover:text-blue-700 underline"
-          >
-            {$tStore.app.signInLink}
-          </a>
-        </p>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 border-t-transparent mx-auto mb-4"></div>
+        <p class="text-gray-600">Redirigiendo al inicio de sesión...</p>
       </div>
     </div>
   {/if}

@@ -107,14 +107,7 @@ export function initAuth(): void {
 // Cerrar sesión
 export async function signOut(): Promise<void> {
   try {
-    // Cerrar sesión en Supabase
-    const { error } = await supabase.auth.signOut()
-    if (error) {
-      console.error('Error al cerrar sesión:', error)
-      // Continuar con la redirección incluso si hay error
-    }
-    
-    // Limpiar estado local
+    // Limpiar estado local primero (antes de redirigir)
     authState.user = null
     authState.session = null
     
@@ -144,16 +137,29 @@ export async function signOut(): Promise<void> {
       (window as any).clearAuthenticatedClientsCache()
     }
     
-    // Redirigir a auth-ui con parámetro de logout para que cierre la sesión allí también
+    // Redirigir inmediatamente a auth-ui con parámetro de logout
+    // Esto evita que se muestre la vista "No autenticado"
     const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
+    
+    // Redirigir inmediatamente sin esperar
+    // El auth-ui se encargará de cerrar la sesión completamente
     window.location.replace(`${authUiUrl}?logout=true`)
+    
+    // Intentar cerrar sesión en Supabase en segundo plano (no esperar)
+    supabase.auth.signOut().catch(() => {
+      // Ignorar errores, ya estamos redirigiendo
+    })
   } catch (error) {
     console.error('Error al cerrar sesión:', error)
     // Asegurarse de limpiar todo incluso si hay un error
     authState.user = null
     authState.session = null
-    throw error
+    
+    // Intentar redirigir de todas formas
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
+    window.location.replace(`${authUiUrl}?logout=true`)
   }
 }
 
