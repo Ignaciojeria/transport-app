@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { signOut } from '../auth.svelte'
+  import { signOut, authState } from '../auth.svelte'
+  import { API_BASE_URL } from '../config'
   
   interface SidebarProps {
     activeSection: string
@@ -10,6 +11,8 @@
 
   let { activeSection, onSectionChange, isOpen = true, onClose }: SidebarProps = $props()
   
+  const session = $derived(authState.session)
+  
   async function handleSignOut() {
     if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
       try {
@@ -18,6 +21,49 @@
         console.error('Error al cerrar sesión:', error)
         alert('Error al cerrar sesión. Por favor, intenta de nuevo.')
       }
+    }
+  }
+
+  async function handleMyPlan() {
+    if (!session?.access_token) {
+      alert('No hay sesión activa. Por favor, inicia sesión nuevamente.')
+      return
+    }
+
+    try {
+      // Llamar al endpoint de customer portal
+      const response = await fetch(`${API_BASE_URL}/customer-portal`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          alert('No se encontró una suscripción activa. Por favor, activa tu plan primero.')
+          return
+        }
+        const errorText = await response.text()
+        console.error('Error obteniendo portal del consumidor:', errorText)
+        alert('Error al obtener el portal del consumidor. Por favor, intenta de nuevo.')
+        return
+      }
+
+      const data = await response.json()
+      const portalUrl = data.customer_portal_link
+
+      if (!portalUrl) {
+        alert('No se recibió la URL del portal. Por favor, intenta de nuevo.')
+        return
+      }
+
+      // Redirigir al portal del consumidor
+      window.open(portalUrl, '_blank')
+    } catch (error) {
+      console.error('Error accediendo al portal:', error)
+      alert('Error al acceder al portal del consumidor. Por favor, intenta de nuevo.')
     }
   }
 </script>
@@ -95,6 +141,16 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
       </svg>
       <span class="text-sm font-medium">Código QR</span>
+    </button>
+
+    <button
+      onclick={handleMyPlan}
+      class="w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 text-gray-300 hover:bg-gray-800 hover:text-white"
+    >
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      <span class="text-sm font-medium">Mi Plan</span>
     </button>
   </nav>
   

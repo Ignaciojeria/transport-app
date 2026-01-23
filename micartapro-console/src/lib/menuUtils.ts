@@ -930,3 +930,46 @@ export async function updateCurrentVersionId(
     return false
   }
 }
+
+/**
+ * Verifica si el usuario tiene una suscripción activa
+ * @param userId - ID del usuario
+ * @param accessToken - Token de autenticación
+ * @returns Promise<boolean> - true si tiene suscripción activa, false en caso contrario
+ */
+export async function hasActiveSubscription(userId: string, accessToken: string): Promise<boolean> {
+  try {
+    console.log('🔍 Verificando suscripción para usuario:', userId)
+    
+    // Llamar al endpoint del backend para verificar la suscripción
+    const response = await fetch(`${API_BASE_URL}/check-subscription`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      console.error('❌ Error verificando suscripción:', {
+        status: response.status,
+        statusText: response.statusText
+      })
+      return false
+    }
+
+    const data = await response.json()
+    const hasSubscription = data.has_active_subscription === true
+
+    if (hasSubscription) {
+      console.log('✅ Usuario tiene suscripción activa')
+    } else {
+      console.log('ℹ️ Usuario no tiene suscripción activa')
+    }
+
+    return hasSubscription
+  } catch (error: any) {
+    console.error('❌ Error en hasActiveSubscription:', error)
+    return false
+  }
+}

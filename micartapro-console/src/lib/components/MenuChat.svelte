@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, hasActiveSubscription } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -48,6 +48,7 @@
   let isCreatingSlug = $state(false) // Estado de carga al crear slug
   let showConfetti = $state(false) // Mostrar confeti
   let confettiParticles = $state<Array<{left: number, delay: number, color: string}>>([]) // Partículas de confeti
+  let showSubscriptionPromo = $state(false) // Modal promocional de suscripción
   let showCamera = $state(false) // Mostrar cámara para tomar foto
   let stream: MediaStream | null = $state(null) // Stream de la cámara
   let videoRef: HTMLVideoElement | null = $state(null) // Referencia al video
@@ -413,13 +414,22 @@
   }
 
   async function shareOnWhatsApp() {
-    if (!menuId || !session?.access_token) {
+    if (!menuId || !session?.access_token || !userId) {
       alert('No se puede compartir: falta información del menú')
       return
     }
 
     try {
-      // Verificar si existe un slug para este menú
+      // Primero verificar si el usuario tiene una suscripción activa
+      const hasSubscription = await hasActiveSubscription(userId, session.access_token)
+      
+      if (!hasSubscription) {
+        // No tiene suscripción, mostrar modal promocional
+        showSubscriptionPromo = true
+        return
+      }
+
+      // Si tiene suscripción, verificar si existe un slug para este menú
       const existingSlug = await getMenuSlug(menuId, session.access_token)
       
       if (!existingSlug) {
@@ -441,6 +451,55 @@
           ? 'Erro ao compartilhar o cardápio. Tente novamente.'
           : 'Error sharing menu. Please try again.'
       )
+    }
+  }
+
+  async function handleActivatePlan() {
+    if (!session?.access_token) {
+      alert('No hay sesión activa. Por favor, inicia sesión nuevamente.')
+      return
+    }
+
+    try {
+      showSubscriptionPromo = false
+      
+      // Llamar al endpoint de checkout del backend
+      const response = await fetch(`${API_BASE_URL}/checkout`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Error obteniendo checkout URL:', errorText)
+        alert('Error al obtener la URL de checkout. Por favor, intenta de nuevo.')
+        return
+      }
+
+      const data = await response.json()
+      const checkoutUrl = data.checkout_url
+
+      if (!checkoutUrl) {
+        alert('No se recibió la URL de checkout. Por favor, intenta de nuevo.')
+        return
+      }
+
+      // Redirigir a la URL de checkout
+      window.open(checkoutUrl, '_blank')
+    } catch (error) {
+      console.error('Error activando plan:', error)
+      alert('Error al activar el plan. Por favor, intenta de nuevo.')
+    }
+  }
+
+  function handleBackToEdit() {
+    showSubscriptionPromo = false
+    // Cerrar preview si está abierto
+    if (showPreview) {
+      showPreview = false
     }
   }
 
@@ -1151,9 +1210,9 @@
 </script>
 
 <div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
-  <!-- Vista de Chat (oculta cuando showPreview es true) -->
-  <div 
-    class="flex flex-col h-full transition-transform duration-300 ease-in-out {showPreview ? '-translate-x-full' : 'translate-x-0'} overflow-y-auto"
+  <!-- Vista de Chat (oculta cuando showPreview, showSlugModal o showSubscriptionPromo es true) -->
+  <div
+    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo) ? '-translate-x-full' : 'translate-x-0'} overflow-y-auto"
     style="max-height: 100dvh;"
   >
     <!-- Header estilo Gemini -->
@@ -1375,7 +1434,7 @@
 
   <!-- Vista de Preview (se muestra cuando showPreview es true) -->
   <div 
-    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {showPreview ? 'translate-x-0' : 'translate-x-full'}"
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {(showPreview && !showSlugModal && !showSubscriptionPromo) ? 'translate-x-0' : 'translate-x-full'}"
   >
     <!-- Header del Preview -->
     <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
@@ -1467,7 +1526,7 @@
   </div>
 
 <!-- Botón flotante: "Usar este menú" o "Compartir" según el estado (móviles) -->
-{#if menuUrl && showPreview && !showSlugModal}
+{#if menuUrl && showPreview && !showSlugModal && !showSubscriptionPromo}
   {@const pendingVersion = messages.find(msg => msg.pendingVersionId && !versionActivated)}
       {#if pendingVersion}
         <!-- Botón "Usar este menú" cuando hay versión pendiente (móvil) -->
@@ -1511,7 +1570,7 @@
 
   <!-- Vista de Crear Slug (se muestra cuando showSlugModal es true) -->
   <div 
-    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {showSlugModal ? 'translate-x-0' : 'translate-x-full'}"
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {(showSlugModal && !showSubscriptionPromo) ? 'translate-x-0' : 'translate-x-full'}"
   >
     <!-- Confeti -->
     {#if showConfetti}
@@ -1780,4 +1839,98 @@
     </div>
   </div>
 {/if}
+
+  <!-- Vista Promocional de Suscripción (se muestra cuando showSubscriptionPromo es true) -->
+  <div 
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out z-30 {showSubscriptionPromo ? 'translate-x-0' : 'translate-x-full'}"
+  >
+    <!-- Header -->
+    <header class="border-b border-gray-200 bg-white px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <button
+        onclick={handleBackToEdit}
+        class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        aria-label="Volver"
+      >
+        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <h2 class="text-lg font-semibold text-gray-900 flex-1 text-center">
+        🎉 Tu carta está lista
+      </h2>
+      <div class="w-9"></div> <!-- Spacer para centrar -->
+    </header>
+
+    <!-- Contenido -->
+    <div class="flex-1 overflow-y-auto px-4 py-6">
+      <div class="max-w-lg mx-auto">
+        <!-- Título -->
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 text-center">
+          🎉 Tu carta está lista para compartirse
+        </h2>
+
+        <!-- Texto principal -->
+        <div class="space-y-4 mb-6">
+          <p class="text-gray-700 text-base leading-relaxed">
+            Estás a un paso de publicar tu carta digital y empezar a recibir pedidos.
+          </p>
+          
+          <p class="text-gray-700 text-base leading-relaxed">
+            Normalmente MiCartaPro cuesta <span class="font-semibold text-gray-900">USD 15</span>, pero por tiempo limitado puedes activar tu plan por solo <span class="font-bold text-green-600 text-lg">USD 3.5</span>.
+          </p>
+        </div>
+
+        <!-- Lista de beneficios -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-5 mb-6 border border-blue-100">
+          <p class="font-semibold text-gray-900 mb-3 text-sm">Activa tu plan ahora y desbloquea:</p>
+          <ul class="space-y-2">
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-gray-700 text-sm">Compartir tu enlace público</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-gray-700 text-sm">Código QR listo para imprimir</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-gray-700 text-sm">Recepción de pedidos por WhatsApp</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-gray-700 text-sm">Tu carta siempre disponible online</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex flex-col gap-3">
+          <!-- CTA Principal -->
+          <button
+            onclick={handleActivatePlan}
+            class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-2"
+          >
+            <span>👉</span>
+            <span>Activar plan por USD 3.5</span>
+          </button>
+
+          <!-- CTA Secundario -->
+          <button
+            onclick={handleBackToEdit}
+            class="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-medium text-sm"
+          >
+            Volver a editar mi carta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
