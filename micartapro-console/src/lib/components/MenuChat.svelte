@@ -1198,7 +1198,8 @@
     <!-- Messages Container -->
     <div 
       id="messages-container"
-      class="flex-1 overflow-y-auto px-4 py-6 pb-24 md:pb-6"
+      class="flex-1 overflow-y-auto px-4 py-6 min-h-0"
+      style="padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));"
     >
     {#if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
@@ -1293,7 +1294,7 @@
     </div>
 
     <!-- Chat Input -->
-    <div class="border-t border-gray-200 bg-white sticky bottom-0 z-10" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));">
+    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10" style="padding-bottom: max(3.5rem, calc(3.5rem + env(safe-area-inset-bottom, 0px)));">
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">
@@ -1691,9 +1692,9 @@
   
   /* Asegurar que el input sea visible en móviles */
   @media (max-width: 768px) {
-    /* Aumentar padding inferior en móviles para que el input no oculte contenido */
+    /* El padding se maneja con inline style para considerar safe areas */
     #messages-container {
-      padding-bottom: 6rem;
+      -webkit-overflow-scrolling: touch;
     }
   }
   

@@ -84,7 +84,7 @@
   </nav>
   
   <!-- Botón de cerrar sesión al final - siempre visible -->
-  <div class="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-900" style="padding-bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom, 0px)));">
+  <div class="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-900" style="padding-bottom: max(5rem, calc(5rem + env(safe-area-inset-bottom, 0px)));">
     <button
       onclick={handleSignOut}
       class="w-full flex items-center p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white"

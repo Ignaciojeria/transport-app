@@ -107,7 +107,7 @@
       />
       
       <!-- Contenido principal -->
-      <div class="flex-1 md:ml-64 overflow-auto bg-gray-50">
+      <div class="flex-1 md:ml-64 overflow-hidden bg-gray-50">
         {#if activeSection === 'menu'}
           <MenuChat onMenuClick={toggleSidebar} />
         {:else if activeSection === 'historial'}
