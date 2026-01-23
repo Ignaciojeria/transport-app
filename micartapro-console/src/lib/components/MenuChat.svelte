@@ -1214,53 +1214,53 @@
         </div>
 
         <!-- Botones seleccionables - siempre visibles cuando no hay mensajes -->
-        <div class="flex flex-col gap-3 w-full">
+        <div class="grid grid-cols-2 gap-2 md:gap-3 w-full">
           <button 
-            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            class="p-2.5 md:p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl transition-all text-left group flex items-center gap-2 md:gap-3"
             onclick={() => handleButtonClick('whatsapp')}
           >
-            <span class="text-2xl">📱</span>
-            <span class="text-base font-normal text-gray-900">{$tStore.chat.updateWhatsApp}</span>
+            <span class="text-xl md:text-2xl">📱</span>
+            <span class="text-sm md:text-base font-normal text-gray-900">{$tStore.chat.updateWhatsApp}</span>
           </button>
 
           <button 
-            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            class="p-2.5 md:p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl transition-all text-left group flex items-center gap-2 md:gap-3"
             onclick={() => handleButtonClick('address')}
           >
-            <span class="text-2xl">📍</span>
-            <span class="text-base font-normal text-gray-900">{$tStore.chat.updateAddress}</span>
+            <span class="text-xl md:text-2xl">📍</span>
+            <span class="text-sm md:text-base font-normal text-gray-900">{$tStore.chat.updateAddress}</span>
           </button>
 
           <button 
-            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            class="p-2.5 md:p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl transition-all text-left group flex items-center gap-2 md:gap-3"
             onclick={() => handleButtonClick('dishes')}
           >
-            <span class="text-2xl">🍽️</span>
-            <span class="text-base font-normal text-gray-900">{$tStore.chat.addDishes}</span>
+            <span class="text-xl md:text-2xl">🍽️</span>
+            <span class="text-sm md:text-base font-normal text-gray-900">{$tStore.chat.addDishes}</span>
           </button>
 
           <button 
-            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            class="p-2.5 md:p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl transition-all text-left group flex items-center gap-2 md:gap-3"
             onclick={() => handleButtonClick('desserts')}
           >
-            <span class="text-2xl">🍰</span>
-            <span class="text-base font-normal text-gray-900">{$tStore.chat.addDesserts}</span>
+            <span class="text-xl md:text-2xl">🍰</span>
+            <span class="text-sm md:text-base font-normal text-gray-900">{$tStore.chat.addDesserts}</span>
           </button>
 
           <button 
-            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            class="p-2.5 md:p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl transition-all text-left group flex items-center gap-2 md:gap-3"
             onclick={() => handleButtonClick('price')}
           >
-            <span class="text-2xl">💰</span>
-            <span class="text-base font-normal text-gray-900">{$tStore.chat.updatePrice}</span>
+            <span class="text-xl md:text-2xl">💰</span>
+            <span class="text-sm md:text-base font-normal text-gray-900">{$tStore.chat.updatePrice}</span>
           </button>
 
           <button 
-            class="p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-2xl transition-all text-left group flex items-center gap-3"
+            class="p-2.5 md:p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl md:rounded-2xl transition-all text-left group flex items-center gap-2 md:gap-3"
             onclick={() => handleButtonClick('delete')}
           >
-            <span class="text-2xl">🗑️</span>
-            <span class="text-base font-normal text-gray-900">{$tStore.chat.deleteItem}</span>
+            <span class="text-xl md:text-2xl">🗑️</span>
+            <span class="text-sm md:text-base font-normal text-gray-900">{$tStore.chat.deleteItem}</span>
           </button>
         </div>
       </div>
