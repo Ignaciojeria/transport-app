@@ -407,7 +407,8 @@
 
   <!-- Vista de Preview (se muestra cuando showPreview es true) -->
   <div 
-    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {showPreview ? 'translate-x-0' : 'translate-x-full'}"
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {showPreview ? 'translate-x-0' : 'translate-x-full'} overflow-y-auto"
+    style="max-height: 100dvh;"
   >
     <!-- Header del Preview -->
     <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
@@ -429,7 +430,7 @@
     </header>
 
     <!-- Contenido del Preview -->
-    <div class="flex-1 overflow-hidden iframe-container relative" style="padding-bottom: {previewUrl ? '90px' : '0'};">
+    <div class="flex-1 overflow-hidden iframe-container relative min-h-0 pb-20 md:pb-0">
       {#if previewUrl}
         {#key iframeKey}
           <iframe
@@ -456,7 +457,7 @@
       {@const previewVersion = versions.find(v => v.id === previewVersionId)}
       {#if previewVersion && previewVersion.id !== currentVersionId}
         <!-- Botón desktop -->
-        <div class="hidden md:block bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 safe-area-inset-bottom shadow-lg">
+        <div class="hidden md:block bg-white border-t border-gray-200 px-4 py-3 flex-shrink-0 shadow-lg">
           <button
             onclick={() => {
               if (previewVersionId) {
@@ -479,7 +480,7 @@
         </div>
 
         <!-- Botón móvil -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-[100] safe-area-inset-bottom shadow-2xl md:hidden">
+        <div class="md:hidden bg-white border-t border-gray-200 px-4 py-3 z-[100] shadow-2xl sticky bottom-0" style="bottom: env(safe-area-inset-bottom, 0px); background: white;">
           <button
             onclick={() => {
               if (previewVersionId) {
