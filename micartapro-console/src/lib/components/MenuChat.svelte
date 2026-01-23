@@ -1292,11 +1292,8 @@
     {/if}
     </div>
 
-    <!-- Chat Input - fixed en móvil para siempre visible -->
-    <div 
-      class="border-t border-gray-200 bg-white z-10 md:relative md:flex-shrink-0 fixed bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto"
-      style="padding-bottom: env(safe-area-inset-bottom, 0);"
-    >
+    <!-- Chat Input -->
+    <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10 md:relative fixed bottom-0 left-0 right-0 md:bottom-auto md:left-auto md:right-auto" style="bottom: env(safe-area-inset-bottom, 0);">
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">
