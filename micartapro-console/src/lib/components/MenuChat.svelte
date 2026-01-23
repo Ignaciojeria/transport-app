@@ -1150,7 +1150,7 @@
   })
 </script>
 
-<div class="flex flex-col h-screen bg-white relative overflow-hidden">
+<div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
   <!-- Vista de Chat (oculta cuando showPreview es true) -->
   <div 
     class="flex flex-col h-full transition-transform duration-300 ease-in-out {showPreview ? '-translate-x-full' : 'translate-x-0'}"
@@ -1293,7 +1293,7 @@
     </div>
 
     <!-- Chat Input -->
-    <div class="border-t border-gray-200 bg-white sticky bottom-0 z-10 safe-area-inset-bottom">
+    <div class="border-t border-gray-200 bg-white sticky bottom-0 z-10" style="padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));">
     <div class="max-w-3xl mx-auto px-4 py-3">
       {#if checkingMenu}
         <div class="flex items-center justify-center py-8">

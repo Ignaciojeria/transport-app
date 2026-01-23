@@ -86,7 +86,7 @@
     </div>
   {:else if user}
     <!-- Content con Sidebar -->
-    <div class="flex h-screen relative">
+    <div class="flex h-screen h-[100dvh] relative">
       <!-- Overlay para móvil -->
       {#if sidebarOpen}
         <div 
