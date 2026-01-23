@@ -106,12 +106,54 @@ export function initAuth(): void {
 
 // Cerrar sesión
 export async function signOut(): Promise<void> {
-  const { error } = await supabase.auth.signOut()
-  if (error) {
+  try {
+    // Cerrar sesión en Supabase
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Error al cerrar sesión:', error)
+      // Continuar con la redirección incluso si hay error
+    }
+    
+    // Limpiar estado local
+    authState.user = null
+    authState.session = null
+    
+    // Limpiar localStorage de Supabase
+    const supabaseKeys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key && (
+        key.startsWith('sb-') || 
+        key.startsWith('supabase.') ||
+        key.includes('supabase') ||
+        key.startsWith('sb-auth-')
+      )) {
+        supabaseKeys.push(key)
+      }
+    }
+    supabaseKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key)
+      } catch (e) {
+        console.warn('No se pudo eliminar la clave:', key, e)
+      }
+    })
+    
+    // Limpiar caché de clientes autenticados
+    if (typeof window !== 'undefined' && (window as any).clearAuthenticatedClientsCache) {
+      (window as any).clearAuthenticatedClientsCache()
+    }
+    
+    // Redirigir a auth-ui con parámetro de logout para que cierre la sesión allí también
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
+    window.location.replace(`${authUiUrl}?logout=true`)
+  } catch (error) {
     console.error('Error al cerrar sesión:', error)
+    // Asegurarse de limpiar todo incluso si hay un error
+    authState.user = null
+    authState.session = null
     throw error
   }
-  authState.user = null
-  authState.session = null
 }
 

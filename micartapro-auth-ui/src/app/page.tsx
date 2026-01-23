@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { useAuth } from '@/components/AuthProvider'
 import { useLanguage } from '@/lib/useLanguage'
 import type { Language } from '@/lib/translations'
+import { supabase } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -18,6 +19,56 @@ export default function LoginPage() {
   const { user, session, loading: authLoading, signInWithGoogle } = useAuth()
   const { t, isLoading: langLoading, language } = useLanguage()
 
+  // Manejar logout si viene el parámetro
+  useEffect(() => {
+    if (langLoading) return
+    
+    const urlParams = new URLSearchParams(window.location.search)
+    const shouldLogout = urlParams.get('logout') === 'true'
+    
+    if (shouldLogout) {
+      const handleLogout = async () => {
+        try {
+          // Cerrar sesión en Supabase
+          const { error } = await supabase.auth.signOut()
+          if (error) {
+            console.error('Error al cerrar sesión:', error)
+          }
+          
+          // Limpiar localStorage de Supabase
+          const supabaseKeys: string[] = []
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && (
+              key.startsWith('sb-') || 
+              key.startsWith('supabase.') ||
+              key.includes('supabase') ||
+              key.startsWith('sb-auth-')
+            )) {
+              supabaseKeys.push(key)
+            }
+          }
+          supabaseKeys.forEach(key => {
+            try {
+              localStorage.removeItem(key)
+            } catch (e) {
+              console.warn('No se pudo eliminar la clave:', key, e)
+            }
+          })
+          
+          // Limpiar el parámetro de logout de la URL
+          window.history.replaceState({}, '', window.location.pathname)
+          
+          console.log('✅ Sesión cerrada correctamente')
+        } catch (err) {
+          console.error('Error durante el logout:', err)
+        }
+      }
+      
+      handleLogout()
+    }
+  }, [langLoading])
+
   // Redirigir si el usuario ya está autenticado (solo si no viene del callback)
   useEffect(() => {
     // No ejecutar hasta que el idioma esté cargado
@@ -26,6 +77,12 @@ export default function LoginPage() {
     const handleSuccessfulAuth = async () => {
       // No redirigir si estamos en la página de callback
       if (window.location.pathname === '/auth/callback') {
+        return
+      }
+      
+      // No redirigir si estamos haciendo logout
+      const urlParams = new URLSearchParams(window.location.search)
+      if (urlParams.get('logout') === 'true') {
         return
       }
       

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { signOut } from '../auth.svelte'
+  
   interface SidebarProps {
     activeSection: string
     onSectionChange: (section: string) => void
@@ -7,10 +9,21 @@
   }
 
   let { activeSection, onSectionChange, isOpen = true, onClose }: SidebarProps = $props()
+  
+  async function handleSignOut() {
+    if (confirm('¿Estás seguro de que deseas cerrar sesión?')) {
+      try {
+        await signOut()
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error)
+        alert('Error al cerrar sesión. Por favor, intenta de nuevo.')
+      }
+    }
+  }
 </script>
 
 <div 
-  class="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 z-40 shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 {isOpen ? 'translate-x-0' : '-translate-x-full'}"
+  class="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 z-40 shadow-xl transform transition-transform duration-300 ease-in-out md:translate-x-0 {isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col"
 >
   <div class="p-6 border-b border-gray-700 flex items-center justify-between">
     <h2 class="text-xl font-bold text-white">MiCartaPro</h2>
@@ -26,7 +39,7 @@
     </button>
   </div>
   
-  <nav class="px-4 py-4">
+  <nav class="px-4 py-4 flex-1">
     <button
       onclick={() => onSectionChange('menu')}
       class={`w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 ${
@@ -69,4 +82,17 @@
       <span class="text-sm font-medium">Galería</span>
     </button>
   </nav>
+  
+  <!-- Botón de cerrar sesión al final -->
+  <div class="p-4 border-t border-gray-700 mt-auto">
+    <button
+      onclick={handleSignOut}
+      class="w-full flex items-center p-3 rounded-lg transition-all duration-200 text-gray-300 hover:bg-gray-800 hover:text-white"
+    >
+      <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+      </svg>
+      <span class="text-sm font-medium">Cerrar sesión</span>
+    </button>
+  </div>
 </div>
