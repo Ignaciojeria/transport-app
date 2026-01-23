@@ -101,6 +101,18 @@ func NewOnMenuInteractionRequest(
 			}
 			createRequest.ID = input.MenuID
 
+			// Procesar imagen de portada si hay solicitud
+			if createRequest.CoverImageGenerationRequest != nil {
+				obs.Logger.InfoContext(ctx, "processing_cover_image_generation_request")
+				
+				if err := processCoverImageGenerationRequest(ctx, obs, &createRequest, generateImage, uploadImage); err != nil {
+					obs.Logger.ErrorContext(ctx, "error_processing_cover_image_generation", "error", err)
+					return "", fmt.Errorf("error al procesar generación de imagen de portada: %w", err)
+				}
+				
+				obs.Logger.InfoContext(ctx, "cover_image_generation_completed")
+			}
+
 			// Procesar imágenes si hay solicitudes de generación
 			if len(createRequest.ImageGenerationRequests) > 0 {
 				obs.Logger.InfoContext(ctx, "processing_image_generation_requests", "count", len(createRequest.ImageGenerationRequests))
@@ -128,6 +140,45 @@ func NewOnMenuInteractionRequest(
 
 		return "Lo siento, no pude entender la acción solicitada.", nil
 	}
+}
+
+// processCoverImageGenerationRequest procesa la solicitud de generación de imagen de portada
+func processCoverImageGenerationRequest(
+	ctx context.Context,
+	obs observability.Observability,
+	createRequest *events.MenuCreateRequest,
+	generateImage imagegenerator.GenerateImage,
+	uploadImage imageuploader.UploadImage,
+) error {
+	spanCtx, span := obs.Tracer.Start(ctx, "process_cover_image")
+	defer span.End()
+
+	coverReq := createRequest.CoverImageGenerationRequest
+	obs.Logger.InfoContext(spanCtx, "generating_cover_image", "prompt", coverReq.Prompt)
+
+	// 1. Generar la imagen con aspect ratio 16:9 (horizontalmente larga y verticalmente corta, tipo foto portada LinkedIn)
+	// Nota: La API solo acepta aspect ratios predefinidos, 16:9 es el más ancho disponible
+	imageBytes, err := generateImage(spanCtx, coverReq.Prompt, "16:9", coverReq.ImageCount)
+	if err != nil {
+		obs.Logger.ErrorContext(spanCtx, "error_generating_cover_image", "error", err)
+		return fmt.Errorf("error generando imagen de portada: %w", err)
+	}
+
+	// 2. Crear nombre de archivo único
+	fileName := fmt.Sprintf("cover-%s.png", uuid.New().String()[:8])
+
+	// 3. Subir la imagen a Supabase Storage
+	publicURL, err := uploadImage(spanCtx, imageBytes, fileName)
+	if err != nil {
+		obs.Logger.ErrorContext(spanCtx, "error_uploading_cover_image", "error", err)
+		return fmt.Errorf("error subiendo imagen de portada: %w", err)
+	}
+
+	// 4. Asignar la URL directamente al coverImage
+	createRequest.CoverImage = publicURL
+	obs.Logger.InfoContext(spanCtx, "cover_image_processed_successfully", "publicURL", publicURL)
+
+	return nil
 }
 
 // processImageGenerationRequests procesa todas las solicitudes de generación de imágenes en paralelo
@@ -201,6 +252,7 @@ func processImageGenerationRequests(
 }
 
 // updateMenuWithImageURLs actualiza el menú asignando las URLs de las imágenes a los items/sides correspondientes
+// También maneja IDs especiales: "footer" para footerImage (cover ahora se maneja por separado)
 func updateMenuWithImageURLs(
 	createRequest *events.MenuCreateRequest,
 	imageURLs map[string]string,
@@ -208,6 +260,13 @@ func updateMenuWithImageURLs(
 	ctx context.Context,
 ) {
 	for menuItemID, imageURL := range imageURLs {
+		// Manejar IDs especiales para imágenes del menú
+		if menuItemID == "footer" {
+			createRequest.FooterImage = imageURL
+			obs.Logger.InfoContext(ctx, "image_url_assigned_to_footer", "imageURL", imageURL)
+			continue
+		}
+		
 		// Buscar el item o side en el menú
 		found := false
 		

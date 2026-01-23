@@ -52,7 +52,14 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 					Description: "Lista opcional de opciones de envío/retiro disponibles (PICKUP o DELIVERY).",
 					Items:       schema.GetDeliveryOptionSchema(),
 				},
-				// 6. imageGenerationRequests: Solicitudes de generación de imágenes
+				// 6. coverImageGenerationRequest: Solicitud de generación de imagen de portada
+				"coverImageGenerationRequest": {
+					Type:        genai.TypeObject,
+					Description: "Solicitud opcional de generación de imagen de portada. Solo incluir cuando el usuario solicita explícitamente generar o cambiar la imagen de portada. La imagen se generará con aspect ratio 16:9 (horizontalmente larga y verticalmente corta, tipo foto portada LinkedIn).",
+					Properties:  schema.GetCoverImageGenerationRequestSchema().Properties,
+					Required:    schema.GetCoverImageGenerationRequestSchema().Required,
+				},
+				// 7. imageGenerationRequests: Solicitudes de generación de imágenes
 				"imageGenerationRequests": {
 					Type:        genai.TypeArray,
 					Description: "Lista opcional de solicitudes de generación de imágenes para items o sides que requieren imagen. Solo incluir cuando el usuario solicita explícitamente generar o cambiar una imagen.",

@@ -112,6 +112,11 @@ type DeliveryOption struct {
 	IMAGE GENERATION
 */
 
+type CoverImageGenerationRequest struct {
+	Prompt     string `json:"prompt"`
+	ImageCount int    `json:"imageCount"`
+}
+
 type ImageGenerationRequest struct {
 	MenuItemID string  `json:"menuItemId"`
 	Prompt     string  `json:"prompt"`
@@ -124,13 +129,14 @@ type ImageGenerationRequest struct {
 */
 
 type MenuCreateRequest struct {
-	ID                    string                   `json:"id"`
-	CoverImage            string                   `json:"coverImage"`
-	FooterImage           string                   `json:"footerImage"`
-	BusinessInfo          BusinessInfo             `json:"businessInfo"`
-	Menu                  []MenuCategory           `json:"menu"`
-	DeliveryOptions       []DeliveryOption         `json:"deliveryOptions,omitempty"`
-	ImageGenerationRequests []ImageGenerationRequest `json:"imageGenerationRequests,omitempty"`
+	ID                      string                      `json:"id"`
+	CoverImage              string                      `json:"coverImage"`
+	FooterImage             string                      `json:"footerImage"`
+	BusinessInfo            BusinessInfo                `json:"businessInfo"`
+	Menu                    []MenuCategory             `json:"menu"`
+	DeliveryOptions         []DeliveryOption            `json:"deliveryOptions,omitempty"`
+	CoverImageGenerationRequest *CoverImageGenerationRequest `json:"coverImageGenerationRequest,omitempty"`
+	ImageGenerationRequests []ImageGenerationRequest    `json:"imageGenerationRequests,omitempty"`
 }
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {

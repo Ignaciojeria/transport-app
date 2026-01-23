@@ -9,7 +9,7 @@ func GetImageGenerationRequestSchema() *genai.Schema {
 		Properties: map[string]*genai.Schema{
 			"menuItemId": {
 				Type:        genai.TypeString,
-				Description: "ID del MenuItem o Side que requiere la imagen. Debe corresponder al campo 'id' del elemento.",
+				Description: "ID del MenuItem, Side, o identificador especial para imágenes del menú. Valores especiales: 'footer' para la imagen del footer (footerImage). Para items o sides, debe corresponder al campo 'id' del elemento. NOTA: Para imágenes de portada, usa el campo 'coverImageGenerationRequest' en lugar de este array.",
 			},
 			"prompt": {
 				Type:        genai.TypeString,
@@ -17,7 +17,7 @@ func GetImageGenerationRequestSchema() *genai.Schema {
 			},
 			"aspectRatio": {
 				Type:        genai.TypeString,
-				Description: "Proporción de la imagen. Por defecto debe ser '1:1' para imágenes cuadradas.",
+				Description: "Proporción de la imagen. Por defecto debe ser '1:1' para imágenes cuadradas. NOTA: Para imágenes de portada, usa el campo 'coverImageGenerationRequest' que automáticamente usa aspect ratio 3:1.",
 			},
 			"imageCount": {
 				Type:        genai.TypeInteger,
