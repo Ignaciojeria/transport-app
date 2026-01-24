@@ -117,11 +117,25 @@ type CoverImageGenerationRequest struct {
 	ImageCount int    `json:"imageCount"`
 }
 
+type CoverImageEditionRequest struct {
+	Prompt            string `json:"prompt"`
+	ImageCount        int    `json:"imageCount"`
+	ReferenceImageUrl string `json:"referenceImageUrl"`
+}
+
 type ImageGenerationRequest struct {
 	MenuItemID string  `json:"menuItemId"`
 	Prompt     string  `json:"prompt"`
 	AspectRatio string `json:"aspectRatio"`
 	ImageCount  int    `json:"imageCount"`
+}
+
+type ImageEditionRequest struct {
+	MenuItemID        string  `json:"menuItemId"`
+	Prompt            string  `json:"prompt"`
+	AspectRatio       string  `json:"aspectRatio"`
+	ImageCount        int     `json:"imageCount"`
+	ReferenceImageUrl string  `json:"referenceImageUrl"`
 }
 
 /*
@@ -136,7 +150,18 @@ type MenuCreateRequest struct {
 	Menu                    []MenuCategory             `json:"menu"`
 	DeliveryOptions         []DeliveryOption            `json:"deliveryOptions,omitempty"`
 	CoverImageGenerationRequest *CoverImageGenerationRequest `json:"coverImageGenerationRequest,omitempty"`
+	CoverImageEditionRequest    *CoverImageEditionRequest    `json:"coverImageEditionRequest,omitempty"`
 	ImageGenerationRequests []ImageGenerationRequest    `json:"imageGenerationRequests,omitempty"`
+	ImageEditionRequests   []ImageEditionRequest       `json:"imageEditionRequests,omitempty"`
+}
+
+// Clean elimina los campos contextuales que solo se usan durante el procesamiento
+// y no deben persistirse en el estado final del menú
+func (c *MenuCreateRequest) Clean() {
+	c.CoverImageGenerationRequest = nil
+	c.CoverImageEditionRequest = nil
+	c.ImageGenerationRequests = nil
+	c.ImageEditionRequests = nil
 }
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {

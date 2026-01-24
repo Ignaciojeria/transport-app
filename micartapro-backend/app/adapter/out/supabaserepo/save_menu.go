@@ -92,6 +92,7 @@ func NewSaveMenu(supabase *supabase.Client) SaveMenu {
 		}
 
 		// 2. Convertir el contenido del menú a JSONB
+		// Nota: Los campos contextuales ya fueron limpiados en on_menu_create_request
 		menuContentBytes, err := json.Marshal(menu)
 		if err != nil {
 			return fmt.Errorf("error marshaling menu content: %w", err)

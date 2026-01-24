@@ -29,6 +29,7 @@ func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu 
 			obs.Logger.Error("user_id_not_found_in_context", "error", "userID is required but not found in context")
 			return nil // o podrías retornar un error si prefieres
 		}
+		
 		obs.Logger.InfoContext(ctx, "save_menu", "menu", menu, "idempotencyKey", idempotencyKey, "userID", userID)
 		bucket := gcs.Bucket("micartapro-menus")
 		objectPath := userID + "/menus/" + menu.ID + "/" + idempotencyKey + ".json"

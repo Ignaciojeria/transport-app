@@ -29,15 +29,20 @@ func NewOnMenuCreateRequest(
 		spanCtx, span := observability.Tracer.Start(ctx, "on_menu_create_request")
 		defer span.End()
 
+		// Limpiar campos contextuales antes de persistir
+		// Hacer una copia para no modificar el original
+		menuToSave := input
+		menuToSave.Clean()
+
 		// Guardar en GCS (storage)
-		err := saveMenuStorage(spanCtx, input)
+		err := saveMenuStorage(spanCtx, menuToSave)
 		if err != nil {
 			observability.Logger.Error("error_saving_menu_to_storage", "error", err)
 			return err
 		}
 
 		// Guardar en Supabase
-		err = saveMenuSupabase(spanCtx, input)
+		err = saveMenuSupabase(spanCtx, menuToSave)
 		if err != nil {
 			observability.Logger.Error("error_saving_menu_to_supabase", "error", err)
 			return err
