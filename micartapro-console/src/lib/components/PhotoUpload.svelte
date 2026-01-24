@@ -102,9 +102,9 @@
   }
 </script>
 
-<div class="min-h-screen bg-gray-50">
+<div class="flex flex-col h-screen h-[100dvh] bg-gray-50 overflow-hidden">
   <!-- Header con botón hamburguesa -->
-  <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between md:hidden sticky top-0 z-10">
+  <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between md:hidden sticky top-0 z-10 flex-shrink-0">
     <button 
       onclick={onMenuClick}
       class="p-2 hover:bg-gray-100 rounded-full transition-colors" 
@@ -118,7 +118,7 @@
     <div class="w-10"></div> <!-- Spacer para centrar -->
   </header>
 
-  <div class="p-6 max-w-6xl mx-auto">
+  <div class="flex-1 overflow-y-auto p-6 max-w-6xl mx-auto min-h-0">
     <!-- Galería de fotos -->
     <div class="bg-white rounded-lg shadow-lg p-6">
       <div class="flex items-center justify-between mb-4">

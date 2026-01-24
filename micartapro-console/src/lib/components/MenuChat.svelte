@@ -955,17 +955,25 @@
       return
     }
     
+    // Verificar si hay texto en el input antes de resetear
+    const textarea = chatInputRef?.textareaRef
+    if (textarea && textarea.value?.trim()) {
+      // Hay texto, no resetear
+      return
+    }
+    
     // En móvil, esperar más tiempo para detectar si el teclado se cerró realmente
     const delay = window.innerWidth <= 768 ? 500 : 200
     
     setTimeout(() => {
-      const textarea = chatInputRef?.textareaRef
-      // Verificar si el textarea todavía tiene focus (en algunos móviles el blur puede ser temporal)
+      // Verificar nuevamente si el textarea todavía tiene focus (en algunos móviles el blur puede ser temporal)
       const isStillFocused = document.activeElement === textarea
       
-      if (!isStillFocused && textarea && !textarea.value?.trim()) {
-        // Solo resetear si realmente perdió el focus y no hay texto
-        // Y solo si no hay sugerencias mostrándose
+      // Verificar nuevamente si hay texto (puede haber cambiado mientras esperábamos)
+      const hasText = textarea && textarea.value?.trim()
+      
+      if (!isStillFocused && !hasText) {
+        // Solo resetear si realmente perdió el focus, no hay texto, y no hay sugerencias mostrándose
         if (!showExamples) {
           showExamples = false
           currentExampleType = null
@@ -1212,7 +1220,7 @@
 <div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
   <!-- Vista de Chat (oculta cuando showPreview, showSlugModal o showSubscriptionPromo es true) -->
   <div
-    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo) ? '-translate-x-full' : 'translate-x-0'} overflow-y-auto"
+    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo) ? '-translate-x-full' : 'translate-x-0'} min-h-0"
     style="max-height: 100dvh;"
   >
     <!-- Header estilo Gemini -->
@@ -1258,7 +1266,7 @@
     <!-- Messages Container -->
     <div 
       id="messages-container"
-      class="flex-1 px-4 py-6 min-h-0"
+      class="flex-1 px-4 py-6 min-h-0 overflow-y-auto"
     >
     {#if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
@@ -1742,6 +1750,8 @@
 <style>
   #messages-container {
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
   }
   
   /* Safe area para dispositivos con notch */
