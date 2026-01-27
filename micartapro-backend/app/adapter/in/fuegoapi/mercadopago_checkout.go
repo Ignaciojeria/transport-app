@@ -49,7 +49,7 @@ func mercadopagoCheckout(
 			checkoutRequest := events.MercadoPagoCheckoutRequest{
 				Items: []events.MercadoPagoCheckoutItem{
 					{
-						ProductName: "Suscripción",
+						ProductName: "Pago único",
 						Quantity:    1,
 						Unit:        "EACH",
 						UnitPrice:   3500,
