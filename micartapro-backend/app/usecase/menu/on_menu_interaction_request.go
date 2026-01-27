@@ -29,6 +29,7 @@ func init() {
 		eventprocessing.NewPublisherStrategy,
 		supabaserepo.NewGetMenuById,
 		imagegenerator.NewImageGenerator,
+		imagegenerator.NewImageEditor,
 		imageuploader.NewImageUploader)
 }
 
@@ -38,6 +39,7 @@ func NewOnMenuInteractionRequest(
 	publisherManager eventprocessing.PublisherManager,
 	getMenuById supabaserepo.GetMenuById,
 	generateImage imagegenerator.GenerateImage,
+	editImage imagegenerator.EditImage,
 	uploadImage imageuploader.UploadImage) OnMenuInteractionRequest {
 	return func(ctx context.Context, input events.MenuInteractionRequest) (string, error) {
 
@@ -63,14 +65,14 @@ func NewOnMenuInteractionRequest(
 			obs.Logger.ErrorContext(ctx, "error getting menu from supabase", "error", err, "menuID", input.MenuID)
 			return "", err
 		}
-		
+
 		// Si el menú no se encuentra, continuamos con un menú vacío (comportamiento original)
 		if err == supabaserepo.ErrMenuNotFound {
 			obs.Logger.WarnContext(ctx, "menu not found in supabase, continuing with empty menu", "menuID", input.MenuID)
 		} else {
 			obs.Logger.InfoContext(ctx, "menu content retrieved from menu_versions using current_version_id, will be passed to prompt", "menuID", input.MenuID)
 		}
-		
+
 		// 4. Asignar el contenido del menú obtenido desde menu_versions (usando current_version_id) al request
 		// Este contenido será convertido a toon format y pasado al prompt como MENU_ACTUAL
 		// Representa la versión actual del menú que el agente debe conocer para aplicar los cambios
@@ -101,28 +103,70 @@ func NewOnMenuInteractionRequest(
 			}
 			createRequest.ID = input.MenuID
 
-			// Procesar imagen de portada si hay solicitud
+			// Procesar imagen de portada si hay solicitud de generación
 			if createRequest.CoverImageGenerationRequest != nil {
 				obs.Logger.InfoContext(ctx, "processing_cover_image_generation_request")
-				
+
 				if err := processCoverImageGenerationRequest(ctx, obs, &createRequest, generateImage, uploadImage); err != nil {
 					obs.Logger.ErrorContext(ctx, "error_processing_cover_image_generation", "error", err)
 					return "", fmt.Errorf("error al procesar generación de imagen de portada: %w", err)
 				}
-				
+
 				obs.Logger.InfoContext(ctx, "cover_image_generation_completed")
+			}
+
+			// Procesar imagen de portada si hay solicitud de edición
+			if createRequest.CoverImageEditionRequest != nil {
+				obs.Logger.InfoContext(ctx, "processing_cover_image_edition_request")
+
+				// Si no hay referenceImageUrl, usar la coverImage del menú actual
+				if createRequest.CoverImageEditionRequest.ReferenceImageUrl == "" && menu.CoverImage != "" {
+					obs.Logger.InfoContext(ctx, "using_current_menu_cover_image_as_reference", "coverImage", menu.CoverImage)
+					createRequest.CoverImageEditionRequest.ReferenceImageUrl = menu.CoverImage
+				}
+
+				if err := processCoverImageEditionRequest(ctx, obs, &createRequest, editImage, uploadImage); err != nil {
+					obs.Logger.ErrorContext(ctx, "error_processing_cover_image_edition", "error", err)
+					return "", fmt.Errorf("error al procesar edición de imagen de portada: %w", err)
+				}
+
+				obs.Logger.InfoContext(ctx, "cover_image_edition_completed")
 			}
 
 			// Procesar imágenes si hay solicitudes de generación
 			if len(createRequest.ImageGenerationRequests) > 0 {
 				obs.Logger.InfoContext(ctx, "processing_image_generation_requests", "count", len(createRequest.ImageGenerationRequests))
-				
+
 				if err := processImageGenerationRequests(ctx, obs, &createRequest, generateImage, uploadImage); err != nil {
 					obs.Logger.ErrorContext(ctx, "error_processing_image_generation", "error", err)
 					return "", fmt.Errorf("error al procesar generación de imágenes: %w", err)
 				}
-				
+
 				obs.Logger.InfoContext(ctx, "image_generation_completed", "count", len(createRequest.ImageGenerationRequests))
+			}
+
+			// Procesar imágenes si hay solicitudes de edición
+			if len(createRequest.ImageEditionRequests) > 0 {
+				obs.Logger.InfoContext(ctx, "processing_image_edition_requests", "count", len(createRequest.ImageEditionRequests))
+
+				// Para cada solicitud de edición, si no hay referenceImageUrl, buscar la imagen del item en el menú actual
+				for i := range createRequest.ImageEditionRequests {
+					if createRequest.ImageEditionRequests[i].ReferenceImageUrl == "" {
+						// Buscar la imagen del item en el menú actual
+						imageURL := findImageUrlInMenu(menu, createRequest.ImageEditionRequests[i].MenuItemID)
+						if imageURL != "" {
+							obs.Logger.InfoContext(ctx, "using_current_menu_image_as_reference", "menuItemId", createRequest.ImageEditionRequests[i].MenuItemID, "imageUrl", imageURL)
+							createRequest.ImageEditionRequests[i].ReferenceImageUrl = imageURL
+						}
+					}
+				}
+
+				if err := processImageEditionRequests(ctx, obs, &createRequest, editImage, uploadImage); err != nil {
+					obs.Logger.ErrorContext(ctx, "error_processing_image_edition", "error", err)
+					return "", fmt.Errorf("error al procesar edición de imágenes: %w", err)
+				}
+
+				obs.Logger.InfoContext(ctx, "image_edition_completed", "count", len(createRequest.ImageEditionRequests))
 			}
 
 			if err := publisherManager.Publish(ctx, eventprocessing.PublishRequest{
@@ -191,7 +235,7 @@ func processImageGenerationRequests(
 ) error {
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(createRequest.ImageGenerationRequests))
-	
+
 	// Mapa para almacenar las URLs generadas por menuItemId
 	imageURLs := make(map[string]string)
 	var mu sync.Mutex
@@ -251,6 +295,36 @@ func processImageGenerationRequests(
 	return nil
 }
 
+// findImageUrlInMenu busca la URL de la imagen de un item o side en el menú actual
+func findImageUrlInMenu(menu events.MenuCreateRequest, menuItemID string) string {
+	// Buscar en items
+	for _, category := range menu.Menu {
+		for _, item := range category.Items {
+			if item.ID == menuItemID {
+				if item.PhotoUrl != "" {
+					return item.PhotoUrl
+				}
+			}
+
+			// Buscar en sides del item
+			for _, side := range item.Sides {
+				if side.ID == menuItemID {
+					if side.PhotoUrl != "" {
+						return side.PhotoUrl
+					}
+				}
+			}
+		}
+	}
+
+	// Manejar IDs especiales
+	if menuItemID == "footer" && menu.FooterImage != "" {
+		return menu.FooterImage
+	}
+
+	return ""
+}
+
 // updateMenuWithImageURLs actualiza el menú asignando las URLs de las imágenes a los items/sides correspondientes
 // También maneja IDs especiales: "footer" para footerImage (cover ahora se maneja por separado)
 func updateMenuWithImageURLs(
@@ -266,10 +340,10 @@ func updateMenuWithImageURLs(
 			obs.Logger.InfoContext(ctx, "image_url_assigned_to_footer", "imageURL", imageURL)
 			continue
 		}
-		
+
 		// Buscar el item o side en el menú
 		found := false
-		
+
 		// Buscar en items
 		for i := range createRequest.Menu {
 			for j := range createRequest.Menu[i].Items {
@@ -279,7 +353,7 @@ func updateMenuWithImageURLs(
 					found = true
 					break
 				}
-				
+
 				// Buscar en sides del item
 				for k := range createRequest.Menu[i].Items[j].Sides {
 					if createRequest.Menu[i].Items[j].Sides[k].ID == menuItemID {
@@ -289,7 +363,7 @@ func updateMenuWithImageURLs(
 						break
 					}
 				}
-				
+
 				if found {
 					break
 				}
@@ -298,9 +372,118 @@ func updateMenuWithImageURLs(
 				break
 			}
 		}
-		
+
 		if !found {
 			obs.Logger.WarnContext(ctx, "menu_item_not_found_for_image", "menuItemId", menuItemID)
 		}
 	}
+}
+
+// processCoverImageEditionRequest procesa la solicitud de edición de imagen de portada
+func processCoverImageEditionRequest(
+	ctx context.Context,
+	obs observability.Observability,
+	createRequest *events.MenuCreateRequest,
+	editImage imagegenerator.EditImage,
+	uploadImage imageuploader.UploadImage,
+) error {
+	spanCtx, span := obs.Tracer.Start(ctx, "process_cover_image_edition")
+	defer span.End()
+
+	coverReq := createRequest.CoverImageEditionRequest
+	obs.Logger.InfoContext(spanCtx, "editing_cover_image", "prompt", coverReq.Prompt, "referenceImageUrl", coverReq.ReferenceImageUrl)
+
+	// 1. Editar la imagen con aspect ratio 16:9 usando la imagen de referencia
+	// Pasar "cover" como menuItemId para indicar que es la imagen de portada (no aplicar remoción de background)
+	imageBytes, err := editImage(spanCtx, coverReq.Prompt, coverReq.ReferenceImageUrl, "16:9", coverReq.ImageCount, "cover")
+	if err != nil {
+		obs.Logger.ErrorContext(spanCtx, "error_editing_cover_image", "error", err)
+		return fmt.Errorf("error editando imagen de portada: %w", err)
+	}
+
+	// 2. Crear nombre de archivo único
+	fileName := fmt.Sprintf("cover-edited-%s.png", uuid.New().String()[:8])
+
+	// 3. Subir la imagen editada a Supabase Storage
+	publicURL, err := uploadImage(spanCtx, imageBytes, fileName)
+	if err != nil {
+		obs.Logger.ErrorContext(spanCtx, "error_uploading_edited_cover_image", "error", err)
+		return fmt.Errorf("error subiendo imagen de portada editada: %w", err)
+	}
+
+	// 4. Asignar la URL directamente al coverImage (nueva versión editada)
+	createRequest.CoverImage = publicURL
+	obs.Logger.InfoContext(spanCtx, "cover_image_edited_successfully", "publicURL", publicURL)
+
+	return nil
+}
+
+// processImageEditionRequests procesa todas las solicitudes de edición de imágenes en paralelo
+func processImageEditionRequests(
+	ctx context.Context,
+	obs observability.Observability,
+	createRequest *events.MenuCreateRequest,
+	editImage imagegenerator.EditImage,
+	uploadImage imageuploader.UploadImage,
+) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(createRequest.ImageEditionRequests))
+
+	// Mapa para almacenar las URLs editadas por menuItemId
+	imageURLs := make(map[string]string)
+	var mu sync.Mutex
+
+	for _, imgReq := range createRequest.ImageEditionRequests {
+		wg.Add(1)
+		go func(req events.ImageEditionRequest) {
+			defer wg.Done()
+
+			spanCtx, span := obs.Tracer.Start(ctx, "process_single_image_edition")
+			defer span.End()
+
+			obs.Logger.InfoContext(spanCtx, "editing_image_for_item", "menuItemId", req.MenuItemID, "prompt", req.Prompt, "referenceImageUrl", req.ReferenceImageUrl)
+
+			// 1. Editar la imagen usando la imagen de referencia
+			imageBytes, err := editImage(spanCtx, req.Prompt, req.ReferenceImageUrl, req.AspectRatio, req.ImageCount, req.MenuItemID)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_editing_image", "error", err, "menuItemId", req.MenuItemID)
+				errChan <- fmt.Errorf("error editando imagen para %s: %w", req.MenuItemID, err)
+				return
+			}
+
+			// 2. Crear nombre de archivo único para la nueva versión editada
+			fileName := fmt.Sprintf("%s-edited-%s.png", req.MenuItemID, uuid.New().String()[:8])
+
+			// 3. Subir la imagen editada a Supabase Storage
+			publicURL, err := uploadImage(spanCtx, imageBytes, fileName)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_uploading_edited_image", "error", err, "menuItemId", req.MenuItemID)
+				errChan <- fmt.Errorf("error subiendo imagen editada para %s: %w", req.MenuItemID, err)
+				return
+			}
+
+			// 4. Guardar la URL en el mapa
+			mu.Lock()
+			imageURLs[req.MenuItemID] = publicURL
+			mu.Unlock()
+
+			obs.Logger.InfoContext(spanCtx, "image_edited_successfully", "menuItemId", req.MenuItemID, "publicURL", publicURL)
+		}(imgReq)
+	}
+
+	// Esperar a que todas las goroutines terminen
+	wg.Wait()
+	close(errChan)
+
+	// Verificar si hubo errores
+	for err := range errChan {
+		if err != nil {
+			return err
+		}
+	}
+
+	// 5. Actualizar el menú con las URLs de las imágenes editadas
+	updateMenuWithImageURLs(createRequest, imageURLs, obs, ctx)
+
+	return nil
 }

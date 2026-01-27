@@ -118,10 +118,28 @@ type CoverImageGenerationRequest struct {
 }
 
 type ImageGenerationRequest struct {
-	MenuItemID string  `json:"menuItemId"`
-	Prompt     string  `json:"prompt"`
+	MenuItemID  string `json:"menuItemId"`
+	Prompt      string `json:"prompt"`
 	AspectRatio string `json:"aspectRatio"`
 	ImageCount  int    `json:"imageCount"`
+}
+
+/*
+	IMAGE EDITION
+*/
+
+type CoverImageEditionRequest struct {
+	Prompt           string `json:"prompt"`
+	ReferenceImageUrl string `json:"referenceImageUrl"`
+	ImageCount       int    `json:"imageCount"`
+}
+
+type ImageEditionRequest struct {
+	MenuItemID       string `json:"menuItemId"`
+	Prompt           string `json:"prompt"`
+	ReferenceImageUrl string `json:"referenceImageUrl"`
+	AspectRatio      string `json:"aspectRatio"`
+	ImageCount       int    `json:"imageCount"`
 }
 
 /*
@@ -129,14 +147,16 @@ type ImageGenerationRequest struct {
 */
 
 type MenuCreateRequest struct {
-	ID                      string                      `json:"id"`
-	CoverImage              string                      `json:"coverImage"`
-	FooterImage             string                      `json:"footerImage"`
-	BusinessInfo            BusinessInfo                `json:"businessInfo"`
-	Menu                    []MenuCategory             `json:"menu"`
-	DeliveryOptions         []DeliveryOption            `json:"deliveryOptions,omitempty"`
+	ID                          string                       `json:"id"`
+	CoverImage                  string                       `json:"coverImage"`
+	FooterImage                 string                       `json:"footerImage"`
+	BusinessInfo                BusinessInfo                 `json:"businessInfo"`
+	Menu                        []MenuCategory               `json:"menu"`
+	DeliveryOptions             []DeliveryOption             `json:"deliveryOptions,omitempty"`
 	CoverImageGenerationRequest *CoverImageGenerationRequest `json:"coverImageGenerationRequest,omitempty"`
-	ImageGenerationRequests []ImageGenerationRequest    `json:"imageGenerationRequests,omitempty"`
+	ImageGenerationRequests     []ImageGenerationRequest     `json:"imageGenerationRequests,omitempty"`
+	CoverImageEditionRequest    *CoverImageEditionRequest   `json:"coverImageEditionRequest,omitempty"`
+	ImageEditionRequests        []ImageEditionRequest       `json:"imageEditionRequests,omitempty"`
 }
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
@@ -147,4 +167,13 @@ func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
 	event.SetData(cloudevents.ApplicationJSON, c)
 	event.SetTime(time.Now())
 	return event
+}
+
+// Clean limpia los campos temporales de solicitudes de generación/edición de imágenes
+// después de que hayan sido procesadas. Estos campos no deben persistirse en storage/Supabase.
+func (c *MenuCreateRequest) Clean() {
+	c.CoverImageGenerationRequest = nil
+	c.ImageGenerationRequests = nil
+	c.CoverImageEditionRequest = nil
+	c.ImageEditionRequests = nil
 }

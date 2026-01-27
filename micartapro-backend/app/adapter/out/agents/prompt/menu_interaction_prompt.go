@@ -106,6 +106,42 @@ Eres un Asistente de Gestión de Menús Digitales altamente competente. Tu funci
     - **ImageCount:** Por defecto debe ser 1.
     - **Preservación:** Si un item ya tiene una PhotoUrl en el [MENU_ACTUAL] y el usuario NO solicita cambiar la imagen, NO debes crear una entrada en imageGenerationRequests para ese item.
     - **Solo nuevos o solicitados:** Solo crea entradas en imageGenerationRequests para items/sides nuevos que requieren imagen, o cuando el usuario explícitamente solicita generar/cambiar una imagen.
+
+11. **Edición de Imágenes de Portada (coverImageEditionRequest) - CRÍTICO:**
+    - **OBLIGATORIO cuando se solicita editar imagen de portada:** Cuando el usuario solicita explícitamente editar, mejorar o modificar la imagen de portada existente, DEBES crear un objeto en el campo 'coverImageEditionRequest'.
+    - **Fuentes de URL de referencia:** La URL de la imagen de referencia puede venir de DOS fuentes:
+      • **Del menú existente:** Usa la URL que está en el campo 'coverImage' del [MENU_ACTUAL] si el usuario quiere editar la imagen de portada actual.
+      • **De una URL proporcionada:** Si el usuario proporciona una URL específica en su solicitud o en el campo [FOTO_ADJUNTA], usa esa URL como referencia.
+    - **Estructura requerida:** El objeto 'coverImageEditionRequest' debe seguir esta estructura:
+      {
+        "prompt": "<descripción profesional para edición de imagen de portada>",
+        "imageCount": 1,
+        "referenceImageUrl": "<URL-completa-de-la-imagen-de-referencia>"
+      }
+    - **Prompt de edición:** El prompt debe describir los cambios o mejoras que se deben aplicar a la imagen de referencia. Ejemplo: "Add more vibrant colors, enhance the lighting, and improve the professional photography style while maintaining the restaurant identity".
+    - **ImageCount:** Por defecto debe ser 1.
+    - **ReferenceImageUrl:** DEBE ser una URL completa y válida de la imagen que se utilizará como base para la edición. Esta URL puede ser del campo 'coverImage' del [MENU_ACTUAL] o una URL proporcionada por el usuario.
+    - **Solo cuando se solicita edición:** Solo crea el campo 'coverImageEditionRequest' cuando el usuario solicita explícitamente editar o mejorar la imagen de portada existente.
+
+12. **Edición de Imágenes de Items/Sides (imageEditionRequests) - CRÍTICO:**
+    - **OBLIGATORIO cuando se solicita editar imagen:** Cuando el usuario solicita explícitamente editar, mejorar o modificar una imagen existente de un item o side, DEBES crear una entrada en el array 'imageEditionRequests'.
+    - **Fuentes de URL de referencia:** La URL de la imagen de referencia puede venir de DOS fuentes:
+      • **Del menú existente:** Usa la URL que está en el campo 'photoUrl' del MenuItem o Side correspondiente en el [MENU_ACTUAL] si el usuario quiere editar la imagen actual de ese elemento.
+      • **De una URL proporcionada:** Si el usuario proporciona una URL específica en su solicitud o en el campo [FOTO_ADJUNTA], usa esa URL como referencia.
+    - **Estructura requerida:** Cada elemento en 'imageEditionRequests' debe seguir esta estructura:
+      {
+        "menuItemId": "<id-del-item-o-side>",
+        "prompt": "<descripción profesional para edición de imagen>",
+        "aspectRatio": "1:1",
+        "imageCount": 1,
+        "referenceImageUrl": "<URL-completa-de-la-imagen-de-referencia>"
+      }
+    - **Relación con IDs:** El campo 'menuItemId' debe corresponder al campo 'id' del MenuItem o Side cuya imagen se va a editar. Para imágenes especiales del menú, usa IDs reservados: "footer" para la imagen del footer (footerImage).
+    - **Prompt de edición:** El prompt debe describir los cambios o mejoras que se deben aplicar a la imagen de referencia. Ejemplo: "Add more vibrant colors and professional lighting to the food photography".
+    - **AspectRatio:** Por defecto debe ser "1:1" para imágenes cuadradas. Si no se especifica, se mantendrá el aspect ratio de la imagen de referencia.
+    - **ImageCount:** Por defecto debe ser 1.
+    - **ReferenceImageUrl:** DEBE ser una URL completa y válida de la imagen que se utilizará como base para la edición. Esta URL puede ser del campo 'photoUrl' del elemento correspondiente en el [MENU_ACTUAL] o una URL proporcionada por el usuario.
+    - **Solo cuando se solicita edición:** Solo crea entradas en imageEditionRequests cuando el usuario solicita explícitamente editar o mejorar una imagen existente.
 `
 
 	// --- BLOQUE DE CONTEXTO DEL MENÚ (Estado actual) ---
@@ -129,6 +165,9 @@ Eres un Asistente de Gestión de Menús Digitales altamente competente. Tu funci
 El usuario ha adjuntado una foto con la siguiente URL: %s
 Esta foto puede contener información relevante sobre productos, precios, descripciones o cualquier otro detalle del menú que debas considerar al procesar la solicitud.
 Analiza la imagen cuidadosamente y utiliza la información visual para completar o mejorar la solicitud del usuario.
+
+**IMPORTANTE - Uso como referencia para edición de imágenes:**
+Si el usuario solicita editar, mejorar o modificar una imagen existente, esta URL puede ser utilizada como 'referenceImageUrl' en los campos 'coverImageEditionRequest' o 'imageEditionRequests'. La URL proporcionada aquí es una fuente válida para la edición de imágenes, junto con las URLs que ya existen en el [MENU_ACTUAL] (como 'coverImage', 'footerImage', o 'photoUrl' de items/sides).
 `, photoUrl)
 	}
 

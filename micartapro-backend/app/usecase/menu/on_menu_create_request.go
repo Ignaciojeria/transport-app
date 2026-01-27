@@ -29,6 +29,10 @@ func NewOnMenuCreateRequest(
 		spanCtx, span := observability.Tracer.Start(ctx, "on_menu_create_request")
 		defer span.End()
 
+		// Limpiar campos temporales de solicitudes de generación/edición de imágenes
+		// antes de guardar (estos campos ya fueron procesados y no deben persistirse)
+		input.Clean()
+
 		// Guardar en GCS (storage)
 		err := saveMenuStorage(spanCtx, input)
 		if err != nil {
