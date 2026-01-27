@@ -25,6 +25,13 @@ type Conf struct {
 	CREEM_WEBHOOK_SIGNING_SECRET string `env:"CREEM_WEBHOOK_SIGNING_SECRET" envDefault:""`
 	SUPABASE_BACKEND_API_KEY     string `env:"SUPABASE_BACKEND_API_KEY" envDefault:""`
 	SUPABASE_PROJECT_URL         string `env:"SUPABASE_PROJECT_URL" envDefault:"https://rbpdhapfcljecofrscnj.supabase.co"`
+	MERCADOPAGO_ACCESS_TOKEN     string `env:"MERCADOPAGO_ACCESS_TOKEN" envDefault:""`
+	MERCADOPAGO_PUBLIC_KEY       string `env:"MERCADOPAGO_PUBLIC_KEY" envDefault:""`
+	MERCADOPAGO_WEBHOOK_SECRET   string `env:"MERCADOPAGO_WEBHOOK_SECRET" envDefault:""`
+	MERCADOPAGO_SUCCESS_URL      string `env:"MERCADOPAGO_SUCCESS_URL" envDefault:"https://console.micartapro.com/"`
+	MERCADOPAGO_FAILURE_URL      string `env:"MERCADOPAGO_FAILURE_URL" envDefault:"https://console.micartapro.com/"`
+	MERCADOPAGO_PENDING_URL      string `env:"MERCADOPAGO_PENDING_URL" envDefault:"https://console.micartapro.com/"`
+	MERCADOPAGO_WEBHOOK_URL      string `env:"MERCADOPAGO_WEBHOOK_URL" envDefault:""`
 }
 
 func NewConf() (Conf, error) {

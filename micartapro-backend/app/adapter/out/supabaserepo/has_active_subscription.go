@@ -3,7 +3,6 @@ package supabaserepo
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"micartapro/app/shared/infrastructure/supabasecli"
 
@@ -11,8 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
-
-var ErrSubscriptionNotFound = errors.New("subscription not found")
 
 type HasActiveSubscription func(ctx context.Context, userID uuid.UUID) (bool, error)
 

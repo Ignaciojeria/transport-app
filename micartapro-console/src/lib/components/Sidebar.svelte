@@ -14,6 +14,7 @@
   
   const session = $derived(authState.session)
   const t = $derived($tStore)
+  let showBuyCreditsModal = $state(false)
   
   async function handleSignOut() {
     if (confirm(t.sidebar.confirmSignOut)) {
@@ -26,15 +27,23 @@
     }
   }
 
-  async function handleMyPlan() {
+  function handleBuyCreditsClick() {
+    showBuyCreditsModal = true
+  }
+
+  function closeBuyCreditsModal() {
+    showBuyCreditsModal = false
+  }
+
+  async function handleBuyCredits() {
     if (!session?.access_token) {
       alert(t.sidebar.errorNoSession)
       return
     }
 
     try {
-      // Llamar al endpoint de customer portal
-      const response = await fetch(`${API_BASE_URL}/customer-portal`, {
+      // Llamar al endpoint de checkout de MercadoPago
+      const response = await fetch(`${API_BASE_URL}/checkout/mercadopago`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -43,29 +52,28 @@
       })
 
       if (!response.ok) {
-        if (response.status === 404) {
-          alert(t.sidebar.errorNoActiveSubscription)
-          return
-        }
         const errorText = await response.text()
-        console.error('Error obteniendo portal del consumidor:', errorText)
-        alert(t.sidebar.errorGettingPortal)
+        console.error('Error obteniendo checkout URL:', errorText)
+        alert('Error al obtener la URL de checkout. Por favor, intenta de nuevo.')
         return
       }
 
       const data = await response.json()
-      const portalUrl = data.customer_portal_link
+      const checkoutUrl = data.checkout_url
 
-      if (!portalUrl) {
-        alert(t.sidebar.errorNoPortalUrl)
+      if (!checkoutUrl) {
+        alert('No se recibió la URL de checkout. Por favor, intenta de nuevo.')
         return
       }
 
-      // Redirigir al portal del consumidor
-      window.open(portalUrl, '_blank')
+      // Cerrar el modal
+      closeBuyCreditsModal()
+
+      // Redirigir a la URL de checkout
+      window.open(checkoutUrl, '_blank')
     } catch (error) {
-      console.error('Error accediendo al portal:', error)
-      alert(t.sidebar.errorAccessingPortal)
+      console.error('Error comprando créditos:', error)
+      alert('Error al comprar créditos. Por favor, intenta de nuevo.')
     }
   }
 </script>
@@ -146,13 +154,13 @@
     </button>
 
     <button
-      onclick={handleMyPlan}
+      onclick={handleBuyCreditsClick}
       class="w-full flex items-center p-3 rounded-lg transition-all duration-200 mb-2 text-gray-300 hover:bg-gray-800 hover:text-white"
     >
       <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span class="text-sm font-medium">{t.sidebar.myPlan}</span>
+      <span class="text-sm font-medium">Comprar créditos</span>
     </button>
   </nav>
   
@@ -169,3 +177,88 @@
     </button>
   </div>
 </div>
+
+<!-- Modal de compra de créditos - Fuera del sidebar para que aparezca sobre toda la aplicación -->
+{#if showBuyCreditsModal}
+  <!-- Overlay con transición -->
+  <div 
+    class="fixed inset-0 bg-black bg-opacity-50 z-[100] transition-opacity duration-300"
+    onclick={closeBuyCreditsModal}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="buy-credits-title"
+  >
+    <!-- Modal -->
+    <div 
+      class="fixed inset-0 flex items-center justify-center p-4 z-[100]"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <div 
+        class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100"
+        onclick={(e) => e.stopPropagation()}
+      >
+        <!-- Header -->
+        <div class="px-6 pt-6 pb-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 id="buy-credits-title" class="text-2xl font-bold text-gray-900">
+              💳 Comprar Créditos
+            </h2>
+            <button
+              onclick={closeBuyCreditsModal}
+              class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Cerrar"
+            >
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="px-6 py-6">
+          <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full mb-4">
+              <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">
+              $3.500 CLP
+            </h3>
+            <p class="text-3xl font-bold text-blue-600 mb-2">
+              25 Créditos
+            </p>
+            <p class="text-gray-600 text-sm">
+              25 ediciones de menú desde nuestro agente
+            </p>
+          </div>
+
+          <!-- Información adicional -->
+          <div class="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
+            <p class="text-sm text-gray-700 text-center">
+              Cada crédito te permite realizar una interacción con el agente para generar o editar tu carta digital.
+            </p>
+          </div>
+
+          <!-- Botones -->
+          <div class="flex flex-col gap-3">
+            <button
+              onclick={handleBuyCredits}
+              class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-2"
+            >
+              <span>💳</span>
+              <span>Comprar ahora</span>
+            </button>
+            <button
+              onclick={closeBuyCreditsModal}
+              class="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-medium text-sm"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}

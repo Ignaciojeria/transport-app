@@ -4,7 +4,7 @@
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, hasActiveSubscription } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, getUserCredits, hasEnoughCredits } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -49,6 +49,8 @@
   let showConfetti = $state(false) // Mostrar confeti
   let confettiParticles = $state<Array<{left: number, delay: number, color: string}>>([]) // Partículas de confeti
   let showSubscriptionPromo = $state(false) // Modal promocional de suscripción
+  let showCreditsPromo = $state(false) // Modal promocional de créditos
+  let userCredits = $state<number | null>(null) // Créditos del usuario
   let showCamera = $state(false) // Mostrar cámara para tomar foto
   let stream: MediaStream | null = $state(null) // Stream de la cámara
   let videoRef: HTMLVideoElement | null = $state(null) // Referencia al video
@@ -183,10 +185,16 @@
       }
     })
     
-    // Cargar menuID al montar el componente
+    // Cargar menuID y créditos al montar el componente
     ;(async () => {
       if (userId && session?.access_token) {
         try {
+          // Cargar créditos del usuario
+          const credits = await getUserCredits(session.access_token)
+          if (credits !== null) {
+            userCredits = credits.balance
+          }
+
           const id = await getLatestMenuId(userId, session.access_token)
           if (id) {
             menuId = id
@@ -420,16 +428,7 @@
     }
 
     try {
-      // Primero verificar si el usuario tiene una suscripción activa
-      const hasSubscription = await hasActiveSubscription(userId, session.access_token)
-      
-      if (!hasSubscription) {
-        // No tiene suscripción, mostrar modal promocional
-        showSubscriptionPromo = true
-        return
-      }
-
-      // Si tiene suscripción, verificar si existe un slug para este menú
+      // Verificar si existe un slug para este menú (siempre permitir compartir)
       const existingSlug = await getMenuSlug(menuId, session.access_token)
       
       if (!existingSlug) {
@@ -462,9 +461,10 @@
 
     try {
       showSubscriptionPromo = false
+      showCreditsPromo = false
       
-      // Llamar al endpoint de checkout del backend
-      const response = await fetch(`${API_BASE_URL}/checkout`, {
+      // Llamar al endpoint de checkout de MercadoPago del backend
+      const response = await fetch(`${API_BASE_URL}/checkout/mercadopago`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
@@ -489,6 +489,11 @@
 
       // Redirigir a la URL de checkout
       window.open(checkoutUrl, '_blank')
+      
+      // Refrescar créditos después de un momento (el webhook puede tardar)
+      setTimeout(async () => {
+        await refreshCredits()
+      }, 3000)
     } catch (error) {
       console.error('Error activando plan:', error)
       alert('Error al activar el plan. Por favor, intenta de nuevo.')
@@ -497,9 +502,19 @@
 
   function handleBackToEdit() {
     showSubscriptionPromo = false
+    showCreditsPromo = false
     // Cerrar preview si está abierto
     if (showPreview) {
       showPreview = false
+    }
+  }
+
+  async function refreshCredits() {
+    if (session?.access_token) {
+      const credits = await getUserCredits(session.access_token)
+      if (credits !== null) {
+        userCredits = credits.balance
+      }
     }
   }
 
@@ -708,6 +723,15 @@
       })
 
       if (!response.ok) {
+        // Si el error es 402 (Payment Required), significa que no hay suficientes créditos
+        if (response.status === 402) {
+          isLoading = false
+          // Obtener créditos actuales para mostrar en el modal
+          const credits = await getUserCredits(session.access_token)
+          userCredits = credits?.balance || 0
+          showCreditsPromo = true
+          return
+        }
         throw new Error(`Error del servidor: ${response.status} ${response.statusText}`)
       }
 
@@ -753,6 +777,9 @@
           console.log('✅ Último mensaje tiene pendingVersionId:', messages[messages.length - 1].pendingVersionId)
           console.log('✅ Valor exacto de pendingVersionId:', messages[messages.length - 1].pendingVersionId)
           versionActivated = false // Resetear el flag cuando hay nueva versión
+          
+          // Refrescar créditos después de consumir uno
+          await refreshCredits()
           
           // Actualizar la URL del menú y forzar recarga del iframe
           // Incluir version_id en la URL para mostrar la versión específica (interacción)
@@ -1220,7 +1247,7 @@
 <div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
   <!-- Vista de Chat (oculta cuando showPreview, showSlugModal o showSubscriptionPromo es true) -->
   <div
-    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo) ? '-translate-x-full' : 'translate-x-0'} min-h-0"
+    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo || showCreditsPromo) ? '-translate-x-full' : 'translate-x-0'} min-h-0"
     style="max-height: 100dvh;"
   >
     <!-- Header estilo Gemini -->
@@ -1237,7 +1264,18 @@
       </button>
       <div class="hidden md:block w-9"></div> <!-- Spacer para desktop -->
       <h1 class="text-lg font-medium text-gray-900">MiCartaPro</h1>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-3">
+        <!-- Contador de créditos -->
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {#if userCredits !== null}
+            <span class="text-sm font-semibold text-blue-700">{userCredits}</span>
+          {:else}
+            <span class="text-sm text-blue-500">-</span>
+          {/if}
+        </div>
         <button 
           onclick={togglePreview}
           class="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
@@ -1442,7 +1480,7 @@
 
   <!-- Vista de Preview (se muestra cuando showPreview es true) -->
   <div 
-    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {(showPreview && !showSlugModal && !showSubscriptionPromo) ? 'translate-x-0' : 'translate-x-full'}"
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {(showPreview && !showSlugModal && !showSubscriptionPromo && !showCreditsPromo) ? 'translate-x-0' : 'translate-x-full'}"
   >
     <!-- Header del Preview -->
     <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
@@ -1534,7 +1572,7 @@
   </div>
 
 <!-- Botón flotante: "Usar este menú" o "Compartir" según el estado (móviles) -->
-{#if menuUrl && showPreview && !showSlugModal && !showSubscriptionPromo}
+{#if menuUrl && showPreview && !showSlugModal && !showSubscriptionPromo && !showCreditsPromo}
   {@const pendingVersion = messages.find(msg => msg.pendingVersionId && !versionActivated)}
       {#if pendingVersion}
         <!-- Botón "Usar este menú" cuando hay versión pendiente (móvil) -->

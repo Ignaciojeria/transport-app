@@ -88,6 +88,38 @@
         {
             "kind": "post-controller",
             "name": "create-order"
+        },
+        {
+            "kind": "post-controller",
+            "name": "mercadopago-checkout"
+        },
+        {
+            "kind": "post-controller",
+            "name": "mercadopago-webhook"
+        },
+        {
+            "kind": "resty-client",
+            "name": "create-mercadopago-order"
+        },
+        {
+            "kind": "resty-client",
+            "name": "get-mercadopago-order"
+        },
+        {
+            "kind": "resty-client",
+            "name": "get-mercadopago-payment"
+        },
+        {
+            "kind": "postgresql-repository",
+            "name": "get-menu-id-by-user-id"
+        },
+        {
+            "kind": "usecase",
+            "name": "create-mercadopago-checkout"
+        },
+        {
+            "kind": "usecase",
+            "name": "on-mercadopago-webhook"
         }
     ]
 }

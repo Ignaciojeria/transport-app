@@ -932,6 +932,62 @@ export async function updateCurrentVersionId(
 }
 
 /**
+ * Obtiene los créditos del usuario
+ * @param accessToken - Token de autenticación
+ * @returns Promise con el balance de créditos y transacciones
+ */
+export async function getUserCredits(accessToken: string): Promise<{ balance: number; transactions: any[] } | null> {
+  try {
+    console.log('🔍 Obteniendo créditos del usuario')
+    
+    const response = await fetch(`${API_BASE_URL}/credits`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      console.error('❌ Error obteniendo créditos:', {
+        status: response.status,
+        statusText: response.statusText
+      })
+      return null
+    }
+
+    const data = await response.json()
+    console.log('✅ Créditos obtenidos:', data.balance)
+    return {
+      balance: data.balance || 0,
+      transactions: data.transactions || []
+    }
+  } catch (error: any) {
+    console.error('❌ Error en getUserCredits:', error)
+    return null
+  }
+}
+
+/**
+ * Verifica si el usuario tiene créditos suficientes
+ * @param accessToken - Token de autenticación
+ * @param requiredCredits - Créditos requeridos (por defecto 1)
+ * @returns Promise<boolean> - true si tiene créditos suficientes, false en caso contrario
+ */
+export async function hasEnoughCredits(accessToken: string, requiredCredits: number = 1): Promise<boolean> {
+  try {
+    const credits = await getUserCredits(accessToken)
+    if (!credits) {
+      return false
+    }
+    return credits.balance >= requiredCredits
+  } catch (error: any) {
+    console.error('❌ Error en hasEnoughCredits:', error)
+    return false
+  }
+}
+
+/**
  * Verifica si el usuario tiene una suscripción activa
  * @param userId - ID del usuario
  * @param accessToken - Token de autenticación

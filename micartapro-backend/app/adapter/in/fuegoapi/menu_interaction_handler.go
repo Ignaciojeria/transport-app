@@ -2,11 +2,13 @@ package fuegoapi
 
 import (
 	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
+	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
+	"micartapro/app/usecase/billing"
 	"net/http"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
@@ -24,6 +26,8 @@ func init() {
 		eventprocessing.NewPublisherStrategy,
 		apimiddleware.NewIdempotencyKeyMiddleware,
 		apimiddleware.NewJWTAuthMiddleware,
+		supabaserepo.NewGetUserCredits,
+		supabaserepo.NewConsumeCredits,
 	)
 }
 func menuInteractionHandler(
@@ -32,6 +36,8 @@ func menuInteractionHandler(
 	publisherManager eventprocessing.PublisherManager,
 	idempotencyKeyMiddleware apimiddleware.IdempotencyKeyMiddleware,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
+	getUserCredits supabaserepo.GetUserCredits,
+	consumeCredits supabaserepo.ConsumeCredits,
 ) {
 	fuego.Post(s.Manager, "/menu/interaction",
 		func(c fuego.ContextWithBody[events.MenuInteractionRequest]) (any, error) {
@@ -54,12 +60,93 @@ func menuInteractionHandler(
 				}
 			}
 
+			// Extraer user_id del contexto
+			userIDStr, ok := sharedcontext.UserIDFromContext(spanCtx)
+			if !ok || userIDStr == "" {
+				return nil, fuego.UnauthorizedError{
+					Title:  "user_id not found in context",
+					Detail: "user_id not found in context",
+					Status: 401,
+				}
+			}
+
+			// Parsear userID
+			userID, err := uuid.Parse(userIDStr)
+			if err != nil {
+				return nil, fuego.BadRequestError{
+					Title:  "invalid user_id",
+					Detail: "invalid user_id format",
+					Status: 400,
+				}
+			}
+
+			// Validar y consumir créditos antes de procesar la interacción
+			// Cada uso del agente consume 1 crédito
+			const creditsPerInteraction = 1
+			
+			// Verificar créditos disponibles
+			userCredits, err := getUserCredits(spanCtx, userID)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_getting_user_credits", "error", err, "user_id", userIDStr)
+				return nil, fuego.HTTPError{
+					Title:  "error checking credits",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
+			}
+
+			if userCredits.Balance < creditsPerInteraction {
+				obs.Logger.WarnContext(spanCtx, "insufficient_credits",
+					"user_id", userIDStr,
+					"balance", userCredits.Balance,
+					"required", creditsPerInteraction)
+				return nil, fuego.HTTPError{
+					Title:  "insufficient credits",
+					Detail: "You don't have enough credits to use the agent. Please purchase credits to continue.",
+					Status: http.StatusPaymentRequired,
+				}
+			}
+
+			// Consumir créditos
+			versionID := uuid.New().String()
+			description := "Uso del agente de menú"
+			_, err = consumeCredits(spanCtx, billing.ConsumeCreditsRequest{
+				UserID:      userID,
+				Amount:      creditsPerInteraction,
+				Source:      "agent.usage",
+				SourceID:    &versionID,
+				Description: &description,
+			})
+
+			if err != nil {
+				if err == supabaserepo.ErrInsufficientCredits {
+					obs.Logger.WarnContext(spanCtx, "insufficient_credits_on_consume",
+						"user_id", userIDStr,
+						"balance", userCredits.Balance,
+						"required", creditsPerInteraction)
+					return nil, fuego.HTTPError{
+						Title:  "insufficient credits",
+						Detail: "You don't have enough credits to use the agent. Please purchase credits to continue.",
+						Status: http.StatusPaymentRequired,
+					}
+				}
+				obs.Logger.ErrorContext(spanCtx, "error_consuming_credits", "error", err, "user_id", userIDStr)
+				return nil, fuego.HTTPError{
+					Title:  "error consuming credits",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
+			}
+
+			obs.Logger.InfoContext(spanCtx, "credits_consumed_successfully",
+				"user_id", userIDStr,
+				"amount", creditsPerInteraction,
+				"versionID", versionID)
+
 			// Generar version_id si no viene en el contexto
-			var versionID string
 			if existingVersionID, ok := sharedcontext.VersionIDFromContext(spanCtx); ok && existingVersionID != "" {
 				versionID = existingVersionID
 			} else {
-				versionID = uuid.New().String()
 				spanCtx = sharedcontext.WithVersionID(spanCtx, versionID)
 			}
 
