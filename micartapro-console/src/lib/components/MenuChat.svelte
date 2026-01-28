@@ -3,8 +3,9 @@
   import { v7 as uuidv7 } from 'uuid'
   import Message from './Message.svelte'
   import ChatInput from './ChatInput.svelte'
+  import ProcessingPreview from './ProcessingPreview.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, getUserCredits, hasEnoughCredits } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, getUserCredits, hasEnoughCredits, getAuthenticatedSupabaseClient } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -60,6 +61,8 @@
   let versionActivated = $state(false) // Flag para saber si la versión ya fue activada
   let showDiscardModal = $state(false) // Modal de confirmación para descartar menú
   let pendingNavigation: (() => void) | null = $state(null) // Callback para ejecutar después de confirmar descarte
+  let pendingVersionId: string | null = $state(null) // VersionID pendiente de procesar
+  let pollingInterval: ReturnType<typeof setInterval> | null = null // Intervalo de polling
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -142,6 +145,154 @@
     pendingNavigation = null
   }
 
+  // Función para guardar versionID en localStorage
+  function savePendingVersionId(versionId: string) {
+    if (menuId) {
+      const key = `pendingVersionId_${menuId}`
+      localStorage.setItem(key, versionId)
+      pendingVersionId = versionId
+      console.log('💾 VersionID guardado en localStorage:', { key, versionId })
+    }
+  }
+
+  // Función para obtener versionID pendiente de localStorage
+  function getPendingVersionId(): string | null {
+    if (menuId) {
+      const key = `pendingVersionId_${menuId}`
+      const stored = localStorage.getItem(key)
+      if (stored) {
+        pendingVersionId = stored
+        console.log('📂 VersionID encontrado en localStorage:', { key, versionId: stored })
+        return stored
+      }
+    }
+    return null
+  }
+
+  // Función para limpiar versionID de localStorage
+  function clearPendingVersionId() {
+    if (menuId) {
+      const key = `pendingVersionId_${menuId}`
+      localStorage.removeItem(key)
+      pendingVersionId = null
+      console.log('🗑️ VersionID limpiado de localStorage:', key)
+    }
+  }
+
+  // Función para guardar instrucción del usuario en localStorage
+  function savePendingInstruction(instruction: string) {
+    if (menuId && instruction) {
+      const key = `pendingInstruction_${menuId}`
+      localStorage.setItem(key, instruction)
+      console.log('💾 Instrucción guardada en localStorage:', { key, instruction })
+    }
+  }
+
+  // Función para obtener instrucción pendiente de localStorage
+  function getPendingInstruction(): string | null {
+    if (menuId) {
+      const key = `pendingInstruction_${menuId}`
+      const stored = localStorage.getItem(key)
+      if (stored) {
+        console.log('📂 Instrucción encontrada en localStorage:', { key, instruction: stored })
+        return stored
+      }
+    }
+    return null
+  }
+
+  // Función para limpiar instrucción de localStorage
+  function clearPendingInstruction() {
+    if (menuId) {
+      const key = `pendingInstruction_${menuId}`
+      localStorage.removeItem(key)
+      console.log('🗑️ Instrucción limpiada de localStorage:', key)
+    }
+  }
+
+  // Función para iniciar polling continuo
+  async function startContinuousPolling(versionId: string) {
+    if (!session?.access_token) {
+      console.error('❌ No hay access_token para polling')
+      return
+    }
+
+    // Limpiar intervalo anterior si existe
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
+    }
+
+    console.log('🔄 Iniciando polling continuo para versionId:', versionId)
+    isLoading = true
+
+    // Polling cada 2 segundos
+    pollingInterval = setInterval(async () => {
+      try {
+        const supabase = await getAuthenticatedSupabaseClient(session.access_token)
+        const { data, error } = await supabase
+          .from('menu_versions')
+          .select('content')
+          .eq('id', versionId)
+          .single()
+
+        if (!error && data && data.content) {
+          // Versión encontrada, detener polling y hacer transición
+          console.log('✅ Versión encontrada, deteniendo polling')
+          if (pollingInterval) {
+            clearInterval(pollingInterval)
+            pollingInterval = null
+          }
+          
+          // Limpiar localStorage
+          clearPendingVersionId()
+          clearPendingInstruction()
+          
+          // Agregar mensaje de éxito
+          const successMessage: ChatMessage = {
+            id: `success-${Date.now()}`,
+            role: 'assistant',
+            content: $tStore.chat.successUpdated,
+            timestamp: new Date(),
+            pendingVersionId: versionId
+          }
+          messages = [...messages, successMessage]
+          versionActivated = false
+          
+          // Refrescar créditos
+          await refreshCredits()
+          
+          // Actualizar URL del menú
+          if (userId && menuId && session?.access_token) {
+            const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
+            if (url) {
+              menuUrl = url
+            }
+            iframeKey++
+          }
+          
+          // Hacer transición a la vista previa
+          isLoading = false
+          showPreview = true
+        } else if (error && error.code !== 'PGRST116') {
+          // Error que no es "no encontrado", loguear pero continuar
+          console.warn('⚠️ Error en polling (continuando):', error)
+        }
+      } catch (error) {
+        console.error('❌ Error en polling continuo:', error)
+      }
+    }, 2000) // Polling cada 2 segundos
+  }
+
+  // Función para detener polling
+  function stopPolling() {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
+      console.log('🛑 Polling detenido')
+    }
+  }
+
   onMount(() => {
     // No mostrar mensajes inicialmente, solo los botones
     messages = []
@@ -199,24 +350,33 @@
           if (id) {
             menuId = id
             
-            // Hacer polling para validar que el menú exista en GCS
-            checkingMenu = true
-            const exists = await pollUntilMenuExists(userId, id)
-            
-            if (exists) {
+            // Verificar si hay un versionID pendiente en localStorage DESPUÉS de tener menuId
+            const storedVersionId = getPendingVersionId()
+            if (storedVersionId) {
+              console.log('🔄 Reanudando polling para versionID pendiente:', storedVersionId)
+              startContinuousPolling(storedVersionId)
+              // No hacer checkingMenu si hay versionId pendiente
               menuReady = true
             } else {
-              // Si no se encontró después de todos los intentos, mostrar mensaje
-              const errorMessage: ChatMessage = {
-                id: `menu-not-found-${Date.now()}`,
-                role: 'assistant',
-                content: $tStore.chat.errorNoMenu,
-                timestamp: new Date()
+              // Hacer polling al endpoint del backend para validar que el menú esté listo
+              checkingMenu = true
+              const exists = await pollUntilMenuExists(id, session.access_token)
+              
+              if (exists) {
+                menuReady = true
+              } else {
+                // Si no se encontró después de todos los intentos, mostrar mensaje
+                const errorMessage: ChatMessage = {
+                  id: `menu-not-found-${Date.now()}`,
+                  role: 'assistant',
+                  content: $tStore.chat.errorNoMenu,
+                  timestamp: new Date()
+                }
+                messages = [...messages, errorMessage]
               }
-              messages = [...messages, errorMessage]
+              
+              checkingMenu = false
             }
-            
-            checkingMenu = false
           } else {
             // No hay menuId en la base de datos
             menuReady = false
@@ -233,6 +393,8 @@
     return () => {
       window.removeEventListener('popstate', handlePopState)
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      // Detener polling si está activo
+      stopPolling()
     }
   })
 
@@ -352,6 +514,13 @@
     }
 
     isActivatingVersion = true
+
+    // Detener polling si está activo
+    stopPolling()
+    
+    // Limpiar localStorage
+    clearPendingVersionId()
+    clearPendingInstruction()
 
     try {
       console.log('🔄 Iniciando actualización de current_version_id:', { menuId, versionId, accessTokenLength: session.access_token.length })
@@ -673,6 +842,21 @@
       return
     }
 
+    // Validar que el usuario tenga créditos suficientes antes de enviar
+    if (session?.access_token) {
+      const hasCredits = await hasEnoughCredits(session.access_token, 1)
+      if (!hasCredits) {
+        // Actualizar créditos del usuario para mostrar en el modal
+        const credits = await getUserCredits(session.access_token)
+        if (credits !== null) {
+          userCredits = credits.balance
+        }
+        // Mostrar modal de créditos
+        showCreditsPromo = true
+        return
+      }
+    }
+
     // Guardar la URL de la foto antes de limpiarla
     const photoUrlToSend = pendingPhotoUrl
 
@@ -750,62 +934,19 @@
       }
       messages = [...messages, initialMessage]
 
-      // Iniciar polling para esperar la actualización del menú usando versionID
+      // Guardar versionID e instrucción en localStorage y iniciar polling continuo
       if (data.versionId && session?.access_token) {
-        console.log('✅ Entrando en bloque con versionId, iniciando polling...')
-        try {
-          // Usar el versionID retornado para consultar directamente Supabase
-          // Aumentamos los intentos a 120 (2 minutos) para procesos que pueden tardar más
-          const updatedMenu = await pollUntilVersionExists(data.versionId, session.access_token, 120, 1000)
-          
-          // Agregar mensaje de confirmación con el menú actualizado
-          // Incluir el versionId pendiente para mostrar el botón "Usar este menú"
-          console.log('✅ Creando mensaje de éxito con versionId:', data.versionId)
-          console.log('✅ Tipo de versionId:', typeof data.versionId)
-          console.log('✅ versionId es válido?', !!data.versionId && data.versionId.length > 0)
-          
-          const successMessage: ChatMessage = {
-            id: `success-${Date.now()}`,
-            role: 'assistant',
-            content: $tStore.chat.successUpdated,
-            timestamp: new Date(),
-            pendingVersionId: data.versionId // Versión pendiente de activar
-          }
-          console.log('✅ Mensaje de éxito creado:', JSON.stringify(successMessage, null, 2))
-          messages = [...messages, successMessage]
-          console.log('✅ Total de mensajes después de agregar éxito:', messages.length)
-          console.log('✅ Último mensaje tiene pendingVersionId:', messages[messages.length - 1].pendingVersionId)
-          console.log('✅ Valor exacto de pendingVersionId:', messages[messages.length - 1].pendingVersionId)
-          versionActivated = false // Resetear el flag cuando hay nueva versión
-          
-          // Refrescar créditos después de consumir uno
-          await refreshCredits()
-          
-          // Actualizar la URL del menú y forzar recarga del iframe
-          // Incluir version_id en la URL para mostrar la versión específica (interacción)
-          if (userId && menuId && session?.access_token) {
-            const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, data.versionId)
-            if (url) {
-              menuUrl = url
-            }
-            // Incrementar iframeKey para forzar recarga del iframe
-            iframeKey++
-          }
-          
-          // Abrir automáticamente la vista previa para mostrar los cambios
-          showPreview = true
-        } catch (pollError: any) {
-          console.error('❌ Error en polling:', pollError)
-          
-          // Agregar mensaje de error del polling
-          const errorMessage: ChatMessage = {
-            id: `poll-error-${Date.now()}`,
-            role: 'assistant',
-            content: $tStore.chat.errorPolling.replace('{message}', pollError.message || 'Error desconocido'),
-            timestamp: new Date()
-          }
-          messages = [...messages, errorMessage]
-        }
+        console.log('✅ VersionId recibido, guardando en localStorage e iniciando polling continuo:', data.versionId)
+        
+        // Guardar versionId e instrucción en localStorage
+        savePendingVersionId(data.versionId)
+        savePendingInstruction(content.trim() || (photoUrlToSend ? '📸 Foto' : ''))
+        
+        // Iniciar polling continuo (no bloqueante)
+        startContinuousPolling(data.versionId)
+        
+        // NO hacer await aquí, el polling continuará en background
+        // El componente ProcessingPreview seguirá mostrándose hasta que el menú esté listo
       } else {
         console.log('⚠️ No hay versionId o access_token. versionId:', data.versionId, 'access_token:', !!session?.access_token)
         // Fallback: si no viene versionId, usar el método anterior (GCS)
@@ -854,6 +995,11 @@
     } catch (error: any) {
       console.error('Error enviando mensaje:', error)
       
+      // Detener polling si hay error
+      stopPolling()
+      clearPendingVersionId()
+      clearPendingInstruction()
+      
       // Mostrar error al usuario
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
@@ -862,9 +1008,9 @@
         timestamp: new Date()
       }
       messages = [...messages, errorMessage]
-    } finally {
       isLoading = false
     }
+    // NO poner isLoading = false aquí porque el polling continuo lo manejará
   }
 
   function scrollToBottom() {
@@ -1242,12 +1388,26 @@
       scrollToBottom()
     }
   })
+
+  // Scroll automático cuando aparece el preview de procesamiento
+  $effect(() => {
+    if (isLoading) {
+      setTimeout(() => {
+        scrollToBottom()
+      }, 100)
+    }
+  })
 </script>
 
 <div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
+  <!-- ProcessingPreview bloqueante para creación inicial del menú (fuera del contenedor del chat) -->
+  {#if checkingMenu}
+    <ProcessingPreview isVisible={checkingMenu} blocking={true} />
+  {/if}
+  
   <!-- Vista de Chat (oculta cuando showPreview, showSlugModal o showSubscriptionPromo es true) -->
   <div
-    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo || showCreditsPromo) ? '-translate-x-full' : 'translate-x-0'} min-h-0"
+    class="flex flex-col h-full transition-transform duration-300 ease-in-out {(showPreview || showSlugModal || showSubscriptionPromo) ? '-translate-x-full' : 'translate-x-0'} min-h-0"
     style="max-height: 100dvh;"
   >
     <!-- Header estilo Gemini -->
@@ -1306,7 +1466,13 @@
       id="messages-container"
       class="flex-1 px-4 py-6 min-h-0 overflow-y-auto"
     >
-    {#if messages.length === 0}
+    {#if isLoading}
+      <!-- Solo mostrar ProcessingPreview cuando está cargando (con la instrucción que envió el usuario) -->
+      {@const lastUserInstruction = [...messages].filter(m => m.role === 'user').pop()?.content ?? ''}
+      {@const storedInstruction = getPendingInstruction()}
+      {@const displayInstruction = lastUserInstruction || storedInstruction || ''}
+      <ProcessingPreview isVisible={isLoading} userInstruction={displayInstruction} />
+    {:else if messages.length === 0}
       <div class="flex flex-col h-full px-4 max-w-2xl mx-auto">
         <!-- Saludo personalizado estilo Gemini -->
         <div class="mt-8 mb-6 text-center">
@@ -1378,7 +1544,7 @@
           />
         {/each}
 
-        {#if isLoading || uploadingPhoto}
+        {#if uploadingPhoto}
           <div class="flex items-start gap-3">
             <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1401,14 +1567,6 @@
     <!-- Chat Input -->
     <div class="border-t border-gray-200 bg-white flex-shrink-0 z-10 md:relative sticky bottom-0" style="bottom: env(safe-area-inset-bottom, 0px); background: white; position: -webkit-sticky; position: sticky;">
     <div class="max-w-3xl mx-auto px-4 py-3">
-      {#if checkingMenu}
-        <div class="flex items-center justify-center py-8">
-          <div class="text-center">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-            <p class="text-gray-600 text-sm">{$tStore.chat.checkingMenu}</p>
-          </div>
-        </div>
-      {/if}
       
       <!-- Preview de foto pendiente -->
       {#if pendingPhotoUrl}
@@ -1480,7 +1638,7 @@
 
   <!-- Vista de Preview (se muestra cuando showPreview es true) -->
   <div 
-    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {(showPreview && !showSlugModal && !showSubscriptionPromo && !showCreditsPromo) ? 'translate-x-0' : 'translate-x-full'}"
+    class="absolute inset-0 flex flex-col h-full bg-white transition-transform duration-300 ease-in-out {(showPreview && !showSlugModal && !showSubscriptionPromo) ? 'translate-x-0' : 'translate-x-full'}"
   >
     <!-- Header del Preview -->
     <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 z-10">
@@ -1978,6 +2136,95 @@
           >
             Volver a editar mi carta
           </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {/if}
+
+  <!-- Vista Promocional de Créditos (se muestra cuando showCreditsPromo es true) -->
+  {#if showCreditsPromo}
+  <!-- Overlay con transición -->
+  <div 
+    class="fixed inset-0 bg-black bg-opacity-50 z-[100] transition-opacity duration-300"
+    onclick={() => showCreditsPromo = false}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="credits-modal-title"
+  >
+    <!-- Modal -->
+    <div 
+      class="fixed inset-0 flex items-center justify-center p-4 z-[100]"
+      onclick={(e) => e.stopPropagation()}
+    >
+      <div 
+        class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all duration-300 scale-100"
+        onclick={(e) => e.stopPropagation()}
+      >
+        <!-- Header -->
+        <div class="px-6 pt-6 pb-4 border-b border-gray-200">
+          <div class="flex items-center justify-between">
+            <h2 id="credits-modal-title" class="text-2xl font-bold text-gray-900">
+              💳 Comprar Créditos
+            </h2>
+            <button
+              onclick={() => showCreditsPromo = false}
+              class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              aria-label="Cerrar"
+            >
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Contenido -->
+        <div class="px-6 py-6">
+          <!-- Información del paquete -->
+          <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 mb-6 border border-blue-100">
+            <div class="text-center mb-4">
+              <p class="text-4xl font-bold text-gray-900 mb-2">$3.500 CLP</p>
+              <p class="text-xl font-semibold text-blue-700">25 Créditos</p>
+            </div>
+            <div class="text-center">
+              <p class="text-sm text-gray-600">
+                25 ediciones de menú desde nuestro agente
+              </p>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="mb-6">
+            <p class="text-gray-700 text-sm leading-relaxed">
+              Cada crédito te permite realizar una interacción con el agente para generar o editar tu carta digital.
+            </p>
+          </div>
+
+          <!-- Créditos actuales (si hay) -->
+          {#if userCredits !== null}
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-6 text-center">
+              <p class="text-sm text-gray-600 mb-1">Créditos disponibles</p>
+              <p class="text-2xl font-bold text-gray-900">{userCredits}</p>
+            </div>
+          {/if}
+
+          <!-- Botones -->
+          <div class="flex flex-col gap-3">
+            <button
+              onclick={handleActivatePlan}
+              class="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-semibold text-base flex items-center justify-center gap-2"
+            >
+              <span>💳</span>
+              <span>Comprar ahora</span>
+            </button>
+            <button
+              onclick={() => showCreditsPromo = false}
+              class="w-full px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-all font-medium text-sm"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       </div>
     </div>

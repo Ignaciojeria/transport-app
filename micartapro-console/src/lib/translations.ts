@@ -107,6 +107,18 @@ export interface Translations {
     errorNoPortalUrl: string
     errorAccessingPortal: string
   }
+  
+  // ProcessingPreview.svelte
+  processing: {
+    understandingInstructions: string
+    creatingCatalog: string
+    preparingSite: string
+    validatingImages: string
+    improvingImages: string
+    finalizing: string
+    pleaseWait: string
+    preparingInitialSetup: string // Mensaje específico para la creación inicial del menú
+  }
 }
 
 export const translations: Record<Language, Translations> = {
@@ -201,6 +213,16 @@ export const translations: Record<Language, Translations> = {
       errorGettingPortal: 'Error al obtener el portal del consumidor. Por favor, intenta de nuevo.',
       errorNoPortalUrl: 'No se recibió la URL del portal. Por favor, intenta de nuevo.',
       errorAccessingPortal: 'Error al acceder al portal del consumidor. Por favor, intenta de nuevo.'
+    },
+    processing: {
+      understandingInstructions: 'Entendiendo tus instrucciones...',
+      creatingCatalog: 'Creando tu catálogo...',
+      preparingSite: 'Preparando tu sitio...',
+      validatingImages: 'Validando si necesitas imágenes...',
+      improvingImages: 'Mejorando tus imágenes...',
+      finalizing: 'Finalizando tu menú...',
+      pleaseWait: 'Por favor espera, esto puede tomar unos momentos',
+      preparingInitialSetup: 'Preparando todo para que puedas crear tu catálogo...'
     }
   },
   PT: {
@@ -304,6 +326,16 @@ export const translations: Record<Language, Translations> = {
       errorGettingPortal: 'Erro ao obter o portal do consumidor. Por favor, tente novamente.',
       errorNoPortalUrl: 'A URL do portal não foi recebida. Por favor, tente novamente.',
       errorAccessingPortal: 'Erro ao acessar o portal do consumidor. Por favor, tente novamente.'
+    },
+    processing: {
+      understandingInstructions: 'Entendendo suas instruções...',
+      creatingCatalog: 'Criando seu catálogo...',
+      preparingSite: 'Preparando seu site...',
+      validatingImages: 'Validando se você precisa de imagens...',
+      improvingImages: 'Melhorando suas imagens...',
+      finalizing: 'Finalizando seu cardápio...',
+      pleaseWait: 'Por favor aguarde, isso pode levar alguns momentos',
+      preparingInitialSetup: 'Preparando tudo para que você possa criar seu catálogo...'
     }
   },
   EN: {
@@ -397,6 +429,16 @@ export const translations: Record<Language, Translations> = {
       errorGettingPortal: 'Error getting customer portal. Please try again.',
       errorNoPortalUrl: 'Portal URL was not received. Please try again.',
       errorAccessingPortal: 'Error accessing customer portal. Please try again.'
+    },
+    processing: {
+      understandingInstructions: 'Understanding your instructions...',
+      creatingCatalog: 'Creating your catalog...',
+      preparingSite: 'Preparing your site...',
+      validatingImages: 'Validating if you need images...',
+      improvingImages: 'Improving your images...',
+      finalizing: 'Finalizing your menu...',
+      pleaseWait: 'Please wait, this may take a few moments',
+      preparingInitialSetup: 'Preparing everything so you can create your catalog...'
     }
   }
 }

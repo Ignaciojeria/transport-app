@@ -13,7 +13,7 @@ const authenticatedClientsCache = new Map<string, any>()
  * @param accessToken - Token de autenticación
  * @returns Cliente de Supabase autenticado
  */
-async function getAuthenticatedSupabaseClient(accessToken: string) {
+export async function getAuthenticatedSupabaseClient(accessToken: string) {
   // Si ya existe un cliente para este token, reutilizarlo
   if (authenticatedClientsCache.has(accessToken)) {
     return authenticatedClientsCache.get(accessToken)
@@ -490,50 +490,63 @@ export async function pollUntilVersionExists(
 }
 
 /**
- * Hace polling para verificar que el menú exista en GCS (verificando latest.json)
+ * Hace polling al endpoint del backend para verificar que el menú esté listo
  * Útil cuando el usuario se registra por primera vez y el menú se está creando
- * @param userId - ID del usuario
  * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
  * @param maxAttempts - Número máximo de intentos (default: 30)
  * @param intervalMs - Intervalo entre intentos en milisegundos (default: 2000)
- * @returns true si el menú existe, false si no se encontró después de todos los intentos
+ * @returns true si el menú está listo, false si no se encontró después de todos los intentos
  */
 export async function pollUntilMenuExists(
-  userId: string,
   menuId: string,
+  accessToken: string,
   maxAttempts: number = 30,
   intervalMs: number = 2000
 ): Promise<boolean> {
+  // Importar API_BASE_URL desde config
+  const { API_BASE_URL } = await import('./config')
   let attempts = 0
   
   while (attempts < maxAttempts) {
     try {
-      const latest = await getLatestJson(userId, menuId)
+      const response = await fetch(`${API_BASE_URL}/menu/${menuId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      })
       
-      if (latest && latest.filename) {
-        // El menú existe
+      if (response.ok) {
+        // El menú está listo
+        console.log('✅ Menú listo en el backend')
         return true
       }
       
-      // Esperar antes del siguiente intento
-      await new Promise(resolve => setTimeout(resolve, intervalMs))
-      attempts++
-    } catch (error: any) {
       // Si es 404, el menú aún no existe, continuar intentando
-      if (error.message?.includes('404')) {
+      if (response.status === 404) {
+        console.log(`⏳ Intento ${attempts + 1}/${maxAttempts}: Menú aún no está listo (404)`)
         await new Promise(resolve => setTimeout(resolve, intervalMs))
         attempts++
         continue
       }
       
-      // Otro error, loguear pero continuar intentando
-      console.error(`Error en intento ${attempts + 1}:`, error)
+      // Otro error HTTP, loguear pero continuar intentando
+      console.warn(`⚠️ Intento ${attempts + 1}/${maxAttempts}: Error ${response.status}`)
+      await new Promise(resolve => setTimeout(resolve, intervalMs))
+      attempts++
+    } catch (error: any) {
+      // Error de red, loguear pero continuar intentando
+      console.error(`❌ Error en intento ${attempts + 1}:`, error)
       await new Promise(resolve => setTimeout(resolve, intervalMs))
       attempts++
     }
   }
   
   // No se encontró el menú después de todos los intentos
+  console.warn(`⏱️ Timeout: El menú no estuvo listo después de ${maxAttempts} intentos`)
   return false
 }
 
