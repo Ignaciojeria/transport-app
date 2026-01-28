@@ -43,9 +43,6 @@
       <div class="max-w-4xl mx-auto space-y-8 sm:space-y-10">
         <!-- Carta (Menú) - Al inicio -->
         <div>
-          <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 uppercase tracking-wide">
-            {$t.home.ourMenu}
-          </h2>
           <CartaSection carta={restaurantData.menu || []} />
         </div>
         
