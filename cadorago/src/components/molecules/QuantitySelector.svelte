@@ -24,6 +24,9 @@
     step < 1
   );
   
+  // Detectar si es venta por peso (ocultar slider)
+  const isWeightSale = $derived(pricing?.mode === 'WEIGHT');
+  
   // Función para formatear cantidad con decimales si es necesario
   function formatQuantity(qty) {
     if (needsDecimals) {
@@ -101,35 +104,37 @@
 </script>
 
 <div class="space-y-4">
-  <!-- Slider -->
-  <div class="space-y-2">
-    <div class="flex justify-between items-center">
-      <label class="text-sm font-medium text-gray-700">
-        Cantidad
-      </label>
-      <span class="text-sm text-gray-600">
-        {formatQuantityString(quantity)} {unitLabel}
-      </span>
+  <!-- Slider (oculto para venta por peso) -->
+  {#if !isWeightSale}
+    <div class="space-y-2">
+      <div class="flex justify-between items-center">
+        <label class="text-sm font-medium text-gray-700">
+          Cantidad
+        </label>
+        <span class="text-sm text-gray-600">
+          {formatQuantityString(quantity)} {unitLabel}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={quantity}
+        oninput={handleSliderChange}
+        class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-600"
+      />
+      <div class="flex justify-between text-xs text-gray-500">
+        <span>{needsDecimals ? min.toFixed(1) : min} {unitLabel}</span>
+        <span>{needsDecimals ? max.toFixed(1) : max} {unitLabel}</span>
+      </div>
     </div>
-    <input
-      type="range"
-      min={min}
-      max={max}
-      step={step}
-      value={quantity}
-      oninput={handleSliderChange}
-      class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-600"
-    />
-    <div class="flex justify-between text-xs text-gray-500">
-      <span>{needsDecimals ? min.toFixed(1) : min} {unitLabel}</span>
-      <span>{needsDecimals ? max.toFixed(1) : max} {unitLabel}</span>
-    </div>
-  </div>
+  {/if}
   
   <!-- Input numérico -->
   <div class="space-y-2">
     <label class="text-sm font-medium text-gray-700">
-      Cantidad exacta
+      {isWeightSale ? 'Cantidad' : 'Cantidad exacta'}
     </label>
     <div class="flex items-center gap-2">
       <input
