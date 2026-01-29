@@ -13,14 +13,23 @@
   let imageError = $state(false);
   let retryCount = $state(0);
   let showLoader = $state(false);
+  let initialTimestamp = $state(Date.now()); // Timestamp inicial para evitar cacheo
   const maxRetries = 20; // Máximo 20 reintentos (~60 segundos)
   const retryInterval = 3000; // 3 segundos entre reintentos
 
   // Determinar si es una imagen de GCS que podría estar siendo generada
   const isGCSImage = $derived(src.includes('storage.googleapis.com'));
 
-  // URL de la imagen con parámetro de retry para forzar recarga (solo cuando hay error)
-  const imageSrc = $derived(src ? (retryCount > 0 ? `${src}${src.includes('?') ? '&' : '?'}_t=${retryCount}` : src) : '');
+  // URL de la imagen con timestamp para evitar cacheo del navegador
+  // Para imágenes de GCS, siempre agregamos timestamp inicial + retryCount si hay error
+  const imageSrc = $derived.by(() => {
+    if (!src) return '';
+    if (!isGCSImage) return src;
+    
+    // Para imágenes de GCS, agregar timestamp inicial + retryCount para forzar recarga
+    const separator = src.includes('?') ? '&' : '?';
+    return `${src}${separator}_t=${initialTimestamp}${retryCount > 0 ? `_r${retryCount}` : ''}`;
+  });
 
   // Resetear estado cuando cambia la URL original
   $effect(() => {
@@ -32,11 +41,12 @@
       return;
     }
 
-    // Resetear estado para nueva imagen
+    // Resetear estado para nueva imagen y generar nuevo timestamp para evitar cacheo
     imageLoaded = false;
     imageError = false;
     retryCount = 0;
     showLoader = false; // No mostrar loader inicialmente
+    initialTimestamp = Date.now(); // Nuevo timestamp para forzar recarga sin cacheo
   });
 
   function handleImageLoad() {
