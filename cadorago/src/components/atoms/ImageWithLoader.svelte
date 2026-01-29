@@ -15,27 +15,37 @@
   let showLoader = $state(false);
   let initialTimestamp = $state(Date.now()); // Timestamp inicial para evitar cacheo
   let lastSrc = $state(''); // Para detectar cambios en la URL
+  let lastImageSrc = $state(''); // Para detectar cambios en imageSrc (por retryCount)
   const maxRetries = 30; // Máximo 30 reintentos (~90 segundos)
   const retryInterval = 3000; // 3 segundos entre reintentos
   const initialPollDelay = 2000; // Esperar 2 segundos antes del primer polling (dar tiempo a que se suba)
 
+  // Normalizar URL: corregir "https.storage" → "https://storage"
+  const normalizedSrc = $derived.by(() => {
+    if (!src) return '';
+    // Corregir URLs mal formateadas
+    return src
+      .replace(/https\.storage\.googleapis\.com/g, 'https://storage.googleapis.com')
+      .replace(/http\.storage\.googleapis\.com/g, 'http://storage.googleapis.com');
+  });
+
   // Determinar si es una imagen de GCS que podría estar siendo generada
-  const isGCSImage = $derived(src.includes('storage.googleapis.com'));
+  const isGCSImage = $derived(normalizedSrc.includes('storage.googleapis.com'));
 
   // URL de la imagen con timestamp para evitar cacheo del navegador
   // Para imágenes de GCS, siempre agregamos timestamp inicial + retryCount
   const imageSrc = $derived.by(() => {
-    if (!src) return '';
-    if (!isGCSImage) return src;
+    if (!normalizedSrc) return '';
+    if (!isGCSImage) return normalizedSrc;
     
     // Para imágenes de GCS, agregar timestamp inicial + retryCount para forzar recarga
-    const separator = src.includes('?') ? '&' : '?';
-    return `${src}${separator}_t=${initialTimestamp}${retryCount > 0 ? `_r${retryCount}` : ''}`;
+    const separator = normalizedSrc.includes('?') ? '&' : '?';
+    return `${normalizedSrc}${separator}_t=${initialTimestamp}${retryCount > 0 ? `_r${retryCount}` : ''}`;
   });
 
-  // Resetear estado cuando cambia la URL original
+  // Resetear estado cuando cambia la URL original (usar normalizedSrc)
   $effect(() => {
-    if (!src) {
+    if (!normalizedSrc) {
       imageLoaded = false;
       imageError = false;
       retryCount = 0;
@@ -45,13 +55,13 @@
     }
 
     // Si la URL cambió, resetear todo y generar nuevo timestamp
-    if (src !== lastSrc) {
+    if (normalizedSrc !== lastSrc) {
       imageLoaded = false;
       imageError = false;
       retryCount = 0;
       showLoader = false;
       initialTimestamp = Date.now(); // Nuevo timestamp para forzar recarga sin cacheo
-      lastSrc = src;
+      lastSrc = normalizedSrc;
     }
   });
 
@@ -61,6 +71,8 @@
     imageError = false;
     showLoader = false;
     retryCount = 0;
+    // Log para debugging (puedes removerlo después)
+    console.log('[ImageWithLoader] Image loaded successfully:', normalizedSrc);
   }
 
   function handleImageError() {
@@ -72,6 +84,8 @@
       // Solo mostrar loader si es una imagen de GCS (podría estar siendo generada)
       if (isGCSImage) {
         // No establecer showLoader aquí - lo hará el $effect si es necesario
+        // Log para debugging (puedes removerlo después)
+        console.log('[ImageWithLoader] Image error, will retry:', normalizedSrc, 'retryCount:', retryCount);
       } else {
         showLoader = false;
       }
@@ -86,6 +100,19 @@
     }
   });
 
+  // Cuando cambia imageSrc (por retryCount), resetear imageError para permitir nuevo intento
+  // El elemento <img> se recrea por el {#key}, pero necesitamos resetear el estado de error
+  $effect(() => {
+    if (imageSrc && imageSrc !== lastImageSrc && !imageLoaded) {
+      // Cuando cambia imageSrc (nuevo retry), resetear imageError para permitir nuevo intento
+      // Esto asegura que si la imagen ahora está disponible, el navegador pueda cargarla
+      imageError = false;
+      lastImageSrc = imageSrc;
+    } else if (!imageSrc) {
+      lastImageSrc = '';
+    }
+  });
+
   // Polling para imágenes de GCS: solo cuando hubo error (reintentos).
   // Si la imagen existe y está cargando, NUNCA mostramos el loader.
   $effect(() => {
@@ -94,7 +121,7 @@
       return;
     }
 
-    if (!src || !isGCSImage) {
+    if (!normalizedSrc || !isGCSImage) {
       return;
     }
 
@@ -126,11 +153,15 @@
           interval = null;
           if (errorTimeout) clearTimeout(errorTimeout);
           showLoader = false;
+          imageError = false;
           return;
         }
         
+        // Incrementar retryCount para cambiar la URL y forzar nueva carga
         if (retryCount < maxRetries) {
           retryCount++;
+          // Cuando cambia retryCount, imageSrc cambia, lo que fuerza al navegador a intentar cargar de nuevo
+          // El evento onload debería dispararse si la imagen ahora está disponible
         } else {
           clearInterval(interval);
           interval = null;
@@ -140,11 +171,14 @@
       }, retryInterval);
     };
 
-    if (imageError && !imageLoaded) {
-      // Falló la carga → mostrar loader y hacer polling
-      startPolling(true);
-    } else if (!imageError && !imageLoaded) {
-      // Aún no hubo error: hacer polling en segundo plano sin mostrar loader
+    // Si hubo error inicialmente, mostrar loader y hacer polling
+    // Si no hubo error pero la imagen no carga, hacer polling en segundo plano después del delay
+    // También continuar polling si retryCount > 0 (ya estamos en modo retry)
+    if ((imageError || retryCount > 0) && !imageLoaded) {
+      // Hubo error o ya estamos en modo retry → mostrar loader solo si hubo error inicial
+      startPolling(imageError);
+    } else if (!imageError && retryCount === 0 && !imageLoaded) {
+      // Aún no hubo error y no hemos empezado a hacer retry: hacer polling en segundo plano sin mostrar loader
       timeout = setTimeout(() => {
         if (!imageLoaded && !imageError && retryCount < maxRetries) {
           startPolling(false); // false = no mostrar loader
@@ -161,7 +195,7 @@
 </script>
 
 <div class="relative {className}">
-  {#if src}
+  {#if normalizedSrc}
     {#if showLoader && !imageLoaded}
       <!-- Loader solo cuando la imagen falla y podría estar siendo generada -->
       <div class="w-full flex items-center justify-center bg-gray-100" style={className.includes('h-auto') ? 'min-height: 200px; padding: 40px 0;' : 'height: 100%;'}>
