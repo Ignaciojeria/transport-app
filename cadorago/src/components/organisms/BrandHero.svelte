@@ -1,5 +1,6 @@
 <script>
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
+  import ImageWithLoader from '../atoms/ImageWithLoader.svelte';
   
   const { className = '' } = $props();
   
@@ -10,11 +11,13 @@
 <div class={`w-full overflow-hidden ${className}`}>
   <!-- Cover Image como foto de portada ocupando todo el ancho sin recortarse -->
   {#if coverImage}
-    <img 
-      src={coverImage} 
-      alt="Portada de Cadorago" 
-      class="w-full h-auto"
-      style="width: 100%; height: auto; display: block; object-fit: contain; object-position: center top;"
-    />
+    <div class="w-full">
+      <ImageWithLoader 
+        src={coverImage} 
+        alt="Portada de Cadorago" 
+        className="w-full h-auto"
+        fallbackIcon={false}
+      />
+    </div>
   {/if}
 </div>

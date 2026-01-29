@@ -558,8 +558,6 @@ export async function pollUntilMenuExists(
   return false
 }
 
-
-
 /**
  * Obtiene el slug activo para un menu_id
  * @param menuId - ID del menú

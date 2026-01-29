@@ -25,6 +25,8 @@ func init() {
 		menu.NewOnMenuInteractionRequest,
 		menu.NewOnMenuCreateRequest,
 		menu.NewOnUserMenusInsertedWebhook,
+		menu.NewOnImageGenerationRequest,
+		menu.NewOnImageEditionRequest,
 		creem.NewOnCreemSubscriptionTrialingWebhook,
 		creem.NewOnCreemCheckoutCompletedWebhook,
 		creem.NewOnCreemSubscriptionActiveWebhook,
@@ -45,6 +47,8 @@ func newPullAllEvents(
 	onMenuInteractionRequest menu.OnMenuInteractionRequest,
 	onMenuCreateRequest menu.OnMenuCreateRequest,
 	onUserMenusInsertedWebhook menu.OnUserMenusInsertedWebhook,
+	onImageGenerationRequest menu.OnImageGenerationRequest,
+	onImageEditionRequest menu.OnImageEditionRequest,
 	onCreemSubscriptionTrialingWebhook creem.OnCreemSubscriptionTrialingWebhook,
 	onCreemCheckoutCompletedWebhook creem.OnCreemCheckoutCompletedWebhook,
 	onCreemSubscriptionActiveWebhook creem.OnCreemSubscriptionActiveWebhook,
@@ -278,6 +282,42 @@ func newPullAllEvents(
 			if err != nil {
 				obs.Logger.Error("error_processing_creem_dispute_created_webhook",
 					"error", err.Error(),
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventImageGenerationRequested:
+			var request events.ImageGenerationRequestEvent
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+				return http.StatusBadRequest
+			}
+			err := onImageGenerationRequest(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_image_generation_request",
+					"error", err.Error(),
+					"menuId", request.MenuID,
+					"menuItemId", request.MenuItemID,
+				)
+				return http.StatusInternalServerError
+			}
+
+		case events.EventImageEditionRequested:
+			var request events.ImageEditionRequestEvent
+			if err := event.DataAs(&request); err != nil {
+				obs.Logger.Error("failed_to_deserialize_cloudevent",
+					"error", err.Error(),
+				)
+				return http.StatusBadRequest
+			}
+			err := onImageEditionRequest(spanCtx, request)
+			if err != nil {
+				obs.Logger.Error("error_processing_image_edition_request",
+					"error", err.Error(),
+					"menuId", request.MenuID,
+					"menuItemId", request.MenuItemID,
 				)
 				return http.StatusInternalServerError
 			}

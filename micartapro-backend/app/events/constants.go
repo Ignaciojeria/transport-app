@@ -15,4 +15,6 @@ const (
 	EventCreemRefundCreatedWebhook        = "creem.refund.created.webhook"
 	EventCreemDisputeCreatedWebhook       = "creem.dispute.created.webhook"
 	EventCreateOrderRequested             = "create.order.requested"
+	EventImageGenerationRequested         = "image.generation.requested"
+	EventImageEditionRequested           = "image.edition.requested"
 )

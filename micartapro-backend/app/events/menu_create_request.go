@@ -115,6 +115,9 @@ type DeliveryOption struct {
 type CoverImageGenerationRequest struct {
 	Prompt     string `json:"prompt"`
 	ImageCount int    `json:"imageCount"`
+	// Campos temporales para URLs pre-firmadas (no se persisten)
+	UploadURL string `json:"uploadUrl,omitempty"`
+	PublicURL string `json:"publicUrl,omitempty"`
 }
 
 type ImageGenerationRequest struct {
@@ -122,6 +125,9 @@ type ImageGenerationRequest struct {
 	Prompt      string `json:"prompt"`
 	AspectRatio string `json:"aspectRatio"`
 	ImageCount  int    `json:"imageCount"`
+	// Campos temporales para URLs pre-firmadas (no se persisten)
+	UploadURL string `json:"uploadUrl,omitempty"`
+	PublicURL string `json:"publicUrl,omitempty"`
 }
 
 /*
@@ -132,6 +138,9 @@ type CoverImageEditionRequest struct {
 	Prompt           string `json:"prompt"`
 	ReferenceImageUrl string `json:"referenceImageUrl"`
 	ImageCount       int    `json:"imageCount"`
+	// Campos temporales para URLs pre-firmadas (no se persisten)
+	UploadURL string `json:"uploadUrl,omitempty"`
+	PublicURL string `json:"publicUrl,omitempty"`
 }
 
 type ImageEditionRequest struct {
@@ -140,6 +149,9 @@ type ImageEditionRequest struct {
 	ReferenceImageUrl string `json:"referenceImageUrl"`
 	AspectRatio      string `json:"aspectRatio"`
 	ImageCount       int    `json:"imageCount"`
+	// Campos temporales para URLs pre-firmadas (no se persisten)
+	UploadURL string `json:"uploadUrl,omitempty"`
+	PublicURL string `json:"publicUrl,omitempty"`
 }
 
 /*
