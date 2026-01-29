@@ -11,12 +11,9 @@
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
 
-  let photos = $state<Array<{ name: string; url: string; created_at: string }>>([])
+  let photos = $state<Array<{ id: number; image_url: string }>>([])
   let loadingPhotos = $state(false)
   let copySuccess = $state(false)
-
-  // Bucket de Supabase Storage para las fotos
-  const BUCKET_NAME = 'menu-photos'
 
   // Cargar fotos cuando el componente se monta o cuando cambia el userId
   $effect(() => {
@@ -30,36 +27,22 @@
 
     loadingPhotos = true
     try {
-      // Listar todos los archivos del usuario en el bucket
-      const { data, error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .list(userId, {
-          limit: 100,
-          offset: 0,
-          sortBy: { column: 'created_at', order: 'desc' }
-        })
+      // Consultar la tabla catalog_images
+      const { data, error } = await supabase
+        .from('catalog_images')
+        .select('id, image_url')
+        .order('id', { ascending: false })
+        .limit(100)
 
       if (error) {
         console.error('Error cargando fotos:', error)
         return
       }
 
-      // Obtener URLs públicas para cada foto
-      const photosWithUrls = await Promise.all(
-        (data || []).map(async (file) => {
-          const { data: urlData } = supabase.storage
-            .from(BUCKET_NAME)
-            .getPublicUrl(`${userId}/${file.name}`)
-          
-          return {
-            name: file.name,
-            url: urlData.publicUrl,
-            created_at: file.created_at || ''
-          }
-        })
-      )
-
-      photos = photosWithUrls
+      photos = (data || []).map((row) => ({
+        id: row.id,
+        image_url: row.image_url
+      }))
     } catch (error) {
       console.error('Error inesperado cargando fotos:', error)
     } finally {
@@ -67,7 +50,7 @@
     }
   }
 
-  async function deletePhoto(photoName: string) {
+  async function deletePhoto(photoId: number) {
     if (!userId) return
 
     if (!confirm('¿Estás seguro de que quieres eliminar esta foto?')) {
@@ -75,9 +58,10 @@
     }
 
     try {
-      const { error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .remove([`${userId}/${photoName}`])
+      const { error } = await supabase
+        .from('catalog_images')
+        .delete()
+        .eq('id', photoId)
 
       if (error) {
         console.error('Error eliminando foto:', error)
@@ -164,8 +148,8 @@
             <div class="relative group">
               <div class="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
                 <img 
-                  src={photo.url} 
-                  alt={photo.name}
+                  src={photo.image_url} 
+                  alt={`Imagen ${photo.id}`}
                   class="w-full h-full object-cover"
                   loading="lazy"
                 />
@@ -173,7 +157,7 @@
               <!-- Overlay con acciones -->
               <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 rounded-lg flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                 <button
-                  onclick={() => copyPhotoUrl(photo.url)}
+                  onclick={() => copyPhotoUrl(photo.image_url)}
                   class="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors"
                   title="Copiar URL"
                 >
@@ -182,7 +166,7 @@
                   </svg>
                 </button>
                 <button
-                  onclick={() => deletePhoto(photo.name)}
+                  onclick={() => deletePhoto(photo.id)}
                   class="p-2 bg-red-600 rounded-full hover:bg-red-700 transition-colors"
                   title="Eliminar"
                 >

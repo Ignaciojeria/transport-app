@@ -494,6 +494,7 @@ export async function pollUntilVersionExists(
  * Útil cuando el usuario se registra por primera vez y el menú se está creando
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
+ * @param versionId - ID de la versión opcional para verificar
  * @param maxAttempts - Número máximo de intentos (default: 30)
  * @param intervalMs - Intervalo entre intentos en milisegundos (default: 2000)
  * @returns true si el menú está listo, false si no se encontró después de todos los intentos
@@ -501,6 +502,7 @@ export async function pollUntilVersionExists(
 export async function pollUntilMenuExists(
   menuId: string,
   accessToken: string,
+  versionId?: string,
   maxAttempts: number = 30,
   intervalMs: number = 2000
 ): Promise<boolean> {
@@ -510,7 +512,13 @@ export async function pollUntilMenuExists(
   
   while (attempts < maxAttempts) {
     try {
-      const response = await fetch(`${API_BASE_URL}/menu/${menuId}`, {
+      // Construir URL con versionId si se proporciona
+      let url = `${API_BASE_URL}/menu/${menuId}`
+      if (versionId) {
+        url += `?version_id=${encodeURIComponent(versionId)}`
+      }
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -521,7 +529,7 @@ export async function pollUntilMenuExists(
       
       if (response.ok) {
         // El menú está listo
-        console.log('✅ Menú listo en el backend')
+        console.log('✅ Menú listo en el backend', versionId ? `(versión ${versionId})` : '')
         return true
       }
       

@@ -63,6 +63,39 @@
   let pendingNavigation: (() => void) | null = $state(null) // Callback para ejecutar después de confirmar descarte
   let pendingVersionId: string | null = $state(null) // VersionID pendiente de procesar
   let pollingInterval: ReturnType<typeof setInterval> | null = null // Intervalo de polling
+  
+  // Funciones para guardar/recuperar referencia del menú en localStorage
+  function saveMenuReference(menuId: string, versionId?: string) {
+    const key = `menuReference_${menuId}`
+    const data = {
+      menuId,
+      versionId: versionId || null,
+      timestamp: Date.now()
+    }
+    localStorage.setItem(key, JSON.stringify(data))
+    console.log('💾 Referencia del menú guardada en localStorage:', data)
+  }
+
+  function getMenuReference(menuId: string): { menuId: string; versionId: string | null } | null {
+    const key = `menuReference_${menuId}`
+    const stored = localStorage.getItem(key)
+    if (stored) {
+      try {
+        const data = JSON.parse(stored)
+        console.log('📂 Referencia del menú encontrada en localStorage:', data)
+        return data
+      } catch (e) {
+        console.error('Error parseando referencia del menú:', e)
+      }
+    }
+    return null
+  }
+
+  function clearMenuReference(menuId: string) {
+    const key = `menuReference_${menuId}`
+    localStorage.removeItem(key)
+    console.log('🗑️ Referencia del menú limpiada de localStorage:', key)
+  }
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -262,6 +295,19 @@
           // Refrescar créditos
           await refreshCredits()
           
+          // Verificar que el endpoint del backend esté listo antes de mostrar la vista previa
+          console.log('🔍 Verificando que el endpoint del backend esté listo...')
+          const backendReady = await pollUntilMenuExists(menuId!, session.access_token, versionId, 15, 1000)
+          
+          if (!backendReady) {
+            console.warn('⚠️ El endpoint del backend no está listo, pero continuando...')
+          }
+          
+          // Guardar referencia del menú en localStorage
+          if (menuId) {
+            saveMenuReference(menuId, versionId)
+          }
+          
           // Actualizar URL del menú
           if (userId && menuId && session?.access_token) {
             const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
@@ -350,6 +396,21 @@
           if (id) {
             menuId = id
             
+            // Intentar recuperar referencia del menú desde localStorage
+            const menuRef = getMenuReference(id)
+            if (menuRef && menuRef.versionId) {
+              // Hay una versión guardada, intentar cargar la URL del menú
+              try {
+                const url = await generateMenuUrl(id, session.access_token, currentLanguage, menuRef.versionId)
+                if (url) {
+                  menuUrl = url
+                  console.log('✅ URL del menú recuperada desde localStorage')
+                }
+              } catch (err) {
+                console.error('Error recuperando URL del menú desde localStorage:', err)
+              }
+            }
+            
             // Verificar si hay un versionID pendiente en localStorage DESPUÉS de tener menuId
             const storedVersionId = getPendingVersionId()
             if (storedVersionId) {
@@ -364,6 +425,17 @@
               
               if (exists) {
                 menuReady = true
+                // Si no hay menuUrl pero el menú existe, cargarlo
+                if (!menuUrl) {
+                  try {
+                    const url = await generateMenuUrl(id, session.access_token, currentLanguage)
+                    if (url) {
+                      menuUrl = url
+                    }
+                  } catch (err) {
+                    console.error('Error cargando URL del menú:', err)
+                  }
+                }
               } else {
                 // Si no se encontró después de todos los intentos, mostrar mensaje
                 const errorMessage: ChatMessage = {
@@ -552,6 +624,8 @@
           if (url) {
             menuUrl = url
           }
+          // Actualizar referencia del menú (sin versionId específico, usa current_version_id del backend)
+          saveMenuReference(menuId)
         }
         
         // Forzar recarga del iframe para mostrar la versión activada
@@ -1163,8 +1237,6 @@
     messages = []
   }
 
-  // Bucket de Supabase Storage para las fotos
-  const BUCKET_NAME = 'menu-photos'
 
   function handleTakePhoto() {
     // Abrir cámara directamente
@@ -1304,7 +1376,7 @@
   }
 
   async function uploadAndSendPhoto(file: File) {
-    if (!userId) return
+    if (!userId || !authState.session?.access_token) return
 
     uploadingPhoto = true
 
@@ -1314,29 +1386,55 @@
 
       // Generar nombre único para el archivo
       const fileExt = file.name.split('.').pop() || 'jpg'
-      const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const fileName = `photo-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
       
-      // Subir a Supabase Storage
-      const { error } = await supabase.storage
-        .from(BUCKET_NAME)
-        .upload(fileName, resizedBlob, {
-          contentType: resizedBlob.type,
-          upsert: false
+      // 1. Obtener signed URL del backend
+      const session = authState.session
+      const signedUrlResponse = await fetch(`${API_BASE_URL}/api/images/upload-url`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          fileName: fileName,
+          contentType: resizedBlob.type || 'image/jpeg'
         })
+      })
 
-      if (error) {
-        throw error
+      if (!signedUrlResponse.ok) {
+        throw new Error(`Error obteniendo signed URL: ${signedUrlResponse.status}`)
       }
 
-      // Obtener la URL pública de la imagen
-      const { data: urlData } = supabase.storage
-        .from(BUCKET_NAME)
-        .getPublicUrl(fileName)
+      const { uploadUrl, publicUrl } = await signedUrlResponse.json()
 
-      const publicUrl = urlData.publicUrl
+      // 2. Subir la imagen directamente a GCS usando la signed URL
+      const uploadResponse = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': resizedBlob.type || 'image/jpeg'
+        },
+        body: resizedBlob
+      })
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Error subiendo imagen a GCS: ${uploadResponse.status}`)
+      }
+      
+      // 3. Guardar la URL en la tabla catalog_images
+      const { error: insertError } = await supabase
+        .from('catalog_images')
+        .insert({
+          image_url: publicUrl
+        })
+
+      if (insertError) {
+        console.error('Error guardando URL en catalog_images:', insertError)
+        // No lanzamos error aquí para no interrumpir el flujo, solo lo registramos
+      }
       
       // Imprimir la URL en la consola
-      console.log('✅ Foto subida exitosamente!')
+      console.log('✅ Foto subida exitosamente a GCS!')
       console.log('📸 URL de la foto:', publicUrl)
 
       // Guardar la URL de la foto pendiente (no enviar mensaje todavía)
@@ -2230,4 +2328,3 @@
     </div>
   </div>
   {/if}
-
