@@ -56,6 +56,7 @@
   });
 
   function handleImageLoad() {
+    // SIEMPRE ocultar el loader cuando la imagen carga, incluso si hubo errores previos
     imageLoaded = true;
     imageError = false;
     showLoader = false;
@@ -63,63 +64,90 @@
   }
 
   function handleImageError() {
-    imageError = true;
-    imageLoaded = false;
-    
-    // Solo mostrar loader si es una imagen de GCS (podría estar siendo generada)
-    if (isGCSImage) {
-      showLoader = true;
-      // Si hay error, empezar polling inmediatamente (no esperar delay inicial)
-      if (retryCount < maxRetries) {
-        setTimeout(() => {
-          retryCount++;
-        }, retryInterval);
+    // Solo marcar error si la imagen aún no ha cargado
+    if (!imageLoaded) {
+      imageError = true;
+      imageLoaded = false;
+      
+      // Solo mostrar loader si es una imagen de GCS (podría estar siendo generada)
+      if (isGCSImage) {
+        // No establecer showLoader aquí - lo hará el $effect si es necesario
+      } else {
+        showLoader = false;
       }
-    } else {
-      // Para otras URLs, no mostrar loader
-      showLoader = false;
     }
   }
 
-  // Polling activo para imágenes de GCS
-  // Se activa cuando hay error o cuando la imagen no carga después del delay inicial
+  // Asegurar que el loader se oculte cuando la imagen carga
   $effect(() => {
-    if (!src || !isGCSImage || imageLoaded) {
+    if (imageLoaded) {
+      showLoader = false;
+      imageError = false;
+    }
+  });
+
+  // Polling para imágenes de GCS: solo cuando hubo error (reintentos).
+  // Si la imagen existe y está cargando, NUNCA mostramos el loader.
+  $effect(() => {
+    // SIEMPRE salir si la imagen cargó
+    if (imageLoaded) {
+      return;
+    }
+
+    if (!src || !isGCSImage) {
       return;
     }
 
     let interval = null;
     let timeout = null;
+    let errorTimeout = null; // Timeout para ocultar loader después de errores sin éxito
 
-    // Función para iniciar el polling
-    const startPolling = () => {
-      if (imageLoaded || retryCount >= maxRetries) {
-        return;
-      }
+    const startPolling = (onlyAfterError) => {
+      // Verificar nuevamente antes de iniciar
+      if (imageLoaded || retryCount >= maxRetries) return;
       
-      showLoader = true;
+      // Solo mostrar "Generando imagen..." cuando ya hubo un error (404, etc.)
+      if (onlyAfterError && !imageLoaded) {
+        showLoader = true;
+        
+        // Si después de varios reintentos la imagen no carga, ocultar el loader
+        // (puede ser un problema de red/CORS, no que la imagen no exista)
+        errorTimeout = setTimeout(() => {
+          if (!imageLoaded && retryCount >= 5) { // Después de 5 reintentos (~15 segundos)
+            showLoader = false;
+          }
+        }, 15000); // 15 segundos
+      }
+
       interval = setInterval(() => {
-        if (!imageLoaded && retryCount < maxRetries) {
+        // Verificar SIEMPRE si la imagen cargó (puede haber cargado mientras esperábamos)
+        if (imageLoaded) {
+          clearInterval(interval);
+          interval = null;
+          if (errorTimeout) clearTimeout(errorTimeout);
+          showLoader = false;
+          return;
+        }
+        
+        if (retryCount < maxRetries) {
           retryCount++;
         } else {
           clearInterval(interval);
           interval = null;
-          if (retryCount >= maxRetries && !imageLoaded) {
-            showLoader = false; // Ocultar loader si se agotaron los reintentos
-          }
+          if (errorTimeout) clearTimeout(errorTimeout);
+          showLoader = false;
         }
       }, retryInterval);
     };
 
-    // Si hay error, empezar polling inmediatamente
-    if (imageError) {
-      startPolling();
-    } else {
-      // Si no hay error, esperar un poco antes de empezar el polling
-      // (dar tiempo a que se suba la imagen)
+    if (imageError && !imageLoaded) {
+      // Falló la carga → mostrar loader y hacer polling
+      startPolling(true);
+    } else if (!imageError && !imageLoaded) {
+      // Aún no hubo error: hacer polling en segundo plano sin mostrar loader
       timeout = setTimeout(() => {
-        if (!imageLoaded && !imageError) {
-          startPolling();
+        if (!imageLoaded && !imageError && retryCount < maxRetries) {
+          startPolling(false); // false = no mostrar loader
         }
       }, initialPollDelay);
     }
@@ -127,6 +155,7 @@
     return () => {
       if (timeout) clearTimeout(timeout);
       if (interval) clearInterval(interval);
+      if (errorTimeout) clearTimeout(errorTimeout);
     };
   });
 </script>
@@ -143,15 +172,17 @@
       </div>
     {/if}
 
-    <img 
-      src={imageSrc} 
-      alt={alt}
-      class={`${className} ${imageLoaded ? 'opacity-100' : showLoader ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-      style={className.includes('h-auto') ? 'width: 100%; height: auto; display: block; object-fit: contain; object-position: center top;' : ''}
-      onload={handleImageLoad}
-      onerror={handleImageError}
-      loading={loadingAttr}
-    />
+    {#key imageSrc}
+      <img 
+        src={imageSrc} 
+        alt={alt}
+        class={`${className} ${imageLoaded ? 'opacity-100' : showLoader ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        style={className.includes('h-auto') ? 'width: 100%; height: auto; display: block; object-fit: contain; object-position: center top;' : ''}
+        onload={handleImageLoad}
+        onerror={handleImageError}
+        loading={loadingAttr}
+      />
+    {/key}
 
     {#if imageError && retryCount >= maxRetries && !imageLoaded}
       <!-- Fallback cuando la imagen no existe después de todos los reintentos -->
