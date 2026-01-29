@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"sync"
 
+	"cloud.google.com/go/storage"
 	"micartapro/app/adapter/out/agents"
 	"micartapro/app/adapter/out/imagegenerator"
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
+	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 	"strings"
@@ -29,7 +31,8 @@ func init() {
 		eventprocessing.NewPublisherStrategy,
 		supabaserepo.NewGetMenuById,
 		imagegenerator.NewImageGenerator,
-		imagegenerator.NewImageEditor)
+		imagegenerator.NewImageEditor,
+		gcs.NewClient)
 }
 
 func NewOnMenuInteractionRequest(
@@ -38,7 +41,8 @@ func NewOnMenuInteractionRequest(
 	publisherManager eventprocessing.PublisherManager,
 	getMenuById supabaserepo.GetMenuById,
 	generateImage imagegenerator.GenerateImage,
-	editImage imagegenerator.EditImage) OnMenuInteractionRequest {
+	editImage imagegenerator.EditImage,
+	gcsClient *storage.Client) OnMenuInteractionRequest {
 	return func(ctx context.Context, input events.MenuInteractionRequest) (string, error) {
 
 		// 1. Verificar y propagar el versionID del contexto para guardar la nueva versión generada
@@ -103,7 +107,7 @@ func NewOnMenuInteractionRequest(
 
 			// Pre-firmar URLs y asignar placeholders para imágenes que se generarán de forma asíncrona
 			// Esto permite guardar el menú rápidamente sin esperar la generación de imágenes
-			if err := prepareImagePlaceholders(ctx, obs, &createRequest, menu); err != nil {
+			if err := prepareImagePlaceholders(ctx, obs, gcsClient, &createRequest, menu); err != nil {
 				obs.Logger.ErrorContext(ctx, "error_preparing_image_placeholders", "error", err)
 				return "", fmt.Errorf("error preparando placeholders de imágenes: %w", err)
 			}
@@ -129,6 +133,7 @@ func NewOnMenuInteractionRequest(
 func prepareImagePlaceholders(
 	ctx context.Context,
 	obs observability.Observability,
+	gcsClient *storage.Client,
 	createRequest *events.MenuCreateRequest,
 	menu events.MenuCreateRequest,
 ) error {
@@ -143,7 +148,7 @@ func prepareImagePlaceholders(
 	// Procesar imagen de portada si hay solicitud de generación
 	if createRequest.CoverImageGenerationRequest != nil {
 		fileName := fmt.Sprintf("cover-%s.png", uuid.New().String()[:8])
-		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, "image/png")
+		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, "image/png")
 		if err != nil {
 			return fmt.Errorf("error generando signed URL para cover: %w", err)
 		}
@@ -168,7 +173,7 @@ func prepareImagePlaceholders(
 			contentType = "image/jpeg"
 		}
 
-		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, contentType)
+		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, contentType)
 		if err != nil {
 			return fmt.Errorf("error generando signed URL para cover editado: %w", err)
 		}
@@ -184,7 +189,7 @@ func prepareImagePlaceholders(
 	for i := range createRequest.ImageGenerationRequests {
 		req := &createRequest.ImageGenerationRequests[i]
 		fileName := fmt.Sprintf("%s-%s.png", req.MenuItemID, uuid.New().String()[:8])
-		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, "image/png")
+		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, "image/png")
 		if err != nil {
 			return fmt.Errorf("error generando signed URL para item %s: %w", req.MenuItemID, err)
 		}
@@ -213,7 +218,7 @@ func prepareImagePlaceholders(
 			contentType = "image/jpeg"
 		}
 
-		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, contentType)
+		uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, contentType)
 		if err != nil {
 			return fmt.Errorf("error generando signed URL para item editado %s: %w", req.MenuItemID, err)
 		}
@@ -282,6 +287,7 @@ func assignImageURLToMenuItem(
 func processCoverImageGenerationRequest(
 	ctx context.Context,
 	obs observability.Observability,
+	gcsClient *storage.Client,
 	createRequest *events.MenuCreateRequest,
 	generateImage imagegenerator.GenerateImage,
 ) error {
@@ -300,7 +306,7 @@ func processCoverImageGenerationRequest(
 	fileName := fmt.Sprintf("cover-%s.png", uuid.New().String()[:8])
 
 	// Generar URLs pre-firmadas
-	uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, "image/png")
+	uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, "image/png")
 	if err != nil {
 		obs.Logger.ErrorContext(spanCtx, "error_generating_signed_url", "error", err)
 		return fmt.Errorf("error generando signed URL: %w", err)
@@ -324,6 +330,7 @@ func processCoverImageGenerationRequest(
 func processImageGenerationRequests(
 	ctx context.Context,
 	obs observability.Observability,
+	gcsClient *storage.Client,
 	createRequest *events.MenuCreateRequest,
 	generateImage imagegenerator.GenerateImage,
 ) error {
@@ -354,7 +361,7 @@ func processImageGenerationRequests(
 			fileName := fmt.Sprintf("%s-%s.png", req.MenuItemID, uuid.New().String()[:8])
 
 			// Generar URLs pre-firmadas
-			uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, "image/png")
+			uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, "image/png")
 			if err != nil {
 				obs.Logger.ErrorContext(spanCtx, "error_generating_signed_url", "error", err, "menuItemId", req.MenuItemID)
 				errChan <- fmt.Errorf("error generando signed URL para %s: %w", req.MenuItemID, err)
@@ -483,6 +490,7 @@ func updateMenuWithImageURLs(
 func processCoverImageEditionRequest(
 	ctx context.Context,
 	obs observability.Observability,
+	gcsClient *storage.Client,
 	createRequest *events.MenuCreateRequest,
 	editImage imagegenerator.EditImage,
 ) error {
@@ -507,7 +515,7 @@ func processCoverImageEditionRequest(
 	}
 
 	// Generar URLs pre-firmadas
-	uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, contentType)
+	uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, contentType)
 	if err != nil {
 		obs.Logger.ErrorContext(spanCtx, "error_generating_signed_url", "error", err)
 		return fmt.Errorf("error generando signed URL: %w", err)
@@ -532,6 +540,7 @@ func processCoverImageEditionRequest(
 func processImageEditionRequests(
 	ctx context.Context,
 	obs observability.Observability,
+	gcsClient *storage.Client,
 	createRequest *events.MenuCreateRequest,
 	editImage imagegenerator.EditImage,
 ) error {
@@ -568,7 +577,7 @@ func processImageEditionRequests(
 			}
 
 			// Generar URLs pre-firmadas
-			uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, obs, userID, fileName, contentType)
+			uploadURL, publicURL, _, err := imagegenerator.GenerateSignedWriteURL(spanCtx, gcsClient, obs, userID, fileName, contentType)
 			if err != nil {
 				obs.Logger.ErrorContext(spanCtx, "error_generating_signed_url", "error", err, "menuItemId", req.MenuItemID)
 				errChan <- fmt.Errorf("error generando signed URL para %s: %w", req.MenuItemID, err)

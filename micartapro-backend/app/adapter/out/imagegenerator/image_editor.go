@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"micartapro/app/shared/infrastructure/ai"
+	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/shared/sharedcontext"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/google/uuid"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	supabase "github.com/supabase-community/supabase-go"
@@ -21,10 +23,10 @@ import (
 type EditImage func(ctx context.Context, prompt string, referenceImageUrl string, aspectRatio string, imageCount int, menuItemId string, uploadURL string, publicURL string) (string, error)
 
 func init() {
-	ioc.Registry(NewImageEditor, ai.NewClient, observability.NewObservability, supabasecli.NewSupabaseClient)
+	ioc.Registry(NewImageEditor, ai.NewClient, observability.NewObservability, supabasecli.NewSupabaseClient, gcs.NewClient)
 }
 
-func NewImageEditor(client *genai.Client, obs observability.Observability, supabaseClient *supabase.Client) (EditImage, error) {
+func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, supabaseClient *supabase.Client, gcsClient *storage.Client) (EditImage, error) {
 	return func(ctx context.Context, prompt string, referenceImageUrl string, aspectRatio string, imageCount int, menuItemId string, uploadURL string, publicURL string) (string, error) {
 		spanCtx, span := obs.Tracer.Start(ctx, "edit_image")
 		defer span.End()
@@ -35,7 +37,7 @@ func NewImageEditor(client *genai.Client, obs observability.Observability, supab
 		// Esto evita descargar la imagen en el backend, ahorrando memoria RAM
 		imageURL := referenceImageUrl
 		if strings.Contains(referenceImageUrl, "storage.googleapis.com") {
-			signedURL, err := GenerateSignedReadURL(spanCtx, obs, referenceImageUrl)
+			signedURL, err := GenerateSignedReadURL(spanCtx, gcsClient, obs, referenceImageUrl)
 			if err != nil {
 				obs.Logger.WarnContext(spanCtx, "error_generating_signed_url_fallback", "error", err, "url", referenceImageUrl)
 				// Continuar con la URL original si falla
@@ -104,7 +106,7 @@ func NewImageEditor(client *genai.Client, obs observability.Observability, supab
 		}
 
 		obs.Logger.InfoContext(spanCtx, "calling_image_to_image", "model", imageModel, "imageUrl", imageURL, "mimeType", mimeType, "imageSize", imageSize, "menuItemId", menuItemId, "optimizedForMobile", menuItemId != "cover" && menuItemId != "footer", "usingFileData", true)
-		respGen, err := client.Models.GenerateContent(spanCtx, imageModel, contents, config)
+		respGen, err := genaiClient.Models.GenerateContent(spanCtx, imageModel, contents, config)
 		if err != nil {
 			obs.Logger.ErrorContext(spanCtx, "error_image_to_image", "error", err, "prompt", prompt)
 			return "", fmt.Errorf("error image-to-image: %w", err)

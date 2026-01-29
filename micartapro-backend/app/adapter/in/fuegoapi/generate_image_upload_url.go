@@ -3,8 +3,8 @@ package fuegoapi
 import (
 	"fmt"
 	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
-	"micartapro/app/adapter/out/imagegenerator"
 	"micartapro/app/shared/configuration"
+	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
@@ -35,6 +35,7 @@ func init() {
 		observability.NewObservability,
 		configuration.NewConf,
 		apimiddleware.NewJWTAuthMiddleware,
+		gcs.NewClient,
 	)
 }
 
@@ -43,6 +44,7 @@ func generateImageUploadURL(
 	obs observability.Observability,
 	conf configuration.Conf,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
+	gcsClient *storage.Client,
 ) {
 	fuego.Post(s.Manager, "/api/images/upload-url",
 		func(c fuego.ContextWithBody[GenerateUploadURLRequest]) (GenerateUploadURLResponse, error) {
@@ -87,25 +89,16 @@ func generateImageUploadURL(
 			randomSuffix := fmt.Sprintf("%d", time.Now().UnixNano()%1000000)
 			objectPath := fmt.Sprintf("%s/%d-%s-%s", userID, timestamp, randomSuffix, req.FileName)
 
-			// Bucket de imágenes (puedes cambiarlo según tu configuración)
-			bucketName := "micartapro-images" // O usa una variable de entorno
-			
-			// Generar signed URL para PUT (subir): usa ADC en Cloud Run o GOOGLE_APPLICATION_CREDENTIALS en local
+			// Bucket de imágenes
+			bucketName := "micartapro-images"
+
+			// Generar signed URL con el cliente GCS (usa ADC en Cloud Run o GOOGLE_APPLICATION_CREDENTIALS en local)
 			opts := &storage.SignedURLOptions{
 				Method:      "PUT",
 				Expires:     time.Now().Add(15 * time.Minute),
 				ContentType: req.ContentType,
 			}
-			if err := imagegenerator.FillSignedURLOptions(spanCtx, obs, opts); err != nil {
-				obs.Logger.ErrorContext(spanCtx, "missing_gcs_credentials", "error", err)
-				return GenerateUploadURLResponse{}, fuego.HTTPError{
-					Title:  "GCS credentials not configured",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
-
-			uploadURL, err := storage.SignedURL(bucketName, objectPath, opts)
+			uploadURL, err := gcsClient.Bucket(bucketName).SignedURL(objectPath, opts)
 			if err != nil {
 				obs.Logger.ErrorContext(spanCtx, "error_generating_signed_url", "error", err, "objectPath", objectPath)
 				return GenerateUploadURLResponse{}, fuego.HTTPError{
