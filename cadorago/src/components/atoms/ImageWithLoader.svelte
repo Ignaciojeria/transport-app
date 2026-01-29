@@ -3,8 +3,11 @@
     src = '',
     alt = '',
     className = '',
-    fallbackIcon = true
+    fallbackIcon = true,
+    /** 'eager' para imágenes above-the-fold (portada); 'lazy' por defecto */
+    loading = 'lazy'
   } = $props();
+  const loadingAttr = loading === 'eager' ? 'eager' : 'lazy';
 
   let imageLoaded = $state(false);
   let imageError = $state(false);
@@ -100,7 +103,7 @@
       style={className.includes('h-auto') ? 'width: 100%; height: auto; display: block; object-fit: contain; object-position: center top;' : ''}
       onload={handleImageLoad}
       onerror={handleImageError}
-      loading="lazy"
+      loading={loadingAttr}
     />
 
     {#if imageError && retryCount >= maxRetries && !imageLoaded}
