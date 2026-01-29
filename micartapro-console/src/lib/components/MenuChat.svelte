@@ -63,6 +63,10 @@
   let pendingNavigation: (() => void) | null = $state(null) // Callback para ejecutar después de confirmar descarte
   let pendingVersionId: string | null = $state(null) // VersionID pendiente de procesar
   let pollingInterval: ReturnType<typeof setInterval> | null = null // Intervalo de polling
+  let imagesPollingInterval: ReturnType<typeof setInterval> | null = null // Intervalo de polling de imágenes
+  let imagesAllReady = $state(false) // Flag para saber si todas las imágenes están listas
+  let lastCheckedMenuId = $state<string | null>(null) // Último menuId verificado
+  let lastCheckedVersionId = $state<string | undefined>(undefined) // Última versionId verificada
   
   // Funciones para guardar/recuperar referencia del menú en localStorage
   function saveMenuReference(menuId: string, versionId?: string) {
@@ -470,8 +474,44 @@
     }
   })
 
+  // Verificar estado de las imágenes del menú
+  async function checkMenuImagesStatus(menuIdToCheck: string, versionIdToCheck?: string): Promise<boolean> {
+    if (!menuIdToCheck || !session?.access_token) return false
+
+    try {
+      const url = new URL(`${API_BASE_URL}/api/menus/${menuIdToCheck}/images-status`)
+      if (versionIdToCheck) {
+        url.searchParams.append('version_id', versionIdToCheck)
+      }
+
+      const response = await fetch(url.toString(), {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      })
+
+      if (!response.ok) {
+        console.warn('Error verificando estado de imágenes:', response.status)
+        return false
+      }
+
+      const data = await response.json()
+      return data.allReady === true
+    } catch (err) {
+      console.error('Error verificando estado de imágenes:', err)
+      return false
+    }
+  }
+
   async function togglePreview() {
     if (showPreview) {
+      // Detener polling de imágenes al cerrar
+      if (imagesPollingInterval) {
+        clearInterval(imagesPollingInterval)
+        imagesPollingInterval = null
+      }
+      imagesAllReady = false
+
       // Verificar si hay un menú pendiente
       const hasPending = hasPendingMenu()
       console.log('🔍 togglePreview - Cerrando vista previa. hasPendingMenu:', hasPending)
@@ -531,6 +571,106 @@
     
     showPreview = true
   }
+
+  // Polling de imágenes cuando la vista previa está abierta
+  $effect(() => {
+    // Solo hacer polling si la vista previa está abierta y hay menuId
+    if (!showPreview || !menuId || !session?.access_token) {
+      // Detener polling si se cierra la vista previa
+      if (imagesPollingInterval) {
+        clearInterval(imagesPollingInterval)
+        imagesPollingInterval = null
+      }
+      // No resetear imagesAllReady aquí para mantener el estado si se vuelve a abrir el mismo menú
+      return
+    }
+
+    // Extraer versionId de menuUrl si existe
+    let versionId: string | undefined = undefined
+    if (menuUrl) {
+      try {
+        const url = new URL(menuUrl)
+        const versionIdParam = url.searchParams.get('version_id')
+        if (versionIdParam) {
+          versionId = versionIdParam
+        }
+      } catch (e) {
+        // Ignorar errores de parsing de URL
+      }
+    }
+
+    // Verificar si cambió el menú o versión
+    const menuChanged = menuId !== lastCheckedMenuId
+    const versionChanged = versionId !== lastCheckedVersionId
+    
+    // Solo resetear y verificar si cambió el menú o versión
+    if (menuChanged || versionChanged) {
+      imagesAllReady = false
+      lastCheckedMenuId = menuId
+      lastCheckedVersionId = versionId
+      
+      // Verificar estado inicial inmediatamente
+      checkMenuImagesStatus(menuId, versionId).then(allReady => {
+        // Solo refrescar si realmente pasaron de "no listas" a "listas"
+        if (allReady && !imagesAllReady) {
+          imagesAllReady = true
+          // Refrescar iframe cuando todas las imágenes estén listas (solo si cambió el menú/versión)
+          iframeKey++
+          console.log('✅ Todas las imágenes están listas, refrescando iframe')
+        } else if (allReady) {
+          // Si ya estaban listas desde antes, solo actualizar el flag sin refrescar
+          imagesAllReady = true
+          console.log('✅ Todas las imágenes ya estaban listas, sin refrescar')
+        }
+      })
+    } else {
+      // Si no cambió el menú/versión y ya estaban listas, no hacer nada
+      if (imagesAllReady) {
+        console.log('✅ Mismo menú/versión, imágenes ya estaban listas, sin verificar')
+        return
+      }
+    }
+
+    // Iniciar polling cada 3 segundos solo si aún no están todas listas
+    // Limpiar intervalo anterior si existe
+    if (imagesPollingInterval) {
+      clearInterval(imagesPollingInterval)
+      imagesPollingInterval = null
+    }
+
+    // Solo hacer polling si aún no están todas listas
+    imagesPollingInterval = setInterval(async () => {
+      if (!showPreview || !menuId || !session?.access_token || imagesAllReady) {
+        if (imagesPollingInterval) {
+          clearInterval(imagesPollingInterval)
+          imagesPollingInterval = null
+        }
+        return
+      }
+
+      const allReady = await checkMenuImagesStatus(menuId, versionId)
+      // Solo refrescar si realmente pasaron de "no listas" a "listas"
+      if (allReady && !imagesAllReady) {
+        imagesAllReady = true
+        // Refrescar iframe cuando todas las imágenes estén listas
+        iframeKey++
+        console.log('✅ Todas las imágenes están listas (polling), refrescando iframe')
+        
+        // Detener polling
+        if (imagesPollingInterval) {
+          clearInterval(imagesPollingInterval)
+          imagesPollingInterval = null
+        }
+      }
+    }, 3000) // Verificar cada 3 segundos
+
+    return () => {
+      if (imagesPollingInterval) {
+        clearInterval(imagesPollingInterval)
+        imagesPollingInterval = null
+      }
+    }
+  })
 
   async function copyToClipboard() {
     if (!menuUrl) return

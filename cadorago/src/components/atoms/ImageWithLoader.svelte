@@ -11,81 +11,76 @@
 
   let imageLoaded = $state(false);
   let imageError = $state(false);
-  let retryCount = $state(0);
   let showLoader = $state(false);
-  let initialTimestamp = $state(Date.now()); // Timestamp inicial para evitar cacheo
   let lastSrc = $state(''); // Para detectar cambios en la URL
-  let lastImageSrc = $state(''); // Para detectar cambios en imageSrc (por retryCount)
-  const maxRetries = 30; // Máximo 30 reintentos (~90 segundos)
-  const retryInterval = 3000; // 3 segundos entre reintentos
-  const initialPollDelay = 2000; // Esperar 2 segundos antes del primer polling (dar tiempo a que se suba)
 
   // Normalizar URL: corregir "https.storage" → "https://storage"
+  // Es idempotente: puede aplicarse múltiples veces sin causar efectos secundarios
   const normalizedSrc = $derived.by(() => {
     if (!src) return '';
+    
+    // Verificar si la URL ya está correctamente formateada
+    if (src.startsWith('https://storage.googleapis.com') || src.startsWith('http://storage.googleapis.com')) {
+      // Aún así, verificar si hay duplicaciones de "https"
+      return src
+        .replace(/httpshttps:\/\//g, 'https://')
+        .replace(/httphttp:\/\//g, 'http://');
+    }
+    
     // Corregir URLs mal formateadas
-    return src
+    let normalized = src
       .replace(/https\.storage\.googleapis\.com/g, 'https://storage.googleapis.com')
       .replace(/http\.storage\.googleapis\.com/g, 'http://storage.googleapis.com');
+    
+    // Manejar casos donde se duplicó "https" (httpshttps://storage...)
+    normalized = normalized
+      .replace(/httpshttps:\/\//g, 'https://')
+      .replace(/httphttp:\/\//g, 'http://');
+    
+    return normalized;
   });
 
   // Determinar si es una imagen de GCS que podría estar siendo generada
   const isGCSImage = $derived(normalizedSrc.includes('storage.googleapis.com'));
 
-  // URL de la imagen con timestamp para evitar cacheo del navegador
-  // Para imágenes de GCS, siempre agregamos timestamp inicial + retryCount
-  const imageSrc = $derived.by(() => {
-    if (!normalizedSrc) return '';
-    if (!isGCSImage) return normalizedSrc;
-    
-    // Para imágenes de GCS, agregar timestamp inicial + retryCount para forzar recarga
-    const separator = normalizedSrc.includes('?') ? '&' : '?';
-    return `${normalizedSrc}${separator}_t=${initialTimestamp}${retryCount > 0 ? `_r${retryCount}` : ''}`;
-  });
+  // URL de la imagen: usar siempre la URL normalizada (sin polling complejo)
+  // El navegador manejará el cacheo naturalmente
+  const imageSrc = $derived(normalizedSrc);
 
-  // Resetear estado cuando cambia la URL original (usar normalizedSrc)
+  // Resetear estado cuando cambia la URL original
   $effect(() => {
     if (!normalizedSrc) {
       imageLoaded = false;
       imageError = false;
-      retryCount = 0;
       showLoader = false;
       lastSrc = '';
       return;
     }
 
-    // Si la URL cambió, resetear todo y generar nuevo timestamp
+    // Si la URL cambió, resetear todo
     if (normalizedSrc !== lastSrc) {
       imageLoaded = false;
       imageError = false;
-      retryCount = 0;
       showLoader = false;
-      initialTimestamp = Date.now(); // Nuevo timestamp para forzar recarga sin cacheo
       lastSrc = normalizedSrc;
     }
   });
 
   function handleImageLoad() {
-    // SIEMPRE ocultar el loader cuando la imagen carga, incluso si hubo errores previos
     imageLoaded = true;
     imageError = false;
     showLoader = false;
-    retryCount = 0;
-    // Log para debugging (puedes removerlo después)
-    console.log('[ImageWithLoader] Image loaded successfully:', normalizedSrc);
   }
 
   function handleImageError() {
-    // Solo marcar error si la imagen aún no ha cargado
     if (!imageLoaded) {
       imageError = true;
       imageLoaded = false;
       
       // Solo mostrar loader si es una imagen de GCS (podría estar siendo generada)
+      // El polling del backend se encargará de refrescar el iframe cuando esté lista
       if (isGCSImage) {
-        // No establecer showLoader aquí - lo hará el $effect si es necesario
-        // Log para debugging (puedes removerlo después)
-        console.log('[ImageWithLoader] Image error, will retry:', normalizedSrc, 'retryCount:', retryCount);
+        showLoader = true;
       } else {
         showLoader = false;
       }
@@ -98,99 +93,6 @@
       showLoader = false;
       imageError = false;
     }
-  });
-
-  // Cuando cambia imageSrc (por retryCount), resetear imageError para permitir nuevo intento
-  // El elemento <img> se recrea por el {#key}, pero necesitamos resetear el estado de error
-  $effect(() => {
-    if (imageSrc && imageSrc !== lastImageSrc && !imageLoaded) {
-      // Cuando cambia imageSrc (nuevo retry), resetear imageError para permitir nuevo intento
-      // Esto asegura que si la imagen ahora está disponible, el navegador pueda cargarla
-      imageError = false;
-      lastImageSrc = imageSrc;
-    } else if (!imageSrc) {
-      lastImageSrc = '';
-    }
-  });
-
-  // Polling para imágenes de GCS: solo cuando hubo error (reintentos).
-  // Si la imagen existe y está cargando, NUNCA mostramos el loader.
-  $effect(() => {
-    // SIEMPRE salir si la imagen cargó
-    if (imageLoaded) {
-      return;
-    }
-
-    if (!normalizedSrc || !isGCSImage) {
-      return;
-    }
-
-    let interval = null;
-    let timeout = null;
-    let errorTimeout = null; // Timeout para ocultar loader después de errores sin éxito
-
-    const startPolling = (onlyAfterError) => {
-      // Verificar nuevamente antes de iniciar
-      if (imageLoaded || retryCount >= maxRetries) return;
-      
-      // Solo mostrar "Generando imagen..." cuando ya hubo un error (404, etc.)
-      if (onlyAfterError && !imageLoaded) {
-        showLoader = true;
-        
-        // Si después de varios reintentos la imagen no carga, ocultar el loader
-        // (puede ser un problema de red/CORS, no que la imagen no exista)
-        errorTimeout = setTimeout(() => {
-          if (!imageLoaded && retryCount >= 5) { // Después de 5 reintentos (~15 segundos)
-            showLoader = false;
-          }
-        }, 15000); // 15 segundos
-      }
-
-      interval = setInterval(() => {
-        // Verificar SIEMPRE si la imagen cargó (puede haber cargado mientras esperábamos)
-        if (imageLoaded) {
-          clearInterval(interval);
-          interval = null;
-          if (errorTimeout) clearTimeout(errorTimeout);
-          showLoader = false;
-          imageError = false;
-          return;
-        }
-        
-        // Incrementar retryCount para cambiar la URL y forzar nueva carga
-        if (retryCount < maxRetries) {
-          retryCount++;
-          // Cuando cambia retryCount, imageSrc cambia, lo que fuerza al navegador a intentar cargar de nuevo
-          // El evento onload debería dispararse si la imagen ahora está disponible
-        } else {
-          clearInterval(interval);
-          interval = null;
-          if (errorTimeout) clearTimeout(errorTimeout);
-          showLoader = false;
-        }
-      }, retryInterval);
-    };
-
-    // Si hubo error inicialmente, mostrar loader y hacer polling
-    // Si no hubo error pero la imagen no carga, hacer polling en segundo plano después del delay
-    // También continuar polling si retryCount > 0 (ya estamos en modo retry)
-    if ((imageError || retryCount > 0) && !imageLoaded) {
-      // Hubo error o ya estamos en modo retry → mostrar loader solo si hubo error inicial
-      startPolling(imageError);
-    } else if (!imageError && retryCount === 0 && !imageLoaded) {
-      // Aún no hubo error y no hemos empezado a hacer retry: hacer polling en segundo plano sin mostrar loader
-      timeout = setTimeout(() => {
-        if (!imageLoaded && !imageError && retryCount < maxRetries) {
-          startPolling(false); // false = no mostrar loader
-        }
-      }, initialPollDelay);
-    }
-
-    return () => {
-      if (timeout) clearTimeout(timeout);
-      if (interval) clearInterval(interval);
-      if (errorTimeout) clearTimeout(errorTimeout);
-    };
   });
 </script>
 
@@ -206,19 +108,17 @@
       </div>
     {/if}
 
-    {#key imageSrc}
-      <img 
-        src={imageSrc} 
-        alt={alt}
-        class={`${className} ${imageLoaded ? 'opacity-100' : showLoader ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
-        style={className.includes('h-auto') ? 'width: 100%; height: auto; display: block; object-fit: contain; object-position: center top;' : ''}
-        onload={handleImageLoad}
-        onerror={handleImageError}
-        loading={loadingAttr}
-      />
-    {/key}
+    <img 
+      src={imageSrc} 
+      alt={alt}
+      class={`${className} ${imageLoaded ? 'opacity-100' : showLoader ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+      style={className.includes('h-auto') ? 'width: 100%; height: auto; display: block; object-fit: contain; object-position: center top;' : ''}
+      onload={handleImageLoad}
+      onerror={handleImageError}
+      loading={loadingAttr}
+    />
 
-    {#if imageError && retryCount >= maxRetries && !imageLoaded}
+    {#if imageError && !imageLoaded}
       <!-- Fallback cuando la imagen no existe después de todos los reintentos -->
       {#if fallbackIcon}
         <div class="w-full flex items-center justify-center bg-gray-100" style={className.includes('h-auto') ? 'min-height: 200px; padding: 40px 0;' : 'height: 100%;'}>

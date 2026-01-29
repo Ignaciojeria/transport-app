@@ -153,7 +153,8 @@ func prepareImagePlaceholders(
 			return fmt.Errorf("error generando signed URL para cover: %w", err)
 		}
 		// Asignar placeholder (la URL pública donde se guardará la imagen)
-		createRequest.CoverImage = publicURL
+		// Normalizar URL antes de asignar
+		createRequest.CoverImage = events.NormalizeGCSURL(publicURL)
 		// Guardar URLs en campos temporales para publicar evento después
 		createRequest.CoverImageGenerationRequest.UploadURL = uploadURL
 		createRequest.CoverImageGenerationRequest.PublicURL = publicURL
@@ -178,7 +179,8 @@ func prepareImagePlaceholders(
 			return fmt.Errorf("error generando signed URL para cover editado: %w", err)
 		}
 		// Asignar placeholder
-		createRequest.CoverImage = publicURL
+		// Normalizar URL antes de asignar
+		createRequest.CoverImage = events.NormalizeGCSURL(publicURL)
 		// Guardar URLs en campos temporales
 		createRequest.CoverImageEditionRequest.UploadURL = uploadURL
 		createRequest.CoverImageEditionRequest.PublicURL = publicURL
@@ -234,6 +236,7 @@ func prepareImagePlaceholders(
 }
 
 // assignImageURLToMenuItem asigna una URL de imagen a un item o side del menú
+// Normaliza la URL antes de asignarla para evitar formatos incorrectos
 func assignImageURLToMenuItem(
 	createRequest *events.MenuCreateRequest,
 	menuItemID string,
@@ -241,10 +244,13 @@ func assignImageURLToMenuItem(
 	obs observability.Observability,
 	ctx context.Context,
 ) {
+	// Normalizar URL antes de asignar
+	normalizedURL := events.NormalizeGCSURL(imageURL)
+	
 	// Manejar IDs especiales
 	if menuItemID == "footer" {
-		createRequest.FooterImage = imageURL
-		obs.Logger.InfoContext(ctx, "image_url_assigned_to_footer", "imageURL", imageURL)
+		createRequest.FooterImage = normalizedURL
+		obs.Logger.InfoContext(ctx, "image_url_assigned_to_footer", "imageURL", normalizedURL)
 		return
 	}
 
@@ -253,8 +259,8 @@ func assignImageURLToMenuItem(
 	for i := range createRequest.Menu {
 		for j := range createRequest.Menu[i].Items {
 			if createRequest.Menu[i].Items[j].ID == menuItemID {
-				createRequest.Menu[i].Items[j].PhotoUrl = imageURL
-				obs.Logger.InfoContext(ctx, "image_url_assigned_to_item", "menuItemId", menuItemID, "imageURL", imageURL)
+				createRequest.Menu[i].Items[j].PhotoUrl = normalizedURL
+				obs.Logger.InfoContext(ctx, "image_url_assigned_to_item", "menuItemId", menuItemID, "imageURL", normalizedURL)
 				found = true
 				break
 			}
@@ -262,8 +268,8 @@ func assignImageURLToMenuItem(
 			// Buscar en sides del item
 			for k := range createRequest.Menu[i].Items[j].Sides {
 				if createRequest.Menu[i].Items[j].Sides[k].ID == menuItemID {
-					createRequest.Menu[i].Items[j].Sides[k].PhotoUrl = imageURL
-					obs.Logger.InfoContext(ctx, "image_url_assigned_to_side", "menuItemId", menuItemID, "imageURL", imageURL)
+					createRequest.Menu[i].Items[j].Sides[k].PhotoUrl = normalizedURL
+					obs.Logger.InfoContext(ctx, "image_url_assigned_to_side", "menuItemId", menuItemID, "imageURL", normalizedURL)
 					found = true
 					break
 				}
@@ -320,8 +326,9 @@ func processCoverImageGenerationRequest(
 	}
 
 	// Asignar la URL directamente al coverImage
-	createRequest.CoverImage = publicURL
-	obs.Logger.InfoContext(spanCtx, "cover_image_processed_successfully", "publicURL", publicURL)
+	// Normalizar URL antes de asignar
+	createRequest.CoverImage = events.NormalizeGCSURL(publicURL)
+	obs.Logger.InfoContext(spanCtx, "cover_image_processed_successfully", "publicURL", createRequest.CoverImage)
 
 	return nil
 }
@@ -434,6 +441,7 @@ func findImageUrlInMenu(menu events.MenuCreateRequest, menuItemID string) string
 
 // updateMenuWithImageURLs actualiza el menú asignando las URLs de las imágenes a los items/sides correspondientes
 // También maneja IDs especiales: "footer" para footerImage (cover ahora se maneja por separado)
+// Normaliza las URLs antes de asignarlas para evitar formatos incorrectos
 func updateMenuWithImageURLs(
 	createRequest *events.MenuCreateRequest,
 	imageURLs map[string]string,
@@ -441,10 +449,13 @@ func updateMenuWithImageURLs(
 	ctx context.Context,
 ) {
 	for menuItemID, imageURL := range imageURLs {
+		// Normalizar URL antes de asignar
+		normalizedURL := events.NormalizeGCSURL(imageURL)
+		
 		// Manejar IDs especiales para imágenes del menú
 		if menuItemID == "footer" {
-			createRequest.FooterImage = imageURL
-			obs.Logger.InfoContext(ctx, "image_url_assigned_to_footer", "imageURL", imageURL)
+			createRequest.FooterImage = normalizedURL
+			obs.Logger.InfoContext(ctx, "image_url_assigned_to_footer", "imageURL", normalizedURL)
 			continue
 		}
 
@@ -455,8 +466,8 @@ func updateMenuWithImageURLs(
 		for i := range createRequest.Menu {
 			for j := range createRequest.Menu[i].Items {
 				if createRequest.Menu[i].Items[j].ID == menuItemID {
-					createRequest.Menu[i].Items[j].PhotoUrl = imageURL
-					obs.Logger.InfoContext(ctx, "image_url_assigned_to_item", "menuItemId", menuItemID, "imageURL", imageURL)
+					createRequest.Menu[i].Items[j].PhotoUrl = normalizedURL
+					obs.Logger.InfoContext(ctx, "image_url_assigned_to_item", "menuItemId", menuItemID, "imageURL", normalizedURL)
 					found = true
 					break
 				}
@@ -464,8 +475,8 @@ func updateMenuWithImageURLs(
 				// Buscar en sides del item
 				for k := range createRequest.Menu[i].Items[j].Sides {
 					if createRequest.Menu[i].Items[j].Sides[k].ID == menuItemID {
-						createRequest.Menu[i].Items[j].Sides[k].PhotoUrl = imageURL
-						obs.Logger.InfoContext(ctx, "image_url_assigned_to_side", "menuItemId", menuItemID, "imageURL", imageURL)
+						createRequest.Menu[i].Items[j].Sides[k].PhotoUrl = normalizedURL
+						obs.Logger.InfoContext(ctx, "image_url_assigned_to_side", "menuItemId", menuItemID, "imageURL", normalizedURL)
 						found = true
 						break
 					}
@@ -530,8 +541,9 @@ func processCoverImageEditionRequest(
 	}
 
 	// Asignar la URL directamente al coverImage (nueva versión editada)
-	createRequest.CoverImage = publicURL
-	obs.Logger.InfoContext(spanCtx, "cover_image_edited_successfully", "publicURL", publicURL)
+	// Normalizar URL antes de asignar
+	createRequest.CoverImage = events.NormalizeGCSURL(publicURL)
+	obs.Logger.InfoContext(spanCtx, "cover_image_edited_successfully", "publicURL", createRequest.CoverImage)
 
 	return nil
 }

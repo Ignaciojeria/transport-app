@@ -64,6 +64,8 @@ func searchMenuBySlug(
 			}
 
 			obs.Logger.InfoContext(spanCtx, "menu found successfully", "slug", slug, "menuID", menu.ID, "versionID", versionID)
+			// Normalizar URLs de imágenes por si se guardaron mal en BD (httpshttps, https.storage, etc.)
+			normalizeMenuImageURLs(&menu)
 			return menu, nil
 		},
 		option.Summary("searchMenuBySlug"),

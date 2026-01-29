@@ -45,6 +45,9 @@ func NewOnMenuCreateRequest(
 		// antes de guardar (estos campos no deben persistirse)
 		input.Clean()
 
+		// Normalizar URLs de imágenes antes de guardar (corrige httpshttps, https.storage, etc.)
+		input.NormalizeImageURLs()
+
 		// Guardar en GCS (storage)
 		err := saveMenuStorage(spanCtx, input)
 		if err != nil {

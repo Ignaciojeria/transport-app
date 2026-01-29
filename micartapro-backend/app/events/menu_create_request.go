@@ -1,6 +1,7 @@
 package events
 
 import (
+	"strings"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2"
@@ -188,4 +189,57 @@ func (c *MenuCreateRequest) Clean() {
 	c.ImageGenerationRequests = nil
 	c.CoverImageEditionRequest = nil
 	c.ImageEditionRequests = nil
+}
+
+// NormalizeGCSURL corrige URLs de GCS mal formateadas
+// Es idempotente: puede aplicarse múltiples veces sin causar efectos secundarios
+// Es pública para poder usarse desde otros paquetes al asignar URLs
+func NormalizeGCSURL(url string) string {
+	if url == "" {
+		return url
+	}
+	
+	// Verificar si la URL ya está correctamente formateada
+	if strings.HasPrefix(url, "https://storage.googleapis.com") || strings.HasPrefix(url, "http://storage.googleapis.com") {
+		// Aún así, verificar duplicaciones de "https" o "http"
+		url = strings.ReplaceAll(url, "httpshttps://", "https://")
+		url = strings.ReplaceAll(url, "httphttp://", "http://")
+		return url
+	}
+	
+	// Corregir "https.storage.googleapis.com" → "https://storage.googleapis.com"
+	// Solo aplicar si el patrón incorrecto está presente
+	if strings.Contains(url, "https.storage.googleapis.com") {
+		url = strings.ReplaceAll(url, "https.storage.googleapis.com", "https://storage.googleapis.com")
+	}
+	if strings.Contains(url, "http.storage.googleapis.com") {
+		url = strings.ReplaceAll(url, "http.storage.googleapis.com", "http://storage.googleapis.com")
+	}
+	
+	// Manejar casos donde se duplicó "https" (httpshttps://storage...)
+	url = strings.ReplaceAll(url, "httpshttps://", "https://")
+	url = strings.ReplaceAll(url, "httphttp://", "http://")
+	
+	return url
+}
+
+// NormalizeImageURLs normaliza todas las URLs de imágenes del menú antes de guardar en BD.
+// Corrige formatos mal guardados como "httpshttps://" o "https.storage.googleapis.com".
+// Es idempotente y seguro llamarlo múltiples veces.
+func (c *MenuCreateRequest) NormalizeImageURLs() {
+	if c == nil {
+		return
+	}
+
+	c.CoverImage = NormalizeGCSURL(c.CoverImage)
+	c.FooterImage = NormalizeGCSURL(c.FooterImage)
+
+	for i := range c.Menu {
+		for j := range c.Menu[i].Items {
+			c.Menu[i].Items[j].PhotoUrl = NormalizeGCSURL(c.Menu[i].Items[j].PhotoUrl)
+			for k := range c.Menu[i].Items[j].Sides {
+				c.Menu[i].Items[j].Sides[k].PhotoUrl = NormalizeGCSURL(c.Menu[i].Items[j].Sides[k].PhotoUrl)
+			}
+		}
+	}
 }
