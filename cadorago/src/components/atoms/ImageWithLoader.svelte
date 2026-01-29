@@ -14,14 +14,16 @@
   let retryCount = $state(0);
   let showLoader = $state(false);
   let initialTimestamp = $state(Date.now()); // Timestamp inicial para evitar cacheo
-  const maxRetries = 20; // Máximo 20 reintentos (~60 segundos)
+  let lastSrc = $state(''); // Para detectar cambios en la URL
+  const maxRetries = 30; // Máximo 30 reintentos (~90 segundos)
   const retryInterval = 3000; // 3 segundos entre reintentos
+  const initialPollDelay = 2000; // Esperar 2 segundos antes del primer polling (dar tiempo a que se suba)
 
   // Determinar si es una imagen de GCS que podría estar siendo generada
   const isGCSImage = $derived(src.includes('storage.googleapis.com'));
 
   // URL de la imagen con timestamp para evitar cacheo del navegador
-  // Para imágenes de GCS, siempre agregamos timestamp inicial + retryCount si hay error
+  // Para imágenes de GCS, siempre agregamos timestamp inicial + retryCount
   const imageSrc = $derived.by(() => {
     if (!src) return '';
     if (!isGCSImage) return src;
@@ -38,15 +40,19 @@
       imageError = false;
       retryCount = 0;
       showLoader = false;
+      lastSrc = '';
       return;
     }
 
-    // Resetear estado para nueva imagen y generar nuevo timestamp para evitar cacheo
-    imageLoaded = false;
-    imageError = false;
-    retryCount = 0;
-    showLoader = false; // No mostrar loader inicialmente
-    initialTimestamp = Date.now(); // Nuevo timestamp para forzar recarga sin cacheo
+    // Si la URL cambió, resetear todo y generar nuevo timestamp
+    if (src !== lastSrc) {
+      imageLoaded = false;
+      imageError = false;
+      retryCount = 0;
+      showLoader = false;
+      initialTimestamp = Date.now(); // Nuevo timestamp para forzar recarga sin cacheo
+      lastSrc = src;
+    }
   });
 
   function handleImageLoad() {
@@ -63,7 +69,7 @@
     // Solo mostrar loader si es una imagen de GCS (podría estar siendo generada)
     if (isGCSImage) {
       showLoader = true;
-      // Hacer polling para reintentar cargar la imagen
+      // Si hay error, empezar polling inmediatamente (no esperar delay inicial)
       if (retryCount < maxRetries) {
         setTimeout(() => {
           retryCount++;
@@ -75,22 +81,53 @@
     }
   }
 
-  // Polling automático solo si hay error y es imagen de GCS
+  // Polling activo para imágenes de GCS
+  // Se activa cuando hay error o cuando la imagen no carga después del delay inicial
   $effect(() => {
-    if (!src || !isGCSImage || imageLoaded || !imageError || !showLoader) {
+    if (!src || !isGCSImage || imageLoaded) {
       return;
     }
 
-    // Si la imagen falló y es de GCS, hacer polling para reintentar
-    const interval = setInterval(() => {
-      if (imageError && !imageLoaded && retryCount < maxRetries) {
-        retryCount++;
-      } else if (imageLoaded || retryCount >= maxRetries) {
-        clearInterval(interval);
-      }
-    }, retryInterval);
+    let interval = null;
+    let timeout = null;
 
-    return () => clearInterval(interval);
+    // Función para iniciar el polling
+    const startPolling = () => {
+      if (imageLoaded || retryCount >= maxRetries) {
+        return;
+      }
+      
+      showLoader = true;
+      interval = setInterval(() => {
+        if (!imageLoaded && retryCount < maxRetries) {
+          retryCount++;
+        } else {
+          clearInterval(interval);
+          interval = null;
+          if (retryCount >= maxRetries && !imageLoaded) {
+            showLoader = false; // Ocultar loader si se agotaron los reintentos
+          }
+        }
+      }, retryInterval);
+    };
+
+    // Si hay error, empezar polling inmediatamente
+    if (imageError) {
+      startPolling();
+    } else {
+      // Si no hay error, esperar un poco antes de empezar el polling
+      // (dar tiempo a que se suba la imagen)
+      timeout = setTimeout(() => {
+        if (!imageLoaded && !imageError) {
+          startPolling();
+        }
+      }, initialPollDelay);
+    }
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+      if (interval) clearInterval(interval);
+    };
   });
 </script>
 
