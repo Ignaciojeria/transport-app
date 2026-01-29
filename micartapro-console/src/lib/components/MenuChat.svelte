@@ -558,11 +558,25 @@
       return
     }
 
-    if (!menuUrl && userId && menuId && session?.access_token) {
+    // Al abrir la vista previa: si mostramos la versión actual (sin version_id), refrescar URL
+    // y añadir cache-busting para evitar iframe en caché tras activar otra versión (ej. en MenuHistory)
+    const hasPendingVersion = messages.some(msg => msg.pendingVersionId && !versionActivated)
+    const currentUrlHasVersionId = !!(menuUrl && menuUrl.includes('version_id='))
+
+    if (userId && menuId && session?.access_token) {
       try {
-        const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
-        if (url) {
-          menuUrl = url
+        // Si no hay versión pendiente o la URL actual no lleva version_id, mostrar versión actual
+        if (!hasPendingVersion || !currentUrlHasVersionId) {
+          const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
+          if (url) {
+            const separator = url.includes('?') ? '&' : '?'
+            menuUrl = `${url}${separator}_refresh=${Date.now()}`
+            iframeKey++
+          }
+        } else if (!menuUrl) {
+          // Versión pendiente y aún sin menuUrl: cargar URL con version_id (ya se hace en polling)
+          const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, messages.find(m => m.pendingVersionId)?.pendingVersionId)
+          if (url) menuUrl = url
         }
       } catch (err) {
         console.error('Error cargando menú:', err)
