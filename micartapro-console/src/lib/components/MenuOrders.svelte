@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getMenuOrders, type MenuOrderRow } from '../menuUtils'
+  import { getLatestMenuId, getMenuOrders, subscribeMenuOrdersRealtime, type MenuOrderRow } from '../menuUtils'
   import { t as tStore } from '../useLanguage'
 
   interface MenuOrdersProps {
@@ -19,17 +19,19 @@
   let thermalPrintMode = $state(false)
   let orderStatus = $state<Record<number, 'pending' | 'preparing' | 'done'>>({})
   let kitchenMode = $state(false)
+  let realtimeUnsubscribe = $state<(() => void) | null>(null)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
   const session = $derived(authState.session)
   const t = $derived($tStore)
 
-  async function loadOrders() {
+  /** Devuelve el menuId cargado (para suscribir Realtime justo después). */
+  async function loadOrders(): Promise<string | null> {
     if (!userId || !session?.access_token) {
       error = t.orders?.noSession ?? 'No hay sesión activa'
       loading = false
-      return
+      return null
     }
 
     try {
@@ -39,13 +41,15 @@
       if (!currentMenuId) {
         error = t.orders?.noMenu ?? 'No se encontró un menú'
         loading = false
-        return
+        return null
       }
       menuId = currentMenuId
       orders = await getMenuOrders(currentMenuId, session.access_token)
+      return currentMenuId
     } catch (err: unknown) {
       console.error('Error cargando órdenes:', err)
       error = err instanceof Error ? err.message : 'Error al cargar las órdenes'
+      return null
     } finally {
       loading = false
     }
@@ -161,7 +165,28 @@
   }
 
   onMount(() => {
-    loadOrders()
+    let cancelled = false
+    let pollInterval: ReturnType<typeof setInterval> | null = null
+    ;(async () => {
+      const mid = await loadOrders()
+      if (cancelled) return
+      const token = session?.access_token
+      if (mid && token) {
+        realtimeUnsubscribe = await subscribeMenuOrdersRealtime(mid, token, () => {
+          loadOrders()
+        })
+        // Polling cada 20 s por si Realtime no está habilitado en Supabase
+        pollInterval = setInterval(() => {
+          loadOrders()
+        }, 20_000)
+      }
+    })()
+    return () => {
+      cancelled = true
+      if (pollInterval) clearInterval(pollInterval)
+      realtimeUnsubscribe?.()
+      realtimeUnsubscribe = null
+    }
   })
 </script>
 
@@ -184,13 +209,23 @@
       <h1 class="text-xl sm:text-2xl font-bold text-gray-800" class:text-3xl={kitchenMode}>
         {t.sidebar.kitchen}
       </h1>
-      <button
-        type="button"
-        onclick={toggleKitchenMode}
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          onclick={() => loadOrders()}
+          class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200"
+          title={t.orders?.reload ?? 'Recargar'}
+        >
+          {t.orders?.reload ?? 'Recargar'}
+        </button>
+        <button
+          type="button"
+          onclick={toggleKitchenMode}
         class="rounded-lg px-4 py-2 text-sm font-semibold {kitchenMode ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
       >
-        {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir modo cocina') : (t.orders?.kitchenMode ?? 'Modo cocina')}
-      </button>
+          {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir modo cocina') : (t.orders?.kitchenMode ?? 'Modo cocina')}
+        </button>
+      </div>
     </div>
     {#if !kitchenMode}
       <p class="mt-1 text-sm text-gray-500">

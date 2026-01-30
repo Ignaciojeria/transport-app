@@ -765,6 +765,48 @@ export async function getMenuOrders(
 }
 
 /**
+ * Suscripción Realtime a nuevos pedidos en menu_orders para un menu_id.
+ * Cuando se inserta una fila, se llama onInsert (ej. recargar lista).
+ * Requiere que la tabla esté en la publicación Realtime (ver sql/realtime_menu_orders.sql).
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @param onInsert - Callback al insertar una nueva orden
+ * @returns Función para cancelar la suscripción
+ */
+export async function subscribeMenuOrdersRealtime(
+  menuId: string,
+  accessToken: string,
+  onInsert: () => void
+): Promise<() => void> {
+  const supabase = await getAuthenticatedSupabaseClient(accessToken)
+  const channel = supabase
+    .channel(`menu_orders:${menuId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'menu_orders',
+        filter: `menu_id=eq.${menuId}`
+      },
+      () => {
+        onInsert()
+      }
+    )
+    .subscribe((status: string, err?: Error) => {
+      if (import.meta.env.DEV) {
+        console.log('[Cocina Realtime]', status, err ?? '')
+      }
+      if (status === 'CHANNEL_ERROR' && import.meta.env.DEV) {
+        console.warn('[Cocina Realtime] Si no ves pedidos al instante, ejecuta en Supabase SQL: ALTER PUBLICATION supabase_realtime ADD TABLE public.menu_orders;')
+      }
+    })
+  return () => {
+    supabase.removeChannel(channel)
+  }
+}
+
+/**
  * Actualiza el nombre de una versión del menú
  * @param versionId - ID de la versión
  * @param name - Nuevo nombre para la versión

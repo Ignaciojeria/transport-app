@@ -145,6 +145,7 @@ export interface Translations {
     statusPreparing: string
     statusDone: string
     startPreparing: string
+    reload: string
   }
 }
 
@@ -275,7 +276,8 @@ export const translations: Record<Language, Translations> = {
       statusPending: 'Pendiente',
       statusPreparing: 'En preparación',
       statusDone: 'Listo',
-      startPreparing: 'Iniciar preparación'
+      startPreparing: 'Iniciar preparación',
+      reload: 'Recargar'
     }
   },
   PT: {
@@ -413,7 +415,8 @@ export const translations: Record<Language, Translations> = {
       statusPending: 'Pendente',
       statusPreparing: 'Em preparação',
       statusDone: 'Pronto',
-      startPreparing: 'Iniciar preparação'
+      startPreparing: 'Iniciar preparação',
+      reload: 'Atualizar'
     }
   },
   EN: {
@@ -542,7 +545,8 @@ export const translations: Record<Language, Translations> = {
       statusPending: 'Pending',
       statusPreparing: 'Preparing',
       statusDone: 'Ready',
-      startPreparing: 'Start preparing'
+      startPreparing: 'Start preparing',
+      reload: 'Refresh'
     }
   }
 }
