@@ -7,28 +7,61 @@ import (
 )
 
 type CreateOrderRequest struct {
-	BusinessInfo struct {
-		BusinessName string `json:"businessName"`
-		Whatsapp     string `json:"whatsapp"`
-	} `json:"businessInfo"`
-	Items []struct {
-		ProductName string  `json:"productName"`
-		PricingMode string  `json:"pricingMode"`
-		Unit        string  `json:"unit"`
-		Quantity    float64 `json:"quantity"`
-		UnitPrice   int     `json:"unitPrice"`
-		TotalPrice  int     `json:"totalPrice"`
-	} `json:"items"`
-	Totals struct {
-		Subtotal    int    `json:"subtotal"`
-		DeliveryFee int    `json:"deliveryFee"`
-		Total       int    `json:"total"`
-		Currency    string `json:"currency"`
-	} `json:"totals"`
-	Fulfillment struct {
-		Type          string    `json:"type"`
-		RequestedTime time.Time `json:"requestedTime"`
-	} `json:"fulfillment"`
+	CreatedAt    string `json:"createdAt"`
+	Items        []OrderItem       `json:"items"`
+	Totals       OrderTotals       `json:"totals"`
+	Fulfillment  OrderFulfillment  `json:"fulfillment"`
+	BusinessInfo OrderBusinessInfo `json:"businessInfo"`
+}
+
+type OrderItem struct {
+	Unit        string  `json:"unit"`
+	Quantity    float64 `json:"quantity"`
+	UnitPrice   int     `json:"unitPrice"`
+	TotalPrice  int     `json:"totalPrice"`
+	PricingMode string  `json:"pricingMode"`
+	ProductName string  `json:"productName"`
+}
+
+type OrderTotals struct {
+	Total       int    `json:"total"`
+	Currency    string `json:"currency"`
+	Subtotal    int    `json:"subtotal"`
+	DeliveryFee int    `json:"deliveryFee"`
+}
+
+type OrderFulfillment struct {
+	Type          string        `json:"type"`
+	RequestedTime string        `json:"requestedTime"`
+	Address       OrderAddress  `json:"address,omitempty"`
+	Contact       OrderContact  `json:"contact,omitempty"`
+}
+
+type OrderAddress struct {
+	RawAddress       string               `json:"rawAddress"`
+	Coordinates      OrderCoordinates     `json:"coordinates"`
+	DeliveryDetails  OrderDeliveryDetails `json:"deliveryDetails,omitempty"`
+}
+
+type OrderCoordinates struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+}
+
+type OrderDeliveryDetails struct {
+	Unit  string `json:"unit"`
+	Notes string `json:"notes"`
+}
+
+type OrderContact struct {
+	FullName string `json:"fullName"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+}
+
+type OrderBusinessInfo struct {
+	Whatsapp     string `json:"whatsapp"`
+	BusinessName string `json:"businessName"`
 }
 
 func (c CreateOrderRequest) ToCloudEvent(source string) cloudevents.Event {

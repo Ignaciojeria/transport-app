@@ -6,6 +6,7 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/usecase/order"
 	"net/http"
+	"time"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
@@ -51,6 +52,9 @@ func createOrder(
 					Status: http.StatusBadRequest,
 				}
 			}
+
+			// Fijar createdAt en el momento en que llega al controlador
+			request.CreatedAt = time.Now().Format(time.RFC3339Nano)
 
 			// Llamar al caso de uso
 			result, err := createOrderUseCase(spanCtx, menuID, request)

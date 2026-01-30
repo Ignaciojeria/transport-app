@@ -30,6 +30,7 @@
   let deliveryType = $state(null); // 'DELIVERY' | 'PICKUP' | null
   let deliveryStep = $state(1); // 1: dirección, 2: datos personales
   let nombreRetiro = $state('');
+  let phoneContact = $state('');
   let horaRetiro = $state('');
   let deliveryAddress = $state('');
   let addressNumber = $state(''); // Número de casa/departamento
@@ -127,6 +128,7 @@
       deliveryType = null;
       deliveryStep = 1;
       nombreRetiro = '';
+      phoneContact = '';
       horaRetiro = '';
       deliveryAddress = '';
       addressNumber = '';
@@ -417,71 +419,96 @@
       throw new Error('No se pudo obtener el ID del menú');
     }
 
-    // Mapear items del carrito al formato de la API
+    // Mapear items del carrito al formato de la API (orden: unit, quantity, unitPrice, totalPrice, pricingMode, productName)
     const items = cartStore.items.map(item => {
       const pricing = item.pricing || {};
-      const pricingMode = pricing.mode === 'WEIGHT' || pricing.mode === 'VOLUME' || pricing.mode === 'LENGTH' || pricing.mode === 'AREA' 
-        ? pricing.mode 
+      const pricingMode = pricing.mode === 'WEIGHT' || pricing.mode === 'VOLUME' || pricing.mode === 'LENGTH' || pricing.mode === 'AREA'
+        ? pricing.mode
         : 'UNIT';
-      
+
       const unit = pricing.unit || 'EACH';
       const quantity = item.customQuantity || item.cantidad;
-      
-      // Calcular precios
+
       let unitPrice = 0;
       let totalPrice = 0;
-      
+
       if (item.customQuantity && item.pricing) {
-        // Para items con cantidad personalizada
         unitPrice = pricing.pricePerUnit || 0;
         totalPrice = getPriceFromPricing(item.pricing, item.customQuantity);
       } else {
-        // Para items normales
         unitPrice = item.precio || 0;
         totalPrice = item.precio * item.cantidad;
       }
 
       return {
-        productName: item.title + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
-        pricingMode: pricingMode,
-        unit: unit,
-        quantity: quantity,
-        unitPrice: unitPrice,
-        totalPrice: totalPrice
+        unit,
+        quantity,
+        unitPrice,
+        totalPrice,
+        pricingMode,
+        productName: item.title + (item.acompanamiento ? ` (${item.acompanamiento})` : '')
       };
     });
 
     // Calcular totales
     const subtotal = cartStore.getTotal();
-    const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0; // Asumiendo fee fijo, ajustar según necesidad
+    const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0;
     const total = subtotal + deliveryFee;
 
-    // Construir fecha/hora solicitada
-    let requestedTime = null;
+    // Fecha/hora solicitada en ISO string
+    let requestedTime = '';
     if (deliveryType === 'PICKUP' && horaRetiro) {
-      requestedTime = formatRequestedTime(horaRetiro);
+      requestedTime = formatRequestedTime(horaRetiro) || '';
     } else if (deliveryType === 'DELIVERY') {
-      // Para delivery, usar fecha/hora actual + tiempo estimado (ej: 1 hora)
       const now = new Date();
       now.setHours(now.getHours() + 1);
       requestedTime = now.toISOString();
     }
 
+    // fulfillment: type, requestedTime, address (solo DELIVERY), contact
+    const fulfillment = {
+      type: deliveryType,
+      requestedTime,
+      address: {
+        rawAddress: '',
+        coordinates: { latitude: 0, longitude: 0 },
+        deliveryDetails: { unit: '', notes: '' }
+      },
+      contact: {
+        fullName: nombreRetiro.trim(),
+        phone: (phoneContact || '').trim(),
+        email: ''
+      }
+    };
+
+    if (deliveryType === 'DELIVERY' && selectedAddress) {
+      const rawAddress = selectedAddress.display_name || deliveryAddress;
+      fulfillment.address = {
+        rawAddress,
+        coordinates: {
+          latitude: parseFloat(selectedAddress.lat) || 0,
+          longitude: parseFloat(selectedAddress.lon) || 0
+        },
+        deliveryDetails: {
+          unit: (addressNumber || '').trim(),
+          notes: (addressNotes || '').trim()
+        }
+      };
+    }
+
     const orderData = {
-      businessInfo: {
-        businessName: restaurantData?.businessInfo?.businessName || 'cadorago',
-        whatsapp: restaurantData?.businessInfo?.whatsapp || ''
-      },
-      items: items,
+      createdAt: '', // el backend lo sobrescribe siempre
+      items,
       totals: {
-        subtotal: subtotal,
-        deliveryFee: deliveryFee,
-        total: total,
-        currency: 'CLP'
+        total,
+        currency: 'CLP',
+        subtotal,
+        deliveryFee
       },
-      fulfillment: {
-        type: deliveryType,
-        requestedTime: requestedTime
+      fulfillment,
+      businessInfo: {
+        whatsapp: restaurantData?.businessInfo?.whatsapp || '',
+        businessName: restaurantData?.businessInfo?.businessName || 'cadorago'
       }
     };
 
@@ -509,8 +536,12 @@
       return;
     }
     
-    // Validar nombre
+    // Validar nombre y teléfono
     if (!nombreRetiro.trim()) {
+      alert($t.cart.completeFields);
+      return;
+    }
+    if (!phoneContact.trim()) {
       alert($t.cart.completeFields);
       return;
     }
@@ -612,6 +643,7 @@
     deliveryType = null;
     deliveryStep = 1;
     nombreRetiro = '';
+    phoneContact = '';
     horaRetiro = '';
     deliveryAddress = '';
     addressNumber = '';
@@ -992,6 +1024,20 @@
             </div>
             
             <div>
+              <label for="phone-contact-delivery" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.phone} *
+              </label>
+              <input
+                id="phone-contact-delivery"
+                type="tel"
+                bind:value={phoneContact}
+                placeholder={$t.cart.phonePlaceholder}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
               <label for="address-number" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
                 {$t.cart.addressNumber}
               </label>
@@ -1023,14 +1069,28 @@
         {#if deliveryType === 'PICKUP'}
           <div class="space-y-4">
             <div>
-              <label for="nombre-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+              <label for="nombre-retiro-pickup" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
                 {$t.cart.pickupName}
               </label>
               <input
-                id="nombre-retiro"
+                id="nombre-retiro-pickup"
                 type="text"
                 bind:value={nombreRetiro}
                 placeholder={$t.cart.nameFormatExample}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label for="phone-contact-pickup" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.phone} *
+              </label>
+              <input
+                id="phone-contact-pickup"
+                type="tel"
+                bind:value={phoneContact}
+                placeholder={$t.cart.phonePlaceholder}
                 class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />
