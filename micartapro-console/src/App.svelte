@@ -20,7 +20,9 @@
   
   // Estado del sidebar (abierto/cerrado en móvil, siempre abierto en desktop)
   let sidebarOpen = $state(false)
-  
+  // Modo cocina: oculta la sidenav para vista fullscreen en cocina
+  let kitchenModeActive = $state(false)
+
   // Función para verificar si estamos en móvil
   function isMobile(): boolean {
     if (typeof window === 'undefined') return false
@@ -30,6 +32,7 @@
   // Función para cambiar de sección
   function handleSectionChange(section: string) {
     activeSection = section
+    if (section !== 'ordenes') kitchenModeActive = false
     // Cerrar sidebar en móvil después de seleccionar una sección
     if (isMobile()) {
       sidebarOpen = false
@@ -46,8 +49,8 @@
     sidebarOpen = false
   }
   
-  // Determinar si el sidebar debe mostrarse (siempre en desktop, condicional en móvil)
-  const isSidebarVisible = $derived(!isMobile() || sidebarOpen)
+  // Determinar si el sidebar debe mostrarse (oculto en modo cocina; en desktop siempre, en móvil si está abierto)
+  const isSidebarVisible = $derived(!kitchenModeActive && (!isMobile() || sidebarOpen))
 
   // Detectar si estamos en la página de éxito de pago
   let isPaymentSuccess = $derived(() => {
@@ -97,10 +100,10 @@
       </div>
     </div>
   {:else if user}
-    <!-- Content con Sidebar -->
+    <!-- Content con Sidebar (sidebar oculto en modo cocina) -->
     <div class="flex h-screen h-[100dvh] relative">
-      <!-- Overlay para móvil -->
-      {#if sidebarOpen}
+      <!-- Overlay para móvil (no en modo cocina) -->
+      {#if !kitchenModeActive && sidebarOpen}
         <div 
           class="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
           onclick={closeSidebar}
@@ -110,16 +113,18 @@
         ></div>
       {/if}
       
-      <!-- Sidebar -->
-      <Sidebar 
-        activeSection={activeSection} 
-        onSectionChange={handleSectionChange}
-        isOpen={isSidebarVisible}
-        onClose={closeSidebar}
-      />
+      <!-- Sidebar: oculto en modo cocina -->
+      {#if !kitchenModeActive}
+        <Sidebar 
+          activeSection={activeSection} 
+          onSectionChange={handleSectionChange}
+          isOpen={isSidebarVisible}
+          onClose={closeSidebar}
+        />
+      {/if}
       
-      <!-- Contenido principal -->
-      <div class="flex-1 md:ml-64 overflow-hidden bg-gray-50">
+      <!-- Contenido principal (full width en modo cocina) -->
+      <div class="flex-1 overflow-hidden bg-gray-50" class:md:ml-64={!kitchenModeActive}>
         {#if activeSection === 'menu'}
           <MenuChat onMenuClick={toggleSidebar} />
         {:else if activeSection === 'historial'}
@@ -129,7 +134,7 @@
         {:else if activeSection === 'qr'}
           <MenuQRCode onMenuClick={toggleSidebar} />
         {:else if activeSection === 'ordenes'}
-          <MenuOrders onMenuClick={toggleSidebar} />
+          <MenuOrders onMenuClick={toggleSidebar} onKitchenModeChange={(v) => kitchenModeActive = v} />
         {/if}
       </div>
     </div>

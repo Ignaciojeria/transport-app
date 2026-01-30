@@ -6,17 +6,19 @@
 
   interface MenuOrdersProps {
     onMenuClick?: () => void
+    onKitchenModeChange?: (active: boolean) => void
   }
 
-  let { onMenuClick }: MenuOrdersProps = $props()
+  let { onMenuClick, onKitchenModeChange }: MenuOrdersProps = $props()
 
   let orders = $state<MenuOrderRow[]>([])
   let loading = $state(true)
   let error = $state<string | null>(null)
   let menuId = $state<string | null>(null)
-  let expandedOrderNumber = $state<number | null>(null)
   let paperOrder = $state<MenuOrderRow | null>(null)
   let thermalPrintMode = $state(false)
+  let orderStatus = $state<Record<number, 'pending' | 'preparing' | 'done'>>({})
+  let kitchenMode = $state(false)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -63,10 +65,6 @@
     return typeof type === 'string' ? type : '—'
   }
 
-  function togglePayload(orderNumber: number) {
-    expandedOrderNumber = expandedOrderNumber === orderNumber ? null : orderNumber
-  }
-
   function formatCurrency(amount: number, currency: string): string {
     if (currency === 'CLP') return `$${amount.toLocaleString('es-CL')}`
     return `${amount} ${currency}`
@@ -76,6 +74,74 @@
     if (!iso) return '—'
     const d = new Date(iso)
     return d.toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })
+  }
+
+  /** Minutos hasta requested_time (negativo = atrasado). */
+  function getRemainingMinutes(iso: string | null): number | null {
+    if (!iso) return null
+    const target = new Date(iso).getTime()
+    const now = Date.now()
+    return Math.round((target - now) / 60_000)
+  }
+
+  function getRemainingTimeLabel(minutes: number | null): string {
+    if (minutes === null) return ''
+    const abs = Math.abs(minutes)
+    const isLate = minutes < 0
+    const template = isLate ? (t.orders?.late ?? 'Atrasado {min} min') : (t.orders?.remainingIn ?? 'En {min} min')
+    return template.replace('{min}', String(abs))
+  }
+
+  /** 'green' >15 min, 'yellow' 5–15, 'red' <5 o atrasado */
+  function getRemainingTimeColor(minutes: number | null): 'green' | 'yellow' | 'red' | null {
+    if (minutes === null) return null
+    if (minutes < 0) return 'red'
+    if (minutes <= 5) return 'red'
+    if (minutes <= 15) return 'yellow'
+    return 'green'
+  }
+
+  /** Agrupa ítems por productName, sumando cantidades. */
+  function groupItems(items: Array<{ productName?: string; quantity?: number }>): Array<{ productName: string; quantity: number }> {
+    const map = new Map<string, number>()
+    for (const it of items) {
+      const name = it.productName?.trim() || '—'
+      map.set(name, (map.get(name) ?? 0) + (it.quantity ?? 0))
+    }
+    return [...map.entries()].map(([productName, quantity]) => ({ productName, quantity }))
+  }
+
+  function getOrderStatus(orderNumber: number): 'pending' | 'preparing' | 'done' {
+    return orderStatus[orderNumber] ?? 'pending'
+  }
+
+  function setOrderStatus(orderNumber: number, status: 'pending' | 'preparing' | 'done') {
+    orderStatus = { ...orderStatus, [orderNumber]: status }
+  }
+
+  function cycleOrderStatus(orderNumber: number) {
+    const current = getOrderStatus(orderNumber)
+    if (current === 'pending') setOrderStatus(orderNumber, 'preparing')
+    else if (current === 'preparing') setOrderStatus(orderNumber, 'done')
+    else setOrderStatus(orderNumber, 'pending')
+  }
+
+  async function toggleKitchenMode() {
+    kitchenMode = !kitchenMode
+    onKitchenModeChange?.(kitchenMode)
+    if (kitchenMode) {
+      try {
+        await document.documentElement.requestFullscreen?.()
+      } catch {
+        // ignore if fullscreen not allowed
+      }
+    } else {
+      try {
+        await document.exitFullscreen?.()
+      } catch {
+        // ignore
+      }
+    }
   }
 
   function openPaperView(order: MenuOrderRow) {
@@ -99,27 +165,38 @@
   })
 </script>
 
-<div class="h-full flex flex-col bg-gray-50">
+<div class="h-full flex flex-col bg-gray-50 kitchen-orders-root" class:kitchen-mode={kitchenMode}>
   <!-- Header -->
-  <div class="flex-shrink-0 px-4 sm:px-6 py-4 border-b border-gray-200 bg-white">
+  <div class="flex-shrink-0 px-4 sm:px-6 py-4 border-b border-gray-200 bg-white" class:kitchen-mode-header={kitchenMode}>
     <div class="flex items-center justify-between gap-4">
+      {#if !kitchenMode}
+        <button
+          type="button"
+          onclick={onMenuClick}
+          class="md:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 text-gray-600"
+          aria-label="Abrir menú"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      {/if}
+      <h1 class="text-xl sm:text-2xl font-bold text-gray-800" class:text-3xl={kitchenMode}>
+        {t.sidebar.kitchen}
+      </h1>
       <button
         type="button"
-        onclick={onMenuClick}
-        class="md:hidden p-2 -ml-2 rounded-lg hover:bg-gray-100 text-gray-600"
-        aria-label="Abrir menú"
+        onclick={toggleKitchenMode}
+        class="rounded-lg px-4 py-2 text-sm font-semibold {kitchenMode ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
       >
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
+        {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir modo cocina') : (t.orders?.kitchenMode ?? 'Modo cocina')}
       </button>
-      <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
-        {t.sidebar.orders}
-      </h1>
     </div>
-    <p class="mt-1 text-sm text-gray-500">
-      {t.orders?.subtitle ?? 'Ordenado por número de orden y hora solicitada para planificar entregas o preparación.'}
-    </p>
+    {#if !kitchenMode}
+      <p class="mt-1 text-sm text-gray-500">
+        {t.orders?.subtitle ?? 'Ordenado por hora comprometida. Vista orientada a cocina.'}
+      </p>
+    {/if}
   </div>
 
   <!-- Content -->
@@ -137,102 +214,82 @@
         {t.orders?.empty ?? 'No hay órdenes aún.'}
       </div>
     {:else}
-      <ul class="space-y-4">
-        {#each orders as order (order.order_number)}
+      <ul class="space-y-5 kitchen-orders-list" class:kitchen-mode-list={kitchenMode}>
+        {#each orders as order, index (order.order_number)}
           {@const type = getFulfillmentType(order.event_payload)}
-          <li class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <button
-              type="button"
-              class="w-full text-left px-4 py-4 sm:px-5 sm:py-4 flex items-center justify-between gap-3 hover:bg-gray-50 transition-colors"
-              onclick={() => togglePayload(order.order_number)}
-            >
-              <div class="flex items-center gap-3 min-w-0">
-                <span class="flex-shrink-0 font-semibold text-gray-800">#{order.order_number}</span>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}">
-                  {type === 'DELIVERY' ? (t.orders?.delivery ?? 'Envío') : (t.orders?.pickup ?? 'Retiro')}
+          {@const rawItems = (order.event_payload?.items as Array<{ productName?: string; quantity?: number }>) ?? []}
+          {@const items = groupItems(rawItems)}
+          {@const itemCount = rawItems.reduce((s, i) => s + (i.quantity ?? 0), 0)}
+          {@const isFirst = index === 0}
+          {@const status = getOrderStatus(order.order_number)}
+          {@const remainingMin = getRemainingMinutes(order.requested_time)}
+          {@const timeColor = getRemainingTimeColor(remainingMin)}
+          <li class="bg-white rounded-xl border-2 overflow-hidden kitchen-order-card {isFirst ? 'kitchen-order-first border-amber-400 shadow-lg' : 'border-gray-200 shadow-sm'}">
+            <!-- Cabecera cocina: número, hora, tipo, tiempo restante, estado (sin expandir) -->
+            <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst ? 'sm:py-6' : 'sm:py-4'}">
+              <span class="font-bold text-gray-900 tabular-nums {isFirst ? 'text-4xl sm:text-5xl md:text-6xl' : 'text-3xl sm:text-4xl'}">#{order.order_number}</span>
+              <span class="font-semibold text-gray-700 {isFirst ? 'text-2xl sm:text-3xl md:text-4xl' : 'text-xl sm:text-2xl'}">
+                {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
+              </span>
+              {#if remainingMin !== null}
+                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums
+                  {timeColor === 'green' ? 'bg-green-100 text-green-800' : ''}
+                  {timeColor === 'yellow' ? 'bg-amber-200 text-amber-900' : ''}
+                  {timeColor === 'red' ? 'bg-red-100 text-red-800' : ''}">
+                  <span aria-hidden="true">{timeColor === 'green' ? '🟢' : timeColor === 'yellow' ? '🟡' : '🔴'}</span>
+                  {getRemainingTimeLabel(remainingMin)}
                 </span>
-                <span class="text-sm text-gray-500 truncate">
-                  {formatRequestedTime(order.requested_time)}
-                </span>
+              {/if}
+              <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}">
+                {type === 'DELIVERY' ? (t.orders?.delivery ?? 'Envío') : (t.orders?.pickup ?? 'Retiro')}
+              </span>
+              <!-- Estado operativo: informativo (ámbar suave), no compite con el botón naranja -->
+              <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
+                {status === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
+                {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
+                {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
+                {#if status === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
+                {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+              </span>
+            </div>
+            <!-- Qué preparar: listado vertical (un ítem por línea; cantidad en bold) -->
+            <div class="px-4 py-3 sm:px-5 bg-amber-50/50 border-b border-amber-100 {isFirst ? 'py-4 sm:py-5' : ''}">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <p class="font-semibold text-amber-800 uppercase tracking-wide {isFirst ? 'text-sm' : 'text-xs'}">{t.orders?.itemsToPrepare ?? 'Qué preparar'}</p>
+                <span class="text-sm font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
               </div>
-              <svg
-                class="w-5 h-5 text-gray-400 flex-shrink-0 transition-transform {expandedOrderNumber === order.order_number ? 'rotate-180' : ''}"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            {#if expandedOrderNumber === order.order_number}
-              {@const p = order.event_payload}
-              {@const items = (p?.items as Array<{ productName?: string; quantity?: number; unitPrice?: number; totalPrice?: number; unit?: string; pricingMode?: string }>) ?? []}
-              {@const totals = (p?.totals as { subtotal?: number; deliveryFee?: number; total?: number; currency?: string }) ?? {}}
-              {@const fulfillment = (p?.fulfillment as { type?: string; requestedTime?: string; address?: { rawAddress?: string; coordinates?: { latitude?: number; longitude?: number }; deliveryDetails?: { unit?: string; notes?: string } }; contact?: { fullName?: string; phone?: string; email?: string } }) ?? {}}
-              {@const contact = fulfillment.contact ?? {}}
-              {@const createdAt = p?.createdAt as string | undefined}
-              <div class="border-t border-gray-200 bg-gray-50 px-4 py-4 sm:px-5 space-y-4">
-                <!-- Items -->
-                <section class="rounded-lg bg-white border border-gray-200 overflow-hidden">
-                  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2 bg-gray-100 border-b border-gray-200">Items</h4>
-                  <ul class="divide-y divide-gray-100">
-                    {#each items as item}
-                      <li class="px-3 py-2.5 flex justify-between items-baseline gap-2">
-                        <span class="text-sm text-gray-800 font-medium">{item.productName ?? '—'}</span>
-                        <span class="text-sm text-gray-600 shrink-0">{item.quantity ?? 0} × {formatCurrency(item.unitPrice ?? 0, totals.currency ?? 'CLP')} = {formatCurrency(item.totalPrice ?? 0, totals.currency ?? 'CLP')}</span>
-                      </li>
-                    {/each}
-                  </ul>
-                </section>
-                <!-- Totals -->
-                <section class="rounded-lg bg-white border border-gray-200 overflow-hidden">
-                  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2 bg-gray-100 border-b border-gray-200">Totales</h4>
-                  <dl class="px-3 py-2.5 space-y-1 text-sm">
-                    <div class="flex justify-between"><dt class="text-gray-500">Subtotal</dt><dd class="text-gray-800 font-medium">{formatCurrency(totals.subtotal ?? 0, totals.currency ?? 'CLP')}</dd></div>
-                    <div class="flex justify-between"><dt class="text-gray-500">Envío</dt><dd class="text-gray-800 font-medium">{formatCurrency(totals.deliveryFee ?? 0, totals.currency ?? 'CLP')}</dd></div>
-                    <div class="flex justify-between border-t border-gray-100 pt-2 mt-2"><dt class="text-gray-700 font-semibold">Total</dt><dd class="text-gray-900 font-bold">{formatCurrency(totals.total ?? 0, totals.currency ?? 'CLP')}</dd></div>
-                  </dl>
-                </section>
-                <!-- Contacto (destacado) -->
-                <section class="rounded-lg bg-white border-2 border-blue-200 overflow-hidden">
-                  <h4 class="text-xs font-semibold text-blue-800 uppercase tracking-wide px-3 py-2.5 bg-blue-50 border-b border-blue-200">Contacto</h4>
-                  <dl class="px-3 py-3 space-y-2.5 text-sm">
-                    <div><dt class="text-gray-500 text-xs mb-0.5">Nombre</dt><dd class="text-gray-900 font-semibold">{(contact.fullName || '').trim() || '—'}</dd></div>
-                    <div><dt class="text-gray-500 text-xs mb-0.5">Teléfono</dt><dd class="text-gray-800">{contact.phone?.trim() || '—'}</dd></div>
-                    <div><dt class="text-gray-500 text-xs mb-0.5">Email</dt><dd class="text-gray-800">{contact.email?.trim() || '—'}</dd></div>
-                  </dl>
-                </section>
-                <!-- Entrega / Retiro -->
-                <section class="rounded-lg bg-white border border-gray-200 overflow-hidden">
-                  <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide px-3 py-2 bg-gray-100 border-b border-gray-200">Entrega / Retiro</h4>
-                  <dl class="px-3 py-2.5 space-y-2 text-sm">
-                    <div class="flex justify-between gap-2"><dt class="text-gray-500 shrink-0">Tipo</dt><dd class="text-gray-800 font-medium">{fulfillment.type ?? '—'}</dd></div>
-                    <div class="flex justify-between gap-2"><dt class="text-gray-500 shrink-0">Hora solicitada</dt><dd class="text-gray-800">{formatDetailDate(fulfillment.requestedTime ?? null)}</dd></div>
-                    {#if fulfillment.address?.rawAddress}
-                      <div><dt class="text-gray-500 text-xs mb-0.5">Dirección</dt><dd class="text-gray-800">{fulfillment.address.rawAddress}</dd></div>
-                      {#if fulfillment.address.deliveryDetails?.unit || fulfillment.address.deliveryDetails?.notes}
-                        <div class="text-gray-600 text-xs">Depto/Unidad: {fulfillment.address.deliveryDetails?.unit ?? '—'} · Notas: {fulfillment.address.deliveryDetails?.notes || '—'}</div>
-                      {/if}
-                    {/if}
-                  </dl>
-                </section>
-                {#if createdAt}
-                  <p class="text-xs text-gray-400">Creado: {formatDetailDate(createdAt)}</p>
-                {/if}
-                <div class="flex justify-end pt-2">
-                  <button
-                    type="button"
-                    onclick={() => openPaperView(order)}
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 shadow-sm print:hidden"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    {t.orders?.viewAsPaper ?? 'Ver como hoja'}
-                  </button>
+              <ul class="space-y-1 text-gray-900 {isFirst ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl'}">
+                {#each items as item}
+                  <li class="tabular-nums">
+                    <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.productName}</span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+            <!-- Un solo CTA primario en la tarjeta (sin abrir el pedido) -->
+            <div class="px-4 py-3 sm:px-5 border-t border-gray-100">
+              {#if status === 'pending'}
+                <button
+                  type="button"
+                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number); }}
+                  class="w-full py-3 px-4 rounded-xl text-base font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-md transition-colors"
+                >
+                  🔥 {t.orders?.startPreparing ?? 'Iniciar preparación'}
+                </button>
+              {:else if status === 'preparing'}
+                <button
+                  type="button"
+                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number); }}
+                  class="w-full py-3 px-4 rounded-xl text-base font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md transition-colors"
+                >
+                  ✓ {t.orders?.markAsReady ?? 'Marcar como listo'}
+                </button>
+              {:else}
+                <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
+                  ✓ {t.orders?.statusDone ?? 'Listo'}
                 </div>
-              </div>
-            {/if}
+              {/if}
+            </div>
           </li>
         {/each}
       </ul>
@@ -241,6 +298,23 @@
 </div>
 
 <style>
+  /* Modo cocina: fullscreen, alto contraste, letra grande */
+  :global(.kitchen-mode) {
+    background: #f5f5f5;
+  }
+  :global(.kitchen-mode .kitchen-mode-header) {
+    padding: 0.75rem 1rem;
+    border-bottom-width: 2px;
+  }
+  :global(.kitchen-mode .kitchen-orders-list) {
+    padding: 0.5rem;
+  }
+  :global(.kitchen-mode .kitchen-order-card) {
+    font-size: 1.05rem;
+  }
+  :global(.kitchen-mode .kitchen-order-first) {
+    font-size: 1.15rem;
+  }
   /* Vista previa térmica en pantalla (ancho 80mm) */
   :global(.ticket-thermal-preview #ticket-print) {
     max-width: 80mm;

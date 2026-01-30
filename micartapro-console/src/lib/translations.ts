@@ -98,6 +98,7 @@ export interface Translations {
     gallery: string
     qrCode: string
     orders: string
+    kitchen: string
     myPlan: string
     signOut: string
     closeMenu: string
@@ -132,6 +133,18 @@ export interface Translations {
     print?: string
     printThermal?: string
     eventPayload: string
+    itemsToPrepare: string
+    forTime: string
+    remainingIn: string
+    late: string
+    itemsCount: string
+    markAsReady: string
+    kitchenMode: string
+    exitKitchenMode: string
+    statusPending: string
+    statusPreparing: string
+    statusDone: string
+    startPreparing: string
   }
 }
 
@@ -219,6 +232,7 @@ export const translations: Record<Language, Translations> = {
       gallery: 'Galería',
       qrCode: 'Código QR',
       orders: 'Órdenes',
+      kitchen: 'Cocina',
       myPlan: 'Mi Plan',
       signOut: 'Cerrar sesión',
       closeMenu: 'Cerrar menú',
@@ -243,13 +257,25 @@ export const translations: Record<Language, Translations> = {
       noSession: 'No hay sesión activa',
       noMenu: 'No se encontró un menú',
       empty: 'No hay órdenes aún.',
-      subtitle: 'Ordenado por número de orden y hora solicitada para planificar entregas o preparación.',
+      subtitle: 'Ordenado por hora comprometida. Vista orientada a cocina.',
       delivery: 'Envío',
       pickup: 'Retiro',
       viewAsPaper: 'Ver como hoja',
       print: 'Imprimir',
       printThermal: 'Imprimir en térmica',
-      eventPayload: 'event_payload'
+      eventPayload: 'event_payload',
+      itemsToPrepare: 'Qué preparar',
+      forTime: 'Para',
+      remainingIn: 'En {min} min',
+      late: 'Atrasado {min} min',
+      itemsCount: '{count} ítems',
+      markAsReady: 'Marcar como listo',
+      kitchenMode: 'Modo cocina',
+      exitKitchenMode: 'Salir modo cocina',
+      statusPending: 'Pendiente',
+      statusPreparing: 'En preparación',
+      statusDone: 'Listo',
+      startPreparing: 'Iniciar preparación'
     }
   },
   PT: {
@@ -369,13 +395,25 @@ export const translations: Record<Language, Translations> = {
       noSession: 'Não há sessão ativa',
       noMenu: 'Nenhum cardápio encontrado',
       empty: 'Ainda não há pedidos.',
-      subtitle: 'Ordenado por número do pedido e hora solicitada para planejar entregas ou preparação.',
+      subtitle: 'Ordenado por hora comprometida. Vista orientada à cozinha.',
       delivery: 'Entrega',
       pickup: 'Retirada',
       viewAsPaper: 'Ver como folha',
       print: 'Imprimir',
       printThermal: 'Imprimir em térmica',
-      eventPayload: 'event_payload'
+      eventPayload: 'event_payload',
+      itemsToPrepare: 'O que preparar',
+      forTime: 'Para',
+      remainingIn: 'Em {min} min',
+      late: 'Atrasado {min} min',
+      itemsCount: '{count} itens',
+      markAsReady: 'Marcar como pronto',
+      kitchenMode: 'Modo cozinha',
+      exitKitchenMode: 'Sair do modo cozinha',
+      statusPending: 'Pendente',
+      statusPreparing: 'Em preparação',
+      statusDone: 'Pronto',
+      startPreparing: 'Iniciar preparação'
     }
   },
   EN: {
@@ -461,6 +499,7 @@ export const translations: Record<Language, Translations> = {
       gallery: 'Gallery',
       qrCode: 'QR Code',
       orders: 'Orders',
+      kitchen: 'Kitchen',
       myPlan: 'My Plan',
       signOut: 'Sign Out',
       closeMenu: 'Close menu',
@@ -485,13 +524,25 @@ export const translations: Record<Language, Translations> = {
       noSession: 'No active session',
       noMenu: 'No menu found',
       empty: 'No orders yet.',
-      subtitle: 'Sorted by order number and requested time for delivery or preparation planning.',
+      subtitle: 'Sorted by requested time. Kitchen-oriented view.',
       delivery: 'Delivery',
       pickup: 'Pickup',
       viewAsPaper: 'View as sheet',
       print: 'Print',
       printThermal: 'Print to thermal',
-      eventPayload: 'event_payload'
+      eventPayload: 'event_payload',
+      itemsToPrepare: 'What to prepare',
+      forTime: 'For',
+      remainingIn: 'In {min} min',
+      late: '{min} min late',
+      itemsCount: '{count} items',
+      markAsReady: 'Mark as ready',
+      kitchenMode: 'Kitchen mode',
+      exitKitchenMode: 'Exit kitchen mode',
+      statusPending: 'Pending',
+      statusPreparing: 'Preparing',
+      statusDone: 'Ready',
+      startPreparing: 'Start preparing'
     }
   }
 }
