@@ -97,6 +97,7 @@ export interface Translations {
     history: string
     gallery: string
     qrCode: string
+    orders: string
     myPlan: string
     signOut: string
     closeMenu: string
@@ -118,6 +119,19 @@ export interface Translations {
     finalizing: string
     pleaseWait: string
     preparingInitialSetup: string // Mensaje específico para la creación inicial del menú
+  }
+  // MenuOrders.svelte
+  orders?: {
+    noSession: string
+    noMenu: string
+    empty: string
+    subtitle: string
+    delivery: string
+    pickup: string
+    viewAsPaper?: string
+    print?: string
+    printThermal?: string
+    eventPayload: string
   }
 }
 
@@ -204,6 +218,7 @@ export const translations: Record<Language, Translations> = {
       history: 'Historial',
       gallery: 'Galería',
       qrCode: 'Código QR',
+      orders: 'Órdenes',
       myPlan: 'Mi Plan',
       signOut: 'Cerrar sesión',
       closeMenu: 'Cerrar menú',
@@ -223,6 +238,18 @@ export const translations: Record<Language, Translations> = {
       finalizing: 'Finalizando tu menú...',
       pleaseWait: 'Por favor espera, esto puede tomar unos momentos',
       preparingInitialSetup: 'Preparando todo para que puedas crear tu catálogo...'
+    },
+    orders: {
+      noSession: 'No hay sesión activa',
+      noMenu: 'No se encontró un menú',
+      empty: 'No hay órdenes aún.',
+      subtitle: 'Ordenado por número de orden y hora solicitada para planificar entregas o preparación.',
+      delivery: 'Envío',
+      pickup: 'Retiro',
+      viewAsPaper: 'Ver como hoja',
+      print: 'Imprimir',
+      printThermal: 'Imprimir en térmica',
+      eventPayload: 'event_payload'
     }
   },
   PT: {
@@ -317,6 +344,7 @@ export const translations: Record<Language, Translations> = {
       history: 'Histórico',
       gallery: 'Galeria',
       qrCode: 'Código QR',
+      orders: 'Pedidos',
       myPlan: 'Meu Plano',
       signOut: 'Sair',
       closeMenu: 'Fechar menu',
@@ -336,6 +364,18 @@ export const translations: Record<Language, Translations> = {
       finalizing: 'Finalizando seu cardápio...',
       pleaseWait: 'Por favor aguarde, isso pode levar alguns momentos',
       preparingInitialSetup: 'Preparando tudo para que você possa criar seu catálogo...'
+    },
+    orders: {
+      noSession: 'Não há sessão ativa',
+      noMenu: 'Nenhum cardápio encontrado',
+      empty: 'Ainda não há pedidos.',
+      subtitle: 'Ordenado por número do pedido e hora solicitada para planejar entregas ou preparação.',
+      delivery: 'Entrega',
+      pickup: 'Retirada',
+      viewAsPaper: 'Ver como folha',
+      print: 'Imprimir',
+      printThermal: 'Imprimir em térmica',
+      eventPayload: 'event_payload'
     }
   },
   EN: {
@@ -420,6 +460,7 @@ export const translations: Record<Language, Translations> = {
       history: 'History',
       gallery: 'Gallery',
       qrCode: 'QR Code',
+      orders: 'Orders',
       myPlan: 'My Plan',
       signOut: 'Sign Out',
       closeMenu: 'Close menu',
@@ -439,6 +480,18 @@ export const translations: Record<Language, Translations> = {
       finalizing: 'Finalizing your menu...',
       pleaseWait: 'Please wait, this may take a few moments',
       preparingInitialSetup: 'Preparing everything so you can create your catalog...'
+    },
+    orders: {
+      noSession: 'No active session',
+      noMenu: 'No menu found',
+      empty: 'No orders yet.',
+      subtitle: 'Sorted by order number and requested time for delivery or preparation planning.',
+      delivery: 'Delivery',
+      pickup: 'Pickup',
+      viewAsPaper: 'View as sheet',
+      print: 'Print',
+      printThermal: 'Print to thermal',
+      eventPayload: 'event_payload'
     }
   }
 }

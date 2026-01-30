@@ -8,6 +8,7 @@
   import PhotoUpload from './lib/components/PhotoUpload.svelte'
   import MenuHistory from './lib/components/MenuHistory.svelte'
   import MenuQRCode from './lib/components/MenuQRCode.svelte'
+  import MenuOrders from './lib/components/MenuOrders.svelte'
 
   // Usar valores derivados reactivos en el componente
   let user = $derived(authState.user)
@@ -127,6 +128,8 @@
           <PhotoUpload onMenuClick={toggleSidebar} />
         {:else if activeSection === 'qr'}
           <MenuQRCode onMenuClick={toggleSidebar} />
+        {:else if activeSection === 'ordenes'}
+          <MenuOrders onMenuClick={toggleSidebar} />
         {/if}
       </div>
     </div>

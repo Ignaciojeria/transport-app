@@ -725,6 +725,45 @@ export async function getMenuVersions(
   }
 }
 
+export interface MenuOrderRow {
+  order_number: number
+  event_payload: Record<string, unknown>
+  event_type: string
+  requested_time: string | null
+  created_at: string | null
+}
+
+/**
+ * Obtiene las órdenes del menú (DELIVERY o PICKUP).
+ * Orden de prioridad cocina: requested_time ASC (hora comprometida), created_at ASC (orden de llegada).
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @returns Array de órdenes con order_number, event_payload, event_type, requested_time, created_at
+ */
+export async function getMenuOrders(
+  menuId: string,
+  accessToken: string
+): Promise<MenuOrderRow[]> {
+  try {
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    const { data, error } = await supabase
+      .from('menu_orders')
+      .select('order_number, event_payload, event_type, requested_time, created_at')
+      .eq('menu_id', menuId)
+      .order('requested_time', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true, nullsFirst: false })
+
+    if (error) {
+      console.error('Error obteniendo órdenes del menú:', error)
+      return []
+    }
+    return (data || []) as MenuOrderRow[]
+  } catch (error) {
+    console.error('Error en getMenuOrders:', error)
+    return []
+  }
+}
+
 /**
  * Actualiza el nombre de una versión del menú
  * @param versionId - ID de la versión
