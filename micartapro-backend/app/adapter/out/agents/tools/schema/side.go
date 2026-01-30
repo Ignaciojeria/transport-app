@@ -25,6 +25,11 @@ func GetSideSchema() *genai.Schema {
 				Type:        genai.TypeString,
 				Description: "URL opcional de la imagen del acompañamiento. Debe ser una URL pública accesible.",
 			},
+			"station": {
+				Type:        genai.TypeString,
+				Enum:        []string{"KITCHEN", "BAR"},
+				Description: "Estación que prepara este acompañamiento: KITCHEN (cocina) o BAR (bar). Opcional.",
+			},
 		},
 		Required: []string{"id", "name", "pricing"},
 	}

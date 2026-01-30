@@ -7,7 +7,7 @@ import (
 )
 
 type CreateOrderRequest struct {
-	CreatedAt    string `json:"createdAt"`
+	CreatedAt    string            `json:"createdAt"`
 	Items        []OrderItem       `json:"items"`
 	Totals       OrderTotals       `json:"totals"`
 	Fulfillment  OrderFulfillment  `json:"fulfillment"`
@@ -21,6 +21,7 @@ type OrderItem struct {
 	TotalPrice  int     `json:"totalPrice"`
 	PricingMode string  `json:"pricingMode"`
 	ProductName string  `json:"productName"`
+	Station     string  `json:"station,omitempty"` // KITCHEN | BAR, opcional
 }
 
 type OrderTotals struct {
@@ -31,16 +32,16 @@ type OrderTotals struct {
 }
 
 type OrderFulfillment struct {
-	Type          string        `json:"type"`
-	RequestedTime string        `json:"requestedTime"`
-	Address       OrderAddress  `json:"address,omitempty"`
-	Contact       OrderContact  `json:"contact,omitempty"`
+	Type          string       `json:"type"`
+	RequestedTime string       `json:"requestedTime"`
+	Address       OrderAddress `json:"address,omitempty"`
+	Contact       OrderContact `json:"contact,omitempty"`
 }
 
 type OrderAddress struct {
-	RawAddress       string               `json:"rawAddress"`
-	Coordinates      OrderCoordinates     `json:"coordinates"`
-	DeliveryDetails  OrderDeliveryDetails `json:"deliveryDetails,omitempty"`
+	RawAddress      string               `json:"rawAddress"`
+	Coordinates     OrderCoordinates     `json:"coordinates"`
+	DeliveryDetails OrderDeliveryDetails `json:"deliveryDetails,omitempty"`
 }
 
 type OrderCoordinates struct {

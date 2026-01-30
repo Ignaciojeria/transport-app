@@ -8,6 +8,17 @@ import (
 )
 
 /*
+	STATION
+*/
+
+type Station string
+
+const (
+	StationKitchen Station = "KITCHEN"
+	StationBar     Station = "BAR"
+)
+
+/*
 	UNITS
 */
 
@@ -53,6 +64,7 @@ type Side struct {
 	Name     string  `json:"name"`
 	Pricing  Pricing `json:"pricing"`
 	PhotoUrl string  `json:"photoUrl,omitempty"`
+	Station  Station `json:"station,omitempty"`
 }
 
 type MenuItem struct {
@@ -62,6 +74,7 @@ type MenuItem struct {
 	Sides       []Side  `json:"sides,omitempty"`
 	Pricing     Pricing `json:"pricing"`
 	PhotoUrl    string  `json:"photoUrl,omitempty"`
+	Station     Station `json:"station,omitempty"`
 }
 
 type MenuCategory struct {
@@ -136,20 +149,20 @@ type ImageGenerationRequest struct {
 */
 
 type CoverImageEditionRequest struct {
-	Prompt           string `json:"prompt"`
+	Prompt            string `json:"prompt"`
 	ReferenceImageUrl string `json:"referenceImageUrl"`
-	ImageCount       int    `json:"imageCount"`
+	ImageCount        int    `json:"imageCount"`
 	// Campos temporales para URLs pre-firmadas (no se persisten)
 	UploadURL string `json:"uploadUrl,omitempty"`
 	PublicURL string `json:"publicUrl,omitempty"`
 }
 
 type ImageEditionRequest struct {
-	MenuItemID       string `json:"menuItemId"`
-	Prompt           string `json:"prompt"`
+	MenuItemID        string `json:"menuItemId"`
+	Prompt            string `json:"prompt"`
 	ReferenceImageUrl string `json:"referenceImageUrl"`
-	AspectRatio      string `json:"aspectRatio"`
-	ImageCount       int    `json:"imageCount"`
+	AspectRatio       string `json:"aspectRatio"`
+	ImageCount        int    `json:"imageCount"`
 	// Campos temporales para URLs pre-firmadas (no se persisten)
 	UploadURL string `json:"uploadUrl,omitempty"`
 	PublicURL string `json:"publicUrl,omitempty"`
@@ -168,8 +181,8 @@ type MenuCreateRequest struct {
 	DeliveryOptions             []DeliveryOption             `json:"deliveryOptions,omitempty"`
 	CoverImageGenerationRequest *CoverImageGenerationRequest `json:"coverImageGenerationRequest,omitempty"`
 	ImageGenerationRequests     []ImageGenerationRequest     `json:"imageGenerationRequests,omitempty"`
-	CoverImageEditionRequest    *CoverImageEditionRequest   `json:"coverImageEditionRequest,omitempty"`
-	ImageEditionRequests        []ImageEditionRequest       `json:"imageEditionRequests,omitempty"`
+	CoverImageEditionRequest    *CoverImageEditionRequest    `json:"coverImageEditionRequest,omitempty"`
+	ImageEditionRequests        []ImageEditionRequest        `json:"imageEditionRequests,omitempty"`
 }
 
 func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
@@ -198,7 +211,7 @@ func NormalizeGCSURL(url string) string {
 	if url == "" {
 		return url
 	}
-	
+
 	// Verificar si la URL ya está correctamente formateada
 	if strings.HasPrefix(url, "https://storage.googleapis.com") || strings.HasPrefix(url, "http://storage.googleapis.com") {
 		// Aún así, verificar duplicaciones de "https" o "http"
@@ -206,7 +219,7 @@ func NormalizeGCSURL(url string) string {
 		url = strings.ReplaceAll(url, "httphttp://", "http://")
 		return url
 	}
-	
+
 	// Corregir "https.storage.googleapis.com" → "https://storage.googleapis.com"
 	// Solo aplicar si el patrón incorrecto está presente
 	if strings.Contains(url, "https.storage.googleapis.com") {
@@ -215,11 +228,11 @@ func NormalizeGCSURL(url string) string {
 	if strings.Contains(url, "http.storage.googleapis.com") {
 		url = strings.ReplaceAll(url, "http.storage.googleapis.com", "http://storage.googleapis.com")
 	}
-	
+
 	// Manejar casos donde se duplicó "https" (httpshttps://storage...)
 	url = strings.ReplaceAll(url, "httpshttps://", "https://")
 	url = strings.ReplaceAll(url, "httphttp://", "http://")
-	
+
 	return url
 }
 

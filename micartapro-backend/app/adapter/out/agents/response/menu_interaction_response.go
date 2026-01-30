@@ -47,6 +47,7 @@ func MenuInteractionResponse() *genai.Schema {
 			"id":      {Type: genai.TypeString},
 			"name":    {Type: genai.TypeString},
 			"pricing": pricingSchema,
+			"station": {Type: genai.TypeString, Enum: []string{"KITCHEN", "BAR"}},
 		},
 		Required: []string{"id", "name", "pricing"},
 	}
@@ -62,6 +63,7 @@ func MenuInteractionResponse() *genai.Schema {
 				Items: sideSchema,
 			},
 			"pricing": pricingSchema,
+			"station": {Type: genai.TypeString, Enum: []string{"KITCHEN", "BAR"}},
 		},
 		Required: []string{"title", "pricing"},
 	}
