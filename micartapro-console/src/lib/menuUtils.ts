@@ -733,9 +733,175 @@ export interface MenuOrderRow {
   created_at: string | null
 }
 
+/** Fila de la proyección order_items_projection (un ítem por fila). */
+export interface OrderItemProjectionRow {
+  id: number
+  menu_order_id: number
+  order_number: number
+  menu_id: string
+  item_key: string
+  item_name: string
+  quantity: number
+  unit: string
+  station: string | null
+  fulfillment: string
+  status: string
+  requested_time: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** Ítem agrupado para la vista de cocina. */
+export interface KitchenOrderItem {
+  item_name: string
+  quantity: number
+  unit: string
+  station: string | null
+}
+
+/** Orden ya agrupada para la vista de cocina (desde order_items_projection). */
+export interface KitchenOrder {
+  order_number: number
+  menu_order_id: number
+  requested_time: string | null
+  created_at: string
+  fulfillment: string
+  items: KitchenOrderItem[]
+}
+
+/** Filtro por estación: ALL = todo; KITCHEN/BAR filtra por columna station en Supabase. */
+export type StationFilter = 'ALL' | 'KITCHEN' | 'BAR'
+
 /**
- * Obtiene las órdenes del menú (DELIVERY o PICKUP).
- * Orden de prioridad cocina: requested_time ASC (hora comprometida), created_at ASC (orden de llegada).
+ * Obtiene las órdenes para la vista de cocina desde la proyección order_items_projection.
+ * El filtro por estación se aplica en Supabase (columna station).
+ * Agrupa ítems por orden (order_number, menu_order_id) y por item_name (sumando cantidades).
+ * Orden: requested_time ASC, created_at ASC.
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @param stationFilter - Si es KITCHEN o BAR, filtra en la query por columna station
+ * @returns Array de órdenes listas para mostrar en cocina
+ */
+export async function getKitchenOrdersFromProjection(
+  menuId: string,
+  accessToken: string,
+  stationFilter: StationFilter = 'ALL'
+): Promise<KitchenOrder[]> {
+  try {
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    let query = supabase
+      .from('order_items_projection')
+      .select('order_number, menu_order_id, requested_time, created_at, fulfillment, item_name, quantity, unit, station')
+      .eq('menu_id', menuId)
+    if (stationFilter === 'KITCHEN' || stationFilter === 'BAR') {
+      query = query.eq('station', stationFilter)
+    }
+    const { data: rows, error } = await query
+      .order('requested_time', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: true, nullsFirst: false })
+
+    if (error) {
+      console.error('Error obteniendo proyección de órdenes:', error)
+      return []
+    }
+    const items = (rows || []) as Array<{
+      order_number: number
+      menu_order_id: number
+      requested_time: string | null
+      created_at: string
+      fulfillment: string
+      item_name: string
+      quantity: number
+      unit: string
+      station: string | null
+    }>
+    return groupProjectionItemsByOrder(items)
+  } catch (error) {
+    console.error('Error en getKitchenOrdersFromProjection:', error)
+    return []
+  }
+}
+
+function groupProjectionItemsByOrder(
+  rows: Array<{
+    order_number: number
+    menu_order_id: number
+    requested_time: string | null
+    created_at: string
+    fulfillment: string
+    item_name: string
+    quantity: number
+    unit: string
+    station: string | null
+  }>
+): KitchenOrder[] {
+  const byOrder = new Map<string, KitchenOrder>()
+  for (const r of rows) {
+    const key = `${r.menu_order_id}:${r.order_number}`
+    let order = byOrder.get(key)
+    if (!order) {
+      order = {
+        order_number: r.order_number,
+        menu_order_id: r.menu_order_id,
+        requested_time: r.requested_time,
+        created_at: r.created_at,
+        fulfillment: r.fulfillment,
+        items: []
+      }
+      byOrder.set(key, order)
+    }
+    const name = r.item_name?.trim() || '—'
+    const existing = order.items.find(
+      (i) => i.item_name === name && i.unit === r.unit && (i.station ?? '') === (r.station ?? '')
+    )
+    if (existing) {
+      existing.quantity += r.quantity
+    } else {
+      order.items.push({
+        item_name: name,
+        quantity: r.quantity,
+        unit: r.unit || 'EACH',
+        station: r.station
+      })
+    }
+  }
+  return [...byOrder.values()].sort((a, b) => {
+    const ta = a.requested_time ? new Date(a.requested_time).getTime() : 0
+    const tb = b.requested_time ? new Date(b.requested_time).getTime() : 0
+    if (ta !== tb) return ta - tb
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  })
+}
+
+/**
+ * Obtiene una orden completa desde menu_orders (para modal "Ver como hoja").
+ * @param menuId - ID del menú
+ * @param orderNumber - Número de orden
+ * @param accessToken - Token de autenticación
+ */
+export async function getMenuOrderByNumber(
+  menuId: string,
+  orderNumber: number,
+  accessToken: string
+): Promise<MenuOrderRow | null> {
+  try {
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    const { data, error } = await supabase
+      .from('menu_orders')
+      .select('order_number, event_payload, event_type, requested_time, created_at')
+      .eq('menu_id', menuId)
+      .eq('order_number', orderNumber)
+      .maybeSingle()
+    if (error || !data) return null
+    return data as MenuOrderRow
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Obtiene las órdenes del menú (DELIVERY o PICKUP) desde la tabla de eventos.
+ * Usar getKitchenOrdersFromProjection para la vista de cocina.
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
  * @returns Array de órdenes con order_number, event_payload, event_type, requested_time, created_at

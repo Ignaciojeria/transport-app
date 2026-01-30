@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getMenuOrders, subscribeMenuOrdersRealtime, type MenuOrderRow } from '../menuUtils'
+  import { getLatestMenuId, getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, getMenuOrderByNumber, type KitchenOrder, type MenuOrderRow, type StationFilter } from '../menuUtils'
   import { t as tStore } from '../useLanguage'
 
   interface MenuOrdersProps {
@@ -11,7 +11,7 @@
 
   let { onMenuClick, onKitchenModeChange }: MenuOrdersProps = $props()
 
-  let orders = $state<MenuOrderRow[]>([])
+  let orders = $state<KitchenOrder[]>([])
   let loading = $state(true)
   let error = $state<string | null>(null)
   let menuId = $state<string | null>(null)
@@ -19,6 +19,8 @@
   let thermalPrintMode = $state(false)
   let orderStatus = $state<Record<number, 'pending' | 'preparing' | 'done'>>({})
   let kitchenMode = $state(false)
+  /** Filtro por estación: se aplica en Supabase (columna station). */
+  let stationFilter = $state<StationFilter>('ALL')
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
 
   const user = $derived(authState.user)
@@ -44,7 +46,7 @@
         return null
       }
       menuId = currentMenuId
-      orders = await getMenuOrders(currentMenuId, session.access_token)
+      orders = await getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter)
       return currentMenuId
     } catch (err: unknown) {
       console.error('Error cargando órdenes:', err)
@@ -64,9 +66,9 @@
     })
   }
 
-  function getFulfillmentType(payload: Record<string, unknown>): string {
-    const type = (payload?.fulfillment as Record<string, unknown>)?.type
-    return typeof type === 'string' ? type : '—'
+  /** fulfillment ya viene de la proyección (string: PICKUP | DELIVERY). */
+  function getFulfillmentLabel(fulfillment: string): string {
+    return fulfillment === 'DELIVERY' ? (t.orders?.delivery ?? 'Envío') : (t.orders?.pickup ?? 'Retiro')
   }
 
   function formatCurrency(amount: number, currency: string): string {
@@ -105,14 +107,24 @@
     return 'green'
   }
 
-  /** Agrupa ítems por productName, sumando cantidades. */
-  function groupItems(items: Array<{ productName?: string; quantity?: number }>): Array<{ productName: string; quantity: number }> {
-    const map = new Map<string, number>()
-    for (const it of items) {
-      const name = it.productName?.trim() || '—'
-      map.set(name, (map.get(name) ?? 0) + (it.quantity ?? 0))
+  /** Total de unidades de ítems (la proyección ya agrupa por nombre en menuUtils). */
+  function getItemCount(items: KitchenOrder['items']): number {
+    return items.reduce((s, i) => s + i.quantity, 0)
+  }
+
+  /** Órdenes mostradas = las que vienen de Supabase ya filtradas por station. */
+  const displayedOrders = $derived(orders)
+
+  async function setStationFilterAndReload(filter: StationFilter) {
+    stationFilter = filter
+    if (menuId && session?.access_token) {
+      loading = true
+      try {
+        orders = await getKitchenOrdersFromProjection(menuId, session.access_token, filter)
+      } finally {
+        loading = false
+      }
     }
-    return [...map.entries()].map(([productName, quantity]) => ({ productName, quantity }))
   }
 
   function getOrderStatus(orderNumber: number): 'pending' | 'preparing' | 'done' {
@@ -148,8 +160,10 @@
     }
   }
 
-  function openPaperView(order: MenuOrderRow) {
-    paperOrder = order
+  async function openPaperView(order: KitchenOrder) {
+    if (!menuId || !session?.access_token) return
+    const full = await getMenuOrderByNumber(menuId, order.order_number, session.access_token)
+    paperOrder = full
   }
 
   function closePaperView() {
@@ -207,23 +221,15 @@
         </button>
       {/if}
       <h1 class="text-xl sm:text-2xl font-bold text-gray-800" class:text-3xl={kitchenMode}>
-        {t.sidebar.kitchen}
+        {t.sidebar.orders}
       </h1>
       <div class="flex items-center gap-2">
         <button
           type="button"
-          onclick={() => loadOrders()}
-          class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 border border-gray-200"
-          title={t.orders?.reload ?? 'Recargar'}
-        >
-          {t.orders?.reload ?? 'Recargar'}
-        </button>
-        <button
-          type="button"
           onclick={toggleKitchenMode}
-        class="rounded-lg px-4 py-2 text-sm font-semibold {kitchenMode ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
-      >
-          {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir modo cocina') : (t.orders?.kitchenMode ?? 'Modo cocina')}
+          class="rounded-lg px-4 py-2 text-sm font-semibold {kitchenMode ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
+        >
+          {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir modo full') : (t.orders?.kitchenMode ?? 'Modo full')}
         </button>
       </div>
     </div>
@@ -232,6 +238,30 @@
         {t.orders?.subtitle ?? 'Ordenado por hora comprometida. Vista orientada a cocina.'}
       </p>
     {/if}
+    <!-- Filtro por estación: se aplica en Supabase (columna station) -->
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button
+        type="button"
+        onclick={() => setStationFilterAndReload('ALL')}
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+      >
+        {t.orders?.filterAll ?? 'Todos'}
+      </button>
+      <button
+        type="button"
+        onclick={() => setStationFilterAndReload('KITCHEN')}
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}"
+      >
+        {t.orders?.filterKitchen ?? 'Cocina'}
+      </button>
+      <button
+        type="button"
+        onclick={() => setStationFilterAndReload('BAR')}
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
+      >
+        {t.orders?.filterBar ?? 'Bar'}
+      </button>
+    </div>
   </div>
 
   <!-- Content -->
@@ -244,17 +274,15 @@
       <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-red-800">
         {error}
       </div>
-    {:else if orders.length === 0}
+    {:else if displayedOrders.length === 0}
       <div class="rounded-lg bg-gray-100 border border-gray-200 p-8 text-center text-gray-600">
-        {t.orders?.empty ?? 'No hay órdenes aún.'}
+        {stationFilter === 'ALL' ? (t.orders?.empty ?? 'No hay órdenes aún.') : (t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.')}
       </div>
     {:else}
       <ul class="space-y-5 kitchen-orders-list" class:kitchen-mode-list={kitchenMode}>
-        {#each orders as order, index (order.order_number)}
-          {@const type = getFulfillmentType(order.event_payload)}
-          {@const rawItems = (order.event_payload?.items as Array<{ productName?: string; quantity?: number }>) ?? []}
-          {@const items = groupItems(rawItems)}
-          {@const itemCount = rawItems.reduce((s, i) => s + (i.quantity ?? 0), 0)}
+        {#each displayedOrders as order, index (order.order_number)}
+          {@const type = order.fulfillment}
+          {@const itemCount = getItemCount(order.items)}
           {@const isFirst = index === 0}
           {@const status = getOrderStatus(order.order_number)}
           {@const remainingMin = getRemainingMinutes(order.requested_time)}
@@ -276,7 +304,7 @@
                 </span>
               {/if}
               <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}">
-                {type === 'DELIVERY' ? (t.orders?.delivery ?? 'Envío') : (t.orders?.pickup ?? 'Retiro')}
+                {getFulfillmentLabel(type)}
               </span>
               <!-- Estado operativo: informativo (ámbar suave), no compite con el botón naranja -->
               <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
@@ -294,9 +322,9 @@
                 <span class="text-sm font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
               </div>
               <ul class="space-y-1 text-gray-900 {isFirst ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl'}">
-                {#each items as item}
+                {#each order.items as item}
                   <li class="tabular-nums">
-                    <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.productName}</span>
+                    <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.item_name}</span>
                   </li>
                 {/each}
               </ul>

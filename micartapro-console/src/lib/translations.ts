@@ -146,6 +146,10 @@ export interface Translations {
     statusDone: string
     startPreparing: string
     reload: string
+    filterAll: string
+    filterKitchen: string
+    filterBar: string
+    emptyForStation: string
   }
 }
 
@@ -271,13 +275,17 @@ export const translations: Record<Language, Translations> = {
       late: 'Atrasado {min} min',
       itemsCount: '{count} ítems',
       markAsReady: 'Marcar como listo',
-      kitchenMode: 'Modo cocina',
-      exitKitchenMode: 'Salir modo cocina',
+      kitchenMode: 'Modo full',
+      exitKitchenMode: 'Salir modo full',
       statusPending: 'Pendiente',
       statusPreparing: 'En preparación',
       statusDone: 'Listo',
       startPreparing: 'Iniciar preparación',
-      reload: 'Recargar'
+      reload: 'Recargar',
+      filterAll: 'Todos',
+      filterKitchen: 'Cocina',
+      filterBar: 'Bar',
+      emptyForStation: 'No hay órdenes para esta estación.'
     }
   },
   PT: {
@@ -410,13 +418,16 @@ export const translations: Record<Language, Translations> = {
       late: 'Atrasado {min} min',
       itemsCount: '{count} itens',
       markAsReady: 'Marcar como pronto',
-      kitchenMode: 'Modo cozinha',
-      exitKitchenMode: 'Sair do modo cozinha',
+      kitchenMode: 'Modo full',
+      exitKitchenMode: 'Sair do modo full',
       statusPending: 'Pendente',
       statusPreparing: 'Em preparação',
       statusDone: 'Pronto',
       startPreparing: 'Iniciar preparação',
-      reload: 'Atualizar'
+      reload: 'Atualizar',
+      filterAll: 'Todos',
+      filterKitchen: 'Cozinha',
+      filterBar: 'Bar'
     }
   },
   EN: {
@@ -540,13 +551,17 @@ export const translations: Record<Language, Translations> = {
       late: '{min} min late',
       itemsCount: '{count} items',
       markAsReady: 'Mark as ready',
-      kitchenMode: 'Kitchen mode',
-      exitKitchenMode: 'Exit kitchen mode',
+      kitchenMode: 'Full mode',
+      exitKitchenMode: 'Exit full mode',
       statusPending: 'Pending',
       statusPreparing: 'Preparing',
       statusDone: 'Ready',
       startPreparing: 'Start preparing',
-      reload: 'Refresh'
+      reload: 'Refresh',
+      filterAll: 'All',
+      filterKitchen: 'Kitchen',
+      filterBar: 'Bar',
+      emptyForStation: 'No orders for this station.'
     }
   }
 }
