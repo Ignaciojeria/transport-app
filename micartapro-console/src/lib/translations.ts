@@ -150,6 +150,8 @@ export interface Translations {
     filterKitchen: string
     filterBar: string
     emptyForStation: string
+    startToReady?: string
+    deliver?: string
   }
 }
 
@@ -274,18 +276,20 @@ export const translations: Record<Language, Translations> = {
       remainingIn: 'En {min} min',
       late: 'Atrasado {min} min',
       itemsCount: '{count} ítems',
-      markAsReady: 'Marcar como listo',
+      markAsReady: 'LISTO',
       kitchenMode: 'Modo full',
       exitKitchenMode: 'Salir modo full',
       statusPending: 'Pendiente',
       statusPreparing: 'En preparación',
-      statusDone: 'Listo',
-      startPreparing: 'Iniciar preparación',
+      statusDone: 'LISTO',
+      startPreparing: 'INICIAR',
       reload: 'Recargar',
-      filterAll: 'Todos',
+      filterAll: 'Caja',
       filterKitchen: 'Cocina',
       filterBar: 'Bar',
-      emptyForStation: 'No hay órdenes para esta estación.'
+      emptyForStation: 'No hay órdenes para esta estación.',
+      startToReady: 'INICIAR → LISTO',
+      deliver: 'ENTREGAR'
     }
   },
   PT: {
@@ -422,12 +426,15 @@ export const translations: Record<Language, Translations> = {
       exitKitchenMode: 'Sair do modo full',
       statusPending: 'Pendente',
       statusPreparing: 'Em preparação',
-      statusDone: 'Pronto',
-      startPreparing: 'Iniciar preparação',
+      statusDone: 'LISTO',
+      startPreparing: 'INICIAR',
       reload: 'Atualizar',
-      filterAll: 'Todos',
+      filterAll: 'Caixa',
       filterKitchen: 'Cozinha',
-      filterBar: 'Bar'
+      filterBar: 'Bar',
+      emptyForStation: 'Nenhum pedido para esta estação.',
+      startToReady: 'INICIAR → LISTO',
+      deliver: 'ENTREGAR'
     }
   },
   EN: {
@@ -550,18 +557,20 @@ export const translations: Record<Language, Translations> = {
       remainingIn: 'In {min} min',
       late: '{min} min late',
       itemsCount: '{count} items',
-      markAsReady: 'Mark as ready',
+      markAsReady: 'READY',
       kitchenMode: 'Full mode',
       exitKitchenMode: 'Exit full mode',
       statusPending: 'Pending',
       statusPreparing: 'Preparing',
-      statusDone: 'Ready',
-      startPreparing: 'Start preparing',
+      statusDone: 'READY',
+      startPreparing: 'START',
       reload: 'Refresh',
-      filterAll: 'All',
+      filterAll: 'Box',
       filterKitchen: 'Kitchen',
       filterBar: 'Bar',
-      emptyForStation: 'No orders for this station.'
+      emptyForStation: 'No orders for this station.',
+      startToReady: 'START → READY',
+      deliver: 'DELIVER'
     }
   }
 }

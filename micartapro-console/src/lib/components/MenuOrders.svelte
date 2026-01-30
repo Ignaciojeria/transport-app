@@ -17,7 +17,8 @@
   let menuId = $state<string | null>(null)
   let paperOrder = $state<MenuOrderRow | null>(null)
   let thermalPrintMode = $state(false)
-  let orderStatus = $state<Record<number, 'pending' | 'preparing' | 'done'>>({})
+  /** Estado por (orden, estación): INICIAR/LISTO se aplican a BAR y COCINA de forma independiente. */
+  let orderStatus = $state<Record<string, 'pending' | 'preparing' | 'done'>>({})
   let kitchenMode = $state(false)
   /** Filtro por estación: se aplica en Supabase (columna station). */
   let stationFilter = $state<StationFilter>('ALL')
@@ -127,19 +128,44 @@
     }
   }
 
-  function getOrderStatus(orderNumber: number): 'pending' | 'preparing' | 'done' {
-    return orderStatus[orderNumber] ?? 'pending'
+  const statusKey = (orderNumber: number, station: string) => `${orderNumber}-${station}`
+
+  function getOrderStatus(orderNumber: number, station: string): 'pending' | 'preparing' | 'done' {
+    return orderStatus[statusKey(orderNumber, station)] ?? 'pending'
   }
 
-  function setOrderStatus(orderNumber: number, status: 'pending' | 'preparing' | 'done') {
-    orderStatus = { ...orderStatus, [orderNumber]: status }
+  function setOrderStatus(orderNumber: number, station: string, status: 'pending' | 'preparing' | 'done') {
+    orderStatus = { ...orderStatus, [statusKey(orderNumber, station)]: status }
   }
 
-  function cycleOrderStatus(orderNumber: number) {
-    const current = getOrderStatus(orderNumber)
-    if (current === 'pending') setOrderStatus(orderNumber, 'preparing')
-    else if (current === 'preparing') setOrderStatus(orderNumber, 'done')
-    else setOrderStatus(orderNumber, 'pending')
+  function cycleOrderStatus(orderNumber: number, station: string) {
+    const current = getOrderStatus(orderNumber, station)
+    if (current === 'pending') setOrderStatus(orderNumber, station, 'preparing')
+    else if (current === 'preparing') setOrderStatus(orderNumber, station, 'done')
+    else setOrderStatus(orderNumber, station, 'pending')
+  }
+
+  /** Estaciones que tienen ítems en esta orden (KITCHEN, BAR). */
+  function getStationsInOrder(order: KitchenOrder): string[] {
+    const stations = new Set<string>()
+    for (const i of order.items) {
+      if (i.station) stations.add(i.station)
+    }
+    return stations.size > 0 ? [...stations] : ['KITCHEN']
+  }
+
+  /** La orden está lista para ENTREGAR en Caja cuando todas sus estaciones están en 'done'. */
+  function isOrderReadyForDelivery(order: KitchenOrder): boolean {
+    const stations = getStationsInOrder(order)
+    return stations.every((st) => getOrderStatus(order.order_number, st) === 'done')
+  }
+
+  /** En Caja: estado resumido para mostrar (Pendiente / En preparación). */
+  function getCajaOrderStatusLabel(order: KitchenOrder): 'pending' | 'preparing' {
+    const stations = getStationsInOrder(order)
+    const statuses = stations.map((st) => getOrderStatus(order.order_number, st))
+    if (statuses.every((s) => s === 'pending')) return 'pending'
+    return 'preparing'
   }
 
   async function toggleKitchenMode() {
@@ -239,13 +265,13 @@
       </p>
     {/if}
     <!-- Filtro por estación: se aplica en Supabase (columna station) -->
-    <div class="mt-3 flex flex-wrap gap-2">
+    <div class="mt-3 flex flex-wrap items-center gap-2">
       <button
         type="button"
         onclick={() => setStationFilterAndReload('ALL')}
         class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
       >
-        {t.orders?.filterAll ?? 'Todos'}
+        {t.orders?.filterAll ?? 'Caja'}
       </button>
       <button
         type="button"
@@ -284,9 +310,13 @@
           {@const type = order.fulfillment}
           {@const itemCount = getItemCount(order.items)}
           {@const isFirst = index === 0}
-          {@const status = getOrderStatus(order.order_number)}
+          {@const cardStation = stationFilter === 'ALL' ? null : stationFilter}
+          {@const status = cardStation !== null ? getOrderStatus(order.order_number, cardStation) : (isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order))}
           {@const remainingMin = getRemainingMinutes(order.requested_time)}
           {@const timeColor = getRemainingTimeColor(remainingMin)}
+          {@const isBarOrder = order.items.some((i) => i.station === 'BAR')}
+          {@const useBarColor = stationFilter === 'BAR' || (stationFilter === 'ALL' && isBarOrder)}
+          {@const readyForDelivery = isOrderReadyForDelivery(order)}
           <li class="bg-white rounded-xl border-2 overflow-hidden kitchen-order-card {isFirst ? 'kitchen-order-first border-amber-400 shadow-lg' : 'border-gray-200 shadow-sm'}">
             <!-- Cabecera cocina: número, hora, tipo, tiempo restante, estado (sin expandir) -->
             <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst ? 'sm:py-6' : 'sm:py-4'}">
@@ -329,28 +359,47 @@
                 {/each}
               </ul>
             </div>
-            <!-- Un solo CTA primario en la tarjeta (sin abrir el pedido) -->
+            <!-- Caja: solo ENTREGAR cuando está listo. Cocina/Bar: INICIAR y LISTO. -->
             <div class="px-4 py-3 sm:px-5 border-t border-gray-100">
-              {#if status === 'pending'}
-                <button
-                  type="button"
-                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number); }}
-                  class="w-full py-3 px-4 rounded-xl text-base font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-md transition-colors"
-                >
-                  🔥 {t.orders?.startPreparing ?? 'Iniciar preparación'}
-                </button>
-              {:else if status === 'preparing'}
-                <button
-                  type="button"
-                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number); }}
-                  class="w-full py-3 px-4 rounded-xl text-base font-bold bg-amber-500 hover:bg-amber-600 text-white shadow-md transition-colors"
-                >
-                  ✓ {t.orders?.markAsReady ?? 'Marcar como listo'}
-                </button>
+              {#if stationFilter === 'ALL'}
+                <!-- Caja: solo acción ENTREGAR cuando todas las estaciones de la orden están listas -->
+                {#if readyForDelivery}
+                  <button
+                    type="button"
+                    onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
+                  >
+                    {t.orders?.deliver ?? 'ENTREGAR'}
+                  </button>
+                {:else}
+                  {@const cajaLabel = getCajaOrderStatusLabel(order)}
+                  <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-gray-100 text-gray-600 text-center">
+                    {cajaLabel === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : (t.orders?.statusPreparing ?? 'En preparación')}
+                  </div>
+                {/if}
               {:else}
-                <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
-                  ✓ {t.orders?.statusDone ?? 'Listo'}
-                </div>
+                <!-- Cocina / Bar: INICIAR y LISTO por estación -->
+                {#if status === 'pending'}
+                  <button
+                    type="button"
+                    onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
+                  >
+                    {t.orders?.startPreparing ?? 'INICIAR'}
+                  </button>
+                {:else if status === 'preparing'}
+                  <button
+                    type="button"
+                    onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
+                  >
+                    ✓ {t.orders?.markAsReady ?? 'LISTO'}
+                  </button>
+                {:else}
+                  <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
+                    ✓ {t.orders?.statusDone ?? 'LISTO'}
+                  </div>
+                {/if}
               {/if}
             </div>
           </li>
