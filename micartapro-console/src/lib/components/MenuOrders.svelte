@@ -293,11 +293,12 @@
     <!-- Enlace/QR para cocina o barra sin login: se traspasa el token en el hash para tiempo real -->
     {#if !kitchenMode && menuId && session?.access_token}
       {@const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''}
-      {@const urlCocina = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=KITCHEN#token=${encodeURIComponent(session.access_token)}` : ''}
-      {@const urlBarra = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=BAR#token=${encodeURIComponent(session.access_token)}` : ''}
+      {@const hashParams = session?.refresh_token ? `token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}` : `token=${encodeURIComponent(session.access_token)}`}
+      {@const urlCocina = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=KITCHEN#${hashParams}` : ''}
+      {@const urlBarra = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=BAR#${hashParams}` : ''}
       <div class="mt-4 pt-4 border-t border-gray-200">
         <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (cocinero/barista escanea el código)</p>
-        <p class="text-xs text-gray-500 mb-2">Haz clic en el código para agrandarlo. El enlace usa tu sesión actual (~1 h).</p>
+        <p class="text-xs text-gray-500 mb-2">Haz clic en el código para agrandarlo. Con refresh token el acceso dura todo el turno sin volver a escanear.</p>
         <div class="flex flex-wrap gap-4">
           <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
             <button
@@ -459,7 +460,8 @@
   <!-- Modal QR ampliado (clic en el código para agrandar) -->
   {#if qrEnlarged && menuId && session?.access_token && typeof window !== 'undefined'}
     {@const baseUrl = window.location.origin}
-    {@const enlargedUrl = `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=${qrEnlarged}#token=${encodeURIComponent(session.access_token)}`}
+    {@const modalHashParams = session?.refresh_token ? `token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}` : `token=${encodeURIComponent(session.access_token)}`}
+    {@const enlargedUrl = `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=${qrEnlarged}#${modalHashParams}`}
     <div
       class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       role="dialog"
@@ -486,7 +488,7 @@
             class="w-64 h-64 sm:w-72 sm:h-72 object-contain"
           />
         </div>
-        <p class="text-xs text-gray-500 mb-3">El enlace usa tu sesión actual (~1 h). Para un QR nuevo, actualiza la página o vuelve a Órdenes.</p>
+        <p class="text-xs text-gray-500 mb-3">Con refresh token el acceso dura todo el turno. Para un QR nuevo, actualiza la página o vuelve a Órdenes.</p>
         <div class="flex gap-2">
           <button
             type="button"

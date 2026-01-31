@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, type KitchenOrder, type StationFilter } from '../menuUtils'
+  import { getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, refreshSupabaseToken, type KitchenOrder, type StationFilter } from '../menuUtils'
   import { t as tStore } from '../useLanguage'
 
   interface Props {
@@ -10,7 +10,11 @@
   const { menuId, station }: Props = $props()
 
   const STORAGE_TOKEN_KEY = $derived(`station_token_${menuId}_${station}`)
+  const STORAGE_REFRESH_KEY = $derived(`station_refresh_${menuId}_${station}`)
   const STORAGE_OPERATOR_KEY = $derived(`station_operator_${menuId}_${station}`)
+
+  /** Renovar token cada 50 min para que el cocinero no tenga que escanear de nuevo (~1 h de vida del access_token). */
+  const REFRESH_INTERVAL_MS = 50 * 60 * 1000
 
   let orders = $state<KitchenOrder[]>([])
   let loading = $state(true)
@@ -20,19 +24,19 @@
   let operatorSubmitted = $state(false)
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
   let orderStatus = $state<Record<string, 'pending' | 'preparing' | 'done'>>({})
-  const cleanupRef = { intervalId: null as ReturnType<typeof setInterval> | null, unsub: null as (() => void) | null }
+  const cleanupRef = { intervalId: null as ReturnType<typeof setInterval> | null, refreshIntervalId: null as ReturnType<typeof setInterval> | null, unsub: null as (() => void) | null }
 
   const t = $derived($tStore)
   const stationFilter = $derived(station) as StationFilter
   const displayedOrders = $derived(orders)
   const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra'))
 
-  function getTokenFromHash(): string | null {
-    if (typeof window === 'undefined') return null
+  function getTokensFromHash(): { token: string | null; refresh_token: string | null } {
+    if (typeof window === 'undefined') return { token: null, refresh_token: null }
     const hash = window.location.hash.slice(1)
-    if (!hash) return null
+    if (!hash) return { token: null, refresh_token: null }
     const params = new URLSearchParams(hash)
-    return params.get('token')
+    return { token: params.get('token'), refresh_token: params.get('refresh_token') }
   }
 
   function clearHash() {
@@ -108,7 +112,7 @@
     orderStatus = { ...orderStatus, [statusKey(orderNumber)]: next }
   }
 
-  async function startOrdersAndRealtime(cleanupRef: { intervalId: ReturnType<typeof setInterval> | null; unsub: (() => void) | null }): Promise<void> {
+  async function startOrdersAndRealtime(cleanupRef: { intervalId: ReturnType<typeof setInterval> | null; refreshIntervalId: ReturnType<typeof setInterval> | null; unsub: (() => void) | null }): Promise<void> {
     const accessToken = token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(STORAGE_TOKEN_KEY) : null)
     if (!accessToken) return
     await loadOrders()
@@ -116,6 +120,34 @@
     realtimeUnsubscribe = unsub
     cleanupRef.unsub = unsub
     cleanupRef.intervalId = setInterval(() => loadOrders(), 20_000)
+  }
+
+  /** Renueva el access_token con el refresh_token y vuelve a suscribir realtime/polling. */
+  async function doRefreshToken(): Promise<void> {
+    const refreshTokenValue = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(STORAGE_REFRESH_KEY) : null
+    if (!refreshTokenValue) return
+    const data = await refreshSupabaseToken(refreshTokenValue)
+    if (!data) {
+      error = 'Sesión expirada. Escanee de nuevo el código desde la consola.'
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.removeItem(STORAGE_TOKEN_KEY)
+        sessionStorage.removeItem(STORAGE_REFRESH_KEY)
+      }
+      token = null
+      return
+    }
+    token = data.access_token
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(STORAGE_TOKEN_KEY, data.access_token)
+      if (data.refresh_token) sessionStorage.setItem(STORAGE_REFRESH_KEY, data.refresh_token)
+    }
+    error = null
+    // Re-suscribir realtime y polling con el nuevo token
+    cleanupRef.intervalId && clearInterval(cleanupRef.intervalId)
+    cleanupRef.unsub?.()
+    cleanupRef.intervalId = null
+    cleanupRef.unsub = null
+    await startOrdersAndRealtime(cleanupRef)
   }
 
   function submitOperatorName() {
@@ -128,10 +160,13 @@
 
   onMount(() => {
     if (typeof window === 'undefined') return
-    let fromHash = getTokenFromHash()
+    const { token: fromHash, refresh_token: refreshFromHash } = getTokensFromHash()
     if (fromHash) {
       sessionStorage.setItem(STORAGE_TOKEN_KEY, fromHash)
       token = fromHash
+      if (refreshFromHash) {
+        sessionStorage.setItem(STORAGE_REFRESH_KEY, refreshFromHash)
+      }
       clearHash()
     } else {
       token = sessionStorage.getItem(STORAGE_TOKEN_KEY)
@@ -145,10 +180,15 @@
 
     if (operatorSubmitted && token) {
       startOrdersAndRealtime(cleanupRef)
+      // Renovar token cada ~50 min para que dure todo el turno sin volver a escanear
+      if (sessionStorage.getItem(STORAGE_REFRESH_KEY)) {
+        cleanupRef.refreshIntervalId = setInterval(() => doRefreshToken(), REFRESH_INTERVAL_MS)
+      }
     }
 
     return () => {
       if (cleanupRef.intervalId) clearInterval(cleanupRef.intervalId)
+      if (cleanupRef.refreshIntervalId) clearInterval(cleanupRef.refreshIntervalId)
       cleanupRef.unsub?.()
       realtimeUnsubscribe = null
     }

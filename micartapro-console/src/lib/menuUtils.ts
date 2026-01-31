@@ -3,6 +3,7 @@ import { API_BASE_URL } from './config'
 
 const STORAGE_BASE_URL = "https://storage.googleapis.com/micartapro-menus"
 const SUPABASE_URL = 'https://rbpdhapfcljecofrscnj.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
 
 // Cache de clientes de Supabase autenticados para evitar múltiples instancias
 const authenticatedClientsCache = new Map<string, any>()
@@ -21,7 +22,7 @@ export async function getAuthenticatedSupabaseClient(accessToken: string) {
   
   // Crear nuevo cliente solo si no existe
   const { createClient } = await import('@supabase/supabase-js')
-  const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
+  const supabaseAnonKey = SUPABASE_ANON_KEY
   
   // Usar un storage key único para evitar conflictos con el cliente principal
   // El storage key debe ser único por cliente para evitar el warning de múltiples instancias
@@ -69,6 +70,41 @@ export async function getAuthenticatedSupabaseClient(accessToken: string) {
   
   authenticatedClientsCache.set(accessToken, client)
   return client
+}
+
+/** Respuesta de Supabase Auth al refrescar token */
+export interface RefreshTokenResponse {
+  access_token: string
+  refresh_token?: string
+  expires_in: number
+  token_type: string
+}
+
+/**
+ * Renueva el access_token usando el refresh_token (API Supabase Auth).
+ * Útil para la vista cocina/barra sin login: el cocinero escanea una vez y la sesión se mantiene todo el turno.
+ */
+export async function refreshSupabaseToken(refreshToken: string): Promise<RefreshTokenResponse | null> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    })
+    if (!res.ok) {
+      const err = await res.text()
+      console.error('refreshSupabaseToken error', res.status, err)
+      return null
+    }
+    const data = await res.json() as RefreshTokenResponse
+    return data
+  } catch (e) {
+    console.error('refreshSupabaseToken', e)
+    return null
+  }
 }
 
 /**
