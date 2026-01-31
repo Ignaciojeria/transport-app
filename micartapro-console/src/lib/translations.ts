@@ -149,6 +149,7 @@ export interface Translations {
     filterAll: string
     filterKitchen: string
     filterBar: string
+    showQR: string
     emptyForStation: string
     startToReady?: string
     deliver?: string
@@ -287,6 +288,7 @@ export const translations: Record<Language, Translations> = {
       filterAll: 'Caja',
       filterKitchen: 'Cocina',
       filterBar: 'Barra',
+      showQR: 'QR',
       emptyForStation: 'No hay órdenes para esta estación.',
       startToReady: 'INICIAR → LISTO',
       deliver: 'ENTREGAR'
@@ -432,6 +434,7 @@ export const translations: Record<Language, Translations> = {
       filterAll: 'Caixa',
       filterKitchen: 'Cozinha',
       filterBar: 'Barra',
+      showQR: 'QR',
       emptyForStation: 'Nenhum pedido para esta estação.',
       startToReady: 'INICIAR → PRONTO',
       deliver: 'ENTREGAR'
@@ -568,6 +571,7 @@ export const translations: Record<Language, Translations> = {
       filterAll: 'Box',
       filterKitchen: 'Kitchen',
       filterBar: 'Barra',
+      showQR: 'QR',
       emptyForStation: 'No orders for this station.',
       startToReady: 'START → READY',
       deliver: 'DELIVER'

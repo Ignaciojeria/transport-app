@@ -60,8 +60,8 @@
     return urlParams.get('payment') === 'success' || urlParams.get('success') === 'true'
   })
 
-  /** Vista pública cocina/barra: URL tiene view=station, menu_id, station y token en hash. Sin login. */
-  let publicStationParams = $state<{ menuId: string; station: 'KITCHEN' | 'BAR' } | null>(null)
+  /** Vista pública cocina/barra/caja: URL tiene view=station, menu_id, station y token en hash. Sin login. */
+  let publicStationParams = $state<{ menuId: string; station: 'KITCHEN' | 'BAR' | 'ALL' } | null>(null)
 
   onMount(() => {
     initLanguage()
@@ -74,10 +74,10 @@
     const hash = window.location.hash
     const hasTokenInHash = hash.includes('token=')
     // Token puede estar en hash (primera carga) o en sessionStorage (después de refrescar)
-    const storageTokenKey = menuId && (station === 'KITCHEN' || station === 'BAR') ? `station_token_${menuId}_${station}` : ''
+    const storageTokenKey = menuId && (station === 'KITCHEN' || station === 'BAR' || station === 'ALL') ? `station_token_${menuId}_${station}` : ''
     const hasTokenInStorage = typeof sessionStorage !== 'undefined' && storageTokenKey && !!sessionStorage.getItem(storageTokenKey)
-    if (view === 'station' && menuId && (station === 'KITCHEN' || station === 'BAR') && (hasTokenInHash || hasTokenInStorage)) {
-      publicStationParams = { menuId, station: station as 'KITCHEN' | 'BAR' }
+    if (view === 'station' && menuId && (station === 'KITCHEN' || station === 'BAR' || station === 'ALL') && (hasTokenInHash || hasTokenInStorage)) {
+      publicStationParams = { menuId, station: station as 'KITCHEN' | 'BAR' | 'ALL' }
     }
 
     // Mostrar fragment en consola para debugging (solo si no es vista station)

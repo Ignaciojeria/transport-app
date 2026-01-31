@@ -5,7 +5,7 @@
 
   interface Props {
     menuId: string
-    station: 'KITCHEN' | 'BAR'
+    station: 'KITCHEN' | 'BAR' | 'ALL'
   }
   const { menuId, station }: Props = $props()
 
@@ -29,7 +29,7 @@
   const t = $derived($tStore)
   const stationFilter = $derived(station) as StationFilter
   const displayedOrders = $derived(orders)
-  const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra'))
+  const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : station === 'BAR' ? (t.orders?.filterBar ?? 'Barra') : (t.orders?.filterAll ?? 'Caja'))
 
   function getTokensFromHash(): { token: string | null; refresh_token: string | null } {
     if (typeof window === 'undefined') return { token: null, refresh_token: null }

@@ -22,9 +22,11 @@
   let kitchenMode = $state(false)
   /** Filtro por estación: se aplica en Supabase (columna station). */
   let stationFilter = $state<StationFilter>('ALL')
+  /** Vista QR: muestra códigos Cocina/Barra en lugar de la lista de órdenes. */
+  let showQRView = $state(false)
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
-  /** Modal QR ampliado: KITCHEN | BAR | null */
-  let qrEnlarged = $state<'KITCHEN' | 'BAR' | null>(null)
+  /** Modal QR ampliado: KITCHEN | BAR | ALL | null */
+  let qrEnlarged = $state<'KITCHEN' | 'BAR' | 'ALL' | null>(null)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -266,82 +268,108 @@
         {t.orders?.subtitle ?? 'Ordenado por hora comprometida. Vista orientada a cocina.'}
       </p>
     {/if}
-    <!-- Filtro por estación: se aplica en Supabase (columna station) -->
+    <!-- Filtro por estación + opción QR (no tapa Cocina/Barra) -->
     <div class="mt-3 flex flex-wrap items-center gap-2">
       <button
         type="button"
-        onclick={() => setStationFilterAndReload('ALL')}
-        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+        onclick={() => { showQRView = false; setStationFilterAndReload('ALL'); }}
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
       >
         {t.orders?.filterAll ?? 'Caja'}
       </button>
       <button
         type="button"
-        onclick={() => setStationFilterAndReload('KITCHEN')}
-        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}"
+        onclick={() => { showQRView = false; setStationFilterAndReload('KITCHEN'); }}
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}"
       >
         {t.orders?.filterKitchen ?? 'Cocina'}
       </button>
       <button
         type="button"
-        onclick={() => setStationFilterAndReload('BAR')}
-        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
+        onclick={() => { showQRView = false; setStationFilterAndReload('BAR'); }}
+        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
       >
         {t.orders?.filterBar ?? 'Barra'}
       </button>
+      {#if !kitchenMode && menuId && session?.access_token}
+        <button
+          type="button"
+          onclick={() => showQRView = true}
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {showQRView ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}"
+        >
+          {t.orders?.showQR ?? 'QR'}
+        </button>
+      {/if}
     </div>
-    <!-- Enlace/QR para cocina o barra sin login: se traspasa el token en el hash para tiempo real -->
-    {#if !kitchenMode && menuId && session?.access_token}
+  </div>
+
+  <!-- Content -->
+  <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+    {#if showQRView && menuId && session?.access_token}
+      <!-- Vista QR: códigos Caja, Cocina y Barra sin tapar filtros -->
       {@const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''}
       {@const hashParams = session?.refresh_token ? `token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}` : `token=${encodeURIComponent(session.access_token)}`}
+      {@const urlCaja = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=ALL#${hashParams}` : ''}
       {@const urlCocina = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=KITCHEN#${hashParams}` : ''}
       {@const urlBarra = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=BAR#${hashParams}` : ''}
-      <div class="mt-4 pt-4 border-t border-gray-200">
-        <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (cocinero/barista escanea el código)</p>
-        <p class="text-xs text-gray-500 mb-2">Haz clic en el código para agrandarlo. Con refresh token el acceso dura todo el turno sin volver a escanear.</p>
-        <div class="flex flex-wrap gap-4">
-          <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+      <div class="max-w-3xl">
+        <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (caja, cocinero o barista escanea el código)</p>
+        <p class="text-xs text-gray-500 mb-4">Haz clic en el código para agrandarlo. Con refresh token el acceso dura todo el turno sin volver a escanear.</p>
+        <div class="flex flex-wrap gap-6">
+          <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-100 border border-gray-300">
             <button
               type="button"
-              onclick={() => qrEnlarged = 'KITCHEN'}
-              class="flex-shrink-0 w-24 h-24 bg-white rounded border border-amber-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              onclick={() => qrEnlarged = 'ALL'}
+              class="flex-shrink-0 w-28 h-28 bg-white rounded-lg border border-gray-300 overflow-hidden cursor-pointer hover:ring-2 hover:ring-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
               title="Clic para agrandar"
             >
-              {#if urlCocina}
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(urlCocina)}`} alt="QR Cocina" class="w-full h-full object-contain pointer-events-none" />
+              {#if urlCaja}
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=112x112&data=${encodeURIComponent(urlCaja)}`} alt="QR Caja" class="w-full h-full object-contain pointer-events-none" />
               {/if}
             </button>
             <div>
-              <p class="font-semibold text-amber-900">Cocina</p>
+              <p class="font-semibold text-gray-900">{t.orders?.filterAll ?? 'Caja'}</p>
+              <p class="text-xs text-gray-700 mb-1">Ver todas las órdenes en tiempo real</p>
+              <button type="button" onclick={() => urlCaja && navigator.clipboard.writeText(urlCaja).then(() => alert('Enlace copiado'))} class="text-xs text-gray-600 underline hover:no-underline">Copiar enlace</button>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
+            <button
+              type="button"
+              onclick={() => qrEnlarged = 'KITCHEN'}
+              class="flex-shrink-0 w-28 h-28 bg-white rounded-lg border border-amber-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              title="Clic para agrandar"
+            >
+              {#if urlCocina}
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=112x112&data=${encodeURIComponent(urlCocina)}`} alt="QR Cocina" class="w-full h-full object-contain pointer-events-none" />
+              {/if}
+            </button>
+            <div>
+              <p class="font-semibold text-amber-900">{t.orders?.filterKitchen ?? 'Cocina'}</p>
               <p class="text-xs text-amber-800 mb-1">Escanear → pedir nombre → ver pedidos en tiempo real</p>
               <button type="button" onclick={() => urlCocina && navigator.clipboard.writeText(urlCocina).then(() => alert('Enlace copiado'))} class="text-xs text-amber-700 underline hover:no-underline">Copiar enlace</button>
             </div>
           </div>
-          <div class="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+          <div class="flex items-start gap-3 p-4 rounded-xl bg-blue-50 border border-blue-200">
             <button
               type="button"
               onclick={() => qrEnlarged = 'BAR'}
-              class="flex-shrink-0 w-24 h-24 bg-white rounded border border-blue-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              class="flex-shrink-0 w-28 h-28 bg-white rounded-lg border border-blue-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Clic para agrandar"
             >
               {#if urlBarra}
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(urlBarra)}`} alt="QR Barra" class="w-full h-full object-contain pointer-events-none" />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=112x112&data=${encodeURIComponent(urlBarra)}`} alt="QR Barra" class="w-full h-full object-contain pointer-events-none" />
               {/if}
             </button>
             <div>
-              <p class="font-semibold text-blue-900">Barra</p>
+              <p class="font-semibold text-blue-900">{t.orders?.filterBar ?? 'Barra'}</p>
               <p class="text-xs text-blue-800 mb-1">Escanear → pedir nombre → ver pedidos en tiempo real</p>
               <button type="button" onclick={() => urlBarra && navigator.clipboard.writeText(urlBarra).then(() => alert('Enlace copiado'))} class="text-xs text-blue-700 underline hover:no-underline">Copiar enlace</button>
             </div>
           </div>
         </div>
       </div>
-    {/if}
-  </div>
-
-  <!-- Content -->
-  <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
-    {#if loading}
+    {:else if loading}
       <div class="flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent"></div>
       </div>
@@ -479,7 +507,7 @@
         onkeydown={(e) => e.stopPropagation()}
       >
         <h2 id="qr-enlarged-title" class="text-lg font-bold text-gray-800 mb-4">
-          {qrEnlarged === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra')}
+          {qrEnlarged === 'ALL' ? (t.orders?.filterAll ?? 'Caja') : qrEnlarged === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra')}
         </h2>
         <div class="flex justify-center mb-4 bg-white rounded-lg border border-gray-200 p-3">
           <img
