@@ -24,12 +24,34 @@
   let operatorSubmitted = $state(false)
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
   let orderStatus = $state<Record<string, 'pending' | 'preparing' | 'done'>>({})
+  /** Tab operativo en Cocina/Bar: Pendientes | En preparación | Listos (solo cuando station es KITCHEN o BAR). */
+  let operationalTab = $state<'pending' | 'preparing' | 'done'>('pending')
+  /** Modo full (pantalla completa) en vista pública. */
+  let fullMode = $state(false)
   const cleanupRef = { intervalId: null as ReturnType<typeof setInterval> | null, refreshIntervalId: null as ReturnType<typeof setInterval> | null, unsub: null as (() => void) | null }
 
   const t = $derived($tStore)
   const stationFilter = $derived(station) as StationFilter
   const displayedOrders = $derived(orders)
   const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : station === 'BAR' ? (t.orders?.filterBar ?? 'Barra') : (t.orders?.filterAll ?? 'Caja'))
+
+  /** En Cocina/Bar: órdenes particionadas por estado para los tabs. En Caja (ALL) no se usa. */
+  const ordersByTab = $derived.by(() => {
+    if (station !== 'KITCHEN' && station !== 'BAR') return { pending: [] as KitchenOrder[], preparing: [] as KitchenOrder[], done: [] as KitchenOrder[] }
+    const pending: KitchenOrder[] = []
+    const preparing: KitchenOrder[] = []
+    const done: KitchenOrder[] = []
+    for (const o of displayedOrders) {
+      const st = getOrderStatus(o.order_number)
+      if (st === 'pending') pending.push(o)
+      else if (st === 'preparing') preparing.push(o)
+      else done.push(o)
+    }
+    return { pending, preparing, done }
+  })
+
+  /** Órdenes a mostrar: en Caja (ALL) = todas; en Cocina/Bar = las del tab activo. */
+  const ordersToShow = $derived(station === 'ALL' ? displayedOrders : ordersByTab[operationalTab])
 
   function getTokensFromHash(): { token: string | null; refresh_token: string | null } {
     if (typeof window === 'undefined') return { token: null, refresh_token: null }
@@ -112,6 +134,20 @@
     orderStatus = { ...orderStatus, [statusKey(orderNumber)]: next }
   }
 
+  async function toggleFullMode() {
+    try {
+      if (fullMode) {
+        await document.exitFullscreen?.()
+        fullMode = false
+      } else {
+        await document.documentElement.requestFullscreen?.()
+        fullMode = true
+      }
+    } catch (_) {
+      fullMode = !!document.fullscreenElement
+    }
+  }
+
   async function startOrdersAndRealtime(cleanupRef: { intervalId: ReturnType<typeof setInterval> | null; refreshIntervalId: ReturnType<typeof setInterval> | null; unsub: (() => void) | null }): Promise<void> {
     const accessToken = token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(STORAGE_TOKEN_KEY) : null)
     if (!accessToken) return
@@ -186,7 +222,13 @@
       }
     }
 
+    const onFullscreenChange = () => {
+      fullMode = !!document.fullscreenElement
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange)
+
     return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange)
       if (cleanupRef.intervalId) clearInterval(cleanupRef.intervalId)
       if (cleanupRef.refreshIntervalId) clearInterval(cleanupRef.refreshIntervalId)
       cleanupRef.unsub?.()
@@ -195,7 +237,7 @@
   })
 </script>
 
-<div class="min-h-screen flex flex-col bg-gray-50">
+<div class="min-h-screen flex flex-col bg-gray-50" class:kitchen-mode={fullMode}>
   <!-- Sin token -->
   {#if typeof window !== 'undefined' && !token && !sessionStorage.getItem(STORAGE_TOKEN_KEY)}
     <div class="flex-1 flex items-center justify-center p-6">
@@ -229,11 +271,22 @@
     </div>
   {:else}
     <!-- Header -->
-    <div class="flex-shrink-0 px-4 py-4 border-b border-gray-200 bg-white">
-      <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
-        {stationLabel} — {operatorName || 'Operador'}
-      </h1>
-      <p class="text-sm text-gray-500 mt-1">Pedidos en tiempo real. Sin login.</p>
+    <div class="flex-shrink-0 px-4 py-4 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
+          {stationLabel} — {operatorName || 'Operador'}
+        </h1>
+        {#if !fullMode}
+          <p class="text-sm text-gray-500 mt-1">Pedidos en tiempo real. Sin login.</p>
+        {/if}
+      </div>
+      <button
+        type="button"
+        onclick={toggleFullMode}
+        class="rounded-lg px-4 py-2 text-sm font-semibold shrink-0 {fullMode ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
+      >
+        {fullMode ? (t.orders?.exitKitchenMode ?? 'Salir modo full') : (t.orders?.kitchenMode ?? 'Modo full')}
+      </button>
     </div>
 
     <!-- Lista de órdenes -->
@@ -244,13 +297,46 @@
         </div>
       {:else if error}
         <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-red-800">{error}</div>
-      {:else if displayedOrders.length === 0}
-        <div class="rounded-lg bg-gray-100 border border-gray-200 p-8 text-center text-gray-600">
-          {t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.'}
-        </div>
       {:else}
+        <!-- Segmented control: solo en Cocina y Bar (siempre visible aunque el tab tenga 0 órdenes) -->
+        {#if station === 'KITCHEN' || station === 'BAR'}
+          <div class="flex items-stretch mb-4 w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En preparación'}, {t.orders?.tabDone ?? 'Listos'}">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={operationalTab === 'pending'}
+              onclick={() => operationalTab = 'pending'}
+              class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors border-r border-gray-200 {operationalTab === 'pending' ? 'bg-amber-200 text-amber-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+            >
+              🟠 {t.orders?.tabPending ?? 'Pendientes'} {ordersByTab.pending.length > 0 ? `(${ordersByTab.pending.length})` : ''}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={operationalTab === 'preparing'}
+              onclick={() => operationalTab = 'preparing'}
+              class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors border-r border-gray-200 {operationalTab === 'preparing' ? 'bg-blue-100 text-blue-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+            >
+              🔵 {t.orders?.tabPreparing ?? 'En preparación'} {ordersByTab.preparing.length > 0 ? `(${ordersByTab.preparing.length})` : ''}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={operationalTab === 'done'}
+              onclick={() => operationalTab = 'done'}
+              class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors {operationalTab === 'done' ? 'bg-green-100 text-green-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+            >
+              🟢 {t.orders?.tabDone ?? 'Listos'} {ordersByTab.done.length > 0 ? `(${ordersByTab.done.length})` : ''}
+            </button>
+          </div>
+        {/if}
+        {#if ordersToShow.length === 0}
+          <div class="rounded-lg bg-gray-100 border border-gray-200 p-8 text-center text-gray-600">
+            {station === 'ALL' ? (t.orders?.empty ?? 'No hay órdenes aún.') : (t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.')}
+          </div>
+        {:else}
         <ul class="space-y-5">
-          {#each displayedOrders as order, index (order.order_number)}
+          {#each ordersToShow as order, index (order.order_number)}
             {@const type = order.fulfillment}
             {@const itemCount = getItemCount(order.items)}
             {@const isFirst = index === 0}
@@ -258,7 +344,8 @@
             {@const remainingMin = getRemainingMinutes(order.requested_time)}
             {@const timeColor = getRemainingTimeColor(remainingMin)}
             {@const useBarColor = station === 'BAR'}
-            <li class="bg-white rounded-xl border-2 overflow-hidden {isFirst ? 'border-amber-400 shadow-lg' : 'border-gray-200'}">
+            {@const isDoneTab = (station === 'KITCHEN' || station === 'BAR') && operationalTab === 'done'}
+            <li class="bg-white rounded-xl border-2 overflow-hidden station-order-card {isDoneTab ? 'order-card-done opacity-80 border-gray-300' : ''} {isFirst && !isDoneTab ? 'border-amber-400 shadow-lg' : 'border-gray-200'}">
               <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100">
                 <span class="font-bold text-gray-900 tabular-nums {isFirst ? 'text-4xl' : 'text-3xl'}">#{order.order_number}</span>
                 <span class="font-semibold text-gray-700">{t.orders?.forTime ?? 'Para'} {formatRequestedTime(order.requested_time)}</span>
@@ -295,7 +382,7 @@
                     onclick={() => cycleOrderStatus(order.order_number)}
                     class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-500 hover:bg-amber-600'}"
                   >
-                    {t.orders?.startPreparing ?? 'INICIAR'}
+                    <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
                   </button>
                 {:else if status === 'preparing'}
                   <button
@@ -314,7 +401,15 @@
             </li>
           {/each}
         </ul>
+        {/if}
       {/if}
     </div>
   {/if}
 </div>
+
+<style>
+  /* Modo full: mismo aspecto que en admin (cocina) */
+  :global(.kitchen-mode) {
+    background: #f5f5f5;
+  }
+</style>

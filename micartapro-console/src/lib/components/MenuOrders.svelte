@@ -22,6 +22,8 @@
   let kitchenMode = $state(false)
   /** Filtro por estación: se aplica en Supabase (columna station). */
   let stationFilter = $state<StationFilter>('ALL')
+  /** Tab operativo en Cocina/Bar: Pendientes | En preparación | Listos (solo cuando stationFilter es KITCHEN o BAR). */
+  let operationalTab = $state<'pending' | 'preparing' | 'done'>('pending')
   /** Vista QR: muestra códigos Cocina/Barra en lugar de la lista de órdenes. */
   let showQRView = $state(false)
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
@@ -120,8 +122,27 @@
   /** Órdenes mostradas = las que vienen de Supabase ya filtradas por station. */
   const displayedOrders = $derived(orders)
 
+  /** En Cocina/Bar: órdenes particionadas por estado (pending / preparing / done) para los tabs. */
+  const ordersByTab = $derived.by(() => {
+    if (stationFilter !== 'KITCHEN' && stationFilter !== 'BAR') return { pending: [] as KitchenOrder[], preparing: [] as KitchenOrder[], done: [] as KitchenOrder[] }
+    const pending: KitchenOrder[] = []
+    const preparing: KitchenOrder[] = []
+    const done: KitchenOrder[] = []
+    for (const o of displayedOrders) {
+      const st = getOrderStatus(o.order_number, stationFilter)
+      if (st === 'pending') pending.push(o)
+      else if (st === 'preparing') preparing.push(o)
+      else done.push(o)
+    }
+    return { pending, preparing, done }
+  })
+
+  /** Órdenes a mostrar: en Caja = todas; en Cocina/Bar = las del tab activo. */
+  const ordersToShow = $derived(stationFilter === 'ALL' ? displayedOrders : ordersByTab[operationalTab])
+
   async function setStationFilterAndReload(filter: StationFilter) {
     stationFilter = filter
+    if (filter === 'KITCHEN' || filter === 'BAR') operationalTab = 'pending'
     if (menuId && session?.access_token) {
       loading = true
       try {
@@ -267,40 +288,40 @@
       <p class="mt-1 text-sm text-gray-500">
         {t.orders?.subtitle ?? 'Ordenado por hora comprometida. Vista orientada a cocina.'}
       </p>
-    {/if}
-    <!-- Filtro por estación + opción QR (no tapa Cocina/Barra) -->
-    <div class="mt-3 flex flex-wrap items-center gap-2">
-      <button
-        type="button"
-        onclick={() => { showQRView = false; setStationFilterAndReload('ALL'); }}
-        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
-      >
-        {t.orders?.filterAll ?? 'Caja'}
-      </button>
-      <button
-        type="button"
-        onclick={() => { showQRView = false; setStationFilterAndReload('KITCHEN'); }}
-        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}"
-      >
-        {t.orders?.filterKitchen ?? 'Cocina'}
-      </button>
-      <button
-        type="button"
-        onclick={() => { showQRView = false; setStationFilterAndReload('BAR'); }}
-        class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
-      >
-        {t.orders?.filterBar ?? 'Barra'}
-      </button>
-      {#if !kitchenMode && menuId && session?.access_token}
+      <!-- Filtro por estación + opción QR: oculto en modo full -->
+      <div class="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onclick={() => showQRView = true}
-          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {showQRView ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}"
+          onclick={() => { showQRView = false; setStationFilterAndReload('ALL'); }}
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
         >
-          {t.orders?.showQR ?? 'QR'}
+          {t.orders?.filterAll ?? 'Caja'}
         </button>
-      {/if}
-    </div>
+        <button
+          type="button"
+          onclick={() => { showQRView = false; setStationFilterAndReload('KITCHEN'); }}
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}"
+        >
+          {t.orders?.filterKitchen ?? 'Cocina'}
+        </button>
+        <button
+          type="button"
+          onclick={() => { showQRView = false; setStationFilterAndReload('BAR'); }}
+          class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
+        >
+          {t.orders?.filterBar ?? 'Barra'}
+        </button>
+        {#if menuId && session?.access_token}
+          <button
+            type="button"
+            onclick={() => showQRView = true}
+            class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {showQRView ? 'bg-gray-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-300'}"
+          >
+            {t.orders?.showQR ?? 'QR'}
+          </button>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <!-- Content -->
@@ -377,13 +398,46 @@
       <div class="rounded-lg bg-red-50 border border-red-200 p-4 text-red-800">
         {error}
       </div>
-    {:else if displayedOrders.length === 0}
-      <div class="rounded-lg bg-gray-100 border border-gray-200 p-8 text-center text-gray-600">
-        {stationFilter === 'ALL' ? (t.orders?.empty ?? 'No hay órdenes aún.') : (t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.')}
-      </div>
     {:else}
+      <!-- Tabs operativos: siempre visibles en Cocina/Bar (aunque el tab activo tenga 0 órdenes) -->
+      {#if !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR')}
+        <div class="flex items-stretch mb-4 w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En preparación'}, {t.orders?.tabDone ?? 'Listos'}">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={operationalTab === 'pending'}
+            onclick={() => operationalTab = 'pending'}
+            class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors border-r border-gray-200 {operationalTab === 'pending' ? 'bg-amber-200 text-amber-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+          >
+            🟠 {t.orders?.tabPending ?? 'Pendientes'} {ordersByTab.pending.length > 0 ? `(${ordersByTab.pending.length})` : ''}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={operationalTab === 'preparing'}
+            onclick={() => operationalTab = 'preparing'}
+            class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors border-r border-gray-200 {operationalTab === 'preparing' ? 'bg-blue-100 text-blue-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+          >
+            🔵 {t.orders?.tabPreparing ?? 'En preparación'} {ordersByTab.preparing.length > 0 ? `(${ordersByTab.preparing.length})` : ''}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={operationalTab === 'done'}
+            onclick={() => operationalTab = 'done'}
+            class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors {operationalTab === 'done' ? 'bg-green-100 text-green-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+          >
+            🟢 {t.orders?.tabDone ?? 'Listos'} {ordersByTab.done.length > 0 ? `(${ordersByTab.done.length})` : ''}
+          </button>
+        </div>
+      {/if}
+      {#if ordersToShow.length === 0}
+        <div class="rounded-lg bg-gray-100 border border-gray-200 p-8 text-center text-gray-600">
+          {stationFilter === 'ALL' ? (t.orders?.empty ?? 'No hay órdenes aún.') : (t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.')}
+        </div>
+      {:else}
       <ul class="space-y-5 kitchen-orders-list" class:kitchen-mode-list={kitchenMode}>
-        {#each displayedOrders as order, index (order.order_number)}
+        {#each ordersToShow as order, index (order.order_number)}
           {@const type = order.fulfillment}
           {@const itemCount = getItemCount(order.items)}
           {@const isFirst = index === 0}
@@ -394,10 +448,16 @@
           {@const isBarOrder = order.items.some((i) => i.station === 'BAR')}
           {@const useBarColor = stationFilter === 'BAR' || (stationFilter === 'ALL' && isBarOrder)}
           {@const readyForDelivery = isOrderReadyForDelivery(order)}
-          <li class="bg-white rounded-xl border-2 overflow-hidden kitchen-order-card {isFirst ? 'kitchen-order-first border-amber-400 shadow-lg' : 'border-gray-200 shadow-sm'}">
-            <!-- Cabecera cocina: número, hora, tipo, tiempo restante, estado (sin expandir) -->
-            <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst ? 'sm:py-6' : 'sm:py-4'}">
-              <span class="font-bold text-gray-900 tabular-nums {isFirst ? 'text-4xl sm:text-5xl md:text-6xl' : 'text-3xl sm:text-4xl'}">#{order.order_number}</span>
+          {@const isDoneTab = stationFilter !== 'ALL' && operationalTab === 'done'}
+          {@const barStatusForOrder = getOrderStatus(order.order_number, 'BAR')}
+          {@const hasBarItems = order.items.some((i) => i.station === 'BAR')}
+          <li class="bg-white rounded-xl border-2 overflow-hidden kitchen-order-card order-card {isDoneTab ? 'order-card-done' : ''} {isFirst && !isDoneTab ? 'kitchen-order-first border-amber-400 shadow-lg' : 'border-gray-200 shadow-sm'}">
+            <!-- Cabecera cocina: número, hora, tipo, tiempo restante, estado; Cocina puede ver icono bar 🍺⏳/✔️ -->
+            <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-6' : 'sm:py-4'}">
+              <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab ? 'text-4xl sm:text-5xl md:text-6xl' : 'text-3xl sm:text-4xl'}">#{order.order_number}</span>
+              {#if stationFilter === 'KITCHEN' && hasBarItems}
+                <span class="text-lg" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar listo') : (t.orders?.statusPreparing ?? 'Bar en preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
+              {/if}
               <span class="font-semibold text-gray-700 {isFirst ? 'text-2xl sm:text-3xl md:text-4xl' : 'text-xl sm:text-2xl'}">
                 {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
               </span>
@@ -413,14 +473,27 @@
               <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}">
                 {getFulfillmentLabel(type)}
               </span>
-              <!-- Estado operativo: informativo (ámbar suave), no compite con el botón naranja -->
-              <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
-                {status === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
-                {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
-                {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
-                {#if status === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
-                {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
-              </span>
+              <!-- Caja: Cocina ✔️/⏳, Bar ✔️/⏳, Estado general. Cocina/Bar: estado operativo de la estación. -->
+              {#if stationFilter === 'ALL'}
+                {@const kitchenSt = getOrderStatus(order.order_number, 'KITCHEN')}
+                {@const barSt = getOrderStatus(order.order_number, 'BAR')}
+                {@const orderHasBar = order.items.some((i) => i.station === 'BAR')}
+                <div class="flex flex-wrap items-center gap-3 text-sm font-semibold">
+                  <span class="inline-flex items-center gap-1">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
+                  <span class="inline-flex items-center gap-1">{t.orders?.filterBar ?? 'Barra'}: {orderHasBar ? (barSt === 'done' ? '✔️' : '⏳') : '—'}</span>
+                  <span class="inline-flex items-center gap-1 rounded-full border px-2 py-1 {readyForDelivery ? 'bg-green-50 text-green-800 border-green-200' : 'bg-amber-50 text-amber-900 border-amber-200'}">
+                    {t.orders?.statusGeneralLabel ?? 'Estado general'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo para entregar') : (t.orders?.statusPreparing ?? 'En preparación')}
+                  </span>
+                </div>
+              {:else}
+                <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
+                  {status === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
+                  {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
+                  {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
+                  {#if status === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
+                  {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+                </span>
+              {/if}
             </div>
             <!-- Qué preparar: listado vertical (un ítem por línea; cantidad en bold) -->
             <div class="px-4 py-3 sm:px-5 bg-amber-50/50 border-b border-amber-100 {isFirst ? 'py-4 sm:py-5' : ''}">
@@ -439,7 +512,7 @@
             <!-- Caja: solo ENTREGAR cuando está listo. Cocina/Bar: INICIAR y LISTO. -->
             <div class="px-4 py-3 sm:px-5 border-t border-gray-100">
               {#if stationFilter === 'ALL'}
-                <!-- Caja: solo acción ENTREGAR cuando todas las estaciones de la orden están listas -->
+                <!-- Caja: ENTREGAR habilitado solo cuando Cocina ✔️ AND Bar ✔️; si no, botón deshabilitado con estado visible -->
                 {#if readyForDelivery}
                   <button
                     type="button"
@@ -449,10 +522,14 @@
                     {t.orders?.deliver ?? 'ENTREGAR'}
                   </button>
                 {:else}
-                  {@const cajaLabel = getCajaOrderStatusLabel(order)}
-                  <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-gray-100 text-gray-600 text-center">
-                    {cajaLabel === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : (t.orders?.statusPreparing ?? 'En preparación')}
-                  </div>
+                  <button
+                    type="button"
+                    disabled
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold bg-gray-100 text-gray-500 cursor-not-allowed"
+                    title="{t.orders?.statusPreparing ?? 'En preparación'}"
+                  >
+                    {t.orders?.deliver ?? 'ENTREGAR'} — {t.orders?.statusPreparing ?? 'En preparación'}
+                  </button>
                 {/if}
               {:else}
                 <!-- Cocina / Bar: INICIAR y LISTO por estación -->
@@ -462,7 +539,7 @@
                     onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
                     class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
                   >
-                    {t.orders?.startPreparing ?? 'INICIAR'}
+                    <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
                   </button>
                 {:else if status === 'preparing'}
                   <button
@@ -482,6 +559,7 @@
           </li>
         {/each}
       </ul>
+      {/if}
     {/if}
   </div>
 
@@ -551,6 +629,11 @@
   }
   :global(.kitchen-mode .kitchen-order-first) {
     font-size: 1.15rem;
+  }
+  /* Tab Listos: tarjetas atenuadas, no compiten con el foco principal */
+  :global(.order-card-done) {
+    opacity: 0.85;
+    border-color: rgb(209 213 219);
   }
   /* Vista previa térmica en pantalla (ancho 80mm) */
   :global(.ticket-thermal-preview #ticket-print) {

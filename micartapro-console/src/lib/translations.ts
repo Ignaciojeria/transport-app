@@ -144,6 +144,11 @@ export interface Translations {
     statusPending: string
     statusPreparing: string
     statusDone: string
+    tabPending: string
+    tabPreparing: string
+    tabDone: string
+    statusGeneralLabel: string
+    readyToDeliver: string
     startPreparing: string
     reload: string
     filterAll: string
@@ -283,7 +288,12 @@ export const translations: Record<Language, Translations> = {
       statusPending: 'Pendiente',
       statusPreparing: 'En preparación',
       statusDone: 'LISTO',
-      startPreparing: 'INICIAR',
+      tabPending: 'Pendientes',
+      tabPreparing: 'En preparación',
+      tabDone: 'Listos',
+      statusGeneralLabel: 'Estado general',
+      readyToDeliver: 'Listo para entregar',
+      startPreparing: 'Iniciar preparación',
       reload: 'Recargar',
       filterAll: 'Caja',
       filterKitchen: 'Cocina',
@@ -429,7 +439,12 @@ export const translations: Record<Language, Translations> = {
       statusPending: 'Pendente',
       statusPreparing: 'Em preparação',
       statusDone: 'PRONTO',
-      startPreparing: 'INICIAR',
+      tabPending: 'Pendentes',
+      tabPreparing: 'Em preparação',
+      tabDone: 'Prontos',
+      statusGeneralLabel: 'Estado geral',
+      readyToDeliver: 'Pronto para entregar',
+      startPreparing: 'Iniciar preparação',
       reload: 'Atualizar',
       filterAll: 'Caixa',
       filterKitchen: 'Cozinha',
@@ -566,7 +581,12 @@ export const translations: Record<Language, Translations> = {
       statusPending: 'Pending',
       statusPreparing: 'Preparing',
       statusDone: 'READY',
-      startPreparing: 'START',
+      tabPending: 'Pending',
+      tabPreparing: 'Preparing',
+      tabDone: 'Ready',
+      statusGeneralLabel: 'Overall status',
+      readyToDeliver: 'Ready for delivery',
+      startPreparing: 'Start preparation',
       reload: 'Refresh',
       filterAll: 'Box',
       filterKitchen: 'Kitchen',
