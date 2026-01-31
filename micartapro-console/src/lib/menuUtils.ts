@@ -280,6 +280,16 @@ export function generateMenuUrlFromMenuId(menuId: string, lang?: string, version
 }
 
 /**
+ * Añade query params para el preview de la consola (ej. station=true para mostrar Cocina/Barra en la carta).
+ * Usar en todas las URLs de preview que abre la consola.
+ */
+export function addPreviewQueryParams(url: string): string {
+  if (!url) return url
+  const separator = url.includes('?') ? '&' : '?'
+  return `${url}${separator}station=true`
+}
+
+/**
  * Genera la URL de la carta del restaurante (obtiene el slug automáticamente)
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación

@@ -24,6 +24,9 @@
   let sideImageErrors = $state({}); // Controla errores de carga de imágenes de sides
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
+
+  // Mostrar etiqueta Cocina/Barra solo cuando la URL tiene ?station=true (ej. preview desde consola)
+  const showStation = $derived(typeof window !== 'undefined' && new URLSearchParams(window.location?.search || '').get('station') === 'true');
   
   // Detectar el modo de pricing
   const pricingMode = $derived(item.pricing?.mode || 'UNIT');
@@ -209,9 +212,9 @@
           </svg>
         {/if}
         <MenuItemTitle title={item.title} className="text-base sm:text-lg font-bold text-gray-900" />
-        {#if item.station === 'KITCHEN'}
+        {#if showStation && item.station === 'KITCHEN'}
           <span class="text-xs font-medium px-2 py-0.5 rounded bg-amber-100 text-amber-800" title="Cocina">Cocina</span>
-        {:else if item.station === 'BAR'}
+        {:else if showStation && item.station === 'BAR'}
           <span class="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 text-blue-800" title="Barra">Barra</span>
         {/if}
       </div>
@@ -433,9 +436,9 @@
                     <span class="font-medium text-gray-800 text-base sm:text-lg">
                       {acompanamiento.name}
                     </span>
-                    {#if acompanamiento.station === 'KITCHEN'}
+                    {#if showStation && acompanamiento.station === 'KITCHEN'}
                       <span class="text-xs font-medium px-2 py-0.5 rounded bg-amber-100 text-amber-800">Cocina</span>
-                    {:else if acompanamiento.station === 'BAR'}
+                    {:else if showStation && acompanamiento.station === 'BAR'}
                       <span class="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 text-blue-800">Barra</span>
                     {/if}
                   </div>

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrlFromMenuId, getCurrentVersionId } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrlFromMenuId, getCurrentVersionId, addPreviewQueryParams } from '../menuUtils'
   import { t as tStore, language } from '../useLanguage'
 
   let menuUrl = $state<string | null>(null)
@@ -43,7 +43,7 @@
       // Generar URL usando menuId directamente (el frontend de cadorago hará el GET al backend)
       const url = generateMenuUrlFromMenuId(menuId, currentLanguage, currentVersionId || undefined)
       if (url) {
-        menuUrl = url
+        menuUrl = addPreviewQueryParams(url)
       } else {
         error = 'No se pudo generar la URL del menú.'
       }

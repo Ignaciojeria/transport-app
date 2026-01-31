@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getMenuVersions, getCurrentVersionId, updateCurrentVersionId, generateMenuUrl, updateVersionName, updateVersionFavorite } from '../menuUtils'
+  import { getLatestMenuId, getMenuVersions, getCurrentVersionId, updateCurrentVersionId, generateMenuUrl, addPreviewQueryParams, updateVersionName, updateVersionFavorite } from '../menuUtils'
   import { language } from '../useLanguage'
 
   interface MenuHistoryProps {
@@ -98,7 +98,7 @@
       // Generar URL usando menuId directamente (no requiere slug)
       const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
       if (url) {
-        previewUrl = url
+        previewUrl = addPreviewQueryParams(url)
         showPreview = true
         iframeKey++ // Forzar recarga del iframe
       } else {

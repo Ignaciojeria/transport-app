@@ -5,7 +5,7 @@
   import ChatInput from './ChatInput.svelte'
   import ProcessingPreview from './ProcessingPreview.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, getUserCredits, hasEnoughCredits, getAuthenticatedSupabaseClient } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, addPreviewQueryParams, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, getUserCredits, hasEnoughCredits, getAuthenticatedSupabaseClient } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -151,7 +151,7 @@
           try {
             const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
             if (url) {
-              menuUrl = url
+              menuUrl = addPreviewQueryParams(url)
               // Forzar recarga del iframe
               iframeKey++
             }
@@ -316,7 +316,7 @@
           if (userId && menuId && session?.access_token) {
             const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
             if (url) {
-              menuUrl = url
+              menuUrl = addPreviewQueryParams(url)
             }
             iframeKey++
           }
@@ -377,7 +377,7 @@
         generateMenuUrl(menuId, session.access_token, currentLanguage, currentVersionId || undefined)
           .then(newUrl => {
             if (newUrl) {
-              menuUrl = newUrl
+              menuUrl = addPreviewQueryParams(newUrl)
             }
           })
           .catch(err => {
@@ -407,7 +407,7 @@
               try {
                 const url = await generateMenuUrl(id, session.access_token, currentLanguage, menuRef.versionId)
                 if (url) {
-                  menuUrl = url
+                  menuUrl = addPreviewQueryParams(url)
                   console.log('✅ URL del menú recuperada desde localStorage')
                 }
               } catch (err) {
@@ -434,7 +434,7 @@
                   try {
                     const url = await generateMenuUrl(id, session.access_token, currentLanguage)
                     if (url) {
-                      menuUrl = url
+                      menuUrl = addPreviewQueryParams(url)
                     }
                   } catch (err) {
                     console.error('Error cargando URL del menú:', err)
@@ -538,7 +538,7 @@
             try {
               const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
               if (url) {
-                menuUrl = url
+                menuUrl = addPreviewQueryParams(url)
                 // Forzar recarga del iframe
                 iframeKey++
               }
@@ -569,14 +569,15 @@
         if (!hasPendingVersion || !currentUrlHasVersionId) {
           const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
           if (url) {
-            const separator = url.includes('?') ? '&' : '?'
-            menuUrl = `${url}${separator}_refresh=${Date.now()}`
+            const urlWithStation = addPreviewQueryParams(url)
+            const separator = urlWithStation.includes('?') ? '&' : '?'
+            menuUrl = `${urlWithStation}${separator}_refresh=${Date.now()}`
             iframeKey++
           }
         } else if (!menuUrl) {
           // Versión pendiente y aún sin menuUrl: cargar URL con version_id (ya se hace en polling)
           const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, messages.find(m => m.pendingVersionId)?.pendingVersionId)
-          if (url) menuUrl = url
+          if (url) menuUrl = addPreviewQueryParams(url)
         }
       } catch (err) {
         console.error('Error cargando menú:', err)
@@ -776,7 +777,7 @@
         if (userId && menuId && session?.access_token) {
           const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
           if (url) {
-            menuUrl = url
+            menuUrl = addPreviewQueryParams(url)
           }
           // Actualizar referencia del menú (sin versionId específico, usa current_version_id del backend)
           saveMenuReference(menuId)
@@ -1199,7 +1200,7 @@
             if (session?.access_token) {
               const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
               if (url) {
-                menuUrl = url
+                menuUrl = addPreviewQueryParams(url)
               }
             }
             iframeKey++
