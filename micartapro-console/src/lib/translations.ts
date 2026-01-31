@@ -286,7 +286,7 @@ export const translations: Record<Language, Translations> = {
       reload: 'Recargar',
       filterAll: 'Caja',
       filterKitchen: 'Cocina',
-      filterBar: 'Bar',
+      filterBar: 'Barra',
       emptyForStation: 'No hay órdenes para esta estación.',
       startToReady: 'INICIAR → LISTO',
       deliver: 'ENTREGAR'
@@ -431,7 +431,7 @@ export const translations: Record<Language, Translations> = {
       reload: 'Atualizar',
       filterAll: 'Caixa',
       filterKitchen: 'Cozinha',
-      filterBar: 'Bar',
+      filterBar: 'Barra',
       emptyForStation: 'Nenhum pedido para esta estação.',
       startToReady: 'INICIAR → LISTO',
       deliver: 'ENTREGAR'
@@ -567,7 +567,7 @@ export const translations: Record<Language, Translations> = {
       reload: 'Refresh',
       filterAll: 'Box',
       filterKitchen: 'Kitchen',
-      filterBar: 'Bar',
+      filterBar: 'Barra',
       emptyForStation: 'No orders for this station.',
       startToReady: 'START → READY',
       deliver: 'DELIVER'

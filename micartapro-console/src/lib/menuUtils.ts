@@ -736,7 +736,7 @@ export interface MenuOrderRow {
 /** Fila de la proyección order_items_projection (un ítem por fila). */
 export interface OrderItemProjectionRow {
   id: number
-  menu_order_id: number
+  aggregate_id: number
   order_number: number
   menu_id: string
   item_key: string
@@ -762,7 +762,7 @@ export interface KitchenOrderItem {
 /** Orden ya agrupada para la vista de cocina (desde order_items_projection). */
 export interface KitchenOrder {
   order_number: number
-  menu_order_id: number
+  aggregate_id: number
   requested_time: string | null
   created_at: string
   fulfillment: string
@@ -775,7 +775,7 @@ export type StationFilter = 'ALL' | 'KITCHEN' | 'BAR'
 /**
  * Obtiene las órdenes para la vista de cocina desde la proyección order_items_projection.
  * El filtro por estación se aplica en Supabase (columna station).
- * Agrupa ítems por orden (order_number, menu_order_id) y por item_name (sumando cantidades).
+ * Agrupa ítems por orden (order_number, aggregate_id) y por item_name (sumando cantidades).
  * Orden: requested_time ASC, created_at ASC.
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
@@ -791,7 +791,7 @@ export async function getKitchenOrdersFromProjection(
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
     let query = supabase
       .from('order_items_projection')
-      .select('order_number, menu_order_id, requested_time, created_at, fulfillment, item_name, quantity, unit, station')
+      .select('order_number, aggregate_id, requested_time, created_at, fulfillment, item_name, quantity, unit, station')
       .eq('menu_id', menuId)
     if (stationFilter === 'KITCHEN' || stationFilter === 'BAR') {
       query = query.eq('station', stationFilter)
@@ -806,7 +806,7 @@ export async function getKitchenOrdersFromProjection(
     }
     const items = (rows || []) as Array<{
       order_number: number
-      menu_order_id: number
+      aggregate_id: number
       requested_time: string | null
       created_at: string
       fulfillment: string
@@ -825,7 +825,7 @@ export async function getKitchenOrdersFromProjection(
 function groupProjectionItemsByOrder(
   rows: Array<{
     order_number: number
-    menu_order_id: number
+    aggregate_id: number
     requested_time: string | null
     created_at: string
     fulfillment: string
@@ -837,12 +837,12 @@ function groupProjectionItemsByOrder(
 ): KitchenOrder[] {
   const byOrder = new Map<string, KitchenOrder>()
   for (const r of rows) {
-    const key = `${r.menu_order_id}:${r.order_number}`
+    const key = `${r.aggregate_id}:${r.order_number}`
     let order = byOrder.get(key)
     if (!order) {
       order = {
         order_number: r.order_number,
-        menu_order_id: r.menu_order_id,
+        aggregate_id: r.aggregate_id,
         requested_time: r.requested_time,
         created_at: r.created_at,
         fulfillment: r.fulfillment,

@@ -19,7 +19,8 @@ import (
 var ErrMenuOrderNotFound = errors.New("menu order not found")
 
 type SaveMenuOrderResult struct {
-	OrderNumber int `json:"order_number"`
+	OrderNumber int   `json:"order_number"`
+	AggregateID int64 `json:"aggregate_id"`
 }
 
 type SaveMenuOrder func(ctx context.Context, menuID string, eventPayload interface{}, eventType string) (SaveMenuOrderResult, error)
@@ -79,8 +80,8 @@ func NewSaveMenuOrder(supabase *supabase.Client, conf configuration.Conf) SaveMe
 			return SaveMenuOrderResult{}, fmt.Errorf("RPC call failed with status %d: %s", resp.StatusCode, string(body))
 		}
 
-		// La función RPC retorna un array de objetos con el order_number
-		// Formato: [{"order_number": 1}]
+		// La función RPC retorna un array con order_number y aggregate_id
+		// Formato: [{"order_number": 1, "aggregate_id": 100023}]
 		var resultArray []SaveMenuOrderResult
 		if err := json.Unmarshal(body, &resultArray); err != nil {
 			return SaveMenuOrderResult{}, fmt.Errorf("failed to parse RPC response: %w, body: %s", err, string(body))

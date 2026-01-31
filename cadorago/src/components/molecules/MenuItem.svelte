@@ -202,13 +202,18 @@
 >
   <div class="flex items-start gap-4">
     <div class="flex-1 min-w-0">
-      <div class="flex items-center gap-2 mb-2">
+      <div class="flex items-center gap-2 mb-2 flex-wrap">
         {#if isInCart}
           <svg class="w-5 h-5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
         {/if}
         <MenuItemTitle title={item.title} className="text-base sm:text-lg font-bold text-gray-900" />
+        {#if item.station === 'KITCHEN'}
+          <span class="text-xs font-medium px-2 py-0.5 rounded bg-amber-100 text-amber-800" title="Cocina">Cocina</span>
+        {:else if item.station === 'BAR'}
+          <span class="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 text-blue-800" title="Barra">Barra</span>
+        {/if}
       </div>
       {#if item.description}
         <MenuItemDescription description={item.description} className="text-sm text-gray-700 mb-2" />
@@ -423,10 +428,17 @@
                   </div>
                 </div>
                 <!-- Información del acompañamiento -->
-                <div class="flex-1 flex justify-between items-center">
-                  <span class="font-medium text-gray-800 text-base sm:text-lg">
-                    {acompanamiento.name}
-                  </span>
+                <div class="flex-1 flex justify-between items-center gap-2 flex-wrap">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-medium text-gray-800 text-base sm:text-lg">
+                      {acompanamiento.name}
+                    </span>
+                    {#if acompanamiento.station === 'KITCHEN'}
+                      <span class="text-xs font-medium px-2 py-0.5 rounded bg-amber-100 text-amber-800">Cocina</span>
+                    {:else if acompanamiento.station === 'BAR'}
+                      <span class="text-xs font-medium px-2 py-0.5 rounded bg-blue-100 text-blue-800">Barra</span>
+                    {/if}
+                  </div>
                   <Price price={acompanamiento.price} className="text-lg sm:text-xl font-semibold" />
                 </div>
               </div>

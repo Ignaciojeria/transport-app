@@ -92,12 +92,15 @@ class CartStore {
         return i;
       });
     } else {
+      // station: lo que diga el menú (sides pueden tener station; si no, el item)
+      const station = side?.station ?? item?.station ?? null;
       this.items = [...this.items, {
         ...item,
         cantidad: 1,
         precio: precio,
         acompanamiento: side ? side.name : null,
-        acompanamientoId: side ? side.name : null
+        acompanamientoId: side ? side.name : null,
+        station
       }];
     }
     

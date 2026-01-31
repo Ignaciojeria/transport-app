@@ -111,11 +111,13 @@ export function adaptMenuData(menuData) {
       price: getPriceFromPricing(item.pricing),
       pricing: item.pricing, // Mantener el pricing original para uso futuro
       photoUrl: item.photoUrl || '', // Incluir photoUrl del item
+      station: item.station ?? null, // KITCHEN | BAR para vista y pedido
       sides: (item.sides || []).map(side => ({
         name: side.name || '',
         price: getPriceFromPricing(side.pricing),
         pricing: side.pricing, // Mantener el pricing original
-        photoUrl: side.photoUrl || '' // Incluir photoUrl del side
+        photoUrl: side.photoUrl || '', // Incluir photoUrl del side
+        station: side.station ?? null // KITCHEN | BAR
       }))
     }))
   }));

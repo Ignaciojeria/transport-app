@@ -10,7 +10,8 @@ import (
 )
 
 type CreateOrderResult struct {
-	OrderNumber int `json:"orderNumber"`
+	OrderNumber int   `json:"orderNumber"`
+	AggregateID int64 `json:"aggregateId"`
 }
 
 type CreateOrder func(ctx context.Context, menuID string, request events.CreateOrderRequest) (CreateOrderResult, error)
@@ -41,9 +42,10 @@ func NewCreateOrder(
 			return CreateOrderResult{}, err
 		}
 
-		observability.Logger.InfoContext(spanCtx, "order created successfully", "menuID", menuID, "orderNumber", result.OrderNumber)
+		observability.Logger.InfoContext(spanCtx, "order created successfully", "menuID", menuID, "orderNumber", result.OrderNumber, "aggregateID", result.AggregateID)
 		return CreateOrderResult{
 			OrderNumber: result.OrderNumber,
+			AggregateID: result.AggregateID,
 		}, nil
 	}
 }

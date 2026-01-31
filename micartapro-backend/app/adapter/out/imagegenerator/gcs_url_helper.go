@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"micartapro/app/shared/infrastructure/observability"
+
+	"cloud.google.com/go/storage"
 )
 
 // normalizeGCSURL corrige URLs de GCS mal formateadas (ej: "https.storage" → "https://storage")
@@ -16,12 +17,12 @@ func normalizeGCSURL(url string) string {
 	if url == "" {
 		return url
 	}
-	
+
 	// Verificar si la URL ya está correctamente formateada
 	if strings.HasPrefix(url, "https://storage.googleapis.com") || strings.HasPrefix(url, "http://storage.googleapis.com") {
 		return url
 	}
-	
+
 	// Corregir "https.storage.googleapis.com" → "https://storage.googleapis.com"
 	// Solo aplicar si el patrón incorrecto está presente
 	if strings.Contains(url, "https.storage.googleapis.com") {
@@ -30,11 +31,11 @@ func normalizeGCSURL(url string) string {
 	if strings.Contains(url, "http.storage.googleapis.com") {
 		url = strings.ReplaceAll(url, "http.storage.googleapis.com", "http://storage.googleapis.com")
 	}
-	
+
 	// Manejar casos donde se duplicó "https" (httpshttps://storage...)
 	url = strings.ReplaceAll(url, "httpshttps://", "https://")
 	url = strings.ReplaceAll(url, "httphttp://", "http://")
-	
+
 	return url
 }
 
@@ -44,7 +45,7 @@ func normalizeGCSURL(url string) string {
 func GenerateSignedReadURL(ctx context.Context, client *storage.Client, obs observability.Observability, imageURL string) (string, error) {
 	// Normalizar URL primero (corregir "https.storage" → "https://storage")
 	imageURL = normalizeGCSURL(imageURL)
-	
+
 	if client == nil {
 		obs.Logger.WarnContext(ctx, "gcs_client_nil", "message", "using original URL")
 		return imageURL, nil

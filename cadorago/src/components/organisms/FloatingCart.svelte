@@ -446,7 +446,8 @@
         unitPrice,
         totalPrice,
         pricingMode,
-        productName: item.title + (item.acompanamiento ? ` (${item.acompanamiento})` : '')
+        productName: item.title + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
+        station: item.station ?? ''
       };
     });
 
