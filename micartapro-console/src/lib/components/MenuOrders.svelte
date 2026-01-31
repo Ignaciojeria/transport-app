@@ -314,7 +314,7 @@
       {@const urlBarra = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=BAR#${hashParams}` : ''}
       <div class="max-w-3xl">
         <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (caja, cocinero o barista escanea el código)</p>
-        <p class="text-xs text-gray-500 mb-4">Haz clic en el código para agrandarlo. Con refresh token el acceso dura todo el turno sin volver a escanear.</p>
+        <p class="text-xs text-gray-500 mb-4">Haz clic en el código para agrandarlo.</p>
         <div class="flex flex-wrap gap-6">
           <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-100 border border-gray-300">
             <button
@@ -516,7 +516,7 @@
             class="w-64 h-64 sm:w-72 sm:h-72 object-contain"
           />
         </div>
-        <p class="text-xs text-gray-500 mb-3">Con refresh token el acceso dura todo el turno. Para un QR nuevo, actualiza la página o vuelve a Órdenes.</p>
+        <p class="text-xs text-gray-500 mb-3">Para un QR nuevo, actualiza la página o vuelve a Órdenes.</p>
         <div class="flex gap-2">
           <button
             type="button"
