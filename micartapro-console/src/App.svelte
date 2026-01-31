@@ -9,6 +9,7 @@
   import MenuHistory from './lib/components/MenuHistory.svelte'
   import MenuQRCode from './lib/components/MenuQRCode.svelte'
   import MenuOrders from './lib/components/MenuOrders.svelte'
+  import StationOrdersPublic from './lib/components/StationOrdersPublic.svelte'
 
   // Usar valores derivados reactivos en el componente
   let user = $derived(authState.user)
@@ -59,27 +60,41 @@
     return urlParams.get('payment') === 'success' || urlParams.get('success') === 'true'
   })
 
+  /** Vista pública cocina/barra: URL tiene view=station, menu_id, station y token en hash. Sin login. */
+  let publicStationParams = $state<{ menuId: string; station: 'KITCHEN' | 'BAR' } | null>(null)
+
   onMount(() => {
     initLanguage()
     initAuth()
-    
-    // Mostrar fragment en consola para debugging
-    const fragment = window.location.hash
-    if (fragment.startsWith('#auth=')) {
-      try {
-        const encodedData = fragment.substring(6)
-        const authData = JSON.parse(atob(encodedData))
-        console.log('📦 Contenido completo del fragment decodificado:')
-        console.log(JSON.stringify(authData, null, 2))
-      } catch (e) {
-        console.error('Error decodificando fragment:', e)
+
+    const params = new URLSearchParams(window.location.search)
+    const view = params.get('view')
+    const menuId = params.get('menu_id')
+    const station = params.get('station')
+    const hash = window.location.hash
+    const hasToken = hash.includes('token=')
+    if (view === 'station' && menuId && (station === 'KITCHEN' || station === 'BAR') && hasToken) {
+      publicStationParams = { menuId, station: station as 'KITCHEN' | 'BAR' }
+    }
+
+    // Mostrar fragment en consola para debugging (solo si no es vista station)
+    if (!publicStationParams) {
+      const fragment = window.location.hash
+      if (fragment.startsWith('#auth=')) {
+        try {
+          const encodedData = fragment.substring(6)
+          const authData = JSON.parse(atob(encodedData))
+          console.log('📦 Contenido completo del fragment decodificado:')
+          console.log(JSON.stringify(authData, null, 2))
+        } catch (e) {
+          console.error('Error decodificando fragment:', e)
+        }
       }
     }
-    
-    // Si no hay usuario autenticado, redirigir a auth-ui
-    // Esto se ejecuta después de que initAuth termine de cargar
+
+    // Si no hay usuario autenticado y no es vista station, redirigir a auth-ui
     setTimeout(() => {
-      if (!user && !authLoading) {
+      if (!publicStationParams && !user && !authLoading) {
         const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
         const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
         window.location.replace(authUiUrl)
@@ -89,7 +104,10 @@
 </script>
 
 <div class="min-h-screen bg-gray-50">
-  {#if isPaymentSuccess()}
+  {#if publicStationParams}
+    <!-- Vista cocina/barra sin login: token en hash, tiempo real con Supabase -->
+    <StationOrdersPublic menuId={publicStationParams.menuId} station={publicStationParams.station} />
+  {:else if isPaymentSuccess()}
     <!-- Página de éxito de pago -->
     <PaymentSuccess />
   {:else if authLoading || $langLoadingStore}

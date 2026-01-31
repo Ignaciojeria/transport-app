@@ -23,6 +23,8 @@
   /** Filtro por estación: se aplica en Supabase (columna station). */
   let stationFilter = $state<StationFilter>('ALL')
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
+  /** Modal QR ampliado: KITCHEN | BAR | null */
+  let qrEnlarged = $state<'KITCHEN' | 'BAR' | null>(null)
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -285,9 +287,55 @@
         onclick={() => setStationFilterAndReload('BAR')}
         class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
       >
-        {t.orders?.filterBar ?? 'Bar'}
+        {t.orders?.filterBar ?? 'Barra'}
       </button>
     </div>
+    <!-- Enlace/QR para cocina o barra sin login: se traspasa el token en el hash para tiempo real -->
+    {#if !kitchenMode && menuId && session?.access_token}
+      {@const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''}
+      {@const urlCocina = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=KITCHEN#token=${encodeURIComponent(session.access_token)}` : ''}
+      {@const urlBarra = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=BAR#token=${encodeURIComponent(session.access_token)}` : ''}
+      <div class="mt-4 pt-4 border-t border-gray-200">
+        <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (cocinero/barista escanea el código)</p>
+        <p class="text-xs text-gray-500 mb-2">Haz clic en el código para agrandarlo. El enlace usa tu sesión actual (~1 h).</p>
+        <div class="flex flex-wrap gap-4">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <button
+              type="button"
+              onclick={() => qrEnlarged = 'KITCHEN'}
+              class="flex-shrink-0 w-24 h-24 bg-white rounded border border-amber-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              title="Clic para agrandar"
+            >
+              {#if urlCocina}
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(urlCocina)}`} alt="QR Cocina" class="w-full h-full object-contain pointer-events-none" />
+              {/if}
+            </button>
+            <div>
+              <p class="font-semibold text-amber-900">Cocina</p>
+              <p class="text-xs text-amber-800 mb-1">Escanear → pedir nombre → ver pedidos en tiempo real</p>
+              <button type="button" onclick={() => urlCocina && navigator.clipboard.writeText(urlCocina).then(() => alert('Enlace copiado'))} class="text-xs text-amber-700 underline hover:no-underline">Copiar enlace</button>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+            <button
+              type="button"
+              onclick={() => qrEnlarged = 'BAR'}
+              class="flex-shrink-0 w-24 h-24 bg-white rounded border border-blue-200 overflow-hidden cursor-pointer hover:ring-2 hover:ring-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Clic para agrandar"
+            >
+              {#if urlBarra}
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=96x96&data=${encodeURIComponent(urlBarra)}`} alt="QR Barra" class="w-full h-full object-contain pointer-events-none" />
+              {/if}
+            </button>
+            <div>
+              <p class="font-semibold text-blue-900">Barra</p>
+              <p class="text-xs text-blue-800 mb-1">Escanear → pedir nombre → ver pedidos en tiempo real</p>
+              <button type="button" onclick={() => urlBarra && navigator.clipboard.writeText(urlBarra).then(() => alert('Enlace copiado'))} class="text-xs text-blue-700 underline hover:no-underline">Copiar enlace</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {/if}
   </div>
 
   <!-- Content -->
@@ -407,6 +455,53 @@
       </ul>
     {/if}
   </div>
+
+  <!-- Modal QR ampliado (clic en el código para agrandar) -->
+  {#if qrEnlarged && menuId && session?.access_token && typeof window !== 'undefined'}
+    {@const baseUrl = window.location.origin}
+    {@const enlargedUrl = `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=${qrEnlarged}#token=${encodeURIComponent(session.access_token)}`}
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="qr-enlarged-title"
+      tabindex="-1"
+      onclick={() => qrEnlarged = null}
+      onkeydown={(e) => e.key === 'Escape' && (qrEnlarged = null)}
+    >
+      <div
+        class="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full"
+        role="document"
+        tabindex="0"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.stopPropagation()}
+      >
+        <h2 id="qr-enlarged-title" class="text-lg font-bold text-gray-800 mb-4">
+          {qrEnlarged === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra')}
+        </h2>
+        <div class="flex justify-center mb-4 bg-white rounded-lg border border-gray-200 p-3">
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(enlargedUrl)}`}
+            alt="QR ampliado"
+            class="w-64 h-64 sm:w-72 sm:h-72 object-contain"
+          />
+        </div>
+        <p class="text-xs text-gray-500 mb-3">El enlace usa tu sesión actual (~1 h). Para un QR nuevo, actualiza la página o vuelve a Órdenes.</p>
+        <div class="flex gap-2">
+          <button
+            type="button"
+            onclick={() => enlargedUrl && navigator.clipboard.writeText(enlargedUrl).then(() => alert('Enlace copiado'))}
+            class="flex-1 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-900"
+          >
+            Copiar enlace
+          </button>
+          <button type="button" onclick={() => qrEnlarged = null} class="py-2 px-4 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
