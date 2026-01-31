@@ -72,8 +72,11 @@
     const menuId = params.get('menu_id')
     const station = params.get('station')
     const hash = window.location.hash
-    const hasToken = hash.includes('token=')
-    if (view === 'station' && menuId && (station === 'KITCHEN' || station === 'BAR') && hasToken) {
+    const hasTokenInHash = hash.includes('token=')
+    // Token puede estar en hash (primera carga) o en sessionStorage (después de refrescar)
+    const storageTokenKey = menuId && (station === 'KITCHEN' || station === 'BAR') ? `station_token_${menuId}_${station}` : ''
+    const hasTokenInStorage = typeof sessionStorage !== 'undefined' && storageTokenKey && !!sessionStorage.getItem(storageTokenKey)
+    if (view === 'station' && menuId && (station === 'KITCHEN' || station === 'BAR') && (hasTokenInHash || hasTokenInStorage)) {
       publicStationParams = { menuId, station: station as 'KITCHEN' | 'BAR' }
     }
 
