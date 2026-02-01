@@ -33,16 +33,17 @@
   const t = $derived($tStore)
   const stationFilter = $derived(station) as StationFilter
   const displayedOrders = $derived(orders)
-  const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : station === 'BAR' ? (t.orders?.filterBar ?? 'Barra') : (t.orders?.filterAll ?? 'Caja'))
+  const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : station === 'BAR' ? (t.orders?.filterBar ?? 'Barra') : (t.orders?.filterAll ?? 'Entrega'))
 
-  /** En Cocina/Bar: órdenes particionadas por estado para los tabs. En Caja (ALL) no se usa. */
+  /** En Cocina/Bar: órdenes particionadas por estado para los tabs. En Entrega (ALL) no se usa. */
   const ordersByTab = $derived.by(() => {
     if (station !== 'KITCHEN' && station !== 'BAR') return { pending: [] as KitchenOrder[], preparing: [] as KitchenOrder[], done: [] as KitchenOrder[] }
+    const stKey = station as 'KITCHEN' | 'BAR'
     const pending: KitchenOrder[] = []
     const preparing: KitchenOrder[] = []
     const done: KitchenOrder[] = []
     for (const o of displayedOrders) {
-      const st = getOrderStatus(o.order_number)
+      const st = getOrderStatus(o.order_number, stKey)
       if (st === 'pending') pending.push(o)
       else if (st === 'preparing') preparing.push(o)
       else done.push(o)
@@ -122,16 +123,43 @@
     return items.reduce((s, i) => s + i.quantity, 0)
   }
 
-  const statusKey = (orderNumber: number) => `${orderNumber}-${station}`
+  const statusKey = (orderNumber: number, st: 'KITCHEN' | 'BAR') => `${orderNumber}-${st}`
 
-  function getOrderStatus(orderNumber: number): 'pending' | 'preparing' | 'done' {
-    return orderStatus[statusKey(orderNumber)] ?? 'pending'
+  function getOrderStatus(orderNumber: number, st: 'KITCHEN' | 'BAR'): 'pending' | 'preparing' | 'done' {
+    return orderStatus[statusKey(orderNumber, st)] ?? 'pending'
   }
 
-  function cycleOrderStatus(orderNumber: number) {
-    const current = getOrderStatus(orderNumber)
+  function setOrderStatus(orderNumber: number, st: 'KITCHEN' | 'BAR', status: 'pending' | 'preparing' | 'done') {
+    orderStatus = { ...orderStatus, [statusKey(orderNumber, st)]: status }
+  }
+
+  function cycleOrderStatus(orderNumber: number, st: 'KITCHEN' | 'BAR') {
+    const current = getOrderStatus(orderNumber, st)
     const next = current === 'pending' ? 'preparing' : current === 'preparing' ? 'done' : 'pending'
-    orderStatus = { ...orderStatus, [statusKey(orderNumber)]: next }
+    setOrderStatus(orderNumber, st, next)
+  }
+
+  /** Estaciones que tienen ítems en esta orden (KITCHEN, BAR). */
+  function getStationsInOrder(order: KitchenOrder): string[] {
+    const stations = new Set<string>()
+    for (const i of order.items) {
+      if (i.station) stations.add(i.station)
+    }
+    return stations.size > 0 ? [...stations] : ['KITCHEN']
+  }
+
+  /** Indica si Cocina y Barra marcaron la orden como lista (solo informativo). */
+  function isOrderReadyForDelivery(order: KitchenOrder): boolean {
+    const stations = getStationsInOrder(order)
+    return stations.every((st) => getOrderStatus(order.order_number, st as 'KITCHEN' | 'BAR') === 'done')
+  }
+
+  /** Estado resumido para mostrar en vista Entrega (Pendiente / En preparación). */
+  function getCajaOrderStatusLabel(order: KitchenOrder): 'pending' | 'preparing' {
+    const stations = getStationsInOrder(order)
+    const statuses = stations.map((st) => getOrderStatus(order.order_number, st as 'KITCHEN' | 'BAR'))
+    if (statuses.every((s) => s === 'pending')) return 'pending'
+    return 'preparing'
   }
 
   async function toggleFullMode() {
@@ -340,62 +368,99 @@
             {@const type = order.fulfillment}
             {@const itemCount = getItemCount(order.items)}
             {@const isFirst = index === 0}
-            {@const status = getOrderStatus(order.order_number)}
             {@const remainingMin = getRemainingMinutes(order.requested_time)}
             {@const timeColor = getRemainingTimeColor(remainingMin)}
-            {@const useBarColor = station === 'BAR'}
+            {@const useBarColor = station === 'BAR' || (station === 'ALL' && order.items.some((i) => i.station === 'BAR'))}
             {@const isDoneTab = (station === 'KITCHEN' || station === 'BAR') && operationalTab === 'done'}
+            {@const cardStatus = station === 'ALL' ? null : getOrderStatus(order.order_number, station)}
+            {@const kitchenSt = station === 'ALL' ? getOrderStatus(order.order_number, 'KITCHEN') : null}
+            {@const barSt = station === 'ALL' ? getOrderStatus(order.order_number, 'BAR') : null}
+            {@const orderHasBar = station === 'ALL' ? order.items.some((i) => i.station === 'BAR') : false}
+            {@const readyForDelivery = station === 'ALL' ? isOrderReadyForDelivery(order) : false}
             <li class="bg-white rounded-xl border-2 overflow-hidden station-order-card {isDoneTab ? 'order-card-done opacity-80 border-gray-300' : ''} {isFirst && !isDoneTab ? 'border-amber-400 shadow-lg' : 'border-gray-200'}">
-              <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100">
-                <span class="font-bold text-gray-900 tabular-nums {isFirst ? 'text-4xl' : 'text-3xl'}">#{order.order_number}</span>
-                <span class="font-semibold text-gray-700">{t.orders?.forTime ?? 'Para'} {formatRequestedTime(order.requested_time)}</span>
+              <!-- Cabecera: número, hora, tiempo restante, tipo, estado(es) -->
+              <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-6' : 'sm:py-4'}">
+                <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab ? 'text-4xl sm:text-5xl md:text-6xl' : 'text-3xl sm:text-4xl'}">#{order.order_number}</span>
+                <span class="font-semibold text-gray-700 {isFirst ? 'text-2xl sm:text-3xl md:text-4xl' : 'text-xl sm:text-2xl'}">
+                  {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
+                </span>
                 {#if remainingMin !== null}
                   <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums
                     {timeColor === 'green' ? 'bg-green-100 text-green-800' : ''}
                     {timeColor === 'yellow' ? 'bg-amber-200 text-amber-900' : ''}
                     {timeColor === 'red' ? 'bg-red-100 text-red-800' : ''}">
+                    <span aria-hidden="true">{timeColor === 'green' ? '🟢' : timeColor === 'yellow' ? '🟡' : '🔴'}</span>
                     {getRemainingTimeLabel(remainingMin)}
                   </span>
                 {/if}
-                <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} px-3 py-1 text-sm">
+                <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}">
                   {getFulfillmentLabel(type)}
                 </span>
-                <span class="inline-flex items-center gap-1 rounded-full font-bold border px-3 py-1 text-sm
-                  {status === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
-                  {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
-                  {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
-                  {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
-                </span>
+                {#if station === 'ALL'}
+                  <!-- Vista Entrega: Cocina ✔️/⏳, Barra ✔️/⏳, Estado general (igual que sidenav) -->
+                  <div class="flex flex-wrap items-center gap-3 text-sm font-semibold">
+                    <span class="inline-flex items-center gap-1">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
+                    <span class="inline-flex items-center gap-1">{t.orders?.filterBar ?? 'Barra'}: {orderHasBar ? (barSt === 'done' ? '✔️' : '⏳') : '—'}</span>
+                    <span class="inline-flex items-center gap-1 rounded-full border px-2 py-1 {readyForDelivery ? 'bg-green-50 text-green-800 border-green-200' : 'bg-amber-50 text-amber-900 border-amber-200'}">
+                      {t.orders?.statusGeneralLabel ?? 'Estado general'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo para entregar') : (t.orders?.statusPreparing ?? 'En preparación')}
+                    </span>
+                  </div>
+                {:else}
+                  <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
+                    {cardStatus === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
+                    {cardStatus === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
+                    {cardStatus === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
+                    {#if cardStatus === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
+                    {cardStatus === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : cardStatus === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+                  </span>
+                {/if}
               </div>
-              <div class="px-4 py-3 sm:px-5 bg-amber-50/50 border-b border-amber-100">
-                <p class="font-semibold text-amber-800 uppercase tracking-wide text-xs mb-2">{t.orders?.itemsToPrepare ?? 'Qué preparar'}</p>
-                <ul class="space-y-1 text-gray-900 text-lg">
+              <!-- Qué preparar: listado con cantidad de ítems (igual que sidenav) -->
+              <div class="px-4 py-3 sm:px-5 bg-amber-50/50 border-b border-amber-100 {isFirst ? 'py-4 sm:py-5' : ''}">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                  <p class="font-semibold text-amber-800 uppercase tracking-wide {isFirst ? 'text-sm' : 'text-xs'}">{t.orders?.itemsToPrepare ?? 'Qué preparar'}</p>
+                  <span class="text-sm font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
+                </div>
+                <ul class="space-y-1 text-gray-900 {isFirst ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl'}">
                   {#each order.items as item}
-                    <li><span class="font-bold text-amber-800">{item.quantity}×</span> {item.item_name}</li>
+                    <li class="tabular-nums">
+                      <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.item_name}</span>
+                    </li>
                   {/each}
                 </ul>
               </div>
+              <!-- Pie: Entrega = solo ENTREGAR; Cocina/Bar = INICIAR y LISTO -->
               <div class="px-4 py-3 sm:px-5 border-t border-gray-100">
-                {#if status === 'pending'}
+                {#if station === 'ALL'}
                   <button
                     type="button"
-                    onclick={() => cycleOrderStatus(order.order_number)}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-amber-500 hover:bg-amber-600'}"
+                    onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
                   >
-                    <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
-                  </button>
-                {:else if status === 'preparing'}
-                  <button
-                    type="button"
-                    onclick={() => cycleOrderStatus(order.order_number)}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
-                  >
-                    ✓ {t.orders?.markAsReady ?? 'LISTO'}
+                    {t.orders?.deliver ?? 'ENTREGAR'}
                   </button>
                 {:else}
-                  <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
-                    ✓ {t.orders?.statusDone ?? 'Listo'}
-                  </div>
+                  {#if cardStatus === 'pending'}
+                    <button
+                      type="button"
+                      onclick={() => cycleOrderStatus(order.order_number, station)}
+                      class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
+                    >
+                      <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
+                    </button>
+                  {:else if cardStatus === 'preparing'}
+                    <button
+                      type="button"
+                      onclick={() => cycleOrderStatus(order.order_number, station)}
+                      class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
+                    >
+                      ✓ {t.orders?.markAsReady ?? 'LISTO'}
+                    </button>
+                  {:else}
+                    <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
+                      ✓ {t.orders?.statusDone ?? 'Listo'}
+                    </div>
+                  {/if}
                 {/if}
               </div>
             </li>

@@ -295,7 +295,7 @@ export const translations: Record<Language, Translations> = {
       readyToDeliver: 'Listo para entregar',
       startPreparing: 'Iniciar preparación',
       reload: 'Recargar',
-      filterAll: 'Caja',
+      filterAll: 'Entrega',
       filterKitchen: 'Cocina',
       filterBar: 'Barra',
       showQR: 'QR',

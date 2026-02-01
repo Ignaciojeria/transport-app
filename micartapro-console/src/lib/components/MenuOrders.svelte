@@ -179,7 +179,7 @@
     return stations.size > 0 ? [...stations] : ['KITCHEN']
   }
 
-  /** La orden está lista para ENTREGAR en Caja cuando todas sus estaciones están en 'done'. */
+  /** Indica si Cocina y Barra marcaron la orden como lista (solo informativo; la entrega no está bloqueada por estaciones). */
   function isOrderReadyForDelivery(order: KitchenOrder): boolean {
     const stations = getStationsInOrder(order)
     return stations.every((st) => getOrderStatus(order.order_number, st) === 'done')
@@ -295,7 +295,7 @@
           onclick={() => { showQRView = false; setStationFilterAndReload('ALL'); }}
           class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
         >
-          {t.orders?.filterAll ?? 'Caja'}
+          {t.orders?.filterAll ?? 'Entrega'}
         </button>
         <button
           type="button"
@@ -327,14 +327,14 @@
   <!-- Content -->
   <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
     {#if showQRView && menuId && session?.access_token}
-      <!-- Vista QR: códigos Caja, Cocina y Barra sin tapar filtros -->
+      <!-- Vista QR: códigos Entrega, Cocina y Barra sin tapar filtros -->
       {@const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''}
       {@const hashParams = session?.refresh_token ? `token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}` : `token=${encodeURIComponent(session.access_token)}`}
       {@const urlCaja = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=ALL#${hashParams}` : ''}
       {@const urlCocina = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=KITCHEN#${hashParams}` : ''}
       {@const urlBarra = baseUrl ? `${baseUrl}/?view=station&menu_id=${encodeURIComponent(menuId)}&station=BAR#${hashParams}` : ''}
       <div class="max-w-3xl">
-        <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (caja, cocinero o barista escanea el código)</p>
+        <p class="text-sm font-medium text-gray-700 mb-2">Acceso sin login (entrega, cocinero o barista escanea el código)</p>
         <p class="text-xs text-gray-500 mb-4">Haz clic en el código para agrandarlo.</p>
         <div class="flex flex-wrap gap-6">
           <div class="flex items-start gap-3 p-4 rounded-xl bg-gray-100 border border-gray-300">
@@ -345,11 +345,11 @@
               title="Clic para agrandar"
             >
               {#if urlCaja}
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=112x112&data=${encodeURIComponent(urlCaja)}`} alt="QR Caja" class="w-full h-full object-contain pointer-events-none" />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=112x112&data=${encodeURIComponent(urlCaja)}`} alt="QR Entrega" class="w-full h-full object-contain pointer-events-none" />
               {/if}
             </button>
             <div>
-              <p class="font-semibold text-gray-900">{t.orders?.filterAll ?? 'Caja'}</p>
+              <p class="font-semibold text-gray-900">{t.orders?.filterAll ?? 'Entrega'}</p>
               <p class="text-xs text-gray-700 mb-1">Ver todas las órdenes en tiempo real</p>
               <button type="button" onclick={() => urlCaja && navigator.clipboard.writeText(urlCaja).then(() => alert('Enlace copiado'))} class="text-xs text-gray-600 underline hover:no-underline">Copiar enlace</button>
             </div>
@@ -509,28 +509,17 @@
                 {/each}
               </ul>
             </div>
-            <!-- Caja: solo ENTREGAR cuando está listo. Cocina/Bar: INICIAR y LISTO. -->
+            <!-- Entrega: ENTREGAR siempre habilitado (no bloqueado por Cocina/Barra). Cocina/Bar: INICIAR y LISTO. -->
             <div class="px-4 py-3 sm:px-5 border-t border-gray-100">
               {#if stationFilter === 'ALL'}
-                <!-- Caja: ENTREGAR habilitado solo cuando Cocina ✔️ AND Bar ✔️; si no, botón deshabilitado con estado visible -->
-                {#if readyForDelivery}
-                  <button
-                    type="button"
-                    onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
-                  >
-                    {t.orders?.deliver ?? 'ENTREGAR'}
-                  </button>
-                {:else}
-                  <button
-                    type="button"
-                    disabled
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold bg-gray-100 text-gray-500 cursor-not-allowed"
-                    title="{t.orders?.statusPreparing ?? 'En preparación'}"
-                  >
-                    {t.orders?.deliver ?? 'ENTREGAR'} — {t.orders?.statusPreparing ?? 'En preparación'}
-                  </button>
-                {/if}
+                <!-- Entrega: botón ENTREGAR siempre disponible. -->
+                <button
+                  type="button"
+                  onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
+                  class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
+                >
+                  {t.orders?.deliver ?? 'ENTREGAR'}
+                </button>
               {:else}
                 <!-- Cocina / Bar: INICIAR y LISTO por estación -->
                 {#if status === 'pending'}
@@ -585,7 +574,7 @@
         onkeydown={(e) => e.stopPropagation()}
       >
         <h2 id="qr-enlarged-title" class="text-lg font-bold text-gray-800 mb-4">
-          {qrEnlarged === 'ALL' ? (t.orders?.filterAll ?? 'Caja') : qrEnlarged === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra')}
+          {qrEnlarged === 'ALL' ? (t.orders?.filterAll ?? 'Entrega') : qrEnlarged === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra')}
         </h2>
         <div class="flex justify-center mb-4 bg-white rounded-lg border border-gray-200 p-3">
           <img
