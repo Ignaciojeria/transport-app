@@ -18,6 +18,15 @@ export interface Translations {
   // CartaSection.svelte
   menu: {
     noItems: string
+    addToCart: string
+    addedToCart: string
+    viewOptions: string
+    allergens: {
+      gluten: string
+      egg: string
+      lactose: string
+      seafood: string
+    }
   }
   
   // FloatingCart.svelte & ShoppingCart.svelte
@@ -99,7 +108,16 @@ export const translations: Record<Language, Translations> = {
       notSpecified: 'No especificado'
     },
     menu: {
-      noItems: 'No hay elementos'
+      noItems: 'No hay elementos',
+      addToCart: 'Agregar',
+      addedToCart: '✓ Agregado',
+      viewOptions: 'Ver opciones',
+      allergens: {
+        gluten: 'Contiene Gluten',
+        egg: 'Contiene Huevo',
+        lactose: 'Contiene Lactosa',
+        seafood: 'Contiene Mariscos'
+      }
     },
     cart: {
       yourOrder: 'Tu pedido',
@@ -175,7 +193,16 @@ export const translations: Record<Language, Translations> = {
       notSpecified: 'Não especificado'
     },
     menu: {
-      noItems: 'Não há elementos'
+      noItems: 'Não há elementos',
+      addToCart: 'Adicionar',
+      addedToCart: '✓ Adicionado',
+      viewOptions: 'Ver opções',
+      allergens: {
+        gluten: 'Contém Glúten',
+        egg: 'Contém Ovo',
+        lactose: 'Contém Lactose',
+        seafood: 'Contém Frutos do Mar'
+      }
     },
     cart: {
       yourOrder: 'Seu pedido',
@@ -251,7 +278,16 @@ export const translations: Record<Language, Translations> = {
       notSpecified: 'Not specified'
     },
     menu: {
-      noItems: 'No items'
+      noItems: 'No items',
+      addToCart: 'Add',
+      addedToCart: '✓ Added',
+      viewOptions: 'View options',
+      allergens: {
+        gluten: 'Contains Gluten',
+        egg: 'Contains Egg',
+        lactose: 'Contains Lactose',
+        seafood: 'Contains Seafood'
+      }
     },
     cart: {
       yourOrder: 'Your order',

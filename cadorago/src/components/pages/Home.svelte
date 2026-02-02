@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import HeroTemplate from '../templates/HeroTemplate.svelte';
+  import ModernTemplate from '../templates/ModernTemplate.svelte';
   import HorariosSection from '../organisms/HorariosSection.svelte';
   import ContactSection from '../organisms/ContactSection.svelte';
   import CartaSection from '../organisms/CartaSection.svelte';
@@ -14,14 +15,41 @@
   const loading = $derived(restaurantDataStore.loading);
   const error = $derived(restaurantDataStore.error);
   
+  // Leer query param ?template= para seleccionar el template
+  let templateName = $state('hero'); // Por defecto: hero (original)
+  
   onMount(() => {
     initLanguage();
+    
+    // Leer query param de la URL
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const templateParam = params.get('template');
+      if (templateParam) {
+        templateName = templateParam.toLowerCase();
+      }
+    }
   });
+  
+  // Seleccionar el componente template según el query param
+  const TemplateComponent = $derived(() => {
+    switch (templateName) {
+      case 'modern':
+        return ModernTemplate;
+      case 'hero':
+      default:
+        return HeroTemplate;
+    }
+  });
+  
+  const CurrentTemplate = $derived(TemplateComponent());
 </script>
 
 <MetaTags />
 
-<HeroTemplate>
+{#if CurrentTemplate}
+  {@const Template = CurrentTemplate}
+  <Template>
   {#if loading}
     <!-- Estado de carga -->
     <section class="px-2 sm:px-4 lg:px-12 pt-8 sm:pt-12 lg:pt-16">
@@ -46,28 +74,34 @@
           <CartaSection carta={restaurantData.menu || []} />
         </div>
         
-        <!-- Horarios de atención - En el medio -->
-        <div>
-          <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 uppercase tracking-wide">
-            {$t.home.businessHours}
-          </h2>
-          <HorariosSection horarios={restaurantData.businessInfo?.businessHours || []} />
-        </div>
-        
-        <!-- Contacto - Al final -->
-        <div class="mb-24 sm:mb-28 lg:mb-32">
-          <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 uppercase tracking-wide">
-            {$t.home.contact}
-          </h2>
-          <ContactSection whatsapp={restaurantData.businessInfo?.whatsapp || ''} />
-        </div>
+        <!-- Horarios de atención y Contacto - Solo para template hero (no modern) -->
+        {#if templateName !== 'modern'}
+          <!-- Horarios de atención - En el medio -->
+          <div>
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 uppercase tracking-wide">
+              {$t.home.businessHours}
+            </h2>
+            <HorariosSection horarios={restaurantData.businessInfo?.businessHours || []} />
+          </div>
+          
+          <!-- Contacto - Al final -->
+          <div class="mb-24 sm:mb-28 lg:mb-32">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 uppercase tracking-wide">
+              {$t.home.contact}
+            </h2>
+            <ContactSection whatsapp={restaurantData.businessInfo?.whatsapp || ''} />
+          </div>
+        {/if}
       </div>
     </section>
   {/if}
   
   <!-- Carrito flotante -->
   <FloatingCart />
-</HeroTemplate>
+  </Template>
+{/if}
 
-<!-- Footer -->
-<Footer />
+<!-- Footer solo para template hero (ModernTemplate ya lo incluye) -->
+{#if templateName === 'hero'}
+  <Footer />
+{/if}

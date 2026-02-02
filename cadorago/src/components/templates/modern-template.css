@@ -1,0 +1,302 @@
+/* Estilos del template moderno basado en template/index.html */
+
+/* Importar fuente Playfair Display - debe estar al inicio */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+.modern-template {
+  --primary: #C85A3A;
+  --primary-light: #E67E5C;
+  --primary-dark: #A63D1F;
+  --secondary: #F4E4D7;
+  --accent-yellow: #FFF4D6;
+  --accent-green: #2D5F3F;
+  --text-dark: #1A1A1A;
+  --text-light: #666666;
+  --border-light: #E8E8E8;
+  --white: #FFFFFF;
+  --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.modern-template {
+  font-family: 'Inter', sans-serif;
+  color: var(--text-dark);
+  background-color: var(--white);
+  line-height: 1.6;
+}
+
+.modern-template h1,
+.modern-template h2,
+.modern-template h3,
+.modern-template h4,
+.modern-template h5,
+.modern-template h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Hero section con overlay - imagen completa sin márgenes */
+.modern-template .hero-section {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.modern-template .hero-image-wrapper {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.modern-template .hero-image-wrapper > div {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.modern-template .hero-image-wrapper img {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+/* Asegurar que BrandHero muestre la imagen completa sin márgenes */
+.modern-template .hero-section .hero-image-wrapper > div {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.modern-template .hero-section .hero-image-wrapper > div > div {
+  width: 100% !important;
+  min-height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.modern-template .hero-section .hero-image-wrapper > div > div > div {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.modern-template .hero-section .hero-image-wrapper img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+}
+
+/* Eliminar cualquier padding/margin del wrapper de ImageWithLoader */
+.modern-template .hero-section .relative {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+/* En móvil, asegurar que ImageWithLoader no añada espacios */
+@media (max-width: 768px) {
+  .modern-template .hero-section .relative {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .modern-template .hero-section .relative > div {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+}
+
+.modern-template .hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15));
+  z-index: 1;
+  pointer-events: none;
+  height: 100%;
+}
+
+/* Contenedor principal */
+.modern-template .content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Secciones */
+.modern-template section {
+  padding: 3rem 1rem;
+}
+
+.modern-template .section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  text-align: center;
+}
+
+/* Cards estilo chef suggestions */
+.modern-template .chef-card {
+  background: linear-gradient(135deg, var(--accent-yellow) 0%, #FFFBF0 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.modern-template .chef-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--primary);
+}
+
+.modern-template .chef-badge {
+  display: inline-block;
+  background-color: var(--primary);
+  color: var(--white);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+}
+
+.modern-template .price {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.modern-template .cta-btn {
+  background-color: var(--primary);
+  color: var(--white);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.modern-template .cta-btn:hover {
+  background-color: var(--primary-dark);
+  transform: scale(1.05);
+}
+
+/* Menu items grid para template moderno */
+.modern-template .items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.modern-template .menu-category-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: var(--text-dark);
+  padding-bottom: 1rem;
+  border-bottom: 3px solid var(--primary);
+  display: inline-block;
+}
+
+/* Sección de menú con fondo alternado */
+.modern-template .menu-section {
+  padding: 3rem 1rem;
+  background-color: #FAFAFA;
+}
+
+.modern-template .menu-category {
+  margin-bottom: 3rem;
+}
+
+.modern-template .menu-item {
+  background-color: var(--white);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.modern-template .menu-item:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-hover);
+}
+
+.modern-template .menu-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modern-template .hero-section {
+    min-height: auto;
+  }
+
+  /* Asegurar que la imagen se muestre completa en móvil sin recortes */
+  .modern-template .hero-section .hero-image-wrapper {
+    width: 100% !important;
+  }
+
+  .modern-template .hero-section .hero-image-wrapper > div,
+  .modern-template .hero-section .hero-image-wrapper > div > div,
+  .modern-template .hero-section .hero-image-wrapper > div > div > div {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .modern-template .hero-section .hero-image-wrapper img {
+    width: 100% !important;
+    height: auto !important;
+    object-fit: contain !important;
+    max-height: none !important;
+    display: block !important;
+  }
+
+  .modern-template .hero-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .modern-template .hero-content p {
+    font-size: 0.95rem;
+  }
+
+  .modern-template .section-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-template .hero-content h2 {
+    font-size: 1.3rem;
+  }
+
+  .modern-template .section-title {
+    font-size: 1.3rem;
+  }
+}

@@ -826,7 +826,7 @@
 <!-- Modal de información de entrega/retiro -->
 {#if showOrderForm}
   <div 
-    class="fixed inset-0 bg-white z-[60] transition-transform duration-300 ease-in-out {orderViewTransition ? 'translate-x-0' : 'translate-x-full'}"
+    class="fixed inset-0 bg-white z-[100] transition-transform duration-300 ease-in-out {orderViewTransition ? 'translate-x-0' : 'translate-x-full'}"
     role="dialog"
     aria-modal="true"
     aria-labelledby="order-form-title"
@@ -1168,7 +1168,7 @@
 <!-- Modal de confirmación para limpiar carrito -->
 {#if showClearConfirm}
   <div 
-    class="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4" 
+    class="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" 
     role="dialog"
     aria-modal="true"
     aria-labelledby="clear-confirm-title"
