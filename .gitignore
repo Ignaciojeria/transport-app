@@ -8,6 +8,8 @@ mexico
 gqlgen_test.yml
 .bak
 .exe
+__debug_bin.exe
+.claude/
 access.log
 geojson.json
 polyline.json
