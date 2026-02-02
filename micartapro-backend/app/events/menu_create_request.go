@@ -99,6 +99,17 @@ const (
 )
 
 /*
+	MENU PRESENTATION STYLE
+*/
+
+type MenuPresentationStyle string
+
+const (
+	MenuStyleHero   MenuPresentationStyle = "HERO"
+	MenuStyleModern MenuPresentationStyle = "MODERN"
+)
+
+/*
 	MENU MODELS
 */
 
@@ -219,6 +230,7 @@ type ImageEditionRequest struct {
 
 type MenuCreateRequest struct {
 	ID                          string                       `json:"id"`
+	PresentationStyle           MenuPresentationStyle        `json:"presentationStyle"`
 	CoverImage                  string                       `json:"coverImage"`
 	FooterImage                 string                       `json:"footerImage"`
 	BusinessInfo                BusinessInfo                 `json:"businessInfo"`
@@ -238,6 +250,21 @@ func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
 	event.SetData(cloudevents.ApplicationJSON, c)
 	event.SetTime(time.Now())
 	return event
+}
+
+// EffectivePresentationStyle retorna el estilo de presentación efectivo; si está vacío retorna HERO por defecto.
+func (c *MenuCreateRequest) EffectivePresentationStyle() MenuPresentationStyle {
+	if c == nil || c.PresentationStyle == "" {
+		return MenuStyleHero
+	}
+	return c.PresentationStyle
+}
+
+// EnsurePresentationStyleDefault asigna HERO a PresentationStyle si está vacío (útil tras deserializar JSON antiguo).
+func (c *MenuCreateRequest) EnsurePresentationStyleDefault() {
+	if c != nil && c.PresentationStyle == "" {
+		c.PresentationStyle = MenuStyleHero
+	}
 }
 
 // Clean limpia los campos temporales de solicitudes de generación/edición de imágenes

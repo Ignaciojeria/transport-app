@@ -111,6 +111,7 @@ func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) 
 			obs.Logger.ErrorContext(ctx, "error_decoding_menu", "error", err)
 			return events.MenuCreateRequest{}, err
 		}
+		menu.EnsurePresentationStyleDefault()
 
 		obs.Logger.Info("menu_found_successfully", "menuID", menuID, "objectPath", objectPath)
 		return menu, nil

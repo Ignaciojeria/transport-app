@@ -101,6 +101,7 @@ func NewGetMenuById(supabase *supabase.Client, obs observability.Observability) 
 
 		// Asegurar que el ID del menú esté establecido
 		menu.ID = menuID
+		menu.EnsurePresentationStyleDefault()
 
 		obs.Logger.InfoContext(ctx, "menu content retrieved from menu_versions", "menuID", menuID, "versionID", targetVersionID)
 		return menu, nil

@@ -30,23 +30,12 @@
     }
   });
   
-  // Leer query param ?template= para seleccionar el template
-  let templateName = $state('hero'); // Por defecto: hero (original)
-  
-  onMount(() => {
-    initLanguage();
-    
-    // Leer query param de la URL
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const templateParam = params.get('template');
-      if (templateParam) {
-        templateName = templateParam.toLowerCase();
-      }
-    }
-  });
-  
-  // Seleccionar el componente template según el query param
+  // Template desde presentationStyle del contrato (HERO | MODERN). Por defecto HERO.
+  // El query param ?template= está deprecado; se ignora.
+  const templateName = $derived(
+    restaurantData?.presentationStyle === 'MODERN' ? 'modern' : 'hero'
+  );
+
   const TemplateComponent = $derived(() => {
     switch (templateName) {
       case 'modern':
@@ -56,8 +45,12 @@
         return HeroTemplate;
     }
   });
-  
+
   const CurrentTemplate = $derived(TemplateComponent());
+
+  onMount(() => {
+    initLanguage();
+  });
 </script>
 
 <MetaTags />
@@ -86,7 +79,7 @@
       <div class="max-w-4xl mx-auto space-y-8 sm:space-y-10">
         <!-- Carta (Menú) - Al inicio -->
         <div>
-          <CartaSection carta={restaurantData.menu || []} />
+          <CartaSection carta={restaurantData.menu || []} templateName={templateName} />
         </div>
         
         <!-- Horarios de atención y Contacto - Solo para template hero (no modern) -->

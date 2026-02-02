@@ -3,7 +3,7 @@
   import { t } from '../../lib/useLanguage';
   import { getBaseText } from '../../lib/multilingual';
   
-  const { carta = [], className = '' } = $props();
+  const { carta = [], templateName = 'hero', className = '' } = $props();
   
   // Filtrar secciones que tengan contenido (título y al menos un item con contenido)
   const seccionesConContenido = $derived.by(() => {
@@ -103,7 +103,7 @@
 <section class={`space-y-10 sm:space-y-12 ${className}`}>
   {#if tieneElementos}
     {#each seccionesConContenido as section}
-      <MenuSection {section} />
+      <MenuSection {section} useModernLayout={templateName === 'modern'} />
     {/each}
   {:else}
     <p class="text-base sm:text-lg text-gray-500">

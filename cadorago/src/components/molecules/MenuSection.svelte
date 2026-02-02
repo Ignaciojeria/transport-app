@@ -12,11 +12,11 @@
     useModernLayout = false
   } = $props();
   
-  // Detectar si estamos en template modern por la clase del body o query param
+  // Template modern: viene del contrato (presentationStyle) vía prop useModernLayout.
+  // El query param ?template= está deprecado.
   const isModernTemplate = $derived(() => {
     if (typeof window === 'undefined') return useModernLayout;
-    const params = new URLSearchParams(window.location.search);
-    return useModernLayout || params.get('template') === 'modern' || (typeof document !== 'undefined' && document.body.classList.contains('modern-template'));
+    return useModernLayout || (typeof document !== 'undefined' && document.body.classList.contains('modern-template'));
   });
   
   const sectionTitle = $derived(getMultilingualText(section.title));

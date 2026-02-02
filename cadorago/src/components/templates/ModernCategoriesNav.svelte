@@ -41,7 +41,7 @@
     border-bottom: 1px solid var(--border-light);
     overflow-x: auto;
     position: sticky;
-    top: 0;
+    top: 3.25rem; /* Debajo del header sticky (aprox. altura de la topbar) */
     z-index: 90;
     margin-top: 0;
   }
@@ -107,6 +107,7 @@
   @media (max-width: 768px) {
     .categories-nav {
       padding: 1rem 0.5rem;
+      top: 4.75rem; /* Debajo de la topbar en móvil (evitar que tape las secciones) */
     }
 
     .categories-container {

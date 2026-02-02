@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 
-	"cloud.google.com/go/storage"
 	"micartapro/app/adapter/out/agents"
 	"micartapro/app/adapter/out/imagegenerator"
 	"micartapro/app/adapter/out/supabaserepo"
@@ -16,6 +15,8 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 	"strings"
+
+	"cloud.google.com/go/storage"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/google/uuid"
@@ -104,6 +105,7 @@ func NewOnMenuInteractionRequest(
 				return "", fmt.Errorf("error al mapear a MenuCreateRequest: %w", err)
 			}
 			createRequest.ID = input.MenuID
+			createRequest.EnsurePresentationStyleDefault()
 
 			// Pre-firmar URLs y asignar placeholders para imágenes que se generarán de forma asíncrona
 			// Esto permite guardar el menú rápidamente sin esperar la generación de imágenes
@@ -246,7 +248,7 @@ func assignImageURLToMenuItem(
 ) {
 	// Normalizar URL antes de asignar
 	normalizedURL := events.NormalizeGCSURL(imageURL)
-	
+
 	// Manejar IDs especiales
 	if menuItemID == "footer" {
 		createRequest.FooterImage = normalizedURL
@@ -451,7 +453,7 @@ func updateMenuWithImageURLs(
 	for menuItemID, imageURL := range imageURLs {
 		// Normalizar URL antes de asignar
 		normalizedURL := events.NormalizeGCSURL(imageURL)
-		
+
 		// Manejar IDs especiales para imágenes del menú
 		if menuItemID == "footer" {
 			createRequest.FooterImage = normalizedURL

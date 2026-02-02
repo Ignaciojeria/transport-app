@@ -74,8 +74,9 @@ func NewOnUserMenusInsertedWebhook(
 		}
 
 		menuCreateRequest := events.MenuCreateRequest{
-			ID:         wh.Record.MenuID,
-			CoverImage: "https://storage.googleapis.com/micartapro-menus/core/micartaprov3.webp",
+			ID:                wh.Record.MenuID,
+			PresentationStyle: events.MenuStyleHero,
+			CoverImage:        "https://storage.googleapis.com/micartapro-menus/core/micartaprov3.webp",
 			BusinessInfo: events.BusinessInfo{
 				BusinessName:  "cadorago",
 				Whatsapp:      "+56957857558",

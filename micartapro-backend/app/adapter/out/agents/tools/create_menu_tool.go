@@ -36,51 +36,56 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 					// ¡CLAVE! Usamos el Schema de Categoría para cada ítem del array.
 					Items: menuCategorySchema,
 				},
-				// 3. coverImage: Imagen de portada del menú
+				// 3. presentationStyle: Estilo de presentación del menú (obligatorio, por defecto HERO)
+				"presentationStyle": {
+					Type:        genai.TypeString,
+					Enum:        []string{"HERO", "MODERN"},
+					Description: "Estilo de presentación del menú. OBLIGATORIO. Valores: HERO (portada clásica con imagen destacada) o MODERN (diseño moderno). Por defecto usar HERO si el usuario no especifica otro. Al copiar del [MENU_ACTUAL], preserva el valor existente.",
+				},
+				// 5. coverImage: Imagen de portada del menú
 				"coverImage": {
 					Type:        genai.TypeString,
 					Description: "URL de la imagen de portada del menú digital.",
 				},
-				// 4. footerImage: Imagen del footer/logo del menú
+				// 6. footerImage: Imagen del footer/logo del menú
 				"footerImage": {
 					Type:        genai.TypeString,
 					Description: "URL de la imagen del footer o logo del menú digital.",
 				},
-				// 5. deliveryOptions: Opciones de envío/retiro disponibles
+				// 7. deliveryOptions: Opciones de envío/retiro disponibles
 				"deliveryOptions": {
 					Type:        genai.TypeArray,
 					Description: "Lista opcional de opciones de envío/retiro disponibles (PICKUP o DELIVERY).",
 					Items:       schema.GetDeliveryOptionSchema(),
 				},
-				// 6. coverImageGenerationRequest: Solicitud de generación de imagen de portada
+				// 8. coverImageGenerationRequest: Solicitud de generación de imagen de portada
 				"coverImageGenerationRequest": {
 					Type:        genai.TypeObject,
 					Description: "Solicitud opcional de generación de imagen de portada. Solo incluir cuando el usuario solicita explícitamente generar o cambiar la imagen de portada. La imagen se generará con aspect ratio 16:9 (horizontalmente larga y verticalmente corta, tipo foto portada LinkedIn).",
 					Properties:  schema.GetCoverImageGenerationRequestSchema().Properties,
 					Required:    schema.GetCoverImageGenerationRequestSchema().Required,
 				},
-				// 7. coverImageEditionRequest: Solicitud de edición de imagen de portada
+				// 9. coverImageEditionRequest: Solicitud de edición de imagen de portada
 				"coverImageEditionRequest": {
 					Type:        genai.TypeObject,
 					Description: "Solicitud opcional de edición de imagen de portada. Solo incluir cuando el usuario solicita explícitamente editar, mejorar o modificar la imagen de portada existente. La URL de referencia puede venir del campo 'coverImage' del menú actual o de una URL proporcionada por el usuario en su solicitud o en [FOTO_ADJUNTA]. El agente debe proporcionar la URL completa de la imagen de referencia que se utilizará como base para la edición. La imagen será horizontalmente larga y verticalmente corta, tipo foto portada LinkedIn (aspect ratio 16:9).",
 					Properties:  schema.GetCoverImageEditionRequestSchema().Properties,
 					Required:    schema.GetCoverImageEditionRequestSchema().Required,
 				},
-				// 8. imageGenerationRequests: Solicitudes de generación de imágenes
+				// 10. imageGenerationRequests: Solicitudes de generación de imágenes
 				"imageGenerationRequests": {
 					Type:        genai.TypeArray,
 					Description: "Lista opcional de solicitudes de generación de imágenes para items o sides que requieren imagen. Solo incluir cuando el usuario solicita explícitamente generar o cambiar una imagen.",
 					Items:       schema.GetImageGenerationRequestSchema(),
 				},
-				// 9. imageEditionRequests: Solicitudes de edición de imágenes
+				// 11. imageEditionRequests: Solicitudes de edición de imágenes
 				"imageEditionRequests": {
 					Type:        genai.TypeArray,
 					Description: "Lista opcional de solicitudes de edición de imágenes para items o sides que requieren modificar una imagen existente. Solo incluir cuando el usuario solicita explícitamente editar, mejorar o modificar una imagen existente. La URL de referencia puede venir del campo 'photoUrl' del elemento correspondiente en el menú actual, del campo 'coverImage'/'footerImage' si es para imágenes especiales, o de una URL proporcionada por el usuario en su solicitud o en [FOTO_ADJUNTA]. El agente debe proporcionar la URL completa de la imagen de referencia que se utilizará como base para la edición.",
 					Items:       schema.GetImageEditionRequestSchema(),
 				},
 			},
-			// Los requeridos son las estructuras complejas que encapsulan todo
-			//Required: []string{"businessInfo", "menu"},
+			Required: []string{"presentationStyle"},
 		},
 	}
 }

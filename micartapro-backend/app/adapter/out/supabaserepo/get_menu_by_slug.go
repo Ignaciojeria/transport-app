@@ -124,6 +124,7 @@ func NewGetMenuBySlug(supabase *supabase.Client) GetMenuBySlug {
 
 		// Asegurar que el ID del menú esté establecido
 		menu.ID = menuID
+		menu.EnsurePresentationStyleDefault()
 
 		return menu, nil
 	}

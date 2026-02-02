@@ -14,6 +14,7 @@
   );
 </script>
 
+<!-- Topbar completa sticky al hacer scroll -->
 <header class="modern-header">
   <div class="header-content">
     {#if businessName}
@@ -62,8 +63,9 @@
   .modern-header {
     background-color: var(--white);
     border-bottom: 1px solid var(--border-light);
-    padding: 1rem 1rem;
-    position: relative;
+    padding: 0.4rem 0.6rem;
+    position: sticky;
+    top: 0;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
@@ -74,7 +76,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 2rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
   }
 
@@ -91,9 +93,9 @@
     margin: 0;
     display: flex;
     justify-content: flex-end;
-    gap: 1.5rem;
+    gap: 0.6rem;
     flex-wrap: wrap;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
   }
 
   .header-contact a {
@@ -111,7 +113,7 @@
 
   .language-selector {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.3rem;
     align-items: center;
   }
 
@@ -119,8 +121,8 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 1.2rem;
-    padding: 0.3rem 0.6rem;
+    font-size: 1.25rem;
+    padding: 0.2rem 0.4rem;
     border-radius: 4px;
     transition: background-color 0.3s;
   }
@@ -135,19 +137,28 @@
   }
 
   @media (max-width: 768px) {
+    .modern-header {
+      padding: 0.35rem 0.5rem;
+    }
+
     .header-content {
       flex-direction: column;
-      gap: 0.8rem;
+      gap: 0.4rem;
     }
 
     .header-title {
-      font-size: 1.3rem;
+      font-size: 1.35rem;
     }
 
     .header-contact {
       justify-content: center;
-      gap: 1rem;
-      font-size: 0.85rem;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .lang-btn {
+      font-size: 1.15rem;
+      padding: 0.15rem 0.35rem;
     }
   }
 </style>
