@@ -1,7 +1,7 @@
 <script>
   import MenuItem from './MenuItem.svelte';
   import ModernMenuItem from '../templates/ModernMenuItem.svelte';
-  import { getMultilingualText } from '../../lib/multilingual';
+  import { getMultilingualText, getBaseText } from '../../lib/multilingual';
   
   const { 
     section = {
@@ -20,9 +20,11 @@
   });
   
   const sectionTitle = $derived(getMultilingualText(section.title));
+  // Slug para enlace y scroll desde la nav de categorías (mismo criterio que ModernTemplate)
+  const sectionId = $derived(getBaseText(section.title).toLowerCase().replace(/\s+/g, '-'));
 </script>
 
-<div class={`mb-8 sm:mb-10 ${className}`}>
+<div id={sectionId || undefined} class={`mb-8 sm:mb-10 section-anchor ${className}`}>
   <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-5 {isModernTemplate() ? 'menu-category-title' : ''}">
     {sectionTitle}
   </h2>
@@ -43,3 +45,9 @@
   {/if}
 </div>
 
+<style>
+  /* Al hacer scroll desde la nav de categorías, dejar espacio para header + nav sticky */
+  :global(.modern-template) .section-anchor {
+    scroll-margin-top: 10rem;
+  }
+</style>

@@ -3,7 +3,7 @@
   import { t } from '../../lib/useLanguage';
   import { getBaseText } from '../../lib/multilingual';
   
-  const { carta = [], templateName = 'hero', className = '' } = $props();
+  const { carta = [], templateName = 'modern', className = '' } = $props();
   
   // Filtrar secciones que tengan contenido (título y al menos un item con contenido)
   const seccionesConContenido = $derived.by(() => {

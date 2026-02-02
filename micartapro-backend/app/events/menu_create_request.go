@@ -273,18 +273,18 @@ func (c MenuCreateRequest) ToCloudEvent(source string) cloudevents.Event {
 	return event
 }
 
-// EffectivePresentationStyle retorna el estilo de presentación efectivo; si está vacío retorna HERO por defecto.
+// EffectivePresentationStyle retorna el estilo de presentación efectivo; si está vacío retorna MODERN por defecto.
 func (c *MenuCreateRequest) EffectivePresentationStyle() MenuPresentationStyle {
 	if c == nil || c.PresentationStyle == "" {
-		return MenuStyleHero
+		return MenuStyleModern
 	}
 	return c.PresentationStyle
 }
 
-// EnsurePresentationStyleDefault asigna HERO a PresentationStyle si está vacío (útil tras deserializar JSON antiguo).
+// EnsurePresentationStyleDefault asigna MODERN a PresentationStyle si está vacío (útil tras deserializar JSON antiguo).
 func (c *MenuCreateRequest) EnsurePresentationStyleDefault() {
 	if c != nil && c.PresentationStyle == "" {
-		c.PresentationStyle = MenuStyleHero
+		c.PresentationStyle = MenuStyleModern
 	}
 }
 

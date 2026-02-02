@@ -38,6 +38,17 @@
     selectedCategory = category;
   }
   
+  // Al elegir una categoría, hacer scroll a esa sección; "Todos" lleva al inicio del menú
+  $effect(() => {
+    const cat = selectedCategory;
+    if (!cat || typeof document === 'undefined') return;
+    const targetId = cat === 'all' ? categories()[0]?.id : cat;
+    const el = targetId ? document.getElementById(targetId) : null;
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+  
   // Agregar clase al body para que los componentes puedan detectar el template moderno
   onMount(() => {
     if (typeof document !== 'undefined') {

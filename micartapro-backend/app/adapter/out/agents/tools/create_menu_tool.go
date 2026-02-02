@@ -36,11 +36,11 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 					// ¡CLAVE! Usamos el Schema de Categoría para cada ítem del array.
 					Items: menuCategorySchema,
 				},
-				// 3. presentationStyle: Estilo de presentación del menú (obligatorio, por defecto HERO)
+				// 3. presentationStyle: Estilo de presentación del menú (obligatorio, por defecto MODERN)
 				"presentationStyle": {
 					Type:        genai.TypeString,
 					Enum:        []string{"HERO", "MODERN"},
-					Description: "Estilo de presentación del menú. OBLIGATORIO. Valores: HERO (portada clásica con imagen destacada) o MODERN (diseño moderno). Por defecto usar HERO si el usuario no especifica otro. Al copiar del [MENU_ACTUAL], preserva el valor existente.",
+					Description: "Estilo de presentación del menú. OBLIGATORIO. Valores: HERO (portada clásica con imagen destacada) o MODERN (diseño moderno). Por defecto usar MODERN si el usuario no especifica otro. Al copiar del [MENU_ACTUAL], preserva el valor existente.",
 				},
 				// 5. coverImage: Imagen de portada del menú
 				"coverImage": {

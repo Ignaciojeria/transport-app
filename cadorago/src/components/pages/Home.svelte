@@ -30,10 +30,10 @@
     }
   });
   
-  // Template desde presentationStyle del contrato (HERO | MODERN). Por defecto HERO.
+  // Template desde presentationStyle del contrato (HERO | MODERN). Por defecto MODERN.
   // El query param ?template= está deprecado; se ignora.
   const templateName = $derived(
-    restaurantData?.presentationStyle === 'MODERN' ? 'modern' : 'hero'
+    (restaurantData?.presentationStyle ?? 'MODERN') === 'HERO' ? 'hero' : 'modern'
   );
 
   const TemplateComponent = $derived(() => {
