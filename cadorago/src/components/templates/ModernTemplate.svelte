@@ -33,15 +33,18 @@
   });
   
   let selectedCategory = $state('all');
+  // Solo hacer scroll cuando el usuario cambie de categoría, no al cargar (evita interferir con el padre si estamos en iframe/preview)
+  let skipNextScroll = $state(true);
   
   function handleCategoryChange(category) {
+    skipNextScroll = false;
     selectedCategory = category;
   }
   
   // Al elegir una categoría, hacer scroll a esa sección; "Todos" lleva al inicio del menú
   $effect(() => {
     const cat = selectedCategory;
-    if (!cat || typeof document === 'undefined') return;
+    if (skipNextScroll || !cat || typeof document === 'undefined') return;
     const targetId = cat === 'all' ? categories()[0]?.id : cat;
     const el = targetId ? document.getElementById(targetId) : null;
     if (el) {
