@@ -8,6 +8,7 @@
   import { getPriceFromPricing } from '../../services/menuData.js';
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
   import { getSlugFromUrl, getUrlParams } from '../../services/restaurantData.js';
+  import { getBaseText, getMultilingualText } from '../../lib/multilingual';
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currentLanguage = $derived($language);
@@ -92,16 +93,18 @@
   
   function handleQuantityChange(cartItem, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
+    const itemTitleBase = getBaseText(cartItem.title);
     const itemKey = cartItem.acompanamientoId 
-      ? `${cartItem.title}_${cartItem.acompanamientoId}` 
-      : cartItem.title;
+      ? `${itemTitleBase}_${cartItem.acompanamientoId}` 
+      : itemTitleBase;
     cartStore.updateQuantity(itemKey, quantity);
   }
   
   function handleRemoveItem(cartItem) {
+    const itemTitleBase = getBaseText(cartItem.title);
     const itemKey = cartItem.acompanamientoId 
-      ? `${cartItem.title}_${cartItem.acompanamientoId}` 
-      : cartItem.title;
+      ? `${itemTitleBase}_${cartItem.acompanamientoId}` 
+      : itemTitleBase;
     cartStore.removeItemByKey(itemKey);
   }
   
@@ -446,7 +449,7 @@
         unitPrice,
         totalPrice,
         pricingMode,
-        productName: item.title + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
+        productName: getBaseText(item.title) + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
         station: item.station ?? ''
       };
     });
@@ -763,14 +766,14 @@
                 <div class="flex justify-between items-start gap-4 mb-3">
                   <div class="flex-1">
                     <h3 class="text-base sm:text-lg font-bold text-gray-800 mb-1">
-                      {cartItem.title}
+                      {getMultilingualText(cartItem.title)}
                       {#if cartItem.acompanamiento}
                         <span class="text-sm font-normal text-gray-600">({cartItem.acompanamiento})</span>
                       {/if}
                     </h3>
-                    {#if cartItem.description}
+                    {#if getMultilingualText(cartItem.description)}
                       <p class="text-xs sm:text-sm text-gray-600">
-                        {cartItem.description}
+                        {getMultilingualText(cartItem.description)}
                       </p>
                     {/if}
                   </div>
@@ -785,7 +788,7 @@
                 
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-2 sm:gap-3">
-                    <label for="quantity-{cartItem.title}" class="text-xs sm:text-sm text-gray-700 font-medium">
+                    <label for="quantity-{getBaseText(cartItem.title)}" class="text-xs sm:text-sm text-gray-700 font-medium">
                       {$t.cart.quantity}
                     </label>
                     {#if cartItem.customQuantity && cartItem.pricing}
@@ -794,7 +797,7 @@
                       </span>
                     {:else}
                       <input
-                        id="quantity-{cartItem.title}"
+                        id="quantity-{getBaseText(cartItem.title)}"
                         type="number"
                         min="1"
                         value={cartItem.cantidad}

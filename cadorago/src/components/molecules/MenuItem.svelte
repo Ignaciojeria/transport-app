@@ -5,6 +5,7 @@
   import QuantitySelector from './QuantitySelector.svelte';
   import { cartStore } from '../../stores/cartStore.svelte.js';
   import { getPriceFromPricing, getPricingLimits } from '../../services/menuData.js';
+  import { getMultilingualText, getBaseText } from '../../lib/multilingual';
   
   const { 
     item = {
@@ -57,14 +58,23 @@
       : (item.price || (item.pricing?.pricePerUnit || 0))
   );
   
+  // Obtener textos multiidioma
+  const itemTitleBase = $derived(getBaseText(item.title));
+  
   // Verificar si el item está en el carrito (necesita verificar por clave única)
   const isInCart = $derived.by(() => {
     const items = cartStore.items;
-    const matchingItems = items.filter(i => i.title === item.title);
+    const matchingItems = items.filter(i => {
+      const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
+      return iTitle === itemTitleBase;
+    });
     return matchingItems.reduce((sum, i) => sum + (i.customQuantity || i.cantidad), 0) > 0;
   });
   
-  const cartItems = $derived.by(() => cartStore.items.filter(i => i.title === item.title));
+  const cartItems = $derived.by(() => cartStore.items.filter(i => {
+    const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
+    return iTitle === itemTitleBase;
+  }));
   const totalQuantity = $derived.by(() => {
     return cartItems.reduce((sum, i) => {
       // Para items con cantidad personalizada, sumar la cantidad
@@ -128,12 +138,13 @@
   
   function handleDecrement(event) {
     event.stopPropagation();
-    // Si tiene múltiples variantes en el carrito, eliminar la última
-    if (cartItems.length > 0) {
-      const lastItem = cartItems[cartItems.length - 1];
-      const itemKey = lastItem.acompanamientoId 
-        ? `${lastItem.title}_${lastItem.acompanamientoId}` 
-        : lastItem.title;
+      // Si tiene múltiples variantes en el carrito, eliminar la última
+      if (cartItems.length > 0) {
+        const lastItem = cartItems[cartItems.length - 1];
+        const lastItemTitle = typeof lastItem.title === 'string' ? lastItem.title : lastItem.title?.base || '';
+        const itemKey = lastItem.acompanamientoId 
+          ? `${lastItemTitle}_${lastItem.acompanamientoId}` 
+          : lastItemTitle;
       
       if (lastItem.cantidad > 1) {
         cartStore.updateQuantity(itemKey, lastItem.cantidad - 1);
@@ -257,7 +268,7 @@
         {#if item.photoUrl && !itemImageError}
           <img 
             src={item.photoUrl} 
-            alt={item.title}
+            alt={itemTitleBase}
             class="w-full h-full object-cover"
             onerror={() => {
               itemImageError = true
@@ -331,11 +342,11 @@
       onkeydown={(e) => e.stopPropagation()}
     >
       <h3 id="quantity-modal-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-        {item.title}
+        {getMultilingualText(item.title)}
       </h3>
-      {#if item.description}
+      {#if getMultilingualText(item.description)}
         <p class="text-sm text-gray-600 mb-4 sm:mb-6">
-          {item.description}
+          {getMultilingualText(item.description)}
         </p>
       {/if}
       
@@ -393,11 +404,11 @@
         <!-- Información del item -->
         <div class="mb-6">
           <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
-            {item.title}
+            {getMultilingualText(item.title)}
           </h4>
-          {#if item.description}
+          {#if getMultilingualText(item.description)}
             <p class="text-sm sm:text-base text-gray-600">
-              {item.description}
+              {getMultilingualText(item.description)}
             </p>
           {/if}
         </div>
@@ -414,13 +425,13 @@
                 <!-- Imagen del acompañamiento (estilo Uber Eats) -->
                 <div class="flex-shrink-0">
                   <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {#if acompanamiento.photoUrl && !sideImageErrors[acompanamiento.name]}
+                    {#if acompanamiento.photoUrl && !sideImageErrors[getBaseText(acompanamiento.name)]}
                       <img 
                         src={acompanamiento.photoUrl} 
-                        alt={acompanamiento.name}
+                        alt={getMultilingualText(acompanamiento.name)}
                         class="w-full h-full object-cover"
                         onerror={() => {
-                          sideImageErrors[acompanamiento.name] = true
+                          sideImageErrors[getBaseText(acompanamiento.name)] = true
                         }}
                       />
                     {:else}
@@ -434,7 +445,7 @@
                 <div class="flex-1 flex justify-between items-center gap-2 flex-wrap">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="font-medium text-gray-800 text-base sm:text-lg">
-                      {acompanamiento.name}
+                      {getMultilingualText(acompanamiento.name)}
                     </span>
                     {#if showStation && acompanamiento.station === 'KITCHEN'}
                       <span class="text-xs font-medium px-2 py-0.5 rounded bg-amber-100 text-amber-800">Cocina</span>

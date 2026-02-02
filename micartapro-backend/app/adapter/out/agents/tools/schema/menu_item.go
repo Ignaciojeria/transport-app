@@ -12,12 +12,52 @@ func GetMenuItemSchema() *genai.Schema {
 				Description: "Identificador semántico único del item en formato kebab-case (ej. 'empanadas-pino', 'pizza-margherita').",
 			},
 			"title": {
-				Type:        genai.TypeString,
-				Description: "Nombre del producto (ej. 'Hamburguesa Clásica').",
+				Type:        genai.TypeObject,
+				Description: "Título del producto en formato multiidioma con base y traducciones.",
+				Properties: map[string]*genai.Schema{
+					"base": {
+						Type:        genai.TypeString,
+						Description: "Texto base del título (idioma principal, generalmente español).",
+					},
+					"languages": {
+						Type:        genai.TypeObject,
+						Description: "Traducciones del título en diferentes idiomas.",
+						Properties: map[string]*genai.Schema{
+							"es": {Type: genai.TypeString, Description: "Título en español."},
+							"en": {Type: genai.TypeString, Description: "Título en inglés."},
+							"pt": {Type: genai.TypeString, Description: "Título en portugués."},
+						},
+					},
+				},
+				Required: []string{"base", "languages"},
 			},
 			"description": {
-				Type:        genai.TypeString,
-				Description: "Breve descripción del producto. Puede estar vacío.",
+				Type:        genai.TypeObject,
+				Description: "Descripción del producto en formato multiidioma con base y traducciones. Opcional.",
+				Properties: map[string]*genai.Schema{
+					"base": {
+						Type:        genai.TypeString,
+						Description: "Texto base de la descripción (idioma principal, generalmente español).",
+					},
+					"languages": {
+						Type:        genai.TypeObject,
+						Description: "Traducciones de la descripción en diferentes idiomas.",
+						Properties: map[string]*genai.Schema{
+							"es": {Type: genai.TypeString, Description: "Descripción en español."},
+							"en": {Type: genai.TypeString, Description: "Descripción en inglés."},
+							"pt": {Type: genai.TypeString, Description: "Descripción en portugués."},
+						},
+					},
+				},
+				Required: []string{"base", "languages"},
+			},
+			"foodAttributes": {
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeString,
+					Enum: []string{"GLUTEN", "SEAFOOD", "NUTS", "DAIRY", "EGGS", "SOY", "VEGAN", "VEGETARIAN", "SPICY", "ALCOHOL"},
+				},
+				Description: "Atributos alimentarios opcionales: alérgenos (GLUTEN, SEAFOOD, NUTS, DAIRY, EGGS, SOY), dieta (VEGAN, VEGETARIAN), SPICY, ALCOHOL.",
 			},
 			"sides": {
 				Type: genai.TypeArray,

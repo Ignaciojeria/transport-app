@@ -18,9 +18,13 @@
     menu.forEach(section => {
       if (section?.title && section?.items?.length > 0) {
         const firstItem = section.items[0];
-        cats.set(section.title, {
-          id: section.title.toLowerCase().replace(/\s+/g, '-'),
-          title: section.title,
+        // Obtener el título base para el ID
+        const titleBase = typeof section.title === 'string' 
+          ? section.title 
+          : section.title?.base || '';
+        cats.set(titleBase, {
+          id: titleBase.toLowerCase().replace(/\s+/g, '-'),
+          title: section.title, // Mantener estructura completa para multiidioma
           image: firstItem?.photoUrl || ''
         });
       }

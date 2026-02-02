@@ -102,21 +102,25 @@ export function getPricingLimits(pricing) {
 export function adaptMenuData(menuData) {
   if (!menuData) return null;
   
-  // Adaptar el menú: convertir MenuCategory[] a formato esperado
+  // Adaptar el menú: preservar estructura multiidioma (no convertir a strings)
   const adaptedMenu = (menuData.menu || []).map(category => ({
-    title: category.title || '',
+    title: category.title ?? '', // Preservar estructura multiidioma o string tal cual viene
     items: (category.items || []).map(item => ({
-      title: item.title || '',
-      description: item.description || '',
+      id: item.id ?? '',
+      title: item.title ?? '', // Preservar estructura multiidioma o string tal cual viene
+      description: item.description ?? '', // Preservar estructura multiidioma o string tal cual viene
+      foodAttributes: item.foodAttributes ?? [], // Preservar atributos alimentarios
       price: getPriceFromPricing(item.pricing),
       pricing: item.pricing, // Mantener el pricing original para uso futuro
-      photoUrl: item.photoUrl || '', // Incluir photoUrl del item
+      photoUrl: item.photoUrl ?? '', // Incluir photoUrl del item
       station: item.station ?? null, // KITCHEN | BAR para vista y pedido
       sides: (item.sides || []).map(side => ({
-        name: side.name || '',
+        id: side.id ?? '',
+        name: side.name ?? '', // Preservar estructura multiidioma o string tal cual viene
+        foodAttributes: side.foodAttributes ?? [], // Preservar atributos alimentarios
         price: getPriceFromPricing(side.pricing),
         pricing: side.pricing, // Mantener el pricing original
-        photoUrl: side.photoUrl || '', // Incluir photoUrl del side
+        photoUrl: side.photoUrl ?? '', // Incluir photoUrl del side
         station: side.station ?? null // KITCHEN | BAR
       }))
     }))

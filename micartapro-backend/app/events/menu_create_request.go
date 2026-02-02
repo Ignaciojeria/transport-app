@@ -56,30 +56,75 @@ type Pricing struct {
 }
 
 /*
+	MULTILINGUAL TEXT
+*/
+
+type MultilingualText struct {
+	Base      string            `json:"base"`
+	Languages map[string]string `json:"languages"`
+}
+
+// GetText retorna el texto en el idioma especificado, o el texto base si no está disponible
+func (m MultilingualText) GetText(lang string) string {
+	if m.Languages != nil {
+		if text, ok := m.Languages[lang]; ok && text != "" {
+			return text
+		}
+	}
+	return m.Base
+}
+
+// GetBase retorna el texto base (idioma principal)
+func (m MultilingualText) GetBase() string {
+	return m.Base
+}
+
+/*
+	FOOD ATTRIBUTES
+*/
+
+type FoodAttribute string
+
+const (
+	FoodGluten     FoodAttribute = "GLUTEN"
+	FoodSeafood    FoodAttribute = "SEAFOOD"
+	FoodNuts       FoodAttribute = "NUTS"
+	FoodDairy      FoodAttribute = "DAIRY"
+	FoodEggs       FoodAttribute = "EGGS"
+	FoodSoy        FoodAttribute = "SOY"
+	FoodVegan      FoodAttribute = "VEGAN"
+	FoodVegetarian FoodAttribute = "VEGETARIAN"
+	FoodSpicy      FoodAttribute = "SPICY"
+	FoodAlcohol    FoodAttribute = "ALCOHOL"
+)
+
+/*
 	MENU MODELS
 */
 
 type Side struct {
-	ID       string  `json:"id"`
-	Name     string  `json:"name"`
-	Pricing  Pricing `json:"pricing"`
-	PhotoUrl string  `json:"photoUrl,omitempty"`
-	Station  Station `json:"station,omitempty"`
+	ID             string           `json:"id"`
+	Name           MultilingualText `json:"name"`
+	FoodAttributes []FoodAttribute  `json:"foodAttributes,omitempty"`
+	Pricing        Pricing          `json:"pricing"`
+	PhotoUrl       string           `json:"photoUrl,omitempty"`
+	Station        Station          `json:"station,omitempty"`
 }
 
 type MenuItem struct {
-	ID          string  `json:"id"`
-	Title       string  `json:"title"`
-	Description string  `json:"description,omitempty"`
-	Sides       []Side  `json:"sides,omitempty"`
-	Pricing     Pricing `json:"pricing"`
-	PhotoUrl    string  `json:"photoUrl,omitempty"`
-	Station     Station `json:"station,omitempty"`
+	ID             string           `json:"id"`
+	Title          MultilingualText `json:"title"`
+	Description    MultilingualText `json:"description,omitempty"`
+	FoodAttributes []FoodAttribute  `json:"foodAttributes,omitempty"`
+	Sides          []Side           `json:"sides,omitempty"`
+	Pricing        Pricing          `json:"pricing"`
+	PhotoUrl       string           `json:"photoUrl,omitempty"`
+	Station        Station          `json:"station,omitempty"`
 }
 
 type MenuCategory struct {
-	Title string     `json:"title"`
-	Items []MenuItem `json:"items"`
+	Title MultilingualText `json:"title"`
+	Items []MenuItem       `json:"items"`
 }
 
 /*

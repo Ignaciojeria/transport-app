@@ -1,4 +1,6 @@
 <script>
+  import { getMultilingualText } from '../../lib/multilingual';
+  
   let activeCategory = $state('all');
   
   const { categories = [], onCategoryChange } = $props();
@@ -26,7 +28,7 @@
         onclick={() => handleCategoryClick(category.id)}
         style={category.image ? `background-image: url('${category.image}');` : ''}
       >
-        <span>{category.title}</span>
+        <span>{getMultilingualText(category.title)}</span>
       </button>
     {/each}
   </div>

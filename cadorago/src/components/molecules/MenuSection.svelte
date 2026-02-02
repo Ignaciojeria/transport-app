@@ -1,6 +1,7 @@
 <script>
   import MenuItem from './MenuItem.svelte';
   import ModernMenuItem from '../templates/ModernMenuItem.svelte';
+  import { getMultilingualText } from '../../lib/multilingual';
   
   const { 
     section = {
@@ -17,11 +18,13 @@
     const params = new URLSearchParams(window.location.search);
     return useModernLayout || params.get('template') === 'modern' || (typeof document !== 'undefined' && document.body.classList.contains('modern-template'));
   });
+  
+  const sectionTitle = $derived(getMultilingualText(section.title));
 </script>
 
 <div class={`mb-8 sm:mb-10 ${className}`}>
   <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-5 {isModernTemplate() ? 'menu-category-title' : ''}">
-    {section.title}
+    {sectionTitle}
   </h2>
   {#if isModernTemplate()}
     <!-- Layout moderno: grid con cards estilo chef -->

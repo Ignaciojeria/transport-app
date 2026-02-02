@@ -1,14 +1,17 @@
 <script>
-  /** @type {string} - Descripción del item */
-  export let description = '';
+  import { getMultilingualText } from '../../lib/multilingual';
   
-  /** @type {string} - Additional custom classes */
-  export let className = '';
+  const { 
+    description = '', 
+    className = '' 
+  } = $props();
+  
+  const displayDescription = $derived(getMultilingualText(description));
 </script>
 
-{#if description}
+{#if displayDescription}
   <p class={`text-base sm:text-lg lg:text-xl text-gray-600 mt-2 sm:mt-3 ${className}`}>
-    {description}
+    {displayDescription}
   </p>
 {/if}
 

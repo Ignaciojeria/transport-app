@@ -1,11 +1,17 @@
 <script>
   import { cartStore } from '../../stores/cartStore.svelte.js';
   import { getPriceFromPricing } from '../../services/menuData.js';
+  import { getMultilingualText, getBaseText } from '../../lib/multilingual';
   import { t } from '../../lib/useLanguage';
   
   const { item } = $props();
   
   let itemImageError = $state(false);
+  
+  // Obtener textos multiidioma
+  const itemTitle = $derived(getMultilingualText(item.title));
+  const itemDescription = $derived(getMultilingualText(item.description));
+  const itemTitleBase = $derived(getBaseText(item.title));
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
   const pricingMode = $derived(item.pricing?.mode || 'UNIT');
@@ -24,7 +30,10 @@
   
   const isInCart = $derived.by(() => {
     const items = cartStore.items;
-    const matchingItems = items.filter(i => i.title === item.title);
+    const matchingItems = items.filter(i => {
+      const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
+      return iTitle === itemTitleBase;
+    });
     return matchingItems.reduce((sum, i) => sum + (i.customQuantity || i.cantidad), 0) > 0;
   });
   
@@ -40,7 +49,7 @@
     }
     
     cartStore.addItem({
-      title: item.title,
+      title: item.title, // Mantener estructura completa para compatibilidad
       precio: displayPrice,
       cantidad: 1,
       photoUrl: item.photoUrl,
@@ -48,38 +57,33 @@
     });
   }
   
-  // Mapeo de alérgenos comunes con traducciones
-  const allergenMap = $derived(() => ({
-    'gluten': { icon: '🌾', label: $t.menu.allergens.gluten, key: 'gluten' },
-    'glúten': { icon: '🌾', label: $t.menu.allergens.gluten, key: 'gluten' },
-    'gluten': { icon: '🌾', label: $t.menu.allergens.gluten, key: 'gluten' },
-    'ovo': { icon: '🥚', label: $t.menu.allergens.egg, key: 'egg' },
-    'egg': { icon: '🥚', label: $t.menu.allergens.egg, key: 'egg' },
-    'huevo': { icon: '🥚', label: $t.menu.allergens.egg, key: 'egg' },
-    'lactose': { icon: '🧀', label: $t.menu.allergens.lactose, key: 'lactose' },
-    'lácteos': { icon: '🧀', label: $t.menu.allergens.lactose, key: 'lactose' },
-    'lactosa': { icon: '🧀', label: $t.menu.allergens.lactose, key: 'lactose' },
-    'frutos do mar': { icon: '🦐', label: $t.menu.allergens.seafood, key: 'seafood' },
-    'seafood': { icon: '🦐', label: $t.menu.allergens.seafood, key: 'seafood' },
-    'mariscos': { icon: '🦐', label: $t.menu.allergens.seafood, key: 'seafood' }
+  // Mapeo de foodAttributes con traducciones e iconos
+  const foodAttributeMap = $derived(() => ({
+    'GLUTEN': { icon: '🌾', label: $t.menu.allergens.gluten },
+    'SEAFOOD': { icon: '🦐', label: $t.menu.allergens.seafood },
+    'NUTS': { icon: '🥜', label: $t.menu.allergens.nuts },
+    'DAIRY': { icon: '🧀', label: $t.menu.allergens.dairy },
+    'EGGS': { icon: '🥚', label: $t.menu.allergens.egg },
+    'SOY': { icon: '🫘', label: $t.menu.allergens.soy },
+    'VEGAN': { icon: '🌱', label: $t.menu.allergens.vegan },
+    'VEGETARIAN': { icon: '🥗', label: $t.menu.allergens.vegetarian },
+    'SPICY': { icon: '🌶️', label: $t.menu.allergens.spicy },
+    'ALCOHOL': { icon: '🍷', label: $t.menu.allergens.alcohol }
   }));
   
-  // Extraer información de alérgenos de la descripción o de un campo específico
+  // Obtener atributos alimentarios del campo foodAttributes
   const allergens = $derived(() => {
-    const found = [];
-    const foundKeys = new Set(); // Evitar duplicados
-    const desc = (item.description || '').toLowerCase();
-    const title = (item.title || '').toLowerCase();
-    const text = `${desc} ${title}`;
-    const map = allergenMap();
-    
-    for (const [key, value] of Object.entries(map)) {
-      if (text.includes(key) && !foundKeys.has(value.key)) {
-        found.push(value);
-        foundKeys.add(value.key);
-      }
+    if (!item.foodAttributes || !Array.isArray(item.foodAttributes)) {
+      return [];
     }
-    return found;
+    
+    const map = foodAttributeMap();
+    return item.foodAttributes
+      .filter(attr => map[attr])
+      .map(attr => ({
+        icon: map[attr].icon,
+        label: map[attr].label
+      }));
   });
   
   // Badge opcional (ej: "MAIS VENDIDA", "ESPECIAL") - puede venir de item.badge o item.tags
@@ -91,7 +95,7 @@
   {#if item.photoUrl && !itemImageError}
     <img 
       src={item.photoUrl} 
-      alt={item.title}
+      alt={itemTitle}
       class="chef-card-image"
       onerror={() => itemImageError = true}
     />
@@ -110,11 +114,11 @@
     {/if}
     
     <!-- Título -->
-    <h3 class="chef-card-title">{item.title}</h3>
+    <h3 class="chef-card-title">{itemTitle}</h3>
     
     <!-- Descripción -->
-    {#if item.description}
-      <p class="chef-card-description">{item.description}</p>
+    {#if itemDescription}
+      <p class="chef-card-description">{itemDescription}</p>
     {/if}
     
     <!-- Información de alérgenos -->

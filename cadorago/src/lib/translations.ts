@@ -26,6 +26,13 @@ export interface Translations {
       egg: string
       lactose: string
       seafood: string
+      nuts: string
+      dairy: string
+      soy: string
+      vegan: string
+      vegetarian: string
+      spicy: string
+      alcohol: string
     }
   }
   
@@ -116,7 +123,14 @@ export const translations: Record<Language, Translations> = {
         gluten: 'Contiene Gluten',
         egg: 'Contiene Huevo',
         lactose: 'Contiene Lactosa',
-        seafood: 'Contiene Mariscos'
+        seafood: 'Contiene Mariscos',
+        nuts: 'Contiene Frutos Secos',
+        dairy: 'Contiene Lácteos',
+        soy: 'Contiene Soja',
+        vegan: 'Vegano',
+        vegetarian: 'Vegetariano',
+        spicy: 'Picante',
+        alcohol: 'Contiene Alcohol'
       }
     },
     cart: {
@@ -201,7 +215,14 @@ export const translations: Record<Language, Translations> = {
         gluten: 'Contém Glúten',
         egg: 'Contém Ovo',
         lactose: 'Contém Lactose',
-        seafood: 'Contém Frutos do Mar'
+        seafood: 'Contém Frutos do Mar',
+        nuts: 'Contém Frutos Secos',
+        dairy: 'Contém Lácteos',
+        soy: 'Contém Soja',
+        vegan: 'Vegano',
+        vegetarian: 'Vegetariano',
+        spicy: 'Picante',
+        alcohol: 'Contém Álcool'
       }
     },
     cart: {
@@ -286,7 +307,14 @@ export const translations: Record<Language, Translations> = {
         gluten: 'Contains Gluten',
         egg: 'Contains Egg',
         lactose: 'Contains Lactose',
-        seafood: 'Contains Seafood'
+        seafood: 'Contains Seafood',
+        nuts: 'Contains Nuts',
+        dairy: 'Contains Dairy',
+        soy: 'Contains Soy',
+        vegan: 'Vegan',
+        vegetarian: 'Vegetarian',
+        spicy: 'Spicy',
+        alcohol: 'Contains Alcohol'
       }
     },
     cart: {

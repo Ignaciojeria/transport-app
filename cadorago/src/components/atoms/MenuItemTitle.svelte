@@ -1,12 +1,15 @@
 <script>
-  /** @type {string} - Título del item */
-  export let title = '';
+  import { getMultilingualText } from '../../lib/multilingual';
   
-  /** @type {string} - Additional custom classes */
-  export let className = '';
+  const { 
+    title = '', 
+    className = '' 
+  } = $props();
+  
+  const displayTitle = $derived(getMultilingualText(title));
 </script>
 
 <h3 class={`text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 ${className}`}>
-  {title}
+  {displayTitle}
 </h3>
 

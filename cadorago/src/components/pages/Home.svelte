@@ -15,6 +15,21 @@
   const loading = $derived(restaurantDataStore.loading);
   const error = $derived(restaurantDataStore.error);
   
+  // Debug: verificar datos del menú
+  $effect(() => {
+    if (restaurantData && typeof window !== 'undefined') {
+      console.log('[Home] Restaurant data:', restaurantData);
+      console.log('[Home] Menu:', restaurantData.menu);
+      if (restaurantData.menu && restaurantData.menu.length > 0) {
+        console.log('[Home] First section:', restaurantData.menu[0]);
+        if (restaurantData.menu[0]) {
+          console.log('[Home] First section title:', restaurantData.menu[0].title);
+          console.log('[Home] First section items:', restaurantData.menu[0].items);
+        }
+      }
+    }
+  });
+  
   // Leer query param ?template= para seleccionar el template
   let templateName = $state('hero'); // Por defecto: hero (original)
   

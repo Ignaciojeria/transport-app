@@ -2,6 +2,7 @@
  * Store del carrito de compras usando Svelte 5 runes
  */
 import { getPriceFromPricing } from '../services/menuData.js';
+import { getBaseText } from '../lib/multilingual';
 
 const STORAGE_KEY = 'cadorago_cart';
 
@@ -72,14 +73,18 @@ class CartStore {
     }
     
     // Crear clave única: title + name del side (si existe)
+    // Usar getBaseText para obtener el texto base para comparaciones
+    const itemTitleBase = getBaseText(item.title);
+    const sideNameBase = side ? getBaseText(side.name) : null;
     const itemKey = side 
-      ? `${item.title}_${side.name}` 
-      : item.title;
+      ? `${itemTitleBase}_${sideNameBase}` 
+      : itemTitleBase;
     
     const existingItemIndex = this.items.findIndex(i => {
+      const iTitleBase = getBaseText(i.title);
       const existingKey = i.acompanamientoId 
-        ? `${i.title}_${i.acompanamientoId}` 
-        : i.title;
+        ? `${iTitleBase}_${i.acompanamientoId}` 
+        : iTitleBase;
       return existingKey === itemKey;
     });
     
@@ -98,8 +103,8 @@ class CartStore {
         ...item,
         cantidad: 1,
         precio: precio,
-        acompanamiento: side ? side.name : null,
-        acompanamientoId: side ? side.name : null,
+        acompanamiento: side ? getBaseText(side.name) : null, // Guardar solo el texto base para compatibilidad
+        acompanamientoId: side ? getBaseText(side.name) : null,
         station
       }];
     }
@@ -126,13 +131,15 @@ class CartStore {
     const precio = getPriceFromPricing(item.pricing, quantity);
     
     // Crear clave única: title + cantidad (para permitir múltiples cantidades diferentes)
-    const itemKey = `${item.title}_${quantity}`;
+    const itemTitleBase = getBaseText(item.title);
+    const itemKey = `${itemTitleBase}_${quantity}`;
     
     // Verificar si ya existe un item con la misma cantidad
     const existingItemIndex = this.items.findIndex(i => {
+      const iTitleBase = getBaseText(i.title);
       const existingKey = i.customQuantity 
-        ? `${i.title}_${i.customQuantity}` 
-        : i.title;
+        ? `${iTitleBase}_${i.customQuantity}` 
+        : iTitleBase;
       return existingKey === itemKey;
     });
     
@@ -165,7 +172,8 @@ class CartStore {
    * @param {string} title - Título del item a eliminar
    */
   removeItem(title) {
-    this.items = this.items.filter(item => item.title !== title);
+    const titleBase = getBaseText(title);
+    this.items = this.items.filter(item => getBaseText(item.title) !== titleBase);
     this.saveToStorage();
   }
 
@@ -182,9 +190,10 @@ class CartStore {
     
     // Crear nuevo array para forzar reactividad
     this.items = this.items.map(item => {
+      const itemTitleBase = getBaseText(item.title);
       const currentKey = item.acompanamientoId 
-        ? `${item.title}_${item.acompanamientoId}` 
-        : item.title;
+        ? `${itemTitleBase}_${item.acompanamientoId}` 
+        : itemTitleBase;
       if (currentKey === itemKey) {
         return { ...item, cantidad };
       }
@@ -200,9 +209,10 @@ class CartStore {
    */
   removeItemByKey(itemKey) {
     this.items = this.items.filter(item => {
+      const itemTitleBase = getBaseText(item.title);
       const currentKey = item.acompanamientoId 
-        ? `${item.title}_${item.acompanamientoId}` 
-        : item.title;
+        ? `${itemTitleBase}_${item.acompanamientoId}` 
+        : itemTitleBase;
       return currentKey !== itemKey;
     });
     this.saveToStorage();
@@ -276,7 +286,8 @@ class CartStore {
     let message = t.greeting;
     
     this.items.forEach((item, index) => {
-      message += `${index + 1}. ${item.title}`;
+      const itemTitle = getBaseText(item.title);
+      message += `${index + 1}. ${itemTitle}`;
       if (item.acompanamiento) {
         message += ` (${item.acompanamiento})`;
       }
