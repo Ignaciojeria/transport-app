@@ -9,8 +9,10 @@
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
   import { getSlugFromUrl, getUrlParams } from '../../services/restaurantData.js';
   import { getBaseText, getMultilingualText } from '../../lib/multilingual';
+  import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
   
   const restaurantData = $derived(restaurantDataStore.value);
+  const currency = $derived(getEffectiveCurrency(restaurantData));
   const currentLanguage = $derived($language);
   
   // Valores derivados reactivos
@@ -505,7 +507,7 @@
       items,
       totals: {
         total,
-        currency: 'CLP',
+        currency: currency,
         subtotal,
         deliveryFee
       },
@@ -808,11 +810,11 @@
                   </div>
                   <div class="text-right">
                     <p class="text-sm sm:text-base text-gray-800 font-semibold">
-                      ${itemPrice.toLocaleString('es-CL')}
+                      {formatPrice(itemPrice, currency)}
                     </p>
                     {#if !cartItem.customQuantity && cartItem.cantidad > 1}
                       <p class="text-xs text-gray-500">
-                        ${cartItem.precio.toLocaleString('es-CL')} c/u
+                        {formatPrice(cartItem.precio, currency)} c/u
                       </p>
                     {/if}
                   </div>

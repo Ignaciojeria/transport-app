@@ -4,10 +4,12 @@
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
+  import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
   
   const { className = '' } = $props();
   
   const restaurantData = $derived(restaurantDataStore.value);
+  const currency = $derived(getEffectiveCurrency(restaurantData));
   const currentLanguage = $derived($language);
   
   // Valores derivados reactivos
@@ -116,11 +118,11 @@
             </div>
             <div class="text-right">
               <p class="text-sm sm:text-base text-gray-600 mb-1">
-                ${(cartItem.precio * cartItem.cantidad).toLocaleString('es-CL')}
+                {formatPrice(cartItem.precio * cartItem.cantidad, currency)}
               </p>
               {#if cartItem.cantidad > 1}
                 <p class="text-xs sm:text-sm text-gray-500">
-                  ${cartItem.precio.toLocaleString('es-CL')} c/u
+                  {formatPrice(cartItem.precio, currency)} c/u
                 </p>
               {/if}
             </div>

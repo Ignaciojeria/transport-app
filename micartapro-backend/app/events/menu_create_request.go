@@ -48,6 +48,18 @@ const (
 	PricingArea   PricingMode = "AREA"
 )
 
+/*
+	CURRENCY
+*/
+
+type Currency string
+
+const (
+	CurrencyUSD Currency = "USD"
+	CurrencyCLP Currency = "CLP"
+	CurrencyBRL Currency = "BRL"
+)
+
 type Pricing struct {
 	Mode         PricingMode   `json:"mode"`
 	Unit         UnitOfMeasure `json:"unit"`
@@ -146,6 +158,15 @@ type BusinessInfo struct {
 	BusinessName  string   `json:"businessName"`
 	Whatsapp      string   `json:"whatsapp"`
 	BusinessHours []string `json:"businessHours"`
+	Currency      Currency `json:"currency"`
+}
+
+// EffectiveCurrency retorna la moneda efectiva del negocio; si está vacía retorna CLP por defecto (compatibilidad con menús antiguos).
+func (b BusinessInfo) EffectiveCurrency() Currency {
+	if b.Currency == "" {
+		return CurrencyCLP
+	}
+	return b.Currency
 }
 
 /*

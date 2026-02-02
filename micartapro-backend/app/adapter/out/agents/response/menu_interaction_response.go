@@ -28,7 +28,7 @@ func MenuInteractionResponse() *genai.Schema {
 		},
 	}
 
-	// --- Pricing schema ---
+	// --- Pricing schema (currency es global en businessInfo, no en pricing) ---
 	pricingSchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
@@ -81,13 +81,14 @@ func MenuInteractionResponse() *genai.Schema {
 		Required: []string{"title", "items"},
 	}
 
-	// --- Contact ---
+	// --- Contact (incluye currency global del negocio) ---
 	contactSchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
 			"whatsapp": {Type: genai.TypeString},
+			"currency": {Type: genai.TypeString, Enum: []string{"USD", "CLP", "BRL"}},
 		},
-		Required: []string{"whatsapp"},
+		Required: []string{"whatsapp", "currency"},
 	}
 
 	// --- Root ---

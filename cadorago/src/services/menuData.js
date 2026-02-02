@@ -130,8 +130,14 @@ export function adaptMenuData(menuData) {
   const presentationStyle = (menuData.presentationStyle || 'HERO').toUpperCase();
   const normalized = presentationStyle === 'MODERN' ? 'MODERN' : 'HERO';
 
+  // Preservar businessInfo y asegurar currency por defecto (CLP) si no viene del backend
+  const businessInfo = menuData.businessInfo
+    ? { ...menuData.businessInfo, currency: menuData.businessInfo.currency || 'CLP' }
+    : { currency: 'CLP' };
+
   return {
     ...menuData,
+    businessInfo,
     menu: adaptedMenu,
     presentationStyle: normalized
   };
@@ -148,6 +154,7 @@ export const DEFAULT_TEST_MENU = {
   "businessInfo": {
     "businessName": "La Pizzería del Centro",
     "whatsapp": "+56912345678",
+    "currency": "CLP",
     "businessHours": [
       "Lunes a Viernes: 12:00 - 22:00",
       "Sábado y Domingo: 13:00 - 23:00"

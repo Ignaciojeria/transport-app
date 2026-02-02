@@ -9,7 +9,11 @@ func GetContactSchema() *genai.Schema {
 		Properties: map[string]*genai.Schema{
 			"businessName": {Type: genai.TypeString, Description: "El nombre oficial del negocio o restaurant."},
 			"whatsapp":     {Type: genai.TypeString, Description: "Número de teléfono de contacto, incluyendo código de país (ej. +56912345678)."},
-
+			"currency": {
+				Type:        genai.TypeString,
+				Enum:        []string{"USD", "CLP", "BRL"},
+				Description: "Moneda del menú/negocio: USD (dólar), CLP (peso chileno), BRL (real brasileño). OBLIGATORIO. Aplica a todos los precios del menú. Para CLP no uses decimales en pricePerUnit; para USD y BRL sí se permiten decimales.",
+			},
 			// Mantenemos TypeArray, pero con una descripción mucho más estricta:
 			"businessHours": {
 				Type:  genai.TypeArray,
@@ -18,6 +22,6 @@ func GetContactSchema() *genai.Schema {
 				Description: "Lista de strings, donde cada string representa un rango de horario distinto. Debe ser un Array JSON (ej. ['Lunes a Viernes: 10h-22h', 'Sábado y Domingo: Cerrado']).",
 			},
 		},
-		Required: []string{"whatsapp"},
+		Required: []string{"whatsapp", "currency"},
 	}
 }

@@ -17,7 +17,7 @@ func GetPricingSchema() *genai.Schema {
 			},
 			"pricePerUnit": {
 				Type:        genai.TypeNumber,
-				Description: "Precio por unidad de medida (ej: 19.9 CLP por gramo, 35.000 CLP por m²).",
+				Description: "Precio por unidad de medida. Usa la moneda del negocio (businessInfo.currency): si es CLP usa número entero (sin decimales); si es USD o BRL se permiten decimales (ej: 9.99).",
 			},
 			"baseUnit": {
 				Type:        genai.TypeNumber,

@@ -81,6 +81,7 @@ func NewOnUserMenusInsertedWebhook(
 				BusinessName:  "cadorago",
 				Whatsapp:      "+56957857558",
 				BusinessHours: []string{},
+				Currency:      events.CurrencyCLP,
 			},
 			Menu: []events.MenuCategory{},
 			DeliveryOptions: []events.DeliveryOption{

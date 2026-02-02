@@ -21,6 +21,8 @@ export interface Translations {
     addToCart: string
     addedToCart: string
     viewOptions: string
+    fromPrice: string
+    chooseOption: string
     allergens: {
       gluten: string
       egg: string
@@ -119,6 +121,8 @@ export const translations: Record<Language, Translations> = {
       addToCart: 'Agregar',
       addedToCart: '✓ Agregado',
       viewOptions: 'Ver opciones',
+      fromPrice: 'Desde',
+      chooseOption: 'Elige tu opción',
       allergens: {
         gluten: 'Contiene Gluten',
         egg: 'Contiene Huevo',
@@ -211,6 +215,8 @@ export const translations: Record<Language, Translations> = {
       addToCart: 'Adicionar',
       addedToCart: '✓ Adicionado',
       viewOptions: 'Ver opções',
+      fromPrice: 'A partir de',
+      chooseOption: 'Escolha sua opção',
       allergens: {
         gluten: 'Contém Glúten',
         egg: 'Contém Ovo',
@@ -303,6 +309,8 @@ export const translations: Record<Language, Translations> = {
       addToCart: 'Add',
       addedToCart: '✓ Added',
       viewOptions: 'View options',
+      fromPrice: 'From',
+      chooseOption: 'Choose your option',
       allergens: {
         gluten: 'Contains Gluten',
         egg: 'Contains Egg',
