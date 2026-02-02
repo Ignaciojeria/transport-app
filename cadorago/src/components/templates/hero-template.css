@@ -1,0 +1,45 @@
+/* Estilos del template Hero - ámbito exclusivo .hero-template */
+/* Aspecto de la vista previa: cards blancas con sombra, texto izquierda, imagen + botón derecha. */
+
+.hero-template {
+  /* Base del template Hero */
+}
+
+/* Cards de ítems del menú (MenuItem): blanco, sombra, esquinas redondeadas (estilo de la imagen) */
+.hero-template .hero-template__items > div {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+}
+
+.hero-template .hero-template__items > div:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 6px 20px rgba(0, 0, 0, 0.08);
+  border-color: #d1d5db;
+}
+
+/* Imagen del ítem: esquinas redondeadas tipo thumbnail */
+.hero-template .hero-template__items > div [class*="w-24"],
+.hero-template .hero-template__items > div [class*="w-28"] {
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+/* Botón + circular sobre la imagen */
+.hero-template .hero-template__items > div .rounded-full {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Títulos de sección del menú (ej. Bebidas) */
+.hero-template h2:has(+ .hero-template__items) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+}
+
+.hero-template h2:has(+ .hero-template__items):first-of-type {
+  margin-top: 0;
+}

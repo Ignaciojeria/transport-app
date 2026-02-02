@@ -5,7 +5,7 @@
   import ChatInput from './ChatInput.svelte'
   import ProcessingPreview from './ProcessingPreview.svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, generateMenuUrl, addPreviewQueryParams, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, getMenuSlug, createMenuSlug, generateSlugUrl, updateCurrentVersionId, getUserCredits, hasEnoughCredits, getAuthenticatedSupabaseClient } from '../menuUtils'
+  import { getLatestMenuId, generateMenuUrl, addPreviewQueryParams, getSlugFromMenuUrl, getMenuSlugFromApi, pollUntilMenuUpdated, pollUntilMenuExists, pollUntilVersionExists, createMenuSlug, generateSlugUrl, updateCurrentVersionId, updateMenuPresentationStyle, getUserCredits, hasEnoughCredits, getAuthenticatedSupabaseClient } from '../menuUtils'
   import { API_BASE_URL } from '../config'
   import { t as tStore, language } from '../useLanguage'
   import { supabase } from '../supabase'
@@ -32,7 +32,10 @@
   let isLoading = $state(false)
   let logoError = $state(false)
   let showPreview = $state(false)
-  let menuUrl = $state<string | null>(null)
+  let baseMenuUrl = $state<string | null>(null) // URL sin params de preview; menuUrl se deriva con station + template
+  let savedPresentationStyle = $state<'HERO' | 'MODERN'>('HERO') // Estilo guardado en el menú (desde iframe MICARTAPRO_MENU_LOADED)
+  let previewTemplateOverride = $state<'HERO' | 'MODERN' | null>(null) // Override en preview; al cambiar recarga iframe con ?template=
+  let menuUrl = $derived(baseMenuUrl ? addPreviewQueryParams(baseMenuUrl, previewTemplateOverride ?? undefined) : null)
   let menuId = $state<string | null>(null)
   let copySuccess = $state(false)
   let linkWasCopied = $state(false) // Estado para saber si el enlace fue copiado (persistente)
@@ -67,6 +70,25 @@
   let imagesAllReady = $state(false) // Flag para saber si todas las imágenes están listas
   let lastCheckedMenuId = $state<string | null>(null) // Último menuId verificado
   let lastCheckedVersionId = $state<string | undefined>(undefined) // Última versionId verificada
+  let isSavingTemplate = $state(false) // Guardando estilo de template (Usar este diseño)
+  
+  const effectiveTemplate = $derived(previewTemplateOverride ?? savedPresentationStyle)
+  const hasTemplateChanged = $derived(previewTemplateOverride !== null && previewTemplateOverride !== savedPresentationStyle)
+  
+  async function useThisDesignTemplate() {
+    if (!hasTemplateChanged || !menuId || !session?.access_token || !previewTemplateOverride) return
+    isSavingTemplate = true
+    try {
+      const ok = await updateMenuPresentationStyle(menuId, previewTemplateOverride, session.access_token)
+      if (ok) {
+        savedPresentationStyle = previewTemplateOverride
+        previewTemplateOverride = null
+        iframeKey++
+      }
+    } finally {
+      isSavingTemplate = false
+    }
+  }
   
   // Funciones para guardar/recuperar referencia del menú en localStorage
   function saveMenuReference(menuId: string, versionId?: string) {
@@ -151,7 +173,7 @@
           try {
             const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
             if (url) {
-              menuUrl = addPreviewQueryParams(url)
+              baseMenuUrl = url
               // Forzar recarga del iframe
               iframeKey++
             }
@@ -263,7 +285,7 @@
     console.log('🔄 Iniciando polling continuo para versionId:', versionId)
     isLoading = true
 
-    // Polling cada 2 segundos
+    // Polling cada 5 segundos (menos agresivo con Supabase)
     pollingInterval = setInterval(async () => {
       try {
         const supabase = await getAuthenticatedSupabaseClient(session.access_token)
@@ -301,7 +323,7 @@
           
           // Verificar que el endpoint del backend esté listo antes de mostrar la vista previa
           console.log('🔍 Verificando que el endpoint del backend esté listo...')
-          const backendReady = await pollUntilMenuExists(menuId!, session.access_token, versionId, 15, 1000)
+          const backendReady = await pollUntilMenuExists(menuId!, session.access_token, versionId, 12, 3000)
           
           if (!backendReady) {
             console.warn('⚠️ El endpoint del backend no está listo, pero continuando...')
@@ -316,7 +338,7 @@
           if (userId && menuId && session?.access_token) {
             const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
             if (url) {
-              menuUrl = addPreviewQueryParams(url)
+              baseMenuUrl = url
             }
             iframeKey++
           }
@@ -331,7 +353,7 @@
       } catch (error) {
         console.error('❌ Error en polling continuo:', error)
       }
-    }, 2000) // Polling cada 2 segundos
+    }, 5000) // Polling cada 5 segundos
   }
 
   // Función para detener polling
@@ -367,18 +389,21 @@
     window.addEventListener('popstate', handlePopState)
     window.addEventListener('beforeunload', handleBeforeUnload)
     
-    // Actualizar menuUrl cuando cambie el idioma
+    const handleMessage = (event: MessageEvent) => {
+      const data = event?.data
+      if (data?.type === 'MICARTAPRO_MENU_LOADED' && (data.presentationStyle === 'HERO' || data.presentationStyle === 'MODERN')) {
+        savedPresentationStyle = data.presentationStyle
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    
     $effect(() => {
-      if (menuUrl && userId && menuId && session?.access_token) {
-        // Reconstruir la URL con el idioma actual
-        // Extraer version_id de la URL actual si existe
-        const currentUrl = new URL(menuUrl)
+      if (baseMenuUrl && userId && menuId && session?.access_token) {
+        const currentUrl = new URL(baseMenuUrl)
         const currentVersionId = currentUrl.searchParams.get('version_id')
         generateMenuUrl(menuId, session.access_token, currentLanguage, currentVersionId || undefined)
           .then(newUrl => {
-            if (newUrl) {
-              menuUrl = addPreviewQueryParams(newUrl)
-            }
+            if (newUrl) baseMenuUrl = newUrl
           })
           .catch(err => {
             console.error('Error actualizando URL del menú:', err)
@@ -407,7 +432,7 @@
               try {
                 const url = await generateMenuUrl(id, session.access_token, currentLanguage, menuRef.versionId)
                 if (url) {
-                  menuUrl = addPreviewQueryParams(url)
+                  baseMenuUrl = url
                   console.log('✅ URL del menú recuperada desde localStorage')
                 }
               } catch (err) {
@@ -430,12 +455,10 @@
               if (exists) {
                 menuReady = true
                 // Si no hay menuUrl pero el menú existe, cargarlo
-                if (!menuUrl) {
+                if (!baseMenuUrl) {
                   try {
                     const url = await generateMenuUrl(id, session.access_token, currentLanguage)
-                    if (url) {
-                      menuUrl = addPreviewQueryParams(url)
-                    }
+                    if (url) baseMenuUrl = url
                   } catch (err) {
                     console.error('Error cargando URL del menú:', err)
                   }
@@ -469,7 +492,7 @@
     return () => {
       window.removeEventListener('popstate', handlePopState)
       window.removeEventListener('beforeunload', handleBeforeUnload)
-      // Detener polling si está activo
+      window.removeEventListener('message', handleMessage)
       stopPolling()
     }
   })
@@ -538,7 +561,7 @@
             try {
               const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
               if (url) {
-                menuUrl = addPreviewQueryParams(url)
+                baseMenuUrl = url
                 // Forzar recarga del iframe
                 iframeKey++
               }
@@ -569,15 +592,13 @@
         if (!hasPendingVersion || !currentUrlHasVersionId) {
           const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
           if (url) {
-            const urlWithStation = addPreviewQueryParams(url)
-            const separator = urlWithStation.includes('?') ? '&' : '?'
-            menuUrl = `${urlWithStation}${separator}_refresh=${Date.now()}`
+            baseMenuUrl = url
             iframeKey++
           }
-        } else if (!menuUrl) {
-          // Versión pendiente y aún sin menuUrl: cargar URL con version_id (ya se hace en polling)
+        } else if (!baseMenuUrl) {
+          // Versión pendiente y aún sin baseMenuUrl: cargar URL con version_id (ya se hace en polling)
           const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, messages.find(m => m.pendingVersionId)?.pendingVersionId)
-          if (url) menuUrl = addPreviewQueryParams(url)
+          if (url) baseMenuUrl = url
         }
       } catch (err) {
         console.error('Error cargando menú:', err)
@@ -646,7 +667,7 @@
       }
     }
 
-    // Iniciar polling cada 3 segundos solo si aún no están todas listas
+    // Iniciar polling cada 8 segundos solo si aún no están todas listas
     // Limpiar intervalo anterior si existe
     if (imagesPollingInterval) {
       clearInterval(imagesPollingInterval)
@@ -677,7 +698,7 @@
           imagesPollingInterval = null
         }
       }
-    }, 3000) // Verificar cada 3 segundos
+    }, 8000) // Verificar cada 8 segundos
 
     return () => {
       if (imagesPollingInterval) {
@@ -777,7 +798,7 @@
         if (userId && menuId && session?.access_token) {
           const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
           if (url) {
-            menuUrl = addPreviewQueryParams(url)
+            baseMenuUrl = url
           }
           // Actualizar referencia del menú (sin versionId específico, usa current_version_id del backend)
           saveMenuReference(menuId)
@@ -826,19 +847,24 @@
     }
 
     try {
-      // Verificar si existe un slug para este menú (siempre permitir compartir)
-      const existingSlug = await getMenuSlug(menuId, session.access_token)
-      
-      if (!existingSlug) {
-        // No existe slug, mostrar modal para crear uno
-        businessName = ''
-        slugPreview = ''
-        showSlugModal = true
+      // Si la URL del preview ya lleva slug (/m/mi-resto), usarlo
+      const slugFromUrl = getSlugFromMenuUrl(baseMenuUrl ?? menuUrl ?? null)
+      if (slugFromUrl) {
+        await proceedWithShare(slugFromUrl)
         return
       }
 
-      // Si ya existe slug, proceder directamente a compartir
-      await proceedWithShare(existingSlug)
+      // Leer slug desde el backend (menu_slugs en servidor); evita problemas de RLS en el cliente
+      const existingSlug = await getMenuSlugFromApi(menuId, session.access_token)
+      if (existingSlug && existingSlug.trim() !== '') {
+        await proceedWithShare(existingSlug.trim())
+        return
+      }
+
+      // Solo mostrar modal de crear slug cuando no hay slug en la tabla
+      businessName = ''
+      slugPreview = ''
+      showSlugModal = true
     } catch (err) {
       console.error('Error compartiendo:', err)
       alert(
@@ -1200,7 +1226,7 @@
             if (session?.access_token) {
               const url = await generateMenuUrl(menuId, session.access_token, currentLanguage)
               if (url) {
-                menuUrl = addPreviewQueryParams(url)
+                baseMenuUrl = url
               }
             }
             iframeKey++
@@ -1912,6 +1938,46 @@
       </div>
       <div class="w-9"></div> <!-- Spacer para centrar -->
     </header>
+
+    <!-- Selector de template (consola decide estilo; cadorago recibe ?template= y reactualiza) -->
+    {#if menuUrl}
+      <div class="flex-shrink-0 px-3 py-2 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center gap-2">
+        <span class="text-sm font-medium text-gray-700">{$tStore.chat.templateLabel}</span>
+        <div class="flex rounded-lg bg-gray-200 p-0.5" role="tablist" aria-label="Estilo de carta">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={effectiveTemplate === 'HERO'}
+            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {effectiveTemplate === 'HERO' ? 'bg-white text-gray-900 shadow' : 'text-gray-600 hover:text-gray-900'}"
+            onclick={() => { previewTemplateOverride = savedPresentationStyle === 'HERO' ? null : 'HERO' }}
+          >
+            {$tStore.chat.templateHero}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={effectiveTemplate === 'MODERN'}
+            class="px-3 py-1.5 text-sm font-medium rounded-md transition-colors {effectiveTemplate === 'MODERN' ? 'bg-white text-gray-900 shadow' : 'text-gray-600 hover:text-gray-900'}"
+            onclick={() => { previewTemplateOverride = savedPresentationStyle === 'MODERN' ? null : 'MODERN' }}
+          >
+            {$tStore.chat.templateModern}
+          </button>
+        </div>
+        {#if hasTemplateChanged}
+          <button
+            type="button"
+            class="px-3 py-1.5 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-60"
+            disabled={isSavingTemplate}
+            onclick={() => useThisDesignTemplate()}
+          >
+            {#if isSavingTemplate}
+              <span class="inline-block animate-spin mr-1">⏳</span>
+            {/if}
+            {$tStore.chat.useThisDesign}
+          </button>
+        {/if}
+      </div>
+    {/if}
 
     <!-- Contenido del Preview -->
     <div class="flex-1 overflow-hidden iframe-container relative min-h-0">

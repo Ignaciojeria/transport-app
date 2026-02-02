@@ -316,13 +316,34 @@ export function generateMenuUrlFromMenuId(menuId: string, lang?: string, version
 }
 
 /**
- * Añade query params para el preview de la consola (ej. station=true para mostrar Cocina/Barra en la carta).
+ * Extrae el slug desde una URL de carta (ej. .../m/mi-resto?lang=ES).
+ * Si el segmento después de /m/ es un UUID, retorna null (es menu_id, no slug).
+ */
+export function getSlugFromMenuUrl(menuUrl: string | null): string | null {
+  if (!menuUrl || typeof menuUrl !== 'string') return null
+  try {
+    const path = new URL(menuUrl).pathname
+    const match = path.match(/^\/m\/([^/]+)/)
+    if (!match || !match[1]) return null
+    const segment = match[1]
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (uuidRegex.test(segment)) return null
+    return segment.trim() || null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Añade query params para el preview de la consola (station=true; opcionalmente template=HERO|MODERN para forzar estilo).
  * Usar en todas las URLs de preview que abre la consola.
  */
-export function addPreviewQueryParams(url: string): string {
+export function addPreviewQueryParams(url: string, template?: 'HERO' | 'MODERN'): string {
   if (!url) return url
   const separator = url.includes('?') ? '&' : '?'
-  return `${url}${separator}station=true`
+  let out = `${url}${separator}station=true`
+  if (template) out += `&template=${template}`
+  return out
 }
 
 /**
@@ -340,20 +361,12 @@ export async function generateMenuUrl(
   versionId?: string
 ): Promise<string | null> {
   try {
-    // Intentar obtener el slug del menú
-    const slug = await getMenuSlug(menuId, accessToken)
-    
+    const slug = await getMenuSlugFromApi(menuId, accessToken)
     if (slug) {
-      // Si hay slug, generar URL usando el slug
       return generateMenuUrlFromSlug(slug, lang, versionId)
     }
-    
-    // Si no hay slug (normal en menús nuevos), usar menu_id directamente
-    // No es un error, es esperado cuando se crea un menú por primera vez
     return generateMenuUrlFromMenuId(menuId, lang, versionId)
-  } catch (error: any) {
-    // Si hay un error (como 406 cuando no hay slug o políticas RLS), usar menu_id directamente
-    // Esto es normal cuando se crea un menú por primera vez
+  } catch (_) {
     return generateMenuUrlFromMenuId(menuId, lang, versionId)
   }
 }
@@ -392,7 +405,7 @@ async function getLatestJson(userId: string, menuId: string): Promise<{ filename
  * @param menuId - ID del menú
  * @param idempotencyKey - Clave de idempotencia a esperar
  * @param maxAttempts - Número máximo de intentos (default: 60)
- * @param intervalMs - Intervalo entre intentos en milisegundos (default: 2000)
+ * @param intervalMs - Intervalo entre intentos en milisegundos (default: 3000)
  * @returns El menú actualizado cuando el idempotencyKey coincide
  */
 export async function pollUntilMenuUpdated(
@@ -400,7 +413,7 @@ export async function pollUntilMenuUpdated(
   menuId: string,
   idempotencyKey: string,
   maxAttempts: number = 60,
-  intervalMs: number = 2000
+  intervalMs: number = 3000
 ): Promise<any> {
   let attempts = 0
   
@@ -446,15 +459,15 @@ export async function pollUntilMenuUpdated(
  * Hace polling en Supabase hasta que la versión del menú exista
  * @param versionID - ID de la versión del menú
  * @param accessToken - Token de autenticación
- * @param maxAttempts - Número máximo de intentos (default: 120 - ~120 segundos)
- * @param intervalMs - Intervalo entre intentos en milisegundos (default: 1000)
+ * @param maxAttempts - Número máximo de intentos (default: 60)
+ * @param intervalMs - Intervalo entre intentos en milisegundos (default: 3000)
  * @returns El contenido del menú cuando la versión existe
  */
 export async function pollUntilVersionExists(
   versionID: string,
   accessToken: string,
-  maxAttempts: number = 120,
-  intervalMs: number = 1000
+  maxAttempts: number = 60,
+  intervalMs: number = 3000
 ): Promise<any> {
   try {
     // Usar cliente autenticado reutilizable
@@ -541,16 +554,16 @@ export async function pollUntilVersionExists(
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
  * @param versionId - ID de la versión opcional para verificar
- * @param maxAttempts - Número máximo de intentos (default: 30)
- * @param intervalMs - Intervalo entre intentos en milisegundos (default: 2000)
+ * @param maxAttempts - Número máximo de intentos (default: 20)
+ * @param intervalMs - Intervalo entre intentos en milisegundos (default: 3000)
  * @returns true si el menú está listo, false si no se encontró después de todos los intentos
  */
 export async function pollUntilMenuExists(
   menuId: string,
   accessToken: string,
   versionId?: string,
-  maxAttempts: number = 30,
-  intervalMs: number = 2000
+  maxAttempts: number = 20,
+  intervalMs: number = 3000
 ): Promise<boolean> {
   // Importar API_BASE_URL desde config
   const { API_BASE_URL } = await import('./config')
@@ -605,43 +618,59 @@ export async function pollUntilMenuExists(
 }
 
 /**
- * Obtiene el slug activo para un menu_id
- * @param menuId - ID del menú
- * @param accessToken - Token de autenticación
- * @returns El slug activo o null si no existe
+ * Obtiene el slug activo desde el backend (API). Fuente de verdad: lee menu_slugs en el servidor.
+ * Usar esto para compartir para evitar problemas de RLS con el cliente Supabase.
+ */
+export async function getMenuSlugFromApi(menuId: string, accessToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/slug`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+    if (res.status === 404) return null
+    if (!res.ok) {
+      const text = await res.text()
+      console.error('getMenuSlugFromApi:', res.status, text)
+      throw new Error(text || `HTTP ${res.status}`)
+    }
+    const data = (await res.json()) as { slug: string }
+    const slug = data?.slug
+    return typeof slug === 'string' && slug.trim() !== '' ? slug.trim() : null
+  } catch (e) {
+    console.error('getMenuSlugFromApi:', e)
+    throw e
+  }
+}
+
+/**
+ * Obtiene el slug activo para un menu_id (vía Supabase desde el cliente).
+ * @deprecated Preferir getMenuSlugFromApi para compartir; el backend lee menu_slugs sin RLS.
  */
 export async function getMenuSlug(menuId: string, accessToken: string): Promise<string | null> {
   try {
-    // Usar cliente autenticado reutilizable
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
-    
     const { data, error } = await supabase
       .from('menu_slugs')
       .select('slug')
       .eq('menu_id', menuId)
       .eq('is_active', true)
-      .maybeSingle() // Usar maybeSingle() en lugar de single() para manejar cuando no hay slug
+      .maybeSingle()
 
     if (error) {
-      // Manejar errores comunes cuando no hay slug (menú nuevo)
-      if (error.code === 'PGRST116' || error.code === '406' || error.message?.includes('406')) {
-        // No se encontró ningún registro o error 406 (Not Acceptable) - es normal cuando no hay slug
+      if (error.code === 'PGRST116' || error.code === '406' || error.message?.includes('406') || error.message?.includes('no rows')) {
         return null
       }
       console.error('Error obteniendo slug:', error)
-      return null
+      throw error
     }
-
-    // Si no hay data, significa que no existe slug para este menú (normal en menús nuevos)
-    return data?.slug || null
+    const slug = data?.slug
+    return typeof slug === 'string' && slug.trim() !== '' ? slug.trim() : null
   } catch (error: any) {
-    // Manejar errores 406 específicamente (Not Acceptable - común cuando no hay políticas RLS o no hay slug)
     if (error?.code === '406' || error?.message?.includes('406') || error?.status === 406) {
-      // Es normal que no haya slug cuando se crea un menú por primera vez
       return null
     }
     console.error('Error en getMenuSlug:', error)
-    return null
+    throw error
   }
 }
 
@@ -1239,6 +1268,36 @@ export async function updateCurrentVersionId(
     return true
   } catch (error) {
     console.error('❌ Error en updateCurrentVersionId:', error)
+    return false
+  }
+}
+
+/**
+ * Actualiza el estilo de presentación de la carta activa (HERO | MODERN).
+ * La consola lo usa cuando el usuario elige "Usar este diseño" en el preview.
+ */
+export async function updateMenuPresentationStyle(
+  menuId: string,
+  presentationStyle: 'HERO' | 'MODERN',
+  accessToken: string
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/presentation-style`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ presentationStyle }),
+    })
+    if (!res.ok) {
+      const text = await res.text()
+      console.error('❌ updateMenuPresentationStyle:', res.status, text)
+      return false
+    }
+    return true
+  } catch (e) {
+    console.error('❌ updateMenuPresentationStyle:', e)
     return false
   }
 }

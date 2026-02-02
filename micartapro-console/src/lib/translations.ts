@@ -67,6 +67,10 @@ export interface Translations {
       discardMenuMessage: string
       discardMenuConfirm: string
       discardMenuCancel: string
+      templateLabel: string
+      templateHero: string
+      templateModern: string
+      useThisDesign: string
     }
   
   // MenuPreview.svelte
@@ -219,7 +223,11 @@ export const translations: Record<Language, Translations> = {
       discardMenuTitle: '¿Descartar este menú?',
       discardMenuMessage: 'Tienes un menú pendiente de aceptar. Si retrocedes, este menú no se activará.',
       discardMenuConfirm: 'Sí, descartar',
-      discardMenuCancel: 'Cancelar'
+      discardMenuCancel: 'Cancelar',
+      templateLabel: 'Estilo',
+      templateHero: 'Hero',
+      templateModern: 'Modern',
+      useThisDesign: 'Usar este diseño'
     },
     preview: {
       loading: 'Cargando tu carta...',
@@ -368,6 +376,10 @@ export const translations: Record<Language, Translations> = {
       discardMenuMessage: 'Você tem um cardápio pendente de aceitar. Se voltar, este cardápio não será ativado.',
       discardMenuConfirm: 'Sim, descartar',
       discardMenuCancel: 'Cancelar',
+      templateLabel: 'Estilo',
+      templateHero: 'Hero',
+      templateModern: 'Modern',
+      useThisDesign: 'Usar este design',
       createMenuMessage: 'Quero criar um cardápio para um restaurante',
       organizeDishesMessage: 'Preciso de ajuda para organizar meus pratos',
       viewPricesMessage: 'Como funciona o sistema de preços?',
@@ -512,7 +524,11 @@ export const translations: Record<Language, Translations> = {
       discardMenuTitle: 'Discard this menu?',
       discardMenuMessage: 'You have a menu pending acceptance. If you go back, this menu will not be activated.',
       discardMenuConfirm: 'Yes, discard',
-      discardMenuCancel: 'Cancel'
+      discardMenuCancel: 'Cancel',
+      templateLabel: 'Style',
+      templateHero: 'Hero',
+      templateModern: 'Modern',
+      useThisDesign: 'Use this design'
     },
     preview: {
       loading: 'Loading your menu...',

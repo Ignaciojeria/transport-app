@@ -126,9 +126,9 @@ export function adaptMenuData(menuData) {
     }))
   }));
   
-  // presentationStyle del contrato: HERO | MODERN. Por defecto MODERN.
-  const presentationStyle = (menuData.presentationStyle || 'MODERN').toUpperCase();
-  const normalized = presentationStyle === 'HERO' ? 'HERO' : 'MODERN';
+  // presentationStyle del contrato: HERO | MODERN. Por defecto HERO (cards horizontales, imagen a la derecha).
+  const presentationStyle = (menuData.presentationStyle || 'HERO').toUpperCase();
+  const normalized = presentationStyle === 'MODERN' ? 'MODERN' : 'HERO';
 
   // Preservar businessInfo y asegurar currency por defecto (CLP) si no viene del backend
   const businessInfo = menuData.businessInfo
@@ -148,7 +148,7 @@ export function adaptMenuData(menuData) {
  */
 export const DEFAULT_TEST_MENU = {
   "id": "menu-123e4567-e89b-12d3-a456-426614174000",
-  "presentationStyle": "MODERN",
+  "presentationStyle": "HERO",
   "coverImage": "https://example.com/images/cover.jpg",
   "footerImage": "https://example.com/images/logo.png",
   "businessInfo": {

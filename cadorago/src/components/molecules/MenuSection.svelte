@@ -24,7 +24,7 @@
   const sectionId = $derived(getBaseText(section.title).toLowerCase().replace(/\s+/g, '-'));
 </script>
 
-<div id={sectionId || undefined} class={`mb-8 sm:mb-10 section-anchor ${className}`}>
+<div id={sectionId || undefined} class="mb-8 sm:mb-10 {isModernTemplate() ? 'modern-section-anchor' : ''} {className}">
   <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-5 {isModernTemplate() ? 'menu-category-title' : ''}">
     {sectionTitle}
   </h2>
@@ -36,8 +36,8 @@
       {/each}
     </div>
   {:else}
-    <!-- Layout original: lista vertical -->
-    <div class="space-y-4 sm:space-y-5">
+    <!-- Layout Hero: lista vertical con cards (estilo de la imagen) -->
+    <div class="hero-template__items space-y-4 sm:space-y-5">
       {#each section.items as item}
         <MenuItem {item} />
       {/each}
@@ -46,8 +46,8 @@
 </div>
 
 <style>
-  /* Al hacer scroll desde la nav de categorías, dejar espacio para header + nav sticky */
-  :global(.modern-template) .section-anchor {
+  /* Solo template Modern: scroll-margin para nav de categorías */
+  :global(.modern-template) .modern-section-anchor {
     scroll-margin-top: 10rem;
   }
 </style>

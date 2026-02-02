@@ -10,10 +10,31 @@
   import MetaTags from '../organisms/MetaTags.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { initLanguage, t } from '../../lib/useLanguage';
+  import { isPreviewMode, getTemplateFromPreviewUrl } from '../../services/restaurantData.js';
   
   const restaurantData = $derived(restaurantDataStore.value);
   const loading = $derived(restaurantDataStore.loading);
   const error = $derived(restaurantDataStore.error);
+  const inPreview = $derived(isPreviewMode());
+  
+  // Template: en preview la consola fuerza vía ?template=HERO|MODERN; si no, usamos presentationStyle del menú.
+  const savedFromMenu = $derived(
+    (restaurantData?.presentationStyle ?? 'HERO') === 'MODERN' ? 'modern' : 'hero'
+  );
+  const templateFromUrl = $derived(getTemplateFromPreviewUrl());
+  const templateName = $derived(
+    inPreview && templateFromUrl !== null ? templateFromUrl : savedFromMenu
+  );
+  
+  // Notificar a la consola el estilo actual del menú al cargar (para que el selector tenga el valor por defecto).
+  $effect(() => {
+    if (inPreview && restaurantData && typeof window !== 'undefined' && (window.opener || window.parent !== window)) {
+      const style = (restaurantData.presentationStyle ?? 'HERO').toUpperCase();
+      const payload = { type: 'MICARTAPRO_MENU_LOADED', presentationStyle: style === 'MODERN' ? 'MODERN' : 'HERO' };
+      if (window.opener) window.opener.postMessage(payload, '*');
+      if (window.parent !== window) window.parent.postMessage(payload, '*');
+    }
+  });
   
   // Debug: verificar datos del menú
   $effect(() => {
@@ -29,12 +50,6 @@
       }
     }
   });
-  
-  // Template desde presentationStyle del contrato (HERO | MODERN). Por defecto MODERN.
-  // El query param ?template= está deprecado; se ignora.
-  const templateName = $derived(
-    (restaurantData?.presentationStyle ?? 'MODERN') === 'HERO' ? 'hero' : 'modern'
-  );
 
   const TemplateComponent = $derived(() => {
     switch (templateName) {

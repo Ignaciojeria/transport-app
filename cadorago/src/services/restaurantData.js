@@ -59,6 +59,27 @@ export function getVersionIdFromUrl() {
 }
 
 /**
+ * Indica si estamos en modo previsualización (iframe desde consola con ?station=true).
+ * @returns {boolean}
+ */
+export function isPreviewMode() {
+  if (typeof window === 'undefined') return false;
+  return new URLSearchParams(window.location.search).get('station') === 'true';
+}
+
+/**
+ * En modo preview, la consola puede forzar la template vía query param ?template=HERO|MODERN.
+ * @returns {'hero' | 'modern' | null} template forzada por la consola, o null si no aplica
+ */
+export function getTemplateFromPreviewUrl() {
+  if (typeof window === 'undefined') return null;
+  const p = new URLSearchParams(window.location.search).get('template');
+  if (p === 'HERO' || p === 'hero') return 'hero';
+  if (p === 'MODERN' || p === 'modern') return 'modern';
+  return null;
+}
+
+/**
  * Obtiene los parámetros userID y menuID desde la URL (query params)
  * @deprecated Este método es legacy y ya no se usa. Se mantiene solo por compatibilidad.
  * @returns {{userID: string | null, menuID: string | null}}

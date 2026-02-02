@@ -91,6 +91,14 @@ export interface Translations {
       redirectingWhatsApp: string
     }
   
+  // TemplateSelector (preview mode)
+  preview: {
+    templateLabel: string
+    templateHero: string
+    templateModern: string
+    useThisDesign: string
+  }
+
   // WhatsApp messages
   whatsapp: {
     greeting: string
@@ -188,6 +196,12 @@ export const translations: Record<Language, Translations> = {
       step1Label: 'Dirección',
       step2Label: 'Contacto'
     },
+    preview: {
+      templateLabel: 'Estilo',
+      templateHero: 'Hero',
+      templateModern: 'Modern',
+      useThisDesign: 'Usar este diseño'
+    },
     whatsapp: {
       greeting: '¡Hola! Me gustaría hacer el siguiente pedido:\n\n',
       orderItem: 'Pedido',
@@ -282,6 +296,12 @@ export const translations: Record<Language, Translations> = {
       step1Label: 'Endereço',
       step2Label: 'Contato'
     },
+    preview: {
+      templateLabel: 'Estilo',
+      templateHero: 'Hero',
+      templateModern: 'Modern',
+      useThisDesign: 'Usar este estilo'
+    },
     whatsapp: {
       greeting: 'Olá! Gostaria de fazer o seguinte pedido:\n\n',
       orderItem: 'Pedido',
@@ -375,6 +395,12 @@ export const translations: Record<Language, Translations> = {
       step2Title: 'Step 2: Contact information',
       step1Label: 'Address',
       step2Label: 'Contact'
+    },
+    preview: {
+      templateLabel: 'Style',
+      templateHero: 'Hero',
+      templateModern: 'Modern',
+      useThisDesign: 'Use this design'
     },
     whatsapp: {
       greeting: 'Hello! I would like to place the following order:\n\n',

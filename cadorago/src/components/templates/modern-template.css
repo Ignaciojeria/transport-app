@@ -34,8 +34,8 @@
   font-family: 'Playfair Display', serif;
 }
 
-/* Hero section con overlay - imagen completa sin márgenes */
-.modern-template .hero-section {
+/* Hero section con overlay - ámbito solo de esta template */
+.modern-template .modern-template__hero {
   position: relative;
   width: 100%;
   overflow: hidden;
@@ -43,20 +43,20 @@
   padding: 0;
 }
 
-.modern-template .hero-image-wrapper {
+.modern-template .modern-template__hero-image {
   position: relative;
   width: 100%;
   margin: 0;
   padding: 0;
 }
 
-.modern-template .hero-image-wrapper > div {
+.modern-template .modern-template__hero-image > div {
   width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-.modern-template .hero-image-wrapper img {
+.modern-template .modern-template__hero-image img {
   width: 100%;
   height: auto;
   display: block;
@@ -64,27 +64,26 @@
   padding: 0;
 }
 
-/* Asegurar que BrandHero muestre la imagen completa sin márgenes */
-.modern-template .hero-section .hero-image-wrapper > div {
+.modern-template .modern-template__hero .modern-template__hero-image > div {
   width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-.modern-template .hero-section .hero-image-wrapper > div > div {
+.modern-template .modern-template__hero .modern-template__hero-image > div > div {
   width: 100% !important;
   min-height: auto !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-.modern-template .hero-section .hero-image-wrapper > div > div > div {
+.modern-template .modern-template__hero .modern-template__hero-image > div > div > div {
   width: 100% !important;
   margin: 0 !important;
   padding: 0 !important;
 }
 
-.modern-template .hero-section .hero-image-wrapper img {
+.modern-template .modern-template__hero .modern-template__hero-image img {
   width: 100% !important;
   height: auto !important;
   max-height: none !important;
@@ -93,29 +92,27 @@
   display: block !important;
 }
 
-/* Eliminar cualquier padding/margin del wrapper de ImageWithLoader */
-.modern-template .hero-section .relative {
+.modern-template .modern-template__hero .relative {
   margin: 0 !important;
   padding: 0 !important;
   width: 100% !important;
 }
 
-/* En móvil, asegurar que ImageWithLoader no añada espacios */
 @media (max-width: 768px) {
-  .modern-template .hero-section .relative {
+  .modern-template .modern-template__hero .relative {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
   }
 
-  .modern-template .hero-section .relative > div {
+  .modern-template .modern-template__hero .relative > div {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
   }
 }
 
-.modern-template .hero-overlay {
+.modern-template .modern-template__hero-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -127,8 +124,8 @@
   height: 100%;
 }
 
-/* Contenedor principal */
-.modern-template .content-container {
+/* Contenedor principal - ámbito solo de esta template */
+.modern-template .modern-template__content {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
@@ -253,37 +250,28 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .modern-template .hero-section {
+  .modern-template .modern-template__hero {
     min-height: auto;
   }
 
-  /* Asegurar que la imagen se muestre completa en móvil sin recortes */
-  .modern-template .hero-section .hero-image-wrapper {
+  .modern-template .modern-template__hero .modern-template__hero-image {
     width: 100% !important;
   }
 
-  .modern-template .hero-section .hero-image-wrapper > div,
-  .modern-template .hero-section .hero-image-wrapper > div > div,
-  .modern-template .hero-section .hero-image-wrapper > div > div > div {
+  .modern-template .modern-template__hero .modern-template__hero-image > div,
+  .modern-template .modern-template__hero .modern-template__hero-image > div > div,
+  .modern-template .modern-template__hero .modern-template__hero-image > div > div > div {
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
   }
 
-  .modern-template .hero-section .hero-image-wrapper img {
+  .modern-template .modern-template__hero .modern-template__hero-image img {
     width: 100% !important;
     height: auto !important;
     object-fit: contain !important;
     max-height: none !important;
     display: block !important;
-  }
-
-  .modern-template .hero-content h2 {
-    font-size: 1.5rem;
-  }
-
-  .modern-template .hero-content p {
-    font-size: 0.95rem;
   }
 
   .modern-template .section-title {
@@ -292,10 +280,6 @@
 }
 
 @media (max-width: 480px) {
-  .modern-template .hero-content h2 {
-    font-size: 1.3rem;
-  }
-
   .modern-template .section-title {
     font-size: 1.3rem;
   }

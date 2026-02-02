@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getMenuSlug, generateMenuUrlFromSlug } from '../menuUtils'
+  import { getLatestMenuId, getMenuSlugFromApi, generateMenuUrlFromSlug, generateMenuUrlFromMenuId } from '../menuUtils'
   import { language } from '../useLanguage'
 
   interface MenuQRCodeProps {
@@ -39,23 +39,18 @@
         loading = false
       }
 
-      // Obtener slug del menú (requerido para QR)
+      // Obtener slug desde el backend (misma fuente que Compartir)
       if (menuId) {
-        const menuSlug = await getMenuSlug(menuId, session.access_token)
-        if (!menuSlug) {
-          error = 'Tu menú aún no tiene un slug. Por favor, crea una versión de tu menú primero para generar el código QR.'
-          loading = false
-          return
+        const menuSlug = await getMenuSlugFromApi(menuId, session.access_token)
+        if (menuSlug && menuSlug.trim() !== '') {
+          slug = menuSlug.trim()
+          menuUrl = generateMenuUrlFromSlug(slug, currentLanguage)
+        } else {
+          // Sin slug: usar URL con menu_id para que igual pueda tener QR
+          menuUrl = generateMenuUrlFromMenuId(menuId, currentLanguage)
         }
-
-        slug = menuSlug
-        // Generar URL usando el slug
-        menuUrl = generateMenuUrlFromSlug(menuSlug, currentLanguage)
-        
-        // Generar código QR usando API de QR Server
-        // Usar una API pública para generar QR codes
         const qrSize = 300
-        qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(menuUrl)}`
+        qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(menuUrl!)}`
       }
     } catch (err: any) {
       console.error('Error cargando código QR:', err)
@@ -203,7 +198,7 @@
               Descargar QR
             </button>
             <button
-              onclick={() => window.open(menuUrl, '_blank')}
+              onclick={() => menuUrl && window.open(menuUrl, '_blank')}
               class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

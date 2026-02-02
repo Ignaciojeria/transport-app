@@ -63,23 +63,23 @@
   });
 </script>
 
-<div class={`min-h-screen modern-template ${bgColor} ${className}`}>
+<div class="modern-template min-h-screen {bgColor} {className}">
   <!-- Header sticky -->
   <ModernHeader />
   
-  <!-- Hero Section con BrandHero y overlay oscuro -->
-  <section class="hero-section">
-    <div class="hero-image-wrapper">
+  <!-- Hero Section con BrandHero y overlay oscuro - ámbito solo de esta template -->
+  <section class="modern-template__hero">
+    <div class="modern-template__hero-image">
       <BrandHero />
     </div>
-    <div class="hero-overlay"></div>
+    <div class="modern-template__hero-overlay"></div>
   </section>
   
   <!-- Navegación de categorías sticky -->
   <ModernCategoriesNav categories={categories()} onCategoryChange={handleCategoryChange} />
    
-  <!-- Contenedor para el contenido adicional con diseño moderno -->
-  <div class="content-container pt-6 sm:pt-8 pb-8 sm:pb-12 lg:pb-20">
+  <!-- Contenedor del contenido adicional - ámbito solo de esta template -->
+  <div class="modern-template__content pt-6 sm:pt-8 pb-8 sm:pb-12 lg:pb-20">
     <!-- Render children content -->
     {@render children()}
   </div>
