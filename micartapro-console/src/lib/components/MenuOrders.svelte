@@ -25,6 +25,10 @@
   let stationFilter = $state<StationFilter>('ALL')
   /** Tab operativo en Cocina/Bar: Pendientes | En preparación | Listos (solo cuando stationFilter es KITCHEN o BAR). */
   let operationalTab = $state<'pending' | 'preparing' | 'done'>('pending')
+  /** Tab en vista Entrega: Por entregar | Entregado. */
+  let deliveryTab = $state<'pending' | 'delivered'>('pending')
+  /** Números de orden marcadas como entregadas (solo en memoria). */
+  let deliveredOrderNumbers = $state<number[]>([])
   /** Vista QR: muestra códigos Cocina/Barra en lugar de la lista de órdenes. */
   let showQRView = $state(false)
   /** Vista órdenes en Cocina/Bar: vertical (tabs + lista) o kanban (3 columnas). */
@@ -157,12 +161,28 @@
     return { pending, preparing, done }
   })
 
-  /** Órdenes a mostrar: en Caja = todas; en Cocina/Bar = las del tab activo. */
-  const ordersToShow = $derived(stationFilter === 'ALL' ? displayedOrders : ordersByTab[operationalTab])
+  /** En vista Entrega: órdenes por tab (por entregar vs entregado). */
+  const ordersByDeliveryTab = $derived.by(() => {
+    if (stationFilter !== 'ALL') return { pending: [] as KitchenOrder[], delivered: [] as KitchenOrder[] }
+    const pending = displayedOrders.filter((o) => !deliveredOrderNumbers.includes(Number(o.order_number)))
+    const delivered = displayedOrders.filter((o) => deliveredOrderNumbers.includes(Number(o.order_number)))
+    return { pending, delivered }
+  })
+
+  /** Órdenes a mostrar: en Entrega = las del tab activo (por entregar/entregado); en Cocina/Bar = las del tab operativo. */
+  const ordersToShow = $derived(
+    stationFilter === 'ALL' ? ordersByDeliveryTab[deliveryTab] : ordersByTab[operationalTab]
+  )
+
+  function markOrderAsDelivered(orderNumber: number) {
+    if (deliveredOrderNumbers.includes(orderNumber)) return
+    deliveredOrderNumbers = [...deliveredOrderNumbers, orderNumber]
+  }
 
   async function setStationFilterAndReload(filter: StationFilter) {
     stationFilter = filter
     if (filter === 'KITCHEN' || filter === 'BAR') operationalTab = 'pending'
+    if (filter === 'ALL') deliveryTab = 'pending'
     if (menuId && session?.access_token) {
       loading = true
       try {
@@ -420,8 +440,8 @@
         {error}
       </div>
     {:else}
-      <!-- Snippet: una card de orden (Cocina/Bar/Caja). compactStatus=true en Kanban: icono pequeño en cabecera en vez de badge. -->
-      {#snippet orderCard(order: KitchenOrder, status: 'pending' | 'preparing' | 'done', isFirst: boolean, compactStatus: boolean = false)}
+      <!-- Snippet: una card de orden (Cocina/Bar/Caja). compactStatus=true en Kanban; isDelivered=true en tab Entregado (Entrega). -->
+      {#snippet orderCard(order: KitchenOrder, status: 'pending' | 'preparing' | 'done', isFirst: boolean, compactStatus: boolean = false, isDelivered: boolean = false)}
         {@const type = order.fulfillment}
         {@const itemCount = getItemCount(order.items)}
         {@const remainingMin = getRemainingMinutes(order.requested_time)}
@@ -494,13 +514,19 @@
           </div>
           <div class="px-3 py-2 sm:px-4 border-t border-gray-100 {compactStatus ? 'py-1.5 sm:py-2' : ''}">
             {#if stationFilter === 'ALL'}
-              <button
-                type="button"
-                onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
-                class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow transition-colors"
-              >
-                {t.orders?.deliver ?? 'ENTREGAR'}
-              </button>
+              {#if isDelivered}
+                <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-100 text-green-800 text-center">
+                  ✓ Entregado
+                </div>
+              {:else}
+                <button
+                  type="button"
+                  onclick={(e) => { e.stopPropagation(); markOrderAsDelivered(order.order_number); }}
+                  class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow transition-colors"
+                >
+                  {t.orders?.deliver ?? 'ENTREGAR'}
+                </button>
+              {/if}
             {:else}
               {#if status === 'pending'}
                 <button
@@ -527,6 +553,29 @@
           </div>
         </li>
       {/snippet}
+      <!-- Tabs en vista Entrega: Por entregar | Entregado -->
+      {#if !showQRView && stationFilter === 'ALL'}
+        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="Por entregar, Entregado">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={deliveryTab === 'pending'}
+            onclick={() => (deliveryTab = 'pending')}
+            class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors border-r border-gray-200 {deliveryTab === 'pending' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+          >
+            📦 Por entregar {ordersByDeliveryTab.pending.length > 0 ? `(${ordersByDeliveryTab.pending.length})` : ''}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={deliveryTab === 'delivered'}
+            onclick={() => (deliveryTab = 'delivered')}
+            class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors {deliveryTab === 'delivered' ? 'bg-green-100 text-green-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+          >
+            ✓ Entregado {ordersByDeliveryTab.delivered.length > 0 ? `(${ordersByDeliveryTab.delivered.length})` : ''}
+          </button>
+        </div>
+      {/if}
       <!-- Toggle vista: Vertical (tabs + lista) vs 3 columnas (Kanban), solo en Cocina/Bar -->
       {#if !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR')}
         <div class="flex items-center gap-1.5 mb-2">
@@ -607,14 +656,20 @@
         </div>
       {:else if ordersToShow.length === 0}
         <div class="rounded-lg bg-gray-100 border border-gray-200 p-6 text-center text-xs text-gray-600">
-          {stationFilter === 'ALL' ? (t.orders?.empty ?? 'No hay órdenes aún.') : (t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.')}
+          {#if stationFilter === 'ALL' && deliveryTab === 'delivered'}
+            No hay órdenes entregadas.
+          {:else if stationFilter === 'ALL'}
+            {t.orders?.empty ?? 'No hay órdenes aún.'}
+          {:else}
+            {t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.'}
+          {/if}
         </div>
       {:else}
       <ul class="space-y-3 kitchen-orders-list" class:kitchen-mode-list={kitchenMode}>
         {#each ordersToShow as order, index (order.order_number)}
           {@const cardStation = stationFilter === 'ALL' ? null : stationFilter}
           {@const status = cardStation !== null ? getOrderStatus(order.order_number, cardStation) : (isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order))}
-          {@render orderCard(order, status, index === 0)}
+          {@render orderCard(order, status, index === 0, false, stationFilter === 'ALL' && deliveryTab === 'delivered')}
         {/each}
       </ul>
       {/if}
