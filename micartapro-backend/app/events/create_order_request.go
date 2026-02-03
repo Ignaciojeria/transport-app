@@ -17,18 +17,18 @@ type CreateOrderRequest struct {
 type OrderItem struct {
 	Unit        string  `json:"unit"`
 	Quantity    float64 `json:"quantity"`
-	UnitPrice   int     `json:"unitPrice"`
-	TotalPrice  int     `json:"totalPrice"`
+	UnitPrice   float64 `json:"unitPrice"`
+	TotalPrice  float64 `json:"totalPrice"`
 	PricingMode string  `json:"pricingMode"`
 	ProductName string  `json:"productName"`
 	Station     string  `json:"station,omitempty"` // KITCHEN | BAR, opcional
 }
 
 type OrderTotals struct {
-	Total       int    `json:"total"`
-	Currency    string `json:"currency"`
-	Subtotal    int    `json:"subtotal"`
-	DeliveryFee int    `json:"deliveryFee"`
+	Total       float64 `json:"total"`
+	Currency    string  `json:"currency"`
+	Subtotal    float64 `json:"subtotal"`
+	DeliveryFee float64 `json:"deliveryFee"`
 }
 
 type OrderFulfillment struct {
