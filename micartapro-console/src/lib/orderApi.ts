@@ -1,9 +1,15 @@
 /**
  * Cliente para los endpoints de transición de estado de órdenes del backend.
- * Usa VITE_API_BASE_URL o la URL por defecto según entorno.
+ * Todas las fechas se envían en UTC (ej: 2026-02-03T18:25:09.506000000Z).
  */
 
 import { API_BASE_URL } from './config'
+
+/** Fecha actual en UTC (ej: 2026-02-03T18:25:09.506000000Z). */
+function getUtcIsoString(): string {
+  const iso = new Date().toISOString()
+  return iso.replace(/\.(\d{3})Z$/, (_, ms) => `.${ms}000000Z`)
+}
 
 export type OrderStatusTransitionError = { message: string; status?: number }
 
@@ -43,7 +49,7 @@ export async function startPreparation(
   await orderFetch(
     `/menu/${encodeURIComponent(menuId)}/orders/${aggregateId}/start-preparation`,
     accessToken,
-    { station, itemKeys }
+    { station, itemKeys, updatedAt: getUtcIsoString() }
   )
 }
 
@@ -65,7 +71,7 @@ export async function markReady(
   await orderFetch(
     `/menu/${encodeURIComponent(menuId)}/orders/${aggregateId}/mark-ready`,
     accessToken,
-    { station, itemKeys }
+    { station, itemKeys, updatedAt: getUtcIsoString() }
   )
 }
 
@@ -80,7 +86,7 @@ export async function dispatchOrder(
   await orderFetch(
     `/menu/${encodeURIComponent(menuId)}/orders/${aggregateId}/dispatch`,
     accessToken,
-    {}
+    { updatedAt: getUtcIsoString() }
   )
 }
 
@@ -96,6 +102,6 @@ export async function cancelOrder(
   await orderFetch(
     `/menu/${encodeURIComponent(menuId)}/orders/${aggregateId}/cancel`,
     accessToken,
-    reason != null && reason !== '' ? { reason } : {}
+    { ...(reason != null && reason !== '' ? { reason } : {}), updatedAt: getUtcIsoString() }
   )
 }

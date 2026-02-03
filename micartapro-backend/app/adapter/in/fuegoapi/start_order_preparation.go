@@ -64,8 +64,10 @@ func startOrderPreparation(
 				}
 			}
 
-			// Fijar updatedAt y aggregateID
-			request.UpdatedAt = time.Now().Format(time.RFC3339Nano)
+			// Conservar updatedAt UTC del frontend; si no viene, fijar en servidor (UTC)
+			if request.UpdatedAt == "" {
+				request.UpdatedAt = time.Now().UTC().Format(time.RFC3339Nano)
+			}
 			request.AggregateID = aggregateID
 
 			// Llamar al caso de uso
