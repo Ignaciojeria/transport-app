@@ -328,7 +328,7 @@
       {:else}
         <!-- Segmented control: solo en Cocina y Bar (siempre visible aunque el tab tenga 0 órdenes) -->
         {#if station === 'KITCHEN' || station === 'BAR'}
-          <div class="flex items-stretch mb-4 w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En preparación'}, {t.orders?.tabDone ?? 'Listos'}">
+          <div class="flex items-stretch mb-4 w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En Preparación'}, {t.orders?.tabDone ?? 'Listos'}">
             <button
               type="button"
               role="tab"
@@ -345,7 +345,7 @@
               onclick={() => operationalTab = 'preparing'}
               class="flex-1 min-w-0 px-3 py-3.5 text-base font-semibold transition-colors border-r border-gray-200 {operationalTab === 'preparing' ? 'bg-blue-100 text-blue-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
             >
-              🔵 {t.orders?.tabPreparing ?? 'En preparación'} {ordersByTab.preparing.length > 0 ? `(${ordersByTab.preparing.length})` : ''}
+              🔵 {t.orders?.tabPreparing ?? 'En Preparación'} {ordersByTab.preparing.length > 0 ? `(${ordersByTab.preparing.length})` : ''}
             </button>
             <button
               type="button"
@@ -402,7 +402,7 @@
                     <span class="inline-flex items-center gap-1">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
                     <span class="inline-flex items-center gap-1">{t.orders?.filterBar ?? 'Barra'}: {orderHasBar ? (barSt === 'done' ? '✔️' : '⏳') : '—'}</span>
                     <span class="inline-flex items-center gap-1 rounded-full border px-2 py-1 {readyForDelivery ? 'bg-green-50 text-green-800 border-green-200' : 'bg-amber-50 text-amber-900 border-amber-200'}">
-                      {t.orders?.statusGeneralLabel ?? 'Estado general'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo para entregar') : (t.orders?.statusPreparing ?? 'En preparación')}
+                      {t.orders?.statusGeneralLabel ?? 'Estado General'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo Para Entregar') : (t.orders?.statusPreparing ?? 'En Preparación')}
                     </span>
                   </div>
                 {:else}
@@ -411,7 +411,7 @@
                     {cardStatus === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
                     {cardStatus === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
                     {#if cardStatus === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
-                    {cardStatus === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : cardStatus === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+                    {cardStatus === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : cardStatus === 'preparing' ? (t.orders?.statusPreparing ?? 'En Preparación') : (t.orders?.statusDone ?? 'Listo')}
                   </span>
                 {/if}
               </div>
@@ -446,7 +446,7 @@
                       onclick={() => cycleOrderStatus(order.order_number, station)}
                       class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
                     >
-                      <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
+                      <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar Preparación'}
                     </button>
                   {:else if cardStatus === 'preparing'}
                     <button

@@ -55,7 +55,7 @@
   /** Devuelve el menuId cargado (para suscribir Realtime justo después). */
   async function loadOrders(): Promise<string | null> {
     if (!userId || !session?.access_token) {
-      error = t.orders?.noSession ?? 'No hay sesión activa'
+      error = t.orders?.noSession ?? 'No Hay Sesión Activa'
       loading = false
       return null
     }
@@ -65,7 +65,7 @@
       error = null
       const currentMenuId = await getLatestMenuId(userId, session.access_token)
       if (!currentMenuId) {
-        error = t.orders?.noMenu ?? 'No se encontró un menú'
+        error = t.orders?.noMenu ?? 'No Se Encontró Un Menú'
         loading = false
         return null
       }
@@ -426,7 +426,7 @@
           onclick={toggleKitchenMode}
           class="rounded-lg px-3 py-1.5 text-xs font-semibold {kitchenMode ? 'bg-amber-500 text-white hover:bg-amber-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}"
         >
-          {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir modo full') : (t.orders?.kitchenMode ?? 'Modo full')}
+          {kitchenMode ? (t.orders?.exitKitchenMode ?? 'Salir Modo Full') : (t.orders?.kitchenMode ?? 'Modo Full')}
         </button>
       </div>
     </div>
@@ -563,7 +563,7 @@
         {@const barStatusForOrder = getOrderStatusFromItems(order, 'BAR')}
         {@const hasBarItems = order.items.some((i) => i.station === 'BAR')}
         {@const statusIcon = status === 'pending' ? '🟠' : status === 'preparing' ? '⏳' : '✓'}
-        {@const statusTitle = status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+        {@const statusTitle = status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En Preparación') : (t.orders?.statusDone ?? 'Listo')}
         <li class="bg-white rounded-lg border overflow-hidden kitchen-order-card order-card {isDoneTab ? 'order-card-done' : ''} {isFirst && !isDoneTab ? 'kitchen-order-first border-amber-400 shadow-md' : 'border-gray-200 shadow-sm'}">
           <div class="w-full px-3 py-2 sm:px-4 flex flex-wrap items-center gap-2 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-3' : ''} {compactStatus ? 'py-1.5 sm:py-2' : ''}">
             <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab && !compactStatus ? 'text-2xl sm:text-3xl' : compactStatus ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}">#{order.order_number}</span>
@@ -571,7 +571,7 @@
               <span class="text-sm opacity-90" aria-hidden="true" title={statusTitle}>{statusIcon}</span>
             {/if}
             {#if stationFilter === 'KITCHEN' && hasBarItems}
-              <span class="text-sm" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar listo') : (t.orders?.statusPreparing ?? 'Bar en preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
+              <span class="text-sm" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar Listo') : (t.orders?.statusPreparing ?? 'Bar En Preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
             {/if}
             <span class="font-semibold text-gray-700 {isFirst && !compactStatus ? 'text-base sm:text-lg' : compactStatus ? 'text-sm' : 'text-sm sm:text-base'}">
               {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
@@ -596,7 +596,7 @@
                 <span class="inline-flex items-center gap-0.5">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
                 <span class="inline-flex items-center gap-0.5">{t.orders?.filterBar ?? 'Barra'}: {orderHasBar ? (barSt === 'done' ? '✔️' : '⏳') : '—'}</span>
                 <span class="inline-flex items-center gap-0.5 rounded-full border px-1.5 py-0.5 {readyForDelivery ? 'bg-green-50 text-green-800 border-green-200' : 'bg-amber-50 text-amber-900 border-amber-200'}">
-                  {t.orders?.statusGeneralLabel ?? 'Estado general'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo para entregar') : (t.orders?.statusPreparing ?? 'En preparación')}
+                  {t.orders?.statusGeneralLabel ?? 'Estado General'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo Para Entregar') : (t.orders?.statusPreparing ?? 'En Preparación')}
                 </span>
               </div>
             {:else if !compactStatus}
@@ -605,13 +605,13 @@
                 {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
                 {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
                 {#if status === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
-                {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+                {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En Preparación') : (t.orders?.statusDone ?? 'Listo')}
               </span>
             {/if}
           </div>
           <div class="px-3 py-2 sm:px-4 bg-amber-50/50 border-b border-amber-100 {isFirst && !compactStatus ? 'py-3' : ''} {compactStatus ? 'py-1.5 sm:py-2' : ''}">
             <div class="flex items-center justify-between gap-1.5 mb-1">
-              <p class="font-semibold text-amber-800 uppercase tracking-wide text-[11px]">{t.orders?.itemsToPrepare ?? 'Qué preparar'}</p>
+              <p class="font-semibold text-amber-800 uppercase tracking-wide text-[11px]">{t.orders?.itemsToPrepare ?? 'Qué Preparar'}</p>
               <span class="text-xs font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
             </div>
             <ul class="space-y-0.5 text-gray-900 {compactStatus ? 'text-sm' : isFirst ? 'text-base sm:text-lg' : 'text-sm sm:text-base'}">
@@ -630,7 +630,7 @@
                 </div>
               {:else if isDelivered}
                 <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-100 text-green-800 text-center">
-                  ✓ {type === 'DELIVERY' ? (t.orders?.delivered ?? 'ENTREGADO') : (t.orders?.dispatched ?? 'DESPACHADO')}
+                  ✓ {type === 'DELIVERY' ? (t.orders?.delivered ?? 'Entregado') : (t.orders?.dispatched ?? 'Despachado')}
                 </div>
               {:else}
                 <div class="flex flex-col gap-1.5">
@@ -643,14 +643,14 @@
                     {#if isDispatchInProgress(order)}
                       <span class="inline-block animate-spin mr-1">⏳</span>
                     {/if}
-                    {type === 'DELIVERY' ? (t.orders?.dispatch ?? 'DESPACHAR') : (t.orders?.deliver ?? 'ENTREGAR')}
+                    {type === 'DELIVERY' ? (t.orders?.dispatch ?? 'Despachar') : (t.orders?.deliver ?? 'Entregar')}
                   </button>
                   <button
                     type="button"
                     onclick={(e) => { e.stopPropagation(); openCancelModal(order); }}
                     class="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
                   >
-                    ✕ {t.orders?.cancelOrder ?? 'Cancelar pedido'}
+                    ✕ {t.orders?.cancelOrder ?? 'Cancelar Pedido'}
                   </button>
                 </div>
               {/if}
@@ -665,7 +665,7 @@
                   {#if isActionInProgress(order, stationFilter, 'pending')}
                     <span class="inline-block animate-spin mr-1">⏳</span>
                   {/if}
-                  <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
+                  <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar Preparación'}
                 </button>
               {:else if status === 'preparing'}
                 <button
@@ -677,11 +677,11 @@
                   {#if isActionInProgress(order, stationFilter, 'preparing')}
                     <span class="inline-block animate-spin mr-1">⏳</span>
                   {/if}
-                  ✓ {t.orders?.markAsReady ?? 'LISTO'}
+                  ✓ {t.orders?.markAsReady ?? 'Listo'}
                 </button>
               {:else}
                 <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-100 text-green-800 text-center">
-                  ✓ {t.orders?.statusDone ?? 'LISTO'}
+                  ✓ {t.orders?.statusDone ?? 'Listo'}
                 </div>
               {/if}
             {/if}
@@ -724,7 +724,7 @@
       {#if !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR' || stationFilter === 'ALL')}
         <div class="flex items-center gap-1.5 mb-2">
           <span class="text-xs font-medium text-gray-600">{t.orders?.viewVertical ?? 'Vista'}:</span>
-          <div class="flex rounded overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="group" aria-label="{t.orders?.viewVertical ?? 'Vertical'} / {t.orders?.viewThreeColumns ?? '3 columnas'}">
+          <div class="flex rounded overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="group" aria-label="{t.orders?.viewVertical ?? 'Vertical'} / {t.orders?.viewThreeColumns ?? '3 Columnas'}">
             <button
               type="button"
               onclick={() => ordersViewMode = 'vertical'}
@@ -737,14 +737,14 @@
               onclick={() => ordersViewMode = 'kanban'}
               class="px-2 py-1.5 text-xs font-semibold transition-colors border-l border-gray-200 {ordersViewMode === 'kanban' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-600 hover:bg-gray-200'}"
             >
-              {t.orders?.viewThreeColumns ?? '3 columnas'}
+              {t.orders?.viewThreeColumns ?? '3 Columnas'}
             </button>
           </div>
         </div>
       {/if}
       <!-- Vista vertical: tabs + una sola lista -->
       {#if ordersViewMode === 'vertical' && !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR')}
-        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En preparación'}, {t.orders?.tabDone ?? 'Listos'}">
+        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En Preparación'}, {t.orders?.tabDone ?? 'Listos'}">
           <button
             type="button"
             role="tab"
@@ -761,7 +761,7 @@
             onclick={() => operationalTab = 'preparing'}
             class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors border-r border-gray-200 {operationalTab === 'preparing' ? 'bg-blue-100 text-blue-900 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
           >
-            🔵 {t.orders?.tabPreparing ?? 'En preparación'} {ordersByTab.preparing.length > 0 ? `(${ordersByTab.preparing.length})` : ''}
+            🔵 {t.orders?.tabPreparing ?? 'En Preparación'} {ordersByTab.preparing.length > 0 ? `(${ordersByTab.preparing.length})` : ''}
           </button>
           <button
             type="button"
@@ -802,7 +802,7 @@
         </div>
       {:else if stationFilter !== 'ALL' && ordersViewMode === 'kanban'}
         <!-- Vista Kanban Cocina/Bar: 3 columnas (Pendientes | En preparación | Listos) -->
-        {@const kanbanColumns = [{ key: 'pending', label: t.orders?.tabPending ?? 'Pendientes', orders: ordersByTab.pending, icon: '🟠', bg: 'bg-amber-50 border-amber-200', headerBg: 'bg-amber-200 text-amber-900' }, { key: 'preparing', label: t.orders?.tabPreparing ?? 'En preparación', orders: ordersByTab.preparing, icon: '🔵', bg: 'bg-blue-50/80 border-blue-200', headerBg: 'bg-blue-100 text-blue-900' }, { key: 'done', label: t.orders?.tabDone ?? 'Listos', orders: ordersByTab.done, icon: '🟢', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }]}
+        {@const kanbanColumns = [{ key: 'pending', label: t.orders?.tabPending ?? 'Pendientes', orders: ordersByTab.pending, icon: '🟠', bg: 'bg-amber-50 border-amber-200', headerBg: 'bg-amber-200 text-amber-900' }, { key: 'preparing', label: t.orders?.tabPreparing ?? 'En Preparación', orders: ordersByTab.preparing, icon: '🔵', bg: 'bg-blue-50/80 border-blue-200', headerBg: 'bg-blue-100 text-blue-900' }, { key: 'done', label: t.orders?.tabDone ?? 'Listos', orders: ordersByTab.done, icon: '🟢', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }]}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
           {#each kanbanColumns as col}
             <div class="flex flex-col rounded-lg border {col.bg} overflow-hidden min-h-[160px]">
@@ -868,7 +868,7 @@
       >
         <h2 id="cancel-modal-title" class="text-base font-bold text-gray-900 flex items-center gap-2">
           <span aria-hidden="true">⚠️</span>
-          {t.orders?.cancelModalTitle ?? 'Cancelar pedido'} #{orderToCancel.order_number}
+          {t.orders?.cancelModalTitle ?? 'Cancelar Pedido'} #{orderToCancel.order_number}
         </h2>
         <p class="mt-1 text-xs text-gray-600">
           {t.orders?.cancelModalSubtitle ?? 'Esta acción no se puede deshacer.'}
@@ -917,7 +917,7 @@
             {#if cancelInProgress}
               <span class="inline-block animate-spin mr-1">⏳</span>
             {/if}
-            {t.orders?.cancelModalConfirm ?? 'Confirmar cancelación'}
+            {t.orders?.cancelModalConfirm ?? 'Confirmar Cancelación'}
           </button>
         </div>
       </div>
@@ -1048,10 +1048,10 @@
   >
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col print:max-h-none print:shadow-none print:rounded-none">
       <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 print:hidden">
-        <h2 id="paper-order-title" class="text-lg font-semibold text-gray-800">{t.orders?.viewAsPaper ?? 'Ver como hoja'}</h2>
+        <h2 id="paper-order-title" class="text-lg font-semibold text-gray-800">{t.orders?.viewAsPaper ?? 'Ver Como Hoja'}</h2>
         <div class="flex items-center gap-2">
           <button type="button" onclick={printThermal} class="px-3 py-1.5 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-900">
-            {t.orders?.printThermal ?? 'Imprimir en térmica'}
+            {t.orders?.printThermal ?? 'Imprimir En Térmica'}
           </button>
           <button type="button" onclick={closePaperView} class="p-2 rounded-lg hover:bg-gray-100 text-gray-600" aria-label="Cerrar">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
