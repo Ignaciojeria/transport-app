@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, refreshSupabaseToken, groupOrderItemsForDisplay, type KitchenOrder, type KitchenOrderItem, type StationFilter } from '../menuUtils'
-  import { dispatchOrder, cancelOrder } from '../orderApi'
+  import { dispatchOrder, cancelOrder, startPreparation, markReady } from '../orderApi'
   import { t as tStore } from '../useLanguage'
   import { playNewOrderSound, ensureAudioUnlocked } from '../utils/newOrderSound'
 
@@ -25,7 +25,6 @@
   let operatorName = $state('')
   let operatorSubmitted = $state(false)
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
-  let orderStatus = $state<Record<string, 'pending' | 'preparing' | 'done'>>({})
   /** Tab operativo en Cocina/Bar: Pendientes | En preparación | Listos (solo cuando station es KITCHEN o BAR). */
   let operationalTab = $state<'pending' | 'preparing' | 'done'>('pending')
   /** Tab en vista Entrega (station ALL): Pendiente | Listo | Cancelado (mismo patrón que consola de órdenes). */
@@ -56,7 +55,16 @@
   const displayedOrders = $derived(orders)
   const stationLabel = $derived(station === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : station === 'BAR' ? (t.orders?.filterBar ?? 'Barra') : (t.orders?.filterAll ?? 'Entrega'))
 
-  /** En Cocina/Bar: órdenes particionadas por estado para los tabs. En Entrega (ALL) no se usa. */
+  /** Estado por estación derivado de los ítems de la orden (proyección). Igual criterio que consola MenuOrders. */
+  function getOrderStatusFromItems(order: KitchenOrder, stationKey: string): 'pending' | 'preparing' | 'done' {
+    const stationItems = order.items.filter((i) => (i.station ?? 'KITCHEN') === stationKey && i.status !== 'CANCELLED')
+    if (stationItems.length === 0) return 'done'
+    if (stationItems.some((i) => i.status === 'PENDING')) return 'pending'
+    if (stationItems.some((i) => i.status === 'IN_PROGRESS')) return 'preparing'
+    return 'done'
+  }
+
+  /** En Cocina/Bar: órdenes particionadas por estado para los tabs (desde proyección, no estado local). */
   const ordersByTab = $derived.by(() => {
     if (station !== 'KITCHEN' && station !== 'BAR') return { pending: [] as KitchenOrder[], preparing: [] as KitchenOrder[], done: [] as KitchenOrder[] }
     const stKey = station as 'KITCHEN' | 'BAR'
@@ -64,7 +72,7 @@
     const preparing: KitchenOrder[] = []
     const done: KitchenOrder[] = []
     for (const o of displayedOrders) {
-      const st = getOrderStatus(o.order_number, stKey)
+      const st = getOrderStatusFromItems(o, stKey)
       if (st === 'pending') pending.push(o)
       else if (st === 'preparing') preparing.push(o)
       else done.push(o)
@@ -121,7 +129,10 @@
             const created = new Date(o.created_at).getTime()
             return Date.now() - created < 90_000
           })
-        if (justArrived) playNewOrderSound()
+        if (justArrived) {
+          ensureAudioUnlocked()
+          playNewOrderSound()
+        }
       }
       newIds.forEach((id) => previousOrderNumbers.add(id))
       initialLoadDone = true
@@ -168,20 +179,41 @@
     return items.reduce((s, i) => s + i.quantity, 0)
   }
 
-  const statusKey = (orderNumber: number, st: 'KITCHEN' | 'BAR') => `${orderNumber}-${st}`
+  /** Acción en curso en Cocina/Bar (start-preparation / mark-ready) para evitar doble clic. */
+  let kitchenActionInProgress = $state<Set<string>>(new Set())
 
-  function getOrderStatus(orderNumber: number, st: 'KITCHEN' | 'BAR'): 'pending' | 'preparing' | 'done' {
-    return orderStatus[statusKey(orderNumber, st)] ?? 'pending'
+  function isKitchenActionInProgress(order: KitchenOrder, st: 'KITCHEN' | 'BAR'): boolean {
+    const current = getOrderStatusFromItems(order, st)
+    return kitchenActionInProgress.has(`${order.aggregate_id}-${current}-${st}`)
   }
 
-  function setOrderStatus(orderNumber: number, st: 'KITCHEN' | 'BAR', status: 'pending' | 'preparing' | 'done') {
-    orderStatus = { ...orderStatus, [statusKey(orderNumber, st)]: status }
-  }
-
-  function cycleOrderStatus(orderNumber: number, st: 'KITCHEN' | 'BAR') {
-    const current = getOrderStatus(orderNumber, st)
-    const next = current === 'pending' ? 'preparing' : current === 'preparing' ? 'done' : 'pending'
-    setOrderStatus(orderNumber, st, next)
+  async function cycleOrderStatus(order: KitchenOrder, st: 'KITCHEN' | 'BAR') {
+    const accessToken = token || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(STORAGE_TOKEN_KEY) : null)
+    if (!menuId || !accessToken) return
+    const current = getOrderStatusFromItems(order, st)
+    const key = `${order.aggregate_id}-${current}-${st}`
+    if (kitchenActionInProgress.has(key)) return
+    kitchenActionInProgress = new Set(kitchenActionInProgress).add(key)
+    try {
+      if (current === 'pending') {
+        await startPreparation(menuId, order.aggregate_id, accessToken, st, [])
+      } else if (current === 'preparing') {
+        const itemKeys = order.items
+          .filter((i) => (i.station ?? 'KITCHEN') === st && i.status === 'IN_PROGRESS')
+          .map((i) => i.item_key)
+        if (itemKeys.length > 0) {
+          await markReady(menuId, order.aggregate_id, accessToken, st, itemKeys)
+        }
+      }
+      await loadOrders()
+    } catch (err) {
+      console.error('Error al actualizar estado en cocina:', err)
+      error = err instanceof Error ? err.message : 'Error al actualizar estado'
+    } finally {
+      const next = new Set(kitchenActionInProgress)
+      next.delete(key)
+      kitchenActionInProgress = next
+    }
   }
 
   /** Estaciones que tienen ítems en esta orden (KITCHEN, BAR). */
@@ -193,10 +225,10 @@
     return stations.size > 0 ? [...stations] : ['KITCHEN']
   }
 
-  /** Indica si Cocina y Barra marcaron la orden como lista (solo informativo; usa estado local en Cocina/Bar). */
+  /** Indica si Cocina y Barra marcaron la orden como lista (derivado de ítems de la proyección). */
   function isOrderReadyForDelivery(order: KitchenOrder): boolean {
     const stations = getStationsInOrder(order)
-    return stations.every((st) => getOrderStatus(order.order_number, st as 'KITCHEN' | 'BAR') === 'done')
+    return stations.every((st) => getOrderStatusFromItems(order, st) === 'done')
   }
 
   /** Orden terminada: todos los ítems activos en DISPATCHED o DELIVERED (mismo criterio que MenuOrders). */
@@ -230,7 +262,7 @@
   /** Estado resumido para mostrar en vista Entrega (Pendiente / En preparación). */
   function getCajaOrderStatusLabel(order: KitchenOrder): 'pending' | 'preparing' {
     const stations = getStationsInOrder(order)
-    const statuses = stations.map((st) => getOrderStatus(order.order_number, st as 'KITCHEN' | 'BAR'))
+    const statuses = stations.map((st) => getOrderStatusFromItems(order, st))
     if (statuses.every((s) => s === 'pending')) return 'pending'
     return 'preparing'
   }
@@ -291,7 +323,7 @@
     const name = operatorName.trim()
     if (!name) return
     ensureAudioUnlocked()
-    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(STORAGE_OPERATOR_KEY, name)
+    if (typeof localStorage !== 'undefined') localStorage.setItem(STORAGE_OPERATOR_KEY, name)
     operatorSubmitted = true
     startOrdersAndRealtime(cleanupRef)
   }
@@ -369,7 +401,7 @@
       token = sessionStorage.getItem(STORAGE_TOKEN_KEY)
     }
 
-    const savedOperator = sessionStorage.getItem(STORAGE_OPERATOR_KEY)
+    const savedOperator = localStorage.getItem(STORAGE_OPERATOR_KEY) ?? sessionStorage.getItem(STORAGE_OPERATOR_KEY)
     if (savedOperator) {
       operatorName = savedOperator
       operatorSubmitted = true
@@ -517,8 +549,8 @@
           {@const useBarColor = station === 'BAR' || (station === 'ALL' && order.items.some((i: KitchenOrderItem) => i.station === 'BAR'))}
           {@const isDoneTab = (station === 'ALL' && (columnKey === 'delivered' || columnKey === 'cancelled')) || ((station === 'KITCHEN' || station === 'BAR') && columnKey === 'done')}
           {@const cardStatus = station === 'ALL' ? null : (columnKey as 'pending' | 'preparing' | 'done')}
-          {@const kitchenSt = station === 'ALL' ? getOrderStatus(order.order_number, 'KITCHEN') : null}
-          {@const barSt = station === 'ALL' ? getOrderStatus(order.order_number, 'BAR') : null}
+          {@const kitchenSt = station === 'ALL' ? getOrderStatusFromItems(order, 'KITCHEN') : null}
+          {@const barSt = station === 'ALL' ? getOrderStatusFromItems(order, 'BAR') : null}
           {@const orderHasBar = station === 'ALL' ? order.items.some((i) => i.station === 'BAR') : false}
           {@const readyForDelivery = station === 'ALL' ? isOrderReadyForDelivery(order) : false}
           <li class="bg-white rounded-xl border-2 overflow-hidden station-order-card {isDoneTab ? 'order-card-done opacity-80 border-gray-300' : ''} {isFirst && !isDoneTab ? 'border-amber-400 shadow-lg' : 'border-gray-200'}">
@@ -606,17 +638,27 @@
                 {#if cardStatus === 'pending'}
                   <button
                     type="button"
-                    onclick={() => cycleOrderStatus(order.order_number, station)}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
+                    disabled={isKitchenActionInProgress(order, station)}
+                    onclick={() => cycleOrderStatus(order, station)}
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
                   >
-                    <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar Preparación'}
+                    {#if isKitchenActionInProgress(order, station)}
+                      <span class="inline-block animate-spin mr-1">⏳</span>
+                    {:else}
+                      <span aria-hidden="true">🔥</span>
+                    {/if}
+                    {t.orders?.startPreparing ?? 'Iniciar Preparación'}
                   </button>
                 {:else if cardStatus === 'preparing'}
                   <button
                     type="button"
-                    onclick={() => cycleOrderStatus(order.order_number, station)}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
+                    disabled={isKitchenActionInProgress(order, station)}
+                    onclick={() => cycleOrderStatus(order, station)}
+                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md disabled:opacity-50 disabled:cursor-not-allowed {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
                   >
+                    {#if isKitchenActionInProgress(order, station)}
+                      <span class="inline-block animate-spin mr-1">⏳</span>
+                    {/if}
                     ✓ {t.orders?.markAsReady ?? 'LISTO'}
                   </button>
                 {:else}
