@@ -3,6 +3,7 @@
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, getMenuOrderByNumber, type KitchenOrder, type MenuOrderRow, type StationFilter } from '../menuUtils'
   import { t as tStore } from '../useLanguage'
+  import { playNewOrderSound, ensureAudioUnlocked } from '../utils/newOrderSound'
 
   interface MenuOrdersProps {
     onMenuClick?: () => void
@@ -31,6 +32,8 @@
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
   /** Modal QR ampliado: KITCHEN | BAR | ALL | null */
   let qrEnlarged = $state<'KITCHEN' | 'BAR' | 'ALL' | null>(null)
+  let previousOrderNumbers = new Set<number>()
+  let initialLoadDone = false
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -55,7 +58,22 @@
         return null
       }
       menuId = currentMenuId
-      orders = await getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter)
+      const newOrders = await getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter)
+      orders = newOrders
+      const newIds = new Set(newOrders.map((o) => Number(o.order_number)))
+      if (initialLoadDone) {
+        const addedIds = [...newIds].filter((id) => !previousOrderNumbers.has(id))
+        const justArrived =
+          addedIds.length > 0 &&
+          newOrders.some((o) => {
+            if (!addedIds.includes(Number(o.order_number))) return false
+            const created = new Date(o.created_at).getTime()
+            return Date.now() - created < 90_000
+          })
+        if (justArrived) playNewOrderSound()
+      }
+      newIds.forEach((id) => previousOrderNumbers.add(id))
+      initialLoadDone = true
       return currentMenuId
     } catch (err: unknown) {
       console.error('Error cargando órdenes:', err)
@@ -149,6 +167,7 @@
       loading = true
       try {
         orders = await getKitchenOrdersFromProjection(menuId, session.access_token, filter)
+        previousOrderNumbers = new Set(orders.map((o) => Number(o.order_number)))
       } finally {
         loading = false
       }
@@ -294,21 +313,21 @@
       <div class="mt-3 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          onclick={() => { showQRView = false; setStationFilterAndReload('ALL'); }}
+          onclick={() => { ensureAudioUnlocked(); showQRView = false; setStationFilterAndReload('ALL'); }}
           class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'ALL' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
         >
           {t.orders?.filterAll ?? 'Entrega'}
         </button>
         <button
           type="button"
-          onclick={() => { showQRView = false; setStationFilterAndReload('KITCHEN'); }}
+          onclick={() => { ensureAudioUnlocked(); showQRView = false; setStationFilterAndReload('KITCHEN'); }}
           class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'KITCHEN' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200'}"
         >
           {t.orders?.filterKitchen ?? 'Cocina'}
         </button>
         <button
           type="button"
-          onclick={() => { showQRView = false; setStationFilterAndReload('BAR'); }}
+          onclick={() => { ensureAudioUnlocked(); showQRView = false; setStationFilterAndReload('BAR'); }}
           class="rounded-lg px-4 py-2 text-sm font-semibold transition-colors {!showQRView && stationFilter === 'BAR' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}"
         >
           {t.orders?.filterBar ?? 'Barra'}
