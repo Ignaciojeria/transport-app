@@ -177,8 +177,8 @@
   /** En vista Entrega: órdenes por tab (por entregar | entregado | cancelado). Usa lista completa para incluir canceladas. */
   const ordersByDeliveryTab = $derived.by(() => {
     if (stationFilter !== 'ALL') return { pending: [] as KitchenOrder[], delivered: [] as KitchenOrder[], cancelled: [] as KitchenOrder[] }
-    const pending = orders.filter((o) => !isOrderFullyDispatched(o) && !isOrderFullyCancelled(o))
-    const delivered = orders.filter((o) => isOrderFullyDispatched(o))
+    const pending = orders.filter((o) => !isOrderFullyDelivered(o) && !isOrderFullyCancelled(o))
+    const delivered = orders.filter((o) => isOrderFullyDelivered(o))
     const cancelled = orders.filter((o) => isOrderFullyCancelled(o))
     return { pending, delivered, cancelled }
   })
@@ -230,9 +230,10 @@
     return 'done'
   }
 
-  function isOrderFullyDispatched(order: KitchenOrder): boolean {
+  /** Orden terminada: todos los ítems activos en estado terminal (DISPATCHED = retiro, DELIVERED = despacho). */
+  function isOrderFullyDelivered(order: KitchenOrder): boolean {
     const active = order.items.filter((i) => i.status !== 'CANCELLED')
-    return active.length > 0 && active.every((i) => i.status === 'DISPATCHED')
+    return active.length > 0 && active.every((i) => i.status === 'DISPATCHED' || i.status === 'DELIVERED')
   }
 
   function isOrderFullyCancelled(order: KitchenOrder): boolean {
@@ -276,7 +277,7 @@
     return stations.size > 0 ? [...stations] : ['KITCHEN']
   }
 
-  /** Indica si Cocina y Barra marcaron la orden como lista (todas estaciones en READY o DISPATCHED). */
+  /** Indica si Cocina y Barra marcaron la orden como lista (todas estaciones en READY, DISPATCHED o DELIVERED). */
   function isOrderReadyForDelivery(order: KitchenOrder): boolean {
     const stations = getStationsInOrder(order)
     return stations.every((st) => getOrderStatusFromItems(order, st) === 'done')
@@ -629,7 +630,7 @@
                 </div>
               {:else if isDelivered}
                 <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-100 text-green-800 text-center">
-                  ✓ Entregado
+                  ✓ {type === 'DELIVERY' ? (t.orders?.delivered ?? 'ENTREGADO') : (t.orders?.dispatched ?? 'DESPACHADO')}
                 </div>
               {:else}
                 <div class="flex flex-col gap-1.5">
@@ -642,7 +643,7 @@
                     {#if isDispatchInProgress(order)}
                       <span class="inline-block animate-spin mr-1">⏳</span>
                     {/if}
-                    {t.orders?.deliver ?? 'ENTREGAR'}
+                    {type === 'DELIVERY' ? (t.orders?.dispatch ?? 'DESPACHAR') : (t.orders?.deliver ?? 'ENTREGAR')}
                   </button>
                   <button
                     type="button"
@@ -687,9 +688,9 @@
           </div>
         </li>
       {/snippet}
-      <!-- Tabs en vista Entrega: Por entregar | Entregado | Cancelado (solo en vista vertical) -->
+      <!-- Tabs en vista Entrega: Pendiente | Listo | Cancelado (solo en vista vertical) -->
       {#if !showQRView && stationFilter === 'ALL' && ordersViewMode === 'vertical'}
-        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="Por entregar, Entregado, Cancelado">
+        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.statusPending ?? 'Pendiente'}, {t.orders?.statusDone ?? 'Listo'}, {t.orders?.cancelled ?? 'Cancelado'}">
           <button
             type="button"
             role="tab"
@@ -697,7 +698,7 @@
             onclick={() => (deliveryTab = 'pending')}
             class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors border-r border-gray-200 {deliveryTab === 'pending' ? 'bg-gray-800 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
           >
-            📦 Por entregar {ordersByDeliveryTab.pending.length > 0 ? `(${ordersByDeliveryTab.pending.length})` : ''}
+            📦 {t.orders?.statusPending ?? 'Pendiente'} {ordersByDeliveryTab.pending.length > 0 ? `(${ordersByDeliveryTab.pending.length})` : ''}
           </button>
           <button
             type="button"
@@ -706,7 +707,7 @@
             onclick={() => (deliveryTab = 'delivered')}
             class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors border-r border-gray-200 {deliveryTab === 'delivered' ? 'bg-green-100 text-green-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
           >
-            ✓ Entregado {ordersByDeliveryTab.delivered.length > 0 ? `(${ordersByDeliveryTab.delivered.length})` : ''}
+            ✓ {t.orders?.statusDone ?? 'Listo'} {ordersByDeliveryTab.delivered.length > 0 ? `(${ordersByDeliveryTab.delivered.length})` : ''}
           </button>
           <button
             type="button"
@@ -774,8 +775,8 @@
         </div>
       {/if}
       {#if stationFilter === 'ALL' && ordersViewMode === 'kanban'}
-        <!-- Vista Kanban Entrega: 3 columnas (Por entregar | Entregado | Cancelado) -->
-        {@const deliveryKanbanColumns = [{ key: 'pending', label: 'Por entregar', orders: ordersByDeliveryTab.pending, icon: '📦', bg: 'bg-gray-100 border-gray-200', headerBg: 'bg-gray-800 text-white' }, { key: 'delivered', label: 'Entregado', orders: ordersByDeliveryTab.delivered, icon: '✓', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }, { key: 'cancelled', label: t.orders?.cancelled ?? 'Cancelado', orders: ordersByDeliveryTab.cancelled, icon: '✕', bg: 'bg-gray-50 border-gray-200', headerBg: 'bg-gray-300 text-gray-800' }]}
+        <!-- Vista Kanban Entrega: 3 columnas (Pendiente | Listo | Cancelado) -->
+        {@const deliveryKanbanColumns = [{ key: 'pending', label: t.orders?.statusPending ?? 'Pendiente', orders: ordersByDeliveryTab.pending, icon: '📦', bg: 'bg-gray-100 border-gray-200', headerBg: 'bg-gray-800 text-white' }, { key: 'delivered', label: t.orders?.statusDone ?? 'Listo', orders: ordersByDeliveryTab.delivered, icon: '✓', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }, { key: 'cancelled', label: t.orders?.cancelled ?? 'Cancelado', orders: ordersByDeliveryTab.cancelled, icon: '✕', bg: 'bg-gray-50 border-gray-200', headerBg: 'bg-gray-300 text-gray-800' }]}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
           {#each deliveryKanbanColumns as col}
             <div class="flex flex-col rounded-lg border {col.bg} overflow-hidden min-h-[160px]">
@@ -840,7 +841,7 @@
         {#each ordersToShow as order, index (order.order_number)}
           {@const cardStation = stationFilter === 'ALL' ? null : stationFilter}
           {@const status = cardStation !== null ? getOrderStatusFromItems(order, cardStation) : (isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order))}
-          {@const isDel = stationFilter === 'ALL' && isOrderFullyDispatched(order)}
+          {@const isDel = stationFilter === 'ALL' && isOrderFullyDelivered(order)}
           {@const isCan = stationFilter === 'ALL' && isOrderFullyCancelled(order)}
           {@render orderCard(order, status, index === 0, false, isDel, isCan)}
         {/each}

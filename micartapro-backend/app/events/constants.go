@@ -17,8 +17,8 @@ const (
 	EventCreateOrderRequested             = "create.order.requested"
 	EventOrderStartedPreparation          = "order.started.preparation"
 	EventOrderItemReady                   = "order.item.ready"
-	EventOrderDispatched                  = "order.dispatched"
+	EventOrderDelivered                   = "order.delivered"
 	EventOrderCancelled                   = "order.cancelled"
 	EventImageGenerationRequested         = "image.generation.requested"
-	EventImageEditionRequested           = "image.edition.requested"
+	EventImageEditionRequested            = "image.edition.requested"
 )

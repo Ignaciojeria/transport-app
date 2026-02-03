@@ -10,7 +10,7 @@ import (
 type OrderItemReadyRequest struct {
 	AggregateID int64    `json:"aggregateId"`
 	ItemKeys    []string `json:"itemKeys"` // Items específicos que están listos
-	Station     string   `json:"station"` // KITCHEN | BAR
+	Station     string   `json:"station"`  // KITCHEN | BAR
 	UpdatedAt   string   `json:"updatedAt"`
 }
 

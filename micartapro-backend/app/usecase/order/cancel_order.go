@@ -26,7 +26,7 @@ func NewCancelOrder(
 		spanCtx, span := observability.Tracer.Start(ctx, "cancel_order")
 		defer span.End()
 
-		// Para cancelar, actualizamos todos los items que no estén en DISPATCHED o CANCELLED
+		// Para cancelar, actualizamos todos los items que no estén en DISPATCHED, DELIVERED o CANCELLED
 		err := updateOrderStatus(
 			spanCtx,
 			aggregateID,

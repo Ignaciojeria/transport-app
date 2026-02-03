@@ -31,11 +31,11 @@ func NewUpdateOrderStatus(supabase *supabase.Client, conf configuration.Conf) Up
 
 		// Preparar los parámetros para la función RPC
 		rpcParams := map[string]interface{}{
-			"p_aggregate_id": aggregateID,
-			"p_new_status":   newStatus,
-			"p_item_keys":    itemKeys,
-			"p_station":      station,
-			"p_event_type":   eventType,
+			"p_aggregate_id":  aggregateID,
+			"p_new_status":    newStatus,
+			"p_item_keys":     itemKeys,
+			"p_station":       station,
+			"p_event_type":    eventType,
 			"p_event_payload": json.RawMessage(eventPayloadBytes),
 		}
 

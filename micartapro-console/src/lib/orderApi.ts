@@ -70,7 +70,7 @@ export async function markReady(
 }
 
 /**
- * Marca la orden como despachada/entregada (READY → DISPATCHED).
+ * Marca la orden como terminada: READY → DISPATCHED (retiro) o DELIVERED (despacho) según fulfillment.
  */
 export async function dispatchOrder(
   menuId: string,

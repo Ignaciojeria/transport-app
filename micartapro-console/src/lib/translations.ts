@@ -163,6 +163,9 @@ export interface Translations {
     emptyCancelled?: string
     startToReady?: string
     deliver?: string
+    dispatch?: string
+    delivered?: string
+    dispatched?: string
     cancelled?: string
     cancelOrder?: string
     cancelModalTitle?: string
@@ -324,6 +327,9 @@ export const translations: Record<Language, Translations> = {
       emptyCancelled: 'No hay órdenes canceladas.',
       startToReady: 'INICIAR → LISTO',
       deliver: 'ENTREGAR',
+      dispatch: 'DESPACHAR',
+      delivered: 'ENTREGADO',
+      dispatched: 'DESPACHADO',
       cancelled: 'Cancelado',
       cancelOrder: 'Cancelar pedido',
       cancelModalTitle: 'Cancelar pedido',
@@ -498,6 +504,9 @@ export const translations: Record<Language, Translations> = {
       emptyCancelled: 'Nenhum pedido cancelado.',
       startToReady: 'INICIAR → PRONTO',
       deliver: 'ENTREGAR',
+      dispatch: 'DESPACHAR',
+      delivered: 'ENTREGADO',
+      dispatched: 'DESPACHADO',
       cancelled: 'Cancelado',
       cancelOrder: 'Cancelar pedido',
       cancelModalTitle: 'Cancelar pedido',
@@ -663,6 +672,9 @@ export const translations: Record<Language, Translations> = {
       emptyCancelled: 'No cancelled orders.',
       startToReady: 'START → READY',
       deliver: 'DELIVER',
+      dispatch: 'DISPATCH',
+      delivered: 'DELIVERED',
+      dispatched: 'DISPATCHED',
       cancelled: 'Cancelled',
       cancelOrder: 'Cancel order',
       cancelModalTitle: 'Cancel order',

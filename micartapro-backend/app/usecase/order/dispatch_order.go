@@ -9,7 +9,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 )
 
-type DispatchOrder func(ctx context.Context, aggregateID int64, request events.OrderDispatchedRequest) error
+type DispatchOrder func(ctx context.Context, aggregateID int64, request events.OrderDeliveredRequest) error
 
 func init() {
 	ioc.Registry(NewDispatchOrder,
@@ -21,19 +21,19 @@ func init() {
 func NewDispatchOrder(
 	observability observability.Observability,
 	updateOrderStatus supabaserepo.UpdateOrderStatus) DispatchOrder {
-	return func(ctx context.Context, aggregateID int64, request events.OrderDispatchedRequest) error {
+	return func(ctx context.Context, aggregateID int64, request events.OrderDeliveredRequest) error {
 		observability.Logger.InfoContext(ctx, "dispatch_order", "aggregateID", aggregateID, "request", request)
 		spanCtx, span := observability.Tracer.Start(ctx, "dispatch_order")
 		defer span.End()
 
-		// Para dispatch, actualizamos todos los items que estén en READY a DISPATCHED
+		// COMPLETE: la DB pone DISPATCHED (retiro) o DELIVERED (despacho) según fulfillment
 		err := updateOrderStatus(
 			spanCtx,
 			aggregateID,
-			"DISPATCHED",
+			"COMPLETE",
 			nil, // nil significa todos los items
 			"",  // No filtramos por estación
-			events.EventOrderDispatched,
+			events.EventOrderDelivered,
 			request,
 		)
 		if err != nil {
@@ -41,7 +41,7 @@ func NewDispatchOrder(
 			return err
 		}
 
-		observability.Logger.InfoContext(spanCtx, "order dispatched successfully", "aggregateID", aggregateID)
+		observability.Logger.InfoContext(spanCtx, "order delivered successfully", "aggregateID", aggregateID)
 		return nil
 	}
 }

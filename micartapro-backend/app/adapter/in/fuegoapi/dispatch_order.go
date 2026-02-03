@@ -30,7 +30,7 @@ func dispatchOrder(
 	dispatchOrderUseCase order.DispatchOrder,
 ) {
 	fuego.Post(s.Manager, "/menu/{menuId}/orders/{aggregateId}/dispatch",
-		func(c fuego.ContextWithBody[events.OrderDispatchedRequest]) (map[string]string, error) {
+		func(c fuego.ContextWithBody[events.OrderDeliveredRequest]) (map[string]string, error) {
 			spanCtx, span := obs.Tracer.Start(c.Context(), "dispatchOrder")
 			defer span.End()
 
@@ -70,7 +70,7 @@ func dispatchOrder(
 				}
 			}
 
-			obs.Logger.InfoContext(spanCtx, "order dispatched successfully", "aggregateID", aggregateID)
+			obs.Logger.InfoContext(spanCtx, "order delivered successfully", "aggregateID", aggregateID)
 			return map[string]string{"status": "success"}, nil
 		},
 		option.Summary("dispatchOrder"),
