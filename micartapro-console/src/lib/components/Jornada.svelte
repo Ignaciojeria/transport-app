@@ -2,6 +2,7 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, type KitchenOrder } from '../menuUtils'
+  import { getActiveJourney, createJourney } from '../journeyApi'
   import { API_BASE_URL } from '../config'
   import { t as tStore } from '../useLanguage'
 
@@ -13,11 +14,14 @@
 
   let menuId = $state<string | null>(null)
   let orders = $state<KitchenOrder[]>([])
+  let activeJourney = $state<{ id: string } | null>(null)
   let loading = $state(true)
   let error = $state<string | null>(null)
   let showCloseModal = $state(false)
   let closeInProgress = $state(false)
   let closeResult = $state<'idle' | 'success' | 'coming_soon'>('idle')
+  let createJourneyInProgress = $state(false)
+  let createJourneyError = $state<string | null>(null)
 
   const session = $derived(authState.session)
   const user = $derived(authState.user)
@@ -87,6 +91,7 @@
     try {
       loading = true
       error = null
+      createJourneyError = null
       const mid = await getLatestMenuId(userId, session.access_token)
       if (!mid) {
         error = t.jornada?.noMenu ?? 'No Se Encontró Un Menú'
@@ -94,13 +99,32 @@
         return
       }
       menuId = mid
-      const list = await getKitchenOrdersFromProjection(mid, session.access_token, 'ALL')
+      const [journey, list] = await Promise.all([
+        getActiveJourney(mid, session.access_token),
+        getKitchenOrdersFromProjection(mid, session.access_token, 'ALL')
+      ])
+      activeJourney = journey
       orders = list
     } catch (e) {
       console.error('Error cargando jornada:', e)
       error = t.jornada?.errorLoading ?? 'Error Al Cargar Los Datos De La Jornada.'
     } finally {
       loading = false
+    }
+  }
+
+  async function openJourney() {
+    if (!session?.access_token || !menuId) return
+    createJourneyInProgress = true
+    createJourneyError = null
+    try {
+      await createJourney(menuId, session.access_token, 'USER', t.jornada?.openJourneyReason ?? 'Apertura manual')
+      await load()
+    } catch (e) {
+      console.error('Error creando jornada:', e)
+      createJourneyError = t.jornada?.errorCreatingJourney ?? 'Error al abrir la jornada. Intenta de nuevo.'
+    } finally {
+      createJourneyInProgress = false
     }
   }
 
@@ -173,8 +197,36 @@
       <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-amber-800">
         <p class="font-medium">{error}</p>
       </div>
+    {:else if activeJourney === null && menuId}
+      <!-- No hay jornada activa: CTA para abrir una -->
+      <section class="max-w-md mx-auto mt-8">
+        <div class="rounded-xl bg-white border border-gray-200 shadow-sm p-8 text-center">
+          <p class="text-gray-600 mb-6">
+            {t.jornada?.noActiveJourney ?? 'No tienes una jornada abierta. Abre una para comenzar a registrar órdenes del día.'}
+          </p>
+          {#if createJourneyError}
+            <p class="text-sm text-red-600 mb-4">{createJourneyError}</p>
+          {/if}
+          <button
+            type="button"
+            disabled={createJourneyInProgress}
+            onclick={openJourney}
+            class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 transition-colors"
+          >
+            {#if createJourneyInProgress}
+              <span class="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+              <span>{t.jornada?.openingJourney ?? 'Abriendo jornada...'}</span>
+            {:else}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>{t.jornada?.openJourney ?? 'Abrir jornada'}</span>
+            {/if}
+          </button>
+        </div>
+      </section>
     {:else}
-      <!-- Estado actual -->
+      <!-- Jornada activa: estado actual, resumen y cerrar -->
       <section class="mb-6">
         <div class="rounded-xl bg-white border border-gray-200 shadow-sm p-5">
           <div class="flex items-center gap-2 mb-3">
@@ -194,7 +246,6 @@
         </div>
       </section>
 
-      <!-- Resumen rápido -->
       <section class="mb-8">
         <h2 class="text-sm font-semibold text-gray-700 mb-3">{t.jornada?.summary ?? 'Resumen Rápido'}</h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -220,7 +271,6 @@
         </div>
       </section>
 
-      <!-- Acción principal: Cerrar jornada -->
       <section class="mt-8 pt-6 border-t border-gray-200">
         <button
           type="button"

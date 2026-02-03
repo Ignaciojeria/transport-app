@@ -201,6 +201,11 @@ export interface Translations {
     noMenu: string
     noSession: string
     errorLoading: string
+    noActiveJourney?: string
+    openJourney?: string
+    openingJourney?: string
+    errorCreatingJourney?: string
+    openJourneyReason?: string
   }
 }
 
@@ -393,7 +398,12 @@ export const translations: Record<Language, Translations> = {
       comingSoon: 'El Cierre De Jornada Estará Disponible En Una Próxima Actualización.',
       noMenu: 'No Se Encontró Un Menú',
       noSession: 'No Hay Sesión Activa',
-      errorLoading: 'Error Al Cargar Los Datos De La Jornada.'
+      errorLoading: 'Error Al Cargar Los Datos De La Jornada.',
+      noActiveJourney: 'No tienes una jornada abierta. Abre una para comenzar a registrar órdenes del día.',
+      openJourney: 'Abrir jornada',
+      openingJourney: 'Abriendo jornada...',
+      errorCreatingJourney: 'Error al abrir la jornada. Intenta de nuevo.',
+      openJourneyReason: 'Apertura manual'
     }
   },
   PT: {
@@ -785,7 +795,12 @@ export const translations: Record<Language, Translations> = {
       comingSoon: 'Workday Closure Will Be Available In An Upcoming Update.',
       noMenu: 'No Menu Found',
       noSession: 'No Active Session',
-      errorLoading: 'Error Loading Workday Data.'
+      errorLoading: 'Error Loading Workday Data.',
+      noActiveJourney: "You don't have an open workday. Open one to start recording today's orders.",
+      openJourney: 'Open workday',
+      openingJourney: 'Opening workday...',
+      errorCreatingJourney: 'Error opening workday. Please try again.',
+      openJourneyReason: 'Manual opening'
     }
   }
 }

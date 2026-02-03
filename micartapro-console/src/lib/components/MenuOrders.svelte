@@ -3,6 +3,7 @@
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, getMenuOrderByNumber, groupOrderItemsForDisplay, type KitchenOrder, type MenuOrderRow, type StationFilter } from '../menuUtils'
   import { startPreparation, markReady, dispatchOrder, cancelOrder } from '../orderApi'
+  import { getActiveJourney, createJourney } from '../journeyApi'
   import { t as tStore } from '../useLanguage'
   import { playNewOrderSound, ensureAudioUnlocked } from '../utils/newOrderSound'
 
@@ -44,6 +45,9 @@
   let cancelInProgress = $state(false)
   let previousOrderNumbers = new Set<number>()
   let initialLoadDone = false
+  let activeJourney = $state<{ id: string } | null>(null)
+  let createJourneyInProgress = $state(false)
+  let createJourneyError = $state<string | null>(null)
 
   const CANCEL_REASON_KEYS = ['outOfStock', 'orderError', 'customerLeft', 'paymentIssue', 'other'] as const
 
@@ -63,6 +67,7 @@
     try {
       loading = true
       error = null
+      createJourneyError = null
       const currentMenuId = await getLatestMenuId(userId, session.access_token)
       if (!currentMenuId) {
         error = t.orders?.noMenu ?? 'No Se Encontró Un Menú'
@@ -70,7 +75,11 @@
         return null
       }
       menuId = currentMenuId
-      const newOrders = await getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter)
+      const [journey, newOrders] = await Promise.all([
+        getActiveJourney(currentMenuId, session.access_token),
+        getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter)
+      ])
+      activeJourney = journey
       orders = newOrders
       const newIds = new Set(newOrders.map((o) => Number(o.order_number)))
       if (initialLoadDone) {
@@ -93,6 +102,21 @@
       return null
     } finally {
       loading = false
+    }
+  }
+
+  async function openJourney() {
+    if (!session?.access_token || !menuId) return
+    createJourneyInProgress = true
+    createJourneyError = null
+    try {
+      await createJourney(menuId, session.access_token, 'USER', t.jornada?.openJourneyReason ?? 'Apertura manual')
+      await loadOrders()
+    } catch (e) {
+      console.error('Error creando jornada:', e)
+      createJourneyError = t.jornada?.errorCreatingJourney ?? 'Error al abrir la jornada. Intenta de nuevo.'
+    } finally {
+      createJourneyInProgress = false
     }
   }
 
@@ -544,6 +568,33 @@
       <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-800">
         {error}
       </div>
+      {:else if menuId && activeJourney === null}
+      <section class="max-w-md mx-auto mt-8">
+        <div class="rounded-xl bg-white border border-gray-200 shadow-sm p-8 text-center">
+          <p class="text-gray-600 mb-6">
+            {t.jornada?.noActiveJourney ?? 'No tienes una jornada abierta. Abre una para comenzar a registrar órdenes del día.'}
+          </p>
+          {#if createJourneyError}
+            <p class="text-sm text-red-600 mb-4">{createJourneyError}</p>
+          {/if}
+          <button
+            type="button"
+            disabled={createJourneyInProgress}
+            onclick={openJourney}
+            class="w-full flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 transition-colors"
+          >
+            {#if createJourneyInProgress}
+              <span class="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+              <span>{t.jornada?.openingJourney ?? 'Abriendo jornada...'}</span>
+            {:else}
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span>{t.jornada?.openJourney ?? 'Abrir jornada'}</span>
+            {/if}
+          </button>
+        </div>
+      </section>
       {:else if actionError}
       <div class="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 mb-3">
         {actionError}
