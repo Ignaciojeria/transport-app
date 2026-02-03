@@ -404,16 +404,16 @@ async function getLatestJson(userId: string, menuId: string): Promise<{ filename
  * @param userId - ID del usuario
  * @param menuId - ID del menú
  * @param idempotencyKey - Clave de idempotencia a esperar
- * @param maxAttempts - Número máximo de intentos (default: 60)
- * @param intervalMs - Intervalo entre intentos en milisegundos (default: 3000)
+ * @param maxAttempts - Número máximo de intentos (default: 24 → ~2 min total)
+ * @param intervalMs - Intervalo entre intentos en ms (default: 5000 para bajar TPS)
  * @returns El menú actualizado cuando el idempotencyKey coincide
  */
 export async function pollUntilMenuUpdated(
   userId: string,
   menuId: string,
   idempotencyKey: string,
-  maxAttempts: number = 60,
-  intervalMs: number = 3000
+  maxAttempts: number = 24,
+  intervalMs: number = 5000
 ): Promise<any> {
   let attempts = 0
   
@@ -459,15 +459,15 @@ export async function pollUntilMenuUpdated(
  * Hace polling en Supabase hasta que la versión del menú exista
  * @param versionID - ID de la versión del menú
  * @param accessToken - Token de autenticación
- * @param maxAttempts - Número máximo de intentos (default: 60)
- * @param intervalMs - Intervalo entre intentos en milisegundos (default: 3000)
+ * @param maxAttempts - Número máximo de intentos (default: 24 → ~2 min total)
+ * @param intervalMs - Intervalo entre intentos en ms (default: 5000 para bajar TPS)
  * @returns El contenido del menú cuando la versión existe
  */
 export async function pollUntilVersionExists(
   versionID: string,
   accessToken: string,
-  maxAttempts: number = 60,
-  intervalMs: number = 3000
+  maxAttempts: number = 24,
+  intervalMs: number = 5000
 ): Promise<any> {
   try {
     // Usar cliente autenticado reutilizable
@@ -554,16 +554,16 @@ export async function pollUntilVersionExists(
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
  * @param versionId - ID de la versión opcional para verificar
- * @param maxAttempts - Número máximo de intentos (default: 20)
- * @param intervalMs - Intervalo entre intentos en milisegundos (default: 3000)
+ * @param maxAttempts - Número máximo de intentos (default: 12 → ~1 min total)
+ * @param intervalMs - Intervalo entre intentos en ms (default: 5000 para bajar TPS)
  * @returns true si el menú está listo, false si no se encontró después de todos los intentos
  */
 export async function pollUntilMenuExists(
   menuId: string,
   accessToken: string,
   versionId?: string,
-  maxAttempts: number = 20,
-  intervalMs: number = 3000
+  maxAttempts: number = 12,
+  intervalMs: number = 5000
 ): Promise<boolean> {
   // Importar API_BASE_URL desde config
   const { API_BASE_URL } = await import('./config')

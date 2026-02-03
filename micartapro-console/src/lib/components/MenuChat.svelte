@@ -323,7 +323,7 @@
           
           // Verificar que el endpoint del backend esté listo antes de mostrar la vista previa
           console.log('🔍 Verificando que el endpoint del backend esté listo...')
-          const backendReady = await pollUntilMenuExists(menuId!, session.access_token, versionId, 12, 3000)
+          const backendReady = await pollUntilMenuExists(menuId!, session.access_token, versionId, 12, 5000)
           
           if (!backendReady) {
             console.warn('⚠️ El endpoint del backend no está listo, pero continuando...')

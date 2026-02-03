@@ -26,6 +26,8 @@
   let operationalTab = $state<'pending' | 'preparing' | 'done'>('pending')
   /** Vista QR: muestra códigos Cocina/Barra en lugar de la lista de órdenes. */
   let showQRView = $state(false)
+  /** Vista órdenes en Cocina/Bar: vertical (tabs + lista) o kanban (3 columnas). */
+  let ordersViewMode = $state<'vertical' | 'kanban'>('vertical')
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
   /** Modal QR ampliado: KITCHEN | BAR | ALL | null */
   let qrEnlarged = $state<'KITCHEN' | 'BAR' | 'ALL' | null>(null)
@@ -399,8 +401,137 @@
         {error}
       </div>
     {:else}
-      <!-- Tabs operativos: siempre visibles en Cocina/Bar (aunque el tab activo tenga 0 órdenes) -->
+      <!-- Snippet: una card de orden (Cocina/Bar/Caja). compactStatus=true en Kanban: icono pequeño en cabecera en vez de badge. -->
+      {#snippet orderCard(order: KitchenOrder, status: 'pending' | 'preparing' | 'done', isFirst: boolean, compactStatus: boolean = false)}
+        {@const type = order.fulfillment}
+        {@const itemCount = getItemCount(order.items)}
+        {@const remainingMin = getRemainingMinutes(order.requested_time)}
+        {@const timeColor = getRemainingTimeColor(remainingMin)}
+        {@const isBarOrder = order.items.some((i) => i.station === 'BAR')}
+        {@const useBarColor = stationFilter === 'BAR' || (stationFilter === 'ALL' && isBarOrder)}
+        {@const readyForDelivery = isOrderReadyForDelivery(order)}
+        {@const isDoneTab = status === 'done'}
+        {@const barStatusForOrder = getOrderStatus(order.order_number, 'BAR')}
+        {@const hasBarItems = order.items.some((i) => i.station === 'BAR')}
+        {@const statusIcon = status === 'pending' ? '🟠' : status === 'preparing' ? '⏳' : '✓'}
+        {@const statusTitle = status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+        <li class="bg-white rounded-xl border-2 overflow-hidden kitchen-order-card order-card {isDoneTab ? 'order-card-done' : ''} {isFirst && !isDoneTab ? 'kitchen-order-first border-amber-400 shadow-lg' : 'border-gray-200 shadow-sm'}">
+          <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-6' : 'sm:py-4'} {compactStatus ? 'py-2 sm:py-3' : ''}">
+            <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab && !compactStatus ? 'text-4xl sm:text-5xl md:text-6xl' : compactStatus ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl'}">#{order.order_number}</span>
+            {#if compactStatus && stationFilter !== 'ALL'}
+              <span class="text-base opacity-90" aria-hidden="true" title={statusTitle}>{statusIcon}</span>
+            {/if}
+            {#if stationFilter === 'KITCHEN' && hasBarItems}
+              <span class="text-lg" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar listo') : (t.orders?.statusPreparing ?? 'Bar en preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
+            {/if}
+            <span class="font-semibold text-gray-700 {isFirst && !compactStatus ? 'text-2xl sm:text-3xl md:text-4xl' : compactStatus ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'}">
+              {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
+            </span>
+            {#if remainingMin !== null}
+              <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums
+                {timeColor === 'green' ? 'bg-green-100 text-green-800' : ''}
+                {timeColor === 'yellow' ? 'bg-amber-200 text-amber-900' : ''}
+                {timeColor === 'red' ? 'bg-red-100 text-red-800' : ''}">
+                <span aria-hidden="true">{timeColor === 'green' ? '🟢' : timeColor === 'yellow' ? '🟡' : '🔴'}</span>
+                {getRemainingTimeLabel(remainingMin)}
+              </span>
+            {/if}
+            <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst && !compactStatus ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}">
+              {getFulfillmentLabel(type)}
+            </span>
+            {#if stationFilter === 'ALL'}
+              {@const kitchenSt = getOrderStatus(order.order_number, 'KITCHEN')}
+              {@const barSt = getOrderStatus(order.order_number, 'BAR')}
+              {@const orderHasBar = order.items.some((i) => i.station === 'BAR')}
+              <div class="flex flex-wrap items-center gap-3 text-sm font-semibold">
+                <span class="inline-flex items-center gap-1">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
+                <span class="inline-flex items-center gap-1">{t.orders?.filterBar ?? 'Barra'}: {orderHasBar ? (barSt === 'done' ? '✔️' : '⏳') : '—'}</span>
+                <span class="inline-flex items-center gap-1 rounded-full border px-2 py-1 {readyForDelivery ? 'bg-green-50 text-green-800 border-green-200' : 'bg-amber-50 text-amber-900 border-amber-200'}">
+                  {t.orders?.statusGeneralLabel ?? 'Estado general'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo para entregar') : (t.orders?.statusPreparing ?? 'En preparación')}
+                </span>
+              </div>
+            {:else if !compactStatus}
+              <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
+                {status === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
+                {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
+                {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
+                {#if status === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
+                {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
+              </span>
+            {/if}
+          </div>
+          <div class="px-4 py-3 sm:px-5 bg-amber-50/50 border-b border-amber-100 {isFirst && !compactStatus ? 'py-4 sm:py-5' : ''} {compactStatus ? 'py-2 sm:py-3' : ''}">
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <p class="font-semibold text-amber-800 uppercase tracking-wide {isFirst && !compactStatus ? 'text-sm' : 'text-xs'}">{t.orders?.itemsToPrepare ?? 'Qué preparar'}</p>
+              <span class="text-sm font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
+            </div>
+            <ul class="space-y-1 text-gray-900 {compactStatus ? 'text-base sm:text-lg' : isFirst ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl'}">
+              {#each order.items as item}
+                <li class="tabular-nums">
+                  <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.item_name}</span>
+                </li>
+              {/each}
+            </ul>
+          </div>
+          <div class="px-4 py-3 sm:px-5 border-t border-gray-100 {compactStatus ? 'py-2 sm:py-3' : ''}">
+            {#if stationFilter === 'ALL'}
+              <button
+                type="button"
+                onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
+                class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
+              >
+                {t.orders?.deliver ?? 'ENTREGAR'}
+              </button>
+            {:else}
+              {#if status === 'pending'}
+                <button
+                  type="button"
+                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
+                  class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
+                >
+                  <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
+                </button>
+              {:else if status === 'preparing'}
+                <button
+                  type="button"
+                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
+                  class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
+                >
+                  ✓ {t.orders?.markAsReady ?? 'LISTO'}
+                </button>
+              {:else}
+                <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
+                  ✓ {t.orders?.statusDone ?? 'LISTO'}
+                </div>
+              {/if}
+            {/if}
+          </div>
+        </li>
+      {/snippet}
+      <!-- Toggle vista: Vertical (tabs + lista) vs 3 columnas (Kanban), solo en Cocina/Bar -->
       {#if !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR')}
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-sm font-medium text-gray-600">{t.orders?.viewVertical ?? 'Vista'}:</span>
+          <div class="flex rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="group" aria-label="{t.orders?.viewVertical ?? 'Vertical'} / {t.orders?.viewThreeColumns ?? '3 columnas'}">
+            <button
+              type="button"
+              onclick={() => ordersViewMode = 'vertical'}
+              class="px-3 py-2 text-sm font-semibold transition-colors {ordersViewMode === 'vertical' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-600 hover:bg-gray-200'}"
+            >
+              {t.orders?.viewVertical ?? 'Vertical'}
+            </button>
+            <button
+              type="button"
+              onclick={() => ordersViewMode = 'kanban'}
+              class="px-3 py-2 text-sm font-semibold transition-colors border-l border-gray-200 {ordersViewMode === 'kanban' ? 'bg-white text-gray-900 shadow-sm border border-gray-200' : 'text-gray-600 hover:bg-gray-200'}"
+            >
+              {t.orders?.viewThreeColumns ?? '3 columnas'}
+            </button>
+          </div>
+        </div>
+      {/if}
+      <!-- Vista vertical: tabs + una sola lista -->
+      {#if ordersViewMode === 'vertical' && !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR')}
         <div class="flex items-stretch mb-4 w-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="{t.orders?.tabPending ?? 'Pendientes'}, {t.orders?.tabPreparing ?? 'En preparación'}, {t.orders?.tabDone ?? 'Listos'}">
           <button
             type="button"
@@ -431,121 +562,40 @@
           </button>
         </div>
       {/if}
-      {#if ordersToShow.length === 0}
+      {#if stationFilter !== 'ALL' && ordersViewMode === 'kanban'}
+        <!-- Vista Kanban: 3 columnas clickeables (Pendientes | En preparación | Listos) -->
+        {@const kanbanColumns = [{ key: 'pending', label: t.orders?.tabPending ?? 'Pendientes', orders: ordersByTab.pending, icon: '🟠', bg: 'bg-amber-50 border-amber-200', headerBg: 'bg-amber-200 text-amber-900' }, { key: 'preparing', label: t.orders?.tabPreparing ?? 'En preparación', orders: ordersByTab.preparing, icon: '🔵', bg: 'bg-blue-50/80 border-blue-200', headerBg: 'bg-blue-100 text-blue-900' }, { key: 'done', label: t.orders?.tabDone ?? 'Listos', orders: ordersByTab.done, icon: '🟢', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }]}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {#each kanbanColumns as col}
+            <div class="flex flex-col rounded-xl border-2 {col.bg} overflow-hidden min-h-[200px]">
+              <button
+                type="button"
+                onclick={() => { operationalTab = col.key as 'pending' | 'preparing' | 'done'; ordersViewMode = 'vertical'; }}
+                class="flex items-center justify-center gap-2 w-full px-4 py-3 font-bold text-left transition-colors hover:opacity-90 {col.headerBg}"
+                title="{t.orders?.viewVertical ?? 'Ver'} {col.label}"
+              >
+                <span aria-hidden="true">{col.icon}</span>
+                <span>{col.label}</span>
+                <span class="tabular-nums">({col.orders.length})</span>
+              </button>
+              <ul class="flex-1 overflow-y-auto p-3 space-y-3">
+                {#each col.orders as order, index (order.order_number)}
+                  {@render orderCard(order, col.key as 'pending' | 'preparing' | 'done', index === 0)}
+                {/each}
+              </ul>
+            </div>
+          {/each}
+        </div>
+      {:else if ordersToShow.length === 0}
         <div class="rounded-lg bg-gray-100 border border-gray-200 p-8 text-center text-gray-600">
           {stationFilter === 'ALL' ? (t.orders?.empty ?? 'No hay órdenes aún.') : (t.orders?.emptyForStation ?? 'No hay órdenes para esta estación.')}
         </div>
       {:else}
       <ul class="space-y-5 kitchen-orders-list" class:kitchen-mode-list={kitchenMode}>
         {#each ordersToShow as order, index (order.order_number)}
-          {@const type = order.fulfillment}
-          {@const itemCount = getItemCount(order.items)}
-          {@const isFirst = index === 0}
           {@const cardStation = stationFilter === 'ALL' ? null : stationFilter}
           {@const status = cardStation !== null ? getOrderStatus(order.order_number, cardStation) : (isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order))}
-          {@const remainingMin = getRemainingMinutes(order.requested_time)}
-          {@const timeColor = getRemainingTimeColor(remainingMin)}
-          {@const isBarOrder = order.items.some((i) => i.station === 'BAR')}
-          {@const useBarColor = stationFilter === 'BAR' || (stationFilter === 'ALL' && isBarOrder)}
-          {@const readyForDelivery = isOrderReadyForDelivery(order)}
-          {@const isDoneTab = stationFilter !== 'ALL' && operationalTab === 'done'}
-          {@const barStatusForOrder = getOrderStatus(order.order_number, 'BAR')}
-          {@const hasBarItems = order.items.some((i) => i.station === 'BAR')}
-          <li class="bg-white rounded-xl border-2 overflow-hidden kitchen-order-card order-card {isDoneTab ? 'order-card-done' : ''} {isFirst && !isDoneTab ? 'kitchen-order-first border-amber-400 shadow-lg' : 'border-gray-200 shadow-sm'}">
-            <!-- Cabecera cocina: número, hora, tipo, tiempo restante, estado; Cocina puede ver icono bar 🍺⏳/✔️ -->
-            <div class="w-full px-4 py-3 sm:px-5 flex flex-wrap items-center gap-4 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-6' : 'sm:py-4'}">
-              <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab ? 'text-4xl sm:text-5xl md:text-6xl' : 'text-3xl sm:text-4xl'}">#{order.order_number}</span>
-              {#if stationFilter === 'KITCHEN' && hasBarItems}
-                <span class="text-lg" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar listo') : (t.orders?.statusPreparing ?? 'Bar en preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
-              {/if}
-              <span class="font-semibold text-gray-700 {isFirst ? 'text-2xl sm:text-3xl md:text-4xl' : 'text-xl sm:text-2xl'}">
-                {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
-              </span>
-              {#if remainingMin !== null}
-                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-bold tabular-nums
-                  {timeColor === 'green' ? 'bg-green-100 text-green-800' : ''}
-                  {timeColor === 'yellow' ? 'bg-amber-200 text-amber-900' : ''}
-                  {timeColor === 'red' ? 'bg-red-100 text-red-800' : ''}">
-                  <span aria-hidden="true">{timeColor === 'green' ? '🟢' : timeColor === 'yellow' ? '🟡' : '🔴'}</span>
-                  {getRemainingTimeLabel(remainingMin)}
-                </span>
-              {/if}
-              <span class="inline-flex items-center rounded-full font-medium {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}">
-                {getFulfillmentLabel(type)}
-              </span>
-              <!-- Caja: Cocina ✔️/⏳, Bar ✔️/⏳, Estado general. Cocina/Bar: estado operativo de la estación. -->
-              {#if stationFilter === 'ALL'}
-                {@const kitchenSt = getOrderStatus(order.order_number, 'KITCHEN')}
-                {@const barSt = getOrderStatus(order.order_number, 'BAR')}
-                {@const orderHasBar = order.items.some((i) => i.station === 'BAR')}
-                <div class="flex flex-wrap items-center gap-3 text-sm font-semibold">
-                  <span class="inline-flex items-center gap-1">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
-                  <span class="inline-flex items-center gap-1">{t.orders?.filterBar ?? 'Barra'}: {orderHasBar ? (barSt === 'done' ? '✔️' : '⏳') : '—'}</span>
-                  <span class="inline-flex items-center gap-1 rounded-full border px-2 py-1 {readyForDelivery ? 'bg-green-50 text-green-800 border-green-200' : 'bg-amber-50 text-amber-900 border-amber-200'}">
-                    {t.orders?.statusGeneralLabel ?? 'Estado general'}: {readyForDelivery ? (t.orders?.readyToDeliver ?? 'Listo para entregar') : (t.orders?.statusPreparing ?? 'En preparación')}
-                  </span>
-                </div>
-              {:else}
-                <span class="inline-flex items-center gap-1 rounded-full font-bold border {isFirst ? 'px-4 py-2 text-base sm:text-lg' : 'px-3 py-1 text-sm'}
-                  {status === 'pending' ? 'bg-gray-100 text-gray-700 border-gray-200' : ''}
-                  {status === 'preparing' ? 'bg-amber-50 text-amber-900 border-amber-200' : ''}
-                  {status === 'done' ? 'bg-green-50 text-green-800 border-green-200' : ''}">
-                  {#if status === 'preparing'}<span aria-hidden="true">⏳</span>{/if}
-                  {status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
-                </span>
-              {/if}
-            </div>
-            <!-- Qué preparar: listado vertical (un ítem por línea; cantidad en bold) -->
-            <div class="px-4 py-3 sm:px-5 bg-amber-50/50 border-b border-amber-100 {isFirst ? 'py-4 sm:py-5' : ''}">
-              <div class="flex items-center justify-between gap-2 mb-2">
-                <p class="font-semibold text-amber-800 uppercase tracking-wide {isFirst ? 'text-sm' : 'text-xs'}">{t.orders?.itemsToPrepare ?? 'Qué preparar'}</p>
-                <span class="text-sm font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
-              </div>
-              <ul class="space-y-1 text-gray-900 {isFirst ? 'text-xl sm:text-2xl md:text-3xl' : 'text-lg sm:text-xl'}">
-                {#each order.items as item}
-                  <li class="tabular-nums">
-                    <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.item_name}</span>
-                  </li>
-                {/each}
-              </ul>
-            </div>
-            <!-- Entrega: ENTREGAR siempre habilitado (no bloqueado por Cocina/Barra). Cocina/Bar: INICIAR y LISTO. -->
-            <div class="px-4 py-3 sm:px-5 border-t border-gray-100">
-              {#if stationFilter === 'ALL'}
-                <!-- Entrega: botón ENTREGAR siempre disponible. -->
-                <button
-                  type="button"
-                  onclick={(e) => { e.stopPropagation(); /* TODO: acción entregar */ }}
-                  class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-600 hover:bg-green-700 text-white shadow-md transition-colors"
-                >
-                  {t.orders?.deliver ?? 'ENTREGAR'}
-                </button>
-              {:else}
-                <!-- Cocina / Bar: INICIAR y LISTO por estación -->
-                {#if status === 'pending'}
-                  <button
-                    type="button"
-                    onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
-                  >
-                    <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
-                  </button>
-                {:else if status === 'preparing'}
-                  <button
-                    type="button"
-                    onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
-                    class="w-full py-3 px-4 rounded-xl text-base font-bold text-white shadow-md transition-colors {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
-                  >
-                    ✓ {t.orders?.markAsReady ?? 'LISTO'}
-                  </button>
-                {:else}
-                  <div class="w-full py-3 px-4 rounded-xl text-base font-bold bg-green-100 text-green-800 text-center">
-                    ✓ {t.orders?.statusDone ?? 'LISTO'}
-                  </div>
-                {/if}
-              {/if}
-            </div>
-          </li>
+          {@render orderCard(order, status, index === 0)}
         {/each}
       </ul>
       {/if}

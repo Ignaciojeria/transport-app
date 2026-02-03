@@ -162,6 +162,8 @@ export interface Translations {
     emptyForStation: string
     startToReady?: string
     deliver?: string
+    viewVertical?: string
+    viewThreeColumns?: string
   }
 }
 
@@ -464,7 +466,9 @@ export const translations: Record<Language, Translations> = {
       showQR: 'QR',
       emptyForStation: 'Nenhum pedido para esta estação.',
       startToReady: 'INICIAR → PRONTO',
-      deliver: 'ENTREGAR'
+      deliver: 'ENTREGAR',
+      viewVertical: 'Vertical',
+      viewThreeColumns: '3 colunas'
     }
   },
   EN: {
@@ -610,7 +614,9 @@ export const translations: Record<Language, Translations> = {
       showQR: 'QR',
       emptyForStation: 'No orders for this station.',
       startToReady: 'START → READY',
-      deliver: 'DELIVER'
+      deliver: 'DELIVER',
+      viewVertical: 'Vertical',
+      viewThreeColumns: '3 columns'
     }
   }
 }
