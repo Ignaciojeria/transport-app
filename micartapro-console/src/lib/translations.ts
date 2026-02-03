@@ -160,8 +160,19 @@ export interface Translations {
     filterBar: string
     showQR: string
     emptyForStation: string
+    emptyCancelled?: string
     startToReady?: string
     deliver?: string
+    cancelled?: string
+    cancelOrder?: string
+    cancelModalTitle?: string
+    cancelModalSubtitle?: string
+    cancelModalReasonLabel?: string
+    cancelReasons?: Record<string, string>
+    cancelModalCommentLabel?: string
+    cancelModalCommentPlaceholder?: string
+    cancelModalBack?: string
+    cancelModalConfirm?: string
     viewVertical?: string
     viewThreeColumns?: string
   }
@@ -310,8 +321,27 @@ export const translations: Record<Language, Translations> = {
       filterBar: 'Barra',
       showQR: 'QR',
       emptyForStation: 'No hay órdenes para esta estación.',
+      emptyCancelled: 'No hay órdenes canceladas.',
       startToReady: 'INICIAR → LISTO',
-      deliver: 'ENTREGAR'
+      deliver: 'ENTREGAR',
+      cancelled: 'Cancelado',
+      cancelOrder: 'Cancelar pedido',
+      cancelModalTitle: 'Cancelar pedido',
+      cancelModalSubtitle: 'Esta acción no se puede deshacer.',
+      cancelModalReasonLabel: 'Motivo (elige uno):',
+      cancelReasons: {
+        outOfStock: 'Falta de stock',
+        orderError: 'Error de pedido',
+        customerLeft: 'Cliente se fue',
+        paymentIssue: 'Problema de pago',
+        other: 'Otro'
+      },
+      cancelModalCommentLabel: 'Comentario (opcional):',
+      cancelModalCommentPlaceholder: 'Ej: cliente no contestó...',
+      cancelModalBack: 'Volver',
+      cancelModalConfirm: 'Confirmar cancelación',
+      viewVertical: 'Vertical',
+      viewThreeColumns: '3 columnas'
     }
   },
   PT: {
@@ -465,8 +495,25 @@ export const translations: Record<Language, Translations> = {
       filterBar: 'Bar',
       showQR: 'QR',
       emptyForStation: 'Nenhum pedido para esta estação.',
+      emptyCancelled: 'Nenhum pedido cancelado.',
       startToReady: 'INICIAR → PRONTO',
       deliver: 'ENTREGAR',
+      cancelled: 'Cancelado',
+      cancelOrder: 'Cancelar pedido',
+      cancelModalTitle: 'Cancelar pedido',
+      cancelModalSubtitle: 'Esta ação não pode ser desfeita.',
+      cancelModalReasonLabel: 'Motivo (escolha um):',
+      cancelReasons: {
+        outOfStock: 'Falta de estoque',
+        orderError: 'Erro no pedido',
+        customerLeft: 'Cliente foi embora',
+        paymentIssue: 'Problema de pagamento',
+        other: 'Outro'
+      },
+      cancelModalCommentLabel: 'Comentário (opcional):',
+      cancelModalCommentPlaceholder: 'Ex: cliente não atendeu...',
+      cancelModalBack: 'Voltar',
+      cancelModalConfirm: 'Confirmar cancelamento',
       viewVertical: 'Vertical',
       viewThreeColumns: '3 colunas'
     }
@@ -613,8 +660,25 @@ export const translations: Record<Language, Translations> = {
       filterBar: 'Bar',
       showQR: 'QR',
       emptyForStation: 'No orders for this station.',
+      emptyCancelled: 'No cancelled orders.',
       startToReady: 'START → READY',
       deliver: 'DELIVER',
+      cancelled: 'Cancelled',
+      cancelOrder: 'Cancel order',
+      cancelModalTitle: 'Cancel order',
+      cancelModalSubtitle: 'This action cannot be undone.',
+      cancelModalReasonLabel: 'Reason (choose one):',
+      cancelReasons: {
+        outOfStock: 'Out of stock',
+        orderError: 'Order error',
+        customerLeft: 'Customer left',
+        paymentIssue: 'Payment issue',
+        other: 'Other'
+      },
+      cancelModalCommentLabel: 'Comment (optional):',
+      cancelModalCommentPlaceholder: 'E.g. customer did not answer...',
+      cancelModalBack: 'Back',
+      cancelModalConfirm: 'Confirm cancellation',
       viewVertical: 'Vertical',
       viewThreeColumns: '3 columns'
     }

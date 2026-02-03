@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
-  import { getLatestMenuId, getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, getMenuOrderByNumber, type KitchenOrder, type MenuOrderRow, type StationFilter } from '../menuUtils'
+  import { getLatestMenuId, getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, getMenuOrderByNumber, groupOrderItemsForDisplay, type KitchenOrder, type MenuOrderRow, type StationFilter } from '../menuUtils'
+  import { startPreparation, markReady, dispatchOrder, cancelOrder } from '../orderApi'
   import { t as tStore } from '../useLanguage'
   import { playNewOrderSound, ensureAudioUnlocked } from '../utils/newOrderSound'
 
@@ -18,26 +19,33 @@
   let menuId = $state<string | null>(null)
   let paperOrder = $state<MenuOrderRow | null>(null)
   let thermalPrintMode = $state(false)
-  /** Estado por (orden, estación): INICIAR/LISTO se aplican a BAR y COCINA de forma independiente. */
-  let orderStatus = $state<Record<string, 'pending' | 'preparing' | 'done'>>({})
   let kitchenMode = $state(false)
   /** Filtro por estación: se aplica en Supabase (columna station). */
   let stationFilter = $state<StationFilter>('ALL')
   /** Tab operativo en Cocina/Bar: Pendientes | En preparación | Listos (solo cuando stationFilter es KITCHEN o BAR). */
   let operationalTab = $state<'pending' | 'preparing' | 'done'>('pending')
-  /** Tab en vista Entrega: Por entregar | Entregado. */
-  let deliveryTab = $state<'pending' | 'delivered'>('pending')
-  /** Números de orden marcadas como entregadas (solo en memoria). */
-  let deliveredOrderNumbers = $state<number[]>([])
+  /** Tab en vista Entrega: Por entregar | Entregado | Cancelado. */
+  let deliveryTab = $state<'pending' | 'delivered' | 'cancelled'>('pending')
+  /** Acción en curso: clave `${aggregateId}-${action}` para deshabilitar botones. */
+  let actionInProgress = $state<Set<string>>(new Set())
+  /** Mensaje de error de la última acción (ej. fallo al llamar al backend). */
+  let actionError = $state<string | null>(null)
   /** Vista QR: muestra códigos Cocina/Barra en lugar de la lista de órdenes. */
   let showQRView = $state(false)
-  /** Vista órdenes en Cocina/Bar: vertical (tabs + lista) o kanban (3 columnas). */
+  /** Vista órdenes: vertical (tabs + lista) o kanban (3 columnas). Aplica a Cocina/Bar y a Entrega. */
   let ordersViewMode = $state<'vertical' | 'kanban'>('vertical')
   let realtimeUnsubscribe = $state<(() => void) | null>(null)
   /** Modal QR ampliado: KITCHEN | BAR | ALL | null */
   let qrEnlarged = $state<'KITCHEN' | 'BAR' | 'ALL' | null>(null)
+  /** Modal cancelar: orden seleccionada, motivo y comentario opcional. */
+  let orderToCancel = $state<KitchenOrder | null>(null)
+  let cancelReason = $state<string>('')
+  let cancelComment = $state<string>('')
+  let cancelInProgress = $state(false)
   let previousOrderNumbers = new Set<number>()
   let initialLoadDone = false
+
+  const CANCEL_REASON_KEYS = ['outOfStock', 'orderError', 'customerLeft', 'paymentIssue', 'other'] as const
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -138,22 +146,27 @@
     return 'green'
   }
 
-  /** Total de unidades de ítems (la proyección ya agrupa por nombre en menuUtils). */
+  /** Total de unidades de ítems. */
   function getItemCount(items: KitchenOrder['items']): number {
     return items.reduce((s, i) => s + i.quantity, 0)
   }
 
-  /** Órdenes mostradas = las que vienen de Supabase ya filtradas por station. */
-  const displayedOrders = $derived(orders)
+  /** Órdenes mostradas = las que vienen de Supabase ya filtradas por station. Excluimos órdenes totalmente canceladas. */
+  const displayedOrders = $derived(
+    orders.filter((o) => {
+      const allCancelled = o.items.every((i) => i.status === 'CANCELLED')
+      return !allCancelled
+    })
+  )
 
-  /** En Cocina/Bar: órdenes particionadas por estado (pending / preparing / done) para los tabs. */
+  /** En Cocina/Bar: órdenes particionadas por estado (pending / preparing / done) según status en proyección. */
   const ordersByTab = $derived.by(() => {
     if (stationFilter !== 'KITCHEN' && stationFilter !== 'BAR') return { pending: [] as KitchenOrder[], preparing: [] as KitchenOrder[], done: [] as KitchenOrder[] }
     const pending: KitchenOrder[] = []
     const preparing: KitchenOrder[] = []
     const done: KitchenOrder[] = []
     for (const o of displayedOrders) {
-      const st = getOrderStatus(o.order_number, stationFilter)
+      const st = getOrderStatusFromItems(o, stationFilter)
       if (st === 'pending') pending.push(o)
       else if (st === 'preparing') preparing.push(o)
       else done.push(o)
@@ -161,22 +174,36 @@
     return { pending, preparing, done }
   })
 
-  /** En vista Entrega: órdenes por tab (por entregar vs entregado). */
+  /** En vista Entrega: órdenes por tab (por entregar | entregado | cancelado). Usa lista completa para incluir canceladas. */
   const ordersByDeliveryTab = $derived.by(() => {
-    if (stationFilter !== 'ALL') return { pending: [] as KitchenOrder[], delivered: [] as KitchenOrder[] }
-    const pending = displayedOrders.filter((o) => !deliveredOrderNumbers.includes(Number(o.order_number)))
-    const delivered = displayedOrders.filter((o) => deliveredOrderNumbers.includes(Number(o.order_number)))
-    return { pending, delivered }
+    if (stationFilter !== 'ALL') return { pending: [] as KitchenOrder[], delivered: [] as KitchenOrder[], cancelled: [] as KitchenOrder[] }
+    const pending = orders.filter((o) => !isOrderFullyDispatched(o) && !isOrderFullyCancelled(o))
+    const delivered = orders.filter((o) => isOrderFullyDispatched(o))
+    const cancelled = orders.filter((o) => isOrderFullyCancelled(o))
+    return { pending, delivered, cancelled }
   })
 
-  /** Órdenes a mostrar: en Entrega = las del tab activo (por entregar/entregado); en Cocina/Bar = las del tab operativo. */
+  /** Órdenes a mostrar: en Entrega = las del tab activo (por entregar/entregado/cancelado); en Cocina/Bar = las del tab operativo. */
   const ordersToShow = $derived(
     stationFilter === 'ALL' ? ordersByDeliveryTab[deliveryTab] : ordersByTab[operationalTab]
   )
 
-  function markOrderAsDelivered(orderNumber: number) {
-    if (deliveredOrderNumbers.includes(orderNumber)) return
-    deliveredOrderNumbers = [...deliveredOrderNumbers, orderNumber]
+  async function markOrderAsDelivered(order: KitchenOrder) {
+    if (!menuId || !session?.access_token) return
+    const key = `${order.aggregate_id}-dispatch`
+    if (actionInProgress.has(key)) return
+    actionError = null
+    actionInProgress = new Set(actionInProgress).add(key)
+    try {
+      await dispatchOrder(menuId, order.aggregate_id, session.access_token)
+      await loadOrders()
+    } catch (err) {
+      actionError = err instanceof Error ? err.message : 'Error al marcar como entregado'
+    } finally {
+      const next = new Set(actionInProgress)
+      next.delete(key)
+      actionInProgress = next
+    }
   }
 
   async function setStationFilterAndReload(filter: StationFilter) {
@@ -194,21 +221,50 @@
     }
   }
 
-  const statusKey = (orderNumber: number, station: string) => `${orderNumber}-${station}`
-
-  function getOrderStatus(orderNumber: number, station: string): 'pending' | 'preparing' | 'done' {
-    return orderStatus[statusKey(orderNumber, station)] ?? 'pending'
+  /** Estado por estación derivado de los ítems de la orden (proyección). Ignora ítems CANCELLED. */
+  function getOrderStatusFromItems(order: KitchenOrder, station: string): 'pending' | 'preparing' | 'done' {
+    const stationItems = order.items.filter((i) => (i.station ?? 'KITCHEN') === station && i.status !== 'CANCELLED')
+    if (stationItems.length === 0) return 'done'
+    if (stationItems.some((i) => i.status === 'PENDING')) return 'pending'
+    if (stationItems.some((i) => i.status === 'IN_PROGRESS')) return 'preparing'
+    return 'done'
   }
 
-  function setOrderStatus(orderNumber: number, station: string, status: 'pending' | 'preparing' | 'done') {
-    orderStatus = { ...orderStatus, [statusKey(orderNumber, station)]: status }
+  function isOrderFullyDispatched(order: KitchenOrder): boolean {
+    const active = order.items.filter((i) => i.status !== 'CANCELLED')
+    return active.length > 0 && active.every((i) => i.status === 'DISPATCHED')
   }
 
-  function cycleOrderStatus(orderNumber: number, station: string) {
-    const current = getOrderStatus(orderNumber, station)
-    if (current === 'pending') setOrderStatus(orderNumber, station, 'preparing')
-    else if (current === 'preparing') setOrderStatus(orderNumber, station, 'done')
-    else setOrderStatus(orderNumber, station, 'pending')
+  function isOrderFullyCancelled(order: KitchenOrder): boolean {
+    return order.items.length > 0 && order.items.every((i) => i.status === 'CANCELLED')
+  }
+
+  async function cycleOrderStatus(order: KitchenOrder, station: string) {
+    if (!menuId || !session?.access_token) return
+    const current = getOrderStatusFromItems(order, station)
+    const key = `${order.aggregate_id}-${current}-${station}`
+    if (actionInProgress.has(key)) return
+    actionError = null
+    actionInProgress = new Set(actionInProgress).add(key)
+    try {
+      if (current === 'pending') {
+        await startPreparation(menuId, order.aggregate_id, session.access_token, station, [])
+      } else if (current === 'preparing') {
+        const itemKeys = order.items
+          .filter((i) => (i.station ?? 'KITCHEN') === station && i.status === 'IN_PROGRESS')
+          .map((i) => i.item_key)
+        if (itemKeys.length > 0) {
+          await markReady(menuId, order.aggregate_id, session.access_token, station, itemKeys)
+        }
+      }
+      await loadOrders()
+    } catch (err) {
+      actionError = err instanceof Error ? err.message : 'Error al actualizar estado'
+    } finally {
+      const next = new Set(actionInProgress)
+      next.delete(key)
+      actionInProgress = next
+    }
   }
 
   /** Estaciones que tienen ítems en esta orden (KITCHEN, BAR). */
@@ -220,18 +276,66 @@
     return stations.size > 0 ? [...stations] : ['KITCHEN']
   }
 
-  /** Indica si Cocina y Barra marcaron la orden como lista (solo informativo; la entrega no está bloqueada por estaciones). */
+  /** Indica si Cocina y Barra marcaron la orden como lista (todas estaciones en READY o DISPATCHED). */
   function isOrderReadyForDelivery(order: KitchenOrder): boolean {
     const stations = getStationsInOrder(order)
-    return stations.every((st) => getOrderStatus(order.order_number, st) === 'done')
+    return stations.every((st) => getOrderStatusFromItems(order, st) === 'done')
   }
 
   /** En Caja: estado resumido para mostrar (Pendiente / En preparación). */
   function getCajaOrderStatusLabel(order: KitchenOrder): 'pending' | 'preparing' {
     const stations = getStationsInOrder(order)
-    const statuses = stations.map((st) => getOrderStatus(order.order_number, st))
+    const statuses = stations.map((st) => getOrderStatusFromItems(order, st))
     if (statuses.every((s) => s === 'pending')) return 'pending'
     return 'preparing'
+  }
+
+  function isActionInProgress(order: KitchenOrder, station: string, action: 'pending' | 'preparing'): boolean {
+    const key = `${order.aggregate_id}-${action}-${station}`
+    return actionInProgress.has(key)
+  }
+
+  function isDispatchInProgress(order: KitchenOrder): boolean {
+    return actionInProgress.has(`${order.aggregate_id}-dispatch`)
+  }
+
+  function openCancelModal(order: KitchenOrder) {
+    orderToCancel = order
+    cancelReason = ''
+    cancelComment = ''
+  }
+
+  function closeCancelModal() {
+    if (!cancelInProgress) {
+      orderToCancel = null
+      cancelReason = ''
+      cancelComment = ''
+    }
+  }
+
+  function getCancelReasonLabel(key: string): string {
+    return t.orders?.cancelReasons?.[key] ?? key
+  }
+
+  async function confirmCancelOrder() {
+    if (!orderToCancel || !menuId || !session?.access_token || !cancelReason.trim()) return
+    cancelInProgress = true
+    actionError = null
+    try {
+      const reasonLabel = getCancelReasonLabel(cancelReason)
+      const reasonText = cancelComment.trim()
+        ? `${reasonLabel}: ${cancelComment.trim()}`
+        : reasonLabel
+      await cancelOrder(menuId, orderToCancel.aggregate_id, session.access_token, reasonText)
+      orderToCancel = null
+      cancelReason = ''
+      cancelComment = ''
+      await loadOrders()
+    } catch (err) {
+      actionError = err instanceof Error ? err.message : 'Error al cancelar la orden'
+    } finally {
+      cancelInProgress = false
+    }
   }
 
   async function toggleKitchenMode() {
@@ -435,13 +539,18 @@
       <div class="flex items-center justify-center py-8">
         <div class="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent"></div>
       </div>
-    {:else if error}
+      {:else if error}
       <div class="rounded-lg bg-red-50 border border-red-200 p-3 text-xs text-red-800">
         {error}
       </div>
+      {:else if actionError}
+      <div class="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 mb-3">
+        {actionError}
+        <button type="button" onclick={() => (actionError = null)} class="ml-2 underline hover:no-underline">Cerrar</button>
+      </div>
     {:else}
       <!-- Snippet: una card de orden (Cocina/Bar/Caja). compactStatus=true en Kanban; isDelivered=true en tab Entregado (Entrega). -->
-      {#snippet orderCard(order: KitchenOrder, status: 'pending' | 'preparing' | 'done', isFirst: boolean, compactStatus: boolean = false, isDelivered: boolean = false)}
+      {#snippet orderCard(order: KitchenOrder, status: 'pending' | 'preparing' | 'done', isFirst: boolean, compactStatus: boolean = false, isDelivered: boolean = false, isCancelled: boolean = false)}
         {@const type = order.fulfillment}
         {@const itemCount = getItemCount(order.items)}
         {@const remainingMin = getRemainingMinutes(order.requested_time)}
@@ -450,7 +559,7 @@
         {@const useBarColor = stationFilter === 'BAR' || (stationFilter === 'ALL' && isBarOrder)}
         {@const readyForDelivery = isOrderReadyForDelivery(order)}
         {@const isDoneTab = status === 'done'}
-        {@const barStatusForOrder = getOrderStatus(order.order_number, 'BAR')}
+        {@const barStatusForOrder = getOrderStatusFromItems(order, 'BAR')}
         {@const hasBarItems = order.items.some((i) => i.station === 'BAR')}
         {@const statusIcon = status === 'pending' ? '🟠' : status === 'preparing' ? '⏳' : '✓'}
         {@const statusTitle = status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En preparación') : (t.orders?.statusDone ?? 'Listo')}
@@ -479,8 +588,8 @@
               {getFulfillmentLabel(type)}
             </span>
             {#if stationFilter === 'ALL'}
-              {@const kitchenSt = getOrderStatus(order.order_number, 'KITCHEN')}
-              {@const barSt = getOrderStatus(order.order_number, 'BAR')}
+              {@const kitchenSt = getOrderStatusFromItems(order, 'KITCHEN')}
+              {@const barSt = getOrderStatusFromItems(order, 'BAR')}
               {@const orderHasBar = order.items.some((i) => i.station === 'BAR')}
               <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
                 <span class="inline-flex items-center gap-0.5">{t.orders?.filterKitchen ?? 'Cocina'}: {kitchenSt === 'done' ? '✔️' : '⏳'}</span>
@@ -505,7 +614,7 @@
               <span class="text-xs font-bold text-amber-800 tabular-nums">{(t.orders?.itemsCount ?? '{count} ítems').replace('{count}', String(itemCount))}</span>
             </div>
             <ul class="space-y-0.5 text-gray-900 {compactStatus ? 'text-sm' : isFirst ? 'text-base sm:text-lg' : 'text-sm sm:text-base'}">
-              {#each order.items as item}
+              {#each groupOrderItemsForDisplay(order.items) as item}
                 <li class="tabular-nums text-inherit">
                   <span class="font-bold text-amber-800">{item.quantity}×</span> <span class="font-normal">{item.item_name}</span>
                 </li>
@@ -514,34 +623,59 @@
           </div>
           <div class="px-3 py-2 sm:px-4 border-t border-gray-100 {compactStatus ? 'py-1.5 sm:py-2' : ''}">
             {#if stationFilter === 'ALL'}
-              {#if isDelivered}
+              {#if isCancelled}
+                <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-gray-200 text-gray-700 text-center">
+                  ✕ {t.orders?.cancelled ?? 'Cancelado'}
+                </div>
+              {:else if isDelivered}
                 <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-100 text-green-800 text-center">
                   ✓ Entregado
                 </div>
               {:else}
-                <button
-                  type="button"
-                  onclick={(e) => { e.stopPropagation(); markOrderAsDelivered(order.order_number); }}
-                  class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow transition-colors"
-                >
-                  {t.orders?.deliver ?? 'ENTREGAR'}
-                </button>
+                <div class="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    disabled={isDispatchInProgress(order)}
+                    onclick={(e) => { e.stopPropagation(); markOrderAsDelivered(order); }}
+                    class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {#if isDispatchInProgress(order)}
+                      <span class="inline-block animate-spin mr-1">⏳</span>
+                    {/if}
+                    {t.orders?.deliver ?? 'ENTREGAR'}
+                  </button>
+                  <button
+                    type="button"
+                    onclick={(e) => { e.stopPropagation(); openCancelModal(order); }}
+                    class="w-full py-1.5 px-3 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+                  >
+                    ✕ {t.orders?.cancelOrder ?? 'Cancelar pedido'}
+                  </button>
+                </div>
               {/if}
             {:else}
               {#if status === 'pending'}
                 <button
                   type="button"
-                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
-                  class="w-full py-2 px-3 rounded-lg text-xs font-bold text-white shadow transition-colors {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
+                  disabled={isActionInProgress(order, stationFilter, 'pending')}
+                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order, stationFilter); }}
+                  class="w-full py-2 px-3 rounded-lg text-xs font-bold text-white shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed {useBarColor ? 'bg-blue-600 hover:bg-blue-700' : 'bg-orange-500 hover:bg-orange-600'}"
                 >
+                  {#if isActionInProgress(order, stationFilter, 'pending')}
+                    <span class="inline-block animate-spin mr-1">⏳</span>
+                  {/if}
                   <span aria-hidden="true">🔥</span> {t.orders?.startPreparing ?? 'Iniciar preparación'}
                 </button>
               {:else if status === 'preparing'}
                 <button
                   type="button"
-                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order.order_number, stationFilter); }}
-                  class="w-full py-2 px-3 rounded-lg text-xs font-bold text-white shadow transition-colors {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
+                  disabled={isActionInProgress(order, stationFilter, 'preparing')}
+                  onclick={(e) => { e.stopPropagation(); cycleOrderStatus(order, stationFilter); }}
+                  class="w-full py-2 px-3 rounded-lg text-xs font-bold text-white shadow transition-colors disabled:opacity-50 disabled:cursor-not-allowed {useBarColor ? 'bg-blue-500 hover:bg-blue-600' : 'bg-amber-500 hover:bg-amber-600'}"
                 >
+                  {#if isActionInProgress(order, stationFilter, 'preparing')}
+                    <span class="inline-block animate-spin mr-1">⏳</span>
+                  {/if}
                   ✓ {t.orders?.markAsReady ?? 'LISTO'}
                 </button>
               {:else}
@@ -553,9 +687,9 @@
           </div>
         </li>
       {/snippet}
-      <!-- Tabs en vista Entrega: Por entregar | Entregado -->
-      {#if !showQRView && stationFilter === 'ALL'}
-        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="Por entregar, Entregado">
+      <!-- Tabs en vista Entrega: Por entregar | Entregado | Cancelado (solo en vista vertical) -->
+      {#if !showQRView && stationFilter === 'ALL' && ordersViewMode === 'vertical'}
+        <div class="flex items-stretch mb-3 w-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="tablist" aria-label="Por entregar, Entregado, Cancelado">
           <button
             type="button"
             role="tab"
@@ -570,14 +704,23 @@
             role="tab"
             aria-selected={deliveryTab === 'delivered'}
             onclick={() => (deliveryTab = 'delivered')}
-            class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors {deliveryTab === 'delivered' ? 'bg-green-100 text-green-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+            class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors border-r border-gray-200 {deliveryTab === 'delivered' ? 'bg-green-100 text-green-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
           >
             ✓ Entregado {ordersByDeliveryTab.delivered.length > 0 ? `(${ordersByDeliveryTab.delivered.length})` : ''}
           </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={deliveryTab === 'cancelled'}
+            onclick={() => (deliveryTab = 'cancelled')}
+            class="flex-1 min-w-0 px-2 py-2.5 text-xs font-semibold transition-colors {deliveryTab === 'cancelled' ? 'bg-gray-300 text-gray-800 shadow-sm' : 'text-gray-600 hover:bg-gray-200'}"
+          >
+            ✕ {t.orders?.cancelled ?? 'Cancelado'} {ordersByDeliveryTab.cancelled.length > 0 ? `(${ordersByDeliveryTab.cancelled.length})` : ''}
+          </button>
         </div>
       {/if}
-      <!-- Toggle vista: Vertical (tabs + lista) vs 3 columnas (Kanban), solo en Cocina/Bar -->
-      {#if !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR')}
+      <!-- Toggle vista: Vertical (tabs + lista) vs 3 columnas (Kanban). Cocina/Bar y Entrega. -->
+      {#if !showQRView && (stationFilter === 'KITCHEN' || stationFilter === 'BAR' || stationFilter === 'ALL')}
         <div class="flex items-center gap-1.5 mb-2">
           <span class="text-xs font-medium text-gray-600">{t.orders?.viewVertical ?? 'Vista'}:</span>
           <div class="flex rounded overflow-hidden border border-gray-200 bg-gray-100 shadow-inner" role="group" aria-label="{t.orders?.viewVertical ?? 'Vertical'} / {t.orders?.viewThreeColumns ?? '3 columnas'}">
@@ -630,8 +773,34 @@
           </button>
         </div>
       {/if}
-      {#if stationFilter !== 'ALL' && ordersViewMode === 'kanban'}
-        <!-- Vista Kanban: 3 columnas clickeables (Pendientes | En preparación | Listos) -->
+      {#if stationFilter === 'ALL' && ordersViewMode === 'kanban'}
+        <!-- Vista Kanban Entrega: 3 columnas (Por entregar | Entregado | Cancelado) -->
+        {@const deliveryKanbanColumns = [{ key: 'pending', label: 'Por entregar', orders: ordersByDeliveryTab.pending, icon: '📦', bg: 'bg-gray-100 border-gray-200', headerBg: 'bg-gray-800 text-white' }, { key: 'delivered', label: 'Entregado', orders: ordersByDeliveryTab.delivered, icon: '✓', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }, { key: 'cancelled', label: t.orders?.cancelled ?? 'Cancelado', orders: ordersByDeliveryTab.cancelled, icon: '✕', bg: 'bg-gray-50 border-gray-200', headerBg: 'bg-gray-300 text-gray-800' }]}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+          {#each deliveryKanbanColumns as col}
+            <div class="flex flex-col rounded-lg border {col.bg} overflow-hidden min-h-[160px]">
+              <button
+                type="button"
+                onclick={() => { deliveryTab = col.key as 'pending' | 'delivered' | 'cancelled'; ordersViewMode = 'vertical'; }}
+                class="flex items-center justify-center gap-1.5 w-full px-3 py-2 text-xs font-bold text-left transition-colors hover:opacity-90 {col.headerBg}"
+                title="{t.orders?.viewVertical ?? 'Ver'} {col.label}"
+              >
+                <span aria-hidden="true">{col.icon}</span>
+                <span>{col.label}</span>
+                <span class="tabular-nums">({col.orders.length})</span>
+              </button>
+              <ul class="flex-1 overflow-y-auto p-2 space-y-2">
+                {#each col.orders as order, index (order.order_number)}
+                  {@const isDel = col.key === 'delivered'}
+                  {@const isCan = col.key === 'cancelled'}
+                  {@render orderCard(order, isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order), index === 0, true, isDel, isCan)}
+                {/each}
+              </ul>
+            </div>
+          {/each}
+        </div>
+      {:else if stationFilter !== 'ALL' && ordersViewMode === 'kanban'}
+        <!-- Vista Kanban Cocina/Bar: 3 columnas (Pendientes | En preparación | Listos) -->
         {@const kanbanColumns = [{ key: 'pending', label: t.orders?.tabPending ?? 'Pendientes', orders: ordersByTab.pending, icon: '🟠', bg: 'bg-amber-50 border-amber-200', headerBg: 'bg-amber-200 text-amber-900' }, { key: 'preparing', label: t.orders?.tabPreparing ?? 'En preparación', orders: ordersByTab.preparing, icon: '🔵', bg: 'bg-blue-50/80 border-blue-200', headerBg: 'bg-blue-100 text-blue-900' }, { key: 'done', label: t.orders?.tabDone ?? 'Listos', orders: ordersByTab.done, icon: '🟢', bg: 'bg-green-50/80 border-green-200', headerBg: 'bg-green-100 text-green-800' }]}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
           {#each kanbanColumns as col}
@@ -648,7 +817,7 @@
               </button>
               <ul class="flex-1 overflow-y-auto p-2 space-y-2">
                 {#each col.orders as order, index (order.order_number)}
-                  {@render orderCard(order, col.key as 'pending' | 'preparing' | 'done', index === 0, true)}
+                  {@render orderCard(order, col.key as 'pending' | 'preparing' | 'done', index === 0, true, false, false)}
                 {/each}
               </ul>
             </div>
@@ -658,6 +827,8 @@
         <div class="rounded-lg bg-gray-100 border border-gray-200 p-6 text-center text-xs text-gray-600">
           {#if stationFilter === 'ALL' && deliveryTab === 'delivered'}
             No hay órdenes entregadas.
+          {:else if stationFilter === 'ALL' && deliveryTab === 'cancelled'}
+            {t.orders?.emptyCancelled ?? 'No hay órdenes canceladas.'}
           {:else if stationFilter === 'ALL'}
             {t.orders?.empty ?? 'No hay órdenes aún.'}
           {:else}
@@ -668,13 +839,89 @@
       <ul class="space-y-3 kitchen-orders-list" class:kitchen-mode-list={kitchenMode}>
         {#each ordersToShow as order, index (order.order_number)}
           {@const cardStation = stationFilter === 'ALL' ? null : stationFilter}
-          {@const status = cardStation !== null ? getOrderStatus(order.order_number, cardStation) : (isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order))}
-          {@render orderCard(order, status, index === 0, false, stationFilter === 'ALL' && deliveryTab === 'delivered')}
+          {@const status = cardStation !== null ? getOrderStatusFromItems(order, cardStation) : (isOrderReadyForDelivery(order) ? 'done' : getCajaOrderStatusLabel(order))}
+          {@const isDel = stationFilter === 'ALL' && isOrderFullyDispatched(order)}
+          {@const isCan = stationFilter === 'ALL' && isOrderFullyCancelled(order)}
+          {@render orderCard(order, status, index === 0, false, isDel, isCan)}
         {/each}
       </ul>
       {/if}
     {/if}
   </div>
+
+  <!-- Modal cancelar pedido (solo vista Entrega) -->
+  {#if orderToCancel}
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cancel-modal-title"
+      onclick={() => closeCancelModal()}
+      onkeydown={(e) => e.key === 'Escape' && closeCancelModal()}
+    >
+      <div
+        class="bg-white rounded-xl shadow-xl max-w-sm w-full p-4"
+        role="document"
+        onclick={(e) => e.stopPropagation()}
+        onkeydown={(e) => e.stopPropagation()}
+      >
+        <h2 id="cancel-modal-title" class="text-base font-bold text-gray-900 flex items-center gap-2">
+          <span aria-hidden="true">⚠️</span>
+          {t.orders?.cancelModalTitle ?? 'Cancelar pedido'} #{orderToCancel.order_number}
+        </h2>
+        <p class="mt-1 text-xs text-gray-600">
+          {t.orders?.cancelModalSubtitle ?? 'Esta acción no se puede deshacer.'}
+        </p>
+        <p class="mt-3 text-xs font-semibold text-gray-700">
+          {t.orders?.cancelModalReasonLabel ?? 'Motivo (elige uno):'}
+        </p>
+        <div class="mt-1.5 space-y-1.5" role="radiogroup" aria-label={t.orders?.cancelModalReasonLabel ?? 'Motivo'}>
+          {#each CANCEL_REASON_KEYS as key}
+            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-800">
+              <input
+                type="radio"
+                name="cancelReason"
+                value={key}
+                bind:group={cancelReason}
+                class="rounded-full border-gray-300 text-red-600 focus:ring-red-500"
+              />
+              <span>{t.orders?.cancelReasons?.[key] ?? key}</span>
+            </label>
+          {/each}
+        </div>
+        <p class="mt-3 text-xs font-semibold text-gray-700">
+          {t.orders?.cancelModalCommentLabel ?? 'Comentario (opcional):'}
+        </p>
+        <textarea
+          bind:value={cancelComment}
+          placeholder={t.orders?.cancelModalCommentPlaceholder ?? 'Ej: cliente no contestó...'}
+          rows="2"
+          class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs placeholder-gray-400 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+        ></textarea>
+        <div class="mt-4 flex gap-2">
+          <button
+            type="button"
+            disabled={cancelInProgress}
+            onclick={closeCancelModal}
+            class="flex-1 py-2 rounded-lg text-xs font-semibold border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {t.orders?.cancelModalBack ?? 'Volver'}
+          </button>
+          <button
+            type="button"
+            disabled={cancelInProgress || !cancelReason.trim()}
+            onclick={confirmCancelOrder}
+            class="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {#if cancelInProgress}
+              <span class="inline-block animate-spin mr-1">⏳</span>
+            {/if}
+            {t.orders?.cancelModalConfirm ?? 'Confirmar cancelación'}
+          </button>
+        </div>
+      </div>
+    </div>
+  {/if}
 
   <!-- Modal QR ampliado (clic en el código para agrandar) -->
   {#if qrEnlarged && menuId && session?.access_token && typeof window !== 'undefined'}

@@ -826,12 +826,14 @@ export interface OrderItemProjectionRow {
   updated_at: string
 }
 
-/** Ítem agrupado para la vista de cocina. */
+/** Ítem de la proyección para la vista de cocina (una fila por ítem, con status e item_key). */
 export interface KitchenOrderItem {
+  item_key: string
   item_name: string
   quantity: number
   unit: string
   station: string | null
+  status: string
 }
 
 /** Orden ya agrupada para la vista de cocina (desde order_items_projection). */
@@ -846,6 +848,21 @@ export interface KitchenOrder {
 
 /** Filtro por estación: ALL = todo; KITCHEN/BAR filtra por columna station en Supabase. */
 export type StationFilter = 'ALL' | 'KITCHEN' | 'BAR'
+
+/** Agrupa ítems por (item_name, unit, station) y suma cantidades para mostrar en lista. */
+export function groupOrderItemsForDisplay(items: KitchenOrderItem[]): Array<{ item_name: string; quantity: number; unit: string; station: string | null }> {
+  const byKey = new Map<string, { item_name: string; quantity: number; unit: string; station: string | null }>()
+  for (const i of items) {
+    const key = `${i.item_name}|${i.unit}|${i.station ?? ''}`
+    const existing = byKey.get(key)
+    if (existing) {
+      existing.quantity += i.quantity
+    } else {
+      byKey.set(key, { item_name: i.item_name, quantity: i.quantity, unit: i.unit, station: i.station })
+    }
+  }
+  return [...byKey.values()]
+}
 
 /**
  * Obtiene las órdenes para la vista de cocina desde la proyección order_items_projection.
@@ -866,7 +883,7 @@ export async function getKitchenOrdersFromProjection(
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
     let query = supabase
       .from('order_items_projection')
-      .select('order_number, aggregate_id, requested_time, created_at, fulfillment, item_name, quantity, unit, station')
+      .select('order_number, aggregate_id, requested_time, created_at, fulfillment, item_key, item_name, quantity, unit, station, status')
       .eq('menu_id', menuId)
     if (stationFilter === 'KITCHEN' || stationFilter === 'BAR') {
       query = query.eq('station', stationFilter)
@@ -885,10 +902,12 @@ export async function getKitchenOrdersFromProjection(
       requested_time: string | null
       created_at: string
       fulfillment: string
+      item_key: string
       item_name: string
       quantity: number
       unit: string
       station: string | null
+      status: string
     }>
     return groupProjectionItemsByOrder(items)
   } catch (error) {
@@ -904,10 +923,12 @@ function groupProjectionItemsByOrder(
     requested_time: string | null
     created_at: string
     fulfillment: string
+    item_key: string
     item_name: string
     quantity: number
     unit: string
     station: string | null
+    status: string
   }>
 ): KitchenOrder[] {
   const byOrder = new Map<string, KitchenOrder>()
@@ -925,20 +946,14 @@ function groupProjectionItemsByOrder(
       }
       byOrder.set(key, order)
     }
-    const name = r.item_name?.trim() || '—'
-    const existing = order.items.find(
-      (i) => i.item_name === name && i.unit === r.unit && (i.station ?? '') === (r.station ?? '')
-    )
-    if (existing) {
-      existing.quantity += r.quantity
-    } else {
-      order.items.push({
-        item_name: name,
-        quantity: r.quantity,
-        unit: r.unit || 'EACH',
-        station: r.station
-      })
-    }
+    order.items.push({
+      item_key: r.item_key,
+      item_name: r.item_name?.trim() || '—',
+      quantity: r.quantity,
+      unit: r.unit || 'EACH',
+      station: r.station,
+      status: r.status || 'PENDING'
+    })
   }
   return [...byOrder.values()].sort((a, b) => {
     const ta = a.requested_time ? new Date(a.requested_time).getTime() : 0
