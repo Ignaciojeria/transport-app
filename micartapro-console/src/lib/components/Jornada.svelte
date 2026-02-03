@@ -1,0 +1,283 @@
+<script lang="ts">
+  import { onMount } from 'svelte'
+  import { authState } from '../auth.svelte'
+  import { getLatestMenuId, getKitchenOrdersFromProjection, type KitchenOrder } from '../menuUtils'
+  import { API_BASE_URL } from '../config'
+  import { t as tStore } from '../useLanguage'
+
+  interface JornadaProps {
+    onMenuClick?: () => void
+  }
+
+  let { onMenuClick }: JornadaProps = $props()
+
+  let menuId = $state<string | null>(null)
+  let orders = $state<KitchenOrder[]>([])
+  let loading = $state(true)
+  let error = $state<string | null>(null)
+  let showCloseModal = $state(false)
+  let closeInProgress = $state(false)
+  let closeResult = $state<'idle' | 'success' | 'coming_soon'>('idle')
+
+  const session = $derived(authState.session)
+  const user = $derived(authState.user)
+  const userId = $derived(user?.id || '')
+  const t = $derived($tStore)
+
+  /** Orden totalmente entregada/despachada (estado terminal). */
+  function isOrderFullyDelivered(order: KitchenOrder): boolean {
+    const active = order.items.filter((i) => i.status !== 'CANCELLED')
+    return active.length > 0 && active.every((i) => i.status === 'DISPATCHED' || i.status === 'DELIVERED')
+  }
+
+  /** Orden totalmente cancelada. */
+  function isOrderFullyCancelled(order: KitchenOrder): boolean {
+    return order.items.length > 0 && order.items.every((i) => i.status === 'CANCELLED')
+  }
+
+  /** Fecha de hoy en zona local YYYY-MM-DD. */
+  function todayLocalDateString(): string {
+    const d = new Date()
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
+  /** Formato DD-MM-YYYY para mostrar en modal. */
+  function formatDateDDMMYYYY(isoDate: string): string {
+    const d = new Date(isoDate + 'T12:00:00')
+    const day = String(d.getDate()).padStart(2, '0')
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const y = d.getFullYear()
+    return `${day}-${m}-${y}`
+  }
+
+  /** Órdenes de hoy (por created_at en fecha local). */
+  const todayOrders = $derived.by(() => {
+    const today = todayLocalDateString()
+    return orders.filter((o) => {
+      const created = o.created_at.slice(0, 10)
+      return created === today
+    })
+  })
+
+  const total = $derived(todayOrders.length)
+  const delivered = $derived(todayOrders.filter((o) => isOrderFullyDelivered(o)).length)
+  const cancelled = $derived(todayOrders.filter((o) => isOrderFullyCancelled(o)).length)
+  const pending = $derived(todayOrders.filter((o) => !isOrderFullyDelivered(o) && !isOrderFullyCancelled(o)).length)
+
+  /** Hora de apertura: mínima created_at de las órdenes de hoy, formateada HH:mm. */
+  const openedSince = $derived.by(() => {
+    if (todayOrders.length === 0) return null
+    const minCreated = todayOrders.reduce((acc, o) => (o.created_at < acc ? o.created_at : acc), todayOrders[0].created_at)
+    const d = new Date(minCreated)
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  })
+
+  const dateLabel = $derived(formatDateDDMMYYYY(todayLocalDateString()))
+  const modalMessage = $derived((t.jornada?.closeModalMessage ?? 'Estás por cerrar la jornada del {date}. Las órdenes pendientes quedarán marcadas como no entregadas. ¿Deseas continuar?').replace('{date}', dateLabel))
+
+  async function load() {
+    if (!userId || !session?.access_token) {
+      error = t.jornada?.noSession ?? 'No Hay Sesión Activa'
+      loading = false
+      return
+    }
+    try {
+      loading = true
+      error = null
+      const mid = await getLatestMenuId(userId, session.access_token)
+      if (!mid) {
+        error = t.jornada?.noMenu ?? 'No Se Encontró Un Menú'
+        loading = false
+        return
+      }
+      menuId = mid
+      const list = await getKitchenOrdersFromProjection(mid, session.access_token, 'ALL')
+      orders = list
+    } catch (e) {
+      console.error('Error cargando jornada:', e)
+      error = t.jornada?.errorLoading ?? 'Error Al Cargar Los Datos De La Jornada.'
+    } finally {
+      loading = false
+    }
+  }
+
+  function openCloseModal() {
+    closeResult = 'idle'
+    showCloseModal = true
+  }
+
+  function cancelCloseModal() {
+    if (!closeInProgress) showCloseModal = false
+  }
+
+  async function confirmCloseWorkday() {
+    if (!session?.access_token || !menuId) return
+    closeInProgress = true
+    closeResult = 'idle'
+    try {
+      const res = await fetch(`${API_BASE_URL}/workday/close`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ menu_id: menuId, date: todayLocalDateString() })
+      })
+      if (res.ok) {
+        closeResult = 'success'
+        await load()
+        setTimeout(() => {
+          showCloseModal = false
+          closeResult = 'idle'
+        }, 1500)
+      } else {
+        closeResult = 'coming_soon'
+      }
+    } catch {
+      closeResult = 'coming_soon'
+    } finally {
+      closeInProgress = false
+    }
+  }
+
+  onMount(() => {
+    load()
+  })
+</script>
+
+<div class="h-full flex flex-col bg-gray-50">
+  <!-- Header con menú -->
+  <header class="flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-200 md:px-6">
+    <button
+      type="button"
+      onclick={onMenuClick}
+      class="p-2 rounded-lg hover:bg-gray-100 md:hidden"
+      aria-label={t.sidebar?.closeMenu ?? 'Menú'}
+    >
+      <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+    <h1 class="text-lg font-semibold text-gray-900">{t.jornada?.title ?? 'Jornada'}</h1>
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-4 md:p-6">
+    {#if loading}
+      <div class="flex items-center justify-center py-12">
+        <div class="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent"></div>
+      </div>
+    {:else if error}
+      <div class="rounded-xl bg-amber-50 border border-amber-200 p-4 text-amber-800">
+        <p class="font-medium">{error}</p>
+      </div>
+    {:else}
+      <!-- Estado actual -->
+      <section class="mb-6">
+        <div class="rounded-xl bg-white border border-gray-200 shadow-sm p-5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="inline-flex w-3 h-3 rounded-full bg-green-500" aria-hidden="true"></span>
+            <h2 class="text-sm font-semibold text-gray-700">{t.jornada?.active ?? 'Jornada Activa'}</h2>
+          </div>
+          <dl class="grid grid-cols-1 gap-2 text-sm">
+            <div>
+              <dt class="text-gray-500">{t.jornada?.date ?? 'Fecha'}</dt>
+              <dd class="font-medium text-gray-900">{dateLabel}</dd>
+            </div>
+            <div>
+              <dt class="text-gray-500">{t.jornada?.openedSince ?? 'Abierta Desde'}</dt>
+              <dd class="font-medium text-gray-900">{openedSince ?? '—'}</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <!-- Resumen rápido -->
+      <section class="mb-8">
+        <h2 class="text-sm font-semibold text-gray-700 mb-3">{t.jornada?.summary ?? 'Resumen Rápido'}</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div class="rounded-xl bg-white border border-gray-200 p-4 text-center">
+            <p class="text-2xl font-bold text-gray-900">{total}</p>
+            <p class="text-xs text-gray-500">{t.jornada?.totalOrders ?? 'Órdenes Totales'}</p>
+          </div>
+          <div class="rounded-xl bg-white border border-gray-200 p-4 text-center">
+            <p class="text-2xl font-bold text-green-600">{delivered}</p>
+            <p class="text-xs text-gray-500">{t.jornada?.delivered ?? 'Entregadas'}</p>
+          </div>
+          <div class="rounded-xl bg-white border border-gray-200 p-4 text-center">
+            <p class="text-2xl font-bold text-gray-600">{cancelled}</p>
+            <p class="text-xs text-gray-500">{t.jornada?.cancelled ?? 'Canceladas'}</p>
+          </div>
+          <div class="rounded-xl bg-white border border-amber-200 bg-amber-50/50 p-4 text-center">
+            <p class="text-2xl font-bold text-amber-700">{pending}</p>
+            <p class="text-xs text-gray-500">{t.jornada?.pending ?? 'Pendientes'}</p>
+            {#if pending > 0}
+              <p class="text-[10px] text-amber-600 mt-0.5">⚠</p>
+            {/if}
+          </div>
+        </div>
+      </section>
+
+      <!-- Acción principal: Cerrar jornada -->
+      <section class="mt-8 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          onclick={openCloseModal}
+          class="w-full max-w-sm mx-auto flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-900 focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition-colors"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span>{t.jornada?.closeWorkday ?? 'Cerrar Jornada'}</span>
+        </button>
+      </section>
+    {/if}
+  </div>
+</div>
+
+<!-- Modal Cerrar Jornada -->
+{#if showCloseModal}
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="jornada-close-title"
+    tabindex="-1"
+    onclick={(e) => e.target === e.currentTarget && !closeInProgress && cancelCloseModal()}
+    onkeydown={(e) => e.key === 'Escape' && !closeInProgress && cancelCloseModal()}
+  >
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+      <h2 id="jornada-close-title" class="text-xl font-bold text-gray-900 mb-3">
+        {t.jornada?.closeModalTitle ?? 'Cerrar Jornada'}
+      </h2>
+      <p class="text-gray-600 text-sm mb-6">{modalMessage}</p>
+
+      {#if closeResult === 'success'}
+        <p class="text-green-600 font-medium mb-4">{t.jornada?.success ?? 'Jornada Cerrada Correctamente.'}</p>
+      {:else if closeResult === 'coming_soon'}
+        <p class="text-amber-700 text-sm mb-4">{t.jornada?.comingSoon ?? 'El Cierre De Jornada Estará Disponible En Una Próxima Actualización.'}</p>
+      {/if}
+
+      <div class="flex gap-3 justify-end">
+        <button
+          type="button"
+          disabled={closeInProgress}
+          onclick={cancelCloseModal}
+          class="px-4 py-2 rounded-lg font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+        >
+          {t.jornada?.closeModalCancel ?? 'Cancelar'}
+        </button>
+        <button
+          type="button"
+          disabled={closeInProgress}
+          onclick={confirmCloseWorkday}
+          class="px-4 py-2 rounded-lg font-medium text-white bg-gray-800 hover:bg-gray-900 disabled:opacity-50"
+        >
+          {closeInProgress ? (t.jornada?.closing ?? 'Cerrando...') : (t.jornada?.closeModalConfirm ?? 'Cerrar Jornada')}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}

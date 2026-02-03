@@ -102,6 +102,7 @@ export interface Translations {
     gallery: string
     qrCode: string
     orders: string
+    jornada: string
     kitchen: string
     myPlan: string
     signOut: string
@@ -178,6 +179,28 @@ export interface Translations {
     cancelModalConfirm?: string
     viewVertical?: string
     viewThreeColumns?: string
+  }
+  jornada?: {
+    title: string
+    active: string
+    date: string
+    openedSince: string
+    summary: string
+    totalOrders: string
+    delivered: string
+    cancelled: string
+    pending: string
+    closeWorkday: string
+    closeModalTitle: string
+    closeModalMessage: string
+    closeModalCancel: string
+    closeModalConfirm: string
+    closing: string
+    success: string
+    comingSoon: string
+    noMenu: string
+    noSession: string
+    errorLoading: string
   }
 }
 
@@ -269,6 +292,7 @@ export const translations: Record<Language, Translations> = {
       gallery: 'Galería',
       qrCode: 'Código QR',
       orders: 'Órdenes',
+      jornada: 'Jornada',
       kitchen: 'Cocina',
       myPlan: 'Mi Plan',
       signOut: 'Cerrar sesión',
@@ -348,6 +372,28 @@ export const translations: Record<Language, Translations> = {
       cancelModalConfirm: 'Confirmar Cancelación',
       viewVertical: 'Vertical',
       viewThreeColumns: '3 Columnas'
+    },
+    jornada: {
+      title: 'Jornada',
+      active: 'Jornada Activa',
+      date: 'Fecha',
+      openedSince: 'Abierta Desde',
+      summary: 'Resumen Rápido',
+      totalOrders: 'Órdenes Totales',
+      delivered: 'Entregadas',
+      cancelled: 'Canceladas',
+      pending: 'Pendientes',
+      closeWorkday: 'Cerrar Jornada',
+      closeModalTitle: 'Cerrar Jornada',
+      closeModalMessage: 'Estás Por Cerrar La Jornada Del {date}. Las Órdenes Pendientes Quedarán Marcadas Como No Entregadas. ¿Deseas Continuar?',
+      closeModalCancel: 'Cancelar',
+      closeModalConfirm: 'Cerrar Jornada',
+      closing: 'Cerrando...',
+      success: 'Jornada Cerrada Correctamente.',
+      comingSoon: 'El Cierre De Jornada Estará Disponible En Una Próxima Actualización.',
+      noMenu: 'No Se Encontró Un Menú',
+      noSession: 'No Hay Sesión Activa',
+      errorLoading: 'Error Al Cargar Los Datos De La Jornada.'
     }
   },
   PT: {
@@ -447,6 +493,8 @@ export const translations: Record<Language, Translations> = {
       gallery: 'Galeria',
       qrCode: 'Código QR',
       orders: 'Pedidos',
+      jornada: 'Jornada',
+      kitchen: 'Cozinha',
       myPlan: 'Meu Plano',
       signOut: 'Sair',
       closeMenu: 'Fechar menu',
@@ -525,6 +573,28 @@ export const translations: Record<Language, Translations> = {
       cancelModalConfirm: 'Confirmar Cancelamento',
       viewVertical: 'Vertical',
       viewThreeColumns: '3 Colunas'
+    },
+    jornada: {
+      title: 'Jornada',
+      active: 'Jornada Ativa',
+      date: 'Data',
+      openedSince: 'Aberta Desde',
+      summary: 'Resumo Rápido',
+      totalOrders: 'Pedidos Totais',
+      delivered: 'Entregues',
+      cancelled: 'Cancelados',
+      pending: 'Pendentes',
+      closeWorkday: 'Fechar Jornada',
+      closeModalTitle: 'Fechar Jornada',
+      closeModalMessage: 'Você Está Prestes A Fechar A Jornada De {date}. Os Pedidos Pendentes Ficarão Marcados Como Não Entregues. Deseja Continuar?',
+      closeModalCancel: 'Cancelar',
+      closeModalConfirm: 'Fechar Jornada',
+      closing: 'Fechando...',
+      success: 'Jornada Fechada Com Sucesso.',
+      comingSoon: 'O Fechamento De Jornada Estará Disponível Em Uma Próxima Atualização.',
+      noMenu: 'Nenhum Cardápio Encontrado',
+      noSession: 'Não Há Sessão Ativa',
+      errorLoading: 'Erro Ao Carregar Os Dados Da Jornada.'
     }
   },
   EN: {
@@ -614,6 +684,7 @@ export const translations: Record<Language, Translations> = {
       gallery: 'Gallery',
       qrCode: 'QR Code',
       orders: 'Orders',
+      jornada: 'Workday',
       kitchen: 'Kitchen',
       myPlan: 'My Plan',
       signOut: 'Sign Out',
@@ -693,6 +764,28 @@ export const translations: Record<Language, Translations> = {
       cancelModalConfirm: 'Confirm Cancellation',
       viewVertical: 'Vertical',
       viewThreeColumns: '3 Columns'
+    },
+    jornada: {
+      title: 'Workday',
+      active: 'Active Workday',
+      date: 'Date',
+      openedSince: 'Opened Since',
+      summary: 'Quick Summary',
+      totalOrders: 'Total Orders',
+      delivered: 'Delivered',
+      cancelled: 'Cancelled',
+      pending: 'Pending',
+      closeWorkday: 'Close Workday',
+      closeModalTitle: 'Close Workday',
+      closeModalMessage: 'You Are About To Close The Workday Of {date}. Pending Orders Will Be Marked As Not Delivered. Do You Want To Continue?',
+      closeModalCancel: 'Cancel',
+      closeModalConfirm: 'Close Workday',
+      closing: 'Closing...',
+      success: 'Workday Closed Successfully.',
+      comingSoon: 'Workday Closure Will Be Available In An Upcoming Update.',
+      noMenu: 'No Menu Found',
+      noSession: 'No Active Session',
+      errorLoading: 'Error Loading Workday Data.'
     }
   }
 }
