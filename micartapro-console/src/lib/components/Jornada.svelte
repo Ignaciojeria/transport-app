@@ -57,24 +57,16 @@
     return `${day}-${m}-${y}`
   }
 
-  /** Órdenes de hoy (por created_at en fecha local). */
-  const todayOrders = $derived.by(() => {
-    const today = todayLocalDateString()
-    return orders.filter((o) => {
-      const created = o.created_at.slice(0, 10)
-      return created === today
-    })
-  })
+  /** Resumen rápido: todas las órdenes de la jornada activa (ya filtradas por journey_id al cargar). */
+  const total = $derived(orders.length)
+  const delivered = $derived(orders.filter((o) => isOrderFullyDelivered(o)).length)
+  const cancelled = $derived(orders.filter((o) => isOrderFullyCancelled(o)).length)
+  const pending = $derived(orders.filter((o) => !isOrderFullyDelivered(o) && !isOrderFullyCancelled(o)).length)
 
-  const total = $derived(todayOrders.length)
-  const delivered = $derived(todayOrders.filter((o) => isOrderFullyDelivered(o)).length)
-  const cancelled = $derived(todayOrders.filter((o) => isOrderFullyCancelled(o)).length)
-  const pending = $derived(todayOrders.filter((o) => !isOrderFullyDelivered(o) && !isOrderFullyCancelled(o)).length)
-
-  /** Hora de apertura: mínima created_at de las órdenes de hoy, formateada HH:mm. */
+  /** Hora de apertura: mínima created_at de las órdenes de la jornada, formateada HH:mm. */
   const openedSince = $derived.by(() => {
-    if (todayOrders.length === 0) return null
-    const minCreated = todayOrders.reduce((acc, o) => (o.created_at < acc ? o.created_at : acc), todayOrders[0].created_at)
+    if (orders.length === 0) return null
+    const minCreated = orders.reduce((acc, o) => (o.created_at < acc ? o.created_at : acc), orders[0].created_at)
     const d = new Date(minCreated)
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   })
@@ -99,11 +91,11 @@
         return
       }
       menuId = mid
-      const [journey, list] = await Promise.all([
-        getActiveJourney(mid, session.access_token),
-        getKitchenOrdersFromProjection(mid, session.access_token, 'ALL')
-      ])
+      const journey = await getActiveJourney(mid, session.access_token)
       activeJourney = journey
+      const list = journey
+        ? await getKitchenOrdersFromProjection(mid, session.access_token, 'ALL', journey.id)
+        : []
       orders = list
     } catch (e) {
       console.error('Error cargando jornada:', e)
