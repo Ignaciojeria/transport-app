@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import { getKitchenOrdersFromProjection, subscribeMenuOrdersRealtime, refreshSupabaseToken, groupOrderItemsForDisplay, type KitchenOrder, type KitchenOrderItem, type StationFilter } from '../menuUtils'
+  import { getActiveJourney } from '../journeyApi'
   import { dispatchOrder, cancelOrder, startPreparation, markReady } from '../orderApi'
   import { t as tStore } from '../useLanguage'
   import { playNewOrderSound, ensureAudioUnlocked } from '../utils/newOrderSound'
@@ -117,7 +118,10 @@
     try {
       loading = true
       error = null
-      const newOrders = await getKitchenOrdersFromProjection(menuId, accessToken, stationFilter)
+      const journey = await getActiveJourney(menuId, accessToken)
+      const newOrders = journey
+        ? await getKitchenOrdersFromProjection(menuId, accessToken, stationFilter, journey.id)
+        : []
       orders = newOrders
       const newIds = new Set(newOrders.map((o) => Number(o.order_number)))
       if (initialLoadDone) {

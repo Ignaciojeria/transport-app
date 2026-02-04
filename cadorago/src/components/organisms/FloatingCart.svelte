@@ -34,7 +34,6 @@
   let deliveryStep = $state(1); // 1: dirección, 2: datos personales
   let nombreRetiro = $state('');
   let phoneContact = $state('');
-  let horaRetiro = $state('');
   let deliveryAddress = $state('');
   let addressNumber = $state(''); // Número de casa/departamento
   let addressNotes = $state(''); // Indicaciones adicionales
@@ -58,40 +57,6 @@
       return timeZone;
     }
   });
-  
-  function formatTimeInput(value) {
-    // Remover todo excepto números
-    let numbers = value.replace(/\D/g, '');
-    
-    // Limitar a 4 dígitos
-    if (numbers.length > 4) {
-      numbers = numbers.slice(0, 4);
-    }
-    
-    // Formatear como HH:MM
-    if (numbers.length >= 3) {
-      return `${numbers.slice(0, 2)}:${numbers.slice(2)}`;
-    } else if (numbers.length === 2) {
-      return `${numbers}:`;
-    }
-    return numbers;
-  }
-  
-  function validateTime(timeValue) {
-    if (!timeValue) return false;
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    return timeRegex.test(timeValue);
-  }
-  
-  function formatTimeForMessage(timeValue) {
-    if (!timeValue) return '';
-    const [hours, minutes] = timeValue.split(':');
-    const hour = parseInt(hours);
-    const min = minutes;
-    const period = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${displayHour}:${min} ${period}`;
-  }
   
   function handleQuantityChange(cartItem, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
@@ -134,7 +99,6 @@
       deliveryStep = 1;
       nombreRetiro = '';
       phoneContact = '';
-      horaRetiro = '';
       deliveryAddress = '';
       addressNumber = '';
       addressNotes = '';
@@ -337,26 +301,6 @@
     }, 200);
   }
   
-  function handleTimeInput(event) {
-    const value = event.currentTarget.value;
-    horaRetiro = formatTimeInput(value);
-  }
-  
-  function handleTimeKeyDown(event) {
-    // Permitir teclas de control (backspace, delete, tab, escape, enter, etc.)
-    if (event.key === 'Backspace' || event.key === 'Delete' || event.key === 'Tab' || 
-        event.key === 'Escape' || event.key === 'Enter' || event.key === 'ArrowLeft' || 
-        event.key === 'ArrowRight' || event.key === 'ArrowUp' || event.key === 'ArrowDown' ||
-        (event.ctrlKey || event.metaKey) && (event.key === 'a' || event.key === 'c' || event.key === 'v' || event.key === 'x')) {
-      return;
-    }
-    
-    // Solo permitir números
-    if (!/[0-9]/.test(event.key)) {
-      event.preventDefault();
-    }
-  }
-
   /**
    * Obtiene el menuId desde la URL o los datos del restaurante
    * @returns {string | null} ID del menú
@@ -386,27 +330,6 @@
     }
     
     return null;
-  }
-
-  /**
-   * Convierte la hora de retiro a formato ISO para la API
-   * @param {string} horaRetiro - Hora en formato HH:MM
-   * @returns {string} Fecha en formato ISO
-   */
-  function formatRequestedTime(horaRetiro) {
-    if (!horaRetiro) return null;
-    
-    const [hours, minutes] = horaRetiro.split(':');
-    const now = new Date();
-    const requestedDate = new Date();
-    requestedDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-    
-    // Si la hora ya pasó hoy, asumir que es para mañana
-    if (requestedDate < now) {
-      requestedDate.setDate(requestedDate.getDate() + 1);
-    }
-    
-    return requestedDate.toISOString();
   }
 
   /**
@@ -461,15 +384,11 @@
     const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0;
     const total = subtotal + deliveryFee;
 
-    // Fecha/hora solicitada en ISO string
-    let requestedTime = '';
-    if (deliveryType === 'PICKUP' && horaRetiro) {
-      requestedTime = formatRequestedTime(horaRetiro) || '';
-    } else if (deliveryType === 'DELIVERY') {
-      const now = new Date();
-      now.setHours(now.getHours() + 1);
-      requestedTime = now.toISOString();
-    }
+    // Fecha/hora solicitada en ISO string (PICKUP: ahora; DELIVERY: ahora + 1h)
+    const now = new Date();
+    const requestedTime = deliveryType === 'DELIVERY'
+      ? (() => { const t = new Date(now); t.setHours(t.getHours() + 1); return t.toISOString(); })()
+      : now.toISOString();
 
     // fulfillment: type, requestedTime, address (solo DELIVERY), contact
     const fulfillment = {
@@ -554,15 +473,7 @@
     
     // Validar según el tipo
     if (deliveryType === 'PICKUP') {
-      if (!horaRetiro.trim()) {
-        alert($t.cart.completeFields);
-        return;
-      }
-      
-      if (!validateTime(horaRetiro)) {
-        alert($t.cart.invalidTime);
-        return;
-      }
+      // Sin hora de retiro: solo nombre y teléfono
     } else if (deliveryType === 'DELIVERY') {
       // Validar que estemos en el paso 2
       if (deliveryStep === 1) {
@@ -590,12 +501,7 @@
       }
     }
     
-    const horaFormateada = deliveryType === 'PICKUP' && horaRetiro 
-      ? formatTimeForMessage(horaRetiro)
-      : null;
-    const horaConZona = horaFormateada 
-      ? `${horaFormateada} (${timeZoneName()})`
-      : null;
+    const horaConZona = null; // Sin hora de retiro en cadorago
     
     // Construir dirección completa para DELIVERY
     let fullDeliveryAddress = null;
@@ -650,7 +556,6 @@
     deliveryStep = 1;
     nombreRetiro = '';
     phoneContact = '';
-    horaRetiro = '';
     deliveryAddress = '';
     addressNumber = '';
     addressNotes = '';
@@ -1102,24 +1007,6 @@
               />
             </div>
             
-            <div>
-              <label for="hora-retiro" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                {$t.cart.pickupTime} <span class="text-xs text-gray-500 font-normal">({timeZoneName()})</span>
-              </label>
-              <input
-                id="hora-retiro"
-                type="tel"
-                inputmode="numeric"
-                value={horaRetiro}
-                oninput={handleTimeInput}
-                onkeydown={handleTimeKeyDown}
-                placeholder={$t.cart.timeFormatExample}
-                maxlength="5"
-                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
-                required
-              />
-              <p class="text-xs text-gray-500 mt-1">{$t.cart.timeFormat}</p>
-            </div>
           </div>
         {/if}
       </div>

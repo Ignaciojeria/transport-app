@@ -867,17 +867,19 @@ export function groupOrderItemsForDisplay(items: KitchenOrderItem[]): Array<{ it
 /**
  * Obtiene las órdenes para la vista de cocina desde la proyección order_items_projection.
  * El filtro por estación se aplica en Supabase (columna station).
+ * Si se pasa journeyId, solo devuelve órdenes asociadas a esa jornada (consola Orders).
  * Agrupa ítems por orden (order_number, aggregate_id) y por item_name (sumando cantidades).
  * Orden: requested_time ASC, created_at ASC.
  * @param menuId - ID del menú
  * @param accessToken - Token de autenticación
  * @param stationFilter - Si es KITCHEN o BAR, filtra en la query por columna station
- * @returns Array de órdenes listas para mostrar en cocina
+ * @param journeyId - Opcional: si se pasa, solo órdenes con journey_id = journeyId (jornada activa en consola)
  */
 export async function getKitchenOrdersFromProjection(
   menuId: string,
   accessToken: string,
-  stationFilter: StationFilter = 'ALL'
+  stationFilter: StationFilter = 'ALL',
+  journeyId?: string | null
 ): Promise<KitchenOrder[]> {
   try {
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
@@ -887,6 +889,9 @@ export async function getKitchenOrdersFromProjection(
       .eq('menu_id', menuId)
     if (stationFilter === 'KITCHEN' || stationFilter === 'BAR') {
       query = query.eq('station', stationFilter)
+    }
+    if (journeyId != null && journeyId !== '') {
+      query = query.eq('journey_id', journeyId)
     }
     const { data: rows, error } = await query
       .order('requested_time', { ascending: true, nullsFirst: false })

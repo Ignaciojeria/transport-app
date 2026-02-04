@@ -75,11 +75,11 @@
         return null
       }
       menuId = currentMenuId
-      const [journey, newOrders] = await Promise.all([
-        getActiveJourney(currentMenuId, session.access_token),
-        getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter)
-      ])
+      const journey = await getActiveJourney(currentMenuId, session.access_token)
       activeJourney = journey
+      const newOrders = journey
+        ? await getKitchenOrdersFromProjection(currentMenuId, session.access_token, stationFilter, journey.id)
+        : []
       orders = newOrders
       const newIds = new Set(newOrders.map((o) => Number(o.order_number)))
       if (initialLoadDone) {
@@ -234,10 +234,10 @@
     stationFilter = filter
     if (filter === 'KITCHEN' || filter === 'BAR') operationalTab = 'pending'
     if (filter === 'ALL') deliveryTab = 'pending'
-    if (menuId && session?.access_token) {
+    if (menuId && session?.access_token && activeJourney) {
       loading = true
       try {
-        orders = await getKitchenOrdersFromProjection(menuId, session.access_token, filter)
+        orders = await getKitchenOrdersFromProjection(menuId, session.access_token, filter, activeJourney.id)
         previousOrderNumbers = new Set(orders.map((o) => Number(o.order_number)))
       } finally {
         loading = false
