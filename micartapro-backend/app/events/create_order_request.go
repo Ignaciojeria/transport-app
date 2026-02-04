@@ -8,6 +8,7 @@ import (
 
 type CreateOrderRequest struct {
 	CreatedAt    string            `json:"createdAt"`
+	TrackingID   string            `json:"trackingId,omitempty"` // no se persiste en el evento; lo genera la proyección order_tracking
 	Items        []OrderItem       `json:"items"`
 	Totals       OrderTotals       `json:"totals"`
 	Fulfillment  OrderFulfillment  `json:"fulfillment"`
