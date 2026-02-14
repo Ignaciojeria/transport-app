@@ -26,7 +26,7 @@ func NewDispatchOrder(
 		spanCtx, span := observability.Tracer.Start(ctx, "dispatch_order")
 		defer span.End()
 
-		// COMPLETE: la DB pone DISPATCHED (retiro) o DELIVERED (despacho) según fulfillment
+		// COMPLETE: la DB pone DELIVERED (PICKUP/retiro) o DISPATCHED (DELIVERY/despacho) según fulfillment
 		err := updateOrderStatus(
 			spanCtx,
 			aggregateID,

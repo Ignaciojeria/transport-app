@@ -254,7 +254,7 @@
     return 'done'
   }
 
-  /** Orden terminada: todos los ítems activos en estado terminal (DISPATCHED = retiro, DELIVERED = despacho). */
+  /** Orden terminada: todos los ítems activos en estado terminal (DELIVERED = PICKUP/retiro, DISPATCHED = DELIVERY/despacho). */
   function isOrderFullyDelivered(order: KitchenOrder): boolean {
     const active = order.items.filter((i) => i.status !== 'CANCELLED')
     return active.length > 0 && active.every((i) => i.status === 'DISPATCHED' || i.status === 'DELIVERED')
@@ -681,7 +681,7 @@
                 </div>
               {:else if isDelivered}
                 <div class="w-full py-2 px-3 rounded-lg text-xs font-bold bg-green-100 text-green-800 text-center">
-                  ✓ {type === 'DELIVERY' ? (t.orders?.delivered ?? 'Entregado') : (t.orders?.dispatched ?? 'Despachado')}
+                  ✓ {type === 'PICKUP' ? (t.orders?.delivered ?? 'Entregado') : (t.orders?.dispatched ?? 'Despachado')}
                 </div>
               {:else}
                 <div class="flex flex-col gap-1.5">
@@ -694,7 +694,7 @@
                     {#if isDispatchInProgress(order)}
                       <span class="inline-block animate-spin mr-1">⏳</span>
                     {/if}
-                    {type === 'DELIVERY' ? (t.orders?.dispatch ?? 'Despachar') : (t.orders?.deliver ?? 'Entregar')}
+                    {type === 'PICKUP' ? (t.orders?.deliver ?? 'Entregar') : (t.orders?.dispatch ?? 'Despachar')}
                   </button>
                   <button
                     type="button"
