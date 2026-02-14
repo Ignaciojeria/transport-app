@@ -2,8 +2,7 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, type KitchenOrder } from '../menuUtils'
-  import { getActiveJourney, createJourney } from '../journeyApi'
-  import { API_BASE_URL } from '../config'
+  import { getActiveJourney, createJourney, closeJourney } from '../journeyApi'
   import { t as tStore } from '../useLanguage'
 
   interface JornadaProps {
@@ -134,24 +133,13 @@
     closeInProgress = true
     closeResult = 'idle'
     try {
-      const res = await fetch(`${API_BASE_URL}/workday/close`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({ menu_id: menuId, date: todayLocalDateString() })
-      })
-      if (res.ok) {
-        closeResult = 'success'
-        await load()
-        setTimeout(() => {
-          showCloseModal = false
-          closeResult = 'idle'
-        }, 1500)
-      } else {
-        closeResult = 'coming_soon'
-      }
+      await closeJourney(menuId, session.access_token)
+      closeResult = 'success'
+      await load()
+      setTimeout(() => {
+        showCloseModal = false
+        closeResult = 'idle'
+      }, 1500)
     } catch {
       closeResult = 'coming_soon'
     } finally {

@@ -78,3 +78,23 @@ export async function createJourney(
   }
   return res.json()
 }
+
+/**
+ * Cierra la jornada activa (OPEN) del menú. Falla con 404 si no hay jornada abierta.
+ */
+export async function closeJourney(
+  menuId: string,
+  accessToken: string
+): Promise<void> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/journeys/close`,
+    {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` }
+    }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Error ${res.status}`)
+  }
+}
