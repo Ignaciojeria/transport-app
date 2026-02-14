@@ -220,6 +220,19 @@ export interface Translations {
     topProducts?: string
     noStats?: string
     errorLoadingStats?: string
+    prev?: string
+    next?: string
+    page?: string
+    back?: string
+    workdayReport?: string
+    duration?: string
+    itemsSold?: string
+    downloadCSV?: string
+    productsTable?: string
+    productName?: string
+    quantity?: string
+    revenue?: string
+    topProduct?: string
   }
 }
 
@@ -431,7 +444,19 @@ export const translations: Record<Language, Translations> = {
       chartByQuantity: 'Por unidades',
       topProducts: 'Productos más vendidos',
       noStats: 'No hay datos de ventas para esta jornada.',
-      errorLoadingStats: 'Error al cargar estadísticas.'
+      errorLoadingStats: 'Error al cargar estadísticas.',
+      prev: 'Anterior',
+      next: 'Siguiente',
+      page: 'Página',
+      workdayReport: 'Reporte de Jornada',
+      duration: 'Duración',
+      itemsSold: 'Ítems vendidos',
+      downloadCSV: 'Descargar CSV',
+      productsTable: 'Productos',
+      productName: 'Producto',
+      quantity: 'Cant.',
+      revenue: 'Ventas',
+      topProduct: 'Producto más vendido'
     }
   },
   PT: {
@@ -646,7 +671,20 @@ export const translations: Record<Language, Translations> = {
       chartByQuantity: 'Por unidades',
       topProducts: 'Produtos mais vendidos',
       noStats: 'Não há dados de vendas para esta jornada.',
-      errorLoadingStats: 'Erro ao carregar estatísticas.'
+      errorLoadingStats: 'Erro ao carregar estatísticas.',
+      prev: 'Anterior',
+      next: 'Próximo',
+      page: 'Página',
+      back: 'Voltar aos relatórios',
+      workdayReport: 'Relatório de Jornada',
+      duration: 'Duração',
+      itemsSold: 'Itens vendidos',
+      downloadCSV: 'Baixar CSV',
+      productsTable: 'Produtos',
+      productName: 'Produto',
+      quantity: 'Qtd.',
+      revenue: 'Vendas',
+      topProduct: 'Produto mais vendido'
     }
   },
   EN: {
@@ -856,7 +894,20 @@ export const translations: Record<Language, Translations> = {
       chartByQuantity: 'By quantity',
       topProducts: 'Top products',
       noStats: 'No sales data for this workday.',
-      errorLoadingStats: 'Error loading statistics.'
+      errorLoadingStats: 'Error loading statistics.',
+      prev: 'Previous',
+      next: 'Next',
+      page: 'Page',
+      back: 'Back to reports',
+      workdayReport: 'Workday Report',
+      duration: 'Duration',
+      itemsSold: 'Items sold',
+      downloadCSV: 'Download CSV',
+      productsTable: 'Products',
+      productName: 'Product',
+      quantity: 'Qty',
+      revenue: 'Revenue',
+      topProduct: 'Top product'
     }
   }
 }
