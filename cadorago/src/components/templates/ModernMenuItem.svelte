@@ -1,5 +1,5 @@
 <script>
-  import { cartStore } from '../../stores/cartStore.svelte.js';
+  import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { getPriceFromPricing } from '../../services/menuData.js';
   import { getMultilingualText, getBaseText } from '../../lib/multilingual';
@@ -46,9 +46,15 @@
     return Math.min(...prices);
   });
   
+  // Sincronizar items del carrito para reactividad
+  let cartItemsList = $state([]);
+  $effect(() => {
+    const unsub = itemsStore.subscribe((v) => { cartItemsList = v ?? []; });
+    return unsub;
+  });
+
   const isInCart = $derived.by(() => {
-    const items = cartStore.items;
-    const matchingItems = items.filter(i => {
+    const matchingItems = cartItemsList.filter(i => {
       const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
       return iTitle === itemTitleBase;
     });
@@ -56,7 +62,7 @@
   });
 
   const cartItems = $derived.by(() =>
-    cartStore.items.filter(i => {
+    cartItemsList.filter(i => {
       const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
       return iTitle === itemTitleBase;
     })

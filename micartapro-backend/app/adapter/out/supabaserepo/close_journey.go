@@ -12,20 +12,24 @@ import (
 )
 
 // CloseJourney cierra la jornada: status = CLOSED, closed_at = now().
+// totalsSnapshot: opcional; si no es nil, se guarda en journeys.totals_snapshot.
 // Solo actualiza si id y menu_id coinciden y status es OPEN.
-type CloseJourney func(ctx context.Context, menuID, journeyID string) error
+type CloseJourney func(ctx context.Context, menuID, journeyID string, totalsSnapshot interface{}) error
 
 func init() {
 	ioc.Registry(NewCloseJourney, supabasecli.NewSupabaseClient)
 }
 
 func NewCloseJourney(supabase *supabase.Client) CloseJourney {
-	return func(ctx context.Context, menuID, journeyID string) error {
+	return func(ctx context.Context, menuID, journeyID string, totalsSnapshot interface{}) error {
 		now := time.Now().UTC()
 		record := map[string]interface{}{
 			"status":     "CLOSED",
 			"closed_at":  now.Format(time.RFC3339),
 			"updated_at": now.Format(time.RFC3339),
+		}
+		if totalsSnapshot != nil {
+			record["totals_snapshot"] = totalsSnapshot
 		}
 		_, _, err := supabase.From("journeys").
 			Update(record, "", "").

@@ -3,7 +3,7 @@
   import MenuItemDescription from '../atoms/MenuItemDescription.svelte';
   import Price from '../atoms/Price.svelte';
   import QuantitySelector from './QuantitySelector.svelte';
-  import { cartStore } from '../../stores/cartStore.svelte.js';
+  import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
   import { getPriceFromPricing, getPricingLimits } from '../../services/menuData.js';
   import { getMultilingualText, getBaseText } from '../../lib/multilingual';
   
@@ -61,17 +61,22 @@
   // Obtener textos multiidioma
   const itemTitleBase = $derived(getBaseText(item.title));
   
-  // Verificar si el item está en el carrito (necesita verificar por clave única)
+  // Sincronizar items del carrito para reactividad
+  let cartItemsList = $state([]);
+  $effect(() => {
+    const unsub = itemsStore.subscribe((v) => { cartItemsList = v ?? []; });
+    return unsub;
+  });
+  
   const isInCart = $derived.by(() => {
-    const items = cartStore.items;
-    const matchingItems = items.filter(i => {
+    const matchingItems = cartItemsList.filter(i => {
       const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
       return iTitle === itemTitleBase;
     });
     return matchingItems.reduce((sum, i) => sum + (i.customQuantity || i.cantidad), 0) > 0;
   });
   
-  const cartItems = $derived.by(() => cartStore.items.filter(i => {
+  const cartItems = $derived.by(() => cartItemsList.filter(i => {
     const iTitle = typeof i.title === 'string' ? i.title : i.title?.base || '';
     return iTitle === itemTitleBase;
   }));

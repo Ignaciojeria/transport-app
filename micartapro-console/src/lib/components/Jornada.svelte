@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, type KitchenOrder } from '../menuUtils'
-  import { getActiveJourney, createJourney, closeJourney } from '../journeyApi'
+  import { getActiveJourney, createJourney, closeJourney, getJourneys, getJourneyStats, type JourneyListItem, type JourneyStats } from '../journeyApi'
   import { t as tStore } from '../useLanguage'
 
   interface JornadaProps {
@@ -21,6 +21,11 @@
   let closeResult = $state<'idle' | 'success' | 'coming_soon'>('idle')
   let createJourneyInProgress = $state(false)
   let createJourneyError = $state<string | null>(null)
+  let journeys = $state<JourneyListItem[]>([])
+  let showStatsModal = $state(false)
+  let statsJourney = $state<JourneyListItem | null>(null)
+  let stats = $state<JourneyStats | null>(null)
+  let statsLoading = $state(false)
 
   const session = $derived(authState.session)
   const user = $derived(authState.user)
@@ -45,6 +50,16 @@
     const m = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
     return `${y}-${m}-${day}`
+  }
+
+  /** Formato DD-MM HH:mm para jornadas. */
+  function formatJourneyDate(isoDate: string): string {
+    const d = new Date(isoDate)
+    const day = String(d.getDate()).padStart(2, '0')
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const h = String(d.getHours()).padStart(2, '0')
+    const min = String(d.getMinutes()).padStart(2, '0')
+    return `${day}/${m} ${h}:${min}`
   }
 
   /** Formato DD-MM-YYYY para mostrar en modal. */
@@ -90,8 +105,12 @@
         return
       }
       menuId = mid
-      const journey = await getActiveJourney(mid, session.access_token)
+      const [journey, journeysList] = await Promise.all([
+        getActiveJourney(mid, session.access_token),
+        getJourneys(mid, session.access_token)
+      ])
       activeJourney = journey
+      journeys = journeysList
       const list = journey
         ? await getKitchenOrdersFromProjection(mid, session.access_token, 'ALL', journey.id)
         : []
@@ -147,6 +166,81 @@
     }
   }
 
+  async function openStatsModal(j: JourneyListItem) {
+    if (!session?.access_token || !menuId) return
+    statsJourney = j
+    showStatsModal = true
+    stats = null
+    statsLoading = true
+    try {
+      stats = await getJourneyStats(menuId, j.id, session.access_token)
+    } catch (e) {
+      console.error('Error cargando estadísticas:', e)
+      stats = null
+    } finally {
+      statsLoading = false
+    }
+  }
+
+  function closeStatsModal() {
+    showStatsModal = false
+    statsJourney = null
+    stats = null
+  }
+
+  /** Formato de moneda para mostrar revenue. */
+  function formatCurrency(n: number): string {
+    if (n >= 1000) return `$${Math.round(n).toLocaleString()}`
+    return `$${n.toFixed(0)}`
+  }
+
+  /** Colores para el gráfico de torta (por índice). */
+  const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
+
+  /** Gradiente conic para el gráfico de torta por revenue. */
+  const pieGradient = $derived.by(() => {
+    if (!stats?.products?.length) return ''
+    let acc = 0
+    return stats.products
+      .map((p, i) => {
+        const start = acc
+        acc += p.percentage
+        return `${PIE_COLORS[i % PIE_COLORS.length]} ${start}% ${acc}%`
+      })
+      .join(', ')
+  })
+
+  /** Gradiente conic para el gráfico de torta por cantidad. */
+  const pieGradientByQuantity = $derived.by(() => {
+    if (!stats?.products?.length) return ''
+    let acc = 0
+    return stats.products
+      .map((p, i) => {
+        const start = acc
+        acc += p.percentageByQuantity
+        return `${PIE_COLORS[i % PIE_COLORS.length]} ${start}% ${acc}%`
+      })
+      .join(', ')
+  })
+
+  /** Ticket promedio (ventas / órdenes). */
+  const averageTicket = $derived.by(() => {
+    if (!stats || stats.totalOrders === 0) return 0
+    return stats.totalRevenue / stats.totalOrders
+  })
+
+  /** Producto top por revenue. */
+  const topByRevenue = $derived.by(() => {
+    if (!stats?.products?.length) return null
+    return stats.products.reduce((a, b) => (a.totalRevenue >= b.totalRevenue ? a : b))
+  })
+
+  /** Producto top por cantidad vendida. */
+  const topByQuantity = $derived.by(() => {
+    if (!stats?.products?.length) return null
+    return stats.products.reduce((a, b) => (a.quantitySold >= b.quantitySold ? a : b))
+  })
+
   onMount(() => {
     load()
   })
@@ -179,6 +273,51 @@
       </div>
     {:else if activeJourney === null && menuId}
       <!-- No hay jornada activa: CTA para abrir una -->
+      {@const closedJourneysNoActive = journeys.filter((j) => j.status === 'CLOSED')}
+      {#if closedJourneysNoActive.length > 0}
+        <section class="mb-8">
+          <h2 class="text-sm font-semibold text-gray-700 mb-3">{t.jornada?.reports ?? 'Reportes de Jornadas'}</h2>
+          <div class="space-y-2">
+            {#each closedJourneysNoActive as j (j.id)}
+              <div class="flex items-center justify-between rounded-xl bg-white border border-gray-200 p-4">
+                <div class="text-sm">
+                  <span class="font-medium text-gray-900">{formatJourneyDate(j.openedAt)}</span>
+                  {#if j.closedAt}
+                    <span class="text-gray-500"> – {formatJourneyDate(j.closedAt)}</span>
+                  {/if}
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick={() => openStatsModal(j)}
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    {t.jornada?.stats ?? 'Estadísticas'}
+                  </button>
+                  {#if j.reportXlsxUrl}
+                    <a
+                      href={j.reportXlsxUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {t.jornada?.downloadExcel ?? 'Descargar Excel'}
+                    </a>
+                  {:else}
+                    <span class="text-xs text-gray-400">{t.jornada?.reportGenerating ?? 'Generando...'}</span>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
       <section class="max-w-md mx-auto mt-8">
         <div class="rounded-xl bg-white border border-gray-200 shadow-sm p-8 text-center">
           <p class="text-gray-600 mb-6">
@@ -263,6 +402,53 @@
           <span>{t.jornada?.closeWorkday ?? 'Cerrar Jornada'}</span>
         </button>
       </section>
+
+      <!-- Reportes de jornadas cerradas -->
+      {@const closedJourneys = journeys.filter((j) => j.status === 'CLOSED')}
+      {#if closedJourneys.length > 0}
+        <section class="mt-10 pt-6 border-t border-gray-200">
+          <h2 class="text-sm font-semibold text-gray-700 mb-3">{t.jornada?.reports ?? 'Reportes de Jornadas'}</h2>
+          <div class="space-y-2">
+            {#each closedJourneys as j (j.id)}
+              <div class="flex items-center justify-between rounded-xl bg-white border border-gray-200 p-4">
+                <div class="text-sm">
+                  <span class="font-medium text-gray-900">{formatJourneyDate(j.openedAt)}</span>
+                  {#if j.closedAt}
+                    <span class="text-gray-500"> – {formatJourneyDate(j.closedAt)}</span>
+                  {/if}
+                </div>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onclick={() => openStatsModal(j)}
+                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    {t.jornada?.stats ?? 'Estadísticas'}
+                  </button>
+                  {#if j.reportXlsxUrl}
+                    <a
+                      href={j.reportXlsxUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      {t.jornada?.downloadExcel ?? 'Descargar Excel'}
+                    </a>
+                  {:else}
+                    <span class="text-xs text-gray-400">{t.jornada?.reportGenerating ?? 'Generando...'}</span>
+                  {/if}
+                </div>
+              </div>
+            {/each}
+          </div>
+        </section>
+      {/if}
     {/if}
   </div>
 </div>
@@ -308,6 +494,127 @@
           {closeInProgress ? (t.jornada?.closing ?? 'Cerrando...') : (t.jornada?.closeModalConfirm ?? 'Cerrar Jornada')}
         </button>
       </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Modal Estadísticas de Jornada -->
+{#if showStatsModal}
+  <div
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="jornada-stats-title"
+    tabindex="-1"
+    onclick={(e) => e.target === e.currentTarget && closeStatsModal()}
+    onkeydown={(e) => e.key === 'Escape' && closeStatsModal()}
+  >
+    <div class="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="jornada-stats-title" class="text-xl font-bold text-gray-900">
+          {t.jornada?.stats ?? 'Estadísticas'}
+          {#if statsJourney}
+            <span class="text-sm font-normal text-gray-500 ml-2">
+              {formatJourneyDate(statsJourney.openedAt)}
+            </span>
+          {/if}
+        </h2>
+        <button
+          type="button"
+          onclick={closeStatsModal}
+          class="p-2 rounded-lg hover:bg-gray-100 text-gray-500"
+          aria-label="Cerrar"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      {#if statsLoading}
+        <div class="flex justify-center py-12">
+          <div class="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent"></div>
+        </div>
+      {:else if stats}
+        <div class="space-y-6">
+          <!-- Métricas rápidas -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-gray-50 p-4">
+              <p class="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+              <p class="text-xs text-gray-500">{t.jornada?.totalRevenue ?? 'Ventas totales'}</p>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-4">
+              <p class="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+              <p class="text-xs text-gray-500">{t.jornada?.statsOrders ?? 'Órdenes'}</p>
+            </div>
+            <div class="rounded-xl bg-gray-50 p-4">
+              <p class="text-2xl font-bold text-gray-900">{formatCurrency(averageTicket)}</p>
+              <p class="text-xs text-gray-500">{t.jornada?.averageTicket ?? 'Ticket promedio'}</p>
+            </div>
+            <div class="rounded-xl bg-blue-50 p-4 border border-blue-100">
+              <p class="text-sm font-semibold text-gray-900 truncate" title={topByRevenue?.productName}>
+                {topByRevenue?.productName ?? '—'}
+              </p>
+              <p class="text-xs text-blue-600">{t.jornada?.topByRevenue ?? 'Top ventas'}</p>
+            </div>
+            <div class="rounded-xl bg-emerald-50 p-4 border border-emerald-100">
+              <p class="text-sm font-semibold text-gray-900 truncate" title={topByQuantity?.productName}>
+                {topByQuantity?.productName ?? '—'}
+              </p>
+              <p class="text-xs text-emerald-600">{t.jornada?.topByQuantity ?? 'Top unidades'}</p>
+            </div>
+          </div>
+
+          {#if stats.products.length > 0}
+            <!-- Gráficos de torta: por ventas y por unidades -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex flex-col items-center">
+                <p class="text-xs font-medium text-gray-600 mb-2">{t.jornada?.chartByRevenue ?? 'Por ventas'}</p>
+                <div
+                  class="w-32 h-32 rounded-full shrink-0"
+                  style="background: conic-gradient({pieGradient})"
+                  role="img"
+                  aria-label="Gráfico por ventas"
+                ></div>
+              </div>
+              <div class="flex flex-col items-center">
+                <p class="text-xs font-medium text-gray-600 mb-2">{t.jornada?.chartByQuantity ?? 'Por unidades'}</p>
+                <div
+                  class="w-32 h-32 rounded-full shrink-0"
+                  style="background: conic-gradient({pieGradientByQuantity})"
+                  role="img"
+                  aria-label="Gráfico por unidades vendidas"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Lista de productos -->
+            <div>
+              <h3 class="text-sm font-semibold text-gray-700 mb-2">{t.jornada?.topProducts ?? 'Productos más vendidos'}</h3>
+              <ul class="space-y-2">
+                {#each stats.products as p, i}
+                  <li class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2">
+                    <span class="flex items-center gap-2">
+                      <span
+                        class="w-3 h-3 rounded-full shrink-0"
+                        style="background-color: {PIE_COLORS[i % PIE_COLORS.length]}"
+                      ></span>
+                      <span class="font-medium text-gray-900">{p.productName}</span>
+                    </span>
+                    <span class="text-sm text-gray-600">
+                      {p.quantitySold} ud · {formatCurrency(p.totalRevenue)} ({p.percentage.toFixed(0)}% ventas / {p.percentageByQuantity.toFixed(0)}% ud)
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+            </div>
+          {:else}
+            <p class="text-gray-500 text-center py-6">{t.jornada?.noStats ?? 'No hay datos de ventas para esta jornada.'}</p>
+          {/if}
+        </div>
+      {:else}
+        <p class="text-gray-500 text-center py-6">{t.jornada?.errorLoadingStats ?? 'Error al cargar estadísticas.'}</p>
+      {/if}
     </div>
   </div>
 {/if}

@@ -12,9 +12,10 @@
 export function getPriceFromPricing(pricing, quantity = null) {
   if (!pricing) return 0;
   
-  // Para modo UNIT, retornar pricePerUnit directamente
+  // Para modo UNIT: precio = pricePerUnit * cantidad (cantidad por defecto 1)
   if (pricing.mode === 'UNIT') {
-    return pricing.pricePerUnit || 0;
+    const qty = quantity !== null && quantity !== undefined ? quantity : 1;
+    return (pricing.pricePerUnit || 0) * qty;
   }
   
   // Para otros modos (WEIGHT, VOLUME, etc.), calcular según cantidad

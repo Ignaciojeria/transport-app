@@ -1602,11 +1602,12 @@
         throw new Error(`Error subiendo imagen a GCS: ${uploadResponse.status}`)
       }
       
-      // 3. Guardar la URL en la tabla catalog_images
+      // 3. Guardar la URL en la tabla catalog_images (con user_id para que aparezca en la galería del usuario)
       const { error: insertError } = await supabase
         .from('catalog_images')
         .insert({
-          image_url: publicUrl
+          image_url: publicUrl,
+          user_id: userId
         })
 
       if (insertError) {

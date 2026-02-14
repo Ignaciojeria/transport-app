@@ -22,6 +22,16 @@ export interface CreateJourneyResponse {
   reason?: string
 }
 
+export interface JourneyListItem {
+  id: string
+  menuId: string
+  status: string
+  openedAt: string
+  closedAt?: string
+  reportPdfUrl?: string
+  reportXlsxUrl?: string
+}
+
 /**
  * Obtiene la jornada activa (OPEN) del menú. Devuelve null si no hay (404).
  */
@@ -70,6 +80,70 @@ export async function createJourney(
         Authorization: `Bearer ${accessToken}`
       },
       body: JSON.stringify({ openedBy, reason: reason ?? 'Apertura manual' })
+    }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Error ${res.status}`)
+  }
+  return res.json()
+}
+
+/**
+ * Lista jornadas del menú (abiertas y cerradas), ordenadas por fecha desc.
+ */
+export async function getJourneys(
+  menuId: string,
+  accessToken: string
+): Promise<JourneyListItem[]> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/journeys`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Error ${res.status}`)
+  }
+  const raw = (await res.json()) as Record<string, unknown>[]
+  return raw.map((j) => ({
+    id: (j.id ?? j.ID) as string,
+    menuId: (j.menuId ?? j.MenuID) as string,
+    status: (j.status ?? j.Status) as string,
+    openedAt: (j.openedAt ?? j.OpenedAt) as string,
+    closedAt: (j.closedAt ?? j.ClosedAt) as string | undefined,
+    reportPdfUrl: (j.reportPdfUrl ?? j.ReportPDFURL) as string | undefined,
+    reportXlsxUrl: (j.reportXlsxUrl ?? j.ReportXLSXURL) as string | undefined
+  }))
+}
+
+export interface JourneyStatsProduct {
+  productName: string
+  quantitySold: number
+  totalRevenue: number
+  percentage: number
+  percentageByQuantity: number
+}
+
+export interface JourneyStats {
+  totalRevenue: number
+  totalOrders: number
+  products: JourneyStatsProduct[]
+}
+
+/**
+ * Obtiene estadísticas de ventas de una jornada (productos más vendidos, revenue, etc.).
+ */
+export async function getJourneyStats(
+  menuId: string,
+  journeyId: string,
+  accessToken: string
+): Promise<JourneyStats> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/journeys/${encodeURIComponent(journeyId)}/stats`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` }
     }
   )
   if (!res.ok) {

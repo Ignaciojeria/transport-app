@@ -206,6 +206,20 @@ export interface Translations {
     openingJourney?: string
     errorCreatingJourney?: string
     openJourneyReason?: string
+    reports?: string
+    downloadExcel?: string
+    reportGenerating?: string
+    stats?: string
+    totalRevenue?: string
+    statsOrders?: string
+    averageTicket?: string
+    topByRevenue?: string
+    topByQuantity?: string
+    chartByRevenue?: string
+    chartByQuantity?: string
+    topProducts?: string
+    noStats?: string
+    errorLoadingStats?: string
   }
 }
 
@@ -403,7 +417,21 @@ export const translations: Record<Language, Translations> = {
       openJourney: 'Abrir jornada',
       openingJourney: 'Abriendo jornada...',
       errorCreatingJourney: 'Error al abrir la jornada. Intenta de nuevo.',
-      openJourneyReason: 'Apertura manual'
+      openJourneyReason: 'Apertura manual',
+      reports: 'Reportes de Jornadas',
+      downloadExcel: 'Descargar Excel',
+      reportGenerating: 'Generando...',
+      stats: 'Estadísticas',
+      totalRevenue: 'Ventas totales',
+      statsOrders: 'Órdenes',
+      averageTicket: 'Ticket promedio',
+      topByRevenue: 'Top ventas',
+      topByQuantity: 'Top unidades',
+      chartByRevenue: 'Por ventas',
+      chartByQuantity: 'Por unidades',
+      topProducts: 'Productos más vendidos',
+      noStats: 'No hay datos de ventas para esta jornada.',
+      errorLoadingStats: 'Error al cargar estadísticas.'
     }
   },
   PT: {
@@ -604,7 +632,21 @@ export const translations: Record<Language, Translations> = {
       comingSoon: 'O Fechamento De Jornada Estará Disponível Em Uma Próxima Atualização.',
       noMenu: 'Nenhum Cardápio Encontrado',
       noSession: 'Não Há Sessão Ativa',
-      errorLoading: 'Erro Ao Carregar Os Dados Da Jornada.'
+      errorLoading: 'Erro Ao Carregar Os Dados Da Jornada.',
+      reports: 'Relatórios de Jornadas',
+      downloadExcel: 'Baixar Excel',
+      reportGenerating: 'Gerando...',
+      stats: 'Estatísticas',
+      totalRevenue: 'Vendas totais',
+      statsOrders: 'Pedidos',
+      averageTicket: 'Ticket médio',
+      topByRevenue: 'Top vendas',
+      topByQuantity: 'Top unidades',
+      chartByRevenue: 'Por vendas',
+      chartByQuantity: 'Por unidades',
+      topProducts: 'Produtos mais vendidos',
+      noStats: 'Não há dados de vendas para esta jornada.',
+      errorLoadingStats: 'Erro ao carregar estatísticas.'
     }
   },
   EN: {
@@ -800,7 +842,21 @@ export const translations: Record<Language, Translations> = {
       openJourney: 'Open workday',
       openingJourney: 'Opening workday...',
       errorCreatingJourney: 'Error opening workday. Please try again.',
-      openJourneyReason: 'Manual opening'
+      openJourneyReason: 'Manual opening',
+      reports: 'Workday Reports',
+      downloadExcel: 'Download Excel',
+      reportGenerating: 'Generating...',
+      stats: 'Statistics',
+      totalRevenue: 'Total sales',
+      statsOrders: 'Orders',
+      averageTicket: 'Average ticket',
+      topByRevenue: 'Top by revenue',
+      topByQuantity: 'Top by quantity',
+      chartByRevenue: 'By revenue',
+      chartByQuantity: 'By quantity',
+      topProducts: 'Top products',
+      noStats: 'No sales data for this workday.',
+      errorLoadingStats: 'Error loading statistics.'
     }
   }
 }

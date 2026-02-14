@@ -27,10 +27,11 @@
 
     loadingPhotos = true
     try {
-      // Consultar la tabla catalog_images
+      // Consultar solo imágenes del usuario actual
       const { data, error } = await supabase
         .from('catalog_images')
         .select('id, image_url')
+        .eq('user_id', userId)
         .order('id', { ascending: false })
         .limit(100)
 

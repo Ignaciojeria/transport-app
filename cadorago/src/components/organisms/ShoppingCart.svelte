@@ -1,10 +1,11 @@
 <script>
-  import { cartStore } from '../../stores/cartStore.svelte.js';
+  import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
   import Price from '../atoms/Price.svelte';
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
   import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
+  import { getPriceFromPricing } from '../../services/menuData.js';
   
   const { className = '' } = $props();
   
@@ -12,10 +13,27 @@
   const currency = $derived(getEffectiveCurrency(restaurantData));
   const currentLanguage = $derived($language);
   
-  // Valores derivados reactivos
-  const items = $derived(cartStore.items);
-  const total = $derived(cartStore.getTotal());
-  const totalItems = $derived(cartStore.getTotalItems());
+  // $effect + subscribe: reactividad explícita (Svelte 5)
+  let items = $state([]);
+  $effect(() => {
+    const unsub = itemsStore.subscribe((v) => { items = v ?? []; });
+    return unsub;
+  });
+  const total = $derived.by(() => {
+    return items.reduce((sum, item) => {
+      if (item.customQuantity != null && item.pricing) {
+        const p = getPriceFromPricing(item.pricing, item.customQuantity);
+        return sum + (p * (item.cantidad || 1));
+      }
+      return sum + ((item.precio || 0) * (item.cantidad || 1));
+    }, 0);
+  });
+  const totalItems = $derived.by(() => {
+    return items.reduce((sum, item) => {
+      if (item.customQuantity) return sum + item.customQuantity;
+      return sum + (item.cantidad || 0);
+    }, 0);
+  });
   
   let showClearConfirm = $state(false);
   
@@ -69,7 +87,7 @@
     {/if}
   </div>
   
-  {#if cartStore.items.length === 0}
+  {#if items.length === 0}
     <div class="text-center py-8 sm:py-12">
       <p class="text-lg sm:text-xl text-gray-600">
         {$t.cart.emptyCart}

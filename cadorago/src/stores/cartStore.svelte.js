@@ -1,55 +1,47 @@
 /**
- * Store del carrito de compras usando Svelte 5 runes
+ * Store del carrito de compras
+ * Usa writable store para garantizar reactividad en todos los componentes
  */
+import { writable } from 'svelte/store';
 import { getPriceFromPricing } from '../services/menuData.js';
 import { getBaseText } from '../lib/multilingual';
 
 const STORAGE_KEY = 'cadorago_cart';
 
+function loadFromStorage() {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return [];
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('Error al cargar el carrito:', error);
+    return [];
+  }
+}
+
+function saveToStorage(itemsToSave) {
+  try {
+    if (typeof window === 'undefined' || !window.localStorage) return;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(itemsToSave));
+  } catch (error) {
+    console.warn('Error al guardar el carrito:', error);
+  }
+}
+
+// writable store: reactividad garantizada en Svelte
+export const itemsStore = writable(loadFromStorage());
+
 class CartStore {
-  constructor() {
-    // Cargar items desde localStorage al inicializar
-    const savedItems = this.loadFromStorage();
-    this.items = $state(savedItems);
+  get items() {
+    let val;
+    itemsStore.subscribe((v) => { val = v; })();
+    return val ?? [];
   }
 
-  /**
-   * Carga los items del carrito desde localStorage
-   * @returns {Array} Array de items del carrito
-   */
-  loadFromStorage() {
-    try {
-      if (typeof window === 'undefined' || !window.localStorage) {
-        return [];
-      }
-      
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) {
-        return [];
-      }
-      
-      const parsed = JSON.parse(saved);
-      // Validar que sea un array
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      console.warn('Error al cargar el carrito desde localStorage:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Guarda los items del carrito en localStorage
-   */
-  saveToStorage() {
-    try {
-      if (typeof window === 'undefined' || !window.localStorage) {
-        return;
-      }
-      
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.items));
-    } catch (error) {
-      console.warn('Error al guardar el carrito en localStorage:', error);
-    }
+  _setItems(value) {
+    itemsStore.set(value);
   }
 
   /**
@@ -80,37 +72,37 @@ class CartStore {
       ? `${itemTitleBase}_${sideNameBase}` 
       : itemTitleBase;
     
-    const existingItemIndex = this.items.findIndex(i => {
-      const iTitleBase = getBaseText(i.title);
-      const existingKey = i.acompanamientoId 
-        ? `${iTitleBase}_${i.acompanamientoId}` 
-        : iTitleBase;
-      return existingKey === itemKey;
-    });
-    
-    if (existingItemIndex !== -1) {
-      // Crear nuevo array para forzar reactividad
-      this.items = this.items.map((i, index) => {
-        if (index === existingItemIndex) {
-          return { ...i, cantidad: i.cantidad + 1 };
-        }
-        return i;
+    itemsStore.update((current) => {
+      const existingItemIndex = current.findIndex(i => {
+        const iTitleBase = getBaseText(i.title);
+        const existingKey = i.acompanamientoId 
+          ? `${iTitleBase}_${i.acompanamientoId}` 
+          : iTitleBase;
+        return existingKey === itemKey;
       });
-    } else {
-      // station: lo que diga el menú (sides pueden tener station; si no, el item)
-      const station = side?.station ?? item?.station ?? null;
-      this.items = [...this.items, {
-        ...item,
-        cantidad: 1,
-        precio: precio,
-        acompanamiento: side ? getBaseText(side.name) : null, // Guardar solo el texto base para compatibilidad
-        acompanamientoId: side ? getBaseText(side.name) : null,
-        station
-      }];
-    }
-    
-    // Guardar en localStorage después de modificar
-    this.saveToStorage();
+      
+      let next;
+      if (existingItemIndex !== -1) {
+        next = current.map((i, index) => {
+          if (index === existingItemIndex) {
+            return { ...i, cantidad: i.cantidad + 1 };
+          }
+          return i;
+        });
+      } else {
+        const station = side?.station ?? item?.station ?? null;
+        next = [...current, {
+          ...item,
+          cantidad: 1,
+          precio: precio,
+          acompanamiento: side ? getBaseText(side.name) : null,
+          acompanamientoId: side ? getBaseText(side.name) : null,
+          station
+        }];
+      }
+      saveToStorage(next);
+      return next;
+    });
   }
 
   /**
@@ -134,37 +126,28 @@ class CartStore {
     const itemTitleBase = getBaseText(item.title);
     const itemKey = `${itemTitleBase}_${quantity}`;
     
-    // Verificar si ya existe un item con la misma cantidad
-    const existingItemIndex = this.items.findIndex(i => {
-      const iTitleBase = getBaseText(i.title);
-      const existingKey = i.customQuantity 
-        ? `${iTitleBase}_${i.customQuantity}` 
-        : iTitleBase;
-      return existingKey === itemKey;
+    itemsStore.update((current) => {
+      const existingItemIndex = current.findIndex(i => {
+        const iTitleBase = getBaseText(i.title);
+        const existingKey = i.customQuantity 
+          ? `${iTitleBase}_${i.customQuantity}` 
+          : iTitleBase;
+        return existingKey === itemKey;
+      });
+      
+      const newItem = {
+        ...item,
+        cantidad: 1,
+        customQuantity: quantity,
+        precio: precio,
+        pricing: item.pricing
+      };
+      const next = existingItemIndex !== -1
+        ? [...current, newItem]
+        : [...current, newItem];
+      saveToStorage(next);
+      return next;
     });
-    
-    if (existingItemIndex !== -1) {
-      // Si existe, incrementar cantidad (pero esto es raro para items con cantidad personalizada)
-      // Mejor agregar como nuevo item
-      this.items = [...this.items, {
-        ...item,
-        cantidad: 1,
-        customQuantity: quantity,
-        precio: precio,
-        pricing: item.pricing // Mantener el pricing original para recálculos
-      }];
-    } else {
-      this.items = [...this.items, {
-        ...item,
-        cantidad: 1,
-        customQuantity: quantity,
-        precio: precio,
-        pricing: item.pricing // Mantener el pricing original para recálculos
-      }];
-    }
-    
-    // Guardar en localStorage después de modificar
-    this.saveToStorage();
   }
 
   /**
@@ -173,8 +156,11 @@ class CartStore {
    */
   removeItem(title) {
     const titleBase = getBaseText(title);
-    this.items = this.items.filter(item => getBaseText(item.title) !== titleBase);
-    this.saveToStorage();
+    itemsStore.update((current) => {
+      const next = current.filter(item => getBaseText(item.title) !== titleBase);
+      saveToStorage(next);
+      return next;
+    });
   }
 
   /**
@@ -188,19 +174,20 @@ class CartStore {
       return;
     }
     
-    // Crear nuevo array para forzar reactividad
-    this.items = this.items.map(item => {
-      const itemTitleBase = getBaseText(item.title);
-      const currentKey = item.acompanamientoId 
-        ? `${itemTitleBase}_${item.acompanamientoId}` 
-        : itemTitleBase;
-      if (currentKey === itemKey) {
-        return { ...item, cantidad };
-      }
-      return item;
+    itemsStore.update((current) => {
+      const next = current.map(item => {
+        const itemTitleBase = getBaseText(item.title);
+        const currentKey = item.acompanamientoId 
+          ? `${itemTitleBase}_${item.acompanamientoId}` 
+          : itemTitleBase;
+        if (currentKey === itemKey) {
+          return { ...item, cantidad };
+        }
+        return item;
+      });
+      saveToStorage(next);
+      return next;
     });
-    
-    this.saveToStorage();
   }
   
   /**
@@ -208,14 +195,17 @@ class CartStore {
    * @param {string} itemKey - Clave única del item
    */
   removeItemByKey(itemKey) {
-    this.items = this.items.filter(item => {
-      const itemTitleBase = getBaseText(item.title);
-      const currentKey = item.acompanamientoId 
-        ? `${itemTitleBase}_${item.acompanamientoId}` 
-        : itemTitleBase;
-      return currentKey !== itemKey;
+    itemsStore.update((current) => {
+      const next = current.filter(item => {
+        const itemTitleBase = getBaseText(item.title);
+        const currentKey = item.acompanamientoId 
+          ? `${itemTitleBase}_${item.acompanamientoId}` 
+          : itemTitleBase;
+        return currentKey !== itemKey;
+      });
+      saveToStorage(next);
+      return next;
     });
-    this.saveToStorage();
   }
 
   /**
@@ -225,11 +215,12 @@ class CartStore {
   getTotal() {
     return this.items.reduce((total, item) => {
       // Si tiene cantidad personalizada y pricing, calcular precio dinámicamente
-      if (item.customQuantity && item.pricing) {
-        return total + getPriceFromPricing(item.pricing, item.customQuantity);
+      if (item.customQuantity != null && item.pricing) {
+        const precioUnitario = getPriceFromPricing(item.pricing, item.customQuantity);
+        return total + (precioUnitario * (item.cantidad || 1));
       }
-      // Precio normal
-      return total + (item.precio * item.cantidad);
+      // Precio normal (items con sides o UNIT sin customQuantity)
+      return total + ((item.precio || 0) * (item.cantidad || 1));
     }, 0);
   }
 
@@ -251,10 +242,8 @@ class CartStore {
    * Limpia el carrito
    */
   clear() {
-    // Asignar nuevo array vacío - esto debería activar la reactividad en Svelte 5
-    this.items = [];
-    // Guardar en localStorage inmediatamente
-    this.saveToStorage();
+    itemsStore.set([]);
+    saveToStorage([]);
   }
 
   /**

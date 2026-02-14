@@ -2,11 +2,14 @@ package fuegoapi
 
 import (
 	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
+	"micartapro/app/adapter/out/storage"
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
+	"micartapro/app/usecase/journey"
 	"net/http"
+	"time"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/go-fuego/fuego"
@@ -21,6 +24,10 @@ func init() {
 		supabaserepo.NewGetActiveJourneyByMenuID,
 		supabaserepo.NewCloseJourney,
 		supabaserepo.NewGetMenuIdByUserId,
+		supabaserepo.NewGetOrderItemsForJourney,
+		supabaserepo.NewGetJourneyStats,
+		storage.NewUploadJourneyReport,
+		supabaserepo.NewUpdateJourneyReportURL,
 		apimiddleware.NewJWTAuthMiddleware,
 	)
 }
@@ -31,6 +38,10 @@ func closeJourneyHandler(
 	getActiveJourney supabaserepo.GetActiveJourneyByMenuID,
 	closeJourney supabaserepo.CloseJourney,
 	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
+	getOrderItems supabaserepo.GetOrderItemsForJourney,
+	getJourneyStats supabaserepo.GetJourneyStats,
+	uploadReport storage.UploadJourneyReport,
+	updateReportURL supabaserepo.UpdateJourneyReportURL,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 ) {
 	fuego.Post(s.Manager, "/api/menus/{menuId}/journeys/close",
@@ -83,12 +94,65 @@ func closeJourneyHandler(
 				}
 			}
 
-			if err := closeJourney(spanCtx, menuID, active.ID); err != nil {
+			// Snapshot de totales para la jornada (desde journey_product_stats)
+			var totalsSnapshot interface{}
+			if stats, err := getJourneyStats(spanCtx, active.ID); err == nil {
+				topProducts := make([]map[string]interface{}, 0, len(stats.Products))
+				for _, p := range stats.Products {
+					topProducts = append(topProducts, map[string]interface{}{
+						"name":     p.ProductName,
+						"quantity": p.QuantitySold,
+						"revenue":  p.TotalRevenue,
+					})
+				}
+				totalsSnapshot = map[string]interface{}{
+					"totalRevenue": stats.TotalRevenue,
+					"totalOrders":  stats.TotalOrders,
+					"topProducts":  topProducts,
+				}
+			}
+
+			if err := closeJourney(spanCtx, menuID, active.ID, totalsSnapshot); err != nil {
 				obs.Logger.ErrorContext(spanCtx, "error closing journey", "error", err, "menuID", menuID, "journeyID", active.ID)
 				return struct{}{}, fuego.HTTPError{
 					Title:  "error closing journey",
 					Detail: err.Error(),
 					Status: http.StatusInternalServerError,
+				}
+			}
+
+			// Generar reporte XLSX al cerrar (snapshot de la jornada)
+			closedAt := time.Now().UTC()
+			items, err := getOrderItems(spanCtx, active.ID)
+			if err != nil {
+				obs.Logger.WarnContext(spanCtx, "error getting order items for report", "error", err, "journeyID", active.ID)
+			} else {
+				reportItems := make([]journey.ReportOrderItem, 0, len(items))
+				for _, it := range items {
+					reportItems = append(reportItems, journey.ReportOrderItem{
+						OrderNumber:   it.OrderNumber,
+						ItemName:      it.ItemName,
+						Quantity:      it.Quantity,
+						Unit:          it.Unit,
+						Station:       it.Station,
+						Fulfillment:   it.Fulfillment,
+						Status:        it.Status,
+						RequestedTime: it.RequestedTime,
+						CreatedAt:     it.CreatedAt,
+					})
+				}
+				xlsxBytes, err := journey.GenerateJourneyReportXLSX(reportItems, active.OpenedAt, closedAt)
+				if err != nil {
+					obs.Logger.WarnContext(spanCtx, "error generating report xlsx", "error", err, "journeyID", active.ID)
+				} else {
+					reportURL, err := uploadReport(spanCtx, active.ID, xlsxBytes)
+					if err != nil {
+						obs.Logger.WarnContext(spanCtx, "error uploading report", "error", err, "journeyID", active.ID)
+					} else if err := updateReportURL(spanCtx, active.ID, reportURL); err != nil {
+						obs.Logger.WarnContext(spanCtx, "error updating journey report url", "error", err, "journeyID", active.ID)
+					} else {
+						obs.Logger.InfoContext(spanCtx, "journey report generated", "journeyID", active.ID)
+					}
 				}
 			}
 

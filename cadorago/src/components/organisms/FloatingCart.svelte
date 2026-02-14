@@ -1,5 +1,6 @@
 <script>
-  import { cartStore } from '../../stores/cartStore.svelte.js';
+  import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
+  import { get } from 'svelte/store';
   import Price from '../atoms/Price.svelte';
   import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
   import OrderLoader from '../atoms/OrderLoader.svelte';
@@ -15,10 +16,25 @@
   const currency = $derived(getEffectiveCurrency(restaurantData));
   const currentLanguage = $derived($language);
   
-  // Valores derivados reactivos
-  const items = $derived(cartStore.items);
-  const total = $derived(cartStore.getTotal());
-  const totalItems = $derived(cartStore.getTotalItems());
+  // Leer $itemsStore en $effect para que Svelte 5 rastree la dependencia
+  let items = $state([]);
+  let total = $state(0);
+  let totalItems = $state(0);
+  $effect(() => {
+    const list = $itemsStore ?? [];
+    items = list;
+    total = list.reduce((sum, item) => {
+      if (item.customQuantity != null && item.pricing) {
+        const p = getPriceFromPricing(item.pricing, item.customQuantity);
+        return sum + (p * (item.cantidad || 1));
+      }
+      return sum + ((item.precio || 0) * (item.cantidad || 1));
+    }, 0);
+    totalItems = list.reduce((sum, item) => {
+      if (item.customQuantity) return sum + item.customQuantity;
+      return sum + (item.cantidad || 0);
+    }, 0);
+  });
   
   // Opciones de delivery disponibles
   const deliveryOptions = $derived(restaurantData?.deliveryOptions || []);
@@ -348,7 +364,7 @@
     }
 
     // Mapear items del carrito al formato de la API (orden: unit, quantity, unitPrice, totalPrice, pricingMode, productName)
-    const items = cartStore.items.map(item => {
+    const items = get(itemsStore).map(item => {
       const pricing = item.pricing || {};
       const pricingMode = pricing.mode === 'WEIGHT' || pricing.mode === 'VOLUME' || pricing.mode === 'LENGTH' || pricing.mode === 'AREA'
         ? pricing.mode
@@ -360,12 +376,13 @@
       let unitPrice = 0;
       let totalPrice = 0;
 
-      if (item.customQuantity && item.pricing) {
+      if (item.customQuantity != null && item.pricing) {
         unitPrice = pricing.pricePerUnit || 0;
-        totalPrice = getPriceFromPricing(item.pricing, item.customQuantity);
+        const precioPorUnidad = getPriceFromPricing(item.pricing, item.customQuantity);
+        totalPrice = precioPorUnidad * (item.cantidad || 1);
       } else {
         unitPrice = item.precio || 0;
-        totalPrice = item.precio * item.cantidad;
+        totalPrice = (item.precio || 0) * (item.cantidad || 1);
       }
 
       return {
@@ -617,7 +634,9 @@
           
           <div class="text-right">
             <p class="text-xs sm:text-sm text-gray-600 mb-1">{$t.cart.total}</p>
-            <Price price={total} className="text-lg sm:text-xl lg:text-2xl font-bold" />
+            {#key items.length + total}
+              <span class="font-bold text-gray-900 text-lg sm:text-xl lg:text-2xl">{formatPrice(total, currency)}</span>
+            {/key}
           </div>
         </div>
         
