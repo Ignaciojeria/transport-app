@@ -249,6 +249,7 @@ export interface Translations {
     topByRevenue?: string
     topByQuantity?: string
     chartByRevenue?: string
+    chartByProfit?: string
     chartByQuantity?: string
     topProducts?: string
     noStats?: string
@@ -266,6 +267,14 @@ export interface Translations {
     productName?: string
     quantity?: string
     revenue?: string
+    cost?: string
+    margin?: string
+    profit?: string
+    marginPercent?: string
+    totalCost?: string
+    totalProfit?: string
+    noCostConfigured?: string
+    totalMargin?: string
     topProduct?: string
   }
 }
@@ -505,6 +514,7 @@ export const translations: Record<Language, Translations> = {
       topByRevenue: 'Top ventas',
       topByQuantity: 'Top unidades',
       chartByRevenue: 'Por ventas',
+      chartByProfit: 'Top productos por ganancias',
       chartByQuantity: 'Por unidades',
       topProducts: 'Productos más vendidos',
       noStats: 'No hay datos de ventas para esta jornada.',
@@ -521,6 +531,14 @@ export const translations: Record<Language, Translations> = {
       productName: 'Producto',
       quantity: 'Cant.',
       revenue: 'Ventas',
+      cost: 'Costo',
+      margin: 'Margen',
+      profit: 'Ganancias',
+      marginPercent: 'margen',
+      totalCost: 'Costo total',
+      totalProfit: 'Ganancias totales',
+      noCostConfigured: 'Configura costos en Cost para ver el margen',
+      totalMargin: 'Margen',
       topProduct: 'Producto más vendido'
     }
   },
@@ -760,6 +778,7 @@ export const translations: Record<Language, Translations> = {
       topByRevenue: 'Top vendas',
       topByQuantity: 'Top unidades',
       chartByRevenue: 'Por vendas',
+      chartByProfit: 'Top produtos por lucro',
       chartByQuantity: 'Por unidades',
       topProducts: 'Produtos mais vendidos',
       noStats: 'Não há dados de vendas para esta jornada.',
@@ -777,6 +796,12 @@ export const translations: Record<Language, Translations> = {
       productName: 'Produto',
       quantity: 'Qtd.',
       revenue: 'Vendas',
+      cost: 'Custo',
+      margin: 'Margem',
+      totalCost: 'Custo total',
+      totalProfit: 'Lucro total',
+      noCostConfigured: 'Configure custos em Cost para ver a margem',
+      totalMargin: 'Margem',
       topProduct: 'Produto mais vendido'
     }
   },
@@ -1014,6 +1039,7 @@ export const translations: Record<Language, Translations> = {
       topByRevenue: 'Top by revenue',
       topByQuantity: 'Top by quantity',
       chartByRevenue: 'By revenue',
+      chartByProfit: 'Top products by profit',
       chartByQuantity: 'By quantity',
       topProducts: 'Top products',
       noStats: 'No sales data for this workday.',
@@ -1031,6 +1057,14 @@ export const translations: Record<Language, Translations> = {
       productName: 'Product',
       quantity: 'Qty',
       revenue: 'Revenue',
+      cost: 'Cost',
+      margin: 'Margin',
+      profit: 'Profit',
+      marginPercent: 'margin',
+      totalCost: 'Total cost',
+      totalProfit: 'Total profit',
+      noCostConfigured: 'Configure costs in Cost to see margin',
+      totalMargin: 'Margin',
       topProduct: 'Top product'
     }
   }

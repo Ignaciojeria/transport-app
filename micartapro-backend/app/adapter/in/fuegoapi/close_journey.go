@@ -139,6 +139,8 @@ func closeJourneyHandler(
 						Status:        it.Status,
 						RequestedTime: it.RequestedTime,
 						CreatedAt:     it.CreatedAt,
+						TotalPrice:    it.TotalPrice,
+						TotalCost:     it.TotalCost,
 					})
 				}
 				xlsxBytes, err := journey.GenerateJourneyReportXLSX(reportItems, active.OpenedAt, closedAt)

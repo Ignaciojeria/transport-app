@@ -16,6 +16,7 @@ import (
 // JourneyStatsResponse es la respuesta del endpoint de estadísticas.
 type JourneyStatsResponse struct {
 	TotalRevenue    float64               `json:"totalRevenue"`
+	TotalCost       float64               `json:"totalCost"`
 	TotalOrders     int                   `json:"totalOrders"`
 	ItemsOrdered    int                   `json:"itemsOrdered"`
 	Products        []ProductStatResponse `json:"products"`
@@ -41,10 +42,11 @@ type OrdersByStatusResp struct {
 
 // ProductStatResponse es un producto con sus estadísticas.
 type ProductStatResponse struct {
-	ProductName          string  `json:"productName"`
-	QuantitySold         int     `json:"quantitySold"`
-	TotalRevenue         float64 `json:"totalRevenue"`
-	Percentage           float64 `json:"percentage"`
+	ProductName           string  `json:"productName"`
+	QuantitySold          int     `json:"quantitySold"`
+	TotalRevenue          float64 `json:"totalRevenue"`
+	TotalCost             float64 `json:"totalCost"`
+	Percentage            float64 `json:"percentage"`
 	PercentageByQuantity  float64 `json:"percentageByQuantity"`
 }
 
@@ -143,6 +145,7 @@ func getJourneyStatsHandler(
 					ProductName:         p.ProductName,
 					QuantitySold:        p.QuantitySold,
 					TotalRevenue:        p.TotalRevenue,
+					TotalCost:           p.TotalCost,
 					Percentage:          p.Percentage,
 					PercentageByQuantity: p.PercentageByQuantity,
 				})
@@ -150,6 +153,7 @@ func getJourneyStatsHandler(
 
 			return JourneyStatsResponse{
 				TotalRevenue: stats.TotalRevenue,
+				TotalCost:    stats.TotalCost,
 				TotalOrders:  stats.TotalOrders,
 				ItemsOrdered: stats.ItemsOrdered,
 				Products:     products,

@@ -51,6 +51,14 @@
     stats && stats.totalOrders > 0 ? stats.totalRevenue / stats.totalOrders : 0
   )
 
+  const totalCost = $derived.by(() => stats?.totalCost ?? 0)
+  const totalProfit = $derived.by(() => (stats?.totalRevenue ?? 0) - (stats?.totalCost ?? 0))
+  const profitMarginPercent = $derived.by(() => {
+    const rev = stats?.totalRevenue ?? 0
+    if (rev <= 0) return 0
+    return ((stats?.totalRevenue ?? 0) - (stats?.totalCost ?? 0)) / rev * 100
+  })
+
   const topProduct = $derived.by(() =>
     stats?.products?.length
       ? stats.products.reduce((a, b) => (a.totalRevenue >= b.totalRevenue ? a : b))
@@ -134,6 +142,15 @@
         <p class="text-sm font-medium text-gray-600 mt-1">{t.jornada?.revenueConcreted ?? 'Ventas concretadas'}</p>
         <p class="text-xs text-gray-500 mt-0.5">{(stats.ordersByStatus?.delivered ?? 0) + (stats.ordersByStatus?.dispatched ?? 0)} {t.jornada?.statsOrders ?? 'órdenes'}</p>
       </div>
+      <div class="rounded-xl bg-white border border-emerald-200 p-4 flex flex-col justify-center">
+        <p class="text-xl font-bold text-emerald-800">{formatCurrency(totalProfit)}</p>
+        <p class="text-xs font-medium text-gray-600 mt-0.5">{t.jornada?.totalProfit ?? 'Ganancias totales'}</p>
+        {#if totalCost > 0 && stats.totalRevenue > 0}
+          <p class="text-xs text-emerald-600 mt-0.5">{profitMarginPercent.toFixed(1)}% {t.jornada?.marginPercent ?? 'margen'}</p>
+        {:else if totalCost === 0 && stats.totalRevenue > 0}
+          <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.noCostConfigured ?? 'Configura costos en Cost para ver el margen'}</p>
+        {/if}
+      </div>
       <div class="rounded-xl bg-white border border-green-100 p-4">
         <p class="text-xl font-bold text-green-800">{formatCurrency(stats.revenueByStatus?.delivered ?? 0)}</p>
         <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueDelivered ?? 'Entregadas'}</p>
@@ -162,17 +179,29 @@
         <p class="text-xl font-bold text-gray-900">{formatCurrency(averageTicket)}</p>
         <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.averageTicket ?? 'Ticket promedio'}</p>
       </div>
+      {#if totalCost > 0}
+        <div class="rounded-xl bg-white border border-amber-200 p-4">
+          <p class="text-xl font-bold text-amber-800">{formatCurrency(totalCost)}</p>
+          <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.totalCost ?? 'Costo total'}</p>
+        </div>
+      {/if}
       {#if topProduct}
+        {@const topProfit = (topProduct.totalRevenue ?? 0) - (topProduct.totalCost ?? 0)}
         <div class="rounded-xl bg-blue-50 border border-blue-200 p-4 md:col-span-2 lg:col-span-2">
           <p class="text-xs font-medium text-blue-600 mb-1">{t.jornada?.topProduct ?? 'Producto más vendido'}</p>
           <p class="text-sm font-semibold text-gray-900 truncate" title={topProduct.productName}>{topProduct.productName}</p>
           <p class="text-xs text-gray-600 mt-0.5">{topProduct.quantitySold} vendidos — {formatCurrency(topProduct.totalRevenue)}</p>
+          {#if (topProduct.totalCost ?? 0) > 0}
+            <p class="text-xs text-emerald-600 mt-0.5">{t.jornada?.profit ?? 'Ganancias'}: {formatCurrency(topProfit)}</p>
+          {/if}
         </div>
       {/if}
     </div>
 
     {#if stats.products.length > 0}
       {@const maxRevenue = Math.max(...stats.products.map((p) => p.totalRevenue), 1)}
+      {@const productsWithProfit = stats.products.filter((p) => (p.totalCost ?? 0) > 0)}
+      {@const maxProfit = productsWithProfit.length > 0 ? Math.max(...productsWithProfit.map((p) => (p.totalRevenue ?? 0) - (p.totalCost ?? 0)), 1) : 1}
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <div class="rounded-xl bg-white border border-gray-200 p-6 min-w-0">
           <h3 class="text-base font-semibold text-gray-900 mb-4">{t.jornada?.chartByRevenue ?? 'Top productos por ventas'}</h3>
@@ -193,7 +222,29 @@
             {/each}
           </div>
         </div>
-        <div class="rounded-xl bg-white border border-gray-200 overflow-hidden min-w-0">
+        {#if productsWithProfit.length > 0}
+          <div class="rounded-xl bg-white border border-emerald-100 p-6 min-w-0">
+            <h3 class="text-base font-semibold text-gray-900 mb-4">{t.jornada?.chartByProfit ?? 'Top productos por ganancias'}</h3>
+            <div class="space-y-3">
+              {#each productsWithProfit as p, i}
+                {@const profit = (p.totalRevenue ?? 0) - (p.totalCost ?? 0)}
+                <div class="flex items-center gap-3 w-full">
+                  <span class="w-32 md:w-48 lg:w-64 text-sm font-medium text-gray-900 truncate shrink-0" title={p.productName}>{p.productName}</span>
+                  <span class="text-sm font-semibold text-emerald-700 shrink-0 w-20 text-right">{formatCurrency(profit)}</span>
+                  <div class="flex-1 min-w-0 h-6 bg-gray-100 rounded overflow-hidden">
+                    <div
+                      class="h-full rounded transition-all bg-emerald-500"
+                      style="width: {(profit / maxProfit) * 100}%;"
+                      role="img"
+                      aria-label="{p.productName}: {formatCurrency(profit)}"
+                    ></div>
+                  </div>
+                </div>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        <div class="rounded-xl bg-white border border-gray-200 overflow-hidden min-w-0 {productsWithProfit.length > 0 ? 'xl:col-span-2' : ''}">
           <h3 class="text-base font-semibold text-gray-900 p-4 pb-2">{t.jornada?.productsTable ?? 'Productos'}</h3>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
@@ -202,14 +253,20 @@
                   <th class="text-left font-medium text-gray-700 px-4 py-3">{t.jornada?.productName ?? 'Producto'}</th>
                   <th class="text-right font-medium text-gray-700 px-4 py-3">{t.jornada?.quantity ?? 'Cant.'}</th>
                   <th class="text-right font-medium text-gray-700 px-4 py-3">{t.jornada?.revenue ?? 'Ventas'}</th>
+                  <th class="text-right font-medium text-gray-700 px-4 py-3">{t.jornada?.cost ?? 'Costo'}</th>
+                  <th class="text-right font-medium text-gray-700 px-4 py-3">{t.jornada?.profit ?? 'Ganancias'}</th>
                 </tr>
               </thead>
               <tbody>
                 {#each stats.products as p}
+                  {@const cost = p.totalCost ?? 0}
+                  {@const profit = (p.totalRevenue ?? 0) - cost}
                   <tr class="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
                     <td class="px-4 py-3 font-medium text-gray-900">{p.productName}</td>
                     <td class="px-4 py-3 text-right text-gray-600">{p.quantitySold}</td>
                     <td class="px-4 py-3 text-right font-medium text-gray-900">{formatCurrency(p.totalRevenue)}</td>
+                    <td class="px-4 py-3 text-right text-gray-600">{formatCurrency(cost)}</td>
+                    <td class="px-4 py-3 text-right font-medium text-emerald-700">{formatCurrency(profit)}</td>
                   </tr>
                 {/each}
               </tbody>

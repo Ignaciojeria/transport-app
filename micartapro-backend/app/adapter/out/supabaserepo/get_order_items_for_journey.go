@@ -23,6 +23,8 @@ type OrderItemRow struct {
 	Status        string  `json:"status"`
 	RequestedTime *string `json:"requested_time"`
 	CreatedAt     string  `json:"created_at"`
+	TotalPrice    float64 `json:"total_price"`
+	TotalCost     float64 `json:"total_cost"`
 }
 
 // GetOrderItemsForJourney obtiene todos los ítems de order_items_projection para una jornada.
@@ -35,7 +37,7 @@ func init() {
 func NewGetOrderItemsForJourney(supabase *supabase.Client) GetOrderItemsForJourney {
 	return func(ctx context.Context, journeyID string) ([]OrderItemRow, error) {
 		data, _, err := supabase.From("order_items_projection").
-			Select("aggregate_id,order_number,item_name,quantity,unit,station,fulfillment,status,requested_time,created_at", "", false).
+			Select("aggregate_id,order_number,item_name,quantity,unit,station,fulfillment,status,requested_time,created_at,total_price,total_cost", "", false).
 			Eq("journey_id", journeyID).
 			Execute()
 		if err != nil {

@@ -34,7 +34,7 @@ func GenerateJourneyReportXLSX(
 	if loc == time.UTC {
 		tzLabel = " (UTC)"
 	}
-	headers := []string{"Orden", "Ítem", "Cantidad", "Unidad", "Estación", "Tipo", "Estado", "Creado" + tzLabel, "Apertura" + tzLabel, "Cierre" + tzLabel}
+	headers := []string{"Orden", "Ítem", "Cantidad", "Unidad", "Estación", "Tipo", "Estado", "Precio", "Costo", "Creado" + tzLabel, "Apertura" + tzLabel, "Cierre" + tzLabel}
 	for i, h := range headers {
 		cell, _ := excelize.CoordinatesToCellName(i+1, 1)
 		f.SetCellValue(sheet, cell, h)
@@ -56,7 +56,7 @@ func GenerateJourneyReportXLSX(
 		} else if t, err := time.Parse(time.RFC3339, it.CreatedAt); err == nil {
 			createdStr = t.In(loc).Format("02/01/2006 15:04")
 		}
-		vals := []interface{}{orderNum, it.ItemName, it.Quantity, it.Unit, station, it.Fulfillment, it.Status, createdStr, openedStr, closedStr}
+		vals := []interface{}{orderNum, it.ItemName, it.Quantity, it.Unit, station, it.Fulfillment, it.Status, it.TotalPrice, it.TotalCost, createdStr, openedStr, closedStr}
 		for i, v := range vals {
 			cell, _ := excelize.CoordinatesToCellName(i+1, row)
 			f.SetCellValue(sheet, cell, v)
@@ -82,4 +82,6 @@ type ReportOrderItem struct {
 	Status        string
 	RequestedTime *string
 	CreatedAt     string
+	TotalPrice    float64
+	TotalCost     float64
 }

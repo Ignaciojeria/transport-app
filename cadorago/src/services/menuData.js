@@ -4,6 +4,23 @@
  */
 
 /**
+ * Obtiene el costo de un item o side basado en su pricing (costPerUnit)
+ * @param {Object} pricing - Objeto de pricing con mode, unit, costPerUnit, baseUnit
+ * @param {number} quantity - Cantidad (opcional, por defecto 1)
+ * @returns {number} Costo total
+ */
+export function getCostFromPricing(pricing, quantity = 1) {
+  if (!pricing || pricing.costPerUnit == null) return 0;
+  const costPerUnit = pricing.costPerUnit || 0;
+  if (pricing.mode === 'UNIT') {
+    return costPerUnit * (quantity ?? 1);
+  }
+  const qty = quantity ?? (pricing.baseUnit || 1);
+  const baseUnit = pricing.baseUnit || 1;
+  return (qty / baseUnit) * costPerUnit;
+}
+
+/**
  * Obtiene el precio de un item o side basado en su pricing
  * @param {Object} pricing - Objeto de pricing con mode, unit, pricePerUnit, baseUnit
  * @param {number} quantity - Cantidad (opcional, por defecto usa baseUnit)

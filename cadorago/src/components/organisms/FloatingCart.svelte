@@ -6,7 +6,7 @@
   import OrderLoader from '../atoms/OrderLoader.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
-  import { getPriceFromPricing } from '../../services/menuData.js';
+  import { getPriceFromPricing, getCostFromPricing } from '../../services/menuData.js';
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
   import { getSlugFromUrl, getUrlParams } from '../../services/restaurantData.js';
   import { getBaseText, getMultilingualText } from '../../lib/multilingual';
@@ -363,9 +363,14 @@
       throw new Error('No se pudo obtener el ID del menú');
     }
 
-    // Mapear items del carrito al formato de la API (orden: unit, quantity, unitPrice, totalPrice, pricingMode, productName)
+    // Mapear items del carrito al formato de la API (orden: unit, quantity, unitPrice, totalPrice, unitCost, totalCost, pricingMode, productName)
     const items = get(itemsStore).map(item => {
-      const pricing = item.pricing || {};
+      // Si tiene acompañamiento, usar pricing del side; si no, del item
+      let pricing = item.pricing || {};
+      if (item.acompanamientoId && item.sides?.length) {
+        const side = item.sides.find(s => getBaseText(s?.name) === item.acompanamientoId);
+        if (side?.pricing) pricing = side.pricing;
+      }
       const pricingMode = pricing.mode === 'WEIGHT' || pricing.mode === 'VOLUME' || pricing.mode === 'LENGTH' || pricing.mode === 'AREA'
         ? pricing.mode
         : 'UNIT';
@@ -375,14 +380,20 @@
 
       let unitPrice = 0;
       let totalPrice = 0;
+      let unitCost = 0;
+      let totalCost = 0;
 
       if (item.customQuantity != null && item.pricing) {
         unitPrice = pricing.pricePerUnit || 0;
         const precioPorUnidad = getPriceFromPricing(item.pricing, item.customQuantity);
         totalPrice = precioPorUnidad * (item.cantidad || 1);
+        unitCost = pricing.costPerUnit ?? 0;
+        totalCost = getCostFromPricing(item.pricing, item.customQuantity) * (item.cantidad || 1);
       } else {
         unitPrice = item.precio || 0;
         totalPrice = (item.precio || 0) * (item.cantidad || 1);
+        unitCost = pricing.costPerUnit ?? 0;
+        totalCost = getCostFromPricing(pricing, item.cantidad || 1);
       }
 
       return {
@@ -390,6 +401,8 @@
         quantity,
         unitPrice,
         totalPrice,
+        unitCost,
+        totalCost,
         pricingMode,
         productName: getBaseText(item.title) + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
         station: item.station ?? ''
@@ -400,6 +413,7 @@
     const subtotal = cartStore.getTotal();
     const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0;
     const total = subtotal + deliveryFee;
+    const totalCost = items.reduce((sum, it) => sum + (it.totalCost || 0), 0);
 
     // Fecha/hora solicitada en ISO string (PICKUP: ahora; DELIVERY: ahora + 1h)
     const now = new Date();
@@ -445,7 +459,8 @@
         total,
         currency: currency,
         subtotal,
-        deliveryFee
+        deliveryFee,
+        totalCost
       },
       fulfillment,
       businessInfo: {

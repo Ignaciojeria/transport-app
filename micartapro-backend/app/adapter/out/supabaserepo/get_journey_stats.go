@@ -21,6 +21,7 @@ type GetJourneyStats func(ctx context.Context, journeyID string) (*JourneyStatsR
 // JourneyStatsResult es el resultado de GetJourneyStats.
 type JourneyStatsResult struct {
 	TotalRevenue    float64
+	TotalCost       float64
 	TotalOrders     int
 	ItemsOrdered    int
 	Products        []ProductStat
@@ -49,6 +50,7 @@ type ProductStat struct {
 	ProductName          string  `json:"productName"`
 	QuantitySold         int     `json:"quantitySold"`
 	TotalRevenue         float64 `json:"totalRevenue"`
+	TotalCost            float64 `json:"totalCost"`
 	Percentage           float64 `json:"percentage"`
 	PercentageByQuantity float64 `json:"percentageByQuantity"`
 }
@@ -71,8 +73,10 @@ type rpcStatsResponse struct {
 		ProductName  string  `json:"productName"`
 		QuantitySold int     `json:"quantitySold"`
 		TotalRevenue float64 `json:"totalRevenue"`
+		TotalCost    float64 `json:"totalCost"`
 	} `json:"products"`
 	TotalRevenue  float64 `json:"totalRevenue"`
+	TotalCost     float64 `json:"totalCost"`
 	TotalOrders   int     `json:"totalOrders"`
 	ItemsOrdered  int     `json:"itemsOrdered"`
 }
@@ -142,6 +146,7 @@ func NewGetJourneyStats(conf configuration.Conf) GetJourneyStats {
 				ProductName:  p.ProductName,
 				QuantitySold: p.QuantitySold,
 				TotalRevenue: p.TotalRevenue,
+				TotalCost:    p.TotalCost,
 			})
 		}
 
@@ -156,6 +161,7 @@ func NewGetJourneyStats(conf configuration.Conf) GetJourneyStats {
 
 		return &JourneyStatsResult{
 			TotalRevenue:   rpc.TotalRevenue,
+			TotalCost:     rpc.TotalCost,
 			TotalOrders:    rpc.TotalOrders,
 			ItemsOrdered:   rpc.ItemsOrdered,
 			Products:       products,

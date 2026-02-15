@@ -20,6 +20,8 @@ type OrderItem struct {
 	Quantity    float64 `json:"quantity"`
 	UnitPrice   float64 `json:"unitPrice"`
 	TotalPrice  float64 `json:"totalPrice"`
+	UnitCost    float64 `json:"unitCost,omitempty"`   // Costo por unidad (opcional)
+	TotalCost   float64 `json:"totalCost,omitempty"`  // Costo total del ítem (opcional)
 	PricingMode string  `json:"pricingMode"`
 	ProductName string  `json:"productName"`
 	Station     string  `json:"station,omitempty"` // KITCHEN | BAR, opcional
@@ -30,6 +32,7 @@ type OrderTotals struct {
 	Currency    string  `json:"currency"`
 	Subtotal    float64 `json:"subtotal"`
 	DeliveryFee float64 `json:"deliveryFee"`
+	TotalCost   float64 `json:"totalCost,omitempty"` // Costo total de los ítems (opcional)
 }
 
 type OrderFulfillment struct {

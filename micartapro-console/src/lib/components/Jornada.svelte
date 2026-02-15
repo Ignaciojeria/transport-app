@@ -154,8 +154,12 @@
 
   function downloadStatsCSV() {
     if (!stats?.products?.length || !activeJourney) return
-    const headers = [t.jornada?.productName ?? 'Producto', t.jornada?.quantity ?? 'Cant.', t.jornada?.revenue ?? 'Ventas']
-    const rows = stats.products.map((p) => [p.productName, String(p.quantitySold), String(p.totalRevenue)])
+    const headers = [t.jornada?.productName ?? 'Producto', t.jornada?.quantity ?? 'Cant.', t.jornada?.revenue ?? 'Ventas', t.jornada?.cost ?? 'Costo', t.jornada?.profit ?? 'Ganancias']
+    const rows = stats.products.map((p) => {
+      const cost = p.totalCost ?? 0
+      const margin = (p.totalRevenue ?? 0) - cost
+      return [p.productName, String(p.quantitySold), String(p.totalRevenue), String(cost), String(margin)]
+    })
     const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n')
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
     const a = document.createElement('a')

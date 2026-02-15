@@ -122,12 +122,14 @@ export interface JourneyStatsProduct {
   productName: string
   quantitySold: number
   totalRevenue: number
+  totalCost?: number
   percentage: number
   percentageByQuantity: number
 }
 
 export interface JourneyStats {
   totalRevenue: number
+  totalCost?: number
   totalOrders: number
   itemsOrdered?: number
   products: JourneyStatsProduct[]
