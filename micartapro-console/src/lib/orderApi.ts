@@ -105,3 +105,105 @@ export async function cancelOrder(
     { ...(reason != null && reason !== '' ? { reason } : {}), updatedAt: getUtcIsoString() }
   )
 }
+
+/** Ítem de una orden (para detalle). */
+export interface OrderItem {
+  itemName: string
+  quantity: number
+  unit: string
+  totalPrice: number
+  station?: string | null
+}
+
+/**
+ * Obtiene los ítems de una orden por aggregate_id.
+ */
+export async function getOrderItems(
+  menuId: string,
+  aggregateId: number,
+  accessToken: string
+): Promise<OrderItem[]> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/orders/${aggregateId}/items`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Error ${res.status}`)
+  }
+  return res.json()
+}
+
+/** Orden pendiente (sin jornada asignada), con ítems agrupados por agregado. */
+export interface PendingOrder {
+  aggregateId: number
+  trackingId: string
+  createdAt: string
+  scheduledFor?: string | null
+  totalAmount: number
+  status: string
+  items: OrderItem[]
+}
+
+/** Filtro opcional para órdenes pendientes. */
+export interface PendingOrdersFilter {
+  fromDate?: string // RFC3339
+  toDate?: string // RFC3339
+}
+
+/**
+ * Obtiene órdenes pendientes (journey_id IS NULL) del menú.
+ */
+export async function getPendingOrders(
+  menuId: string,
+  accessToken: string,
+  filter?: PendingOrdersFilter
+): Promise<PendingOrder[]> {
+  const params = new URLSearchParams()
+  if (filter?.fromDate) params.set('fromDate', filter.fromDate)
+  if (filter?.toDate) params.set('toDate', filter.toDate)
+  const qs = params.toString()
+  const url = `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/pending-orders${qs ? `?${qs}` : ''}`
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  })
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Error ${res.status}`)
+  }
+  return res.json()
+}
+
+/** Resultado de asignar una orden a la jornada. */
+export interface AssignOrderResult {
+  aggregateId: number
+  orderNumber?: number | null
+  assigned: boolean
+}
+
+/**
+ * Asigna órdenes pendientes a la jornada activa.
+ */
+export async function assignOrdersToJourney(
+  menuId: string,
+  aggregateIds: number[],
+  accessToken: string
+): Promise<AssignOrderResult[]> {
+  const res = await fetch(
+    `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/journeys/assign-orders`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({ aggregateIds })
+    }
+  )
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(text || `Error ${res.status}`)
+  }
+  const data = (await res.json()) as { results: AssignOrderResult[] }
+  return data.results
+}

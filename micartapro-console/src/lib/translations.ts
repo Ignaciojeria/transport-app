@@ -179,6 +179,19 @@ export interface Translations {
     cancelModalConfirm?: string
     viewVertical?: string
     viewThreeColumns?: string
+    // Vista Pendientes (órdenes sin jornada)
+    pendingView?: string
+    pendingFrom?: string
+    pendingTo?: string
+    pendingSelectAll?: string
+    pendingSelected?: string
+    pendingAssignToJourney?: string
+    pendingCancelOrders?: string
+    pendingClearSelection?: string
+    pendingViewDetails?: string
+    pendingAssign?: string
+    pendingEmpty?: string
+    pendingNoActiveJourney?: string
   }
   jornada?: {
     title: string
@@ -407,7 +420,19 @@ export const translations: Record<Language, Translations> = {
       cancelModalBack: 'Volver',
       cancelModalConfirm: 'Confirmar Cancelación',
       viewVertical: 'Vertical',
-      viewThreeColumns: '3 Columnas'
+      viewThreeColumns: '3 Columnas',
+      pendingView: 'Pendientes',
+      pendingFrom: 'Desde',
+      pendingTo: 'Hasta',
+      pendingSelectAll: 'Seleccionar todas',
+      pendingSelected: 'órdenes seleccionadas',
+      pendingAssignToJourney: 'Asignar a jornada activa',
+      pendingCancelOrders: 'Cancelar órdenes',
+      pendingClearSelection: 'Limpiar selección',
+      pendingViewDetails: 'Ver',
+      pendingAssign: 'Asignar',
+      pendingEmpty: 'No hay órdenes pendientes.',
+      pendingNoActiveJourney: 'Abre una jornada para asignar órdenes.'
     },
     jornada: {
       title: 'Jornada',
@@ -645,7 +670,19 @@ export const translations: Record<Language, Translations> = {
       cancelModalBack: 'Voltar',
       cancelModalConfirm: 'Confirmar Cancelamento',
       viewVertical: 'Vertical',
-      viewThreeColumns: '3 Colunas'
+      viewThreeColumns: '3 Colunas',
+      pendingView: 'Pendentes',
+      pendingFrom: 'De',
+      pendingTo: 'Até',
+      pendingSelectAll: 'Selecionar todas',
+      pendingSelected: 'pedidos selecionados',
+      pendingAssignToJourney: 'Atribuir ao turno ativo',
+      pendingCancelOrders: 'Cancelar pedidos',
+      pendingClearSelection: 'Limpar seleção',
+      pendingViewDetails: 'Ver',
+      pendingAssign: 'Atribuir',
+      pendingEmpty: 'Não há pedidos pendentes.',
+      pendingNoActiveJourney: 'Abra um turno para atribuir pedidos.'
     },
     jornada: {
       title: 'Jornada',
@@ -867,7 +904,19 @@ export const translations: Record<Language, Translations> = {
       cancelModalBack: 'Back',
       cancelModalConfirm: 'Confirm Cancellation',
       viewVertical: 'Vertical',
-      viewThreeColumns: '3 Columns'
+      viewThreeColumns: '3 Columns',
+      pendingView: 'Pending',
+      pendingFrom: 'From',
+      pendingTo: 'To',
+      pendingSelectAll: 'Select all',
+      pendingSelected: 'orders selected',
+      pendingAssignToJourney: 'Assign to active workday',
+      pendingCancelOrders: 'Cancel orders',
+      pendingClearSelection: 'Clear selection',
+      pendingViewDetails: 'View',
+      pendingAssign: 'Assign',
+      pendingEmpty: 'No pending orders.',
+      pendingNoActiveJourney: 'Open a workday to assign orders.'
     },
     jornada: {
       title: 'Workday',

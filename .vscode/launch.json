@@ -8,6 +8,12 @@
         "program": "${workspaceFolder}",
       },
       {
+        "name": "Debug Micartapro Backend",
+        "type": "go",
+        "request": "launch",
+        "program": "${workspaceFolder}/micartapro-backend"
+      },
+      {
         "name": "Debug Webhooks Service Main",
         "type": "go",
         "request": "launch",
