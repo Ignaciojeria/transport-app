@@ -15,9 +15,28 @@ import (
 
 // JourneyStatsResponse es la respuesta del endpoint de estadísticas.
 type JourneyStatsResponse struct {
-	TotalRevenue float64              `json:"totalRevenue"`
-	TotalOrders  int                  `json:"totalOrders"`
-	Products     []ProductStatResponse `json:"products"`
+	TotalRevenue    float64               `json:"totalRevenue"`
+	TotalOrders     int                   `json:"totalOrders"`
+	ItemsOrdered    int                   `json:"itemsOrdered"`
+	Products        []ProductStatResponse `json:"products"`
+	RevenueByStatus RevenueByStatusResp   `json:"revenueByStatus"`
+	OrdersByStatus  OrdersByStatusResp    `json:"ordersByStatus"`
+}
+
+// RevenueByStatusResp ventas por estado.
+type RevenueByStatusResp struct {
+	Delivered  float64 `json:"delivered"`
+	Dispatched float64 `json:"dispatched"`
+	Pending    float64 `json:"pending"`
+	Cancelled  float64 `json:"cancelled"`
+}
+
+// OrdersByStatusResp órdenes por estado.
+type OrdersByStatusResp struct {
+	Delivered  int `json:"delivered"`
+	Dispatched int `json:"dispatched"`
+	Pending    int `json:"pending"`
+	Cancelled  int `json:"cancelled"`
 }
 
 // ProductStatResponse es un producto con sus estadísticas.
@@ -132,7 +151,20 @@ func getJourneyStatsHandler(
 			return JourneyStatsResponse{
 				TotalRevenue: stats.TotalRevenue,
 				TotalOrders:  stats.TotalOrders,
+				ItemsOrdered: stats.ItemsOrdered,
 				Products:     products,
+				RevenueByStatus: RevenueByStatusResp{
+					Delivered:  stats.RevenueByStatus.Delivered,
+					Dispatched: stats.RevenueByStatus.Dispatched,
+					Pending:    stats.RevenueByStatus.Pending,
+					Cancelled:  stats.RevenueByStatus.Cancelled,
+				},
+				OrdersByStatus: OrdersByStatusResp{
+					Delivered:  stats.OrdersByStatus.Delivered,
+					Dispatched: stats.OrdersByStatus.Dispatched,
+					Pending:    stats.OrdersByStatus.Pending,
+					Cancelled:  stats.OrdersByStatus.Cancelled,
+				},
 			}, nil
 		},
 		option.Summary("Get journey statistics"),

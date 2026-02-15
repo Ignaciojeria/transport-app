@@ -129,7 +129,20 @@ export interface JourneyStatsProduct {
 export interface JourneyStats {
   totalRevenue: number
   totalOrders: number
+  itemsOrdered?: number
   products: JourneyStatsProduct[]
+  revenueByStatus?: {
+    delivered: number
+    dispatched: number
+    pending: number
+    cancelled: number
+  }
+  ordersByStatus?: {
+    delivered: number
+    dispatched: number
+    pending: number
+    cancelled: number
+  }
 }
 
 /**

@@ -1,106 +1,153 @@
 package supabaserepo
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
+	"micartapro/app/shared/configuration"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
-	"github.com/supabase-community/supabase-go"
 )
 
-// JourneyProductStatRow es una fila de journey_product_stats.
-type JourneyProductStatRow struct {
-	JourneyID    string   `json:"journey_id"`
-	ProductName  string   `json:"product_name"`
-	QuantitySold int      `json:"quantity_sold"`
-	TotalRevenue *float64 `json:"total_revenue"`
-}
-
 // GetJourneyStats obtiene las estadísticas de productos para una jornada.
-// Devuelve totalRevenue, totalOrders (count distinct aggregate_id en order_items_projection)
-// y productos con quantity_sold, total_revenue, percentage.
+// Totaliza por estado: entregadas (DISPATCHED/DELIVERED), pendientes, canceladas.
+// La venta se concreta solo cuando el producto está entregado.
 type GetJourneyStats func(ctx context.Context, journeyID string) (*JourneyStatsResult, error)
 
 // JourneyStatsResult es el resultado de GetJourneyStats.
 type JourneyStatsResult struct {
-	TotalRevenue float64
-	TotalOrders  int
-	Products     []ProductStat
+	TotalRevenue    float64
+	TotalOrders     int
+	ItemsOrdered    int
+	Products        []ProductStat
+	RevenueByStatus RevenueByStatus
+	OrdersByStatus  OrdersByStatus
 }
 
-// ProductStat es un producto con sus estadísticas.
+// RevenueByStatus ventas totalizadas por estado.
+type RevenueByStatus struct {
+	Delivered  float64 `json:"delivered"`  // DELIVERED (retiro)
+	Dispatched float64 `json:"dispatched"` // DISPATCHED (envío)
+	Pending    float64 `json:"pending"`
+	Cancelled  float64 `json:"cancelled"`
+}
+
+// OrdersByStatus órdenes totalizadas por estado.
+type OrdersByStatus struct {
+	Delivered  int `json:"delivered"`
+	Dispatched int `json:"dispatched"`
+	Pending    int `json:"pending"`
+	Cancelled  int `json:"cancelled"`
+}
+
+// ProductStat es un producto con sus estadísticas (solo entregados).
 type ProductStat struct {
 	ProductName          string  `json:"productName"`
 	QuantitySold         int     `json:"quantitySold"`
 	TotalRevenue         float64 `json:"totalRevenue"`
-	Percentage           float64 `json:"percentage"`           // % sobre revenue total
-	PercentageByQuantity float64 `json:"percentageByQuantity"` // % sobre unidades totales
+	Percentage           float64 `json:"percentage"`
+	PercentageByQuantity float64 `json:"percentageByQuantity"`
+}
+
+// rpcStatsResponse es la respuesta cruda del RPC.
+type rpcStatsResponse struct {
+	RevenueByStatus struct {
+		Delivered  float64 `json:"delivered"`
+		Dispatched float64 `json:"dispatched"`
+		Pending    float64 `json:"pending"`
+		Cancelled  float64 `json:"cancelled"`
+	} `json:"revenueByStatus"`
+	OrdersByStatus struct {
+		Delivered  int `json:"delivered"`
+		Dispatched int `json:"dispatched"`
+		Pending    int `json:"pending"`
+		Cancelled  int `json:"cancelled"`
+	} `json:"ordersByStatus"`
+	Products      []struct {
+		ProductName  string  `json:"productName"`
+		QuantitySold int     `json:"quantitySold"`
+		TotalRevenue float64 `json:"totalRevenue"`
+	} `json:"products"`
+	TotalRevenue  float64 `json:"totalRevenue"`
+	TotalOrders   int     `json:"totalOrders"`
+	ItemsOrdered  int     `json:"itemsOrdered"`
 }
 
 func init() {
-	ioc.Registry(NewGetJourneyStats, supabasecli.NewSupabaseClient)
+	ioc.Registry(NewGetJourneyStats, configuration.NewConf)
 }
 
-func NewGetJourneyStats(supabase *supabase.Client) GetJourneyStats {
+func NewGetJourneyStats(conf configuration.Conf) GetJourneyStats {
 	return func(ctx context.Context, journeyID string) (*JourneyStatsResult, error) {
-		// 1. Obtener stats por producto
-		data, _, err := supabase.From("journey_product_stats").
-			Select("journey_id,product_name,quantity_sold,total_revenue", "", false).
-			Eq("journey_id", journeyID).
-			Execute()
+		rpcParams := map[string]interface{}{"p_journey_id": journeyID}
+		requestBody, err := json.Marshal(rpcParams)
 		if err != nil {
-			return nil, fmt.Errorf("querying journey_product_stats: %w", err)
-		}
-		var rows []JourneyProductStatRow
-		if err := json.Unmarshal(data, &rows); err != nil {
-			return nil, fmt.Errorf("unmarshaling journey_product_stats: %w", err)
+			return nil, fmt.Errorf("marshaling rpc params: %w", err)
 		}
 
-		// 2. Obtener total de órdenes (distinct aggregate_id en order_items_projection)
-		ordersData, _, err := supabase.From("order_items_projection").
-			Select("aggregate_id", "", false).
-			Eq("journey_id", journeyID).
-			Execute()
+		rpcURL := fmt.Sprintf("%s/rest/v1/rpc/get_journey_stats_by_status", conf.SUPABASE_PROJECT_URL)
+		req, err := http.NewRequestWithContext(ctx, "POST", rpcURL, bytes.NewBuffer(requestBody))
 		if err != nil {
-			return nil, fmt.Errorf("querying order_items_projection for order count: %w", err)
+			return nil, fmt.Errorf("creating request: %w", err)
 		}
-		var orderRows []struct {
-			AggregateID int64 `json:"aggregate_id"`
-		}
-		if err := json.Unmarshal(ordersData, &orderRows); err != nil {
-			return nil, fmt.Errorf("unmarshaling order count: %w", err)
-		}
-		seen := make(map[int64]struct{})
-		for _, r := range orderRows {
-			seen[r.AggregateID] = struct{}{}
-		}
-		totalOrders := len(seen)
 
-		// 3. Calcular totales y porcentajes
-		var totalRevenue float64
-		var totalQuantity int
-		products := make([]ProductStat, 0, len(rows))
-		for _, r := range rows {
-			rev := 0.0
-			if r.TotalRevenue != nil {
-				rev = *r.TotalRevenue
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("apikey", conf.SUPABASE_BACKEND_API_KEY)
+		req.Header.Set("Authorization", "Bearer "+conf.SUPABASE_BACKEND_API_KEY)
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("calling get_journey_stats_by_status: %w", err)
+		}
+		defer resp.Body.Close()
+
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, fmt.Errorf("reading response: %w", err)
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return nil, fmt.Errorf("RPC failed status %d: %s", resp.StatusCode, string(body))
+		}
+
+		// PostgREST devuelve jsonb: puede ser objeto directo {...} o array [result]
+		var rpc rpcStatsResponse
+		if err := json.Unmarshal(body, &rpc); err != nil {
+			var raw []json.RawMessage
+			if err2 := json.Unmarshal(body, &raw); err2 != nil {
+				return nil, fmt.Errorf("unmarshaling rpc response: %w", err)
 			}
-			totalRevenue += rev
-			totalQuantity += r.QuantitySold
+			if len(raw) == 0 {
+				return &JourneyStatsResult{
+					RevenueByStatus: RevenueByStatus{},
+					OrdersByStatus:  OrdersByStatus{},
+					Products:        []ProductStat{},
+				}, nil
+			}
+			if err := json.Unmarshal(raw[0], &rpc); err != nil {
+				return nil, fmt.Errorf("unmarshaling stats: %w", err)
+			}
+		}
+
+		products := make([]ProductStat, 0, len(rpc.Products))
+		var totalQuantity int
+		for _, p := range rpc.Products {
+			totalQuantity += p.QuantitySold
 			products = append(products, ProductStat{
-				ProductName:  r.ProductName,
-				QuantitySold: r.QuantitySold,
-				TotalRevenue: rev,
+				ProductName:  p.ProductName,
+				QuantitySold: p.QuantitySold,
+				TotalRevenue: p.TotalRevenue,
 			})
 		}
 
-		// Porcentaje por producto (revenue y cantidad)
 		for i := range products {
-			if totalRevenue > 0 {
-				products[i].Percentage = (products[i].TotalRevenue / totalRevenue) * 100
+			if rpc.TotalRevenue > 0 {
+				products[i].Percentage = (products[i].TotalRevenue / rpc.TotalRevenue) * 100
 			}
 			if totalQuantity > 0 {
 				products[i].PercentageByQuantity = (float64(products[i].QuantitySold) / float64(totalQuantity)) * 100
@@ -108,9 +155,22 @@ func NewGetJourneyStats(supabase *supabase.Client) GetJourneyStats {
 		}
 
 		return &JourneyStatsResult{
-			TotalRevenue: totalRevenue,
-			TotalOrders:  totalOrders,
-			Products:     products,
+			TotalRevenue:   rpc.TotalRevenue,
+			TotalOrders:    rpc.TotalOrders,
+			ItemsOrdered:   rpc.ItemsOrdered,
+			Products:       products,
+			RevenueByStatus: RevenueByStatus{
+				Delivered:  rpc.RevenueByStatus.Delivered,
+				Dispatched: rpc.RevenueByStatus.Dispatched,
+				Pending:    rpc.RevenueByStatus.Pending,
+				Cancelled:  rpc.RevenueByStatus.Cancelled,
+			},
+			OrdersByStatus: OrdersByStatus{
+				Delivered:  rpc.OrdersByStatus.Delivered,
+				Dispatched: rpc.OrdersByStatus.Dispatched,
+				Pending:    rpc.OrdersByStatus.Pending,
+				Cancelled:  rpc.OrdersByStatus.Cancelled,
+			},
 		}, nil
 	}
 }

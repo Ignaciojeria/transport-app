@@ -229,11 +229,8 @@
     return stats.products.reduce((a, b) => (a.quantitySold >= b.quantitySold ? a : b))
   })
 
-  /** Total de ítems vendidos (suma de quantitySold). */
-  const itemsSold = $derived.by(() => {
-    if (!stats?.products?.length) return 0
-    return stats.products.reduce((sum, p) => sum + p.quantitySold, 0)
-  })
+  /** Total de ítems ordenados (todos los estados, desde API). */
+  const itemsOrdered = $derived.by(() => stats?.itemsOrdered ?? 0)
 
   /** Producto top (por revenue, para card compacto). */
   const topProduct = $derived(topByRevenue)
@@ -363,19 +360,36 @@
             </div>
           </div>
 
-          <!-- KPIs: Total sales dominante, jerarquía visual - usa espacio disponible -->
+          <!-- KPIs: Ventas por estado (entregadas + despachadas = concretadas) -->
           <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div class="rounded-xl bg-white border-2 border-gray-200 p-5 md:col-span-2 lg:col-span-2 md:row-span-2 flex flex-col justify-center">
+            <div class="rounded-xl bg-white border-2 border-green-200 p-5 md:col-span-2 lg:col-span-2 md:row-span-2 flex flex-col justify-center">
               <p class="text-3xl md:text-4xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
-              <p class="text-sm font-medium text-gray-600 mt-1">{t.jornada?.totalRevenue ?? 'Ventas totales'}</p>
+              <p class="text-sm font-medium text-gray-600 mt-1">{t.jornada?.revenueConcreted ?? 'Ventas concretadas'}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{(stats.ordersByStatus?.delivered ?? 0) + (stats.ordersByStatus?.dispatched ?? 0)} {t.jornada?.statsOrders ?? 'órdenes'}</p>
+            </div>
+            <div class="rounded-xl bg-white border border-green-100 p-4">
+              <p class="text-xl font-bold text-green-800">{formatCurrency(stats.revenueByStatus?.delivered ?? 0)}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueDelivered ?? 'Entregadas'}</p>
+              <p class="text-xs text-gray-400">{stats.ordersByStatus?.delivered ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
+            </div>
+            <div class="rounded-xl bg-white border border-blue-100 p-4">
+              <p class="text-xl font-bold text-blue-800">{formatCurrency(stats.revenueByStatus?.dispatched ?? 0)}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueDispatched ?? 'Despachadas'}</p>
+              <p class="text-xs text-gray-400">{stats.ordersByStatus?.dispatched ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
+            </div>
+            <div class="rounded-xl bg-white border border-amber-200 p-4">
+              <p class="text-xl font-bold text-amber-800">{formatCurrency(stats.revenueByStatus?.pending ?? 0)}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenuePending ?? 'Ventas pendientes'}</p>
+              <p class="text-xs text-gray-400">{stats.ordersByStatus?.pending ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
             </div>
             <div class="rounded-xl bg-white border border-gray-200 p-4">
-              <p class="text-xl font-bold text-gray-900">{stats.totalOrders}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.statsOrders ?? 'Órdenes'}</p>
+              <p class="text-xl font-bold text-gray-600">{formatCurrency(stats.revenueByStatus?.cancelled ?? 0)}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueCancelled ?? 'Canceladas'}</p>
+              <p class="text-xs text-gray-400">{stats.ordersByStatus?.cancelled ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
             </div>
             <div class="rounded-xl bg-white border border-gray-200 p-4">
-              <p class="text-xl font-bold text-gray-900">{itemsSold}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.itemsSold ?? 'Ítems vendidos'}</p>
+              <p class="text-xl font-bold text-gray-900">{itemsOrdered}</p>
+              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.itemsOrdered ?? 'Ítems ordenados'}</p>
             </div>
             <div class="rounded-xl bg-white border border-gray-200 p-4 md:col-span-2 lg:col-span-2">
               <p class="text-xl font-bold text-gray-900">{formatCurrency(averageTicket)}</p>

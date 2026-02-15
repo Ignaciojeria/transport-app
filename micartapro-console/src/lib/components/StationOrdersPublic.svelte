@@ -480,7 +480,7 @@
     <div class="flex-shrink-0 px-4 py-4 border-b border-gray-200 bg-white flex flex-wrap items-center justify-between gap-2">
       <div>
         <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
-          {stationLabel} — {operatorName || 'Operador'}
+          {ordersViewMode === 'kanban' ? `${t.sidebar?.orders ?? 'Kanban'} - ${stationLabel}` : stationLabel} — {operatorName || 'Operador'}
         </h1>
         {#if !fullMode}
           <p class="text-sm text-gray-500 mt-1">Pedidos en tiempo real. Sin login.</p>

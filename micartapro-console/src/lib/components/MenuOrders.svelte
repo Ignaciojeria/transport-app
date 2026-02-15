@@ -442,7 +442,9 @@
         </button>
       {/if}
       <h1 class="text-lg sm:text-xl font-bold text-gray-800" class:text-2xl={kitchenMode}>
-        {t.sidebar.orders}
+        {ordersViewMode === 'kanban'
+          ? `${t.sidebar.orders} - ${stationFilter === 'ALL' ? (t.orders?.filterAll ?? 'Entrega') : stationFilter === 'KITCHEN' ? (t.orders?.filterKitchen ?? 'Cocina') : (t.orders?.filterBar ?? 'Barra')}`
+          : t.sidebar.orders}
       </h1>
       <div class="flex items-center gap-1.5">
         <button

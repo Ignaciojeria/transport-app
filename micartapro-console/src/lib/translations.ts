@@ -211,6 +211,9 @@ export interface Translations {
     reportGenerating?: string
     stats?: string
     totalRevenue?: string
+    revenueDelivered?: string
+    revenuePending?: string
+    revenueCancelled?: string
     statsOrders?: string
     averageTicket?: string
     topByRevenue?: string
@@ -227,6 +230,7 @@ export interface Translations {
     workdayReport?: string
     duration?: string
     itemsSold?: string
+    itemsOrdered?: string
     downloadCSV?: string
     productsTable?: string
     productName?: string
@@ -436,6 +440,11 @@ export const translations: Record<Language, Translations> = {
       reportGenerating: 'Generando...',
       stats: 'Estadísticas',
       totalRevenue: 'Ventas totales',
+      revenueConcreted: 'Ventas concretadas',
+      revenueDelivered: 'Entregadas',
+      revenueDispatched: 'Despachadas',
+      revenuePending: 'Ventas pendientes',
+      revenueCancelled: 'Canceladas',
       statsOrders: 'Órdenes',
       averageTicket: 'Ticket promedio',
       topByRevenue: 'Top ventas',
@@ -451,6 +460,7 @@ export const translations: Record<Language, Translations> = {
       workdayReport: 'Reporte de Jornada',
       duration: 'Duración',
       itemsSold: 'Ítems vendidos',
+      itemsOrdered: 'Ítems ordenados',
       downloadCSV: 'Descargar CSV',
       productsTable: 'Productos',
       productName: 'Producto',
@@ -663,6 +673,9 @@ export const translations: Record<Language, Translations> = {
       reportGenerating: 'Gerando...',
       stats: 'Estatísticas',
       totalRevenue: 'Vendas totais',
+      revenueDelivered: 'Vendas entregues',
+      revenuePending: 'Vendas pendentes',
+      revenueCancelled: 'Vendas canceladas',
       statsOrders: 'Pedidos',
       averageTicket: 'Ticket médio',
       topByRevenue: 'Top vendas',
@@ -679,6 +692,7 @@ export const translations: Record<Language, Translations> = {
       workdayReport: 'Relatório de Jornada',
       duration: 'Duração',
       itemsSold: 'Itens vendidos',
+      itemsOrdered: 'Itens pedidos',
       downloadCSV: 'Baixar CSV',
       productsTable: 'Produtos',
       productName: 'Produto',
@@ -886,6 +900,11 @@ export const translations: Record<Language, Translations> = {
       reportGenerating: 'Generating...',
       stats: 'Statistics',
       totalRevenue: 'Total sales',
+      revenueConcreted: 'Concreted sales',
+      revenueDelivered: 'Delivered',
+      revenueDispatched: 'Dispatched',
+      revenuePending: 'Pending sales',
+      revenueCancelled: 'Cancelled',
       statsOrders: 'Orders',
       averageTicket: 'Average ticket',
       topByRevenue: 'Top by revenue',
@@ -902,6 +921,7 @@ export const translations: Record<Language, Translations> = {
       workdayReport: 'Workday Report',
       duration: 'Duration',
       itemsSold: 'Items sold',
+      itemsOrdered: 'Items ordered',
       downloadCSV: 'Download CSV',
       productsTable: 'Products',
       productName: 'Product',
