@@ -2,7 +2,8 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, type KitchenOrder } from '../menuUtils'
-  import { getActiveJourney, createJourney, closeJourney, getJourneys, getJourneyStats, type JourneyListItem, type JourneyStats } from '../journeyApi'
+  import { getActiveJourney, createJourney, closeJourney, getJourneyStats, type ActiveJourney, type JourneyStats } from '../journeyApi'
+  import JourneyStatsView from './JourneyStatsView.svelte'
   import { t as tStore } from '../useLanguage'
 
   interface JornadaProps {
@@ -13,7 +14,10 @@
 
   let menuId = $state<string | null>(null)
   let orders = $state<KitchenOrder[]>([])
-  let activeJourney = $state<{ id: string } | null>(null)
+  let activeJourney = $state<ActiveJourney | null>(null)
+  let view = $state<'main' | 'stats'>('main')
+  let stats = $state<JourneyStats | null>(null)
+  let statsLoading = $state(false)
   let loading = $state(true)
   let error = $state<string | null>(null)
   let showCloseModal = $state(false)
@@ -21,13 +25,6 @@
   let closeResult = $state<'idle' | 'success' | 'coming_soon'>('idle')
   let createJourneyInProgress = $state(false)
   let createJourneyError = $state<string | null>(null)
-  let journeys = $state<JourneyListItem[]>([])
-  let view = $state<'list' | 'stats'>('list')
-  let statsJourney = $state<JourneyListItem | null>(null)
-  let stats = $state<JourneyStats | null>(null)
-  let statsLoading = $state(false)
-  const REPORT_PAGE_SIZE = 10
-  let reportPage = $state(1)
 
   const session = $derived(authState.session)
   const user = $derived(authState.user)
@@ -52,16 +49,6 @@
     const m = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
     return `${y}-${m}-${day}`
-  }
-
-  /** Formato DD-MM HH:mm para jornadas. */
-  function formatJourneyDate(isoDate: string): string {
-    const d = new Date(isoDate)
-    const day = String(d.getDate()).padStart(2, '0')
-    const m = String(d.getMonth() + 1).padStart(2, '0')
-    const h = String(d.getHours()).padStart(2, '0')
-    const min = String(d.getMinutes()).padStart(2, '0')
-    return `${day}/${m} ${h}:${min}`
   }
 
   /** Formato DD-MM-YYYY para mostrar en modal. */
@@ -90,17 +77,6 @@
   const dateLabel = $derived(formatDateDDMMYYYY(todayLocalDateString()))
   const modalMessage = $derived((t.jornada?.closeModalMessage ?? 'Estás por cerrar la jornada del {date}. Las órdenes pendientes quedarán marcadas como no entregadas. ¿Deseas continuar?').replace('{date}', dateLabel))
 
-  /** Lista de jornadas cerradas (para reportes). */
-  const closedJourneysList = $derived(journeys.filter((j) => j.status === 'CLOSED'))
-  const reportTotalPages = $derived(Math.max(1, Math.ceil(closedJourneysList.length / REPORT_PAGE_SIZE)))
-  const paginatedReports = $derived(
-    closedJourneysList.slice((reportPage - 1) * REPORT_PAGE_SIZE, reportPage * REPORT_PAGE_SIZE)
-  )
-
-  function goToReportPage(p: number) {
-    reportPage = Math.max(1, Math.min(p, reportTotalPages))
-  }
-
   async function load() {
     if (!userId || !session?.access_token) {
       error = t.jornada?.noSession ?? 'No Hay Sesión Activa'
@@ -118,13 +94,8 @@
         return
       }
       menuId = mid
-      const [journey, journeysList] = await Promise.all([
-        getActiveJourney(mid, session.access_token),
-        getJourneys(mid, session.access_token)
-      ])
+      const journey = await getActiveJourney(mid, session.access_token)
       activeJourney = journey
-      journeys = journeysList
-      reportPage = 1
       const list = journey
         ? await getKitchenOrdersFromProjection(mid, session.access_token, 'ALL', journey.id)
         : []
@@ -161,6 +132,39 @@
     if (!closeInProgress) showCloseModal = false
   }
 
+  async function openStatsForActive() {
+    if (!session?.access_token || !menuId || !activeJourney) return
+    view = 'stats'
+    stats = null
+    statsLoading = true
+    try {
+      stats = await getJourneyStats(menuId, activeJourney.id, session.access_token)
+    } catch (e) {
+      console.error('Error cargando estadísticas:', e)
+      stats = null
+    } finally {
+      statsLoading = false
+    }
+  }
+
+  function goBackFromStats() {
+    view = 'main'
+    stats = null
+  }
+
+  function downloadStatsCSV() {
+    if (!stats?.products?.length || !activeJourney) return
+    const headers = [t.jornada?.productName ?? 'Producto', t.jornada?.quantity ?? 'Cant.', t.jornada?.revenue ?? 'Ventas']
+    const rows = stats.products.map((p) => [p.productName, String(p.quantitySold), String(p.totalRevenue)])
+    const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `jornada-${activeJourney.id}.csv`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
   async function confirmCloseWorkday() {
     if (!session?.access_token || !menuId) return
     closeInProgress = true
@@ -178,96 +182,6 @@
     } finally {
       closeInProgress = false
     }
-  }
-
-  async function openStatsView(j: JourneyListItem) {
-    if (!session?.access_token || !menuId) return
-    statsJourney = j
-    view = 'stats'
-    stats = null
-    statsLoading = true
-    try {
-      stats = await getJourneyStats(menuId, j.id, session.access_token)
-    } catch (e) {
-      console.error('Error cargando estadísticas:', e)
-      stats = null
-    } finally {
-      statsLoading = false
-    }
-  }
-
-  function goBackToList() {
-    view = 'list'
-    statsJourney = null
-    stats = null
-  }
-
-  /** Formato de moneda para mostrar revenue. */
-  function formatCurrency(n: number): string {
-    if (n >= 1000) return `$${Math.round(n).toLocaleString()}`
-    return `$${n.toFixed(0)}`
-  }
-
-  /** Colores para el gráfico de torta (por índice). */
-  const PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16']
-
-  /** Ticket promedio (ventas / órdenes). */
-  const averageTicket = $derived.by(() => {
-    if (!stats || stats.totalOrders === 0) return 0
-    return stats.totalRevenue / stats.totalOrders
-  })
-
-  /** Producto top por revenue. */
-  const topByRevenue = $derived.by(() => {
-    if (!stats?.products?.length) return null
-    return stats.products.reduce((a, b) => (a.totalRevenue >= b.totalRevenue ? a : b))
-  })
-
-  /** Producto top por cantidad vendida. */
-  const topByQuantity = $derived.by(() => {
-    if (!stats?.products?.length) return null
-    return stats.products.reduce((a, b) => (a.quantitySold >= b.quantitySold ? a : b))
-  })
-
-  /** Total de ítems ordenados (todos los estados, desde API). */
-  const itemsOrdered = $derived.by(() => stats?.itemsOrdered ?? 0)
-
-  /** Producto top (por revenue, para card compacto). */
-  const topProduct = $derived(topByRevenue)
-
-  /** Formato "14 Feb 2026" para encabezado. */
-  function formatWorkdayDate(isoDate: string): string {
-    const d = new Date(isoDate)
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
-  }
-
-  /** Duración en minutos entre openedAt y closedAt. */
-  const journeyDurationMinutes = $derived.by(() => {
-    if (!statsJourney?.openedAt || !statsJourney?.closedAt) return null
-    const start = new Date(statsJourney.openedAt).getTime()
-    const end = new Date(statsJourney.closedAt).getTime()
-    return Math.round((end - start) / 60000)
-  })
-
-  /** Formato HH:mm para hora. */
-  function formatTime(isoDate: string): string {
-    const d = new Date(isoDate)
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-  }
-
-  function downloadStatsCSV() {
-    if (!stats?.products?.length || !statsJourney) return
-    const headers = [t.jornada?.productName ?? 'Producto', t.jornada?.quantity ?? 'Cant.', t.jornada?.revenue ?? 'Ventas']
-    const rows = stats.products.map((p) => [p.productName, String(p.quantitySold), String(p.totalRevenue)])
-    const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `jornada-${statsJourney.id}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   onMount(() => {
@@ -292,176 +206,7 @@
   </header>
 
   <div class="flex-1 min-h-0 overflow-y-auto p-4 md:p-6">
-    {#if view === 'stats'}
-      <!-- Vista dedicada de estadísticas - diseño profesional -->
-      <div class="mb-6">
-        <button
-          type="button"
-          onclick={goBackToList}
-          class="inline-flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-          {t.jornada?.back ?? 'Volver a reportes'}
-        </button>
-      </div>
-
-      {#if statsLoading}
-        <div class="flex justify-center py-16">
-          <div class="animate-spin rounded-full h-12 w-12 border-2 border-blue-600 border-t-transparent"></div>
-        </div>
-      {:else if stats}
-        <div class="space-y-8 w-full max-w-full">
-          <!-- Encabezado + Export en fila en pantallas grandes -->
-          <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-            {#if statsJourney}
-              <div class="rounded-xl bg-white border border-gray-200 p-6 flex-1 min-w-0">
-                <h2 class="text-lg font-bold text-gray-900 mb-1">{t.jornada?.workdayReport ?? 'Reporte de Jornada'}</h2>
-                <p class="text-xl font-semibold text-gray-800">{formatWorkdayDate(statsJourney.openedAt)}</p>
-                <p class="text-sm text-gray-600 mt-1">
-                  {formatTime(statsJourney.openedAt)}
-                  {#if statsJourney.closedAt}
-                    – {formatTime(statsJourney.closedAt)}
-                    {#if journeyDurationMinutes != null}
-                      · {t.jornada?.duration ?? 'Duración'}: {journeyDurationMinutes} min
-                    {/if}
-                  {/if}
-                </p>
-              </div>
-            {/if}
-            <!-- Export buttons -->
-            <div class="flex flex-wrap gap-2 shrink-0 {statsJourney ? 'lg:mt-6' : ''}">
-            {#if statsJourney?.reportXlsxUrl}
-              <a
-                href={statsJourney.reportXlsxUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                {t.jornada?.downloadExcel ?? 'Descargar Excel'}
-              </a>
-            {/if}
-            {#if stats.products.length > 0}
-              <button
-                type="button"
-                onclick={downloadStatsCSV}
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                {t.jornada?.downloadCSV ?? 'Descargar CSV'}
-              </button>
-            {/if}
-            </div>
-          </div>
-
-          <!-- KPIs: Ventas por estado (entregadas + despachadas = concretadas) -->
-          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            <div class="rounded-xl bg-white border-2 border-green-200 p-5 md:col-span-2 lg:col-span-2 md:row-span-2 flex flex-col justify-center">
-              <p class="text-3xl md:text-4xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
-              <p class="text-sm font-medium text-gray-600 mt-1">{t.jornada?.revenueConcreted ?? 'Ventas concretadas'}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{(stats.ordersByStatus?.delivered ?? 0) + (stats.ordersByStatus?.dispatched ?? 0)} {t.jornada?.statsOrders ?? 'órdenes'}</p>
-            </div>
-            <div class="rounded-xl bg-white border border-green-100 p-4">
-              <p class="text-xl font-bold text-green-800">{formatCurrency(stats.revenueByStatus?.delivered ?? 0)}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueDelivered ?? 'Entregadas'}</p>
-              <p class="text-xs text-gray-400">{stats.ordersByStatus?.delivered ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
-            </div>
-            <div class="rounded-xl bg-white border border-blue-100 p-4">
-              <p class="text-xl font-bold text-blue-800">{formatCurrency(stats.revenueByStatus?.dispatched ?? 0)}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueDispatched ?? 'Despachadas'}</p>
-              <p class="text-xs text-gray-400">{stats.ordersByStatus?.dispatched ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
-            </div>
-            <div class="rounded-xl bg-white border border-amber-200 p-4">
-              <p class="text-xl font-bold text-amber-800">{formatCurrency(stats.revenueByStatus?.pending ?? 0)}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenuePending ?? 'Ventas pendientes'}</p>
-              <p class="text-xs text-gray-400">{stats.ordersByStatus?.pending ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
-            </div>
-            <div class="rounded-xl bg-white border border-gray-200 p-4">
-              <p class="text-xl font-bold text-gray-600">{formatCurrency(stats.revenueByStatus?.cancelled ?? 0)}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.revenueCancelled ?? 'Canceladas'}</p>
-              <p class="text-xs text-gray-400">{stats.ordersByStatus?.cancelled ?? 0} {t.jornada?.statsOrders ?? 'órdenes'}</p>
-            </div>
-            <div class="rounded-xl bg-white border border-gray-200 p-4">
-              <p class="text-xl font-bold text-gray-900">{itemsOrdered}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.itemsOrdered ?? 'Ítems ordenados'}</p>
-            </div>
-            <div class="rounded-xl bg-white border border-gray-200 p-4 md:col-span-2 lg:col-span-2">
-              <p class="text-xl font-bold text-gray-900">{formatCurrency(averageTicket)}</p>
-              <p class="text-xs text-gray-500 mt-0.5">{t.jornada?.averageTicket ?? 'Ticket promedio'}</p>
-            </div>
-            <!-- Top product compacto -->
-            {#if topProduct}
-              <div class="rounded-xl bg-blue-50 border border-blue-200 p-4 md:col-span-2 lg:col-span-2">
-                <p class="text-xs font-medium text-blue-600 mb-1">{t.jornada?.topProduct ?? 'Producto más vendido'}</p>
-                <p class="text-sm font-semibold text-gray-900 truncate" title={topProduct.productName}>{topProduct.productName}</p>
-                <p class="text-xs text-gray-600 mt-0.5">{topProduct.quantitySold} vendidos — {formatCurrency(topProduct.totalRevenue)}</p>
-              </div>
-            {/if}
-          </div>
-
-          {#if stats.products.length > 0}
-            <!-- Bar chart + Tabla: lado a lado en pantallas grandes -->
-            {@const maxRevenue = Math.max(...stats.products.map((p) => p.totalRevenue), 1)}
-            <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <div class="rounded-xl bg-white border border-gray-200 p-6 min-w-0">
-              <h3 class="text-base font-semibold text-gray-900 mb-4">{t.jornada?.chartByRevenue ?? 'Top productos por ventas'}</h3>
-              <div class="space-y-3">
-                {#each stats.products as p, i}
-                  <div class="flex items-center gap-3 w-full">
-                    <span class="w-32 md:w-48 lg:w-64 text-sm font-medium text-gray-900 truncate shrink-0" title={p.productName}>{p.productName}</span>
-                    <span class="text-sm font-semibold text-gray-700 shrink-0 w-20 text-right">{formatCurrency(p.totalRevenue)}</span>
-                    <div class="flex-1 min-w-0 h-6 bg-gray-100 rounded overflow-hidden">
-                      <div
-                        class="h-full rounded transition-all"
-                        style="width: {(p.totalRevenue / maxRevenue) * 100}%; background-color: {PIE_COLORS[i % PIE_COLORS.length]}"
-                        role="img"
-                        aria-label="{p.productName}: {formatCurrency(p.totalRevenue)}"
-                      ></div>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            </div>
-
-            <!-- Tabla detallada de productos -->
-            <div class="rounded-xl bg-white border border-gray-200 overflow-hidden min-w-0">
-              <h3 class="text-base font-semibold text-gray-900 p-4 pb-2">{t.jornada?.productsTable ?? 'Productos'}</h3>
-              <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <thead>
-                    <tr class="border-b border-gray-200 bg-gray-50">
-                      <th class="text-left font-medium text-gray-700 px-4 py-3">{t.jornada?.productName ?? 'Producto'}</th>
-                      <th class="text-right font-medium text-gray-700 px-4 py-3">{t.jornada?.quantity ?? 'Cant.'}</th>
-                      <th class="text-right font-medium text-gray-700 px-4 py-3">{t.jornada?.revenue ?? 'Ventas'}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {#each stats.products as p}
-                      <tr class="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50">
-                        <td class="px-4 py-3 font-medium text-gray-900">{p.productName}</td>
-                        <td class="px-4 py-3 text-right text-gray-600">{p.quantitySold}</td>
-                        <td class="px-4 py-3 text-right font-medium text-gray-900">{formatCurrency(p.totalRevenue)}</td>
-                      </tr>
-                    {/each}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            </div>
-          {:else}
-            <p class="text-gray-500 text-center py-12">{t.jornada?.noStats ?? 'No hay datos de ventas para esta jornada.'}</p>
-          {/if}
-        </div>
-      {:else}
-        <p class="text-gray-500 text-center py-12">{t.jornada?.errorLoadingStats ?? 'Error al cargar estadísticas.'}</p>
-      {/if}
-    {:else if loading}
+    {#if loading}
       <div class="flex items-center justify-center py-12">
         <div class="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent"></div>
       </div>
@@ -498,75 +243,19 @@
         </div>
       </section>
 
-      {#if closedJourneysList.length > 0}
-        <section class="mt-8">
-          <h2 class="text-sm font-semibold text-gray-700 mb-3">{t.jornada?.reports ?? 'Reportes de Jornadas'}</h2>
-          <div class="space-y-2">
-            {#each paginatedReports as j (j.id)}
-              <div class="flex items-center justify-between rounded-xl bg-white border border-gray-200 p-4">
-                <div class="text-sm">
-                  <span class="font-medium text-gray-900">{formatJourneyDate(j.openedAt)}</span>
-                  {#if j.closedAt}
-                    <span class="text-gray-500"> – {formatJourneyDate(j.closedAt)}</span>
-                  {/if}
-                </div>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onclick={() => openStatsView(j)}
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    {t.jornada?.stats ?? 'Estadísticas'}
-                  </button>
-                  {#if j.reportXlsxUrl}
-                    <a
-                      href={j.reportXlsxUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {t.jornada?.downloadExcel ?? 'Descargar Excel'}
-                    </a>
-                  {:else}
-                    <span class="text-xs text-gray-400">{t.jornada?.reportGenerating ?? 'Generando...'}</span>
-                  {/if}
-                </div>
-              </div>
-            {/each}
-          </div>
-          {#if reportTotalPages > 1}
-            <div class="flex items-center justify-between mt-4 px-2">
-              <button
-                type="button"
-                disabled={reportPage <= 1}
-                onclick={() => goToReportPage(reportPage - 1)}
-                class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                ← {t.jornada?.prev ?? 'Anterior'}
-              </button>
-              <span class="text-sm text-gray-600">
-                {t.jornada?.page ?? 'Página'} {reportPage} / {reportTotalPages}
-              </span>
-              <button
-                type="button"
-                disabled={reportPage >= reportTotalPages}
-                onclick={() => goToReportPage(reportPage + 1)}
-                class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {t.jornada?.next ?? 'Siguiente'} →
-              </button>
-            </div>
-          {/if}
-        </section>
-      {/if}
     {:else}
-      <!-- Jornada activa: estado actual, resumen y cerrar -->
+      <!-- Jornada activa -->
+      {#if view === 'stats'}
+        <JourneyStatsView
+          stats={stats}
+          statsLoading={statsLoading}
+          journeyInfo={activeJourney ? { id: activeJourney.id, openedAt: activeJourney.openedAt } : null}
+          onBack={goBackFromStats}
+          backLabel={t.jornada?.back ?? 'Volver'}
+          onDownloadCSV={downloadStatsCSV}
+        />
+      {:else}
+      <!-- Vista principal: estado actual, resumen y botones -->
       <section class="mb-6">
         <div class="rounded-xl bg-white border border-gray-200 shadow-sm p-5">
           <div class="flex items-center gap-2 mb-3">
@@ -611,87 +300,31 @@
         </div>
       </section>
 
-      <!-- Cerrar jornada arriba del listado -->
+      <!-- Estadísticas y Cerrar jornada -->
       <section class="mt-8 pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          onclick={openCloseModal}
-          class="w-full max-w-sm mx-auto flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-900 focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition-colors"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <span>{t.jornada?.closeWorkday ?? 'Cerrar Jornada'}</span>
-        </button>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+          <button
+            type="button"
+            onclick={openStatsForActive}
+            class="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>{t.jornada?.stats ?? 'Estadísticas'}</span>
+          </button>
+          <button
+            type="button"
+            onclick={openCloseModal}
+            class="flex-1 flex items-center justify-center gap-2 py-4 px-6 rounded-xl font-semibold text-white bg-gray-800 hover:bg-gray-900 focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span>{t.jornada?.closeWorkday ?? 'Cerrar Jornada'}</span>
+          </button>
+        </div>
       </section>
-
-      <!-- Reportes de jornadas cerradas (paginado) -->
-      {#if closedJourneysList.length > 0}
-        <section class="mt-10 pt-6 border-t border-gray-200">
-          <h2 class="text-sm font-semibold text-gray-700 mb-3">{t.jornada?.reports ?? 'Reportes de Jornadas'}</h2>
-          <div class="space-y-2">
-            {#each paginatedReports as j (j.id)}
-              <div class="flex items-center justify-between rounded-xl bg-white border border-gray-200 p-4">
-                <div class="text-sm">
-                  <span class="font-medium text-gray-900">{formatJourneyDate(j.openedAt)}</span>
-                  {#if j.closedAt}
-                    <span class="text-gray-500"> – {formatJourneyDate(j.closedAt)}</span>
-                  {/if}
-                </div>
-                <div class="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onclick={() => openStatsView(j)}
-                    class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    {t.jornada?.stats ?? 'Estadísticas'}
-                  </button>
-                  {#if j.reportXlsxUrl}
-                    <a
-                      href={j.reportXlsxUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      {t.jornada?.downloadExcel ?? 'Descargar Excel'}
-                    </a>
-                  {:else}
-                    <span class="text-xs text-gray-400">{t.jornada?.reportGenerating ?? 'Generando...'}</span>
-                  {/if}
-                </div>
-              </div>
-            {/each}
-          </div>
-          {#if reportTotalPages > 1}
-            <div class="flex items-center justify-between mt-4 px-2">
-              <button
-                type="button"
-                disabled={reportPage <= 1}
-                onclick={() => goToReportPage(reportPage - 1)}
-                class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                ← {t.jornada?.prev ?? 'Anterior'}
-              </button>
-              <span class="text-sm text-gray-600">
-                {t.jornada?.page ?? 'Página'} {reportPage} / {reportTotalPages}
-              </span>
-              <button
-                type="button"
-                disabled={reportPage >= reportTotalPages}
-                onclick={() => goToReportPage(reportPage + 1)}
-                class="px-3 py-2 rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {t.jornada?.next ?? 'Siguiente'} →
-              </button>
-            </div>
-          {/if}
-        </section>
       {/if}
     {/if}
   </div>

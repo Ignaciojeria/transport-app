@@ -10,6 +10,7 @@
   import MenuQRCode from './lib/components/MenuQRCode.svelte'
   import MenuOrders from './lib/components/MenuOrders.svelte'
   import Jornada from './lib/components/Jornada.svelte'
+  import Reportes from './lib/components/Reportes.svelte'
   import StationOrdersPublic from './lib/components/StationOrdersPublic.svelte'
 
   // Usar valores derivados reactivos en el componente
@@ -159,6 +160,8 @@
           <MenuOrders onMenuClick={toggleSidebar} onKitchenModeChange={(v) => kitchenModeActive = v} />
         {:else if activeSection === 'jornada'}
           <Jornada onMenuClick={toggleSidebar} />
+        {:else if activeSection === 'reportes'}
+          <Reportes onMenuClick={toggleSidebar} />
         {/if}
       </div>
     </div>

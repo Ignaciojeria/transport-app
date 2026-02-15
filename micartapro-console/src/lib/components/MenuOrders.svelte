@@ -6,6 +6,7 @@
   import { getActiveJourney, createJourney } from '../journeyApi'
   import { t as tStore } from '../useLanguage'
   import { playNewOrderSound, ensureAudioUnlocked } from '../utils/newOrderSound'
+  import PendientesView from './PendientesView.svelte'
 
   interface MenuOrdersProps {
     onMenuClick?: () => void
@@ -48,6 +49,8 @@
   let activeJourney = $state<{ id: string } | null>(null)
   let createJourneyInProgress = $state(false)
   let createJourneyError = $state<string | null>(null)
+  /** Tab principal: Pendientes (órdenes sin jornada) | Kanban (órdenes en jornada activa). */
+  let ordersMainTab = $state<'pendientes' | 'kanban'>('pendientes')
 
   const CANCEL_REASON_KEYS = ['outOfStock', 'orderError', 'customerLeft', 'paymentIssue', 'other'] as const
 
@@ -460,7 +463,25 @@
       <p class="mt-0.5 text-xs text-gray-500">
         {t.orders?.subtitle ?? 'Ordenado por hora comprometida. Vista orientada a cocina.'}
       </p>
-      <!-- Filtro por estación + opción QR: oculto en modo full -->
+      <!-- Tab principal: Pendientes | Kanban -->
+      <div class="mt-2 flex flex-wrap items-center gap-1.5">
+        <button
+          type="button"
+          onclick={() => { ordersMainTab = 'pendientes'; showQRView = false; }}
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors {ordersMainTab === 'pendientes' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+        >
+          {t.orders?.pendingView ?? 'Pendientes'}
+        </button>
+        <button
+          type="button"
+          onclick={() => { ordersMainTab = 'kanban'; showQRView = false; }}
+          class="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors {ordersMainTab === 'kanban' ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}"
+        >
+          Kanban
+        </button>
+      </div>
+      <!-- Filtro por estación + opción QR: oculto en modo full, solo cuando tab Kanban -->
+      {#if ordersMainTab === 'kanban'}
       <div class="mt-2 flex flex-wrap items-center gap-1.5">
         <button
           type="button"
@@ -493,12 +514,19 @@
           </button>
         {/if}
       </div>
+      {/if}
     {/if}
   </div>
 
   <!-- Content -->
   <div class="flex-1 overflow-y-auto px-3 sm:px-4 py-3">
-    {#if showQRView && menuId && session?.access_token}
+    {#if ordersMainTab === 'pendientes' && menuId && session?.access_token}
+      <PendientesView
+        menuId={menuId}
+        accessToken={session.access_token}
+        onAssigned={loadOrders}
+      />
+    {:else if showQRView && menuId && session?.access_token}
       <!-- Vista QR: códigos Entrega, Cocina y Barra sin tapar filtros -->
       {@const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''}
       {@const hashParams = session?.refresh_token ? `token=${encodeURIComponent(session.access_token)}&refresh_token=${encodeURIComponent(session.refresh_token)}` : `token=${encodeURIComponent(session.access_token)}`}

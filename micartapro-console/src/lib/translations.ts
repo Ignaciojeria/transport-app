@@ -103,6 +103,7 @@ export interface Translations {
     qrCode: string
     orders: string
     jornada: string
+    reportes: string
     kitchen: string
     myPlan: string
     signOut: string
@@ -224,7 +225,9 @@ export interface Translations {
     reportGenerating?: string
     stats?: string
     totalRevenue?: string
+    revenueConcreted?: string
     revenueDelivered?: string
+    revenueDispatched?: string
     revenuePending?: string
     revenueCancelled?: string
     statsOrders?: string
@@ -342,6 +345,7 @@ export const translations: Record<Language, Translations> = {
       qrCode: 'Código QR',
       orders: 'Kanban',
       jornada: 'Jornada',
+      reportes: 'Reportes',
       kitchen: 'Cocina',
       myPlan: 'Mi Plan',
       signOut: 'Cerrar sesión',
@@ -826,6 +830,7 @@ export const translations: Record<Language, Translations> = {
       qrCode: 'QR Code',
       orders: 'Kanban',
       jornada: 'Workday',
+      reportes: 'Reports',
       kitchen: 'Kitchen',
       myPlan: 'My Plan',
       signOut: 'Sign Out',
