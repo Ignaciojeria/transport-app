@@ -23,6 +23,10 @@ func GetPricingSchema() *genai.Schema {
 				Type:        genai.TypeNumber,
 				Description: "Unidad base opcional (ej: 100 => precio por 100 gramos). Puede omitirse si no aplica.",
 			},
+			"costPerUnit": {
+				Type:        genai.TypeNumber,
+				Description: "Costo por unidad de medida (opcional). Misma moneda que pricePerUnit. Solo incluir si el usuario proporciona el costo. Si se omite, el sistema interpreta 0.",
+			},
 		},
 		Required: []string{"mode", "unit", "pricePerUnit"},
 	}

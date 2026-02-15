@@ -104,6 +104,7 @@ export interface Translations {
     orders: string
     jornada: string
     reportes: string
+    cost: string
     kitchen: string
     myPlan: string
     signOut: string
@@ -116,6 +117,19 @@ export interface Translations {
     errorAccessingPortal: string
   }
   
+  // CostView.svelte
+  cost?: {
+    title: string
+    subtitle: string
+    unit: string
+    baseUnit: string
+    priceSale: string
+    cost: string
+    save: string
+    saved: string
+    reload: string
+  }
+
   // ProcessingPreview.svelte
   processing: {
     understandingInstructions: string
@@ -338,6 +352,17 @@ export const translations: Record<Language, Translations> = {
       redirecting: 'Redirigiendo a la consola...',
       goToConsole: 'Ir a la consola'
     },
+    cost: {
+      title: 'Costos del menú',
+      subtitle: 'Configura el costo de cada ítem y acompañamiento. Se usa para márgenes y reportes.',
+      unit: 'Unidad de venta',
+      baseUnit: 'Base',
+      priceSale: 'Precio venta',
+      cost: 'Costo',
+      save: 'Guardar',
+      saved: 'Precio y costo guardados correctamente',
+      reload: 'Recargar'
+    },
     sidebar: {
       aiAssistant: 'Asistente IA',
       history: 'Historial',
@@ -346,6 +371,7 @@ export const translations: Record<Language, Translations> = {
       orders: 'Kanban',
       jornada: 'Jornada',
       reportes: 'Reportes',
+      cost: 'Costos',
       kitchen: 'Cocina',
       myPlan: 'Mi Plan',
       signOut: 'Cerrar sesión',
@@ -589,6 +615,16 @@ export const translations: Record<Language, Translations> = {
       redirecting: 'Redirecionando para o console...',
       goToConsole: 'Ir para o console'
     },
+    cost: {
+      title: 'Custos do cardápio',
+      subtitle: 'Configure o custo de cada item e acompanhamento. Usado para margens e relatórios.',
+      unit: 'Unidade de venda',
+      baseUnit: 'Base',
+      priceSale: 'Preço venda',
+      cost: 'Custo',
+      save: 'Salvar custos',
+      reload: 'Recarregar'
+    },
     sidebar: {
       aiAssistant: 'Assistente IA',
       history: 'Histórico',
@@ -596,6 +632,8 @@ export const translations: Record<Language, Translations> = {
       qrCode: 'Código QR',
       orders: 'Kanban',
       jornada: 'Jornada',
+      reportes: 'Relatórios',
+      cost: 'Custos',
       kitchen: 'Cozinha',
       myPlan: 'Meu Plano',
       signOut: 'Sair',
@@ -823,6 +861,17 @@ export const translations: Record<Language, Translations> = {
       redirecting: 'Redirecting to console...',
       goToConsole: 'Go to console'
     },
+    cost: {
+      title: 'Menu costs',
+      subtitle: 'Configure the cost of each item and side. Used for margins and reports.',
+      unit: 'Unit of sale',
+      baseUnit: 'Base',
+      priceSale: 'Sale price',
+      cost: 'Cost',
+      save: 'Save',
+      saved: 'Price and cost saved successfully',
+      reload: 'Reload'
+    },
     sidebar: {
       aiAssistant: 'AI Assistant',
       history: 'History',
@@ -831,6 +880,7 @@ export const translations: Record<Language, Translations> = {
       orders: 'Kanban',
       jornada: 'Workday',
       reportes: 'Reports',
+      cost: 'Cost',
       kitchen: 'Kitchen',
       myPlan: 'My Plan',
       signOut: 'Sign Out',

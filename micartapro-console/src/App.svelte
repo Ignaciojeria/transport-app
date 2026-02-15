@@ -11,6 +11,7 @@
   import MenuOrders from './lib/components/MenuOrders.svelte'
   import Jornada from './lib/components/Jornada.svelte'
   import Reportes from './lib/components/Reportes.svelte'
+  import CostView from './lib/components/CostView.svelte'
   import StationOrdersPublic from './lib/components/StationOrdersPublic.svelte'
 
   // Usar valores derivados reactivos en el componente
@@ -162,6 +163,8 @@
           <Jornada onMenuClick={toggleSidebar} />
         {:else if activeSection === 'reportes'}
           <Reportes onMenuClick={toggleSidebar} />
+        {:else if activeSection === 'cost'}
+          <CostView onMenuClick={toggleSidebar} />
         {/if}
       </div>
     </div>

@@ -65,6 +65,20 @@ type Pricing struct {
 	Unit         UnitOfMeasure `json:"unit"`
 	PricePerUnit float64       `json:"pricePerUnit"`
 	BaseUnit     float64       `json:"baseUnit"`
+	CostPerUnit  *float64      `json:"costPerUnit,omitempty"` // Costo por unidad (nil = no definido)
+}
+
+// HasCost indica si hay costo definido.
+func (p Pricing) HasCost() bool {
+	return p.CostPerUnit != nil
+}
+
+// EffectiveCostPerUnit retorna el costo por unidad; 0 si no está definido.
+func (p Pricing) EffectiveCostPerUnit() float64 {
+	if p.CostPerUnit == nil {
+		return 0
+	}
+	return *p.CostPerUnit
 }
 
 /*

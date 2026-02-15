@@ -1200,6 +1200,75 @@ export async function getCurrentVersionId(
 }
 
 /**
+ * Obtiene el content de la versión actual del menú
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @returns content (objeto con menu, etc.) o null
+ */
+/** Content del menú (JSON en menu_versions). */
+export interface MenuContent {
+  menu: Array<{
+    title?: { base?: string }
+    items?: Array<{
+      id?: string
+      title?: { base?: string }
+      pricing?: { costPerUnit?: number; pricePerUnit?: number; mode?: string; unit?: string; baseUnit?: number }
+      sides?: Array<{
+        id?: string
+        name?: { base?: string }
+        pricing?: { costPerUnit?: number; pricePerUnit?: number; mode?: string; unit?: string; baseUnit?: number }
+      }>
+    }>
+  }>
+}
+
+/**
+ * Obtiene el content de la versión actual del menú
+ * @param menuId - ID del menú
+ * @param accessToken - Token de autenticación
+ * @returns content (objeto con menu, etc.) o null
+ */
+export async function getCurrentVersionContent(
+  menuId: string,
+  accessToken: string
+): Promise<MenuContent | null> {
+  const versionId = await getCurrentVersionId(menuId, accessToken)
+  if (!versionId) return null
+  const supabase = await getAuthenticatedSupabaseClient(accessToken)
+  const { data, error } = await supabase
+    .from('menu_versions')
+    .select('content')
+    .eq('id', versionId)
+    .single()
+  if (error || !data?.content) return null
+  return data.content as MenuContent
+}
+
+/**
+ * Actualiza el content de una versión del menú (PATCH)
+ * @param versionId - ID de la versión
+ * @param content - Nuevo content (objeto con menu, etc.)
+ * @param accessToken - Token de autenticación
+ * @returns true si se actualizó correctamente
+ */
+export async function updateMenuVersionContent(
+  versionId: string,
+  content: MenuContent,
+  accessToken: string
+): Promise<boolean> {
+  const supabase = await getAuthenticatedSupabaseClient(accessToken)
+  const { error } = await supabase
+    .from('menu_versions')
+    .update({ content })
+    .eq('id', versionId)
+  if (error) {
+    console.error('Error actualizando content:', error)
+    return false
+  }
+  return true
+}
+
+/**
  * Actualiza el current_version_id de un menú en Supabase
  * @param menuId - ID del menú
  * @param versionId - ID de la versión a activar
