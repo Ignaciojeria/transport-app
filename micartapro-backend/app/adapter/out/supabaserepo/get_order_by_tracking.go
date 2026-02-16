@@ -33,6 +33,7 @@ type OrderByTrackingResult struct {
 	OrderNumber  int                 `json:"orderNumber"`
 	MenuID       string              `json:"menuId"`
 	Fulfillment  string              `json:"fulfillment"`
+	JourneyID    *string             `json:"journeyId,omitempty"` // NULL si no hay jornada activa (negocio cerrado)
 	Items        []OrderTrackingItem `json:"items"`
 	RequestedAt  *string             `json:"requestedAt,omitempty"`
 	CreatedAt    string              `json:"createdAt"`
@@ -45,6 +46,7 @@ type orderTrackingRow struct {
 type orderItemProjectionRow struct {
 	OrderNumber   int     `json:"order_number"`
 	MenuID        string  `json:"menu_id"`
+	JourneyID     *string `json:"journey_id"`
 	ItemName      string  `json:"item_name"`
 	Quantity      int     `json:"quantity"`
 	Unit          string  `json:"unit"`
@@ -84,7 +86,7 @@ func NewGetOrderByTrackingID(sb *supabase.Client) GetOrderByTrackingID {
 
 		// 2) Obtener ítems desde order_items_projection
 		data, _, err := sb.From("order_items_projection").
-			Select("order_number,menu_id,item_name,quantity,unit,status,total_price,station,fulfillment,requested_time,created_at", "", false).
+			Select("order_number,menu_id,journey_id,item_name,quantity,unit,status,total_price,station,fulfillment,requested_time,created_at", "", false).
 			Eq("aggregate_id", strconv.FormatInt(aggregateID, 10)).
 			Execute()
 		if err != nil {
@@ -123,6 +125,7 @@ func NewGetOrderByTrackingID(sb *supabase.Client) GetOrderByTrackingID {
 			OrderNumber: rows[0].OrderNumber,
 			MenuID:      rows[0].MenuID,
 			Fulfillment: rows[0].Fulfillment,
+			JourneyID:   rows[0].JourneyID,
 			Items:       items,
 			RequestedAt: requestedAt,
 			CreatedAt:   createdAt,

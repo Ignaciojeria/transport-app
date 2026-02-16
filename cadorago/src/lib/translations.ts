@@ -99,6 +99,43 @@ export interface Translations {
     shareTracking: string
     shareCopied: string
     contactStore: string
+    productCancelled: string
+    orderCancelled: string
+    backToMenu: string
+    activeOrders: string
+    activeOrdersTitle: string
+    recentOrders: string
+    orderTracking: string
+    yourOrdersInProgress: string
+    loading: string
+    consult: string
+    consultByCode: string
+    codePlaceholder: string
+    searching: string
+    loadingOrder: string
+    delivery: string
+    pickup: string
+    statusConfirmed: string
+    statusPreparing: string
+    statusOnTheWay: string
+    statusReadyForPickup: string
+    statusDelivered: string
+    statusCancelled: string
+    statusConsult: string
+    progress: string
+    received: string
+    preparing: string
+    detail: string
+    total: string
+    deliveredCheck: string
+    whatsappGreeting: string
+    orderLabel: string
+    orderReceived: string
+    dateLabel: string
+    codeLabel: string
+    statusLabel: string
+    errorFetching: string
+    statusPendingNoJourney: string
   }
 
   // TemplateSelector (preview mode)
@@ -212,7 +249,44 @@ export const translations: Record<Language, Translations> = {
     tracking: {
       shareTracking: 'Compartir seguimiento',
       shareCopied: 'Enlace copiado',
-      contactStore: 'Contactar con la tienda'
+      contactStore: 'Contactar con la tienda',
+      productCancelled: 'Producto cancelado',
+      orderCancelled: 'Pedido cancelado',
+      backToMenu: '← Volver al menú',
+      activeOrders: '← Pedidos activos',
+      activeOrdersTitle: 'Pedidos activos',
+      recentOrders: 'Pedidos recientes',
+      orderTracking: 'Seguimiento de pedido',
+      yourOrdersInProgress: 'Tus pedidos en curso y recientes',
+      loading: '→ Cargando...',
+      consult: 'Consultar',
+      consultByCode: 'Consultar pedido por código',
+      codePlaceholder: 'Ej: ABC12345',
+      searching: 'Buscando...',
+      loadingOrder: 'Cargando pedido...',
+      delivery: 'Envío a domicilio',
+      pickup: 'Retiro en local',
+      statusConfirmed: 'Pedido confirmado',
+      statusPreparing: 'En preparación',
+      statusOnTheWay: 'En camino',
+      statusReadyForPickup: 'Listo para entregar',
+      statusDelivered: 'Entregado',
+      statusCancelled: 'Cancelado',
+      statusConsult: 'Consultar',
+      progress: 'Progreso',
+      received: 'Pedido recibido',
+      preparing: 'En preparación',
+      detail: 'Detalle',
+      total: 'Total',
+      deliveredCheck: 'Entregado ✓',
+      whatsappGreeting: 'Hola, tengo una consulta sobre mi pedido:',
+      orderLabel: 'Pedido',
+      orderReceived: 'Pedido recibido',
+      dateLabel: 'Fecha',
+      codeLabel: 'Código',
+      statusLabel: 'Estado',
+      errorFetching: 'Error al consultar el pedido',
+      statusPendingNoJourney: 'Pedido recibido. Se preparará cuando el negocio abra'
     },
     preview: {
       templateLabel: 'Estilo',
@@ -320,7 +394,44 @@ export const translations: Record<Language, Translations> = {
     tracking: {
       shareTracking: 'Compartir rastreamento',
       shareCopied: 'Link copiado',
-      contactStore: 'Contatar a loja'
+      contactStore: 'Contatar a loja',
+      productCancelled: 'Produto cancelado',
+      orderCancelled: 'Pedido cancelado',
+      backToMenu: '← Voltar ao cardápio',
+      activeOrders: '← Pedidos ativos',
+      activeOrdersTitle: 'Pedidos ativos',
+      recentOrders: 'Pedidos recentes',
+      orderTracking: 'Rastreamento de pedido',
+      yourOrdersInProgress: 'Seus pedidos em andamento e recentes',
+      loading: '→ Carregando...',
+      consult: 'Consultar',
+      consultByCode: 'Consultar pedido por código',
+      codePlaceholder: 'Ex: ABC12345',
+      searching: 'Buscando...',
+      loadingOrder: 'Carregando pedido...',
+      delivery: 'Entrega em domicílio',
+      pickup: 'Retirada na loja',
+      statusConfirmed: 'Pedido confirmado',
+      statusPreparing: 'Em preparação',
+      statusOnTheWay: 'A caminho',
+      statusReadyForPickup: 'Pronto para retirar',
+      statusDelivered: 'Entregue',
+      statusCancelled: 'Cancelado',
+      statusConsult: 'Consultar',
+      progress: 'Progresso',
+      received: 'Pedido recebido',
+      preparing: 'Em preparação',
+      detail: 'Detalhe',
+      total: 'Total',
+      deliveredCheck: 'Entregue ✓',
+      whatsappGreeting: 'Olá, tenho uma dúvida sobre meu pedido:',
+      orderLabel: 'Pedido',
+      orderReceived: 'Pedido recebido',
+      dateLabel: 'Data',
+      codeLabel: 'Código',
+      statusLabel: 'Status',
+      errorFetching: 'Erro ao consultar o pedido',
+      statusPendingNoJourney: 'Pedido recebido. Será preparado quando o negócio abrir'
     },
     preview: {
       templateLabel: 'Estilo',
@@ -428,7 +539,44 @@ export const translations: Record<Language, Translations> = {
     tracking: {
       shareTracking: 'Share tracking',
       shareCopied: 'Link copied',
-      contactStore: 'Contact store'
+      contactStore: 'Contact store',
+      productCancelled: 'Product cancelled',
+      orderCancelled: 'Order cancelled',
+      backToMenu: '← Back to menu',
+      activeOrders: '← Active orders',
+      activeOrdersTitle: 'Active orders',
+      recentOrders: 'Recent orders',
+      orderTracking: 'Order tracking',
+      yourOrdersInProgress: 'Your orders in progress and recent',
+      loading: '→ Loading...',
+      consult: 'Search',
+      consultByCode: 'Search order by code',
+      codePlaceholder: 'E.g. ABC12345',
+      searching: 'Searching...',
+      loadingOrder: 'Loading order...',
+      delivery: 'Home delivery',
+      pickup: 'Store pickup',
+      statusConfirmed: 'Order confirmed',
+      statusPreparing: 'Preparing',
+      statusOnTheWay: 'On the way',
+      statusReadyForPickup: 'Ready for pickup',
+      statusDelivered: 'Delivered',
+      statusCancelled: 'Cancelled',
+      statusConsult: 'Check status',
+      progress: 'Progress',
+      received: 'Order received',
+      preparing: 'Preparing',
+      detail: 'Detail',
+      total: 'Total',
+      deliveredCheck: 'Delivered ✓',
+      whatsappGreeting: 'Hello, I have a question about my order:',
+      orderLabel: 'Order',
+      orderReceived: 'Order received',
+      dateLabel: 'Date',
+      codeLabel: 'Code',
+      statusLabel: 'Status',
+      errorFetching: 'Error fetching order',
+      statusPendingNoJourney: 'Order received. It will be prepared when the business opens'
     },
     preview: {
       templateLabel: 'Style',

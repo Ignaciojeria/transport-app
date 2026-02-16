@@ -29,7 +29,7 @@
       const id = typeof e === 'string' ? e : e?.id;
       const summary = orderSummaries[id];
       if (!summary) return true;
-      return summary.statusLabel !== 'Entregado' && summary.statusLabel !== 'Cancelado';
+      return summary.statusKey !== 'delivered' && summary.statusKey !== 'cancelled';
     })
   );
   /** Pedidos recientes: entregados o cancelados */
@@ -38,7 +38,7 @@
       const id = typeof e === 'string' ? e : e?.id;
       const summary = orderSummaries[id];
       if (!summary) return false;
-      return summary.statusLabel === 'Entregado' || summary.statusLabel === 'Cancelado';
+      return summary.statusKey === 'delivered' || summary.statusKey === 'cancelled';
     })
   );
 
@@ -60,22 +60,26 @@
       ids.map(async (id) => {
         try {
           const o = await getOrderByTrackingId(id);
-          const statuses = o?.items ? [...new Set(o.items.map((i) => i.status))] : [];
-          let statusLabel = 'Pedido confirmado';
-          if (statuses.includes('CANCELLED') && statuses.length === 1) statusLabel = 'Cancelado';
-          else if (statuses.includes('DELIVERED')) statusLabel = 'Entregado';
-          else if (statuses.includes('DISPATCHED')) statusLabel = 'En camino';
-          else if (statuses.includes('READY')) statusLabel = o?.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para entregar';
-          else if (statuses.includes('IN_PROGRESS')) statusLabel = 'En preparación';
-          return { id, orderNumber: o?.orderNumber ?? id, statusLabel, menuId: o?.menuId };
+          const items = o?.items ?? [];
+          const allCancelled = items.length > 0 && items.every((i) => i.status === 'CANCELLED');
+          const noJourney = o?.journeyId == null || o?.journeyId === '';
+          const noOrderNumber = o?.orderNumber === 0 || o?.orderNumber == null;
+          let statusKey = 'pending';
+          if (allCancelled) statusKey = 'cancelled';
+          else if (items.some((i) => i.status === 'DELIVERED')) statusKey = 'delivered';
+          else if (items.some((i) => i.status === 'DISPATCHED')) statusKey = 'dispatched';
+          else if (items.some((i) => i.status === 'READY')) statusKey = o?.fulfillment === 'DELIVERY' ? 'dispatched' : 'ready';
+          else if (items.some((i) => i.status === 'IN_PROGRESS')) statusKey = 'in_progress';
+          else if (items.every((i) => i.status === 'PENDING') && noJourney && noOrderNumber) statusKey = 'pending_no_journey';
+          return { id, orderNumber: o?.orderNumber ?? id, statusKey, menuId: o?.menuId };
         } catch {
-          return { id, orderNumber: id, statusLabel: 'Consultar' };
+          return { id, orderNumber: id, statusKey: 'consult' };
         }
       })
     ).then((results) => {
-      orderSummaries = Object.fromEntries(results.map((r) => [r.id, { orderNumber: r.orderNumber, statusLabel: r.statusLabel, menuId: r.menuId }]));
+      orderSummaries = Object.fromEntries(results.map((r) => [r.id, { orderNumber: r.orderNumber, statusKey: r.statusKey, menuId: r.menuId }]));
       results.forEach((r) => {
-        trackingStore.updateTracking(r.id, { isDelivered: r.statusLabel === 'Entregado' });
+        trackingStore.updateTracking(r.id, { isDelivered: r.statusKey === 'delivered' });
       });
     });
   });
@@ -109,7 +113,7 @@
         } catch {}
       }
     } catch (e) {
-      error = e.message || 'Error al consultar el pedido';
+      error = e.message || $t.tracking.errorFetching;
     } finally {
       loading = false;
     }
@@ -120,8 +124,9 @@
   async function shareTracking() {
     if (!order?.trackingId || typeof window === 'undefined') return;
     const url = `${window.location.origin}/track/${encodeURIComponent(order.trackingId)}`;
-    const title = `Pedido #${order.orderNumber} - MiCartaPro`;
-    const text = `Seguimiento del pedido #${order.orderNumber}`;
+    const orderDisplay = (order.orderNumber === 0 || order.orderNumber == null) ? $t.tracking.orderReceived : `${$t.tracking.orderLabel} #${order.orderNumber}`;
+    const title = `${orderDisplay} - MiCartaPro`;
+    const text = `Seguimiento del pedido: ${orderDisplay}`;
     try {
       if (navigator.share) {
         await navigator.share({ title, text, url });
@@ -143,22 +148,22 @@
 
   function openWhatsAppContact() {
     if (!businessWhatsapp || !order) return;
-    const total = order.items?.reduce((s, i) => s + (i.totalPrice || 0), 0) ?? 0;
-    const statusLabel = overallStatus === 'PENDING' ? 'Pedido confirmado' : overallStatus === 'IN_PROGRESS' ? 'En preparación' : overallStatus === 'READY' ? (order.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para entregar') : overallStatus === 'DISPATCHED' ? 'En camino' : overallStatus === 'DELIVERED' ? 'Entregado' : overallStatus === 'CANCELLED' ? 'Cancelado' : 'Consultar';
+    const total = order.items?.filter((i) => i.status !== 'CANCELLED').reduce((s, i) => s + (i.totalPrice || 0), 0) ?? 0;
+    const statusLabel = getHeaderStatusLabel() || $t.tracking.statusConsult;
     const lines = [
-      'Hola, tengo una consulta sobre mi pedido:',
+      $t.tracking.whatsappGreeting,
       '',
-      `📋 *Pedido #${order.orderNumber}*`,
-      `🔖 Código: ${order.trackingId}`,
-      `📦 Tipo: ${order.fulfillment === 'DELIVERY' ? 'Envío a domicilio' : 'Retiro en local'}`,
-      `📊 Estado: ${statusLabel}`,
+      `📋 *${getOrderDisplay(order.orderNumber)}*`,
+      `🔖 ${$t.tracking.codeLabel}: ${order.trackingId}`,
+      `📦 Tipo: ${order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : $t.tracking.pickup}`,
+      `📊 ${$t.tracking.statusLabel}: ${statusLabel}`,
       '',
-      '*Detalle:*',
+      `*${$t.tracking.detail}:*`,
       ...(order.items || []).map((i) => `• ${i.itemName} ×${i.quantity}${i.unit && i.unit !== 'EACH' ? ` ${i.unit}` : ''} — $${(i.totalPrice || 0).toLocaleString('es-CL')}`),
       '',
-      `*Total: $${total.toLocaleString('es-CL')}*`,
+      `*${$t.tracking.total}: $${total.toLocaleString('es-CL')}*`,
       '',
-      `Fecha: ${order.createdAt ? new Date(order.createdAt).toLocaleString('es-CL') : ''}`,
+      `${$t.tracking.dateLabel}: ${order.createdAt ? new Date(order.createdAt).toLocaleString('es-CL') : ''}`,
     ];
     const msg = lines.join('\n');
     const phone = businessWhatsapp.replace(/[^0-9]/g, '');
@@ -170,28 +175,87 @@
     if (trackingCode.trim()) fetchOrder(trackingCode.trim());
   }
 
+  /** Orden cancelada cuando todos los productos están cancelados */
   const overallStatus = $derived.by(() => {
     if (!order?.items?.length) return null;
-    const statuses = [...new Set(order.items.map((i) => i.status))];
-    if (statuses.includes('CANCELLED') && statuses.length === 1) return 'CANCELLED';
-    if (statuses.includes('DELIVERED')) return 'DELIVERED';
-    if (statuses.includes('DISPATCHED')) return 'DISPATCHED';
-    if (statuses.includes('READY')) return 'READY';
-    if (statuses.includes('IN_PROGRESS')) return 'IN_PROGRESS';
+    const items = order.items;
+    if (items.every((i) => i.status === 'CANCELLED')) return 'CANCELLED';
+    if (items.some((i) => i.status === 'DELIVERED')) return 'DELIVERED';
+    if (items.some((i) => i.status === 'DISPATCHED')) return 'DISPATCHED';
+    if (items.some((i) => i.status === 'READY')) return 'READY';
+    if (items.some((i) => i.status === 'IN_PROGRESS')) return 'IN_PROGRESS';
     return 'PENDING';
   });
 
-  // Timeline: pasos según fulfillment
+  /** Negocio cerrado: PENDING sin jornada y sin número asignado (orderNumber 0) */
+  const isWaitingForBusinessToOpen = $derived(
+    overallStatus === 'PENDING' &&
+    (order?.journeyId == null || order?.journeyId === '') &&
+    (order?.orderNumber === 0 || order?.orderNumber == null)
+  );
+
+  // Timeline: pasos según fulfillment. Si orden cancelada o PENDING sin jornada (negocio cerrado), mensaje específico.
   const timelineSteps = $derived.by(() => {
     const isDelivery = order?.fulfillment === 'DELIVERY';
     const s = overallStatus;
+    if (s === 'CANCELLED') {
+      return [
+        { key: 'received', label: $t.tracking.received, status: 'done' },
+        { key: 'cancelled', label: $t.tracking.orderCancelled, status: 'current' },
+      ];
+    }
+    if (isWaitingForBusinessToOpen) {
+      return [
+        { key: 'received', label: $t.tracking.received, status: 'done' },
+        { key: 'waiting', label: $t.tracking.statusPendingNoJourney, status: 'current' },
+      ];
+    }
     return [
-      { key: 'received', label: 'Pedido recibido', status: 'done' },
-      { key: 'preparing', label: 'En preparación', status: s === 'PENDING' || s === 'IN_PROGRESS' ? 'current' : 'done' },
-      { key: 'ready', label: isDelivery ? 'En camino' : 'Listo para entregar', status: s === 'READY' || s === 'DISPATCHED' ? 'current' : s === 'DELIVERED' ? 'done' : 'pending' },
-      { key: 'delivered', label: 'Entregado', status: s === 'DELIVERED' ? 'done' : 'pending' },
+      { key: 'received', label: $t.tracking.received, status: 'done' },
+      { key: 'preparing', label: $t.tracking.preparing, status: s === 'PENDING' || s === 'IN_PROGRESS' ? 'current' : 'done' },
+      { key: 'ready', label: isDelivery ? $t.tracking.statusOnTheWay : $t.tracking.statusReadyForPickup, status: s === 'READY' || s === 'DISPATCHED' ? 'current' : s === 'DELIVERED' ? 'done' : 'pending' },
+      { key: 'delivered', label: $t.tracking.statusDelivered, status: s === 'DELIVERED' ? 'done' : 'pending' },
     ];
   });
+
+  /** Total excluyendo productos cancelados */
+  const orderTotal = $derived(
+    order?.items?.filter((i) => i.status !== 'CANCELLED').reduce((s, i) => s + (i.totalPrice || 0), 0) ?? 0
+  );
+
+  function getOrderDisplay(num) {
+    return (num === 0 || num == null) ? $t.tracking.orderReceived : `${$t.tracking.orderLabel} #${num}`;
+  }
+
+  function getStatusLabel(key) {
+    const map = {
+      pending: $t.tracking.statusConfirmed,
+      pending_no_journey: $t.tracking.statusPendingNoJourney,
+      cancelled: $t.tracking.statusCancelled,
+      delivered: $t.tracking.statusDelivered,
+      dispatched: $t.tracking.statusOnTheWay,
+      ready: $t.tracking.statusReadyForPickup,
+      in_progress: $t.tracking.statusPreparing,
+      consult: $t.tracking.statusConsult,
+    };
+    return map[key] ?? key;
+  }
+
+  function getHeaderStatusLabel() {
+    if (!overallStatus) return '';
+    if (isWaitingForBusinessToOpen) {
+      return $t.tracking.statusPendingNoJourney;
+    }
+    const map = {
+      PENDING: $t.tracking.statusConfirmed,
+      IN_PROGRESS: $t.tracking.statusPreparing,
+      READY: order?.fulfillment === 'DELIVERY' ? $t.tracking.statusOnTheWay : $t.tracking.statusReadyForPickup,
+      DISPATCHED: $t.tracking.statusOnTheWay,
+      DELIVERED: $t.tracking.statusDelivered,
+      CANCELLED: $t.tracking.statusCancelled,
+    };
+    return map[overallStatus] ?? '';
+  }
 </script>
 
 <div class="min-h-screen bg-slate-50 font-sans py-8 pb-24 px-4 sm:px-6 lg:px-8">
@@ -200,28 +264,28 @@
     {#if hasTrackingInUrl}
       {#if order?.menuId}
         <a href="/m/{order.menuId}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
-          ← Volver al menú
+          {$t.tracking.backToMenu}
         </a>
       {:else}
         <a href="/track" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
-          ← Pedidos activos
+          {$t.tracking.activeOrders}
         </a>
       {/if}
     {:else if listMenuId}
       <a href="/m/{listMenuId}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
-        ← Volver al menú
+        {$t.tracking.backToMenu}
       </a>
     {/if}
 
     <!-- Vista: lista de pedidos (solo cuando NO hay tracking en URL) -->
     {#if !hasTrackingInUrl}
-      <h1 class="text-2xl font-bold text-slate-900 mb-2">Seguimiento de pedido</h1>
-      <p class="text-slate-600 text-sm mb-6">Tus pedidos en curso y recientes</p>
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">{$t.tracking.orderTracking}</h1>
+      <p class="text-slate-600 text-sm mb-6">{$t.tracking.yourOrdersInProgress}</p>
 
       <!-- 1. Pedidos activos (máxima prioridad) -->
       {#if activeOrders.length > 0}
         <div class="mb-8">
-          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Pedidos activos</h2>
+          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">{$t.tracking.activeOrdersTitle}</h2>
           <div class="space-y-2">
             {#each activeOrders as entry}
               {@const id = typeof entry === 'string' ? entry : entry.id}
@@ -229,11 +293,11 @@
               <div class="flex items-center gap-2 p-4 bg-white rounded-xl border-2 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
                 <a href="/track/{encodeURIComponent(id)}" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
                   {#if summary}
-                    <span class="font-semibold text-slate-900">Pedido #{summary.orderNumber}</span>
-                    <span class="text-slate-600 text-sm font-medium">{summary.statusLabel}</span>
+                    <span class="font-semibold text-slate-900">{getOrderDisplay(summary.orderNumber)}</span>
+                    <span class="text-slate-600 text-sm font-medium">{getStatusLabel(summary.statusKey)}</span>
                   {:else}
                     <span class="font-mono font-semibold text-slate-900 truncate">{id}</span>
-                    <span class="text-slate-400 text-sm">→ Cargando...</span>
+                    <span class="text-slate-400 text-sm">{$t.tracking.loading}</span>
                   {/if}
                 </a>
               </div>
@@ -245,7 +309,7 @@
       <!-- 2. Pedidos recientes (entregados / cancelados) -->
       {#if recentOrders.length > 0}
         <div class="mb-8">
-          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Pedidos recientes</h2>
+          <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{$t.tracking.recentOrders}</h2>
           <div class="space-y-2">
             {#each recentOrders as entry}
               {@const id = typeof entry === 'string' ? entry : entry.id}
@@ -253,13 +317,13 @@
               <div class="flex items-center gap-2 p-4 bg-slate-50/80 rounded-xl border border-slate-200/60 hover:border-slate-300/80 transition-all">
                 <a href="/track/{encodeURIComponent(id)}" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
                   {#if summary}
-                    <span class="font-medium text-slate-700">Pedido #{summary.orderNumber}</span>
+                    <span class="font-medium text-slate-700">{getOrderDisplay(summary.orderNumber)}</span>
                     <span class="text-slate-500 text-sm">
-                      {summary.statusLabel === 'Entregado' ? 'Entregado ✓' : summary.statusLabel}
+                      {summary.statusKey === 'delivered' ? $t.tracking.deliveredCheck : getStatusLabel(summary.statusKey)}
                     </span>
                   {:else}
                     <span class="font-mono font-medium text-slate-700 truncate">{id}</span>
-                    <span class="text-slate-400 text-sm">→ Cargando...</span>
+                    <span class="text-slate-400 text-sm">{$t.tracking.loading}</span>
                   {/if}
                 </a>
               </div>
@@ -270,13 +334,13 @@
 
       <!-- 3. Consultar por código (opcional, secundario) -->
       <div class="pt-4 border-t border-slate-200">
-        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Consultar pedido por código</h2>
+        <h2 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{$t.tracking.consultByCode}</h2>
         <form onsubmit={handleSubmit} class="flex gap-2">
-          <input type="text" bind:value={trackingCode} placeholder="Ej: ABC12345" maxlength="12" disabled={loading}
+          <input type="text" bind:value={trackingCode} placeholder={$t.tracking.codePlaceholder} maxlength="12" disabled={loading}
             class="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-slate-300 focus:border-slate-400 outline-none font-mono text-sm text-slate-900 placeholder:text-slate-400" />
           <button type="submit" disabled={loading || !trackingCode.trim()}
             class="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 disabled:bg-slate-100 disabled:cursor-not-allowed text-slate-700 font-medium rounded-lg transition-colors text-sm">
-            {loading ? 'Buscando...' : 'Consultar'}
+            {loading ? $t.tracking.searching : $t.tracking.consult}
           </button>
         </form>
       </div>
@@ -286,7 +350,7 @@
     {#if hasTrackingInUrl && loading}
       <div class="flex flex-col items-center justify-center py-20">
         <div class="w-10 h-10 border-2 border-slate-200 border-t-slate-900 rounded-full animate-spin mb-4"></div>
-        <p class="text-slate-500 text-sm">Cargando pedido...</p>
+        <p class="text-slate-500 text-sm">{$t.tracking.loadingOrder}</p>
       </div>
     {/if}
 
@@ -300,16 +364,16 @@
       <div class="space-y-6">
         <!-- Header: Pedido #7, Estado, Retiro -->
         <div>
-          <h1 class="text-2xl font-bold text-slate-900">Pedido #{order.orderNumber}</h1>
-          <p class="text-slate-600 mt-1">{order.fulfillment === 'DELIVERY' ? 'Envío a domicilio' : 'Retiro en local'}</p>
+          <h1 class="text-2xl font-bold text-slate-900">{getOrderDisplay(order.orderNumber)}</h1>
+          <p class="text-slate-600 mt-1">{order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : $t.tracking.pickup}</p>
           <p class="text-base font-semibold mt-2 {overallStatus === 'PENDING' ? 'text-slate-500' : overallStatus === 'IN_PROGRESS' ? 'text-blue-600' : overallStatus === 'READY' || overallStatus === 'DISPATCHED' ? 'text-emerald-600' : overallStatus === 'DELIVERED' ? 'text-slate-800' : 'text-slate-600'}">
-            {overallStatus === 'PENDING' ? 'Pedido confirmado' : overallStatus === 'IN_PROGRESS' ? 'En preparación' : overallStatus === 'READY' ? (order.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para entregar') : overallStatus === 'DISPATCHED' ? 'En camino' : overallStatus === 'DELIVERED' ? 'Entregado' : overallStatus === 'CANCELLED' ? 'Cancelado' : ''}
+            {getHeaderStatusLabel()}
           </p>
         </div>
 
         <!-- Timeline -->
         <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
-          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Progreso</h2>
+          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">{$t.tracking.progress}</h2>
           <div class="relative">
             {#each timelineSteps as step, i}
               {@const done = step.status === 'done'}
@@ -336,18 +400,23 @@
 
         <!-- Detalle -->
         <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
-          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Detalle</h2>
+          <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">{$t.tracking.detail}</h2>
           <ul class="space-y-3">
             {#each order.items as item}
-              <li class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0">
-                <span class="font-medium text-slate-900">{item.itemName}</span>
+              <li class="flex justify-between items-center py-2 border-b border-slate-100 last:border-0 {item.status === 'CANCELLED' ? 'opacity-70' : ''}">
+                <div class="flex flex-col gap-0.5">
+                  <span class="font-medium {item.status === 'CANCELLED' ? 'text-slate-500 line-through' : 'text-slate-900'}">{item.itemName}</span>
+                  {#if item.status === 'CANCELLED'}
+                    <span class="text-xs font-medium text-red-600">{$t.tracking.productCancelled}</span>
+                  {/if}
+                </div>
                 <span class="text-slate-500 text-sm">×{item.quantity} — {formatPrice(item.totalPrice || 0, currency)}</span>
               </li>
             {/each}
           </ul>
           <div class="flex justify-between items-center pt-4 mt-4 border-t-2 border-slate-200">
-            <span class="font-bold text-slate-900">Total</span>
-            <span class="font-bold text-lg text-slate-900">{formatPrice(order.items?.reduce((s, i) => s + (i.totalPrice || 0), 0) ?? 0, currency)}</span>
+            <span class="font-bold text-slate-900">{$t.tracking.total}</span>
+            <span class="font-bold text-lg text-slate-900">{formatPrice(orderTotal, currency)}</span>
           </div>
         </div>
 
