@@ -2,9 +2,9 @@
   import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
   import { get } from 'svelte/store';
   import Price from '../atoms/Price.svelte';
-  import WhatsAppIcon from '../atoms/WhatsAppIcon.svelte';
   import OrderLoader from '../atoms/OrderLoader.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
+  import { trackingStore } from '../../stores/trackingStore.svelte.js';
   import { t, language } from '../../lib/useLanguage';
   import { getPriceFromPricing, getCostFromPricing } from '../../services/menuData.js';
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
@@ -45,6 +45,7 @@
   let showOrderForm = $state(false);
   let showClearConfirm = $state(false);
   let showOrderLoader = $state(false);
+  let lastTrackingId = $state(null);
   let orderViewTransition = $state(false); // Controla la transición de la vista
   let deliveryType = $state(null); // 'DELIVERY' | 'PICKUP' | null
   let deliveryStep = $state(1); // 1: dirección, 2: datos personales
@@ -350,7 +351,7 @@
 
   /**
    * Envía la orden a la API de micartapro-backend
-   * @returns {Promise<number>} Número de orden
+   * @returns {Promise<{orderNumber: number, trackingId: string}>} Número de orden y código de seguimiento
    */
   async function sendOrderToAPI() {
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
@@ -483,7 +484,7 @@
     }
 
     const result = await response.json();
-    return result.orderNumber;
+    return { orderNumber: result.orderNumber, trackingId: result.trackingId };
   }
   
   async function handleConfirmOrder() {
@@ -552,11 +553,12 @@
     // Mostrar loader
     showOrderForm = false;
     showOrderLoader = true;
+    lastTrackingId = null;
     
-    let orderNumber = null;
+    let orderResult = null;
     try {
       // Enviar orden a la API
-      orderNumber = await sendOrderToAPI();
+      orderResult = await sendOrderToAPI();
     } catch (error) {
       console.error('Error al enviar orden a la API:', error);
       alert('Error al procesar la orden. Por favor, intenta nuevamente.');
@@ -565,24 +567,11 @@
       return;
     }
     
-    // Generar mensaje de WhatsApp con el número de orden
-    const url = cartStore.generateWhatsAppMessage(
-      restaurantData?.businessInfo?.whatsapp || '',
-      nombreRetiro.trim(),
-      horaConZona,
-      fullDeliveryAddress,
-      currentLanguage,
-      $t.whatsapp,
-      orderNumber
-    );
-    
-    // Esperar 2 segundos antes de redirigir
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Redirigir a WhatsApp
-    window.open(url, '_blank');
-    
-    // Cerrar loader, limpiar formulario y carrito
+    lastTrackingId = orderResult.trackingId || null;
+    trackingStore.addTracking(orderResult.trackingId || '', new Date().toISOString());
+
+    // Limpiar carrito y formulario antes de redirigir
+    cartStore.clear();
     showOrderLoader = false;
     deliveryType = null;
     deliveryStep = 1;
@@ -594,8 +583,10 @@
     addressSuggestions = [];
     showSuggestions = false;
     selectedAddress = null;
-    cartStore.clear();
     isExpanded = false;
+
+    // Redirigir a la vista de tracking (el usuario puede contactar por WhatsApp desde ahí)
+    window.location.href = `/track/${encodeURIComponent(orderResult.trackingId || '')}`;
   }
   
   function handleClearCart() {
@@ -671,10 +662,9 @@
           <button
             onclick={handleSendOrderClick}
             class="px-4 py-2 sm:px-6 sm:py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2 sm:gap-3 font-semibold text-sm sm:text-base"
-            aria-label="Enviar pedido por WhatsApp"
+            aria-label="Realizar pedido"
           >
-            <WhatsAppIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span>{$t.cart.orderWhatsApp}</span>
+            <span>{$t.cart.placeOrder}</span>
           </button>
         </div>
       </div>
@@ -1076,8 +1066,7 @@
             disabled={searchingAddress}
             class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
           >
-            <WhatsAppIcon className="w-5 h-5" />
-            <span>{$t.cart.sendOrder}</span>
+            <span>{$t.cart.placeOrder}</span>
           </button>
         {/if}
       </div>
@@ -1088,7 +1077,11 @@
 
 <!-- Loader de preparación de pedido -->
 {#if showOrderLoader}
-  <OrderLoader message={$t.cart.preparingOrder} redirectingMessage={$t.cart.redirectingWhatsApp} />
+  <OrderLoader
+    message={$t.cart.preparingOrder}
+    redirectingMessage={$t.cart.redirectingWhatsApp}
+    trackingId={lastTrackingId}
+  />
 {/if}
 
 <!-- Modal de confirmación para limpiar carrito -->
@@ -1132,4 +1125,3 @@
     </div>
   </div>
 {/if}
-

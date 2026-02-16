@@ -6,6 +6,7 @@
   import ContactSection from '../organisms/ContactSection.svelte';
   import CartaSection from '../organisms/CartaSection.svelte';
   import FloatingCart from '../organisms/FloatingCart.svelte';
+  import FloatingTrackingButton from '../molecules/FloatingTrackingButton.svelte';
   import Footer from '../organisms/Footer.svelte';
   import MetaTags from '../organisms/MetaTags.svelte';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
@@ -121,6 +122,8 @@
   
   <!-- Carrito flotante -->
   <FloatingCart />
+  <!-- Botón flotante para ver pedido en curso -->
+  <FloatingTrackingButton />
   </Template>
 {/if}
 

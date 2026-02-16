@@ -47,6 +47,7 @@ export interface Translations {
     items: string
     sendOrderWhatsApp: string
     orderWhatsApp: string
+    placeOrder: string
     clearOrder: string
     pickupInfo: string
     pickupName: string
@@ -89,8 +90,17 @@ export interface Translations {
       clear: string
       preparingOrder: string
       redirectingWhatsApp: string
+      viewYourOrder: string
+      viewYourOrders: string
     }
   
+  // TrackingView.svelte
+  tracking: {
+    shareTracking: string
+    shareCopied: string
+    contactStore: string
+  }
+
   // TemplateSelector (preview mode)
   preview: {
     templateLabel: string
@@ -153,6 +163,7 @@ export const translations: Record<Language, Translations> = {
       items: 'items',
       sendOrderWhatsApp: 'Enviar Pedido por WhatsApp',
       orderWhatsApp: 'Pedir por WhatsApp',
+      placeOrder: 'Realizar pedido',
       clearOrder: 'Limpiar pedido',
       pickupInfo: 'Información de Retiro',
       pickupName: 'Nombre de quien va a retirar *',
@@ -176,6 +187,8 @@ export const translations: Record<Language, Translations> = {
       clear: 'Vaciar',
       preparingOrder: 'Preparando tu pedido...',
       redirectingWhatsApp: 'Redirigiendo a WhatsApp...',
+      viewYourOrder: 'Ver tu pedido',
+      viewYourOrders: 'Ver tus pedidos',
       deliveryType: 'Tipo de entrega',
       delivery: 'Envío a domicilio',
       pickup: 'Retiro en tienda',
@@ -195,6 +208,11 @@ export const translations: Record<Language, Translations> = {
       step2Title: 'Paso 2: Información de contacto',
       step1Label: 'Dirección',
       step2Label: 'Contacto'
+    },
+    tracking: {
+      shareTracking: 'Compartir seguimiento',
+      shareCopied: 'Enlace copiado',
+      contactStore: 'Contactar con la tienda'
     },
     preview: {
       templateLabel: 'Estilo',
@@ -253,6 +271,7 @@ export const translations: Record<Language, Translations> = {
       items: 'itens',
       sendOrderWhatsApp: 'Enviar Pedido por WhatsApp',
       orderWhatsApp: 'Pedir por WhatsApp',
+      placeOrder: 'Realizar pedido',
       clearOrder: 'Limpar pedido',
       pickupInfo: 'Informações de Retirada',
       pickupName: 'Nome de quem vai retirar *',
@@ -276,6 +295,8 @@ export const translations: Record<Language, Translations> = {
       clear: 'Limpar',
       preparingOrder: 'Preparando seu pedido...',
       redirectingWhatsApp: 'Redirecionando para o WhatsApp...',
+      viewYourOrder: 'Ver seu pedido',
+      viewYourOrders: 'Ver seus pedidos',
       deliveryType: 'Tipo de entrega',
       delivery: 'Entrega em domicílio',
       pickup: 'Retirada na loja',
@@ -295,6 +316,11 @@ export const translations: Record<Language, Translations> = {
       step2Title: 'Passo 2: Informações de contato',
       step1Label: 'Endereço',
       step2Label: 'Contato'
+    },
+    tracking: {
+      shareTracking: 'Compartir rastreamento',
+      shareCopied: 'Link copiado',
+      contactStore: 'Contatar a loja'
     },
     preview: {
       templateLabel: 'Estilo',
@@ -353,6 +379,7 @@ export const translations: Record<Language, Translations> = {
       items: 'items',
       sendOrderWhatsApp: 'Send Order via WhatsApp',
       orderWhatsApp: 'Order via WhatsApp',
+      placeOrder: 'Place order',
       clearOrder: 'Clear order',
       pickupInfo: 'Pickup Information',
       pickupName: 'Name of person picking up *',
@@ -376,6 +403,8 @@ export const translations: Record<Language, Translations> = {
       clear: 'Clear',
       preparingOrder: 'Preparing your order...',
       redirectingWhatsApp: 'Redirecting to WhatsApp...',
+      viewYourOrder: 'View your order',
+      viewYourOrders: 'View your orders',
       deliveryType: 'Delivery type',
       delivery: 'Home delivery',
       pickup: 'Store pickup',
@@ -395,6 +424,11 @@ export const translations: Record<Language, Translations> = {
       step2Title: 'Step 2: Contact information',
       step1Label: 'Address',
       step2Label: 'Contact'
+    },
+    tracking: {
+      shareTracking: 'Share tracking',
+      shareCopied: 'Link copied',
+      contactStore: 'Contact store'
     },
     preview: {
       templateLabel: 'Style',

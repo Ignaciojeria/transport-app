@@ -1,5 +1,13 @@
 <script>
-  const { message = 'Preparando tu pedido...', redirectingMessage = 'Redirigiendo a WhatsApp...' } = $props();
+  const {
+    message = 'Preparando tu pedido...',
+    redirectingMessage = 'Redirigiendo a WhatsApp...',
+    trackingId = null
+  } = $props();
+
+  const trackingUrl = $derived(
+    trackingId ? `${typeof window !== 'undefined' ? window.location.origin : ''}/track/${encodeURIComponent(trackingId)}` : null
+  );
 </script>
 
 <div class="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
@@ -23,9 +31,20 @@
     <p class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
       {message}
     </p>
-    <p class="text-sm text-gray-600">
+    <p class="text-sm text-gray-600 mb-3">
       {redirectingMessage}
     </p>
+    {#if trackingId && trackingUrl}
+      <p class="text-xs text-gray-500 mb-2">Código: <span class="font-mono font-semibold">{trackingId}</span></p>
+      <a
+        href={trackingUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-block text-sm text-emerald-600 hover:text-emerald-700 font-medium underline"
+      >
+        Ver estado del pedido →
+      </a>
+    {/if}
   </div>
 </div>
 
