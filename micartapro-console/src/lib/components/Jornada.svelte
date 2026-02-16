@@ -2,7 +2,7 @@
   import { onMount } from 'svelte'
   import { authState } from '../auth.svelte'
   import { getLatestMenuId, getKitchenOrdersFromProjection, type KitchenOrder } from '../menuUtils'
-  import { getActiveJourney, createJourney, closeJourney, getJourneyStats, type ActiveJourney, type JourneyStats } from '../journeyApi'
+  import { getActiveJourney, createJourney, closeJourney, getJourneyStats, type ActiveJourney, type JourneyStats, type PendingOrdersAction } from '../journeyApi'
   import JourneyStatsView from './JourneyStatsView.svelte'
   import { t as tStore } from '../useLanguage'
 
@@ -23,6 +23,7 @@
   let showCloseModal = $state(false)
   let closeInProgress = $state(false)
   let closeResult = $state<'idle' | 'success' | 'coming_soon'>('idle')
+  let pendingOrdersAction = $state<PendingOrdersAction | null>(null)
   let createJourneyInProgress = $state(false)
   let createJourneyError = $state<string | null>(null)
 
@@ -75,7 +76,7 @@
   })
 
   const dateLabel = $derived(formatDateDDMMYYYY(todayLocalDateString()))
-  const modalMessage = $derived((t.jornada?.closeModalMessage ?? 'Estás por cerrar la jornada del {date}. Las órdenes pendientes quedarán marcadas como no entregadas. ¿Deseas continuar?').replace('{date}', dateLabel))
+  const modalMessage = $derived((t.jornada?.closeModalMessage ?? 'Estás por cerrar la jornada del {date}. ¿Qué deseas hacer con las órdenes pendientes?').replace('{date}', dateLabel))
 
   async function load() {
     if (!userId || !session?.access_token) {
@@ -125,6 +126,7 @@
 
   function openCloseModal() {
     closeResult = 'idle'
+    pendingOrdersAction = null
     showCloseModal = true
   }
 
@@ -170,16 +172,17 @@
   }
 
   async function confirmCloseWorkday() {
-    if (!session?.access_token || !menuId) return
+    if (!session?.access_token || !menuId || pendingOrdersAction === null) return
     closeInProgress = true
     closeResult = 'idle'
     try {
-      await closeJourney(menuId, session.access_token)
+      await closeJourney(menuId, session.access_token, pendingOrdersAction)
       closeResult = 'success'
       await load()
       setTimeout(() => {
         showCloseModal = false
         closeResult = 'idle'
+        pendingOrdersAction = null
       }, 1500)
     } catch {
       closeResult = 'coming_soon'
@@ -349,12 +352,26 @@
       <h2 id="jornada-close-title" class="text-xl font-bold text-gray-900 mb-3">
         {t.jornada?.closeModalTitle ?? 'Cerrar Jornada'}
       </h2>
-      <p class="text-gray-600 text-sm mb-6">{modalMessage}</p>
+      <p class="text-gray-600 text-sm mb-4">{modalMessage}</p>
 
       {#if closeResult === 'success'}
         <p class="text-green-600 font-medium mb-4">{t.jornada?.success ?? 'Jornada Cerrada Correctamente.'}</p>
       {:else if closeResult === 'coming_soon'}
         <p class="text-amber-700 text-sm mb-4">{t.jornada?.comingSoon ?? 'El Cierre De Jornada Estará Disponible En Una Próxima Actualización.'}</p>
+      {:else}
+        <!-- SIEMPRE preguntar: dos opciones, nunca decidir automáticamente -->
+        <div class="space-y-2 mb-6">
+          <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors {pendingOrdersAction === 'cancel' ? 'border-gray-800 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}">
+            <input type="radio" name="pendingAction" value="cancel" bind:group={pendingOrdersAction} class="w-4 h-4 text-gray-800" />
+            <span class="font-medium">{t.jornada?.closeModalCancelPending ?? 'Cancelar órdenes pendientes'}</span>
+            <span class="text-xs text-gray-500">({t.jornada?.closeModalCancelPendingHint ?? 'estado cancelado'})</span>
+          </label>
+          <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors {pendingOrdersAction === 'keep' ? 'border-gray-800 bg-gray-50' : 'border-gray-200 hover:border-gray-300'}">
+            <input type="radio" name="pendingAction" value="keep" bind:group={pendingOrdersAction} class="w-4 h-4 text-gray-800" />
+            <span class="font-medium">{t.jornada?.closeModalKeepForNext ?? 'Mantener para próxima jornada'}</span>
+            <span class="text-xs text-gray-500">({t.jornada?.closeModalKeepForNextHint ?? 'estado inicial'})</span>
+          </label>
+        </div>
       {/if}
 
       <div class="flex gap-3 justify-end">
@@ -368,9 +385,9 @@
         </button>
         <button
           type="button"
-          disabled={closeInProgress}
+          disabled={closeInProgress || pendingOrdersAction === null}
           onclick={confirmCloseWorkday}
-          class="px-4 py-2 rounded-lg font-medium text-white bg-gray-800 hover:bg-gray-900 disabled:opacity-50"
+          class="px-4 py-2 rounded-lg font-medium text-white bg-gray-800 hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {closeInProgress ? (t.jornada?.closing ?? 'Cerrando...') : (t.jornada?.closeModalConfirm ?? 'Cerrar Jornada')}
         </button>

@@ -222,6 +222,10 @@ export interface Translations {
     closeModalTitle: string
     closeModalMessage: string
     closeModalCancel: string
+    closeModalCancelPending?: string
+    closeModalCancelPendingHint?: string
+    closeModalKeepForNext?: string
+    closeModalKeepForNextHint?: string
     closeModalConfirm: string
     closing: string
     success: string
@@ -485,8 +489,12 @@ export const translations: Record<Language, Translations> = {
       pending: 'Pendientes',
       closeWorkday: 'Cerrar Jornada',
       closeModalTitle: 'Cerrar Jornada',
-      closeModalMessage: 'Estás Por Cerrar La Jornada Del {date}. Las Órdenes Pendientes Quedarán Marcadas Como No Entregadas. ¿Deseas Continuar?',
+      closeModalMessage: 'Estás Por Cerrar La Jornada Del {date}. ¿Qué Deseas Hacer Con Las Órdenes Pendientes?',
       closeModalCancel: 'Cancelar',
+      closeModalCancelPending: 'Cancelar órdenes pendientes',
+      closeModalCancelPendingHint: 'estado cancelado',
+      closeModalKeepForNext: 'Mantener para próxima jornada',
+      closeModalKeepForNextHint: 'estado inicial',
       closeModalConfirm: 'Cerrar Jornada',
       closing: 'Cerrando...',
       success: 'Jornada Cerrada Correctamente.',
@@ -756,8 +764,12 @@ export const translations: Record<Language, Translations> = {
       pending: 'Pendentes',
       closeWorkday: 'Fechar Jornada',
       closeModalTitle: 'Fechar Jornada',
-      closeModalMessage: 'Você Está Prestes A Fechar A Jornada De {date}. Os Pedidos Pendentes Ficarão Marcados Como Não Entregues. Deseja Continuar?',
+      closeModalMessage: 'Você Está Prestes A Fechar A Jornada De {date}. O Que Deseja Fazer Com Os Pedidos Pendentes?',
       closeModalCancel: 'Cancelar',
+      closeModalCancelPending: 'Cancelar pedidos pendentes',
+      closeModalCancelPendingHint: 'estado cancelado',
+      closeModalKeepForNext: 'Manter para próxima jornada',
+      closeModalKeepForNextHint: 'estado inicial',
       closeModalConfirm: 'Fechar Jornada',
       closing: 'Fechando...',
       success: 'Jornada Fechada Com Sucesso.',
@@ -1010,8 +1022,12 @@ export const translations: Record<Language, Translations> = {
       pending: 'Pending',
       closeWorkday: 'Close Workday',
       closeModalTitle: 'Close Workday',
-      closeModalMessage: 'You Are About To Close The Workday Of {date}. Pending Orders Will Be Marked As Not Delivered. Do You Want To Continue?',
+      closeModalMessage: 'You Are About To Close The Workday Of {date}. What Do You Want To Do With Pending Orders?',
       closeModalCancel: 'Cancel',
+      closeModalCancelPending: 'Cancel pending orders',
+      closeModalCancelPendingHint: 'cancelled status',
+      closeModalKeepForNext: 'Keep for next journey',
+      closeModalKeepForNextHint: 'initial status',
       closeModalConfirm: 'Close Workday',
       closing: 'Closing...',
       success: 'Workday Closed Successfully.',

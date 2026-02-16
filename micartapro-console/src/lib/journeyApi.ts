@@ -168,18 +168,27 @@ export async function getJourneyStats(
   return res.json()
 }
 
+/** Acción con órdenes pendientes al cerrar jornada. SIEMPRE se debe elegir. */
+export type PendingOrdersAction = 'cancel' | 'keep'
+
 /**
  * Cierra la jornada activa (OPEN) del menú. Falla con 404 si no hay jornada abierta.
+ * Requiere pendingOrdersAction: 'cancel' = cancelar pendientes, 'keep' = mantener para próxima jornada.
  */
 export async function closeJourney(
   menuId: string,
-  accessToken: string
+  accessToken: string,
+  pendingOrdersAction: PendingOrdersAction
 ): Promise<void> {
   const res = await fetch(
     `${API_BASE_URL}/api/menus/${encodeURIComponent(menuId)}/journeys/close`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` }
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({ pendingOrdersAction })
     }
   )
   if (!res.ok) {

@@ -4,10 +4,12 @@ import (
 	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
 	"micartapro/app/adapter/out/storage"
 	"micartapro/app/adapter/out/supabaserepo"
+	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 	"micartapro/app/usecase/journey"
+	"micartapro/app/usecase/order"
 	"net/http"
 	"time"
 
@@ -15,6 +17,12 @@ import (
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
+
+// CloseJourneyRequest body para cerrar jornada. SIEMPRE se requiere elegir la acción con órdenes pendientes.
+type CloseJourneyRequest struct {
+	// PendingOrdersAction: "cancel" = cancelar órdenes pendientes; "keep" = mantener para próxima jornada
+	PendingOrdersAction string `json:"pendingOrdersAction"`
+}
 
 func init() {
 	ioc.Registry(
@@ -26,8 +34,10 @@ func init() {
 		supabaserepo.NewGetMenuIdByUserId,
 		supabaserepo.NewGetOrderItemsForJourney,
 		supabaserepo.NewGetJourneyStats,
+		supabaserepo.NewReleaseOrdersFromJourney,
 		storage.NewUploadJourneyReport,
 		supabaserepo.NewUpdateJourneyReportURL,
+		order.NewCancelOrder,
 		apimiddleware.NewJWTAuthMiddleware,
 	)
 }
@@ -40,12 +50,14 @@ func closeJourneyHandler(
 	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
 	getOrderItems supabaserepo.GetOrderItemsForJourney,
 	getJourneyStats supabaserepo.GetJourneyStats,
+	releaseOrders supabaserepo.ReleaseOrdersFromJourney,
 	uploadReport storage.UploadJourneyReport,
 	updateReportURL supabaserepo.UpdateJourneyReportURL,
+	cancelOrder order.CancelOrder,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 ) {
 	fuego.Post(s.Manager, "/api/menus/{menuId}/journeys/close",
-		func(c fuego.ContextNoBody) (struct{}, error) {
+		func(c fuego.ContextWithBody[CloseJourneyRequest]) (struct{}, error) {
 			ctx := c.Context()
 			spanCtx, span := obs.Tracer.Start(ctx, "closeJourney")
 			defer span.End()
@@ -55,6 +67,22 @@ func closeJourneyHandler(
 				return struct{}{}, fuego.HTTPError{
 					Title:  "menuId is required",
 					Detail: "menuId path parameter is required",
+					Status: http.StatusBadRequest,
+				}
+			}
+
+			body, err := c.Body()
+			if err != nil {
+				return struct{}{}, fuego.HTTPError{
+					Title:  "invalid body",
+					Detail: err.Error(),
+					Status: http.StatusBadRequest,
+				}
+			}
+			if body.PendingOrdersAction != "cancel" && body.PendingOrdersAction != "keep" {
+				return struct{}{}, fuego.HTTPError{
+					Title:  "pendingOrdersAction required",
+					Detail: "pendingOrdersAction must be 'cancel' or 'keep'",
 					Status: http.StatusBadRequest,
 				}
 			}
@@ -94,6 +122,46 @@ func closeJourneyHandler(
 				}
 			}
 
+			// Procesar órdenes pendientes según la acción elegida (SIEMPRE preguntar, nunca automático)
+			items, err := getOrderItems(spanCtx, active.ID)
+			if err != nil {
+				obs.Logger.WarnContext(spanCtx, "error getting order items for pending action", "error", err, "journeyID", active.ID)
+			}
+			pendingAggregateIDs := make(map[int64]bool)
+			for _, it := range items {
+				if it.Status == "PENDING" || it.Status == "IN_PROGRESS" || it.Status == "READY" {
+					pendingAggregateIDs[it.AggregateID] = true
+				}
+			}
+			if err == nil {
+				if body.PendingOrdersAction == "cancel" {
+					for aggID := range pendingAggregateIDs {
+						req := events.OrderCancelledRequest{
+							AggregateID: aggID,
+							Reason:      "Jornada cerrada",
+							UpdatedAt:   time.Now().UTC().Format(time.RFC3339Nano),
+						}
+						if err := cancelOrder(spanCtx, aggID, req); err != nil {
+							obs.Logger.ErrorContext(spanCtx, "error cancelling order on journey close", "error", err, "aggregateID", aggID)
+							return struct{}{}, fuego.HTTPError{
+								Title:  "error cancelling pending orders",
+								Detail: err.Error(),
+								Status: http.StatusInternalServerError,
+							}
+						}
+					}
+				} else {
+					if err := releaseOrders(spanCtx, active.ID); err != nil {
+						obs.Logger.ErrorContext(spanCtx, "error releasing orders from journey", "error", err, "journeyID", active.ID)
+						return struct{}{}, fuego.HTTPError{
+							Title:  "error releasing orders for next journey",
+							Detail: err.Error(),
+							Status: http.StatusInternalServerError,
+						}
+					}
+				}
+			}
+
 			// Snapshot de totales para la jornada (desde journey_product_stats)
 			var totalsSnapshot interface{}
 			if stats, err := getJourneyStats(spanCtx, active.ID); err == nil {
@@ -121,14 +189,15 @@ func closeJourneyHandler(
 				}
 			}
 
-			// Generar reporte XLSX al cerrar (snapshot de la jornada)
+			// Generar reporte XLSX al cerrar (snapshot de la jornada, usa items ya obtenidos)
 			closedAt := time.Now().UTC()
-			items, err := getOrderItems(spanCtx, active.ID)
-			if err != nil {
-				obs.Logger.WarnContext(spanCtx, "error getting order items for report", "error", err, "journeyID", active.ID)
-			} else {
+			if len(items) > 0 {
 				reportItems := make([]journey.ReportOrderItem, 0, len(items))
 				for _, it := range items {
+					status := it.Status
+					if body.PendingOrdersAction == "cancel" && pendingAggregateIDs[it.AggregateID] {
+						status = "CANCELLED"
+					}
 					reportItems = append(reportItems, journey.ReportOrderItem{
 						OrderNumber:   it.OrderNumber,
 						ItemName:      it.ItemName,
@@ -136,7 +205,7 @@ func closeJourneyHandler(
 						Unit:          it.Unit,
 						Station:       it.Station,
 						Fulfillment:   it.Fulfillment,
-						Status:        it.Status,
+						Status:        status,
 						RequestedTime: it.RequestedTime,
 						CreatedAt:     it.CreatedAt,
 						TotalPrice:    it.TotalPrice,
