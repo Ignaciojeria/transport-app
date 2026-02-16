@@ -1,6 +1,7 @@
 package events
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -149,14 +150,70 @@ type Side struct {
 }
 
 type MenuItem struct {
-	ID             string           `json:"id"`
-	Title          MultilingualText `json:"title"`
-	Description    MultilingualText `json:"description,omitempty"`
-	FoodAttributes []FoodAttribute  `json:"foodAttributes,omitempty"`
-	Sides          []Side           `json:"sides,omitempty"`
-	Pricing        Pricing          `json:"pricing"`
-	PhotoUrl       string           `json:"photoUrl,omitempty"`
-	Station        Station          `json:"station,omitempty"`
+	ID             string             `json:"id"`
+	Title          MultilingualText   `json:"title"`
+	Description    []MultilingualText `json:"description,omitempty"` // Array: cada elemento es una dimensión (ej. ingredientes, preparación, notas)
+	FoodAttributes []FoodAttribute    `json:"foodAttributes,omitempty"`
+	Sides          []Side             `json:"sides,omitempty"`
+	Pricing        Pricing            `json:"pricing"`
+	PhotoUrl       string             `json:"photoUrl,omitempty"`
+	Station        Station            `json:"station,omitempty"`
+}
+
+// GetDescriptionText une todos los elementos de Description en un solo texto para el idioma dado.
+func (m MenuItem) GetDescriptionText(lang string) string {
+	if len(m.Description) == 0 {
+		return ""
+	}
+	parts := make([]string, 0, len(m.Description))
+	for _, d := range m.Description {
+		t := d.GetText(lang)
+		if t != "" {
+			parts = append(parts, t)
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+type menuItemRaw struct {
+	ID             string            `json:"id"`
+	Title          MultilingualText  `json:"title"`
+	Description    json.RawMessage   `json:"description"`
+	FoodAttributes []FoodAttribute   `json:"foodAttributes,omitempty"`
+	Sides          []Side            `json:"sides,omitempty"`
+	Pricing        Pricing           `json:"pricing"`
+	PhotoUrl       string            `json:"photoUrl,omitempty"`
+	Station        Station           `json:"station,omitempty"`
+}
+
+// UnmarshalJSON acepta description como array o como objeto único (datos existentes en BD).
+func (m *MenuItem) UnmarshalJSON(data []byte) error {
+	var raw menuItemRaw
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	m.ID = raw.ID
+	m.Title = raw.Title
+	m.FoodAttributes = raw.FoodAttributes
+	m.Sides = raw.Sides
+	m.Pricing = raw.Pricing
+	m.PhotoUrl = raw.PhotoUrl
+	m.Station = raw.Station
+	if len(raw.Description) == 0 {
+		m.Description = nil
+		return nil
+	}
+	var arr []MultilingualText
+	if err := json.Unmarshal(raw.Description, &arr); err == nil {
+		m.Description = arr
+		return nil
+	}
+	var single MultilingualText
+	if err := json.Unmarshal(raw.Description, &single); err != nil {
+		return err
+	}
+	m.Description = []MultilingualText{single}
+	return nil
 }
 
 type MenuCategory struct {

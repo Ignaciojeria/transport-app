@@ -4,6 +4,7 @@
   import { getPriceFromPricing } from '../../services/menuData.js';
   import { getMultilingualText, getBaseText } from '../../lib/multilingual';
   import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
+  import MenuItemDescription from '../atoms/MenuItemDescription.svelte';
   import { t } from '../../lib/useLanguage';
   
   const { item } = $props();
@@ -17,7 +18,6 @@
   
   // Obtener textos multiidioma
   const itemTitle = $derived(getMultilingualText(item.title));
-  const itemDescription = $derived(getMultilingualText(item.description));
   const itemTitleBase = $derived(getBaseText(item.title));
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
@@ -202,9 +202,7 @@
     <h3 class="chef-card-title">{itemTitle}</h3>
     
     <!-- Descripción -->
-    {#if itemDescription}
-      <p class="chef-card-description">{itemDescription}</p>
-    {/if}
+    <MenuItemDescription description={item.description} className="chef-card-description" />
     
     <!-- Información de alérgenos -->
     {#if allergens().length > 0}

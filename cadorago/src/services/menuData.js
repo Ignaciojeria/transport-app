@@ -126,7 +126,7 @@ export function adaptMenuData(menuData) {
     items: (category.items || []).map(item => ({
       id: item.id ?? '',
       title: item.title ?? '', // Preservar estructura multiidioma o string tal cual viene
-      description: item.description ?? '', // Preservar estructura multiidioma o string tal cual viene
+      description: item.description ?? [],
       foodAttributes: item.foodAttributes ?? [], // Preservar atributos alimentarios
       price: getPriceFromPricing(item.pricing),
       pricing: item.pricing, // Mantener el pricing original para uso futuro
@@ -184,7 +184,7 @@ export const DEFAULT_TEST_MENU = {
       "items": [
         {
           "title": "Pizza Margherita",
-          "description": "Tomate, mozzarella y albahaca fresca",
+          "description": [{ "base": "Tomate, mozzarella y albahaca fresca", "languages": {} }],
           "pricing": {
             "mode": "UNIT",
             "unit": "EACH",
@@ -214,7 +214,7 @@ export const DEFAULT_TEST_MENU = {
         },
         {
           "title": "Pizza Pepperoni",
-          "description": "Pepperoni, queso mozzarella y orégano",
+          "description": [{ "base": "Pepperoni, queso mozzarella y orégano", "languages": {} }],
           "pricing": {
             "mode": "UNIT",
             "unit": "EACH",
@@ -229,7 +229,7 @@ export const DEFAULT_TEST_MENU = {
       "items": [
         {
           "title": "Coca Cola",
-          "description": "Refresco de cola 500ml",
+          "description": [{ "base": "Refresco de cola 500ml", "languages": {} }],
           "pricing": {
             "mode": "UNIT",
             "unit": "EACH",
@@ -264,7 +264,7 @@ export const DEFAULT_TEST_MENU = {
       "items": [
         {
           "title": "Palta Hass",
-          "description": "Palta Hass fresca, venta por kilos",
+          "description": [{ "base": "Palta Hass fresca, venta por kilos", "languages": {} }],
           "pricing": {
             "mode": "WEIGHT",
             "unit": "KILOGRAM",

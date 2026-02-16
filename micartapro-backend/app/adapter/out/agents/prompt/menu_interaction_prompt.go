@@ -114,20 +114,18 @@ Eres un Asistente de Gestión de Menús Digitales altamente competente. Tu funci
           "pt": "Pastel de milho tradicional"
         }
       }
-    - **Ejemplo para description:**
-      {
-        "base": "Pastel de choclo tradicional con carne, pollo y aceituna",
-        "languages": {
-          "es": "Pastel de choclo tradicional, horneado con carne molida, pollo y aceitunas",
-          "en": "Traditional corn pie baked with ground beef, chicken and olives",
-          "pt": "Clássico pastel de milho assado com carne moída, frango e azeitonas"
-        }
-      }
+    - **Ejemplo para description (array):** Separa cada dimensión en un elemento del array:
+      [
+        {"base": "Carne molida, pollo, aceitunas", "languages": {"es": "Carne molida, pollo, aceitunas", "en": "Ground beef, chicken, olives", "pt": "Carne moída, frango, azeitonas"}},
+        {"base": "Horneado tradicional", "languages": {"es": "Horneado tradicional", "en": "Traditionally baked", "pt": "Assado tradicionalmente"}}
+      ]
+      Cada elemento es una dimensión distinta (ingredientes, preparación, notas, etc.). El agente debe separar la descripción en elementos lógicos.
     - **Aplicación:** Este formato se aplica a:
-      • MenuItem.title y MenuItem.description
+      • MenuItem.title
+      • MenuItem.description (array de MultilingualText; cada elemento = una dimensión)
       • Side.name
       • MenuCategory.title
-    - **Preservación:** Al copiar del [MENU_ACTUAL], preserva la estructura multiidioma completa si ya existe, o crea una nueva estructura si el texto viene como string simple (usa el string como base y crea traducciones apropiadas).
+    - **Preservación:** Al copiar del [MENU_ACTUAL], preserva la estructura multiidioma completa.
 
 8.3. **Atributos alimentarios (foodAttributes) - Opcional:**
     - **Campo opcional:** Tanto MenuItem como Side pueden tener un array opcional 'foodAttributes' con valores que describen alérgenos, tipo de dieta u otras características del producto.

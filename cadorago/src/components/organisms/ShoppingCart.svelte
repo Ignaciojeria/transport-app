@@ -6,6 +6,8 @@
   import { t, language } from '../../lib/useLanguage';
   import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
   import { getPriceFromPricing } from '../../services/menuData.js';
+  import { getMultilingualText, getBaseText } from '../../lib/multilingual';
+  import MenuItemDescription from '../atoms/MenuItemDescription.svelte';
   
   const { className = '' } = $props();
   
@@ -37,13 +39,14 @@
   
   let showClearConfirm = $state(false);
   
-  function handleQuantityChange(title, event) {
+  function handleQuantityChange(item, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
-    cartStore.updateQuantity(title, quantity);
+    const key = item.acompanamientoId ? `${getBaseText(item.title)}_${item.acompanamientoId}` : getBaseText(item.title);
+    cartStore.updateQuantity(key, quantity);
   }
   
-  function handleRemoveItem(title) {
-    cartStore.removeItem(title);
+  function handleRemoveItem(item) {
+    cartStore.removeItem(item.title);
   }
   
   function handleSendOrder() {
@@ -99,20 +102,17 @@
   {:else}
     <div class="space-y-4 sm:space-y-5 lg:space-y-6 mb-6 sm:mb-8">
       {#each items as cartItem}
+        {@const itemKey = cartItem.acompanamientoId ? `${getBaseText(cartItem.title)}_${cartItem.acompanamientoId}` : getBaseText(cartItem.title)}
         <div class="bg-gray-50 rounded-lg p-4 sm:p-5 lg:p-6 border border-gray-200">
           <div class="flex justify-between items-start gap-4 mb-3">
             <div class="flex-1">
               <h3 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 mb-1">
-                {cartItem.title}
+                {getMultilingualText(cartItem.title)}
               </h3>
-              {#if cartItem.description}
-                <p class="text-sm sm:text-base text-gray-600">
-                  {cartItem.description}
-                </p>
-              {/if}
+              <MenuItemDescription description={cartItem.description} className="text-sm sm:text-base text-gray-600" />
             </div>
             <button
-              onclick={() => handleRemoveItem(cartItem.title)}
+              onclick={() => handleRemoveItem(cartItem)}
               class="text-red-600 hover:text-red-800 text-xl font-bold"
               aria-label="Eliminar item"
             >
@@ -122,15 +122,15 @@
           
           <div class="flex justify-between items-center">
             <div class="flex items-center gap-3 sm:gap-4">
-              <label for="quantity-{cartItem.title}" class="text-sm sm:text-base text-gray-700 font-medium">
+              <label for="quantity-{itemKey}" class="text-sm sm:text-base text-gray-700 font-medium">
                 {$t.cart.quantity}
               </label>
               <input
-                id="quantity-{cartItem.title}"
+                id="quantity-{itemKey}"
                 type="number"
                 min="1"
                 value={cartItem.cantidad}
-                oninput={(e) => handleQuantityChange(cartItem.title, e)}
+                oninput={(e) => handleQuantityChange(cartItem, e)}
                 class="w-16 sm:w-20 px-2 py-1 border border-gray-300 rounded text-center text-sm sm:text-base"
               />
             </div>

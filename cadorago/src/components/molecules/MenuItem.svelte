@@ -10,7 +10,7 @@
   const { 
     item = {
       title: '',
-      description: '',
+      description: [],
       price: 0,
       sides: null
     },
@@ -349,11 +349,7 @@
       <h3 id="quantity-modal-title" class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
         {getMultilingualText(item.title)}
       </h3>
-      {#if getMultilingualText(item.description)}
-        <p class="text-sm text-gray-600 mb-4 sm:mb-6">
-          {getMultilingualText(item.description)}
-        </p>
-      {/if}
+      <MenuItemDescription description={item.description} className="text-sm text-gray-600 mb-4 sm:mb-6" />
       
       {#if item.pricing}
         {@const limits = getPricingLimits(item.pricing)}
@@ -411,11 +407,7 @@
           <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
             {getMultilingualText(item.title)}
           </h4>
-          {#if getMultilingualText(item.description)}
-            <p class="text-sm sm:text-base text-gray-600">
-              {getMultilingualText(item.description)}
-            </p>
-          {/if}
+          <MenuItemDescription description={item.description} className="text-sm sm:text-base text-gray-600" />
         </div>
         
         <!-- Lista de acompañamientos -->

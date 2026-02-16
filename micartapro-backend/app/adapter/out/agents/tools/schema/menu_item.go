@@ -32,24 +32,27 @@ func GetMenuItemSchema() *genai.Schema {
 				Required: []string{"base", "languages"},
 			},
 			"description": {
-				Type:        genai.TypeObject,
-				Description: "Descripción del producto en formato multiidioma con base y traducciones. Opcional.",
-				Properties: map[string]*genai.Schema{
-					"base": {
-						Type:        genai.TypeString,
-						Description: "Texto base de la descripción (idioma principal, generalmente español).",
-					},
-					"languages": {
-						Type:        genai.TypeObject,
-						Description: "Traducciones de la descripción en diferentes idiomas.",
-						Properties: map[string]*genai.Schema{
-							"es": {Type: genai.TypeString, Description: "Descripción en español."},
-							"en": {Type: genai.TypeString, Description: "Descripción en inglés."},
-							"pt": {Type: genai.TypeString, Description: "Descripción en portugués."},
+				Type: genai.TypeArray,
+				Items: &genai.Schema{
+					Type: genai.TypeObject,
+					Properties: map[string]*genai.Schema{
+						"base": {
+							Type:        genai.TypeString,
+							Description: "Texto base de este elemento (idioma principal, generalmente español).",
+						},
+						"languages": {
+							Type:        genai.TypeObject,
+							Description: "Traducciones de este elemento en diferentes idiomas.",
+							Properties: map[string]*genai.Schema{
+								"es": {Type: genai.TypeString, Description: "Texto en español."},
+								"en": {Type: genai.TypeString, Description: "Texto en inglés."},
+								"pt": {Type: genai.TypeString, Description: "Texto en portugués."},
+							},
 						},
 					},
+					Required: []string{"base", "languages"},
 				},
-				Required: []string{"base", "languages"},
+				Description: "Array de descripciones: separa cada dimensión en un elemento (ej. [ingredientes, preparación, notas]). Cada elemento en formato multiidioma. Opcional.",
 			},
 			"foodAttributes": {
 				Type: genai.TypeArray,

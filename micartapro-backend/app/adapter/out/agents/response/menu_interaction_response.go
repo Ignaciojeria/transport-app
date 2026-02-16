@@ -56,8 +56,11 @@ func MenuInteractionResponse() *genai.Schema {
 	menuItemSchema := &genai.Schema{
 		Type: genai.TypeObject,
 		Properties: map[string]*genai.Schema{
-			"title":       {Type: genai.TypeString},
-			"description": {Type: genai.TypeString},
+			"title": {Type: genai.TypeString},
+			"description": {
+				Type:  genai.TypeArray,
+				Items: &genai.Schema{Type: genai.TypeString},
+			},
 			"sides": {
 				Type:  genai.TypeArray,
 				Items: sideSchema,

@@ -10,6 +10,7 @@
   import { geocodeAddress, autocompleteAddress, getStaticMapUrl } from '../../services/locationIQ.js';
   import { getSlugFromUrl, getUrlParams } from '../../services/restaurantData.js';
   import { getBaseText, getMultilingualText } from '../../lib/multilingual';
+  import MenuItemDescription from '../atoms/MenuItemDescription.svelte';
   import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
   
   const restaurantData = $derived(restaurantDataStore.value);
@@ -704,11 +705,7 @@
                         <span class="text-sm font-normal text-gray-600">({cartItem.acompanamiento})</span>
                       {/if}
                     </h3>
-                    {#if getMultilingualText(cartItem.description)}
-                      <p class="text-xs sm:text-sm text-gray-600">
-                        {getMultilingualText(cartItem.description)}
-                      </p>
-                    {/if}
+                    <MenuItemDescription description={cartItem.description} className="text-xs sm:text-sm text-gray-600" />
                   </div>
                   <button
                     onclick={() => handleRemoveItem(cartItem)}
