@@ -65,7 +65,7 @@
           if (statuses.includes('CANCELLED') && statuses.length === 1) statusLabel = 'Cancelado';
           else if (statuses.includes('DELIVERED')) statusLabel = 'Entregado';
           else if (statuses.includes('DISPATCHED')) statusLabel = 'En camino';
-          else if (statuses.includes('READY')) statusLabel = o?.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para retirar';
+          else if (statuses.includes('READY')) statusLabel = o?.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para entregar';
           else if (statuses.includes('IN_PROGRESS')) statusLabel = 'En preparación';
           return { id, orderNumber: o?.orderNumber ?? id, statusLabel, menuId: o?.menuId };
         } catch {
@@ -144,7 +144,7 @@
   function openWhatsAppContact() {
     if (!businessWhatsapp || !order) return;
     const total = order.items?.reduce((s, i) => s + (i.totalPrice || 0), 0) ?? 0;
-    const statusLabel = overallStatus === 'PENDING' ? 'Pedido confirmado' : overallStatus === 'IN_PROGRESS' ? 'En preparación' : overallStatus === 'READY' ? (order.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para retirar') : overallStatus === 'DISPATCHED' ? 'En camino' : overallStatus === 'DELIVERED' ? 'Entregado' : overallStatus === 'CANCELLED' ? 'Cancelado' : 'Consultar';
+    const statusLabel = overallStatus === 'PENDING' ? 'Pedido confirmado' : overallStatus === 'IN_PROGRESS' ? 'En preparación' : overallStatus === 'READY' ? (order.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para entregar') : overallStatus === 'DISPATCHED' ? 'En camino' : overallStatus === 'DELIVERED' ? 'Entregado' : overallStatus === 'CANCELLED' ? 'Cancelado' : 'Consultar';
     const lines = [
       'Hola, tengo una consulta sobre mi pedido:',
       '',
@@ -188,7 +188,7 @@
     return [
       { key: 'received', label: 'Pedido recibido', status: 'done' },
       { key: 'preparing', label: 'En preparación', status: s === 'PENDING' || s === 'IN_PROGRESS' ? 'current' : 'done' },
-      { key: 'ready', label: isDelivery ? 'En camino' : 'Listo para retirar', status: s === 'READY' || s === 'DISPATCHED' ? 'current' : s === 'DELIVERED' ? 'done' : 'pending' },
+      { key: 'ready', label: isDelivery ? 'En camino' : 'Listo para entregar', status: s === 'READY' || s === 'DISPATCHED' ? 'current' : s === 'DELIVERED' ? 'done' : 'pending' },
       { key: 'delivered', label: 'Entregado', status: s === 'DELIVERED' ? 'done' : 'pending' },
     ];
   });
@@ -303,7 +303,7 @@
           <h1 class="text-2xl font-bold text-slate-900">Pedido #{order.orderNumber}</h1>
           <p class="text-slate-600 mt-1">{order.fulfillment === 'DELIVERY' ? 'Envío a domicilio' : 'Retiro en local'}</p>
           <p class="text-base font-semibold mt-2 {overallStatus === 'PENDING' ? 'text-slate-500' : overallStatus === 'IN_PROGRESS' ? 'text-blue-600' : overallStatus === 'READY' || overallStatus === 'DISPATCHED' ? 'text-emerald-600' : overallStatus === 'DELIVERED' ? 'text-slate-800' : 'text-slate-600'}">
-            {overallStatus === 'PENDING' ? 'Pedido confirmado' : overallStatus === 'IN_PROGRESS' ? 'En preparación' : overallStatus === 'READY' ? 'Listo para retirar' : overallStatus === 'DISPATCHED' ? 'En camino' : overallStatus === 'DELIVERED' ? 'Entregado' : overallStatus === 'CANCELLED' ? 'Cancelado' : ''}
+            {overallStatus === 'PENDING' ? 'Pedido confirmado' : overallStatus === 'IN_PROGRESS' ? 'En preparación' : overallStatus === 'READY' ? (order.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para entregar') : overallStatus === 'DISPATCHED' ? 'En camino' : overallStatus === 'DELIVERED' ? 'Entregado' : overallStatus === 'CANCELLED' ? 'Cancelado' : ''}
           </p>
         </div>
 
