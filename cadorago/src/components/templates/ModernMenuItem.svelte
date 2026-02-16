@@ -291,9 +291,7 @@
 
       <div class="acompanamiento-sheet-item-info">
         <h4 class="acompanamiento-sheet-item-title">{itemTitle}</h4>
-        {#if itemDescription}
-          <p class="acompanamiento-sheet-item-desc">{itemDescription}</p>
-        {/if}
+        <MenuItemDescription description={item.description} className="acompanamiento-sheet-item-desc" />
       </div>
 
       <div class="acompanamiento-sheet-options">
