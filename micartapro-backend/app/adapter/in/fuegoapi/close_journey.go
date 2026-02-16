@@ -31,7 +31,7 @@ func init() {
 		observability.NewObservability,
 		supabaserepo.NewGetActiveJourneyByMenuID,
 		supabaserepo.NewCloseJourney,
-		supabaserepo.NewGetMenuIdByUserId,
+		supabaserepo.NewUserHasMenu,
 		supabaserepo.NewGetOrderItemsForJourney,
 		supabaserepo.NewGetJourneyStats,
 		supabaserepo.NewReleaseOrdersFromJourney,
@@ -47,7 +47,7 @@ func closeJourneyHandler(
 	obs observability.Observability,
 	getActiveJourney supabaserepo.GetActiveJourneyByMenuID,
 	closeJourney supabaserepo.CloseJourney,
-	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
+	userHasMenu supabaserepo.UserHasMenu,
 	getOrderItems supabaserepo.GetOrderItemsForJourney,
 	getJourneyStats supabaserepo.GetJourneyStats,
 	releaseOrders supabaserepo.ReleaseOrdersFromJourney,
@@ -96,8 +96,8 @@ func closeJourneyHandler(
 				}
 			}
 
-			userMenuID, err := getMenuIdByUserId(spanCtx, userID)
-			if err != nil || userMenuID != menuID {
+			hasMenu, err := userHasMenu(spanCtx, userID, menuID)
+			if err != nil || !hasMenu {
 				return struct{}{}, fuego.HTTPError{
 					Title:  "menu not found",
 					Detail: "menu not found or you do not own it",

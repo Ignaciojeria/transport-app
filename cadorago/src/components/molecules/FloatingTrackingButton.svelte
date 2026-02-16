@@ -1,19 +1,30 @@
 <script>
   import { trackingStore } from '../../stores/trackingStore.svelte.js';
   import { itemsStore } from '../../stores/cartStore.svelte.js';
+  import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
+  import { getSlugFromUrl } from '../../services/restaurantData.js';
   import { t } from '../../lib/useLanguage';
 
+  const currentMenuId = $derived(
+    restaurantDataStore.value?.id || (getSlugFromUrl()?.isMenuId ? getSlugFromUrl()?.value : null)
+  );
   const allTrackings = $derived(Array.isArray($trackingStore) ? $trackingStore : []);
-  /** Solo pedidos activos (no entregados): el botón solo aparece cuando hay pedidos en curso */
-  const activeTrackings = $derived(allTrackings.filter((t) => !(typeof t === 'object' && t?.isDelivered === true)));
+  /** Filtrar por menuId del menú actual; si no hay menuId, mostrar todos (compatibilidad) */
+  const trackingsForMenu = $derived(
+    currentMenuId
+      ? allTrackings.filter((e) => (typeof e === 'object' ? e?.menuId : null) === currentMenuId)
+      : allTrackings
+  );
+  /** Solo pedidos activos (no entregados) del menú actual */
+  const activeTrackings = $derived(trackingsForMenu.filter((e) => !(typeof e === 'object' && e?.isDelivered === true)));
   const hasCartItems = $derived(Array.isArray($itemsStore) && $itemsStore.length > 0);
-  /** Ocultar cuando hay ítems en el carrito o cuando no hay pedidos activos */
   const showButton = $derived(activeTrackings.length > 0 && !hasCartItems);
 
   const firstId = $derived(activeTrackings[0] ? (typeof activeTrackings[0] === 'string' ? activeTrackings[0] : activeTrackings[0]?.id) : '');
   const isSingle = $derived(activeTrackings.length === 1);
   const buttonText = $derived(isSingle ? $t.cart.viewYourOrder : $t.cart.viewYourOrders);
-  const buttonHref = $derived(isSingle && firstId ? `/track/${encodeURIComponent(firstId)}` : '/track');
+  const menuQuery = $derived(currentMenuId ? `?m=${encodeURIComponent(currentMenuId)}` : '');
+  const buttonHref = $derived(isSingle && firstId ? `/track/${encodeURIComponent(firstId)}${menuQuery}` : `/track${menuQuery}`);
 </script>
 
 {#if showButton}

@@ -568,7 +568,8 @@
     }
     
     lastTrackingId = orderResult.trackingId || null;
-    trackingStore.addTracking(orderResult.trackingId || '', new Date().toISOString());
+    const menuId = getMenuId();
+    trackingStore.addTracking(orderResult.trackingId || '', new Date().toISOString(), menuId);
 
     // Limpiar carrito y formulario antes de redirigir
     cartStore.clear();
@@ -585,8 +586,9 @@
     selectedAddress = null;
     isExpanded = false;
 
-    // Redirigir a la vista de tracking (el usuario puede contactar por WhatsApp desde ahí)
-    window.location.href = `/track/${encodeURIComponent(orderResult.trackingId || '')}`;
+    // Redirigir a la vista de tracking (con menuId para filtrar por menú)
+    const m = menuId ? `?m=${encodeURIComponent(menuId)}` : '';
+    window.location.href = `/track/${encodeURIComponent(orderResult.trackingId || '')}${m}`;
   }
   
   function handleClearCart() {

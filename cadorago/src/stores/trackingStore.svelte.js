@@ -10,11 +10,12 @@ const MAX_TRACKINGS = 20; // Límite para no llenar localStorage
 
 function normalizeEntry(entry) {
   if (typeof entry === 'string' && entry.trim()) {
-    return { id: entry.trim(), createdAt: null, isDelivered: false };
+    return { id: entry.trim(), menuId: null, createdAt: null, isDelivered: false };
   }
   if (entry && typeof entry === 'object' && entry.id) {
     return {
       id: String(entry.id).trim(),
+      menuId: entry.menuId || null,
       createdAt: entry.createdAt || null,
       isDelivered: entry.isDelivered === true,
     };
@@ -66,12 +67,17 @@ function createTrackingStore() {
   const w = writable(loadFromStorage());
   const { subscribe, set } = w;
 
-  function addTracking(trackingId, createdAt = null) {
+  function addTracking(trackingId, createdAt = null, menuId = null) {
     const id = (trackingId && typeof trackingId === 'string' ? trackingId : String(trackingId || '')).trim();
     if (!id) return;
     const current = get(w) || [];
     const filtered = current.filter((x) => (typeof x === 'string' ? x : x.id) !== id);
-    const entry = { id, createdAt: createdAt || (typeof trackingId === 'object' && trackingId?.createdAt) || null, isDelivered: false };
+    const entry = {
+      id,
+      menuId: menuId || (typeof trackingId === 'object' && trackingId?.menuId) || null,
+      createdAt: createdAt || (typeof trackingId === 'object' && trackingId?.createdAt) || null,
+      isDelivered: false,
+    };
     const next = [entry, ...filtered.map((x) => (typeof x === 'object' ? x : normalizeEntry(x)))].slice(0, MAX_TRACKINGS);
     set(next);
     saveToStorage(next);
@@ -82,7 +88,8 @@ function createTrackingStore() {
     const next = current.map((e) => {
       const eid = typeof e === 'string' ? e : e.id;
       if (eid !== trackingId) return typeof e === 'object' ? e : normalizeEntry(e);
-      return { ...(typeof e === 'object' ? e : { id: e, createdAt: null }), ...updates };
+      const base = typeof e === 'object' ? e : { id: e, menuId: null, createdAt: null };
+      return { ...base, ...updates };
     });
     set(next);
     saveToStorage(next);
@@ -95,12 +102,21 @@ function createTrackingStore() {
     saveToStorage(next);
   }
 
+  /** Obtiene trackings opcionalmente filtrados por menuId */
+  function getTrackings(menuId = null) {
+    const list = get(w) || [];
+    const normalized = list.map((x) => (typeof x === 'object' ? x : normalizeEntry(x)));
+    if (!menuId) return normalized;
+    return normalized.filter((e) => e.menuId === menuId);
+  }
+
   return {
     subscribe,
     addTracking,
     setTracking: addTracking,
     updateTracking,
     removeTracking,
+    getTrackings,
     clear: () => {
       set([]);
       saveToStorage([]);

@@ -62,7 +62,7 @@
         <span>📍</span>
         <span>Santiago, Chile</span>
       </div>
-      <a href="/track" class="flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 transition-colors">
+      <a href={restaurantData?.id ? `/track?m=${encodeURIComponent(restaurantData.id)}` : '/track'} class="flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 transition-colors">
         <span>📦</span>
         <span>Seguimiento de pedido</span>
       </a>

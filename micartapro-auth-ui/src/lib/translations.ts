@@ -37,6 +37,12 @@ export interface Translations {
     noSession: string
     error: string
     secureConnection: string
+    slugLabel?: string
+    slugPlaceholder?: string
+    slugHint?: string
+    create?: string
+    creating?: string
+    chooseSlug?: string
   }
   
   // Error Messages
@@ -92,7 +98,13 @@ export const translations: Record<Language, Translations> = {
       welcome: 'Welcome {email}! Redirecting...',
       noSession: 'No session found. Redirecting...',
       error: 'Error: {message}',
-      secureConnection: 'Connecting securely • SSL/TLS Encrypted'
+      secureConnection: 'Connecting securely • SSL/TLS Encrypted',
+      chooseSlug: 'Choose your menu identifier',
+      slugLabel: 'Menu identifier (slug)',
+      slugPlaceholder: 'e.g. my-restaurant',
+      slugHint: 'Lowercase letters, numbers and hyphens only. Will be your menu URL.',
+      create: 'Create',
+      creating: 'Creating...'
     },
     errors: {
       popupBlocked: 'Popup window blocked. Please allow popups.',
@@ -132,7 +144,13 @@ export const translations: Record<Language, Translations> = {
       welcome: '¡Bienvenido {email}! Redirigiendo...',
       noSession: 'No se encontró sesión. Redirigiendo...',
       error: 'Error: {message}',
-      secureConnection: 'Conectando de forma segura • SSL/TLS Encriptado'
+      secureConnection: 'Conectando de forma segura • SSL/TLS Encriptado',
+      chooseSlug: 'Elige el identificador de tu menú',
+      slugLabel: 'Identificador del menú (slug)',
+      slugPlaceholder: 'ej: mi-restaurante',
+      slugHint: 'Solo letras minúsculas, números y guiones. Será la URL de tu carta.',
+      create: 'Crear',
+      creating: 'Creando...'
     },
     errors: {
       popupBlocked: 'Ventana emergente bloqueada. Por favor, permite ventanas emergentes.',
@@ -172,7 +190,13 @@ export const translations: Record<Language, Translations> = {
       welcome: 'Bem-vindo {email}! Redirecionando...',
       noSession: 'Nenhuma sessão encontrada. Redirecionando...',
       error: 'Erro: {message}',
-      secureConnection: 'Conectando com segurança • SSL/TLS Criptografado'
+      secureConnection: 'Conectando com segurança • SSL/TLS Criptografado',
+      chooseSlug: 'Escolha o identificador do seu cardápio',
+      slugLabel: 'Identificador do cardápio (slug)',
+      slugPlaceholder: 'ex: meu-restaurante',
+      slugHint: 'Apenas letras minúsculas, números e hífens. Será a URL do seu cardápio.',
+      create: 'Criar',
+      creating: 'Criando...'
     },
     errors: {
       popupBlocked: 'Janela popup bloqueada. Por favor, permita popups.',

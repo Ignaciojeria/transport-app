@@ -97,6 +97,7 @@ export interface Translations {
   
   // Sidebar.svelte
   sidebar: {
+    negocios?: string
     aiAssistant: string
     history: string
     gallery: string
@@ -263,23 +264,25 @@ export interface Translations {
     page?: string
     back?: string
     workdayReport?: string
-    duration?: string
-    itemsSold?: string
-    itemsOrdered?: string
-    downloadCSV?: string
-    productsTable?: string
-    productName?: string
-    quantity?: string
-    revenue?: string
-    cost?: string
-    margin?: string
-    profit?: string
-    marginPercent?: string
-    totalCost?: string
-    totalProfit?: string
-    noCostConfigured?: string
-    totalMargin?: string
-    topProduct?: string
+  }
+  negocios?: {
+    title: string
+    subtitle: string
+    createNew: string
+    creating: string
+    yourBusinesses: string
+    noBusinesses: string
+    business: string
+    active: string
+    select: string
+    errorLoading: string
+    errorCreating: string
+    slugLabel?: string
+    slugPlaceholder?: string
+    slugHint?: string
+    create?: string
+    cancel?: string
+    newMenuTitle?: string
   }
 }
 
@@ -377,6 +380,7 @@ export const translations: Record<Language, Translations> = {
       reload: 'Recargar'
     },
     sidebar: {
+      negocios: 'Negocios',
       aiAssistant: 'Asistente IA',
       history: 'Historial',
       gallery: 'Galería',
@@ -548,6 +552,25 @@ export const translations: Record<Language, Translations> = {
       noCostConfigured: 'Configura costos en Cost para ver el margen',
       totalMargin: 'Margen',
       topProduct: 'Producto más vendido'
+    },
+    negocios: {
+      title: 'Negocios',
+      subtitle: 'Selecciona tu negocio activo o crea uno nuevo para trabajar.',
+      createNew: 'Crear nuevo menú',
+      creating: 'Creando...',
+      yourBusinesses: 'Tus negocios',
+      noBusinesses: 'Aún no tienes negocios. Crea uno arriba.',
+      business: 'Negocio',
+      active: 'Activo',
+      select: 'Seleccionar',
+      errorLoading: 'Error al cargar los negocios.',
+      errorCreating: 'Error al crear el nuevo menú.',
+      slugLabel: 'Identificador de tu negocio (slug)',
+      slugPlaceholder: 'ej: mi-restaurante',
+      slugHint: 'Solo letras minúsculas, números y guiones. Será la URL de tu carta.',
+      create: 'Crear',
+      cancel: 'Cancelar',
+      newMenuTitle: 'Nuevo negocio'
     }
   },
   PT: {
@@ -652,6 +675,7 @@ export const translations: Record<Language, Translations> = {
       reload: 'Recarregar'
     },
     sidebar: {
+      negocios: 'Negócios',
       aiAssistant: 'Assistente IA',
       history: 'Histórico',
       gallery: 'Galeria',
@@ -815,6 +839,25 @@ export const translations: Record<Language, Translations> = {
       noCostConfigured: 'Configure custos em Cost para ver a margem',
       totalMargin: 'Margem',
       topProduct: 'Produto mais vendido'
+    },
+    negocios: {
+      title: 'Negócios',
+      subtitle: 'Selecione seu negócio ativo ou crie um novo para trabalhar.',
+      createNew: 'Criar novo cardápio',
+      creating: 'Criando...',
+      yourBusinesses: 'Seus negócios',
+      noBusinesses: 'Você ainda não tem negócios. Crie um acima.',
+      business: 'Negócio',
+      active: 'Ativo',
+      select: 'Selecionar',
+      errorLoading: 'Erro ao carregar os negócios.',
+      errorCreating: 'Erro ao criar o novo cardápio.',
+      slugLabel: 'Identificador do seu negócio (slug)',
+      slugPlaceholder: 'ex: meu-restaurante',
+      slugHint: 'Apenas letras minúsculas, números e hífens. Será a URL da sua carta.',
+      create: 'Criar',
+      cancel: 'Cancelar',
+      newMenuTitle: 'Novo negócio'
     }
   },
   EN: {
@@ -910,6 +953,7 @@ export const translations: Record<Language, Translations> = {
       reload: 'Reload'
     },
     sidebar: {
+      negocios: 'Businesses',
       aiAssistant: 'AI Assistant',
       history: 'History',
       gallery: 'Gallery',
@@ -1082,6 +1126,25 @@ export const translations: Record<Language, Translations> = {
       noCostConfigured: 'Configure costs in Cost to see margin',
       totalMargin: 'Margin',
       topProduct: 'Top product'
+    },
+    negocios: {
+      title: 'Businesses',
+      subtitle: 'Select your active business or create a new one to work on.',
+      createNew: 'Create new menu',
+      creating: 'Creating...',
+      yourBusinesses: 'Your businesses',
+      noBusinesses: "You don't have any businesses yet. Create one above.",
+      business: 'Business',
+      active: 'Active',
+      select: 'Select',
+      errorLoading: 'Error loading businesses.',
+      errorCreating: 'Error creating new menu.',
+      slugLabel: 'Business identifier (slug)',
+      slugPlaceholder: 'e.g. my-restaurant',
+      slugHint: 'Lowercase letters, numbers and hyphens only. Will be your menu URL.',
+      create: 'Create',
+      cancel: 'Cancel',
+      newMenuTitle: 'New business'
     }
   }
 }

@@ -40,7 +40,7 @@ func init() {
 		httpserver.New,
 		observability.NewObservability,
 		supabaserepo.NewGetPendingOrders,
-		supabaserepo.NewGetMenuIdByUserId,
+		supabaserepo.NewGetUserMenuIds,
 		apimiddleware.NewJWTAuthMiddleware,
 	)
 }
@@ -49,7 +49,7 @@ func listPendingOrdersHandler(
 	s httpserver.Server,
 	obs observability.Observability,
 	getPendingOrders supabaserepo.GetPendingOrders,
-	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
+	getUserMenuIds supabaserepo.GetUserMenuIds,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 ) {
 	fuego.Get(s.Manager, "/api/menus/{menuId}/pending-orders",
@@ -75,8 +75,23 @@ func listPendingOrdersHandler(
 				}
 			}
 
-			userMenuID, err := getMenuIdByUserId(spanCtx, userID)
-			if err != nil || userMenuID != menuID {
+			menuIDs, err := getUserMenuIds(spanCtx, userID)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error getting user menus", "error", err, "userID", userID)
+				return nil, fuego.HTTPError{
+					Title:  "error checking menu access",
+					Detail: err.Error(),
+					Status: http.StatusInternalServerError,
+				}
+			}
+			hasMenu := false
+			for _, id := range menuIDs {
+				if id == menuID {
+					hasMenu = true
+					break
+				}
+			}
+			if !hasMenu {
 				return nil, fuego.HTTPError{
 					Title:  "menu not found",
 					Detail: "menu not found or you do not own it",

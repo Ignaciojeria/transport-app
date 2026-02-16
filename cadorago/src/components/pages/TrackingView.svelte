@@ -20,8 +20,26 @@
     return match ? match[1] : null;
   });
 
-  const savedTrackings = $derived(Array.isArray($trackingStore) ? $trackingStore : []);
+  /** menuId desde query ?m= para filtrar órdenes por menú */
+  const menuIdFromUrl = $derived(() => {
+    if (typeof window === 'undefined') return null;
+    return new URLSearchParams(window.location.search).get('m');
+  });
+
+  const allTrackings = $derived(Array.isArray($trackingStore) ? $trackingStore : []);
   const hasTrackingInUrl = $derived(!!trackingFromUrl());
+  /** Lista para fetch de resúmenes: siempre todos (para rellenar menuId de entradas antiguas) */
+  const trackingsToFetch = $derived(allTrackings);
+  /** Lista mostrada: filtrada por menuId cuando hay ?m= en la URL */
+  const savedTrackings = $derived.by(() => {
+    const m = menuIdFromUrl();
+    if (!m) return allTrackings;
+    return allTrackings.filter((e) => {
+      const entry = typeof e === 'object' ? e : { id: e, menuId: null };
+      const mid = entry.menuId ?? orderSummaries[entry.id]?.menuId;
+      return mid === m;
+    });
+  });
 
   /** Pedidos activos: no entregados ni cancelados */
   const activeOrders = $derived(
@@ -53,7 +71,7 @@
   /** Cache de resumen por tracking: { orderNumber, statusLabel } para la lista */
   let orderSummaries = $state({});
   $effect(() => {
-    const list = savedTrackings;
+    const list = trackingsToFetch;
     if (!list.length || hasTrackingInUrl) return;
     const ids = list.map((e) => (typeof e === 'string' ? e : e?.id)).filter(Boolean);
     Promise.all(
@@ -79,7 +97,7 @@
     ).then((results) => {
       orderSummaries = Object.fromEntries(results.map((r) => [r.id, { orderNumber: r.orderNumber, statusKey: r.statusKey, menuId: r.menuId }]));
       results.forEach((r) => {
-        trackingStore.updateTracking(r.id, { isDelivered: r.statusKey === 'delivered' });
+        trackingStore.updateTracking(r.id, { isDelivered: r.statusKey === 'delivered', menuId: r.menuId });
       });
     });
   });
@@ -101,10 +119,10 @@
     businessWhatsapp = null;
     try {
       order = await getOrderByTrackingId(code.trim().toUpperCase());
-      trackingStore.addTracking(order.trackingId, order.createdAt);
+      trackingStore.addTracking(order.trackingId, order.createdAt, order?.menuId);
       const statuses = order?.items ? [...new Set(order.items.map((i) => i.status))] : [];
       const isDelivered = statuses.includes('DELIVERED');
-      trackingStore.updateTracking(order.trackingId, { isDelivered });
+      trackingStore.updateTracking(order.trackingId, { isDelivered, menuId: order?.menuId });
       if (order?.menuId) {
         try {
           const menu = await fetchRestaurantDataById(order.menuId);
@@ -267,7 +285,8 @@
           {$t.tracking.backToMenu}
         </a>
       {:else}
-        <a href="/track" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+        {@const listMq = menuIdFromUrl() ? `?m=${encodeURIComponent(menuIdFromUrl())}` : ''}
+        <a href="/track{listMq}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
           {$t.tracking.activeOrders}
         </a>
       {/if}
@@ -290,8 +309,9 @@
             {#each activeOrders as entry}
               {@const id = typeof entry === 'string' ? entry : entry.id}
               {@const summary = orderSummaries[id]}
+              {@const mq = menuIdFromUrl() ? `?m=${encodeURIComponent(menuIdFromUrl())}` : ''}
               <div class="flex items-center gap-2 p-4 bg-white rounded-xl border-2 border-slate-200 hover:border-slate-300 transition-all shadow-sm">
-                <a href="/track/{encodeURIComponent(id)}" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                <a href="/track/{encodeURIComponent(id)}{mq}" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
                   {#if summary}
                     <span class="font-semibold text-slate-900">{getOrderDisplay(summary.orderNumber)}</span>
                     <span class="text-slate-600 text-sm font-medium">{getStatusLabel(summary.statusKey)}</span>
@@ -314,8 +334,9 @@
             {#each recentOrders as entry}
               {@const id = typeof entry === 'string' ? entry : entry.id}
               {@const summary = orderSummaries[id]}
+              {@const mq = menuIdFromUrl() ? `?m=${encodeURIComponent(menuIdFromUrl())}` : ''}
               <div class="flex items-center gap-2 p-4 bg-slate-50/80 rounded-xl border border-slate-200/60 hover:border-slate-300/80 transition-all">
-                <a href="/track/{encodeURIComponent(id)}" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
+                <a href="/track/{encodeURIComponent(id)}{mq}" class="flex-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 min-w-0">
                   {#if summary}
                     <span class="font-medium text-slate-700">{getOrderDisplay(summary.orderNumber)}</span>
                     <span class="text-slate-500 text-sm">

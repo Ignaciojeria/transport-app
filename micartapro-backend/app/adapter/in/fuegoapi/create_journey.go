@@ -37,7 +37,7 @@ func init() {
 		observability.NewObservability,
 		supabaserepo.NewGetActiveJourneyByMenuID,
 		supabaserepo.NewInsertJourney,
-		supabaserepo.NewGetMenuIdByUserId,
+		supabaserepo.NewUserHasMenu,
 		apimiddleware.NewJWTAuthMiddleware,
 	)
 }
@@ -47,7 +47,7 @@ func createJourneyHandler(
 	obs observability.Observability,
 	getActiveJourney supabaserepo.GetActiveJourneyByMenuID,
 	insertJourney supabaserepo.InsertJourney,
-	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
+	userHasMenu supabaserepo.UserHasMenu,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 ) {
 	fuego.Post(s.Manager, "/api/menus/{menuId}/journeys",
@@ -74,8 +74,8 @@ func createJourneyHandler(
 				}
 			}
 
-			userMenuID, err := getMenuIdByUserId(spanCtx, userID)
-			if err != nil || userMenuID != menuID {
+			hasMenu, err := userHasMenu(spanCtx, userID, menuID)
+			if err != nil || !hasMenu {
 				return CreateJourneyResponse{}, fuego.HTTPError{
 					Title:  "menu not found",
 					Detail: "menu not found or you do not own it",

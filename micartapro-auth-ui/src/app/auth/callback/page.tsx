@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useLanguage } from '@/lib/useLanguage'
 import { Language } from '@/lib/translations'
-import { getOrCreateMenuId } from '@/lib/menuId'
+import { getOrCreateMenuId, createMenuWithSlug } from '@/lib/menuId'
 import '@/lib/diagnoseMenuId' // Cargar función de diagnóstico en window
 
 export default function AuthCallback() {
   const [status, setStatus] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [showSlugForm, setShowSlugForm] = useState(false)
+  const [slug, setSlug] = useState('')
+  const [slugError, setSlugError] = useState('')
   const router = useRouter()
   const { t, isLoading: langLoading, language } = useLanguage()
   
@@ -58,33 +61,27 @@ export default function AuthCallback() {
         if (session && session.user) {
           setStatus(t.callback.welcome.replace('{email}', session.user.email || ''))
           
-          // Obtener o crear menuID para el usuario (si no existe, se crea automáticamente)
-          // CRÍTICO: Si falla, NO redirigir - el usuario debe tener un menuID para continuar
-          let menuId: string
+          let menuId: string | null
           try {
-            // Pequeño delay para asegurar que la sesión esté lista
             await new Promise(resolve => setTimeout(resolve, 100))
-            
-            console.log('🔄 Obteniendo o creando menuID para usuario:', session.user.id)
-            setStatus('Creando tu menú...')
+            console.log('🔄 Obteniendo menuID para usuario:', session.user.id)
             menuId = await getOrCreateMenuId(session.user.id)
-            console.log('✅ MenuID obtenido/creado exitosamente:', menuId)
+            if (menuId) {
+              console.log('✅ MenuID obtenido:', menuId)
+            } else {
+              console.log('📝 Usuario nuevo, mostrar formulario de slug')
+              setShowSlugForm(true)
+              setIsLoading(false)
+              return
+            }
           } catch (menuError: any) {
-            // Si falla la creación del menuID, NO continuar con la redirección
-            console.error('❌ Error crítico al obtener/crear menuID:', {
-              message: menuError?.message,
-              error: menuError
-            })
-            setStatus(`Error al crear tu menú: ${menuError?.message || 'Error desconocido'}`)
+            console.error('❌ Error al obtener menuID:', menuError)
+            setStatus(`Error: ${menuError?.message || 'Error desconocido'}`)
             setIsLoading(false)
-            // NO redirigir - mostrar error y opción de reintentar
-            setTimeout(() => {
-              router.push('/')
-            }, 5000)
-            return // Salir de la función, no continuar con la redirección
+            setTimeout(() => router.push('/'), 5000)
+            return
           }
           
-          // Solo continuar si el menuID se creó/obtuvo exitosamente
           setStatus('Redirigiendo...')
           
           // Preparar datos para el fragment
@@ -127,9 +124,7 @@ export default function AuthCallback() {
           }, 1000)
         } else {
           setStatus(t.callback.noSession)
-          setTimeout(() => {
-            router.push('/')
-          }, 2000)
+          setTimeout(() => router.push('/'), 2000)
         }
       } catch (err: any) {
         console.error('❌ Error en callback:', err)
@@ -143,6 +138,59 @@ export default function AuthCallback() {
 
     handleAuthCallback()
   }, [router, t, language, langLoading])
+
+  const handleCreateWithSlug = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session?.user || !session.access_token) return
+    const s = slug.trim()
+    if (!s) {
+      setSlugError(t.callback.slugLabel || 'El slug es requerido')
+      return
+    }
+    const normalized = s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+    if (!normalized) {
+      setSlugError(t.callback.slugHint || 'Solo letras, números y guiones')
+      return
+    }
+    setSlugError('')
+    setIsLoading(true)
+    try {
+      await createMenuWithSlug(session.user.id, normalized, session.access_token)
+      const urlParams = new URLSearchParams(window.location.search)
+      const langParam = urlParams.get('lang') as Language
+      const savedLang = localStorage.getItem('preferred-language') as Language
+      const currentLanguage = (langParam && ['EN', 'ES', 'PT'].includes(langParam))
+        ? langParam
+        : (savedLang && ['EN', 'ES', 'PT'].includes(savedLang))
+        ? savedLang
+        : language
+      const userMetadata = session.user.user_metadata || {}
+      const authData = {
+        access_token: session.access_token,
+        token_type: 'Bearer',
+        expires_in: session.expires_in || 3600,
+        refresh_token: session.refresh_token || '',
+        user: {
+          id: session.user.id,
+          email: session.user.email || '',
+          verified_email: !!session.user.email_confirmed_at,
+          name: userMetadata.full_name || userMetadata.name || session.user.email?.split('@')[0] || '',
+          given_name: userMetadata.given_name || userMetadata.name?.split(' ')[0] || '',
+          family_name: userMetadata.family_name || userMetadata.name?.split(' ').slice(1).join(' ') || '',
+          picture: userMetadata.avatar_url || userMetadata.picture || '',
+          locale: userMetadata.locale || 'es',
+        },
+        timestamp: Date.now(),
+        provider: 'supabase',
+      }
+      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      const baseUrl = isLocalDev ? 'http://localhost:5174' : 'https://console.micartapro.com'
+      window.location.href = `${baseUrl}?lang=${currentLanguage}#auth=${btoa(JSON.stringify(authData))}`
+    } catch (e: any) {
+      setSlugError(e?.message === 'SLUG_EXISTS' ? 'Ese identificador ya está en uso' : (e?.message || 'Error al crear'))
+      setIsLoading(false)
+    }
+  }
 
   // Show loading while language is loading
   if (langLoading) {
@@ -188,13 +236,45 @@ export default function AuthCallback() {
               {status}
             </p>
 
-            {isLoading && (
+            {showSlugForm && (
+              <div className="mb-6 text-left">
+                <h3 className="text-sm font-semibold text-gray-800 mb-3">
+                  {t.callback.chooseSlug ?? 'Elige el identificador de tu menú'}
+                </h3>
+                <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-2">
+                  {t.callback.slugLabel ?? 'Identificador (slug)'}
+                </label>
+                <input
+                  id="slug"
+                  type="text"
+                  value={slug}
+                  onChange={(e) => { setSlug(e.target.value); setSlugError('') }}
+                  placeholder={t.callback.slugPlaceholder ?? 'ej: mi-restaurante'}
+                  className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none mb-2"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateWithSlug()}
+                />
+                <p className="text-xs text-gray-500 mb-3">
+                  {t.callback.slugHint ?? 'Solo letras minúsculas, números y guiones.'}
+                </p>
+                {slugError && <p className="text-sm text-red-600 mb-2">{slugError}</p>}
+                <button
+                  type="button"
+                  onClick={handleCreateWithSlug}
+                  disabled={isLoading}
+                  className="w-full py-3 rounded-xl font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-60"
+                >
+                  {isLoading ? (t.callback.creating ?? 'Creando...') : (t.callback.create ?? 'Crear')}
+                </button>
+              </div>
+            )}
+
+            {isLoading && !showSlugForm && (
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '75%'}}></div>
               </div>
             )}
 
-            {!isLoading && (
+            {!isLoading && !showSlugForm && (
               <div className="text-sm text-gray-500">
                 {t.callback.redirecting}
               </div>

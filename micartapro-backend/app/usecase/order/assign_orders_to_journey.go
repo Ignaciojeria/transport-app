@@ -24,14 +24,14 @@ func init() {
 		NewAssignOrdersToJourney,
 		supabaserepo.NewAssignOrdersToJourney,
 		supabaserepo.NewGetActiveJourneyByMenuID,
-		supabaserepo.NewGetMenuIdByUserId,
+		supabaserepo.NewUserHasMenu,
 	)
 }
 
 func NewAssignOrdersToJourney(
 	assignRepo supabaserepo.AssignOrdersToJourney,
 	getActiveJourney supabaserepo.GetActiveJourneyByMenuID,
-	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
+	userHasMenu supabaserepo.UserHasMenu,
 ) AssignOrdersToJourney {
 	return func(ctx context.Context, menuID string, aggregateIDs []int64) ([]supabaserepo.AssignOrdersResult, error) {
 		userID, ok := sharedcontext.UserIDFromContext(ctx)
@@ -39,8 +39,8 @@ func NewAssignOrdersToJourney(
 			return nil, ErrUnauthorized
 		}
 
-		userMenuID, err := getMenuIdByUserId(ctx, userID)
-		if err != nil || userMenuID != menuID {
+		hasMenu, err := userHasMenu(ctx, userID, menuID)
+		if err != nil || !hasMenu {
 			return nil, ErrMenuNotFound
 		}
 

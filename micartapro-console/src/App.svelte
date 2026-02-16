@@ -12,6 +12,7 @@
   import Jornada from './lib/components/Jornada.svelte'
   import Reportes from './lib/components/Reportes.svelte'
   import CostView from './lib/components/CostView.svelte'
+  import NegociosView from './lib/components/NegociosView.svelte'
   import StationOrdersPublic from './lib/components/StationOrdersPublic.svelte'
 
   // Usar valores derivados reactivos en el componente
@@ -149,7 +150,12 @@
       
       <!-- Contenido principal (full width en modo cocina) -->
       <div class="flex-1 overflow-hidden bg-gray-50" class:md:ml-64={!kitchenModeActive}>
-        {#if activeSection === 'menu'}
+        {#if activeSection === 'negocios'}
+          <NegociosView
+            onMenuClick={toggleSidebar}
+            onBusinessSelected={() => handleSectionChange('menu')}
+          />
+        {:else if activeSection === 'menu'}
           <MenuChat onMenuClick={toggleSidebar} />
         {:else if activeSection === 'historial'}
           <MenuHistory onMenuClick={toggleSidebar} />

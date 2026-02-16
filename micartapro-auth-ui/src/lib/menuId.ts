@@ -1,44 +1,93 @@
 import { v7 as uuidv7 } from 'uuid'
 import { supabase } from './supabase'
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ||
+  (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8082'
+    : 'https://micartapro-backend-27303662337.us-central1.run.app')
+
 // Cache para evitar llamadas simultáneas para el mismo usuario
 const pendingRequests = new Map<string, Promise<string>>()
 
 /**
- * Verifica si el usuario tiene al menos un menuID, y si no tiene ninguno, crea uno por defecto.
- * Esta función es idempotente: si el usuario ya tiene al menos un menuID, no crea uno nuevo.
- * Si no tiene ninguno, genera un nuevo UUID v7 y lo guarda en Supabase.
- * 
- * NOTA: El usuario puede tener múltiples menús, pero en el callback solo se crea uno por defecto
- * si no tiene ninguno.
- * 
- * Evita race conditions usando un cache de peticiones pendientes.
- * 
- * @param userId - El ID del usuario de Supabase (UUID)
- * @returns El menuID (UUID v7) creado o el más reciente si ya existe alguno
- * @throws Error si no se puede obtener o crear el menuID
+ * Verifica si el usuario tiene al menos un menú.
  */
-export async function getOrCreateMenuId(userId: string): Promise<string> {
+export async function hasUserMenus(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('user_menus')
+    .select('menu_id')
+    .eq('user_id', userId)
+    .limit(1)
+  if (error || !data || data.length === 0) return false
+  return true
+}
+
+/**
+ * Crea un nuevo menú con slug para un usuario (primera vez).
+ * Inserta en user_menus, espera a que el menú exista (webhook), crea el slug.
+ */
+export async function createMenuWithSlug(
+  userId: string,
+  slug: string,
+  accessToken: string
+): Promise<string> {
+  const newMenuId = uuidv7()
+  const { data: inserted, error: insertError } = await supabase
+    .from('user_menus')
+    .insert({ user_id: userId, menu_id: newMenuId })
+    .select('menu_id')
+    .single()
+
+  if (insertError || !inserted?.menu_id) {
+    throw new Error(insertError?.message || 'Error al crear el menú')
+  }
+
+  const normalizedSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  if (normalizedSlug) {
+    for (let i = 0; i < 24; i++) {
+      await new Promise((r) => setTimeout(r, 2500))
+      const res = await fetch(`${API_BASE_URL}/menu/${encodeURIComponent(inserted.menu_id)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      if (res.ok) {
+        const { data: existing } = await supabase.from('menu_slugs').select('id').eq('slug', normalizedSlug).maybeSingle()
+        if (existing) throw new Error('SLUG_EXISTS')
+        await supabase.from('menu_slugs').update({ is_active: false }).eq('menu_id', inserted.menu_id)
+        const { error: slugErr } = await supabase.from('menu_slugs').insert({
+          menu_id: inserted.menu_id,
+          slug: normalizedSlug,
+          is_active: true,
+        })
+        if (slugErr) throw new Error(slugErr.message)
+        break
+      }
+      if (i === 23) console.warn('Timeout esperando menú para crear slug')
+    }
+  }
+  return inserted.menu_id
+}
+
+/**
+ * Obtiene el menuID más reciente del usuario. Si no tiene ninguno, retorna null
+ * (el caller debe mostrar el formulario de slug y llamar createMenuWithSlug).
+ */
+export async function getOrCreateMenuId(userId: string): Promise<string | null> {
   // Si ya hay una petición en curso para este usuario, esperar a que termine
   if (pendingRequests.has(userId)) {
     console.log('⏳ Ya hay una petición en curso para este usuario, esperando...')
     return pendingRequests.get(userId)!
   }
 
-  // Crear la petición y guardarla en el cache
   const requestPromise = getOrCreateMenuIdInternal(userId)
   pendingRequests.set(userId, requestPromise)
-
   try {
-    const result = await requestPromise
-    return result
+    return await requestPromise
   } finally {
-    // Limpiar el cache después de completar
     pendingRequests.delete(userId)
   }
 }
 
-async function getOrCreateMenuIdInternal(userId: string): Promise<string> {
+async function getOrCreateMenuIdInternal(userId: string): Promise<string | null> {
   try {
     console.log('🔍 Buscando menuID para usuario:', userId)
     
@@ -88,74 +137,16 @@ async function getOrCreateMenuIdInternal(userId: string): Promise<string> {
       }
     }
 
-    // Si el usuario ya tiene al menos un menuID, no crear uno nuevo
+    // Si el usuario ya tiene al menos un menuID, retornar el más reciente
     if (existingMenus && existingMenus.length > 0 && existingMenus[0].menu_id) {
       const latestMenuId = existingMenus[0].menu_id
-      console.log('✅ El usuario ya tiene al menos un menuID, usando el más reciente:', latestMenuId)
+      console.log('✅ El usuario ya tiene menús, usando el más reciente:', latestMenuId)
       return latestMenuId
     }
 
-    // Si llegamos aquí, el usuario NO tiene ningún menuID, así que creamos uno por defecto
-    console.log('📝 El usuario no tiene ningún menuID, creando uno por defecto...')
-
-    // 2. Si el usuario no tiene ningún menuID, generar uno nuevo por defecto
-    const newMenuId = uuidv7()
-    console.log('🆕 Generando nuevo MenuID por defecto (UUID v7):', newMenuId)
-
-    // 3. Insertar el nuevo menuID (INSERT simple, no UPSERT)
-    // No usamos onConflict porque el usuario puede tener múltiples menús
-    const { data: insertedMenu, error: insertError } = await supabase
-      .from('user_menus')
-      .insert({
-        user_id: userId,
-        menu_id: newMenuId,
-        created_at: new Date().toISOString(),
-      })
-      .select('menu_id')
-      .single()
-
-    if (insertError) {
-      console.error('❌ Error al insertar menuID:', {
-        code: insertError.code,
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint
-      })
-      
-      // Si falla por duplicado (race condition), intentar obtener el menuID que se creó
-      if (insertError.code === '23505' || insertError.message?.includes('duplicate') || insertError.message?.includes('unique')) {
-        console.log('⚠️ MenuID duplicado detectado (race condition), obteniendo el existente...')
-        const { data: retryMenus, error: retryError } = await supabase
-          .from('user_menus')
-          .select('menu_id')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-
-        if (retryMenus && retryMenus.length > 0 && retryMenus[0].menu_id) {
-          console.log('✅ MenuID obtenido después de race condition:', retryMenus[0].menu_id)
-          return retryMenus[0].menu_id
-        }
-
-        if (retryError) {
-          throw new Error(`Error al obtener menuID después de race condition: ${retryError.message}`)
-        }
-      }
-      
-      // Si es error de RLS
-      if (insertError.code === '42501' || insertError.message?.includes('permission denied') || insertError.message?.includes('RLS')) {
-        throw new Error('Permiso denegado por RLS al insertar. Verifica que la política "Users can insert their own menu" esté correctamente configurada.')
-      }
-
-      throw new Error(`Error al crear menuID: ${insertError.message} (Código: ${insertError.code})`)
-    }
-
-    if (!insertedMenu || !insertedMenu.menu_id) {
-      throw new Error('No se pudo crear el menuID: respuesta vacía')
-    }
-
-    console.log('✅ MenuID por defecto creado exitosamente:', insertedMenu.menu_id)
-    return insertedMenu.menu_id
+    // Usuario nuevo: retornar null para que el callback muestre el formulario de slug
+    console.log('📝 Usuario nuevo sin menús, se debe mostrar formulario de slug')
+    return null
   } catch (error) {
     console.error('❌ Error completo en getOrCreateMenuId:', error)
     throw error

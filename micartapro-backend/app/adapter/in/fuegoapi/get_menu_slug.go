@@ -23,7 +23,7 @@ func init() {
 		httpserver.New,
 		observability.NewObservability,
 		supabaserepo.NewGetActiveSlugByMenuID,
-		supabaserepo.NewGetMenuIdByUserId,
+		supabaserepo.NewUserHasMenu,
 		apimiddleware.NewJWTAuthMiddleware,
 	)
 }
@@ -32,7 +32,7 @@ func getMenuSlugHandler(
 	s httpserver.Server,
 	obs observability.Observability,
 	getActiveSlug supabaserepo.GetActiveSlugByMenuID,
-	getMenuIdByUserId supabaserepo.GetMenuIdByUserId,
+	userHasMenu supabaserepo.UserHasMenu,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 ) {
 	fuego.Get(s.Manager, "/api/menus/{menuId}/slug",
@@ -59,8 +59,8 @@ func getMenuSlugHandler(
 				}
 			}
 
-			userMenuID, err := getMenuIdByUserId(spanCtx, userID)
-			if err != nil || userMenuID != menuID {
+			hasMenu, err := userHasMenu(spanCtx, userID, menuID)
+			if err != nil || !hasMenu {
 				return MenuSlugResponse{}, fuego.HTTPError{
 					Title:  "menu not found",
 					Detail: "menu not found or you do not own it",

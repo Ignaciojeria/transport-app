@@ -2,6 +2,9 @@ import { supabase } from './supabase'
 import { API_BASE_URL } from './config'
 
 const STORAGE_BASE_URL = "https://storage.googleapis.com/micartapro-menus"
+
+/** Clave para el menú activo en sessionStorage (por pestaña). DB = default al abrir nueva pestaña. */
+const ACTIVE_MENU_SESSION_KEY = 'micartapro-activeMenuId'
 const SUPABASE_URL = 'https://rbpdhapfcljecofrscnj.supabase.co'
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJicGRoYXBmY2xqZWNvZnJzY25qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ5NjY3NDMsImV4cCI6MjA4MDU0Mjc0M30.Ba-W2KHJS8U6OYVAjU98Y7JDn87gYPuhFvg_0vhcFfI'
 
@@ -138,24 +141,147 @@ export async function fetchRestaurantData(userId: string, menuId: string): Promi
   }
 }
 
+/** Menú del usuario (para lista de negocios). */
+export interface UserMenu {
+  menuId: string
+  createdAt: string
+  slug?: string | null
+}
+
 /**
- * Obtiene el menuID más reciente del usuario autenticado
+ * Obtiene todos los menús (negocios) del usuario con sus slugs.
+ */
+export async function getUserMenus(userId: string, accessToken: string): Promise<UserMenu[]> {
+  try {
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    const { data, error } = await supabase
+      .from('user_menus')
+      .select('menu_id, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error obteniendo menús del usuario:', error)
+      return []
+    }
+    const rows = data || []
+    const menus: UserMenu[] = await Promise.all(
+      rows.map(async (r: { menu_id: string; created_at: string }) => {
+        let slug: string | null = null
+        try {
+          slug = await getMenuSlugFromApi(r.menu_id, accessToken)
+        } catch {
+          // ignorar errores de slug
+        }
+        return {
+          menuId: r.menu_id,
+          createdAt: r.created_at,
+          slug: slug ?? null
+        }
+      })
+    )
+    return menus
+  } catch (err) {
+    console.error('Error en getUserMenus:', err)
+    return []
+  }
+}
+
+/**
+ * Establece el menú activo en sessionStorage (esta pestaña).
+ * Permite varias pestañas con menús distintos sin afectar la DB.
+ */
+export async function setActiveMenuId(
+  _userId: string,
+  menuId: string,
+  _accessToken: string
+): Promise<boolean> {
+  try {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(ACTIVE_MENU_SESSION_KEY, menuId)
+    }
+    return true
+  } catch (err) {
+    console.error('Error en setActiveMenuId:', err)
+    return false
+  }
+}
+
+/**
+ * Crea un nuevo menú (negocio) para el usuario. Inserta en user_menus y dispara el webhook.
+ * Si se proporciona slug, espera a que el menú exista y crea el slug.
+ */
+export async function createNewMenu(
+  userId: string,
+  accessToken: string,
+  slug?: string | null
+): Promise<string | null> {
+  try {
+    const { v7: uuidv7 } = await import('uuid')
+    const supabase = await getAuthenticatedSupabaseClient(accessToken)
+    const newMenuId = uuidv7()
+
+    const { data, error } = await supabase
+      .from('user_menus')
+      .insert({ user_id: userId, menu_id: newMenuId })
+      .select('menu_id')
+      .single()
+
+    if (error) {
+      console.error('Error creando nuevo menú:', error)
+      return null
+    }
+    const resultId = data?.menu_id || newMenuId
+
+    if (slug && slug.trim()) {
+      const normalizedSlug = slug.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+      if (normalizedSlug) {
+        const ready = await pollUntilMenuExists(resultId, accessToken)
+        if (ready) {
+          try {
+            await createMenuSlug(resultId, normalizedSlug, accessToken)
+          } catch (e) {
+            console.warn('No se pudo crear el slug:', e)
+          }
+        }
+      }
+    }
+
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(ACTIVE_MENU_SESSION_KEY, resultId)
+    }
+    return resultId
+  } catch (err) {
+    console.error('Error en createNewMenu:', err)
+    return null
+  }
+}
+
+/**
+ * Obtiene el menuID activo del usuario.
+ * sessionStorage (menú de esta pestaña) primero; si no hay, menú más reciente por created_at en DB.
  * @param userId - ID del usuario
  * @param accessToken - Token de autenticación
  * @returns El menuID o null si no existe
  */
 export async function getLatestMenuId(userId: string, accessToken: string): Promise<string | null> {
   try {
-    // Usar cliente autenticado reutilizable
+    // 1) sessionStorage: menú de esta pestaña (permite varias pestañas con menús distintos)
+    if (typeof sessionStorage !== 'undefined') {
+      const stored = sessionStorage.getItem(ACTIVE_MENU_SESSION_KEY)
+      if (stored && stored.trim()) return stored.trim()
+    }
+
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
-    
+
+    // 2) DB: menú más reciente por created_at (fallback al abrir nueva pestaña)
     const { data, error } = await supabase
       .from('user_menus')
       .select('menu_id, created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (error) {
       // PRIMERO verificar si es un error de permisos/RLS (406, PGRST301, etc.)
@@ -202,7 +328,11 @@ export async function getLatestMenuId(userId: string, accessToken: string): Prom
       return null
     }
 
-    return data?.menu_id || null
+    const result = data?.menu_id || null
+    if (result && typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem(ACTIVE_MENU_SESSION_KEY, result)
+    }
+    return result
   } catch (err) {
     console.error('❌ Error en getLatestMenuId:', err)
     if (err instanceof Error) {
