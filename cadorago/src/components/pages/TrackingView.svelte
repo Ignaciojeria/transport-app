@@ -42,6 +42,14 @@
     })
   );
 
+  /** menuId para "Volver al menú" en lista: del primer pedido que tenga */
+  const listMenuId = $derived(
+    [...activeOrders, ...recentOrders].map((e) => {
+      const id = typeof e === 'string' ? e : e?.id;
+      return orderSummaries[id]?.menuId;
+    }).find(Boolean) ?? order?.menuId
+  );
+
   /** Cache de resumen por tracking: { orderNumber, statusLabel } para la lista */
   let orderSummaries = $state({});
   $effect(() => {
@@ -59,13 +67,13 @@
           else if (statuses.includes('DISPATCHED')) statusLabel = 'En camino';
           else if (statuses.includes('READY')) statusLabel = o?.fulfillment === 'DELIVERY' ? 'En camino' : 'Listo para retirar';
           else if (statuses.includes('IN_PROGRESS')) statusLabel = 'En preparación';
-          return { id, orderNumber: o?.orderNumber ?? id, statusLabel };
+          return { id, orderNumber: o?.orderNumber ?? id, statusLabel, menuId: o?.menuId };
         } catch {
           return { id, orderNumber: id, statusLabel: 'Consultar' };
         }
       })
     ).then((results) => {
-      orderSummaries = Object.fromEntries(results.map((r) => [r.id, { orderNumber: r.orderNumber, statusLabel: r.statusLabel }]));
+      orderSummaries = Object.fromEntries(results.map((r) => [r.id, { orderNumber: r.orderNumber, statusLabel: r.statusLabel, menuId: r.menuId }]));
       results.forEach((r) => {
         trackingStore.updateTracking(r.id, { isDelivered: r.statusLabel === 'Entregado' });
       });
@@ -189,13 +197,19 @@
 <div class="min-h-screen bg-slate-50 font-sans py-8 pb-24 px-4 sm:px-6 lg:px-8">
   <div class="max-w-lg mx-auto">
     <!-- Back link -->
-    {#if order?.menuId}
-      <a href="/m/{order.menuId}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+    {#if hasTrackingInUrl}
+      {#if order?.menuId}
+        <a href="/m/{order.menuId}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+          ← Volver al menú
+        </a>
+      {:else}
+        <a href="/track" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
+          ← Pedidos activos
+        </a>
+      {/if}
+    {:else if listMenuId}
+      <a href="/m/{listMenuId}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
         ← Volver al menú
-      </a>
-    {:else if hasTrackingInUrl}
-      <a href="/track" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-800 mb-6 transition-colors">
-        ← Pedidos activos
       </a>
     {/if}
 
@@ -222,9 +236,6 @@
                     <span class="text-slate-400 text-sm">→ Cargando...</span>
                   {/if}
                 </a>
-                <button type="button" onclick={() => trackingStore.removeTracking(id)} class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" aria-label="Quitar">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
               </div>
             {/each}
           </div>
@@ -251,9 +262,6 @@
                     <span class="text-slate-400 text-sm">→ Cargando...</span>
                   {/if}
                 </a>
-                <button type="button" onclick={() => trackingStore.removeTracking(id)} class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" aria-label="Quitar">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
               </div>
             {/each}
           </div>
