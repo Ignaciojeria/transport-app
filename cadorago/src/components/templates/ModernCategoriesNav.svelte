@@ -14,10 +14,9 @@
 <nav class="categories-nav">
   <div class="categories-container">
     <button 
-      class="category-btn" 
+      class="category-btn category-btn--dark" 
       class:active={activeCategory === 'all'}
       onclick={() => handleCategoryClick('all')}
-      style="background-image: url('https://storage.googleapis.com/micartapro-images/70895fae-85aa-47ea-a14a-dd76ea379f2e/1769720140-887099-empanadas-de-pino-e34e2d7e.png');"
     >
       <span>Todos</span>
     </button>
@@ -101,6 +100,21 @@
 
   .category-btn:hover::before,
   .category-btn.active::before {
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  /* Todos: oscuro, sin imagen de fondo */
+  .category-btn--dark {
+    background-color: #374151;
+    background-image: none;
+  }
+
+  .category-btn--dark::before {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .category-btn--dark:hover::before,
+  .category-btn--dark.active::before {
     background-color: rgba(0, 0, 0, 0.5);
   }
 
