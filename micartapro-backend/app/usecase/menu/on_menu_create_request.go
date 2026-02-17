@@ -134,11 +134,17 @@ func publishImageGenerationEvents(
 		obs.Logger.InfoContext(ctx, "cover_edition_event_published", "menuId", menuID, "publicURL", coverEditReq.PublicURL)
 	}
 
-	// Publicar eventos para generar imágenes de items
+	// Publicar eventos para generar imágenes de items (deduplicar por menuItemId para evitar duplicados si el agente repite)
+	seenGen := make(map[string]bool)
 	for _, req := range imageGenReqs {
 		if req.UploadURL == "" || req.PublicURL == "" {
 			continue
 		}
+		if seenGen[req.MenuItemID] {
+			obs.Logger.WarnContext(ctx, "skipping_duplicate_image_generation_request", "menuItemId", req.MenuItemID)
+			continue
+		}
+		seenGen[req.MenuItemID] = true
 		event := events.ImageGenerationRequestEvent{
 			MenuID:      menuID,
 			MenuItemID:  req.MenuItemID,
@@ -161,11 +167,17 @@ func publishImageGenerationEvents(
 		obs.Logger.InfoContext(ctx, "item_generation_event_published", "menuId", menuID, "menuItemId", req.MenuItemID, "publicURL", req.PublicURL)
 	}
 
-	// Publicar eventos para editar imágenes de items
+	// Publicar eventos para editar imágenes de items (deduplicar por menuItemId para evitar duplicados)
+	seenEdit := make(map[string]bool)
 	for _, req := range imageEditReqs {
 		if req.UploadURL == "" || req.PublicURL == "" {
 			continue
 		}
+		if seenEdit[req.MenuItemID] {
+			obs.Logger.WarnContext(ctx, "skipping_duplicate_image_edition_request", "menuItemId", req.MenuItemID)
+			continue
+		}
+		seenEdit[req.MenuItemID] = true
 		event := events.ImageEditionRequestEvent{
 			MenuID:            menuID,
 			MenuItemID:        req.MenuItemID,

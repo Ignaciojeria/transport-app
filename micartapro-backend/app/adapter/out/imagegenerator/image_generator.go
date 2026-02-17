@@ -4,17 +4,20 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"micartapro/app/shared/infrastructure/ai"
+	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/shared/sharedcontext"
 
-	"github.com/google/uuid"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 	supabase "github.com/supabase-community/supabase-go"
 	"google.golang.org/genai"
 )
@@ -22,10 +25,10 @@ import (
 type GenerateImage func(ctx context.Context, prompt string, aspectRatio string, imageCount int, uploadURL string, publicURL string) (string, error)
 
 func init() {
-	ioc.Registry(NewImageGenerator, ai.NewClient, observability.NewObservability, supabasecli.NewSupabaseClient)
+	ioc.Registry(NewImageGenerator, ai.NewClient, observability.NewObservability, supabasecli.NewSupabaseClient, gcs.NewClient)
 }
 
-func NewImageGenerator(client *genai.Client, obs observability.Observability, supabaseClient *supabase.Client) (GenerateImage, error) {
+func NewImageGenerator(client *genai.Client, obs observability.Observability, supabaseClient *supabase.Client, gcsClient *storage.Client) (GenerateImage, error) {
 	return func(ctx context.Context, prompt string, aspectRatio string, imageCount int, uploadURL string, publicURL string) (string, error) {
 		spanCtx, span := obs.Tracer.Start(ctx, "generate_image")
 		defer span.End()
@@ -37,13 +40,17 @@ func NewImageGenerator(client *genai.Client, obs observability.Observability, su
 
 		obs.Logger.InfoContext(spanCtx, "generating_image", "prompt", prompt, "aspectRatio", aspectRatio, "imageCount", imageCount)
 
+		// Prefijo obligatorio: generar exactamente lo descrito, sin inventar ni omitir
+		// Para sushi/piezas: respetar contenido de cada pieza Y envoltorio (Env) según la descripción
+		precisePrompt := "CRITICAL: Generate exactly and only what is described below. Do not add, invent, or omit any ingredients, elements, or details. For sushi, pieces, or rolls: each piece must show its exact filling (contenido) AND wrapper (envoltorio/Env) as stated. The image must show precisely what is stated—nothing more, nothing less. Professional food photography style.\n\n" + prompt
+
 		// 1. Generar la imagen con Gemini
 		config := &genai.GenerateImagesConfig{
 			AspectRatio:    aspectRatio,
 			NumberOfImages: 1,
 		}
 
-		resp, err := client.Models.GenerateImages(spanCtx, "imagen-4.0-ultra-generate-001", prompt, config)
+		resp, err := client.Models.GenerateImages(spanCtx, "imagen-4.0-ultra-generate-001", precisePrompt, config)
 		if err != nil {
 			obs.Logger.ErrorContext(spanCtx, "error_generating_image", "error", err, "prompt", prompt)
 			return "", fmt.Errorf("error generating image: %w", err)
@@ -81,31 +88,48 @@ func NewImageGenerator(client *genai.Client, obs observability.Observability, su
 		} else if strings.Contains(lowerPublicURL, ".webp") {
 			mimeType = "image/webp"
 		}
-		
+
 		obs.Logger.InfoContext(spanCtx, "mime_type_determined", "mimeType", mimeType, "publicURL", publicURL)
 
-		// 3. Subir usando la signed URL pre-firmada
-		req, err := http.NewRequestWithContext(spanCtx, "PUT", uploadURL, bytes.NewReader(imgBytes))
-		if err != nil {
-			obs.Logger.ErrorContext(spanCtx, "error_creating_upload_request", "error", err)
-			return "", fmt.Errorf("error creating upload request: %w", err)
-		}
-		req.Header.Set("Content-Type", mimeType)
+		// 3. Subir usando la signed URL pre-firmada (con retry si ExpiredToken)
+		uploadURLToUse := uploadURL
+		for attempt := 0; attempt < 2; attempt++ {
+			req, err := http.NewRequestWithContext(spanCtx, "PUT", uploadURLToUse, bytes.NewReader(imgBytes))
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_creating_upload_request", "error", err)
+				return "", fmt.Errorf("error creating upload request: %w", err)
+			}
+			req.Header.Set("Content-Type", mimeType)
 
-		httpClient := &http.Client{Timeout: 30 * time.Second}
-		respUpload, err := httpClient.Do(req)
-		if err != nil {
-			obs.Logger.ErrorContext(spanCtx, "error_uploading_image", "error", err)
-			return "", fmt.Errorf("error uploading image: %w", err)
-		}
-		defer respUpload.Body.Close()
+			httpClient := &http.Client{Timeout: 30 * time.Second}
+			respUpload, err := httpClient.Do(req)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_uploading_image", "error", err)
+				return "", fmt.Errorf("error uploading image: %w", err)
+			}
+			body, _ := io.ReadAll(respUpload.Body)
+			respUpload.Body.Close()
 
-		if respUpload.StatusCode < 200 || respUpload.StatusCode >= 300 {
-			obs.Logger.ErrorContext(spanCtx, "error_upload_status", "status", respUpload.StatusCode)
-			return "", fmt.Errorf("error uploading image: status %d", respUpload.StatusCode)
-		}
+			if respUpload.StatusCode >= 200 && respUpload.StatusCode < 300 {
+				obs.Logger.InfoContext(spanCtx, "image_uploaded_successfully", "publicURL", publicURL, "size_bytes", len(imgBytes))
+				break
+			}
 
-		obs.Logger.InfoContext(spanCtx, "image_uploaded_successfully", "publicURL", publicURL, "size_bytes", len(imgBytes))
+			// Si ExpiredToken y tenemos gcsClient, regenerar URL y reintentar
+			if attempt == 0 && respUpload.StatusCode == 400 && strings.Contains(string(body), "ExpiredToken") && gcsClient != nil {
+				newURL, regenErr := RegenerateSignedWriteURL(spanCtx, gcsClient, obs, publicURL, mimeType)
+				if regenErr != nil {
+					obs.Logger.WarnContext(spanCtx, "error_regenerating_signed_url", "error", regenErr)
+				} else {
+					obs.Logger.InfoContext(spanCtx, "retrying_upload_with_regenerated_url", "publicURL", publicURL)
+					uploadURLToUse = newURL
+					continue
+				}
+			}
+
+			obs.Logger.ErrorContext(spanCtx, "error_upload_status", "status", respUpload.StatusCode, "response_body", string(body), "publicURL", publicURL, "mimeType", mimeType, "content_length", len(imgBytes))
+			return "", fmt.Errorf("error uploading image: status %d: %s", respUpload.StatusCode, string(body))
+		}
 
 		// 4. Guardar en catalog_images
 		record := map[string]interface{}{

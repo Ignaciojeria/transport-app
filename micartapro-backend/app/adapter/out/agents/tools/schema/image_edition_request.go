@@ -13,7 +13,7 @@ func GetImageEditionRequestSchema() *genai.Schema {
 			},
 			"prompt": {
 				Type:        genai.TypeString,
-				Description: "Descripción profesional y detallada en inglés para la edición o generación de la imagen basada en la imagen de referencia, enfocada en fotografía gastronómica profesional. Describe los cambios o mejoras que se deben aplicar a la imagen de referencia (ej. 'Add more vibrant colors and professional lighting to the food photography').",
+				Description: "Descripción profesional en inglés de los cambios a aplicar. OBLIGATORIO: incluir que se mantengan visibles EXACTAMENTE los ingredientes del array 'description' del item; no inventar ni omitir ninguno. Para sushi/piezas/rolls: incluir CADA variedad con su contenido Y envoltorio (Env). Ej: 'Add vibrant colors and lighting. Keep ALL pieces exactly: [pieza 1: contenido + Env X], [pieza 2: contenido + Env Y]. Do not change any filling or wrapper.'",
 			},
 			"aspectRatio": {
 				Type:        genai.TypeString,

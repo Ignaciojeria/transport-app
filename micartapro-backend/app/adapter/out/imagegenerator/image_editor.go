@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"micartapro/app/shared/infrastructure/ai"
 	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
@@ -32,6 +33,11 @@ func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, 
 		defer span.End()
 
 		obs.Logger.InfoContext(spanCtx, "editing_image", "prompt", prompt, "referenceImageUrl", referenceImageUrl, "aspectRatio", aspectRatio, "imageCount", imageCount, "menuItemId", menuItemId)
+
+		// 0. Validar que la imagen de referencia exista y tenga contenido antes de llamar a Vertex AI
+		if err := ValidateReferenceImage(spanCtx, gcsClient, referenceImageUrl, obs); err != nil {
+			return "", err
+		}
 
 		// 1. Generar signed URL si es necesario (para imágenes de GCS)
 		// Esto evita descargar la imagen en el backend, ahorrando memoria RAM
@@ -75,10 +81,12 @@ func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, 
 			imageSize = "2K" // Portadas usan mayor resolución
 		}
 		
-		// Agregar instrucciones de optimización móvil al prompt si es para productos
-		optimizedPrompt := prompt
+		// Prefijo obligatorio: precisión sin inventar ni omitir ingredientes
+		// Para sushi/piezas: respetar contenido de cada pieza Y envoltorio (Env) según la descripción
+		precisionPrefix := "CRITICAL: Apply the requested changes while keeping EXACTLY the ingredients and elements visible. For sushi, pieces, or rolls: preserve each piece's exact filling (contenido) AND wrapper (envoltorio/Env). Do not add, invent, or omit anything. "
+		optimizedPrompt := precisionPrefix + prompt
 		if menuItemId != "cover" && menuItemId != "footer" {
-			optimizedPrompt = prompt + " Optimize this image for mobile app product catalog display: ensure fast loading, clear product visibility, and professional food photography quality suitable for small screens."
+			optimizedPrompt += " Optimize for mobile app product catalog: clear product visibility, professional food photography."
 		}
 		
 		// 3. Usar FileData con URI en lugar de InlineData con bytes
@@ -132,28 +140,45 @@ func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, 
 
 		obs.Logger.InfoContext(spanCtx, "image_to_image_success", "size_bytes", len(imgBytes))
 
-		// 6. Subir usando la signed URL pre-firmada
-		req, err := http.NewRequestWithContext(spanCtx, "PUT", uploadURL, bytes.NewReader(imgBytes))
-		if err != nil {
-			obs.Logger.ErrorContext(spanCtx, "error_creating_upload_request", "error", err)
-			return "", fmt.Errorf("error creating upload request: %w", err)
-		}
-		req.Header.Set("Content-Type", mimeType)
+		// 6. Subir usando la signed URL pre-firmada (con retry si ExpiredToken)
+		uploadURLToUse := uploadURL
+		for attempt := 0; attempt < 2; attempt++ {
+			req, err := http.NewRequestWithContext(spanCtx, "PUT", uploadURLToUse, bytes.NewReader(imgBytes))
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_creating_upload_request", "error", err)
+				return "", fmt.Errorf("error creating upload request: %w", err)
+			}
+			req.Header.Set("Content-Type", mimeType)
 
-		httpClient := &http.Client{Timeout: 30 * time.Second}
-		respUpload, err := httpClient.Do(req)
-		if err != nil {
-			obs.Logger.ErrorContext(spanCtx, "error_uploading_image", "error", err)
-			return "", fmt.Errorf("error uploading image: %w", err)
-		}
-		defer respUpload.Body.Close()
+			httpClient := &http.Client{Timeout: 30 * time.Second}
+			respUpload, err := httpClient.Do(req)
+			if err != nil {
+				obs.Logger.ErrorContext(spanCtx, "error_uploading_image", "error", err)
+				return "", fmt.Errorf("error uploading image: %w", err)
+			}
+			body, _ := io.ReadAll(respUpload.Body)
+			respUpload.Body.Close()
 
-		if respUpload.StatusCode < 200 || respUpload.StatusCode >= 300 {
-			obs.Logger.ErrorContext(spanCtx, "error_upload_status", "status", respUpload.StatusCode)
-			return "", fmt.Errorf("error uploading image: status %d", respUpload.StatusCode)
-		}
+			if respUpload.StatusCode >= 200 && respUpload.StatusCode < 300 {
+				obs.Logger.InfoContext(spanCtx, "image_uploaded_successfully", "publicURL", publicURL, "size_bytes", len(imgBytes))
+				break
+			}
 
-		obs.Logger.InfoContext(spanCtx, "image_uploaded_successfully", "publicURL", publicURL, "size_bytes", len(imgBytes))
+			// Si ExpiredToken y tenemos gcsClient, regenerar URL y reintentar
+			if attempt == 0 && respUpload.StatusCode == 400 && strings.Contains(string(body), "ExpiredToken") && gcsClient != nil {
+				newURL, regenErr := RegenerateSignedWriteURL(spanCtx, gcsClient, obs, publicURL, mimeType)
+				if regenErr != nil {
+					obs.Logger.WarnContext(spanCtx, "error_regenerating_signed_url", "error", regenErr)
+				} else {
+					obs.Logger.InfoContext(spanCtx, "retrying_upload_with_regenerated_url", "publicURL", publicURL)
+					uploadURLToUse = newURL
+					continue
+				}
+			}
+
+			obs.Logger.ErrorContext(spanCtx, "error_upload_status", "status", respUpload.StatusCode, "response_body", string(body), "publicURL", publicURL, "mimeType", mimeType, "content_length", len(imgBytes))
+			return "", fmt.Errorf("error uploading image: status %d: %s", respUpload.StatusCode, string(body))
+		}
 
 		// 7. Guardar en catalog_images
 		userID, ok := sharedcontext.UserIDFromContext(spanCtx)

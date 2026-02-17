@@ -8,6 +8,7 @@ import (
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
+	"micartapro/app/adapter/out/imagegenerator"
 	"micartapro/app/adapter/out/storage"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
@@ -59,7 +60,7 @@ func newPullAllEvents(
 	onCreemSubscriptionPausedWebhook creem.OnCreemSubscriptionPausedWebhook,
 	onCreemRefundCreatedWebhook creem.OnCreemRefundCreatedWebhook,
 	onCreemDisputeCreatedWebhook creem.OnCreemDisputeCreatedWebhook) eventprocessing.MessageProcessor {
-	subscriptionName := "micartapro.events.v2"
+	subscriptionName := "micartapro.events.v3"
 	processor := func(ctx context.Context, event cloudevents.Event) int {
 
 		ctx = sharedcontext.ContextFromCloudEvent(ctx, event)
@@ -301,7 +302,8 @@ func newPullAllEvents(
 					"menuId", request.MenuID,
 					"menuItemId", request.MenuItemID,
 				)
-				return http.StatusInternalServerError
+				// ACK para no reintentar (evita retries infinitos en fallos de API/upload)
+				return http.StatusAccepted
 			}
 
 		case events.EventImageEditionRequested:
@@ -314,6 +316,15 @@ func newPullAllEvents(
 			}
 			err := onImageEditionRequest(spanCtx, request)
 			if err != nil {
+				// Imagen no disponible o vacía: ACK para no reintentar (no es candidata a edición)
+				if errors.Is(err, imagegenerator.ErrReferenceImageNotAvailable) {
+					obs.Logger.WarnContext(spanCtx, "reference_image_not_available_ack",
+						"error", err.Error(),
+						"menuId", request.MenuID,
+						"menuItemId", request.MenuItemID,
+					)
+					return http.StatusAccepted
+				}
 				obs.Logger.Error("error_processing_image_edition_request",
 					"error", err.Error(),
 					"menuId", request.MenuID,
@@ -326,6 +337,6 @@ func newPullAllEvents(
 	}
 
 	// Start subscriber
-	go sub.Start(subscriptionName, processor, eventprocessing.ReceiveSettings{MaxOutstandingMessages: 1})
+	go sub.Start(subscriptionName, processor, eventprocessing.ReceiveSettings{MaxOutstandingMessages: 3})
 	return processor
 }

@@ -3,6 +3,7 @@ package imagegenerator
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -10,6 +11,10 @@ import (
 
 	"cloud.google.com/go/storage"
 )
+
+// ErrReferenceImageNotAvailable se retorna cuando la imagen de referencia no existe o está vacía.
+// Indica que el ítem no es candidato para edición image-to-image.
+var ErrReferenceImageNotAvailable = fmt.Errorf("la imagen de referencia no está disponible o está vacía; no es candidata para edición")
 
 // normalizeGCSURL corrige URLs de GCS mal formateadas (ej: "https.storage" → "https://storage")
 // Es idempotente: puede aplicarse múltiples veces sin causar efectos secundarios
@@ -104,4 +109,99 @@ func GenerateSignedWriteURL(ctx context.Context, client *storage.Client, obs obs
 	publicURL = fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectPath)
 	obs.Logger.InfoContext(ctx, "signed_write_url_generated", "objectPath", objectPath, "userID", userID, "contentType", contentType)
 	return uploadURL, publicURL, objectPath, nil
+}
+
+// RegenerateSignedWriteURL regenera una signed URL de escritura para el mismo objeto (publicURL).
+// Útil cuando la URL original expiró (ExpiredToken) y se necesita reintentar el upload.
+func RegenerateSignedWriteURL(ctx context.Context, client *storage.Client, obs observability.Observability, publicURL string, contentType string) (string, error) {
+	if client == nil {
+		return "", fmt.Errorf("GCS client is nil")
+	}
+	url := normalizeGCSURL(publicURL)
+	if !strings.Contains(url, "storage.googleapis.com/") {
+		return "", fmt.Errorf("publicURL no es una URL de GCS: %s", publicURL)
+	}
+	parts := strings.Split(url, "storage.googleapis.com/")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("formato de URL GCS inválido: %s", publicURL)
+	}
+	pathParts := strings.SplitN(parts[1], "/", 2)
+	if len(pathParts) != 2 {
+		return "", fmt.Errorf("path GCS inválido: %s", publicURL)
+	}
+	bucketName := pathParts[0]
+	objectPath := pathParts[1]
+
+	opts := &storage.SignedURLOptions{
+		Method:      "PUT",
+		Expires:     time.Now().Add(15 * time.Minute),
+		ContentType: contentType,
+	}
+	uploadURL, err := client.Bucket(bucketName).SignedURL(objectPath, opts)
+	if err != nil {
+		return "", fmt.Errorf("regenerando signed URL: %w", err)
+	}
+	obs.Logger.InfoContext(ctx, "signed_write_url_regenerated", "objectPath", objectPath, "contentType", contentType)
+	return uploadURL, nil
+}
+
+// ValidateReferenceImage verifica que la URL de referencia exista y tenga contenido antes de usarla en image-to-image.
+// Evita errores URL_ERROR-ERROR_NOT_FOUND de Vertex AI cuando la URL apunta a un placeholder vacío.
+func ValidateReferenceImage(ctx context.Context, client *storage.Client, imageURL string, obs observability.Observability) error {
+	if imageURL == "" {
+		return ErrReferenceImageNotAvailable
+	}
+	imageURL = normalizeGCSURL(imageURL)
+
+	if strings.Contains(imageURL, "storage.googleapis.com/") && client != nil {
+		parts := strings.Split(imageURL, "storage.googleapis.com/")
+		if len(parts) != 2 {
+			obs.Logger.WarnContext(ctx, "invalid_gcs_url_for_validation", "url", imageURL)
+			return ErrReferenceImageNotAvailable
+		}
+		pathParts := strings.SplitN(parts[1], "/", 2)
+		if len(pathParts) != 2 {
+			return ErrReferenceImageNotAvailable
+		}
+		bucketName := pathParts[0]
+		objectPath := pathParts[1]
+
+		attrs, err := client.Bucket(bucketName).Object(objectPath).Attrs(ctx)
+		if err != nil {
+			if err == storage.ErrObjectNotExist {
+				obs.Logger.InfoContext(ctx, "reference_image_not_found_gcs", "url", imageURL)
+				return ErrReferenceImageNotAvailable
+			}
+			obs.Logger.WarnContext(ctx, "error_checking_reference_image", "error", err, "url", imageURL)
+			return ErrReferenceImageNotAvailable
+		}
+		if attrs.Size == 0 {
+			obs.Logger.InfoContext(ctx, "reference_image_empty", "url", imageURL)
+			return ErrReferenceImageNotAvailable
+		}
+		return nil
+	}
+
+	// Para URLs no-GCS (signed, etc.): HEAD request
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, imageURL, nil)
+	if err != nil {
+		obs.Logger.WarnContext(ctx, "error_creating_head_request", "error", err, "url", imageURL)
+		return ErrReferenceImageNotAvailable
+	}
+	clientHTTP := &http.Client{Timeout: 10 * time.Second}
+	resp, err := clientHTTP.Do(req)
+	if err != nil {
+		obs.Logger.WarnContext(ctx, "error_head_reference_image", "error", err, "url", imageURL)
+		return ErrReferenceImageNotAvailable
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		obs.Logger.InfoContext(ctx, "reference_image_not_accessible", "url", imageURL, "status", resp.StatusCode)
+		return ErrReferenceImageNotAvailable
+	}
+	if resp.ContentLength >= 0 && resp.ContentLength == 0 {
+		obs.Logger.InfoContext(ctx, "reference_image_empty_http", "url", imageURL)
+		return ErrReferenceImageNotAvailable
+	}
+	return nil
 }

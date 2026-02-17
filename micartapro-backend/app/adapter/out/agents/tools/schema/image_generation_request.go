@@ -13,7 +13,7 @@ func GetImageGenerationRequestSchema() *genai.Schema {
 			},
 			"prompt": {
 				Type:        genai.TypeString,
-				Description: "Descripción profesional y detallada en inglés para la generación de la imagen, enfocada en fotografía gastronómica profesional (ej. 'Professional food photography of Chilean empanadas de pino on a wooden table').",
+				Description: "Descripción profesional en inglés. OBLIGATORIO: usar EXACTAMENTE los ingredientes del array 'description' del item; no inventar ni omitir ninguno. Para sushi/piezas/rolls: incluir CADA variedad con su contenido Y envoltorio (Env) exactos. Ej: 'Professional food photography of [title]. Show exactly: [pieza 1: contenido + Env X], [pieza 2: contenido + Env Y]. Each piece must show correct filling and wrapper.'",
 			},
 			"aspectRatio": {
 				Type:        genai.TypeString,
