@@ -65,7 +65,7 @@ func NewCreateOrder(
 				observability.Logger.ErrorContext(spanCtx, "error generating trackingId", "error", err)
 				return CreateOrderResult{}, err
 			}
-			err = insertOrderTracking(spanCtx, result.AggregateID, tid)
+			err = insertOrderTracking(spanCtx, result.AggregateID, tid, &request.Fulfillment)
 			if err == nil {
 				trackingID = tid
 				break

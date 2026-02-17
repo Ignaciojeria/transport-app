@@ -33,6 +33,7 @@
   const hasDescriptionSelectables = $derived(descriptionSelectables.length > 0);
   const needsOptionSheet = $derived(hasAcompanamientos || hasDescriptionSelectables);
   const currency = $derived(getEffectiveCurrency(restaurantDataStore.value));
+  const currentMenuId = $derived(restaurantDataStore.value?.id);
   const canAddFromSheet = $derived(!hasAcompanamientos || selectedAcompanamiento !== null);
 
   // Mostrar etiqueta Cocina/Barra solo cuando la URL tiene ?station=true (ej. preview desde consola)
@@ -70,11 +71,10 @@
   // Obtener textos multiidioma
   const itemTitleBase = $derived(getBaseText(item.title));
   
-  // Sincronizar items del carrito para reactividad
-  let cartItemsList = $state([]);
-  $effect(() => {
-    const unsub = itemsStore.subscribe((v) => { cartItemsList = v ?? []; });
-    return unsub;
+  // Items del carrito filtrados por menú actual (como el tracking)
+  const cartItemsList = $derived.by(() => {
+    const list = $itemsStore ?? [];
+    return currentMenuId ? list.filter((i) => (i.menuId ?? null) === currentMenuId) : list;
   });
   
   const isInCart = $derived.by(() => {
@@ -121,7 +121,7 @@
     } else if (needsQuantitySelector) {
       showQuantityModal = true;
     } else {
-      cartStore.addItem(item);
+      cartStore.addItem(item, null, [], currentMenuId);
     }
   }
   
@@ -135,12 +135,12 @@
     } else if (needsQuantitySelector) {
       showQuantityModal = true;
     } else {
-      cartStore.addItem(item);
+      cartStore.addItem(item, null, [], currentMenuId);
     }
   }
   
   function handleQuantityConfirm(quantity) {
-    cartStore.addItemWithQuantity(item, quantity);
+    cartStore.addItemWithQuantity(item, quantity, currentMenuId);
     showQuantityModal = false;
   }
   
@@ -196,7 +196,7 @@
     if (event) event.preventDefault();
     if (!canAddFromSheet) return;
     try {
-      cartStore.addItem(item, selectedAcompanamiento, getDescriptionSelectionsArray());
+      cartStore.addItem(item, selectedAcompanamiento, getDescriptionSelectionsArray(), currentMenuId);
       acompanamientoViewTransition = false;
       selectedAcompanamiento = null;
       selectedDescriptionSelections = {};
@@ -226,7 +226,7 @@
     
     // Agregar directamente al carrito al seleccionar el acompañamiento
     try {
-      cartStore.addItem(item, acompanamiento);
+      cartStore.addItem(item, acompanamiento, [], currentMenuId);
       // Primero ocultar la vista con transición
       acompanamientoViewTransition = false;
       // Luego limpiar después de la animación

@@ -15,23 +15,25 @@
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currency = $derived(getEffectiveCurrency(restaurantData));
+  const currentMenuId = $derived(restaurantData?.id);
   const currentLanguage = $derived($language);
   
-  // Leer $itemsStore en $effect para que Svelte 5 rastree la dependencia
+  // Items y total filtrados por menú actual (como el tracking)
   let items = $state([]);
   let total = $state(0);
   let totalItems = $state(0);
   $effect(() => {
     const list = $itemsStore ?? [];
-    items = list;
-    total = list.reduce((sum, item) => {
+    const filtered = currentMenuId ? list.filter((i) => (i.menuId ?? null) === currentMenuId) : list;
+    items = filtered;
+    total = filtered.reduce((sum, item) => {
       if (item.customQuantity != null && item.pricing) {
         const p = getPriceFromPricing(item.pricing, item.customQuantity);
         return sum + (p * (item.cantidad || 1));
       }
       return sum + ((item.precio || 0) * (item.cantidad || 1));
     }, 0);
-    totalItems = list.reduce((sum, item) => {
+    totalItems = filtered.reduce((sum, item) => {
       if (item.customQuantity) return sum + item.customQuantity;
       return sum + (item.cantidad || 0);
     }, 0);
@@ -52,6 +54,7 @@
   let deliveryStep = $state(1); // 1: dirección, 2: datos personales
   let nombreRetiro = $state('');
   let phoneContact = $state('');
+  let emailContact = $state('');
   let deliveryAddress = $state('');
   let addressNumber = $state(''); // Número de casa/departamento
   let addressNotes = $state(''); // Indicaciones adicionales
@@ -78,19 +81,11 @@
   
   function handleQuantityChange(cartItem, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
-    const itemTitleBase = getBaseText(cartItem.title);
-    const itemKey = cartItem.acompanamientoId 
-      ? `${itemTitleBase}_${cartItem.acompanamientoId}` 
-      : itemTitleBase;
-    cartStore.updateQuantity(itemKey, quantity);
+    cartStore.updateQuantity(cartStore.getItemKey(cartItem), quantity);
   }
   
   function handleRemoveItem(cartItem) {
-    const itemTitleBase = getBaseText(cartItem.title);
-    const itemKey = cartItem.acompanamientoId 
-      ? `${itemTitleBase}_${cartItem.acompanamientoId}` 
-      : itemTitleBase;
-    cartStore.removeItemByKey(itemKey);
+    cartStore.removeItemByKey(cartStore.getItemKey(cartItem));
   }
   
   function handleSendOrderClick() {
@@ -117,6 +112,7 @@
       deliveryStep = 1;
       nombreRetiro = '';
       phoneContact = '';
+      emailContact = '';
       deliveryAddress = '';
       addressNumber = '';
       addressNotes = '';
@@ -365,8 +361,9 @@
       throw new Error('No se pudo obtener el ID del menú');
     }
 
-    // Mapear items del carrito al formato de la API (orden: unit, quantity, unitPrice, totalPrice, unitCost, totalCost, pricingMode, productName)
-    const items = get(itemsStore).map(item => {
+    // Mapear items del carrito del menú actual al formato de la API
+    const cartItems = cartStore.getItemsForMenu(menuId);
+    const items = cartItems.map(item => {
       // Si tiene acompañamiento, usar pricing del side; si no, del item
       let pricing = item.pricing || {};
       if (item.acompanamientoId && item.sides?.length) {
@@ -414,8 +411,8 @@
       };
     });
 
-    // Calcular totales
-    const subtotal = cartStore.getTotal();
+    // Calcular totales (solo items del menú actual)
+    const subtotal = cartStore.getTotal(menuId);
     const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0;
     const total = subtotal + deliveryFee;
     const totalCost = items.reduce((sum, it) => sum + (it.totalCost || 0), 0);
@@ -438,7 +435,7 @@
       contact: {
         fullName: nombreRetiro.trim(),
         phone: (phoneContact || '').trim(),
-        email: ''
+        email: (emailContact || '').trim()
       }
     };
 
@@ -575,13 +572,14 @@
     const menuId = getMenuId();
     trackingStore.addTracking(orderResult.trackingId || '', new Date().toISOString(), menuId);
 
-    // Limpiar carrito y formulario antes de redirigir
-    cartStore.clear();
+    // Limpiar carrito del menú actual y formulario antes de redirigir
+    cartStore.clear(menuId);
     showOrderLoader = false;
     deliveryType = null;
     deliveryStep = 1;
     nombreRetiro = '';
     phoneContact = '';
+    emailContact = '';
     deliveryAddress = '';
     addressNumber = '';
     addressNotes = '';
@@ -600,7 +598,7 @@
   }
   
   function confirmClearCart() {
-    cartStore.clear();
+    cartStore.clear(currentMenuId);
     isExpanded = false;
     showClearConfirm = false;
   }
@@ -614,7 +612,7 @@
   }
 </script>
 
-{#if items.length > 0}
+  {#if items.length > 0}
   <div class="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-2xl border-t-2 border-gray-300">
     <!-- Resumen compacto (siempre visible cuando hay items) -->
     <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-4 sm:py-5">
@@ -975,6 +973,20 @@
             </div>
             
             <div>
+              <label for="email-contact-delivery" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.email} *
+              </label>
+              <input
+                id="email-contact-delivery"
+                type="email"
+                bind:value={emailContact}
+                placeholder={$t.cart.emailPlaceholder}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
               <label for="address-number" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
                 {$t.cart.addressNumber}
               </label>
@@ -1028,6 +1040,20 @@
                 type="tel"
                 bind:value={phoneContact}
                 placeholder={$t.cart.phonePlaceholder}
+                class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                required
+              />
+            </div>
+            
+            <div>
+              <label for="email-contact-pickup" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                {$t.cart.email} *
+              </label>
+              <input
+                id="email-contact-pickup"
+                type="email"
+                bind:value={emailContact}
+                placeholder={$t.cart.emailPlaceholder}
                 class="w-full px-4 py-2 sm:py-3 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                 required
               />

@@ -386,11 +386,36 @@
         <!-- Header: Pedido #7, Estado, Retiro -->
         <div>
           <h1 class="text-2xl font-bold text-slate-900">{getOrderDisplay(order.orderNumber)}</h1>
+          {#if order.trackingId}
+            <p class="text-sm text-slate-500 mt-1 font-mono">{$t.tracking.codeLabel}: {order.trackingId}</p>
+          {/if}
           <p class="text-slate-600 mt-1">{order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : $t.tracking.pickup}</p>
           <p class="text-base font-semibold mt-2 {overallStatus === 'PENDING' ? 'text-slate-500' : overallStatus === 'IN_PROGRESS' ? 'text-blue-600' : overallStatus === 'READY' || overallStatus === 'DISPATCHED' ? 'text-emerald-600' : overallStatus === 'DELIVERED' ? 'text-slate-800' : 'text-slate-600'}">
-            {getHeaderStatusLabel()}
+            {$t.tracking.statusLabel}: {getHeaderStatusLabel()}
           </p>
         </div>
+
+        <!-- Datos del pedido: nombre, dirección (sin teléfono/email por privacidad) -->
+        {#if order.customerName || (order.fulfillment === 'DELIVERY' && (order.deliveryAddress || order.deliveryUnit || order.deliveryNotes))}
+          <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
+            <h2 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">{$t.tracking.orderInfo}</h2>
+            <div class="space-y-2 text-sm">
+              {#if order.customerName}
+                <p class="font-semibold text-slate-900">{$t.tracking.customerLabel}: {order.customerName}</p>
+              {/if}
+              {#if order.fulfillment === 'DELIVERY'}
+                {#if order.deliveryAddress || order.deliveryUnit}
+                  <p class="text-slate-700">
+                    {$t.tracking.deliveryInfo}: {order.deliveryAddress}{#if order.deliveryUnit}{order.deliveryAddress ? ', ' : ''}{$t.tracking.unit} {order.deliveryUnit}{/if}
+                  </p>
+                {/if}
+                {#if order.deliveryNotes}
+                  <p class="text-amber-800 font-medium">{$t.tracking.notes}: {order.deliveryNotes}</p>
+                {/if}
+              {/if}
+            </div>
+          </div>
+        {/if}
 
         <!-- Timeline -->
         <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">

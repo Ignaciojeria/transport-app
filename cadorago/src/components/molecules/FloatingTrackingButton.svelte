@@ -17,7 +17,11 @@
   );
   /** Solo pedidos activos (no entregados) del menú actual */
   const activeTrackings = $derived(trackingsForMenu.filter((e) => !(typeof e === 'object' && e?.isDelivered === true)));
-  const hasCartItems = $derived(Array.isArray($itemsStore) && $itemsStore.length > 0);
+  const hasCartItems = $derived.by(() => {
+    const list = Array.isArray($itemsStore) ? $itemsStore : [];
+    const forMenu = currentMenuId ? list.filter((i) => (i?.menuId ?? null) === currentMenuId) : list;
+    return forMenu.length > 0;
+  });
   const showButton = $derived(activeTrackings.length > 0 && !hasCartItems);
 
   const firstId = $derived(activeTrackings[0] ? (typeof activeTrackings[0] === 'string' ? activeTrackings[0] : activeTrackings[0]?.id) : '');

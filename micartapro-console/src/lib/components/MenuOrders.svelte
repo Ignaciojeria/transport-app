@@ -132,6 +132,13 @@
     })
   }
 
+  /** Hora corta operativa: "1:55 AM" para cabecera de tarjeta. */
+  function formatRequestedTimeShort(iso: string | null): string {
+    if (!iso) return '—'
+    const d = new Date(iso)
+    return d.toLocaleTimeString('es-CL', { hour: 'numeric', minute: '2-digit', hour12: true })
+  }
+
   /** fulfillment ya viene de la proyección (string: PICKUP | DELIVERY). */
   function getFulfillmentLabel(fulfillment: string): string {
     return fulfillment === 'DELIVERY' ? (t.orders?.delivery ?? 'Envío') : (t.orders?.pickup ?? 'Retiro')
@@ -645,30 +652,64 @@
         {@const hasBarItems = order.items.some((i) => i.station === 'BAR')}
         {@const statusIcon = status === 'pending' ? '🟠' : status === 'preparing' ? '⏳' : '✓'}
         {@const statusTitle = status === 'pending' ? (t.orders?.statusPending ?? 'Pendiente') : status === 'preparing' ? (t.orders?.statusPreparing ?? 'En Preparación') : (t.orders?.statusDone ?? 'Listo')}
+        {@const customerLabel = order.customer_name || order.tracking_id || '—'}
+        {@const showDeliveryContact = stationFilter === 'ALL' && type === 'DELIVERY'}
         <li class="bg-white rounded-lg border overflow-hidden kitchen-order-card order-card {isDoneTab ? 'order-card-done' : ''} {isFirst && !isDoneTab ? 'kitchen-order-first border-amber-400 shadow-md' : 'border-gray-200 shadow-sm'}">
-          <div class="w-full px-3 py-2 sm:px-4 flex flex-wrap items-center gap-2 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-3' : ''} {compactStatus ? 'py-1.5 sm:py-2' : ''}">
-            <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab && !compactStatus ? 'text-2xl sm:text-3xl' : compactStatus ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}">#{order.order_number}</span>
-            {#if compactStatus && stationFilter !== 'ALL'}
-              <span class="text-sm opacity-90" aria-hidden="true" title={statusTitle}>{statusIcon}</span>
-            {/if}
-            {#if stationFilter === 'KITCHEN' && hasBarItems}
-              <span class="text-sm" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar Listo') : (t.orders?.statusPreparing ?? 'Bar En Preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
-            {/if}
-            <span class="font-semibold text-gray-700 {isFirst && !compactStatus ? 'text-base sm:text-lg' : compactStatus ? 'text-sm' : 'text-sm sm:text-base'}">
-              {(t.orders?.forTime ?? 'Para')} {formatRequestedTime(order.requested_time)}
-            </span>
-            {#if remainingMin !== null}
-              <span class="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums
-                {timeColor === 'green' ? 'bg-green-100 text-green-800' : ''}
-                {timeColor === 'yellow' ? 'bg-amber-200 text-amber-900' : ''}
-                {timeColor === 'red' ? 'bg-red-100 text-red-800' : ''}">
-                <span aria-hidden="true">{timeColor === 'green' ? '🟢' : timeColor === 'yellow' ? '🟡' : '🔴'}</span>
-                {getRemainingTimeLabel(remainingMin)}
+          <div class="w-full px-3 py-2 sm:px-4 flex flex-col gap-1.5 border-b border-gray-100 {isFirst && !isDoneTab ? 'sm:py-3' : ''} {compactStatus ? 'py-1.5 sm:py-2' : ''}">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="font-bold text-gray-900 tabular-nums {isFirst && !isDoneTab && !compactStatus ? 'text-2xl sm:text-3xl' : compactStatus ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl'}">#{order.order_number}</span>
+              <span class="text-gray-700 font-medium" aria-hidden="true">·</span>
+              <span class="font-semibold text-gray-800 {compactStatus ? 'text-sm' : 'text-sm sm:text-base'}">{customerLabel}</span>
+              {#if order.tracking_id && order.customer_name}
+                <span class="text-xs font-mono text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded" title="Tracking ID">{order.tracking_id}</span>
+              {:else if order.tracking_id}
+                <span class="text-xs font-mono text-gray-600 font-semibold" title="Tracking ID">{order.tracking_id}</span>
+              {/if}
+              {#if compactStatus && stationFilter !== 'ALL'}
+                <span class="text-sm opacity-90" aria-hidden="true" title={statusTitle}>{statusIcon}</span>
+              {/if}
+              {#if stationFilter === 'KITCHEN' && hasBarItems}
+                <span class="text-sm" aria-hidden="true" title="{barStatusForOrder === 'done' ? (t.orders?.statusDone ?? 'Bar Listo') : (t.orders?.statusPreparing ?? 'Bar En Preparación')}">{barStatusForOrder === 'done' ? '🍺 ✔️' : '🍺 ⏳'}</span>
+              {/if}
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1 rounded-full font-bold text-xs px-2.5 py-1 {type === 'DELIVERY' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}">
+                <span aria-hidden="true">{type === 'DELIVERY' ? '🟢' : '🟡'}</span>
+                {getFulfillmentLabel(type)}
               </span>
+              <span class="text-gray-600 font-medium text-sm">
+                · {formatRequestedTimeShort(order.requested_time)}
+              </span>
+              {#if remainingMin !== null}
+                <span class="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold tabular-nums
+                  {timeColor === 'green' ? 'bg-green-100 text-green-800' : ''}
+                  {timeColor === 'yellow' ? 'bg-amber-200 text-amber-900' : ''}
+                  {timeColor === 'red' ? 'bg-red-100 text-red-800' : ''}">
+                  <span aria-hidden="true">{timeColor === 'green' ? '🟢' : timeColor === 'yellow' ? '🟡' : '🔴'}</span>
+                  {getRemainingTimeLabel(remainingMin)}
+                </span>
+              {/if}
+            </div>
+            {#if showDeliveryContact && (order.customer_name || order.customer_phone || order.delivery_address)}
+              <div class="mt-0.5 pt-2 border-t border-gray-100 space-y-0.5 text-sm">
+                {#if order.customer_name}
+                  <p class="font-semibold text-gray-900">{order.customer_name}</p>
+                {/if}
+                {#if order.customer_phone}
+                  <p class="text-gray-700">
+                    <a href="tel:{order.customer_phone}" class="text-blue-600 hover:underline font-medium">{order.customer_phone}</a>
+                  </p>
+                {/if}
+                {#if order.delivery_address}
+                  <p class="text-gray-700">
+                    {order.delivery_address}{#if order.delivery_unit}<br />{t.orders?.unit ?? 'Depto'}: {order.delivery_unit}{/if}
+                  </p>
+                {/if}
+                {#if order.delivery_notes}
+                  <p class="text-amber-800 text-xs font-medium">{t.orders?.deliveryNotes ?? 'Notas'}: {order.delivery_notes}</p>
+                {/if}
+              </div>
             {/if}
-            <span class="inline-flex items-center rounded-full font-medium text-xs {type === 'DELIVERY' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'} {isFirst && !compactStatus ? 'px-2.5 py-1' : 'px-2 py-0.5'}">
-              {getFulfillmentLabel(type)}
-            </span>
             {#if stationFilter === 'ALL'}
               {@const kitchenSt = getOrderStatusFromItems(order, 'KITCHEN')}
               {@const barSt = getOrderStatusFromItems(order, 'BAR')}
@@ -702,6 +743,11 @@
                 </li>
               {/each}
             </ul>
+            {#if order.total_amount != null && order.total_amount > 0}
+              <p class="mt-2 pt-2 border-t border-amber-200 text-sm font-bold text-amber-900 tabular-nums">
+                {(t.orders?.total ?? 'Total')}: {formatCurrency(Math.round(order.total_amount), 'CLP')}
+              </p>
+            {/if}
           </div>
           <div class="px-3 py-2 sm:px-4 border-t border-gray-100 {compactStatus ? 'py-1.5 sm:py-2' : ''}">
             {#if stationFilter === 'ALL'}

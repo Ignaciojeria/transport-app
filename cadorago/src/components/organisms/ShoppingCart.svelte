@@ -13,13 +13,15 @@
   
   const restaurantData = $derived(restaurantDataStore.value);
   const currency = $derived(getEffectiveCurrency(restaurantData));
+  const currentMenuId = $derived(restaurantData?.id);
   const currentLanguage = $derived($language);
   
-  // $effect + subscribe: reactividad explícita (Svelte 5)
+  // Items filtrados por menú actual (como el tracking)
   let items = $state([]);
   $effect(() => {
-    const unsub = itemsStore.subscribe((v) => { items = v ?? []; });
-    return unsub;
+    const list = $itemsStore ?? [];
+    const mid = currentMenuId;
+    items = mid ? list.filter((i) => (i.menuId ?? null) === mid) : list;
   });
   const total = $derived.by(() => {
     return items.reduce((sum, item) => {
@@ -41,12 +43,11 @@
   
   function handleQuantityChange(item, event) {
     const quantity = parseInt(event.currentTarget.value) || 0;
-    const key = item.acompanamientoId ? `${getBaseText(item.title)}_${item.acompanamientoId}` : getBaseText(item.title);
-    cartStore.updateQuantity(key, quantity);
+    cartStore.updateQuantity(cartStore.getItemKey(item), quantity);
   }
   
   function handleRemoveItem(item) {
-    cartStore.removeItem(item.title);
+    cartStore.removeItemByKey(cartStore.getItemKey(item));
   }
   
   function handleSendOrder() {
@@ -54,8 +55,11 @@
       restaurantData?.businessInfo?.whatsapp || '',
       '',
       '',
+      null,
       currentLanguage,
-      $t.whatsapp
+      $t.whatsapp,
+      null,
+      currentMenuId
     );
     window.open(url, '_blank');
   }
@@ -65,7 +69,7 @@
   }
   
   function confirmClearCart() {
-    cartStore.clear();
+    cartStore.clear(currentMenuId);
     showClearConfirm = false;
   }
   
@@ -102,7 +106,7 @@
   {:else}
     <div class="space-y-4 sm:space-y-5 lg:space-y-6 mb-6 sm:mb-8">
       {#each items as cartItem}
-        {@const itemKey = cartItem.acompanamientoId ? `${getBaseText(cartItem.title)}_${cartItem.acompanamientoId}` : getBaseText(cartItem.title)}
+        {@const itemKey = cartStore.getItemKey(cartItem)}
         <div class="bg-gray-50 rounded-lg p-4 sm:p-5 lg:p-6 border border-gray-200">
           <div class="flex justify-between items-start gap-4 mb-3">
             <div class="flex-1">

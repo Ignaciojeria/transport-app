@@ -966,7 +966,7 @@ export interface KitchenOrderItem {
   status: string
 }
 
-/** Orden ya agrupada para la vista de cocina (desde order_items_projection). */
+/** Orden ya agrupada para la vista de cocina (desde order_items_projection + order_tracking). */
 export interface KitchenOrder {
   order_number: number
   aggregate_id: number
@@ -974,6 +974,20 @@ export interface KitchenOrder {
   created_at: string
   fulfillment: string
   items: KitchenOrderItem[]
+  /** Token corto para buscar/confirmar (desde order_tracking). */
+  tracking_id?: string | null
+  /** Nombre del cliente (desde order_tracking). */
+  customer_name?: string | null
+  /** Teléfono (solo para DELIVERY, desde order_tracking). */
+  customer_phone?: string | null
+  /** Dirección (solo para DELIVERY, desde order_tracking). */
+  delivery_address?: string | null
+  /** Depto/unidad (solo para DELIVERY). */
+  delivery_unit?: string | null
+  /** Notas de entrega (solo para DELIVERY). */
+  delivery_notes?: string | null
+  /** Suma de total_price de todos los ítems. */
+  total_amount?: number
 }
 
 /** Filtro por estación: ALL = todo; KITCHEN/BAR filtra por columna station en Supabase. */
@@ -1015,7 +1029,7 @@ export async function getKitchenOrdersFromProjection(
     const supabase = await getAuthenticatedSupabaseClient(accessToken)
     let query = supabase
       .from('order_items_projection')
-      .select('order_number, aggregate_id, requested_time, created_at, fulfillment, item_key, item_name, quantity, unit, station, status')
+      .select('order_number, aggregate_id, requested_time, created_at, fulfillment, item_key, item_name, quantity, unit, station, status, total_price')
       .eq('menu_id', menuId)
     if (stationFilter === 'KITCHEN' || stationFilter === 'BAR') {
       query = query.eq('station', stationFilter)
@@ -1043,11 +1057,82 @@ export async function getKitchenOrdersFromProjection(
       unit: string
       station: string | null
       status: string
+      total_price?: number
     }>
-    return groupProjectionItemsByOrder(items)
+    const orders = groupProjectionItemsByOrder(items)
+    await enrichOrdersWithTracking(supabase, menuId, orders)
+    return orders
   } catch (error) {
     console.error('Error en getKitchenOrdersFromProjection:', error)
     return []
+  }
+}
+
+async function enrichOrdersWithTracking(
+  supabase: any,
+  menuId: string,
+  orders: KitchenOrder[]
+): Promise<void> {
+  const ids = [...new Set(orders.map((o) => Number(o.aggregate_id)))]
+  if (ids.length === 0) return
+
+  // 1) Intentar order_tracking (datos de fulfillment del backend)
+  const { data: trackingRows, error } = await supabase
+    .from('order_tracking')
+    .select('aggregate_id, tracking_id, customer_name, customer_phone, delivery_address, delivery_unit, delivery_notes')
+    .in('aggregate_id', ids)
+  const byAgg = new Map<number, { tracking_id?: string; customer_name?: string; customer_phone?: string; delivery_address?: string; delivery_unit?: string; delivery_notes?: string }>()
+  if (!error && trackingRows) {
+    for (const row of trackingRows) {
+      const aggId = Number(row.aggregate_id)
+      byAgg.set(aggId, {
+        tracking_id: row.tracking_id ?? undefined,
+        customer_name: row.customer_name ?? undefined,
+        customer_phone: row.customer_phone ?? undefined,
+        delivery_address: row.delivery_address ?? undefined,
+        delivery_unit: row.delivery_unit ?? undefined,
+        delivery_notes: row.delivery_notes ?? undefined
+      })
+    }
+  }
+
+  // 2) Fallback: si faltan datos, leer desde menu_orders (event_payload tiene fulfillment)
+  const needFallback = ids.some((id) => !byAgg.get(id)?.customer_name)
+  if (needFallback) {
+    const { data: menuRows } = await supabase
+      .from('menu_orders')
+      .select('aggregate_id, event_payload')
+      .eq('menu_id', menuId)
+      .eq('event_type', 'create.order.requested')
+      .in('aggregate_id', ids)
+    for (const row of menuRows || []) {
+      const aggId = Number(row.aggregate_id)
+      const payload = row.event_payload as { fulfillment?: { contact?: { fullName?: string; phone?: string; email?: string }; address?: { rawAddress?: string; deliveryDetails?: { unit?: string; notes?: string } } } } | null
+      const f = payload?.fulfillment
+      const existing = byAgg.get(aggId)
+      if (!existing || !existing.customer_name) {
+        const data = existing ?? {}
+        if (!data.customer_name && f?.contact?.fullName) data.customer_name = f.contact.fullName
+        if (!data.customer_phone && f?.contact?.phone) data.customer_phone = f.contact.phone
+        if (!data.delivery_address && f?.address?.rawAddress) data.delivery_address = f.address.rawAddress
+        if (!data.delivery_unit && f?.address?.deliveryDetails?.unit) data.delivery_unit = f.address.deliveryDetails.unit
+        if (!data.delivery_notes && f?.address?.deliveryDetails?.notes) data.delivery_notes = f.address.deliveryDetails.notes
+        if (!existing) byAgg.set(aggId, data)
+      }
+    }
+  }
+
+  for (const order of orders) {
+    const aggId = Number(order.aggregate_id)
+    const t = byAgg.get(aggId)
+    if (t) {
+      order.tracking_id = t.tracking_id ?? null
+      order.customer_name = t.customer_name ?? null
+      order.customer_phone = t.customer_phone ?? null
+      order.delivery_address = t.delivery_address ?? null
+      order.delivery_unit = t.delivery_unit ?? null
+      order.delivery_notes = t.delivery_notes ?? null
+    }
   }
 }
 
@@ -1064,6 +1149,7 @@ function groupProjectionItemsByOrder(
     unit: string
     station: string | null
     status: string
+    total_price?: number
   }>
 ): KitchenOrder[] {
   const byOrder = new Map<string, KitchenOrder>()
@@ -1077,7 +1163,8 @@ function groupProjectionItemsByOrder(
         requested_time: r.requested_time,
         created_at: r.created_at,
         fulfillment: r.fulfillment,
-        items: []
+        items: [],
+        total_amount: 0
       }
       byOrder.set(key, order)
     }
@@ -1089,6 +1176,7 @@ function groupProjectionItemsByOrder(
       station: r.station,
       status: r.status || 'PENDING'
     })
+    order.total_amount = (order.total_amount ?? 0) + (r.total_price ?? 0)
   }
   return [...byOrder.values()].sort((a, b) => {
     const ta = a.requested_time ? new Date(a.requested_time).getTime() : 0

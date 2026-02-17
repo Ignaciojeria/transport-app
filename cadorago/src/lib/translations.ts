@@ -67,6 +67,8 @@ export interface Translations {
     nameFormatExample: string
     phone: string
     phonePlaceholder: string
+    email: string
+    emailPlaceholder: string
     deliveryType: string
     delivery: string
     pickup: string
@@ -138,6 +140,11 @@ export interface Translations {
     statusLabel: string
     errorFetching: string
     statusPendingNoJourney: string
+    orderInfo: string
+    customerLabel: string
+    deliveryInfo: string
+    unit: string
+    notes: string
   }
 
   // TemplateSelector (preview mode)
@@ -222,6 +229,8 @@ export const translations: Record<Language, Translations> = {
       nameFormatExample: 'Ej: Juan Perez',
       phone: 'Teléfono',
       phonePlaceholder: 'Ej: +56912345678',
+      email: 'Email',
+      emailPlaceholder: 'Ej: correo@ejemplo.com',
       shoppingCart: 'Carrito de Compras',
       emptyCart: 'Tu carrito está vacío',
       emptyCartMessage: 'Agrega items del menú para comenzar',
@@ -290,7 +299,11 @@ export const translations: Record<Language, Translations> = {
       codeLabel: 'Código',
       statusLabel: 'Estado',
       errorFetching: 'Error al consultar el pedido',
-      statusPendingNoJourney: 'Pedido recibido. Se preparará cuando el negocio abra'
+      statusPendingNoJourney: 'Pedido recibido. Se preparará cuando el negocio abra',
+      orderInfo: 'Datos del pedido',
+      deliveryInfo: 'Dirección de entrega',
+      unit: 'Depto/Unidad',
+      notes: 'Notas'
     },
     preview: {
       templateLabel: 'Estilo',
@@ -367,6 +380,8 @@ export const translations: Record<Language, Translations> = {
       nameFormatExample: 'Ex: João Silva',
       phone: 'Telefone',
       phonePlaceholder: 'Ex: +5511999999999',
+      email: 'Email',
+      emailPlaceholder: 'Ex: email@exemplo.com',
       shoppingCart: 'Carrinho de Compras',
       emptyCart: 'Seu carrinho está vazio',
       emptyCartMessage: 'Adicione itens do cardápio para começar',
@@ -435,7 +450,12 @@ export const translations: Record<Language, Translations> = {
       codeLabel: 'Código',
       statusLabel: 'Status',
       errorFetching: 'Erro ao consultar o pedido',
-      statusPendingNoJourney: 'Pedido recebido. Será preparado quando o negócio abrir'
+      statusPendingNoJourney: 'Pedido recebido. Será preparado quando o negócio abrir',
+      orderInfo: 'Dados do pedido',
+      customerLabel: 'Cliente',
+      deliveryInfo: 'Endereço de entrega',
+      unit: 'Apto/Unidade',
+      notes: 'Notas'
     },
     preview: {
       templateLabel: 'Estilo',
@@ -514,6 +534,8 @@ export const translations: Record<Language, Translations> = {
       nameFormatExample: 'Ex: John Doe',
       phone: 'Phone',
       phonePlaceholder: 'Ex: +1234567890',
+      email: 'Email',
+      emailPlaceholder: 'Ex: email@example.com',
       shoppingCart: 'Shopping Cart',
       emptyCart: 'Your cart is empty',
       emptyCartMessage: 'Add items from the menu to get started',
@@ -582,7 +604,12 @@ export const translations: Record<Language, Translations> = {
       codeLabel: 'Code',
       statusLabel: 'Status',
       errorFetching: 'Error fetching order',
-      statusPendingNoJourney: 'Order received. It will be prepared when the business opens'
+      statusPendingNoJourney: 'Order received. It will be prepared when the business opens',
+      orderInfo: 'Order details',
+      customerLabel: 'Customer',
+      deliveryInfo: 'Delivery address',
+      unit: 'Unit',
+      notes: 'Notes'
     },
     preview: {
       templateLabel: 'Style',

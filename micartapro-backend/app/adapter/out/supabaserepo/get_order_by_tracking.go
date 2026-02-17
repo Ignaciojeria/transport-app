@@ -28,19 +28,28 @@ type OrderTrackingItem struct {
 
 // OrderByTrackingResult es el resultado de consultar una orden por tracking_id.
 type OrderByTrackingResult struct {
-	TrackingID   string              `json:"trackingId"`
-	AggregateID  int64               `json:"aggregateId"`
-	OrderNumber  int                 `json:"orderNumber"`
-	MenuID       string              `json:"menuId"`
-	Fulfillment  string              `json:"fulfillment"`
-	JourneyID    *string             `json:"journeyId,omitempty"` // NULL si no hay jornada activa (negocio cerrado)
-	Items        []OrderTrackingItem `json:"items"`
-	RequestedAt  *string             `json:"requestedAt,omitempty"`
-	CreatedAt    string              `json:"createdAt"`
+	TrackingID      string              `json:"trackingId"`
+	AggregateID     int64               `json:"aggregateId"`
+	OrderNumber     int                 `json:"orderNumber"`
+	MenuID          string              `json:"menuId"`
+	Fulfillment     string              `json:"fulfillment"`
+	JourneyID       *string             `json:"journeyId,omitempty"` // NULL si no hay jornada activa (negocio cerrado)
+	Items           []OrderTrackingItem `json:"items"`
+	RequestedAt     *string             `json:"requestedAt,omitempty"`
+	CreatedAt       string              `json:"createdAt"`
+		CustomerName    string              `json:"customerName,omitempty"`
+		DeliveryAddress string              `json:"deliveryAddress,omitempty"`
+	DeliveryUnit    string              `json:"deliveryUnit,omitempty"`
+	DeliveryNotes   string              `json:"deliveryNotes,omitempty"`
 }
 
 type orderTrackingRow struct {
-	AggregateID int64 `json:"aggregate_id"`
+	AggregateID     int64  `json:"aggregate_id"`
+	CustomerName    string `json:"customer_name"`
+	CustomerPhone   string `json:"customer_phone"`
+	DeliveryAddress string `json:"delivery_address"`
+	DeliveryUnit    string `json:"delivery_unit"`
+	DeliveryNotes   string `json:"delivery_notes"`
 }
 
 type orderItemProjectionRow struct {
@@ -67,9 +76,9 @@ func init() {
 
 func NewGetOrderByTrackingID(sb *supabase.Client) GetOrderByTrackingID {
 	return func(ctx context.Context, trackingID string) (*OrderByTrackingResult, error) {
-		// 1) Obtener aggregate_id desde order_tracking
+		// 1) Obtener aggregate_id y datos de fulfillment desde order_tracking
 		trackingData, _, err := sb.From("order_tracking").
-			Select("aggregate_id", "", false).
+			Select("aggregate_id,customer_name,delivery_address,delivery_unit,delivery_notes", "", false).
 			Eq("tracking_id", trackingID).
 			Execute()
 		if err != nil {
@@ -119,16 +128,21 @@ func NewGetOrderByTrackingID(sb *supabase.Client) GetOrderByTrackingID {
 			}
 		}
 
+		t := trackingRows[0]
 		return &OrderByTrackingResult{
-			TrackingID:  trackingID,
-			AggregateID: aggregateID,
-			OrderNumber: rows[0].OrderNumber,
-			MenuID:      rows[0].MenuID,
-			Fulfillment: rows[0].Fulfillment,
-			JourneyID:   rows[0].JourneyID,
-			Items:       items,
-			RequestedAt: requestedAt,
-			CreatedAt:   createdAt,
+			TrackingID:      trackingID,
+			AggregateID:     aggregateID,
+			OrderNumber:     rows[0].OrderNumber,
+			MenuID:          rows[0].MenuID,
+			Fulfillment:     rows[0].Fulfillment,
+			JourneyID:       rows[0].JourneyID,
+			Items:           items,
+			RequestedAt:     requestedAt,
+			CreatedAt:       createdAt,
+			CustomerName:    t.CustomerName,
+			DeliveryAddress: t.DeliveryAddress,
+			DeliveryUnit:    t.DeliveryUnit,
+			DeliveryNotes:   t.DeliveryNotes,
 		}, nil
 	}
 }

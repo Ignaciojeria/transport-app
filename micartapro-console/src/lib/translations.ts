@@ -208,6 +208,9 @@ export interface Translations {
     pendingAssign?: string
     pendingEmpty?: string
     pendingNoActiveJourney?: string
+    unit?: string
+    deliveryNotes?: string
+    total?: string
   }
   jornada?: {
     title: string
@@ -479,7 +482,10 @@ export const translations: Record<Language, Translations> = {
       pendingViewDetails: 'Ver',
       pendingAssign: 'Asignar',
       pendingEmpty: 'No hay órdenes pendientes.',
-      pendingNoActiveJourney: 'Abre una jornada para asignar órdenes.'
+      pendingNoActiveJourney: 'Abre una jornada para asignar órdenes.',
+      unit: 'Depto',
+      deliveryNotes: 'Notas',
+      total: 'Total'
     },
     jornada: {
       title: 'Jornada',
@@ -1052,7 +1058,10 @@ export const translations: Record<Language, Translations> = {
       pendingViewDetails: 'View',
       pendingAssign: 'Assign',
       pendingEmpty: 'No pending orders.',
-      pendingNoActiveJourney: 'Open a workday to assign orders.'
+      pendingNoActiveJourney: 'Open a workday to assign orders.',
+      unit: 'Unit',
+      deliveryNotes: 'Notes',
+      total: 'Total'
     },
     jornada: {
       title: 'Workday',

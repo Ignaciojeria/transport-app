@@ -10,6 +10,7 @@
   const { item } = $props();
 
   const currency = $derived(getEffectiveCurrency(restaurantDataStore.value));
+  const currentMenuId = $derived(restaurantDataStore.value?.id);
   
   let itemImageError = $state(false);
   let showAcompanamientoModal = $state(false);
@@ -89,7 +90,7 @@
       // TODO: Abrir modal de cantidad
       return;
     }
-    cartStore.addItem(item);
+    cartStore.addItem(item, null, [], currentMenuId);
   }
 
   function handleIncrement(event) {
@@ -145,7 +146,7 @@
     if (event) event.preventDefault();
     if (!canAddFromSheet) return;
     try {
-      cartStore.addItem(item, selectedSide, getDescriptionSelectionsArray());
+      cartStore.addItem(item, selectedSide, getDescriptionSelectionsArray(), currentMenuId);
       acompanamientoViewTransition = false;
       selectedSide = null;
       selectedDescriptionSelections = {};

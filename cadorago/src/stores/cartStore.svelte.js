@@ -49,8 +49,9 @@ class CartStore {
    * @param {Object} item - Item del menú a agregar
    * @param {Object} side - Side seleccionado (opcional)
    * @param {Array<{descriptionId: string, optionId: string}>} descriptionSelections - Selecciones de description.selectables (opcional)
+   * @param {string} menuId - ID del menú (asocia el item al menú actual, como el tracking)
    */
-  addItem(item, side = null, descriptionSelections = []) {
+  addItem(item, side = null, descriptionSelections = [], menuId = null) {
     // Si tiene sides, debe tener uno seleccionado
     if (item.sides && item.sides.length > 0 && !side) {
       throw new Error('Debe seleccionar un acompañamiento');
@@ -70,17 +71,18 @@ class CartStore {
     const descKey = descriptionSelections.length
       ? '_' + descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
       : '';
-    const itemKey = (side ? `${itemTitleBase}_${sideNameBase}` : itemTitleBase) + descKey;
+    const baseKey = (side ? `${itemTitleBase}_${sideNameBase}` : itemTitleBase) + descKey;
     
     itemsStore.update((current) => {
       const existingItemIndex = current.findIndex(i => {
+        if ((i.menuId ?? null) !== (menuId ?? null)) return false;
         const iTitleBase = getBaseText(i.title);
         const iSide = i.acompanamientoId ?? null;
         const iDesc = i.descriptionSelections?.length
           ? '_' + i.descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
           : '';
         const existingKey = (iSide ? `${iTitleBase}_${iSide}` : iTitleBase) + iDesc;
-        return existingKey === itemKey;
+        return existingKey === baseKey;
       });
       
       let next;
@@ -100,7 +102,8 @@ class CartStore {
           acompanamiento: side ? getBaseText(side.name) : null,
           acompanamientoId: side ? getBaseText(side.name) : null,
           descriptionSelections: descriptionSelections.length ? descriptionSelections : undefined,
-          station
+          station,
+          menuId: menuId || undefined
         }];
       }
       saveToStorage(next);
@@ -111,19 +114,34 @@ class CartStore {
   /** Obtiene la clave única de un item del carrito (para updateQuantity/removeItemByKey) */
   getItemKey(cartItem) {
     const titleBase = getBaseText(cartItem.title);
-    const side = cartItem.acompanamientoId ?? null;
-    const desc = cartItem.descriptionSelections?.length
-      ? '_' + cartItem.descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
-      : '';
-    return (side ? `${titleBase}_${side}` : titleBase) + desc;
+    let baseKey;
+    if (cartItem.customQuantity != null) {
+      baseKey = `${titleBase}_${cartItem.customQuantity}`;
+    } else {
+      const side = cartItem.acompanamientoId ?? null;
+      const desc = cartItem.descriptionSelections?.length
+        ? '_' + cartItem.descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
+        : '';
+      baseKey = (side ? `${titleBase}_${side}` : titleBase) + desc;
+    }
+    const menuId = cartItem.menuId ?? null;
+    return menuId ? `${menuId}_${baseKey}` : baseKey;
+  }
+
+  /** Obtiene items filtrados por menuId (null = todos, para compatibilidad) */
+  getItemsForMenu(menuId) {
+    const list = this.items;
+    if (!menuId) return list;
+    return list.filter((i) => (i.menuId ?? null) === menuId);
   }
 
   /**
    * Agrega un item al carrito con cantidad personalizada (para WEIGHT, VOLUME, etc.)
    * @param {Object} item - Item del menú a agregar
    * @param {number} quantity - Cantidad personalizada
+   * @param {string} menuId - ID del menú (asocia el item al menú actual)
    */
-  addItemWithQuantity(item, quantity) {
+  addItemWithQuantity(item, quantity, menuId = null) {
     if (!item.pricing) {
       throw new Error('El item debe tener pricing para usar cantidad personalizada');
     }
@@ -137,15 +155,16 @@ class CartStore {
     
     // Crear clave única: title + cantidad (para permitir múltiples cantidades diferentes)
     const itemTitleBase = getBaseText(item.title);
-    const itemKey = `${itemTitleBase}_${quantity}`;
+    const baseKey = `${itemTitleBase}_${quantity}`;
     
     itemsStore.update((current) => {
       const existingItemIndex = current.findIndex(i => {
+        if ((i.menuId ?? null) !== (menuId ?? null)) return false;
         const iTitleBase = getBaseText(i.title);
-        const existingKey = i.customQuantity 
-          ? `${iTitleBase}_${i.customQuantity}` 
+        const existingKey = i.customQuantity
+          ? `${iTitleBase}_${i.customQuantity}`
           : iTitleBase;
-        return existingKey === itemKey;
+        return existingKey === baseKey;
       });
       
       const newItem = {
@@ -153,10 +172,11 @@ class CartStore {
         cantidad: 1,
         customQuantity: quantity,
         precio: precio,
-        pricing: item.pricing
+        pricing: item.pricing,
+        menuId: menuId || undefined
       };
       const next = existingItemIndex !== -1
-        ? [...current, newItem]
+        ? current.map((i, idx) => (idx === existingItemIndex ? { ...i, cantidad: i.cantidad + 1 } : i))
         : [...current, newItem];
       saveToStorage(next);
       return next;
@@ -213,11 +233,13 @@ class CartStore {
   }
 
   /**
-   * Calcula el total del carrito
+   * Calcula el total del carrito (opcionalmente filtrado por menuId)
+   * @param {string} menuId - ID del menú; si se pasa, solo suma items de ese menú
    * @returns {number} Total del carrito
    */
-  getTotal() {
-    return this.items.reduce((total, item) => {
+  getTotal(menuId = null) {
+    const list = menuId ? this.getItemsForMenu(menuId) : this.items;
+    return list.reduce((total, item) => {
       // Si tiene cantidad personalizada y pricing, calcular precio dinámicamente
       if (item.customQuantity != null && item.pricing) {
         const precioUnitario = getPriceFromPricing(item.pricing, item.customQuantity);
@@ -229,11 +251,13 @@ class CartStore {
   }
 
   /**
-   * Obtiene la cantidad total de items
+   * Obtiene la cantidad total de items (opcionalmente filtrado por menuId)
+   * @param {string} menuId - ID del menú; si se pasa, solo cuenta items de ese menú
    * @returns {number} Cantidad total de items
    */
-  getTotalItems() {
-    return this.items.reduce((total, item) => {
+  getTotalItems(menuId = null) {
+    const list = menuId ? this.getItemsForMenu(menuId) : this.items;
+    return list.reduce((total, item) => {
       // Para items con cantidad personalizada, sumar la cantidad personalizada
       if (item.customQuantity) {
         return total + item.customQuantity;
@@ -243,11 +267,20 @@ class CartStore {
   }
 
   /**
-   * Limpia el carrito
+   * Limpia el carrito (opcionalmente solo items del menuId indicado)
+   * @param {string} menuId - Si se pasa, solo elimina items de ese menú; si no, limpia todo
    */
-  clear() {
-    itemsStore.set([]);
-    saveToStorage([]);
+  clear(menuId = null) {
+    if (!menuId) {
+      itemsStore.set([]);
+      saveToStorage([]);
+      return;
+    }
+    itemsStore.update((current) => {
+      const next = current.filter((i) => (i.menuId ?? null) !== menuId);
+      saveToStorage(next);
+      return next;
+    });
   }
 
   /**
@@ -261,7 +294,7 @@ class CartStore {
    * @param {number} orderNumber - Número de orden (opcional)
    * @returns {string} URL de WhatsApp con el mensaje
    */
-  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', deliveryAddress = null, lang = 'ES', translations = null, orderNumber = null) {
+  generateWhatsAppMessage(whatsappNumber, nombreRetiro = '', horaRetiro = '', deliveryAddress = null, lang = 'ES', translations = null, orderNumber = null, menuId = null) {
     // Si no se pasan traducciones, usar valores por defecto en español
     const t = translations || {
       greeting: "¡Hola! Me gustaría hacer el siguiente pedido:\n\n",
@@ -277,8 +310,8 @@ class CartStore {
     const locale = lang === 'PT' ? 'pt-BR' : lang === 'EN' ? 'en-US' : 'es-CL';
     
     let message = t.greeting;
-    
-    this.items.forEach((item, index) => {
+    const itemsToUse = menuId ? this.getItemsForMenu(menuId) : this.items;
+    itemsToUse.forEach((item, index) => {
       const itemTitle = getBaseText(item.title);
       message += `${index + 1}. ${itemTitle}`;
       if (item.acompanamiento) {
@@ -314,7 +347,7 @@ class CartStore {
       message += "\n";
     });
     
-    message += `\n*${t.orderTotal}: $${this.getTotal().toLocaleString(locale)}*\n\n`;
+    message += `\n*${t.orderTotal}: $${this.getTotal(menuId).toLocaleString(locale)}*\n\n`;
     
     // Agregar número de orden si está disponible
     if (orderNumber !== null) {
