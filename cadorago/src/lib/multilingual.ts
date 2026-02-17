@@ -41,9 +41,10 @@ export function getMultilingualText(
 }
 
 /**
- * Obtiene el texto base de un texto multiidioma
+ * Obtiene el texto base de un texto multiidioma o string
  */
-export function getBaseText(text: MultilingualText | undefined | null): string {
-  if (!text || typeof text !== 'object') return '';
+export function getBaseText(text: MultilingualText | string | undefined | null): string {
+  if (!text) return '';
+  if (typeof text === 'string') return text;
   return text.base || '';
 }

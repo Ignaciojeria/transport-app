@@ -36,6 +36,10 @@ func GetMenuItemSchema() *genai.Schema {
 				Items: &genai.Schema{
 					Type: genai.TypeObject,
 					Properties: map[string]*genai.Schema{
+						"id": {
+							Type:        genai.TypeString,
+							Description: "ID único del bloque (kebab-case). OBLIGATORIO si tiene selectables. Ej: 'california-camaron-palta'. Permite mapear descriptionSelections en el pedido.",
+						},
 						"base": {
 							Type:        genai.TypeString,
 							Description: "Texto base de este elemento (idioma principal, generalmente español).",
@@ -49,10 +53,35 @@ func GetMenuItemSchema() *genai.Schema {
 								"pt": {Type: genai.TypeString, Description: "Texto en portugués."},
 							},
 						},
+						"selectables": {
+							Type: genai.TypeObject,
+							Description: "Preferencias sin precio dentro de este bloque (ej. 'envuelto en sésamo o ciboulette'). Solo cuando el texto indica opciones elegibles que NO cambian precio.",
+							Properties: map[string]*genai.Schema{
+								"selection": {
+									Type: genai.TypeObject,
+									Properties: map[string]*genai.Schema{
+										"mode":  {Type: genai.TypeString, Enum: []string{"SINGLE", "MULTIPLE"}, Description: "SINGLE: elegir una. MULTIPLE: elegir varias."},
+										"min":   {Type: genai.TypeInteger, Description: "Mínimo a elegir (0 = opcional)."},
+										"max":   {Type: genai.TypeInteger, Description: "Máximo a elegir."},
+									},
+								},
+								"options": {
+									Type: genai.TypeArray,
+									Items: &genai.Schema{
+										Type: genai.TypeObject,
+										Properties: map[string]*genai.Schema{
+											"id":   {Type: genai.TypeString, Description: "ID único de la opción (kebab-case)."},
+											"name": {Type: genai.TypeObject, Description: "Nombre en formato multiidioma.", Properties: map[string]*genai.Schema{"base": {Type: genai.TypeString}, "languages": {Type: genai.TypeObject, Properties: map[string]*genai.Schema{"es": {Type: genai.TypeString}, "en": {Type: genai.TypeString}, "pt": {Type: genai.TypeString}}}}},
+										},
+										Required: []string{"id", "name"},
+									},
+								},
+							},
+						},
 					},
 					Required: []string{"base", "languages"},
 				},
-				Description: "Array de descripciones: separa cada dimensión en un elemento (ej. [ingredientes, preparación, notas]). Cada elemento en formato multiidioma. Opcional.",
+				Description: "Array de descripciones: cada elemento = una dimensión (ingredientes, preparación, notas). Con id y selectables opcionales para preferencias sin precio.",
 			},
 			"foodAttributes": {
 				Type: genai.TypeArray,

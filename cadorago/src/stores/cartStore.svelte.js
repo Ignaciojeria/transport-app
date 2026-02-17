@@ -48,15 +48,15 @@ class CartStore {
    * Agrega un item al carrito
    * @param {Object} item - Item del menú a agregar
    * @param {Object} side - Side seleccionado (opcional)
+   * @param {Array<{descriptionId: string, optionId: string}>} descriptionSelections - Selecciones de description.selectables (opcional)
    */
-  addItem(item, side = null) {
+  addItem(item, side = null, descriptionSelections = []) {
     // Si tiene sides, debe tener uno seleccionado
     if (item.sides && item.sides.length > 0 && !side) {
       throw new Error('Debe seleccionar un acompañamiento');
     }
     
     // Determinar precio: usar precio del side si existe, sino el precio del item
-    // El precio puede venir directamente (formato antiguo) o desde pricing (formato nuevo)
     let precio = 0;
     if (side) {
       precio = side.price || (side.pricing?.pricePerUnit || 0);
@@ -64,20 +64,22 @@ class CartStore {
       precio = item.price || (item.pricing?.pricePerUnit || 0);
     }
     
-    // Crear clave única: title + name del side (si existe)
-    // Usar getBaseText para obtener el texto base para comparaciones
+    // Crear clave única: title + side + descriptionSelections
     const itemTitleBase = getBaseText(item.title);
     const sideNameBase = side ? getBaseText(side.name) : null;
-    const itemKey = side 
-      ? `${itemTitleBase}_${sideNameBase}` 
-      : itemTitleBase;
+    const descKey = descriptionSelections.length
+      ? '_' + descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
+      : '';
+    const itemKey = (side ? `${itemTitleBase}_${sideNameBase}` : itemTitleBase) + descKey;
     
     itemsStore.update((current) => {
       const existingItemIndex = current.findIndex(i => {
         const iTitleBase = getBaseText(i.title);
-        const existingKey = i.acompanamientoId 
-          ? `${iTitleBase}_${i.acompanamientoId}` 
-          : iTitleBase;
+        const iSide = i.acompanamientoId ?? null;
+        const iDesc = i.descriptionSelections?.length
+          ? '_' + i.descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
+          : '';
+        const existingKey = (iSide ? `${iTitleBase}_${iSide}` : iTitleBase) + iDesc;
         return existingKey === itemKey;
       });
       
@@ -97,12 +99,23 @@ class CartStore {
           precio: precio,
           acompanamiento: side ? getBaseText(side.name) : null,
           acompanamientoId: side ? getBaseText(side.name) : null,
+          descriptionSelections: descriptionSelections.length ? descriptionSelections : undefined,
           station
         }];
       }
       saveToStorage(next);
       return next;
     });
+  }
+
+  /** Obtiene la clave única de un item del carrito (para updateQuantity/removeItemByKey) */
+  getItemKey(cartItem) {
+    const titleBase = getBaseText(cartItem.title);
+    const side = cartItem.acompanamientoId ?? null;
+    const desc = cartItem.descriptionSelections?.length
+      ? '_' + cartItem.descriptionSelections.map(s => `${s.descriptionId}:${s.optionId}`).sort().join(',')
+      : '';
+    return (side ? `${titleBase}_${side}` : titleBase) + desc;
   }
 
   /**
@@ -165,7 +178,7 @@ class CartStore {
 
   /**
    * Actualiza la cantidad de un item
-   * @param {string} itemKey - Clave única del item (title o title_acompanamientoId)
+   * @param {string} itemKey - Clave única del item (usar getItemKey)
    * @param {number} cantidad - Nueva cantidad
    */
   updateQuantity(itemKey, cantidad) {
@@ -176,10 +189,7 @@ class CartStore {
     
     itemsStore.update((current) => {
       const next = current.map(item => {
-        const itemTitleBase = getBaseText(item.title);
-        const currentKey = item.acompanamientoId 
-          ? `${itemTitleBase}_${item.acompanamientoId}` 
-          : itemTitleBase;
+        const currentKey = this.getItemKey(item);
         if (currentKey === itemKey) {
           return { ...item, cantidad };
         }
@@ -192,17 +202,11 @@ class CartStore {
   
   /**
    * Elimina un item del carrito por clave única
-   * @param {string} itemKey - Clave única del item
+   * @param {string} itemKey - Clave única del item (usar getItemKey)
    */
   removeItemByKey(itemKey) {
     itemsStore.update((current) => {
-      const next = current.filter(item => {
-        const itemTitleBase = getBaseText(item.title);
-        const currentKey = item.acompanamientoId 
-          ? `${itemTitleBase}_${item.acompanamientoId}` 
-          : itemTitleBase;
-        return currentKey !== itemKey;
-      });
+      const next = current.filter(item => this.getItemKey(item) !== itemKey);
       saveToStorage(next);
       return next;
     });
@@ -279,6 +283,10 @@ class CartStore {
       message += `${index + 1}. ${itemTitle}`;
       if (item.acompanamiento) {
         message += ` (${item.acompanamiento})`;
+      }
+      if (item.descriptionSelections?.length) {
+        const prefParts = item.descriptionSelections.map(s => s.optionId).join(', ');
+        message += ` [${prefParts}]`;
       }
       
       // Manejar cantidad personalizada (WEIGHT, VOLUME, etc.)

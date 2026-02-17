@@ -113,6 +113,16 @@ export function getPricingLimits(pricing) {
 }
 
 /**
+ * Obtiene los bloques de description que tienen selectables (preferencias sin precio).
+ * @param {Object} item - Item del menú
+ * @returns {Array<{id: string, base: string, languages: object, selectables: object}>}
+ */
+export function getDescriptionSelectablesForItem(item) {
+  const desc = item?.description || [];
+  return desc.filter(d => d.selectables && d.selectables.options?.length > 0);
+}
+
+/**
  * Convierte el nuevo formato de menú al formato esperado por los componentes
  * @param {Object} menuData - Datos del menú en el nuevo formato
  * @returns {Object} Datos en formato compatible

@@ -4,8 +4,11 @@
   import Price from '../atoms/Price.svelte';
   import QuantitySelector from './QuantitySelector.svelte';
   import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
-  import { getPriceFromPricing, getPricingLimits } from '../../services/menuData.js';
+  import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
+  import { getPriceFromPricing, getPricingLimits, getDescriptionSelectablesForItem } from '../../services/menuData.js';
   import { getMultilingualText, getBaseText } from '../../lib/multilingual';
+  import { t } from '../../lib/useLanguage';
+  import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
   
   const { 
     item = {
@@ -20,11 +23,17 @@
   let showAcompanamientoModal = $state(false);
   let showQuantityModal = $state(false);
   let selectedAcompanamiento = $state(null);
+  let selectedDescriptionSelections = $state({});
   let acompanamientoViewTransition = $state(false); // Controla la transición de la vista
   let itemImageError = $state(false); // Controla si la imagen del item falló al cargar
   let sideImageErrors = $state({}); // Controla errores de carga de imágenes de sides
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
+  const descriptionSelectables = $derived(getDescriptionSelectablesForItem(item));
+  const hasDescriptionSelectables = $derived(descriptionSelectables.length > 0);
+  const needsOptionSheet = $derived(hasAcompanamientos || hasDescriptionSelectables);
+  const currency = $derived(getEffectiveCurrency(restaurantDataStore.value));
+  const canAddFromSheet = $derived(!hasAcompanamientos || selectedAcompanamiento !== null);
 
   // Mostrar etiqueta Cocina/Barra solo cuando la URL tiene ?station=true (ej. preview desde consola)
   const showStation = $derived(typeof window !== 'undefined' && new URLSearchParams(window.location?.search || '').get('station') === 'true');
@@ -104,9 +113,8 @@
   
   function handleAddToCart(event) {
     event.stopPropagation();
-    if (hasAcompanamientos) {
+    if (needsOptionSheet) {
       showAcompanamientoModal = true;
-      // Activar transición después de un pequeño delay para suavidad
       setTimeout(() => {
         acompanamientoViewTransition = true;
       }, 10);
@@ -119,9 +127,8 @@
   
   function handleIncrement(event) {
     event.stopPropagation();
-    if (hasAcompanamientos) {
+    if (needsOptionSheet) {
       showAcompanamientoModal = true;
-      // Activar transición después de un pequeño delay para suavidad
       setTimeout(() => {
         acompanamientoViewTransition = true;
       }, 10);
@@ -143,19 +150,59 @@
   
   function handleDecrement(event) {
     event.stopPropagation();
-      // Si tiene múltiples variantes en el carrito, eliminar la última
-      if (cartItems.length > 0) {
-        const lastItem = cartItems[cartItems.length - 1];
-        const lastItemTitle = typeof lastItem.title === 'string' ? lastItem.title : lastItem.title?.base || '';
-        const itemKey = lastItem.acompanamientoId 
-          ? `${lastItemTitle}_${lastItem.acompanamientoId}` 
-          : lastItemTitle;
-      
+    if (cartItems.length > 0) {
+      const lastItem = cartItems[cartItems.length - 1];
+      const itemKey = cartStore.getItemKey(lastItem);
       if (lastItem.cantidad > 1) {
         cartStore.updateQuantity(itemKey, lastItem.cantidad - 1);
       } else {
         cartStore.removeItemByKey(itemKey);
       }
+    }
+  }
+
+  function toggleDescriptionSelectable(descBlock, optionId) {
+    const mode = descBlock.selectables?.selection?.mode ?? 'SINGLE';
+    const max = descBlock.selectables?.selection?.max ?? 1;
+    const prev = selectedDescriptionSelections[descBlock.id];
+    const isArray = Array.isArray(prev);
+    const current = isArray ? prev : (prev ? [prev] : []);
+    const idx = current.indexOf(optionId);
+    let next;
+    if (idx >= 0) {
+      next = current.filter((_, i) => i !== idx);
+    } else {
+      if (mode === 'SINGLE') next = [optionId];
+      else if (current.length >= max) return;
+      else next = [...current, optionId];
+    }
+    selectedDescriptionSelections = {
+      ...selectedDescriptionSelections,
+      [descBlock.id]: mode === 'SINGLE' ? (next[0] ?? null) : next
+    };
+  }
+
+  function getDescriptionSelectionsArray() {
+    const arr = [];
+    for (const [descId, val] of Object.entries(selectedDescriptionSelections)) {
+      if (!val) continue;
+      const ids = Array.isArray(val) ? val : [val];
+      for (const optId of ids) arr.push({ descriptionId: descId, optionId: optId });
+    }
+    return arr;
+  }
+
+  function handleAddFromSheet(event) {
+    if (event) event.preventDefault();
+    if (!canAddFromSheet) return;
+    try {
+      cartStore.addItem(item, selectedAcompanamiento, getDescriptionSelectionsArray());
+      acompanamientoViewTransition = false;
+      selectedAcompanamiento = null;
+      selectedDescriptionSelections = {};
+      setTimeout(() => showAcompanamientoModal = false, 300);
+    } catch (err) {
+      console.error('Error al agregar item:', err);
     }
   }
   
@@ -194,16 +241,11 @@
   }
   
   function handleCancelAcompanamiento(event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    // Primero ocultar la vista con transición
+    if (event) event.stopPropagation();
     acompanamientoViewTransition = false;
-    // Luego limpiar después de la animación
-    setTimeout(() => {
-      showAcompanamientoModal = false;
-      selectedAcompanamiento = null;
-    }, 300); // Duración de la transición
+    selectedAcompanamiento = null;
+    selectedDescriptionSelections = {};
+    setTimeout(() => showAcompanamientoModal = false, 300);
   }
 </script>
 
@@ -237,9 +279,9 @@
       {#if item.description}
         <MenuItemDescription description={item.description} className="text-sm text-gray-700 mb-2" />
       {/if}
-      {#if hasAcompanamientos}
+      {#if needsOptionSheet}
         <p class="text-xs sm:text-sm text-gray-600 mb-2">
-          Selecciona una opción
+          {$t.menu.chooseOption}
         </p>
         {#if minSidePrice !== null}
           <p class="text-sm sm:text-base text-gray-800 font-semibold">
@@ -407,16 +449,16 @@
           <h4 class="text-lg sm:text-xl font-semibold text-gray-800 mb-2">
             {getMultilingualText(item.title)}
           </h4>
-          <MenuItemDescription description={item.description} className="text-sm sm:text-base text-gray-600" />
         </div>
         
         <!-- Lista de acompañamientos -->
+        {#if hasAcompanamientos}
         <div class="space-y-3 sm:space-y-4">
           {#each item.sides as acompanamiento}
             <button
               type="button"
               onclick={(e) => handleSelectAcompanamiento(acompanamiento, e)}
-              class="w-full text-left p-4 sm:p-5 rounded-lg border-2 border-gray-300 hover:border-green-500 hover:bg-green-50 transition-all duration-200 active:scale-[0.98]"
+              class="w-full text-left p-4 sm:p-5 rounded-lg border-2 transition-all duration-200 active:scale-[0.98] {selectedAcompanamiento === acompanamiento ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-500 hover:bg-green-50'}"
             >
               <div class="flex items-center gap-4">
                 <!-- Imagen del acompañamiento (estilo Uber Eats) -->
@@ -456,6 +498,53 @@
             </button>
           {/each}
         </div>
+        {/if}
+
+        <!-- Selectables de description (preferencias sin precio) -->
+        {#if hasDescriptionSelectables}
+        <div class="mt-6 space-y-4">
+          {#each descriptionSelectables as descBlock}
+            {@const mode = descBlock.selectables?.selection?.mode ?? 'SINGLE'}
+            {@const max = descBlock.selectables?.selection?.max ?? 1}
+            {@const selected = selectedDescriptionSelections[descBlock.id]}
+            {@const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : [])}
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-2">{$t.menu.optional}</p>
+              {#if descBlock.base}
+                <p class="text-sm text-gray-700 mb-2">{getMultilingualText(descBlock)}</p>
+              {/if}
+              <div class="flex flex-wrap gap-2">
+                {#each descBlock.selectables.options as opt}
+                  {@const isSelected = selectedArr.includes(opt.id)}
+                  {@const isDisabled = mode === 'MULTIPLE' && !isSelected && selectedArr.length >= max}
+                  <label class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-colors {isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:border-green-500'} {isSelected ? 'border-green-500 bg-green-50' : 'border-gray-300'}">
+                    <input
+                      type={mode === 'SINGLE' ? 'radio' : 'checkbox'}
+                      name={mode === 'SINGLE' ? `desc-${descBlock.id}` : undefined}
+                      checked={isSelected}
+                      disabled={isDisabled}
+                      onchange={() => toggleDescriptionSelectable(descBlock, opt.id)}
+                    />
+                    <span>{getMultilingualText(opt.name)}</span>
+                  </label>
+                {/each}
+              </div>
+            </div>
+          {/each}
+        </div>
+        {#if hasDescriptionSelectables || (hasAcompanamientos && selectedAcompanamiento)}
+        <div class="mt-6 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            class="w-full py-4 rounded-lg font-bold text-lg bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={!canAddFromSheet}
+            onclick={handleAddFromSheet}
+          >
+            {$t.menu.add1ToCart} • {formatPrice(selectedAcompanamiento ? (selectedAcompanamiento.price ?? getPriceFromPricing(selectedAcompanamiento.pricing)) : (item.price ?? getPriceFromPricing(item.pricing)), currency)}
+          </button>
+        </div>
+        {/if}
+        {/if}
       </div>
     </div>
   </div>

@@ -406,8 +406,11 @@
         unitCost,
         totalCost,
         pricingMode,
-        productName: getBaseText(item.title) + (item.acompanamiento ? ` (${item.acompanamiento})` : ''),
-        station: item.station ?? ''
+        productName: getBaseText(item.title)
+          + (item.acompanamiento ? ` (${item.acompanamiento})` : '')
+          + (item.descriptionSelections?.length ? ` [${item.descriptionSelections.map(s => s.optionId).join(', ')}]` : ''),
+        station: item.station ?? '',
+        descriptionSelections: item.descriptionSelections?.length ? item.descriptionSelections : undefined
       };
     });
 

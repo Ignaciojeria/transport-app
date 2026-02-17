@@ -1,7 +1,7 @@
 <script>
   import { cartStore, itemsStore } from '../../stores/cartStore.svelte.js';
   import { restaurantDataStore } from '../../stores/restaurantDataStore.svelte.js';
-  import { getPriceFromPricing } from '../../services/menuData.js';
+  import { getPriceFromPricing, getDescriptionSelectablesForItem } from '../../services/menuData.js';
   import { getMultilingualText, getBaseText } from '../../lib/multilingual';
   import { getEffectiveCurrency, formatPrice } from '../../lib/currency';
   import MenuItemDescription from '../atoms/MenuItemDescription.svelte';
@@ -15,12 +15,17 @@
   let showAcompanamientoModal = $state(false);
   let acompanamientoViewTransition = $state(false);
   let sideImageErrors = $state({});
+  let selectedSide = $state(null);
+  let selectedDescriptionSelections = $state({}); // { descriptionId: optionId } para SINGLE, { descriptionId: [optionId] } para MULTIPLE
   
   // Obtener textos multiidioma
   const itemTitle = $derived(getMultilingualText(item.title));
   const itemTitleBase = $derived(getBaseText(item.title));
   
   const hasAcompanamientos = $derived(item.sides && item.sides.length > 0);
+  const descriptionSelectables = $derived(getDescriptionSelectablesForItem(item));
+  const hasDescriptionSelectables = $derived(descriptionSelectables.length > 0);
+  const needsOptionSheet = $derived(hasAcompanamientos || hasDescriptionSelectables);
   const pricingMode = $derived(item.pricing?.mode || 'UNIT');
   const needsQuantitySelector = $derived(
     pricingMode === 'WEIGHT' || 
@@ -73,7 +78,7 @@
 
   function handleAddToCart(event) {
     event.stopPropagation();
-    if (hasAcompanamientos) {
+    if (needsOptionSheet) {
       showAcompanamientoModal = true;
       setTimeout(() => {
         acompanamientoViewTransition = true;
@@ -89,7 +94,7 @@
 
   function handleIncrement(event) {
     event.stopPropagation();
-    if (hasAcompanamientos) {
+    if (needsOptionSheet) {
       showAcompanamientoModal = true;
       setTimeout(() => {
         acompanamientoViewTransition = true;
@@ -103,38 +108,77 @@
     cartStore.addItem(item);
   }
 
+  const canAddFromSheet = $derived(!hasAcompanamientos || selectedSide !== null);
+
+  function toggleDescriptionSelectable(descBlock, optionId) {
+    const mode = descBlock.selectables?.selection?.mode ?? 'SINGLE';
+    const max = descBlock.selectables?.selection?.max ?? 1;
+    const prev = selectedDescriptionSelections[descBlock.id];
+    const isArray = Array.isArray(prev);
+    const current = isArray ? prev : (prev ? [prev] : []);
+    const idx = current.indexOf(optionId);
+    let next;
+    if (idx >= 0) {
+      next = current.filter((_, i) => i !== idx);
+    } else {
+      if (mode === 'SINGLE') next = [optionId];
+      else if (current.length >= max) return;
+      else next = [...current, optionId];
+    }
+    selectedDescriptionSelections = {
+      ...selectedDescriptionSelections,
+      [descBlock.id]: mode === 'SINGLE' ? (next[0] ?? null) : next
+    };
+  }
+
+  function getDescriptionSelectionsArray() {
+    const arr = [];
+    for (const [descId, val] of Object.entries(selectedDescriptionSelections)) {
+      if (!val) continue;
+      const ids = Array.isArray(val) ? val : [val];
+      for (const optId of ids) arr.push({ descriptionId: descId, optionId: optId });
+    }
+    return arr;
+  }
+
+  function handleAddFromSheet(event) {
+    if (event) event.preventDefault();
+    if (!canAddFromSheet) return;
+    try {
+      cartStore.addItem(item, selectedSide, getDescriptionSelectionsArray());
+      acompanamientoViewTransition = false;
+      selectedSide = null;
+      selectedDescriptionSelections = {};
+      setTimeout(() => showAcompanamientoModal = false, 300);
+    } catch (err) {
+      console.error('Error al agregar item:', err);
+    }
+  }
+
   function handleSelectAcompanamiento(acompanamiento, event) {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
-    try {
-      cartStore.addItem(item, acompanamiento);
-      acompanamientoViewTransition = false;
-      setTimeout(() => {
-        showAcompanamientoModal = false;
-      }, 300);
-    } catch (err) {
-      console.error('Error al agregar item:', err);
+    selectedSide = acompanamiento;
+    if (!hasDescriptionSelectables) {
+      handleAddFromSheet();
     }
   }
 
   function handleCancelAcompanamiento(event) {
     if (event) event.stopPropagation();
     acompanamientoViewTransition = false;
-    setTimeout(() => {
-      showAcompanamientoModal = false;
-    }, 300);
+    selectedSide = null;
+    selectedDescriptionSelections = {};
+    setTimeout(() => showAcompanamientoModal = false, 300);
   }
 
   function handleDecrement(event) {
     event.stopPropagation();
     if (cartItems.length === 0) return;
     const lastItem = cartItems[cartItems.length - 1];
-    const lastTitleBase = typeof lastItem.title === 'string' ? lastItem.title : lastItem.title?.base || '';
-    const itemKey = lastItem.acompanamientoId
-      ? `${lastTitleBase}_${lastItem.acompanamientoId}`
-      : lastTitleBase;
+    const itemKey = cartStore.getItemKey(lastItem);
     if (lastItem.cantidad > 1) {
       cartStore.updateQuantity(itemKey, lastItem.cantidad - 1);
     } else {
@@ -291,15 +335,15 @@
 
       <div class="acompanamiento-sheet-item-info">
         <h4 class="acompanamiento-sheet-item-title">{itemTitle}</h4>
-        <MenuItemDescription description={item.description} className="acompanamiento-sheet-item-desc" />
       </div>
 
+      {#if hasAcompanamientos}
       <div class="acompanamiento-sheet-options">
         {#each item.sides as side}
           <button
             type="button"
             onclick={(e) => handleSelectAcompanamiento(side, e)}
-            class="acompanamiento-sheet-option"
+            class="acompanamiento-sheet-option {selectedSide === side ? 'acompanamiento-sheet-option--selected' : ''}"
           >
             <div class="acompanamiento-sheet-option-image">
               {#if side.photoUrl && !sideImageErrors[getBaseText(side.name)]}
@@ -325,6 +369,52 @@
           </button>
         {/each}
       </div>
+      {/if}
+
+      {#if hasDescriptionSelectables}
+      <div class="acompanamiento-sheet-selectables">
+        {#each descriptionSelectables as descBlock}
+          {@const mode = descBlock.selectables?.selection?.mode ?? 'SINGLE'}
+          {@const max = descBlock.selectables?.selection?.max ?? 1}
+          {@const selected = selectedDescriptionSelections[descBlock.id]}
+          {@const selectedArr = Array.isArray(selected) ? selected : (selected ? [selected] : [])}
+          <div class="selectable-group">
+            <p class="selectable-group-label">{$t.menu.optional}</p>
+            {#if descBlock.base}
+              <p class="selectable-group-desc">{getMultilingualText(descBlock)}</p>
+            {/if}
+            <div class="selectable-options">
+              {#each descBlock.selectables.options as opt}
+                {@const isSelected = selectedArr.includes(opt.id)}
+                {@const isDisabled = mode === 'MULTIPLE' && !isSelected && selectedArr.length >= max}
+                <label class="selectable-option {isDisabled ? 'selectable-option--disabled' : ''}">
+                  <input
+                    type={mode === 'SINGLE' ? 'radio' : 'checkbox'}
+                    name={mode === 'SINGLE' ? `desc-${descBlock.id}` : undefined}
+                    checked={isSelected}
+                    disabled={isDisabled}
+                    onchange={() => toggleDescriptionSelectable(descBlock, opt.id)}
+                  />
+                  <span>{getMultilingualText(opt.name)}</span>
+                </label>
+              {/each}
+            </div>
+          </div>
+        {/each}
+      </div>
+      {#if hasDescriptionSelectables || (hasAcompanamientos && selectedSide)}
+      <div class="acompanamiento-sheet-footer">
+        <button
+          type="button"
+          class="acompanamiento-sheet-add-btn"
+          disabled={!canAddFromSheet}
+          onclick={handleAddFromSheet}
+        >
+          {$t.menu.add1ToCart} • {formatPrice(selectedSide ? (selectedSide.price ?? getPriceFromPricing(selectedSide.pricing)) : (item.price ?? getPriceFromPricing(item.pricing)), currency)}
+        </button>
+      </div>
+      {/if}
+      {/if}
     </div>
   </div>
 {/if}
@@ -629,11 +719,105 @@
     color: var(--text-dark);
   }
 
+  .acompanamiento-sheet-option--selected {
+    border-color: var(--primary);
+    background-color: rgba(200, 90, 58, 0.08);
+  }
+
   .acompanamiento-sheet-option-price {
     font-family: 'Playfair Display', serif;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--primary);
+  }
+
+  .acompanamiento-sheet-selectables {
+    margin-top: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .selectable-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .selectable-group-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .selectable-group-desc {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    margin: 0.25rem 0 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  .selectable-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .selectable-option {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 2px solid var(--border-light);
+    border-radius: 8px;
+    background: var(--white);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: border-color 0.2s, background-color 0.2s;
+  }
+
+  .selectable-option:hover:not(.selectable-option--disabled) {
+    border-color: var(--primary);
+    background-color: rgba(200, 90, 58, 0.06);
+  }
+
+  .selectable-option--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .selectable-option input {
+    accent-color: var(--primary);
+  }
+
+  .acompanamiento-sheet-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-light);
+  }
+
+  .acompanamiento-sheet-add-btn {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    background-color: var(--primary);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+  }
+
+  .acompanamiento-sheet-add-btn:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+  }
+
+  .acompanamiento-sheet-add-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
   @media (max-width: 768px) {

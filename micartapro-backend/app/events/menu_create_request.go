@@ -137,6 +137,46 @@ const (
 )
 
 /*
+	DESCRIPTION WITH SELECTABLES
+	description[]: cada bloque puede tener id y selectables para preferencias sin precio.
+	sides[]: variantes reales con precio.
+*/
+
+// DescriptionSelectableOption es una opción seleccionable dentro de un bloque de descripción (preferencia sin precio).
+type DescriptionSelectableOption struct {
+	ID   string           `json:"id"`
+	Name MultilingualText `json:"name"`
+}
+
+// DescriptionSelectables define preferencias sin precio dentro de un bloque de descripción.
+type DescriptionSelectables struct {
+	Selection struct {
+		Mode string `json:"mode"` // "SINGLE" o "MULTIPLE"
+		Min  int    `json:"min"`
+		Max  int    `json:"max"`
+	} `json:"selection"`
+	Options []DescriptionSelectableOption `json:"options"`
+}
+
+// DescriptionBlock es un elemento del array description con soporte opcional de selectables.
+type DescriptionBlock struct {
+	ID          string                 `json:"id,omitempty"`
+	Base        string                 `json:"base"`
+	Languages   map[string]string      `json:"languages"`
+	Selectables *DescriptionSelectables `json:"selectables,omitempty"`
+}
+
+// GetText retorna el texto en el idioma especificado.
+func (d DescriptionBlock) GetText(lang string) string {
+	if d.Languages != nil {
+		if text, ok := d.Languages[lang]; ok && text != "" {
+			return text
+		}
+	}
+	return d.Base
+}
+
+/*
 	MENU MODELS
 */
 
@@ -150,14 +190,14 @@ type Side struct {
 }
 
 type MenuItem struct {
-	ID             string             `json:"id"`
-	Title          MultilingualText   `json:"title"`
-	Description    []MultilingualText `json:"description,omitempty"` // Array: cada elemento es una dimensión (ej. ingredientes, preparación, notas)
-	FoodAttributes []FoodAttribute    `json:"foodAttributes,omitempty"`
-	Sides          []Side             `json:"sides,omitempty"`
-	Pricing        Pricing            `json:"pricing"`
-	PhotoUrl       string             `json:"photoUrl,omitempty"`
-	Station        Station            `json:"station,omitempty"`
+	ID             string            `json:"id"`
+	Title          MultilingualText  `json:"title"`
+	Description    []DescriptionBlock `json:"description,omitempty"` // Array: cada elemento es una dimensión; puede tener id y selectables para preferencias sin precio
+	FoodAttributes []FoodAttribute   `json:"foodAttributes,omitempty"`
+	Sides          []Side            `json:"sides,omitempty"`
+	Pricing        Pricing           `json:"pricing"`
+	PhotoUrl       string            `json:"photoUrl,omitempty"`
+	Station        Station           `json:"station,omitempty"`
 }
 
 // GetDescriptionText une todos los elementos de Description en un solo texto para el idioma dado.
@@ -186,7 +226,7 @@ type menuItemRaw struct {
 	Station        Station           `json:"station,omitempty"`
 }
 
-// UnmarshalJSON acepta description como array o como objeto único (datos existentes en BD).
+// UnmarshalJSON acepta description como array de DescriptionBlock, array de MultilingualText (legacy), o objeto único (legacy).
 func (m *MenuItem) UnmarshalJSON(data []byte) error {
 	var raw menuItemRaw
 	if err := json.Unmarshal(data, &raw); err != nil {
@@ -203,16 +243,24 @@ func (m *MenuItem) UnmarshalJSON(data []byte) error {
 		m.Description = nil
 		return nil
 	}
-	var arr []MultilingualText
+	var arr []DescriptionBlock
 	if err := json.Unmarshal(raw.Description, &arr); err == nil {
 		m.Description = arr
+		return nil
+	}
+	var legacyArr []MultilingualText
+	if err := json.Unmarshal(raw.Description, &legacyArr); err == nil {
+		m.Description = make([]DescriptionBlock, len(legacyArr))
+		for i, mt := range legacyArr {
+			m.Description[i] = DescriptionBlock{Base: mt.Base, Languages: mt.Languages}
+		}
 		return nil
 	}
 	var single MultilingualText
 	if err := json.Unmarshal(raw.Description, &single); err != nil {
 		return err
 	}
-	m.Description = []MultilingualText{single}
+	m.Description = []DescriptionBlock{{Base: single.Base, Languages: single.Languages}}
 	return nil
 }
 
