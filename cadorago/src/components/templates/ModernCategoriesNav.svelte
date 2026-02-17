@@ -36,7 +36,7 @@
 <style>
   .categories-nav {
     background-color: var(--white);
-    padding: 2rem 1rem;
+    padding: 1rem;
     border-bottom: 1px solid var(--border-light);
     overflow-x: auto;
     position: sticky;
@@ -49,13 +49,22 @@
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Ocultar scrollbar manteniendo scroll (touch, rueda, trackpad) */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .categories-container::-webkit-scrollbar {
+    display: none;
   }
 
   .category-btn {
-    padding: 1rem 1.5rem;
+    padding: 0.85rem 1.25rem;
     border: none;
     background-size: cover;
     background-position: center;
@@ -63,12 +72,14 @@
     border-radius: 12px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     transition: all 0.3s ease;
     white-space: nowrap;
     position: relative;
     overflow: hidden;
-    min-height: 80px;
+    min-height: 72px;
+    min-width: 120px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -120,18 +131,19 @@
 
   @media (max-width: 768px) {
     .categories-nav {
-      padding: 1rem 0.5rem;
+      padding: 0.75rem 0.5rem;
       top: 4.75rem; /* Debajo de la topbar en móvil (evitar que tape las secciones) */
     }
 
     .categories-container {
-      gap: 0.4rem;
+      gap: 0.5rem;
     }
 
     .category-btn {
-      padding: 0.5rem 0.8rem;
-      font-size: 0.75rem;
-      min-height: 50px;
+      padding: 0.65rem 1rem;
+      font-size: 0.8rem;
+      min-height: 58px;
+      min-width: 100px;
     }
   }
 </style>
