@@ -53,6 +53,7 @@ export interface Translations {
     clearOrder: string
     pickupInfo: string
     pickupName: string
+    nameLabel: string
     pickupTime: string
     timeFormat: string
     cancel: string
@@ -218,6 +219,7 @@ export const translations: Record<Language, Translations> = {
       clearOrder: 'Limpiar pedido',
       pickupInfo: 'Información de Retiro',
       pickupName: 'Nombre de quien va a retirar *',
+      nameLabel: 'Nombre *',
       pickupTime: 'Hora de retiro *',
       timeFormat: 'Formato: HH:MM (24 horas, ejemplo: 14:30 para 2:30 PM)',
       cancel: 'Cancelar',
@@ -372,6 +374,7 @@ export const translations: Record<Language, Translations> = {
       clearOrder: 'Limpar pedido',
       pickupInfo: 'Informações de Retirada',
       pickupName: 'Nome de quem vai retirar *',
+      nameLabel: 'Nome *',
       pickupTime: 'Hora de retirada *',
       timeFormat: 'Formato: HH:MM (24 horas, exemplo: 14:30 para 2:30 PM)',
       cancel: 'Cancelar',
@@ -529,6 +532,7 @@ export const translations: Record<Language, Translations> = {
       clearOrder: 'Clear order',
       pickupInfo: 'Pickup Information',
       pickupName: 'Name of person picking up *',
+      nameLabel: 'Name *',
       pickupTime: 'Pickup time *',
       timeFormat: 'Format: HH:MM (24 hours, example: 14:30 for 2:30 PM)',
       cancel: 'Cancel',

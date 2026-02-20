@@ -1039,7 +1039,7 @@
           <div class="space-y-4">
             <div>
               <label for="nombre-retiro-pickup" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-                {$t.cart.pickupName}
+                {deliveryType === 'DIGITAL' ? $t.cart.nameLabel : $t.cart.pickupName}
               </label>
               <input
                 id="nombre-retiro-pickup"
