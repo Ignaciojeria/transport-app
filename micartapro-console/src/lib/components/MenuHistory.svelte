@@ -31,6 +31,9 @@
   let iframeKey = $state(0) // Key para forzar recarga del iframe
   let editingNameId = $state<string | null>(null) // ID de la versión cuyo nombre se está editando
   let editingName = $state<string>('') // Nombre temporal mientras se edita
+  let previewIframeEl = $state<HTMLIFrameElement | null>(null)
+  let pendingPrevisualizar = $state(false)
+  let catalogMessageQueue = $state<Record<string, unknown>[]>([])
 
   const user = $derived(authState.user)
   const userId = $derived(user?.id || '')
@@ -98,9 +101,19 @@
       // Generar URL usando menuId directamente (no requiere slug)
       const url = await generateMenuUrl(menuId, session.access_token, currentLanguage, versionId)
       if (url) {
-        previewUrl = addPreviewQueryParams(url)
+        let finalUrl = addPreviewQueryParams(url)
+        if (typeof window !== 'undefined' && (window !== window.top || new URLSearchParams(window.location.search).get('demo') === '1')) {
+          finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'demo=1'
+        }
+        previewUrl = finalUrl
         showPreview = true
         iframeKey++ // Forzar recarga del iframe
+        // Demo Remotion: notificar al padre la URL del catálogo para que pueda enviar mensajes directamente
+        if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1') {
+          try {
+            window.parent.postMessage({ type: 'MICARTAPRO_CATALOG_URL', url: finalUrl }, '*')
+          } catch (_) { /* ignore */ }
+        }
       } else {
         alert('No se pudo generar la URL de previsualización')
       }
@@ -245,8 +258,65 @@
     }
   }
 
+  $effect(() => {
+    if (pendingPrevisualizar && versions.length > 0) {
+      previewVersion(versions[0].id)
+      pendingPrevisualizar = false
+    }
+  })
+
   onMount(() => {
     loadVersions()
+
+    // Demo Remotion: previsualizar primera versión al recibir postMessage
+    const msgHandler = (e: MessageEvent) => {
+      const allowed = ['http://localhost:', 'http://127.0.0.1:']
+      if (!allowed.some(o => e.origin?.startsWith(o))) return
+      if (!e.data?.clickPrevisualizar) return
+      if (versions.length > 0) {
+        previewVersion(versions[0].id)
+      } else {
+        pendingPrevisualizar = true
+      }
+    }
+    window.addEventListener('message', msgHandler)
+
+    // Demo Remotion: reenviar mensajes del catálogo al iframe de preview
+    const catalogHandler = (e: CustomEvent) => {
+      if (!e.detail) return
+      const send = (win: Window, msg: Record<string, unknown>) => {
+        try {
+          win.postMessage(msg, '*')
+        } catch (_) { /* ignore */ }
+      }
+      if (showPreview && previewIframeEl?.contentWindow) {
+        send(previewIframeEl.contentWindow, e.detail)
+      } else {
+        catalogMessageQueue = [...catalogMessageQueue, e.detail]
+      }
+    }
+    window.addEventListener('remotion-catalog-demo', catalogHandler as EventListener)
+
+    return () => {
+      window.removeEventListener('message', msgHandler)
+      window.removeEventListener('remotion-catalog-demo', catalogHandler as EventListener)
+    }
+  })
+
+  function flushCatalogQueue() {
+    if (!previewIframeEl?.contentWindow || catalogMessageQueue.length === 0) return
+    catalogMessageQueue.forEach((msg) => {
+      try {
+        previewIframeEl!.contentWindow!.postMessage(msg, '*')
+      } catch (_) { /* ignore */ }
+    })
+    catalogMessageQueue = []
+  }
+
+  $effect(() => {
+    if (previewIframeEl && catalogMessageQueue.length > 0) {
+      flushCatalogQueue()
+    }
   })
 </script>
 
@@ -434,12 +504,14 @@
       {#if previewUrl}
         {#key iframeKey}
           <iframe
+            bind:this={previewIframeEl}
             src={previewUrl}
             class="w-full h-full border-0"
             title="Vista previa de la versión"
             loading="lazy"
             allow="camera; microphone; geolocation; autoplay; clipboard-write"
             sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
+            onload={flushCatalogQueue}
           ></iframe>
         {/key}
       {:else}

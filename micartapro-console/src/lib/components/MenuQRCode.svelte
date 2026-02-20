@@ -20,6 +20,7 @@
   let menuUrl = $state<string | null>(null)
   let qrCodeUrl = $state<string | null>(null)
   let slug = $state<string | null>(null)
+  let menuWindowRef = $state<Window | null>(null)
 
   async function loadQRCode() {
     if (!userId || !session?.access_token) {
@@ -57,6 +58,25 @@
       error = err.message || 'Error al cargar el código QR'
     } finally {
       loading = false
+    }
+  }
+
+  function openMenuInNewTab() {
+    if (!menuUrl) return
+    let url = menuUrl
+    if (typeof window !== 'undefined' && (window !== window.top || new URLSearchParams(window.location.search).get('demo') === '1')) {
+      url += (url.includes('?') ? '&' : '?') + 'demo=1'
+    }
+    openUrlInNewTab(url)
+  }
+
+  function openUrlInNewTab(url: string) {
+    const w = window.open(url, '_blank')
+    if (w) {
+      menuWindowRef = w
+      w.focus()
+      setTimeout(() => { try { w.focus() } catch (_) {} }, 200)
+      setTimeout(() => { try { w.focus() } catch (_) {} }, 500)
     }
   }
 
@@ -108,6 +128,7 @@
 </script>
 
 <div class="flex flex-col h-screen h-[100dvh] bg-white relative overflow-hidden">
+  <div class="flex flex-col h-full">
   <!-- Header -->
   <header class="border-b border-gray-200 bg-white px-4 py-2 flex items-center justify-between flex-shrink-0 sticky top-0 z-20 bg-white">
     <button 
@@ -198,7 +219,7 @@
               Descargar QR
             </button>
             <button
-              onclick={() => menuUrl && window.open(menuUrl, '_blank')}
+              onclick={openMenuInNewTab}
               class="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,5 +238,6 @@
         </div>
       </div>
     {/if}
+  </div>
   </div>
 </div>

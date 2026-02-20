@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { Suspense } from 'react'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
+import { RemotionDemoListener } from '@/components/RemotionDemoListener'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -26,6 +27,7 @@ export default function RootLayout({
         {/* Supabase maneja Google OAuth internamente */}
       </head>
       <body className={inter.className}>
+        <RemotionDemoListener />
         <AuthProvider>
           <Suspense fallback={
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { RemotionDemoListener } from '@/components/RemotionDemoListener'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -35,6 +36,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
+        <RemotionDemoListener />
         {children}
       </body>
     </html>

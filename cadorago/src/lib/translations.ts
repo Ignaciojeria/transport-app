@@ -93,7 +93,7 @@ export interface Translations {
       emptyCartMessage: string
       clear: string
       preparingOrder: string
-      redirectingWhatsApp: string
+      orderSent: string
       viewYourOrder: string
       viewYourOrders: string
     }
@@ -236,7 +236,7 @@ export const translations: Record<Language, Translations> = {
       emptyCartMessage: 'Agrega items del menú para comenzar',
       clear: 'Vaciar',
       preparingOrder: 'Preparando tu pedido...',
-      redirectingWhatsApp: 'Redirigiendo a WhatsApp...',
+      orderSent: 'Tu pedido se ha enviado correctamente',
       viewYourOrder: 'Ver tu pedido',
       viewYourOrders: 'Ver tus pedidos',
       deliveryType: 'Tipo de entrega',
@@ -387,7 +387,7 @@ export const translations: Record<Language, Translations> = {
       emptyCartMessage: 'Adicione itens do cardápio para começar',
       clear: 'Limpar',
       preparingOrder: 'Preparando seu pedido...',
-      redirectingWhatsApp: 'Redirecionando para o WhatsApp...',
+      orderSent: 'Seu pedido foi enviado com sucesso',
       viewYourOrder: 'Ver seu pedido',
       viewYourOrders: 'Ver seus pedidos',
       deliveryType: 'Tipo de entrega',
@@ -541,7 +541,7 @@ export const translations: Record<Language, Translations> = {
       emptyCartMessage: 'Add items from the menu to get started',
       clear: 'Clear',
       preparingOrder: 'Preparing your order...',
-      redirectingWhatsApp: 'Redirecting to WhatsApp...',
+      orderSent: 'Your order has been sent successfully',
       viewYourOrder: 'View your order',
       viewYourOrders: 'View your orders',
       deliveryType: 'Delivery type',

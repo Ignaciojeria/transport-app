@@ -296,6 +296,8 @@
         <button 
           class="cta-btn" 
           onclick={handleAddToCart}
+          data-item-title={itemTitleBase}
+          data-remotion-add={typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1' ? itemTitleBase : undefined}
         >
           {$t.menu.addToCart}
         </button>

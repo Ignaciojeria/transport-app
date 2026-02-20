@@ -410,6 +410,8 @@
   }
 
   onMount(() => {
+    const onKanban = () => { ordersMainTab = 'kanban'; showQRView = false }
+    window.addEventListener('remotion-click-kanban-tab', onKanban)
     let cancelled = false
     let pollInterval: ReturnType<typeof setInterval> | null = null
     ;(async () => {
@@ -427,6 +429,7 @@
       }
     })()
     return () => {
+      window.removeEventListener('remotion-click-kanban-tab', onKanban)
       cancelled = true
       if (pollInterval) clearInterval(pollInterval)
       realtimeUnsubscribe?.()

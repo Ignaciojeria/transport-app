@@ -357,6 +357,8 @@
           onclick={handleAddToCart}
           class="absolute -bottom-2 -right-2 w-8 h-8 bg-white hover:bg-gray-50 rounded-full shadow-lg border border-gray-300 flex items-center justify-center transition-colors"
           aria-label="Agregar al carrito"
+          data-item-title={itemTitleBase}
+          data-remotion-add={typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('demo') === '1' ? itemTitleBase : undefined}
         >
           <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

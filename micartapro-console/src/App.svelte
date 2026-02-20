@@ -71,6 +71,24 @@
     initLanguage()
     initAuth()
 
+    // Demo Remotion: seleccionar sección al recibir postMessage
+    const msgHandler = (e: MessageEvent) => {
+      const allowed = ['http://localhost:', 'http://127.0.0.1:']
+      if (!allowed.some(o => e.origin?.startsWith(o))) return
+      if (e.data?.clickJornada) handleSectionChange('jornada')
+      if (e.data?.clickOpenJourney) window.dispatchEvent(new CustomEvent('remotion-open-jornada'))
+      if (e.data?.clickOrdenes) handleSectionChange('ordenes')
+      if (e.data?.clickKanbanTab) window.dispatchEvent(new CustomEvent('remotion-click-kanban-tab'))
+      if (e.data?.clickNegocios) handleSectionChange('negocios')
+      if (e.data?.clickHistorial) handleSectionChange('historial')
+      // Reenviar mensajes del catálogo al iframe de previsualización (dentro de MenuHistory)
+      const catalogKeys = ['scrollY', 'changeLanguage', 'scrollToElement', 'clickAddToCart', 'selectAndAddFromSheet', 'clickRealizarPedido', 'selectDelivery', 'typeDeliveryAddress', 'selectFirstAddressSuggestion', 'clickDeliveryNextStep', 'fillDeliveryContactForm', 'clickPlaceOrder']
+      if (catalogKeys.some(k => k in (e.data || {}))) {
+        window.dispatchEvent(new CustomEvent('remotion-catalog-demo', { detail: e.data }))
+      }
+    }
+    window.addEventListener('message', msgHandler)
+
     const params = new URLSearchParams(window.location.search)
     const view = params.get('view')
     const menuId = params.get('menu_id')
@@ -100,13 +118,27 @@
     }
 
     // Si no hay usuario autenticado y no es vista station, redirigir a auth-ui
+    // No redirigir si tenemos #auth= (token directo de demo/Remotion): esperar a que setSession termine
+    const hasAuthFragment = hash.startsWith('#auth=')
     setTimeout(() => {
       if (!publicStationParams && !user && !authLoading) {
-        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
-        window.location.replace(authUiUrl)
+        if (hasAuthFragment) {
+          // Token directo: dar más tiempo a setSession antes de redirigir
+          setTimeout(() => {
+            if (!authState.user) {
+              const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+              window.location.replace(isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com')
+            }
+          }, 2000)
+        } else {
+          const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          const authUiUrl = isLocalDev ? 'http://localhost:3003' : 'https://auth.micartapro.com'
+          window.location.replace(authUiUrl)
+        }
       }
-    }, 100)
+    }, hasAuthFragment ? 500 : 100)
+
+    return () => window.removeEventListener('message', msgHandler)
   })
 </script>
 

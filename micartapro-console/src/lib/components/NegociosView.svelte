@@ -113,6 +113,21 @@
 
   onMount(() => {
     load()
+
+    // Demo Remotion: seleccionar negocio por slug al recibir postMessage
+    const msgHandler = (e: MessageEvent) => {
+      const allowed = ['http://localhost:', 'http://127.0.0.1:']
+      if (!allowed.some(o => e.origin?.startsWith(o))) return
+      const slug = e.data?.clickSelectBusiness
+      if (slug && menus.length > 0) {
+        const menu = menus.find((m) => m.slug === slug)
+        if (menu && menu.menuId !== activeMenuId) {
+          handleSelect(menu)
+        }
+      }
+    }
+    window.addEventListener('message', msgHandler)
+    return () => window.removeEventListener('message', msgHandler)
   })
 </script>
 

@@ -40,6 +40,12 @@ function highlightAIAgent(text: string) {
 export default function LandingPage() {
   const { language, changeLanguage, t, isLoading, availableLanguages, languageNames, languageFlags } = useLanguage()
 
+  const getAuthRedirectUrl = () => {
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+    const demo = params?.get('demo') === '1' ? '&demo=1' : ''
+    return `${getAuthUiUrl()}?lang=${language}${demo}`
+  }
+
   // Show loading while language is loading
   if (isLoading) {
     return (
@@ -79,7 +85,7 @@ export default function LandingPage() {
               />
               <Button 
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => window.location.href = `${getAuthUiUrl()}?lang=${language}`}
+                onClick={() => window.location.href = getAuthRedirectUrl()}
               >
                 {t.nav.signIn}
               </Button>
@@ -130,7 +136,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   className="bg-blue-600 hover:bg-blue-700 text-lg px-8 py-3"
-                  onClick={() => window.location.href = `${getAuthUiUrl()}?lang=${language}`}
+                  onClick={() => window.location.href = getAuthRedirectUrl()}
                 >
                   {t.hero.startFree}
                   <ArrowRight className="ml-2 h-5 w-5" />
@@ -237,7 +243,7 @@ export default function LandingPage() {
                   className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
                   onClick={(e) => {
                     e.preventDefault()
-                    window.location.href = `${getAuthUiUrl()}?lang=${language}`
+                    window.location.href = getAuthRedirectUrl()
                   }}
                 >
                   {t.service.startFreeButton}
@@ -375,7 +381,7 @@ export default function LandingPage() {
               <Button 
                 size="lg" 
                 className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-8 py-3"
-                onClick={() => window.location.href = `${getAuthUiUrl()}?lang=${language}`}
+                onClick={() => window.location.href = getAuthRedirectUrl()}
               >
                 {t.cta.startFreeButton}
                 <ArrowRight className="ml-2 h-5 w-5" />

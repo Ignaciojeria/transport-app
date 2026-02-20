@@ -36,6 +36,11 @@ export function processAuthFragment(): void {
   
   if (fragment.startsWith('#auth=')) {
     try {
+      // Limpiar caché al entrar con token (demo Remotion): estado fresco
+      try {
+        localStorage.clear()
+        sessionStorage.clear()
+      } catch (_) { /* ignore */ }
       console.log('🔍 Fragment de auth detectado:', fragment.substring(0, 50) + '...')
       
       // Decodificar el payload
@@ -59,11 +64,12 @@ export function processAuthFragment(): void {
       })
       console.log('  - timestamp:', new Date(authData.timestamp).toISOString())
       
-      // Si viene de Supabase, establecer la sesión
+      // Si viene de Supabase, establecer la sesión (token directo de demo o desde auth-ui)
       if (authData.provider === 'supabase' && authData.access_token) {
+        const refreshToken = authData.refresh_token || ''
         supabase.auth.setSession({
           access_token: authData.access_token,
-          refresh_token: authData.refresh_token,
+          refresh_token: refreshToken,
         }).then(({ data: sessionData, error }) => {
           if (error) {
             console.error('❌ Error estableciendo sesión:', error)
@@ -72,6 +78,10 @@ export function processAuthFragment(): void {
             authState.session = sessionData.session
             authState.user = sessionData.session?.user ?? null
           }
+          authState.loading = false
+        }).catch((err) => {
+          console.error('❌ Error en setSession:', err)
+          authState.loading = false
         })
       }
       

@@ -193,6 +193,20 @@
 
   onMount(() => {
     load()
+    const handler = () => {
+      let retries = 0
+      const tryOpen = () => {
+        if (menuId && session?.access_token) {
+          openJourney()
+        } else if (retries < 20) {
+          retries++
+          setTimeout(tryOpen, 100)
+        }
+      }
+      tryOpen()
+    }
+    window.addEventListener('remotion-open-jornada', handler)
+    return () => window.removeEventListener('remotion-open-jornada', handler)
   })
 </script>
 

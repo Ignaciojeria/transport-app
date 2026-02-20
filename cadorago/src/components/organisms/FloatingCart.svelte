@@ -867,6 +867,7 @@
                   {#each addressSuggestions as suggestion}
                     <button
                       type="button"
+                      data-address-suggestion
                       onclick={() => selectAddress(suggestion)}
                       class="w-full text-left hover:bg-gray-50 border-b border-gray-100 last:border-b-0 transition-colors"
                     >
@@ -1082,6 +1083,7 @@
         
         {#if deliveryType === 'DELIVERY' && deliveryStep === 1}
           <button
+            data-delivery-next
             onclick={handleNextStep}
             disabled={!selectedAddress}
             class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold text-sm sm:text-base"
@@ -1090,6 +1092,7 @@
           </button>
         {:else}
           <button
+            data-place-order
             onclick={handleConfirmOrder}
             disabled={searchingAddress}
             class="flex-1 px-4 py-2 sm:py-3 bg-green-500 hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold text-sm sm:text-base flex items-center justify-center gap-2"
@@ -1107,7 +1110,7 @@
 {#if showOrderLoader}
   <OrderLoader
     message={$t.cart.preparingOrder}
-    redirectingMessage={$t.cart.redirectingWhatsApp}
+    redirectingMessage={$t.cart.orderSent}
     trackingId={lastTrackingId}
   />
 {/if}
