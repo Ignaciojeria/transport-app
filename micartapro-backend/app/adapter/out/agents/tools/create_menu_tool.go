@@ -55,7 +55,7 @@ func CreateMenuTool() *genai.FunctionDeclaration {
 				// 7. deliveryOptions: Opciones de envío/retiro disponibles
 				"deliveryOptions": {
 					Type:        genai.TypeArray,
-					Description: "Lista opcional de opciones de envío/retiro disponibles (PICKUP o DELIVERY).",
+					Description: "Lista opcional de opciones de envío/retiro disponibles (PICKUP, DELIVERY o DIGITAL para productos digitales).",
 					Items:       schema.GetDeliveryOptionSchema(),
 				},
 				// 8. coverImageGenerationRequest: Solicitud de generación de imagen de portada

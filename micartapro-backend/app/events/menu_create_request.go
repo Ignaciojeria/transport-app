@@ -297,6 +297,7 @@ type DeliveryOptionType string
 const (
 	DeliveryOptionPickup   DeliveryOptionType = "PICKUP"
 	DeliveryOptionDelivery DeliveryOptionType = "DELIVERY"
+	DeliveryOptionDigital  DeliveryOptionType = "DIGITAL"
 )
 
 type TimeRequestType string

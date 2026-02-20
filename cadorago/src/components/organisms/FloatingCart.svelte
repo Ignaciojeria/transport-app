@@ -43,6 +43,8 @@
   const deliveryOptions = $derived(restaurantData?.deliveryOptions || []);
   const hasDelivery = $derived(deliveryOptions.some(opt => opt.type === 'DELIVERY'));
   const hasPickup = $derived(deliveryOptions.some(opt => opt.type === 'PICKUP'));
+  const hasDigital = $derived(deliveryOptions.some(opt => opt.type === 'DIGITAL'));
+  const hasMultipleDeliveryOptions = $derived([hasDelivery, hasPickup, hasDigital].filter(Boolean).length >= 2);
   
   let isExpanded = $state(false);
   let showOrderForm = $state(false);
@@ -90,10 +92,12 @@
   
   function handleSendOrderClick() {
     // Si solo hay una opción, seleccionarla automáticamente
-    if (hasDelivery && !hasPickup) {
+    if (hasDelivery && !hasPickup && !hasDigital) {
       deliveryType = 'DELIVERY';
-    } else if (hasPickup && !hasDelivery) {
+    } else if (hasPickup && !hasDelivery && !hasDigital) {
       deliveryType = 'PICKUP';
+    } else if (hasDigital && !hasDelivery && !hasPickup) {
+      deliveryType = 'DIGITAL';
     }
     showOrderForm = true;
     // Activar transición después de un pequeño delay para suavidad
@@ -413,11 +417,11 @@
 
     // Calcular totales (solo items del menú actual)
     const subtotal = cartStore.getTotal(menuId);
-    const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0;
+    const deliveryFee = deliveryType === 'DELIVERY' ? 2000 : 0; // DIGITAL y PICKUP: sin costo de envío
     const total = subtotal + deliveryFee;
     const totalCost = items.reduce((sum, it) => sum + (it.totalCost || 0), 0);
 
-    // Fecha/hora solicitada en ISO string (PICKUP: ahora; DELIVERY: ahora + 1h)
+    // Fecha/hora solicitada en ISO string (PICKUP/DIGITAL: ahora; DELIVERY: ahora + 1h)
     const now = new Date();
     const requestedTime = deliveryType === 'DELIVERY'
       ? (() => { const t = new Date(now); t.setHours(t.getHours() + 1); return t.toISOString(); })()
@@ -506,8 +510,8 @@
     }
     
     // Validar según el tipo
-    if (deliveryType === 'PICKUP') {
-      // Sin hora de retiro: solo nombre y teléfono
+    if (deliveryType === 'PICKUP' || deliveryType === 'DIGITAL') {
+      // PICKUP/DIGITAL: solo nombre, teléfono y email
     } else if (deliveryType === 'DELIVERY') {
       // Validar que estemos en el paso 2
       if (deliveryStep === 1) {
@@ -789,6 +793,8 @@
               ? (deliveryStep === 1 ? $t.cart.step1Title : $t.cart.step2Title)
               : deliveryType === 'PICKUP' 
               ? $t.cart.pickupInfo 
+              : deliveryType === 'DIGITAL'
+              ? $t.cart.digitalInfo
               : 'Información del Pedido'}
           </h3>
           <div class="w-10"></div> <!-- Spacer para centrar el título -->
@@ -816,27 +822,40 @@
       {/if}
       
       <div class="space-y-4 sm:space-y-5" onclick={(e) => e.stopPropagation()}>
-        <!-- Selección de tipo de entrega (si hay ambas opciones) -->
-        {#if hasDelivery && hasPickup && !deliveryType}
+        <!-- Selección de tipo de entrega (si hay más de una opción) -->
+        {#if hasMultipleDeliveryOptions && !deliveryType}
           <div>
             <label class="block text-sm sm:text-base font-medium text-gray-700 mb-3">
               {$t.cart.deliveryType}
             </label>
-            <div class="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onclick={() => deliveryType = 'DELIVERY'}
-                class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'DELIVERY' ? 'border-green-500 bg-green-50' : ''}"
-              >
-                📦 {$t.cart.delivery}
-              </button>
-              <button
-                type="button"
-                onclick={() => deliveryType = 'PICKUP'}
-                class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'PICKUP' ? 'border-green-500 bg-green-50' : ''}"
-              >
-                🏪 {$t.cart.pickup}
-              </button>
+            <div class="grid gap-3 {[hasDelivery, hasPickup, hasDigital].filter(Boolean).length === 3 ? 'grid-cols-3' : 'grid-cols-2'}">
+              {#if hasDelivery}
+                <button
+                  type="button"
+                  onclick={() => deliveryType = 'DELIVERY'}
+                  class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'DELIVERY' ? 'border-green-500 bg-green-50' : ''}"
+                >
+                  📦 {$t.cart.delivery}
+                </button>
+              {/if}
+              {#if hasPickup}
+                <button
+                  type="button"
+                  onclick={() => deliveryType = 'PICKUP'}
+                  class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'PICKUP' ? 'border-green-500 bg-green-50' : ''}"
+                >
+                  🏪 {$t.cart.pickup}
+                </button>
+              {/if}
+              {#if hasDigital}
+                <button
+                  type="button"
+                  onclick={() => deliveryType = 'DIGITAL'}
+                  class="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors text-sm sm:text-base font-medium {deliveryType === 'DIGITAL' ? 'border-green-500 bg-green-50' : ''}"
+                >
+                  📱 {$t.cart.digital}
+                </button>
+              {/if}
             </div>
           </div>
         {/if}
@@ -1015,8 +1034,8 @@
           </div>
         {/if}
         
-        <!-- Formulario PICKUP (sin pasos) -->
-        {#if deliveryType === 'PICKUP'}
+        <!-- Formulario PICKUP o DIGITAL (sin pasos, solo contacto) -->
+        {#if deliveryType === 'PICKUP' || deliveryType === 'DIGITAL'}
           <div class="space-y-4">
             <div>
               <label for="nombre-retiro-pickup" class="block text-sm sm:text-base font-medium text-gray-700 mb-2">

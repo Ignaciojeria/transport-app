@@ -27,8 +27,8 @@ func GetDeliveryOptionSchema() *genai.Schema {
 		Properties: map[string]*genai.Schema{
 			"type": {
 				Type:        genai.TypeString,
-				Enum:        []string{"PICKUP", "DELIVERY"},
-				Description: "Tipo de opción: 'PICKUP' (retiro en tienda) o 'DELIVERY' (envío a domicilio).",
+				Enum:        []string{"PICKUP", "DELIVERY", "DIGITAL"},
+				Description: "Tipo de opción: 'PICKUP' (retiro en tienda), 'DELIVERY' (envío a domicilio) o 'DIGITAL' (productos digitales, entrega instantánea).",
 			},
 			"requireTime": {
 				Type:        genai.TypeBoolean,

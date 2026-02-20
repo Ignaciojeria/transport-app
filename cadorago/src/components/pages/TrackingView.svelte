@@ -173,7 +173,7 @@
       '',
       `📋 *${getOrderDisplay(order.orderNumber)}*`,
       `🔖 ${$t.tracking.codeLabel}: ${order.trackingId}`,
-      `📦 Tipo: ${order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : $t.tracking.pickup}`,
+      `📦 Tipo: ${order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : order.fulfillment === 'DIGITAL' ? $t.tracking.digital : $t.tracking.pickup}`,
       `📊 ${$t.tracking.statusLabel}: ${statusLabel}`,
       '',
       `*${$t.tracking.detail}:*`,
@@ -389,7 +389,7 @@
           {#if order.trackingId}
             <p class="text-sm text-slate-500 mt-1 font-mono">{$t.tracking.codeLabel}: {order.trackingId}</p>
           {/if}
-          <p class="text-slate-600 mt-1">{order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : $t.tracking.pickup}</p>
+          <p class="text-slate-600 mt-1">{order.fulfillment === 'DELIVERY' ? $t.tracking.delivery : order.fulfillment === 'DIGITAL' ? $t.tracking.digital : $t.tracking.pickup}</p>
           <p class="text-base font-semibold mt-2 {overallStatus === 'PENDING' ? 'text-slate-500' : overallStatus === 'IN_PROGRESS' ? 'text-blue-600' : overallStatus === 'READY' || overallStatus === 'DISPATCHED' ? 'text-emerald-600' : overallStatus === 'DELIVERED' ? 'text-slate-800' : 'text-slate-600'}">
             {$t.tracking.statusLabel}: {getHeaderStatusLabel()}
           </p>

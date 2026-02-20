@@ -72,6 +72,8 @@ export interface Translations {
     deliveryType: string
     delivery: string
     pickup: string
+    digital: string
+    digitalInfo: string
       deliveryAddress: string
       deliveryAddressPlaceholder: string
       searchingAddress: string
@@ -119,6 +121,7 @@ export interface Translations {
     loadingOrder: string
     delivery: string
     pickup: string
+    digital: string
     statusConfirmed: string
     statusPreparing: string
     statusOnTheWay: string
@@ -242,6 +245,8 @@ export const translations: Record<Language, Translations> = {
       deliveryType: 'Tipo de entrega',
       delivery: 'Envío a domicilio',
       pickup: 'Retiro en tienda',
+      digital: 'Producto digital',
+      digitalInfo: 'Información para entrega digital',
       deliveryAddress: 'Dirección de envío *',
       deliveryAddressPlaceholder: 'Ej: Av. Providencia 123, Santiago',
       searchingAddress: 'Buscando dirección...',
@@ -279,6 +284,7 @@ export const translations: Record<Language, Translations> = {
       loadingOrder: 'Cargando pedido...',
       delivery: 'Envío a domicilio',
       pickup: 'Retiro en local',
+      digital: 'Producto digital',
       statusConfirmed: 'Pedido confirmado',
       statusPreparing: 'En preparación',
       statusOnTheWay: 'En camino',
@@ -393,6 +399,8 @@ export const translations: Record<Language, Translations> = {
       deliveryType: 'Tipo de entrega',
       delivery: 'Entrega em domicílio',
       pickup: 'Retirada na loja',
+      digital: 'Produto digital',
+      digitalInfo: 'Informações para entrega digital',
       deliveryAddress: 'Endereço de entrega *',
       deliveryAddressPlaceholder: 'Ex: Av. Paulista 123, São Paulo',
       searchingAddress: 'Buscando endereço...',
@@ -430,6 +438,7 @@ export const translations: Record<Language, Translations> = {
       loadingOrder: 'Carregando pedido...',
       delivery: 'Entrega em domicílio',
       pickup: 'Retirada na loja',
+      digital: 'Produto digital',
       statusConfirmed: 'Pedido confirmado',
       statusPreparing: 'Em preparação',
       statusOnTheWay: 'A caminho',
@@ -547,6 +556,8 @@ export const translations: Record<Language, Translations> = {
       deliveryType: 'Delivery type',
       delivery: 'Home delivery',
       pickup: 'Store pickup',
+      digital: 'Digital product',
+      digitalInfo: 'Information for digital delivery',
       deliveryAddress: 'Delivery address *',
       deliveryAddressPlaceholder: 'Ex: 123 Main St, New York',
       searchingAddress: 'Searching address...',
@@ -584,6 +595,7 @@ export const translations: Record<Language, Translations> = {
       loadingOrder: 'Loading order...',
       delivery: 'Home delivery',
       pickup: 'Store pickup',
+      digital: 'Digital product',
       statusConfirmed: 'Order confirmed',
       statusPreparing: 'Preparing',
       statusOnTheWay: 'On the way',
