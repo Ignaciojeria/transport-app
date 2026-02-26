@@ -14,6 +14,7 @@ import (
 	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
+	"micartapro/app/usecase/billing"
 	"strings"
 
 	"cloud.google.com/go/storage"
@@ -31,6 +32,8 @@ func init() {
 		agents.NewMenuInteractionAgent,
 		eventprocessing.NewPublisherStrategy,
 		supabaserepo.NewGetMenuById,
+		supabaserepo.NewGetUserCredits,
+		supabaserepo.NewConsumeCredits,
 		imagegenerator.NewImageGenerator,
 		imagegenerator.NewImageEditor,
 		gcs.NewClient)
@@ -41,6 +44,8 @@ func NewOnMenuInteractionRequest(
 	menuInteractionAgent agents.MenuInteractionAgent,
 	publisherManager eventprocessing.PublisherManager,
 	getMenuById supabaserepo.GetMenuById,
+	getUserCredits supabaserepo.GetUserCredits,
+	consumeCredits supabaserepo.ConsumeCredits,
 	generateImage imagegenerator.GenerateImage,
 	editImage imagegenerator.EditImage,
 	gcsClient *storage.Client) OnMenuInteractionRequest {
@@ -87,6 +92,37 @@ func NewOnMenuInteractionRequest(
 		agentResp, err := menuInteractionAgent(ctx, input)
 		if err != nil {
 			return "", err
+		}
+
+		// Consumir créditos por uso del agente (el consumo por imágenes se hace en los handlers de imagen)
+		userID, ok := sharedcontext.UserIDFromContext(ctx)
+		if !ok || userID == "" {
+			return "", fmt.Errorf("userID is required but not found in context")
+		}
+		parsedUserID, err := uuid.Parse(userID)
+		if err != nil {
+			return "", fmt.Errorf("invalid userID: %w", err)
+		}
+		userCredits, err := getUserCredits(ctx, parsedUserID)
+		if err != nil {
+			return "", fmt.Errorf("error getting user credits: %w", err)
+		}
+		if userCredits.Balance < billing.CreditsPerAgentUsage {
+			return "", fmt.Errorf("insufficient credits: balance %d, required %d", userCredits.Balance, billing.CreditsPerAgentUsage)
+		}
+		desc := "Uso del agente de menú"
+		_, err = consumeCredits(ctx, billing.ConsumeCreditsRequest{
+			UserID:      parsedUserID,
+			Amount:      billing.CreditsPerAgentUsage,
+			Source:      "agent.usage",
+			SourceID:    nil,
+			Description: &desc,
+		})
+		if err != nil {
+			if err == supabaserepo.ErrInsufficientCredits {
+				return "", fmt.Errorf("insufficient credits to use the agent")
+			}
+			return "", fmt.Errorf("error consuming credits: %w", err)
 		}
 
 		// 2. Lógica Limpia: ¿Es texto o un comando?

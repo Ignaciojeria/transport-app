@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	"github.com/google/uuid"
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 	supabase "github.com/supabase-community/supabase-go"
 	"google.golang.org/genai"
 )
@@ -66,13 +66,13 @@ func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, 
 		} else if strings.Contains(lowerPublicURL, ".webp") {
 			mimeType = "image/webp"
 		}
-		
+
 		obs.Logger.InfoContext(spanCtx, "mime_type_determined", "mimeType", mimeType, "publicURL", publicURL)
 
 		// 4. Image-to-image con gemini-2.5-flash-image: GenerateContent con prompt + imagen de referencia
 		// Parts: texto (prompt) + imagen inline, igual que en el ejemplo oficial
 		imageModel := "gemini-2.5-flash-image"
-		
+
 		// Determinar el tamaño de imagen según el uso:
 		// - "1K" para productos del catálogo (optimizado para apps móviles, carga más rápida)
 		// - "2K" para imágenes de portada (mayor calidad visual)
@@ -80,7 +80,7 @@ func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, 
 		if menuItemId == "cover" {
 			imageSize = "2K" // Portadas usan mayor resolución
 		}
-		
+
 		// Prefijo obligatorio: precisión sin inventar ni omitir ingredientes
 		// Para sushi/piezas: respetar contenido de cada pieza Y envoltorio (Env) según la descripción
 		precisionPrefix := "CRITICAL: Apply the requested changes while keeping EXACTLY the ingredients and elements visible. For sushi, pieces, or rolls: preserve each piece's exact filling (contenido) AND wrapper (envoltorio/Env). Do not add, invent, or omit anything. "
@@ -88,7 +88,7 @@ func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, 
 		if menuItemId != "cover" && menuItemId != "footer" {
 			optimizedPrompt += " Optimize for mobile app product catalog: clear product visibility, professional food photography."
 		}
-		
+
 		// 3. Usar FileData con URI en lugar de InlineData con bytes
 		// Esto evita descargar la imagen en el backend, ahorrando memoria RAM
 		// Gemini puede acceder directamente a la URL desde GCS

@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"micartapro/app/adapter/out/imagegenerator"
+	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
+	"micartapro/app/usecase/billing"
 
 	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"github.com/google/uuid"
 )
 
 type OnImageEditionRequest func(ctx context.Context, input events.ImageEditionRequestEvent) error
@@ -18,12 +21,17 @@ func init() {
 		NewOnImageEditionRequest,
 		observability.NewObservability,
 		imagegenerator.NewImageEditor,
+		supabaserepo.NewGetUserCredits,
+		supabaserepo.NewConsumeCredits,
 	)
 }
 
 func NewOnImageEditionRequest(
 	obs observability.Observability,
-	editImage imagegenerator.EditImage) OnImageEditionRequest {
+	editImage imagegenerator.EditImage,
+	getUserCredits supabaserepo.GetUserCredits,
+	consumeCredits supabaserepo.ConsumeCredits,
+) OnImageEditionRequest {
 	return func(ctx context.Context, input events.ImageEditionRequestEvent) error {
 		spanCtx, span := obs.Tracer.Start(ctx, "on_image_edition_request")
 		defer span.End()
@@ -46,6 +54,33 @@ func NewOnImageEditionRequest(
 			"referenceImageUrl", input.ReferenceImageUrl,
 			"userID", userID,
 		)
+
+		parsedUserID, err := uuid.Parse(userID)
+		if err != nil {
+			return fmt.Errorf("invalid userID: %w", err)
+		}
+		userCredits, err := getUserCredits(spanCtx, parsedUserID)
+		if err != nil {
+			return fmt.Errorf("error getting user credits: %w", err)
+		}
+		if userCredits.Balance < billing.CreditsPerImageEdition {
+			return fmt.Errorf("insufficient credits: balance %d, required %d", userCredits.Balance, billing.CreditsPerImageEdition)
+		}
+		sourceID := input.MenuID + ":" + input.MenuItemID + ":" + input.ImageType + ":edit"
+		desc := "Edición de imagen"
+		_, err = consumeCredits(spanCtx, billing.ConsumeCreditsRequest{
+			UserID:      parsedUserID,
+			Amount:      billing.CreditsPerImageEdition,
+			Source:      "image.edition",
+			SourceID:    &sourceID,
+			Description: &desc,
+		})
+		if err != nil {
+			if err == supabaserepo.ErrInsufficientCredits {
+				return fmt.Errorf("insufficient credits for image edition")
+			}
+			return fmt.Errorf("error consuming credits: %w", err)
+		}
 
 		// Determinar menuItemId para el editor (vacío para cover)
 		menuItemId := input.MenuItemID

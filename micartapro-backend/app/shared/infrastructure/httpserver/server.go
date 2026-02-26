@@ -42,6 +42,11 @@ func New(conf configuration.Conf, requestLoggerMiddleware RequestLoggerMiddlewar
 			requestLoggerMiddleware,
 		),
 	)
+	// Timeout de 10 min para pruebas (evitar que corte solicitudes largas como generate speech con escenas)
+	s.ReadTimeout = 30 * time.Minute
+	s.WriteTimeout = 30 * time.Minute
+	s.ReadHeaderTimeout = 30 * time.Minute
+	s.IdleTimeout = 30 * time.Minute
 	server := Server{
 		Manager: s,
 		conf:    conf,

@@ -1,0 +1,413 @@
+{
+    "id": "onepage_the_vibe_stack_01",
+    "type": "ONE_PAGE_PRODUCT",
+    "version": 2,
+  
+    "slug": "the-vibe-stack",
+  
+    "status": "DRAFT",
+  
+    "createdAt": "2026-02-20T00:00:00Z",
+    "updatedAt": "2026-02-20T00:00:00Z",
+  
+    "seo": {
+      "title": "The Vibe Stack | Aprende a construir productos reales con AI",
+      "description": "El sistema completo para diseñar, construir y lanzar software moderno usando AI y un stack listo para producción.",
+      "keywords": [
+        "AI",
+        "SaaS",
+        "Startup",
+        "Go",
+        "React",
+        "MicartaPro",
+        "Vibe Coding"
+      ],
+      "ogImage": {
+        "url": "https://cdn.micartapro.com/the-vibe-stack/og-cover.png",
+        "alt": "The Vibe Stack preview",
+        "width": 1200,
+        "height": 630
+      }
+    },
+  
+    "businessInfo": {
+      "name": "Ignacio Jeria",
+      "email": "contacto@vibestack.dev",
+      "website": "https://vibestack.dev"
+    },
+  
+    "product": {
+      "id": "product_the_vibe_stack",
+  
+      "name": "The Vibe Stack",
+  
+      "description": "Aprende a construir productos reales usando AI y un stack moderno listo para producción.",
+  
+      "pricing": {
+        "mode": "ONE_TIME",
+  
+        "price": {
+          "amount": 49,
+          "currency": "USD"
+        },
+  
+        "compareAtPrice": {
+          "amount": 149,
+          "currency": "USD"
+        }
+      },
+  
+      "checkout": {
+        "provider": "MICARTAPRO"
+      },
+  
+      "media": {
+        "coverImage": {
+          "url": "https://cdn.micartapro.com/the-vibe-stack/cover.png",
+          "alt": "The Vibe Stack cover",
+          "width": 1200,
+          "height": 630
+        },
+  
+        "gallery": [
+          {
+            "url": "https://cdn.micartapro.com/the-vibe-stack/gallery-1.png",
+            "alt": "Course modules preview"
+          },
+          {
+            "url": "https://cdn.micartapro.com/the-vibe-stack/gallery-2.png",
+            "alt": "Platform interface preview"
+          }
+        ]
+      }
+    },
+  
+    "theme": {
+      "mode": "dark",
+  
+      "colors": {
+        "primary": "#6366f1",
+        "background": "#0a0a0a",
+        "surface": "#111111",
+        "text": "#ffffff",
+        "mutedText": "#a1a1aa",
+        "border": "#222222"
+      },
+  
+      "font": {
+        "family": "Inter"
+      },
+  
+      "radius": "medium"
+    },
+  
+    "sections": [
+  
+      {
+        "id": "hero",
+  
+        "type": "HERO",
+  
+        "layout": {
+          "paddingY": "xl",
+          "container": "default",
+          "alignment": "center"
+        },
+  
+        "props": {
+  
+          "headline": "The Vibe Stack",
+  
+          "subheadline": "Aprende a construir productos reales usando AI y un stack moderno listo para producción.",
+  
+          "description": "El sistema exacto que utilizo para diseñar, construir y lanzar software real rápidamente.",
+  
+          "media": {
+            "type": "image",
+  
+            "url": "https://cdn.micartapro.com/the-vibe-stack/hero.png",
+  
+            "alt": "Hero interface preview",
+  
+            "width": 800,
+  
+            "height": 800
+          },
+  
+          "bullets": [
+            "Construye productos reales, no tutoriales",
+            "Usa AI como copiloto profesional",
+            "Arquitectura lista para producción desde el día 1"
+          ],
+  
+          "primaryCTA": {
+            "label": "Obtener acceso anticipado",
+  
+            "action": {
+              "type": "CHECKOUT",
+  
+              "useProductData": true
+            }
+          },
+  
+          "secondaryCTA": {
+            "label": "Ver contenido",
+  
+            "action": {
+              "type": "SCROLL",
+  
+              "target": "features"
+            }
+          }
+  
+        }
+      },
+  
+      {
+        "id": "preview",
+  
+        "type": "IMAGE",
+  
+        "layout": {
+          "paddingY": "lg",
+          "container": "default",
+          "alignment": "center"
+        },
+  
+        "props": {
+  
+          "media": {
+            "type": "image",
+  
+            "url": "https://cdn.micartapro.com/the-vibe-stack/full-preview.png",
+  
+            "alt": "Full product preview",
+  
+            "width": 1400,
+  
+            "height": 900
+          },
+  
+          "caption": "Vista previa real del contenido"
+        }
+      },
+  
+      {
+        "id": "features",
+  
+        "type": "FEATURES",
+  
+        "layout": {
+          "paddingY": "lg",
+          "columns": 2
+        },
+  
+        "props": {
+  
+          "title": "Qué aprenderás",
+  
+          "items": [
+  
+            {
+              "title": "Arquitectura moderna",
+  
+              "description": "Cómo estructurar software profesional.",
+  
+              "media": {
+                "type": "icon",
+  
+                "name": "cpu"
+              }
+            },
+  
+            {
+              "title": "Uso estratégico de AI",
+  
+              "description": "Integra AI correctamente en producción.",
+  
+              "media": {
+                "type": "image",
+  
+                "url": "https://cdn.micartapro.com/the-vibe-stack/feature-ai.png"
+              }
+            },
+  
+            {
+              "title": "Stack completo",
+  
+              "description": "Backend, frontend e infraestructura.",
+  
+              "media": {
+                "type": "image",
+  
+                "url": "https://cdn.micartapro.com/the-vibe-stack/feature-stack.png"
+              }
+            },
+  
+            {
+              "title": "Shipping rápido",
+  
+              "description": "Lanza productos rápidamente.",
+  
+              "media": {
+                "type": "icon",
+  
+                "name": "rocket"
+              }
+            }
+  
+          ]
+        }
+      },
+  
+      {
+        "id": "gallery",
+  
+        "type": "GALLERY",
+  
+        "layout": {
+          "paddingY": "lg"
+        },
+  
+        "props": {
+  
+          "images": [
+  
+            {
+              "url": "https://cdn.micartapro.com/the-vibe-stack/screen-1.png"
+            },
+  
+            {
+              "url": "https://cdn.micartapro.com/the-vibe-stack/screen-2.png"
+            },
+  
+            {
+              "url": "https://cdn.micartapro.com/the-vibe-stack/screen-3.png"
+            }
+  
+          ]
+        }
+      },
+  
+      {
+        "id": "pricing",
+  
+        "type": "PRICING",
+  
+        "layout": {
+          "paddingY": "xl",
+          "alignment": "center"
+        },
+  
+        "props": {
+  
+          "title": "Acceso anticipado",
+  
+          "useProductData": true,
+  
+          "note": "El precio aumentará pronto.",
+  
+          "cta": {
+  
+            "label": "Comprar ahora",
+  
+            "action": {
+  
+              "type": "CHECKOUT",
+  
+              "useProductData": true
+            }
+          }
+        }
+      },
+  
+      {
+        "id": "faq",
+  
+        "type": "FAQ",
+  
+        "layout": {
+          "paddingY": "lg"
+        },
+  
+        "props": {
+  
+          "items": [
+  
+            {
+              "question": "¿Cuándo obtengo acceso?",
+  
+              "answer": "Obtienes acceso inmediatamente después de comprar."
+            },
+  
+            {
+              "question": "¿Es un pago único?",
+  
+              "answer": "Sí, es un pago único."
+            },
+  
+            {
+              "question": "¿Incluye actualizaciones?",
+  
+              "answer": "Sí, todas las futuras actualizaciones están incluidas."
+            }
+  
+          ]
+        }
+      },
+  
+      {
+        "id": "cta",
+  
+        "type": "CTA",
+  
+        "layout": {
+          "paddingY": "xl",
+          "alignment": "center"
+        },
+  
+        "props": {
+  
+          "headline": "Empieza a construir productos reales hoy.",
+  
+          "cta": {
+  
+            "label": "Obtener acceso anticipado",
+  
+            "action": {
+  
+              "type": "CHECKOUT",
+  
+              "useProductData": true
+            }
+          }
+        }
+      },
+  
+      {
+        "id": "footer",
+  
+        "type": "FOOTER",
+  
+        "layout": {
+          "paddingY": "md"
+        },
+  
+        "props": {
+  
+          "copyright": "© 2026 The Vibe Stack",
+  
+          "links": [
+  
+            {
+              "label": "Contacto",
+  
+              "url": "mailto:contacto@vibestack.dev"
+            }
+  
+          ]
+        }
+      }
+  
+    ]
+  }

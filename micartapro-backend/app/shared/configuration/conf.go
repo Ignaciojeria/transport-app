@@ -16,6 +16,7 @@ type Conf struct {
 	NGROK_AUTHTOKEN              string `env:"NGROK_AUTHTOKEN"`
 	GOOGLE_PROJECT_ID            string `env:"GOOGLE_PROJECT_ID" envDefault:"einar-404623"`
 	GOOGLE_PROJECT_LOCATION      string `env:"GOOGLE_PROJECT_LOCATION" envDefault:"us-central1"`
+	SPEECH_TO_TEXT_PROVIDER      string `env:"SPEECH_TO_TEXT_PROVIDER" envDefault:"chirp"` // "chirp" | "gemini"
 	SUPABASE_WEBHOOK_SECRET      string `env:"SUPABASE_WEBHOOK_SECRET" envDefault:""`
 	SUPABASE_JWKS_URL            string `env:"SUPABASE_JWKS_URL" envDefault:"https://rbpdhapfcljecofrscnj.supabase.co/auth/v1/.well-known/jwks.json"`
 	CREEM_PRODUCT_ID             string `env:"CREEM_PRODUCT_ID" envDefault:""`

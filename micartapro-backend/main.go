@@ -22,6 +22,7 @@ import (
 	_ "micartapro/app/adapter/out/agents"
 	_ "micartapro/app/adapter/out/imagegenerator"
 	_ "micartapro/app/adapter/out/imageuploader"
+	_ "micartapro/app/adapter/out/speechtotext"
 	_ "micartapro/app/adapter/out/storage"
 	_ "micartapro/app/usecase/billing"
 	_ "micartapro/app/usecase/creem"

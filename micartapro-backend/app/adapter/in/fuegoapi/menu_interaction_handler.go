@@ -27,7 +27,6 @@ func init() {
 		apimiddleware.NewIdempotencyKeyMiddleware,
 		apimiddleware.NewJWTAuthMiddleware,
 		supabaserepo.NewGetUserCredits,
-		supabaserepo.NewConsumeCredits,
 	)
 }
 func menuInteractionHandler(
@@ -37,7 +36,6 @@ func menuInteractionHandler(
 	idempotencyKeyMiddleware apimiddleware.IdempotencyKeyMiddleware,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 	getUserCredits supabaserepo.GetUserCredits,
-	consumeCredits supabaserepo.ConsumeCredits,
 ) {
 	fuego.Post(s.Manager, "/menu/interaction",
 		func(c fuego.ContextWithBody[events.MenuInteractionRequest]) (any, error) {
@@ -80,11 +78,7 @@ func menuInteractionHandler(
 				}
 			}
 
-			// Validar y consumir créditos antes de procesar la interacción
-			// Cada uso del agente consume 1 crédito
-			const creditsPerInteraction = 1
-			
-			// Verificar créditos disponibles
+			// Verificar créditos mínimos antes de publicar (el consumo real se hace por operación en el subscriber)
 			userCredits, err := getUserCredits(spanCtx, userID)
 			if err != nil {
 				obs.Logger.ErrorContext(spanCtx, "error_getting_user_credits", "error", err, "user_id", userIDStr)
@@ -95,11 +89,11 @@ func menuInteractionHandler(
 				}
 			}
 
-			if userCredits.Balance < creditsPerInteraction {
+			if userCredits.Balance < billing.CreditsPerAgentUsage {
 				obs.Logger.WarnContext(spanCtx, "insufficient_credits",
 					"user_id", userIDStr,
 					"balance", userCredits.Balance,
-					"required", creditsPerInteraction)
+					"required", billing.CreditsPerAgentUsage)
 				return nil, fuego.HTTPError{
 					Title:  "insufficient credits",
 					Detail: "You don't have enough credits to use the agent. Please purchase credits to continue.",
@@ -107,43 +101,8 @@ func menuInteractionHandler(
 				}
 			}
 
-			// Consumir créditos
-			versionID := uuid.New().String()
-			description := "Uso del agente de menú"
-			_, err = consumeCredits(spanCtx, billing.ConsumeCreditsRequest{
-				UserID:      userID,
-				Amount:      creditsPerInteraction,
-				Source:      "agent.usage",
-				SourceID:    &versionID,
-				Description: &description,
-			})
-
-			if err != nil {
-				if err == supabaserepo.ErrInsufficientCredits {
-					obs.Logger.WarnContext(spanCtx, "insufficient_credits_on_consume",
-						"user_id", userIDStr,
-						"balance", userCredits.Balance,
-						"required", creditsPerInteraction)
-					return nil, fuego.HTTPError{
-						Title:  "insufficient credits",
-						Detail: "You don't have enough credits to use the agent. Please purchase credits to continue.",
-						Status: http.StatusPaymentRequired,
-					}
-				}
-				obs.Logger.ErrorContext(spanCtx, "error_consuming_credits", "error", err, "user_id", userIDStr)
-				return nil, fuego.HTTPError{
-					Title:  "error consuming credits",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
-
-			obs.Logger.InfoContext(spanCtx, "credits_consumed_successfully",
-				"user_id", userIDStr,
-				"amount", creditsPerInteraction,
-				"versionID", versionID)
-
 			// Generar version_id si no viene en el contexto
+			versionID := uuid.New().String()
 			if existingVersionID, ok := sharedcontext.VersionIDFromContext(spanCtx); ok && existingVersionID != "" {
 				versionID = existingVersionID
 			} else {

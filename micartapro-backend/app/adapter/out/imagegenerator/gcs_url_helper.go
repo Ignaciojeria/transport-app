@@ -111,6 +111,42 @@ func GenerateSignedWriteURL(ctx context.Context, client *storage.Client, obs obs
 	return uploadURL, publicURL, objectPath, nil
 }
 
+// GenerateSignedWriteURLForReelScene genera signed URL para subir imagen de escena de reel.
+// Path: {userID}/reel-scenes/{timestamp}-{random}-scene-{sceneIndex}.png
+func GenerateSignedWriteURLForReelScene(ctx context.Context, client *storage.Client, obs observability.Observability, userID string, sceneIndex int, contentType string) (uploadURL string, publicURL string, objectPath string, err error) {
+	return generateSignedWriteURLForReelMedia(ctx, client, obs, userID, sceneIndex, contentType, "png")
+}
+
+// GenerateSignedWriteURLForReelSceneVideo genera signed URL para subir video de escena de reel.
+// Path: {userID}/reel-scenes/{timestamp}-{random}-scene-{sceneIndex}.mp4
+func GenerateSignedWriteURLForReelSceneVideo(ctx context.Context, client *storage.Client, obs observability.Observability, userID string, sceneIndex int, contentType string) (uploadURL string, publicURL string, objectPath string, err error) {
+	return generateSignedWriteURLForReelMedia(ctx, client, obs, userID, sceneIndex, contentType, "mp4")
+}
+
+func generateSignedWriteURLForReelMedia(ctx context.Context, client *storage.Client, obs observability.Observability, userID string, sceneIndex int, contentType string, ext string) (uploadURL string, publicURL string, objectPath string, err error) {
+	if client == nil {
+		return "", "", "", fmt.Errorf("GCS client is nil")
+	}
+	timestamp := time.Now().Unix()
+	randomSuffix := fmt.Sprintf("%d", time.Now().UnixNano()%1000000)
+	fileName := fmt.Sprintf("scene-%d.%s", sceneIndex, ext)
+	objectPath = fmt.Sprintf("%s/reel-scenes/%d-%s-%s", userID, timestamp, randomSuffix, fileName)
+	bucketName := "micartapro-images"
+
+	opts := &storage.SignedURLOptions{
+		Method:      "PUT",
+		Expires:     time.Now().Add(15 * time.Minute),
+		ContentType: contentType,
+	}
+	uploadURL, err = client.Bucket(bucketName).SignedURL(objectPath, opts)
+	if err != nil {
+		return "", "", "", fmt.Errorf("generating signed URL: %w", err)
+	}
+	publicURL = fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectPath)
+	obs.Logger.InfoContext(ctx, "signed_write_url_reel_scene_generated", "objectPath", objectPath, "userID", userID, "sceneIndex", sceneIndex, "contentType", contentType)
+	return uploadURL, publicURL, objectPath, nil
+}
+
 // RegenerateSignedWriteURL regenera una signed URL de escritura para el mismo objeto (publicURL).
 // Útil cuando la URL original expiró (ExpiredToken) y se necesita reintentar el upload.
 func RegenerateSignedWriteURL(ctx context.Context, client *storage.Client, obs observability.Observability, publicURL string, contentType string) (string, error) {
