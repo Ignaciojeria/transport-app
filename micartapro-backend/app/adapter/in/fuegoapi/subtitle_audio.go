@@ -9,6 +9,7 @@ import (
 	"micartapro/app/adapter/out/scenegenerator"
 	"micartapro/app/adapter/out/speechtotext"
 	"micartapro/app/adapter/out/supabaserepo"
+	"micartapro/app/adapter/out/texttospeech"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
@@ -22,9 +23,14 @@ import (
 	"github.com/google/uuid"
 )
 
-// SubtitleAudioRequest es el body del POST para subtitular un audio existente.
+// SubtitleAudioRequest es el body del POST para subtitular un audio existente o generar desde guion.
+// Modo 1: audioUrl → transcribe (Speech-to-Text) y genera subtítulos + imágenes.
+// Modo 2: scriptText (sin audioUrl) → genera audio con TTS, subtítulos con timing exacto, e imágenes.
 type SubtitleAudioRequest struct {
 	AudioURL         string   `json:"audioUrl"`
+	// ScriptText: guion en texto. Si audioUrl está vacío, se usa TTS para generar el audio.
+	// Cada línea (separada por \n) se convierte en un segmento con timing exacto.
+	ScriptText       string   `json:"scriptText,omitempty"`
 	LanguageCode     string   `json:"languageCode,omitempty"`
 	SubtitleStyle    string   `json:"subtitleStyle,omitempty"`
 	MaxCharsPerLine  int      `json:"maxCharsPerLine,omitempty"`
@@ -80,6 +86,7 @@ func init() {
 		observability.NewObservability,
 		apimiddleware.NewJWTAuthMiddleware,
 		speechtotext.NewTranscribeAudioProvider,
+		texttospeech.NewTextToSpeechForLines,
 		scenegenerator.NewSceneGenerator,
 		supabaserepo.NewGetUserCredits,
 		supabaserepo.NewConsumeCredits,
@@ -91,6 +98,7 @@ func subtitleAudioHandler(
 	obs observability.Observability,
 	jwtAuthMiddleware apimiddleware.JWTAuthMiddleware,
 	transcribeAudio speechtotext.TranscribeAudio,
+	generateSpeechForLines texttospeech.GenerateSpeechForLines,
 	sceneGenerator *scenegenerator.SceneGenerator,
 	getUserCredits supabaserepo.GetUserCredits,
 	consumeCredits supabaserepo.ConsumeCredits,
@@ -110,10 +118,20 @@ func subtitleAudioHandler(
 			}
 
 			audioURL := strings.TrimSpace(req.AudioURL)
-			if audioURL == "" {
+			scriptText := strings.TrimSpace(req.ScriptText)
+			useScriptMode := audioURL == "" && scriptText != ""
+
+			if audioURL == "" && scriptText == "" {
 				return subtitles.TimelineResponse{}, fuego.HTTPError{
-					Title:  "audioUrl is required",
-					Detail: "provide 'audioUrl' with a valid URL to an audio file (MP3, WAV, FLAC)",
+					Title:  "audioUrl or scriptText required",
+					Detail: "provide 'audioUrl' with a valid URL to an audio file, or 'scriptText' with your script to generate audio with TTS",
+					Status: http.StatusBadRequest,
+				}
+			}
+			if audioURL != "" && scriptText != "" {
+				return subtitles.TimelineResponse{}, fuego.HTTPError{
+					Title:  "provide one input only",
+					Detail: "provide either 'audioUrl' (to transcribe) or 'scriptText' (to generate with TTS), not both",
 					Status: http.StatusBadRequest,
 				}
 			}
@@ -140,6 +158,10 @@ func subtitleAudioHandler(
 				}
 			}
 
+			creditsNeeded := billing.CreditsPerSpeechSubtitle
+			if useScriptMode {
+				creditsNeeded = billing.CreditsPerSpeechTTS
+			}
 			userCredits, err := getUserCredits(spanCtx, parsedUserID)
 			if err != nil {
 				obs.Logger.ErrorContext(spanCtx, "error_getting_user_credits", "error", err)
@@ -149,49 +171,112 @@ func subtitleAudioHandler(
 					Status: http.StatusInternalServerError,
 				}
 			}
-			if userCredits.Balance < billing.CreditsPerSpeechSubtitle {
+			if userCredits.Balance < creditsNeeded {
 				return subtitles.TimelineResponse{}, fuego.HTTPError{
 					Title:  "insufficient credits",
-					Detail: "You don't have enough credits for audio transcription. Please purchase credits to continue.",
+					Detail: "You don't have enough credits. Please purchase credits to continue.",
 					Status: http.StatusPaymentRequired,
 				}
 			}
 
-			desc := "Transcripción de audio a subtítulos"
-			sourceID := "speech:subtitle:" + uuid.New().String()
-			_, err = consumeCredits(spanCtx, billing.ConsumeCreditsRequest{
-				UserID:      parsedUserID,
-				Amount:      billing.CreditsPerSpeechSubtitle,
-				Source:      "speech.subtitle",
-				SourceID:    &sourceID,
-				Description: &desc,
-			})
-			if err != nil {
-				if err == supabaserepo.ErrInsufficientCredits {
+			var segments []speechtotext.SubtitleSegment
+			var durationSec float64
+
+			if useScriptMode {
+				desc := "Generación de audio TTS desde guion"
+				sourceID := "speech:tts:" + uuid.New().String()
+				_, err = consumeCredits(spanCtx, billing.ConsumeCreditsRequest{
+					UserID:      parsedUserID,
+					Amount:      billing.CreditsPerSpeechTTS,
+					Source:      "speech.tts",
+					SourceID:    &sourceID,
+					Description: &desc,
+				})
+				if err != nil {
+					if err == supabaserepo.ErrInsufficientCredits {
+						return subtitles.TimelineResponse{}, fuego.HTTPError{
+							Title:  "insufficient credits",
+							Detail: "You don't have enough credits for TTS.",
+							Status: http.StatusPaymentRequired,
+						}
+					}
+					obs.Logger.ErrorContext(spanCtx, "error_consuming_credits", "error", err)
 					return subtitles.TimelineResponse{}, fuego.HTTPError{
-						Title:  "insufficient credits",
-						Detail: "You don't have enough credits for audio transcription.",
-						Status: http.StatusPaymentRequired,
+						Title:  "error consuming credits",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
 					}
 				}
-				obs.Logger.ErrorContext(spanCtx, "error_consuming_credits", "error", err)
-				return subtitles.TimelineResponse{}, fuego.HTTPError{
-					Title:  "error consuming credits",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
-				}
-			}
 
-			segments, durationSec, err := transcribeAudio(spanCtx, audioURL, languageCode)
-			if err != nil {
-				obs.Logger.ErrorContext(spanCtx, "error_transcribing_audio", "error", err, "audioUrl", audioURL)
-				return subtitles.TimelineResponse{}, fuego.HTTPError{
-					Title:  "error transcribing audio",
-					Detail: err.Error(),
-					Status: http.StatusInternalServerError,
+				lines := splitScriptIntoLines(scriptText)
+				if len(lines) == 0 {
+					return subtitles.TimelineResponse{}, fuego.HTTPError{
+						Title:  "scriptText is empty",
+						Detail: "scriptText must contain at least one non-empty line",
+						Status: http.StatusBadRequest,
+					}
 				}
+
+				ttsOpts := &texttospeech.GenerateSpeechOptions{
+					LanguageCode: languageCode,
+				}
+				result, err := generateSpeechForLines(spanCtx, lines, ttsOpts)
+				if err != nil {
+					obs.Logger.ErrorContext(spanCtx, "error_generating_tts", "error", err)
+					return subtitles.TimelineResponse{}, fuego.HTTPError{
+						Title:  "error generating speech",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+
+				audioURL = result.AudioURL
+				durationSec = result.DurationSeconds
+				segments = make([]speechtotext.SubtitleSegment, len(lines))
+				for i := range lines {
+					segments[i] = speechtotext.SubtitleSegment{
+						Text:  lines[i],
+						Start: result.LineTimings[i].Start,
+						End:   result.LineTimings[i].End,
+					}
+				}
+			} else {
+				desc := "Transcripción de audio a subtítulos"
+				sourceID := "speech:subtitle:" + uuid.New().String()
+				_, err = consumeCredits(spanCtx, billing.ConsumeCreditsRequest{
+					UserID:      parsedUserID,
+					Amount:      billing.CreditsPerSpeechSubtitle,
+					Source:      "speech.subtitle",
+					SourceID:    &sourceID,
+					Description: &desc,
+				})
+				if err != nil {
+					if err == supabaserepo.ErrInsufficientCredits {
+						return subtitles.TimelineResponse{}, fuego.HTTPError{
+							Title:  "insufficient credits",
+							Detail: "You don't have enough credits for audio transcription.",
+							Status: http.StatusPaymentRequired,
+						}
+					}
+					obs.Logger.ErrorContext(spanCtx, "error_consuming_credits", "error", err)
+					return subtitles.TimelineResponse{}, fuego.HTTPError{
+						Title:  "error consuming credits",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+
+				segments, durationSec, err = transcribeAudio(spanCtx, audioURL, languageCode)
+				if err != nil {
+					obs.Logger.ErrorContext(spanCtx, "error_transcribing_audio", "error", err, "audioUrl", audioURL)
+					return subtitles.TimelineResponse{}, fuego.HTTPError{
+						Title:  "error transcribing audio",
+						Detail: err.Error(),
+						Status: http.StatusInternalServerError,
+					}
+				}
+				segments = speechtotext.MergeFragmentedSegments(segments)
 			}
-			segments = speechtotext.MergeFragmentedSegments(segments)
 
 			// Resolver estilo, layout y hints
 			subtitleStyle := resolveSubtitleStyle(req.SubtitleStyle)
@@ -571,6 +656,19 @@ func resolveDirectionPreset(s string, style string) string {
 		return subtitles.DirectionPresetTrailerV1
 	}
 	return ""
+}
+
+// splitScriptIntoLines divide el guion en líneas (por \n), filtra vacías.
+func splitScriptIntoLines(script string) []string {
+	raw := strings.Split(script, "\n")
+	out := make([]string, 0, len(raw))
+	for _, line := range raw {
+		t := strings.TrimSpace(line)
+		if t != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // findNearestFrameImage devuelve la URL del frame cuyo timestamp está más cerca de segmentStart

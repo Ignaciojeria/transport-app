@@ -22,8 +22,11 @@ import (
 
 const ttsModel = "gemini-2.5-flash-preview-tts"
 
-// Voces predefinidas de Gemini TTS (ej: Kore, Puck, Zephyr, Aoede, etc.)
-const defaultVoice = "Kore"
+// Voces predefinidas de Gemini TTS (ej: Sadachbia, Puck, Kore, Zephyr, Aoede, etc.)
+const defaultVoice = "Sadachbia"
+
+// delayBetweenTTSLines evita 429 (quota exceeded) al hacer muchas llamadas por minuto.
+const delayBetweenTTSLines = 6 * time.Second
 
 // GenerateSpeech convierte texto a audio usando Gemini TTS, lo sube a GCS y retorna la URL pública y duración.
 type GenerateSpeech func(ctx context.Context, text string, opts *GenerateSpeechOptions) (*GenerateSpeechResult, error)
@@ -188,11 +191,19 @@ func NewTextToSpeechForLines(
 				lineTimings = append(lineTimings, LineTiming{Start: start, End: start})
 				continue
 			}
-			stylePrompt := ""
-			if opts != nil {
+			// Rate limit: Gemini TTS tiene ~10 req/min. Delay entre líneas evita 429.
+			if i > 0 {
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(delayBetweenTTSLines):
+				}
+			}
+			stylePrompt := "fluently and briskly, with minimal pauses between phrases"
+			if opts != nil && opts.StylePrompt != "" {
 				stylePrompt = opts.StylePrompt
 			}
-			promptText := buildTTSPrompt(lang, stylePrompt != "", stylePrompt, line)
+			promptText := buildTTSPrompt(lang, true, stylePrompt, line)
 			pcm, err := synthesizeToPCM(spanCtx, genaiClient, promptText, voiceName, obs)
 			if err != nil {
 				return nil, fmt.Errorf("line %d: %w", i+1, err)
