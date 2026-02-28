@@ -6,16 +6,13 @@ import (
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type MarkReady func(ctx context.Context, aggregateID int64, request events.OrderItemReadyRequest) error
 
 func init() {
-	ioc.Registry(NewMarkReady,
-		observability.NewObservability,
-		supabaserepo.NewUpdateOrderStatus,
-	)
+	ioc.Register(NewMarkReady)
 }
 
 func NewMarkReady(

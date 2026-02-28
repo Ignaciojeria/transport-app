@@ -7,19 +7,14 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
-	ioc.Registry(
-		searchMenuById,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetMenuById,
-	)
+	ioc.Register(searchMenuById)
 }
 
 func searchMenuById(

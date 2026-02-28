@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
@@ -17,7 +16,7 @@ var ErrCustomerNotFound = errors.New("customer not found")
 type GetCustomerID func(ctx context.Context, userID uuid.UUID) (string, error)
 
 func init() {
-	ioc.Registry(NewGetCustomerID, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetCustomerID)
 }
 
 func NewGetCustomerID(supabase *supabase.Client) GetCustomerID {

@@ -10,16 +10,15 @@ import (
 	"time"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
 
 func init() {
-	ioc.Registry(NewGrantCredits, supabasecli.NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewGrantCredits)
 }
 
 func NewGrantCredits(supabase *supabase.Client, conf configuration.Conf) GrantCredits {
@@ -27,8 +26,8 @@ func NewGrantCredits(supabase *supabase.Client, conf configuration.Conf) GrantCr
 		// Construir los parámetros para la función
 		params := map[string]interface{}{
 			"p_user_id": req.UserID.String(),
-			"p_amount":   req.Amount,
-			"p_source":   req.Source,
+			"p_amount":  req.Amount,
+			"p_source":  req.Source,
 		}
 
 		if req.SourceID != nil {
@@ -90,16 +89,16 @@ func NewGrantCredits(supabase *supabase.Client, conf configuration.Conf) GrantCr
 
 		// Obtener la transacción completa
 		var transaction []struct {
-			ID             int64     `json:"id"`
-			UserID         string    `json:"user_id"`
-			Amount         int       `json:"amount"`
-			TransactionType string   `json:"transaction_type"`
-			Source         string    `json:"source"`
-			SourceID       *string   `json:"source_id"`
-			Description    *string   `json:"description"`
-			BalanceBefore  int       `json:"balance_before"`
-			BalanceAfter   int       `json:"balance_after"`
-			CreatedAt      time.Time `json:"created_at"`
+			ID              int64     `json:"id"`
+			UserID          string    `json:"user_id"`
+			Amount          int       `json:"amount"`
+			TransactionType string    `json:"transaction_type"`
+			Source          string    `json:"source"`
+			SourceID        *string   `json:"source_id"`
+			Description     *string   `json:"description"`
+			BalanceBefore   int       `json:"balance_before"`
+			BalanceAfter    int       `json:"balance_after"`
+			CreatedAt       time.Time `json:"created_at"`
 		}
 
 		var data []byte

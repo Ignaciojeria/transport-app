@@ -9,19 +9,14 @@ import (
 	"strconv"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
-	ioc.Registry(
-		markOrderReady,
-		httpserver.New,
-		observability.NewObservability,
-		order.NewMarkReady,
-	)
+	ioc.Register(markOrderReady)
 }
 
 func markOrderReady(

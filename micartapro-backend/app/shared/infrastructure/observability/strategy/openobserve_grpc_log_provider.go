@@ -1,10 +1,10 @@
 package strategy
 
 import (
-	"micartapro/app/shared/configuration"
 	"context"
 	"fmt"
 	"log/slog"
+	"micartapro/app/shared/configuration"
 	"os"
 	"os/signal"
 	"syscall"

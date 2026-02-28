@@ -4,17 +4,15 @@ import (
 	"strings"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/ai"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/genai"
 )
 
 func init() {
-	ioc.Registry(NewTranscribeAudioProvider, observability.NewObservability, gcs.NewClient, ai.NewClient, configuration.NewConf)
+	ioc.Register(NewTranscribeAudioProvider)
 }
 
 // NewTranscribeAudioProvider retorna el TranscribeAudio según SPEECH_TO_TEXT_PROVIDER.

@@ -5,36 +5,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/httpresty"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-resty/resty/v2"
 )
 
 type GetMercadoPagoPayment func(ctx context.Context, paymentID string) (PaymentResponse, error)
 
 type PaymentResponse struct {
-	ID                int64                  `json:"id"`
-	Status            string                 `json:"status"`
-	StatusDetail      string                 `json:"status_detail"`
-	ExternalReference string                 `json:"external_reference,omitempty"`
-	Metadata          map[string]interface{} `json:"metadata,omitempty"`
-	DateCreated       string                 `json:"date_created"`
-	DateLastUpdated   string                 `json:"date_last_updated"`
-	TransactionAmount float64                `json:"transaction_amount"`
-	CurrencyID        string                 `json:"currency_id"`
-	PaymentMethodID   string                 `json:"payment_method_id"`
-	PaymentTypeID     string                 `json:"payment_type_id"`
-	TransactionDetails *TransactionDetails   `json:"transaction_details,omitempty"`
+	ID                 int64                  `json:"id"`
+	Status             string                 `json:"status"`
+	StatusDetail       string                 `json:"status_detail"`
+	ExternalReference  string                 `json:"external_reference,omitempty"`
+	Metadata           map[string]interface{} `json:"metadata,omitempty"`
+	DateCreated        string                 `json:"date_created"`
+	DateLastUpdated    string                 `json:"date_last_updated"`
+	TransactionAmount  float64                `json:"transaction_amount"`
+	CurrencyID         string                 `json:"currency_id"`
+	PaymentMethodID    string                 `json:"payment_method_id"`
+	PaymentTypeID      string                 `json:"payment_type_id"`
+	TransactionDetails *TransactionDetails    `json:"transaction_details,omitempty"`
 }
 
 type TransactionDetails struct {
-	TotalPaidAmount float64 `json:"total_paid_amount"`
+	TotalPaidAmount   float64 `json:"total_paid_amount"`
 	NetReceivedAmount float64 `json:"net_received_amount"`
 }
 
 func init() {
-	ioc.Registry(NewGetMercadoPagoPayment, httpresty.NewClient, configuration.NewConf)
+	ioc.Register(NewGetMercadoPagoPayment)
 }
 
 func NewGetMercadoPagoPayment(cli *resty.Client, conf configuration.Conf) GetMercadoPagoPayment {

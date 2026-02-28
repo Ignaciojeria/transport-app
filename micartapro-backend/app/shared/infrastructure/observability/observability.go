@@ -3,7 +3,7 @@ package observability
 import (
 	"log/slog"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	otelmeter "go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -15,11 +15,7 @@ type Observability struct {
 }
 
 func init() {
-	ioc.Registry(
-		NewObservability,
-		newTraceProvider,
-		newLoggerProvider,
-		newMeterProvider)
+	ioc.Register(NewObservability)
 }
 func NewObservability(
 	tracer trace.Tracer,

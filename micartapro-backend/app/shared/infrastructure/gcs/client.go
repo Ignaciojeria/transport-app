@@ -5,11 +5,11 @@ import (
 	"micartapro/app/shared/configuration"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 func init() {
-	ioc.Registry(NewClient, configuration.NewConf)
+	ioc.Register(NewClient)
 }
 
 func NewClient(conf configuration.Conf) (*storage.Client, error) {

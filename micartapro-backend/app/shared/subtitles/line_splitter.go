@@ -7,8 +7,8 @@ import (
 
 const (
 	defaultMaxCharsPerLine = 42
-	minCharsPerLine        = 10  // Evitar líneas muy cortas (ej: "lo crean.")
-	minWordsPerLine        = 2   // O al menos 2 palabras
+	minCharsPerLine        = 10 // Evitar líneas muy cortas (ej: "lo crean.")
+	minWordsPerLine        = 2  // O al menos 2 palabras
 )
 
 // SplitSegmentIntoLinesWithOverflow divide en líneas respetando maxLines según overflowStrategy.

@@ -7,9 +7,8 @@ import (
 	"strings"
 
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -22,7 +21,7 @@ var ErrTrackingIDConflict = errors.New("tracking_id already exists")
 type InsertOrderTracking func(ctx context.Context, aggregateID int64, trackingID string, fulfillment *events.OrderFulfillment) error
 
 func init() {
-	ioc.Registry(NewInsertOrderTracking, supabasecli.NewSupabaseClient)
+	ioc.Register(NewInsertOrderTracking)
 }
 
 func NewInsertOrderTracking(supabase *supabase.Client) InsertOrderTracking {

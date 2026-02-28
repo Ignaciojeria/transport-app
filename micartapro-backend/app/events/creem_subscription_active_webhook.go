@@ -10,7 +10,7 @@ type CreemSubscriptionActiveWebhook struct {
 	ID        string                        `json:"id" example:"evt_6EptlmjazyGhEPiNQ5f4lz"`
 	EventType string                        `json:"eventType" example:"subscription.active"`
 	CreatedAt int64                         `json:"created_at" example:"1728734325927"`
-	Object    CreemSubscriptionActiveObject  `json:"object"`
+	Object    CreemSubscriptionActiveObject `json:"object"`
 }
 
 type CreemSubscriptionActiveProduct struct {

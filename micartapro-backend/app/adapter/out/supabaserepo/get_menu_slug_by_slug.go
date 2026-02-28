@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -21,7 +19,7 @@ type MenuSlugInfo struct {
 type GetMenuSlugBySlug func(ctx context.Context, slug string) (MenuSlugInfo, error)
 
 func init() {
-	ioc.Registry(NewGetMenuSlugBySlug, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetMenuSlugBySlug)
 }
 
 func NewGetMenuSlugBySlug(supabase *supabase.Client) GetMenuSlugBySlug {

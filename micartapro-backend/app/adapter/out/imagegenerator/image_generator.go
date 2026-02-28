@@ -9,14 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
-	"micartapro/app/shared/infrastructure/ai"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"cloud.google.com/go/storage"
+
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	supabase "github.com/supabase-community/supabase-go"
 	"google.golang.org/genai"
@@ -25,7 +23,7 @@ import (
 type GenerateImage func(ctx context.Context, prompt string, aspectRatio string, imageCount int, uploadURL string, publicURL string) (string, error)
 
 func init() {
-	ioc.Registry(NewImageGenerator, ai.NewClient, observability.NewObservability, supabasecli.NewSupabaseClient, gcs.NewClient)
+	ioc.Register(NewImageGenerator)
 }
 
 func NewImageGenerator(client *genai.Client, obs observability.Observability, supabaseClient *supabase.Client, gcsClient *storage.Client) (GenerateImage, error) {

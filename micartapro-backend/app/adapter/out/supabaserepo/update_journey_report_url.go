@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -15,7 +13,7 @@ import (
 type UpdateJourneyReportURL func(ctx context.Context, journeyID, reportURL string) error
 
 func init() {
-	ioc.Registry(NewUpdateJourneyReportURL, supabasecli.NewSupabaseClient)
+	ioc.Register(NewUpdateJourneyReportURL)
 }
 
 func NewUpdateJourneyReportURL(supabase *supabase.Client) UpdateJourneyReportURL {
@@ -23,7 +21,7 @@ func NewUpdateJourneyReportURL(supabase *supabase.Client) UpdateJourneyReportURL
 		_, _, err := supabase.From("journeys").
 			Update(map[string]interface{}{
 				"report_xlsx_url": reportURL,
-				"updated_at":     time.Now().UTC().Format(time.RFC3339),
+				"updated_at":      time.Now().UTC().Format(time.RFC3339),
 			}, "", "").
 			Eq("id", journeyID).
 			Execute()

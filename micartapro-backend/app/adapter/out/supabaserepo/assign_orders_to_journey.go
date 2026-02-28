@@ -9,9 +9,8 @@ import (
 	"net/http"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -26,7 +25,7 @@ type AssignOrdersResult struct {
 type AssignOrdersToJourney func(ctx context.Context, menuID, journeyID string, aggregateIDs []int64) ([]AssignOrdersResult, error)
 
 func init() {
-	ioc.Registry(NewAssignOrdersToJourney, supabasecli.NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewAssignOrdersToJourney)
 }
 
 func NewAssignOrdersToJourney(supabase *supabase.Client, conf configuration.Conf) AssignOrdersToJourney {

@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/httpresty"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -22,7 +21,7 @@ type creemCustomerPortalResponse struct {
 }
 
 func init() {
-	ioc.Registry(NewGetCreemCustomerPortal, httpresty.NewClient, configuration.NewConf)
+	ioc.Register(NewGetCreemCustomerPortal)
 }
 
 func NewGetCreemCustomerPortal(cli *resty.Client, conf configuration.Conf) GetCreemCustomerPortal {

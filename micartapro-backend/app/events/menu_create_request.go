@@ -160,9 +160,9 @@ type DescriptionSelectables struct {
 
 // DescriptionBlock es un elemento del array description con soporte opcional de selectables.
 type DescriptionBlock struct {
-	ID          string                 `json:"id,omitempty"`
-	Base        string                 `json:"base"`
-	Languages   map[string]string      `json:"languages"`
+	ID          string                  `json:"id,omitempty"`
+	Base        string                  `json:"base"`
+	Languages   map[string]string       `json:"languages"`
 	Selectables *DescriptionSelectables `json:"selectables,omitempty"`
 }
 
@@ -190,14 +190,14 @@ type Side struct {
 }
 
 type MenuItem struct {
-	ID             string            `json:"id"`
-	Title          MultilingualText  `json:"title"`
+	ID             string             `json:"id"`
+	Title          MultilingualText   `json:"title"`
 	Description    []DescriptionBlock `json:"description,omitempty"` // Array: cada elemento es una dimensión; puede tener id y selectables para preferencias sin precio
-	FoodAttributes []FoodAttribute   `json:"foodAttributes,omitempty"`
-	Sides          []Side            `json:"sides,omitempty"`
-	Pricing        Pricing           `json:"pricing"`
-	PhotoUrl       string            `json:"photoUrl,omitempty"`
-	Station        Station           `json:"station,omitempty"`
+	FoodAttributes []FoodAttribute    `json:"foodAttributes,omitempty"`
+	Sides          []Side             `json:"sides,omitempty"`
+	Pricing        Pricing            `json:"pricing"`
+	PhotoUrl       string             `json:"photoUrl,omitempty"`
+	Station        Station            `json:"station,omitempty"`
 }
 
 // GetDescriptionText une todos los elementos de Description en un solo texto para el idioma dado.
@@ -216,14 +216,14 @@ func (m MenuItem) GetDescriptionText(lang string) string {
 }
 
 type menuItemRaw struct {
-	ID             string            `json:"id"`
-	Title          MultilingualText  `json:"title"`
-	Description    json.RawMessage   `json:"description"`
-	FoodAttributes []FoodAttribute   `json:"foodAttributes,omitempty"`
-	Sides          []Side            `json:"sides,omitempty"`
-	Pricing        Pricing           `json:"pricing"`
-	PhotoUrl       string            `json:"photoUrl,omitempty"`
-	Station        Station           `json:"station,omitempty"`
+	ID             string           `json:"id"`
+	Title          MultilingualText `json:"title"`
+	Description    json.RawMessage  `json:"description"`
+	FoodAttributes []FoodAttribute  `json:"foodAttributes,omitempty"`
+	Sides          []Side           `json:"sides,omitempty"`
+	Pricing        Pricing          `json:"pricing"`
+	PhotoUrl       string           `json:"photoUrl,omitempty"`
+	Station        Station          `json:"station,omitempty"`
 }
 
 // UnmarshalJSON acepta description como array de DescriptionBlock, array de MultilingualText (legacy), o objeto único (legacy).

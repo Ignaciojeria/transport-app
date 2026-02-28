@@ -40,6 +40,6 @@ type TotalsSnapshot struct {
 	OrdersCancelled int   `json:"orders_cancelled"`
 	OrdersPending   int   `json:"orders_pending"`
 	PickupOrders    int   `json:"pickup_orders"`
-	DeliveryOrders int   `json:"delivery_orders"`
-	GrossAmount    int64 `json:"gross_amount"` // pesos / centavos
+	DeliveryOrders  int   `json:"delivery_orders"`
+	GrossAmount     int64 `json:"gross_amount"` // pesos / centavos
 }

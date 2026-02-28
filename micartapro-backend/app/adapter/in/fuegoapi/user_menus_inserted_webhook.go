@@ -9,17 +9,13 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 func init() {
-	ioc.Registry(userMenusInsertedWebhook, httpserver.New,
-		observability.NewObservability,
-		eventprocessing.NewPublisherStrategy,
-		apimiddleware.NewValidateSupabaseWebhookSecretMiddleware,
-	)
+	ioc.Register(userMenusInsertedWebhook)
 }
 func userMenusInsertedWebhook(
 	s httpserver.Server,

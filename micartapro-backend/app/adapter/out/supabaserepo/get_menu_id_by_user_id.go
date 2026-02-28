@@ -6,9 +6,7 @@ import (
 	"errors"
 	"fmt"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -17,7 +15,7 @@ var ErrUserMenuNotFound = errors.New("user menu not found")
 type GetMenuIdByUserId func(ctx context.Context, userID string) (string, error)
 
 func init() {
-	ioc.Registry(NewGetMenuIdByUserId, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetMenuIdByUserId)
 }
 
 func NewGetMenuIdByUserId(supabase *supabase.Client) GetMenuIdByUserId {

@@ -8,7 +8,7 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -18,14 +18,7 @@ type MenuSlugResponse struct {
 }
 
 func init() {
-	ioc.Registry(
-		getMenuSlugHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetActiveSlugByMenuID,
-		supabaserepo.NewUserHasMenu,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(getMenuSlugHandler)
 }
 
 func getMenuSlugHandler(

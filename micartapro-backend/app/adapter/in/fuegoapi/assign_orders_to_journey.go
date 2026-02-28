@@ -9,7 +9,7 @@ import (
 	"micartapro/app/usecase/order"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -33,13 +33,7 @@ type AssignOrderResult struct {
 }
 
 func init() {
-	ioc.Registry(
-		assignOrdersToJourneyHandler,
-		httpserver.New,
-		observability.NewObservability,
-		order.NewAssignOrdersToJourney,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(assignOrdersToJourneyHandler)
 }
 
 func assignOrdersToJourneyHandler(

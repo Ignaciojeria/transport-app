@@ -8,18 +8,13 @@ import (
 	"micartapro/app/shared/infrastructure/eventprocessing"
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type OnMenuCreateRequest func(ctx context.Context, input events.MenuCreateRequest) error
 
 func init() {
-	ioc.Registry(NewOnMenuCreateRequest,
-		observability.NewObservability,
-		storage.NewSaveMenu,
-		supabaserepo.NewSaveMenu,
-		eventprocessing.NewPublisherStrategy,
-	)
+	ioc.Register(NewOnMenuCreateRequest)
 }
 
 func NewOnMenuCreateRequest(
@@ -114,13 +109,13 @@ func publishImageGenerationEvents(
 	if coverEditReq != nil && coverEditReq.UploadURL != "" && coverEditReq.PublicURL != "" {
 		event := events.ImageEditionRequestEvent{
 			MenuID:            menuID,
-			Prompt:           coverEditReq.Prompt,
+			Prompt:            coverEditReq.Prompt,
 			ReferenceImageUrl: coverEditReq.ReferenceImageUrl,
-			AspectRatio:      "16:9",
-			ImageCount:       coverEditReq.ImageCount,
-			UploadURL:        coverEditReq.UploadURL,
-			PublicURL:        coverEditReq.PublicURL,
-			ImageType:        "cover",
+			AspectRatio:       "16:9",
+			ImageCount:        coverEditReq.ImageCount,
+			UploadURL:         coverEditReq.UploadURL,
+			PublicURL:         coverEditReq.PublicURL,
+			ImageType:         "cover",
 		}
 		if err := publisherManager.Publish(ctx, eventprocessing.PublishRequest{
 			Topic:       "micartapro.events",
@@ -181,13 +176,13 @@ func publishImageGenerationEvents(
 		event := events.ImageEditionRequestEvent{
 			MenuID:            menuID,
 			MenuItemID:        req.MenuItemID,
-			Prompt:           req.Prompt,
+			Prompt:            req.Prompt,
 			ReferenceImageUrl: req.ReferenceImageUrl,
-			AspectRatio:      req.AspectRatio,
-			ImageCount:       req.ImageCount,
-			UploadURL:        req.UploadURL,
-			PublicURL:        req.PublicURL,
-			ImageType:        "item",
+			AspectRatio:       req.AspectRatio,
+			ImageCount:        req.ImageCount,
+			UploadURL:         req.UploadURL,
+			PublicURL:         req.PublicURL,
+			ImageType:         "item",
 		}
 		if err := publisherManager.Publish(ctx, eventprocessing.PublishRequest{
 			Topic:       "micartapro.events",

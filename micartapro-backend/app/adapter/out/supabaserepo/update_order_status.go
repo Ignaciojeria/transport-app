@@ -9,16 +9,15 @@ import (
 	"net/http"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
 type UpdateOrderStatus func(ctx context.Context, aggregateID int64, newStatus string, itemKeys []string, station string, eventType string, eventPayload interface{}) error
 
 func init() {
-	ioc.Registry(NewUpdateOrderStatus, supabasecli.NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewUpdateOrderStatus)
 }
 
 func NewUpdateOrderStatus(supabase *supabase.Client, conf configuration.Conf) UpdateOrderStatus {

@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -31,7 +29,7 @@ type OrderItemRow struct {
 type GetOrderItemsForJourney func(ctx context.Context, journeyID string) ([]OrderItemRow, error)
 
 func init() {
-	ioc.Registry(NewGetOrderItemsForJourney, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetOrderItemsForJourney)
 }
 
 func NewGetOrderItemsForJourney(supabase *supabase.Client) GetOrderItemsForJourney {

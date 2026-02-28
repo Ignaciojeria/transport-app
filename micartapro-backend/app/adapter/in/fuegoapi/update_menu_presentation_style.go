@@ -8,7 +8,7 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -18,13 +18,7 @@ type UpdatePresentationStyleBody struct {
 }
 
 func init() {
-	ioc.Registry(
-		updateMenuPresentationStyleHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewUpdateMenuPresentationStyle,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(updateMenuPresentationStyleHandler)
 }
 
 func updateMenuPresentationStyleHandler(

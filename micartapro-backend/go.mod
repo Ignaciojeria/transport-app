@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/pubsub/v2 v2.3.0
 	cloud.google.com/go/speech v1.29.0
 	cloud.google.com/go/storage v1.58.0
-	github.com/Ignaciojeria/einar-ioc/v2 v2.4.0
+	github.com/Ignaciojeria/ioc v1.0.0
 	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/alpkeskin/gotoon v0.1.1
 	github.com/caarlos0/env/v6 v6.10.1
@@ -36,6 +36,7 @@ require (
 	google.golang.org/api v0.256.0
 	google.golang.org/genai v1.38.0
 	google.golang.org/grpc v1.77.0
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -124,7 +125,6 @@ require (
 	google.golang.org/genproto v0.0.0-20250922171735-9219d122eba9 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

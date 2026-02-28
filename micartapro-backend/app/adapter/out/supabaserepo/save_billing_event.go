@@ -4,17 +4,16 @@ import (
 	"context"
 	"encoding/json"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
 type SaveBillingEvent func(ctx context.Context, billingEvent billing.BillingEvent) error
 
 func init() {
-	ioc.Registry(NewSaveBillingEvent, supabasecli.NewSupabaseClient)
+	ioc.Register(NewSaveBillingEvent)
 }
 
 func NewSaveBillingEvent(supabase *supabase.Client) SaveBillingEvent {

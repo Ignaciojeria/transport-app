@@ -1,9 +1,9 @@
 package strategy
 
 import (
-	"micartapro/app/shared/configuration"
 	"context"
 	"fmt"
+	"micartapro/app/shared/configuration"
 	"os"
 	"os/signal"
 	"syscall"

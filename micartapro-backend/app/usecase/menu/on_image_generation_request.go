@@ -10,20 +10,14 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 )
 
 type OnImageGenerationRequest func(ctx context.Context, input events.ImageGenerationRequestEvent) error
 
 func init() {
-	ioc.Registry(
-		NewOnImageGenerationRequest,
-		observability.NewObservability,
-		imagegenerator.NewImageGenerator,
-		supabaserepo.NewGetUserCredits,
-		supabaserepo.NewConsumeCredits,
-	)
+	ioc.Register(NewOnImageGenerationRequest)
 }
 
 func NewOnImageGenerationRequest(

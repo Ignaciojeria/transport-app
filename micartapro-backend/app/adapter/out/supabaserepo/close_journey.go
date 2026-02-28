@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -17,7 +15,7 @@ import (
 type CloseJourney func(ctx context.Context, menuID, journeyID string, totalsSnapshot interface{}) error
 
 func init() {
-	ioc.Registry(NewCloseJourney, supabasecli.NewSupabaseClient)
+	ioc.Register(NewCloseJourney)
 }
 
 func NewCloseJourney(supabase *supabase.Client) CloseJourney {

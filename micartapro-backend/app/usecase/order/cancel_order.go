@@ -6,16 +6,13 @@ import (
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type CancelOrder func(ctx context.Context, aggregateID int64, request events.OrderCancelledRequest) error
 
 func init() {
-	ioc.Registry(NewCancelOrder,
-		observability.NewObservability,
-		supabaserepo.NewUpdateOrderStatus,
-	)
+	ioc.Register(NewCancelOrder)
 }
 
 func NewCancelOrder(

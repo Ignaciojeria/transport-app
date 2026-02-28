@@ -1,7 +1,7 @@
 package events
 
 type MercadoPagoCheckoutRequest struct {
-	Items []MercadoPagoCheckoutItem `json:"items"`
+	Items  []MercadoPagoCheckoutItem `json:"items"`
 	Totals struct {
 		Subtotal    int    `json:"subtotal"`
 		DeliveryFee int    `json:"deliveryFee"`

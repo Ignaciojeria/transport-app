@@ -7,16 +7,15 @@ import (
 
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
 type GetMenuById func(ctx context.Context, menuID string, versionID string) (events.MenuCreateRequest, error)
 
 func init() {
-	ioc.Registry(NewGetMenuById, supabasecli.NewSupabaseClient, observability.NewObservability)
+	ioc.Register(NewGetMenuById)
 }
 
 func NewGetMenuById(supabase *supabase.Client, obs observability.Observability) GetMenuById {

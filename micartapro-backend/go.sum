@@ -36,6 +36,8 @@ github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapp
 github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.54.0/go.mod h1:Mf6O40IAyB9zR/1J8nGDDPirZQQPbYJni8Yisy7NTMc=
 github.com/Ignaciojeria/einar-ioc/v2 v2.4.0 h1:VsLldKsPR1wyauZYjCvK3Iiodyuaw58x6Md/xNUwY+E=
 github.com/Ignaciojeria/einar-ioc/v2 v2.4.0/go.mod h1:FhuC5ttwimkc3FGdfh4y1LifaB07np/7gX/K2nfEBLU=
+github.com/Ignaciojeria/ioc v1.0.0 h1:uUoiP3A0jh+LSsC6y07WMZhaxfjQ1VQobjaqud8S2ZU=
+github.com/Ignaciojeria/ioc v1.0.0/go.mod h1:4cUHRzI8EkJGwTDJHLum15m0RLOpyxZtwm34davqMBY=
 github.com/MicahParks/keyfunc/v2 v2.1.0 h1:6ZXKb9Rp6qp1bDbJefnG7cTH8yMN1IC/4nf+GVjO99k=
 github.com/MicahParks/keyfunc/v2 v2.1.0/go.mod h1:rW42fi+xgLJ2FRRXAfNx9ZA8WpD4OeE/yHVMteCkw9k=
 github.com/alpkeskin/gotoon v0.1.1 h1:GQOVwMfWKINnfEA6slrXHJaJYDwnUFmrPlXOtnuja1w=

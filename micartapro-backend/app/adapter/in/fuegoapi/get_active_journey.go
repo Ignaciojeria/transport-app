@@ -9,20 +9,13 @@ import (
 	"micartapro/app/usecase/journey"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 func init() {
-	ioc.Registry(
-		getActiveJourneyHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetActiveJourneyByMenuID,
-		supabaserepo.NewUserHasMenu,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(getActiveJourneyHandler)
 }
 
 func getActiveJourneyHandler(

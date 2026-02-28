@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -25,24 +25,17 @@ type PendingOrderItemResponse struct {
 
 // PendingOrderResponse representa una orden pendiente en la respuesta API.
 type PendingOrderResponse struct {
-	AggregateID  int64                         `json:"aggregateId"`
-	TrackingID   string                        `json:"trackingId"`
-	CreatedAt    string                        `json:"createdAt"`
-	ScheduledFor *string                       `json:"scheduledFor,omitempty"`
-	TotalAmount  int64                         `json:"totalAmount"`
-	Status       string                        `json:"status"`
-	Items        []PendingOrderItemResponse    `json:"items"`
+	AggregateID  int64                      `json:"aggregateId"`
+	TrackingID   string                     `json:"trackingId"`
+	CreatedAt    string                     `json:"createdAt"`
+	ScheduledFor *string                    `json:"scheduledFor,omitempty"`
+	TotalAmount  int64                      `json:"totalAmount"`
+	Status       string                     `json:"status"`
+	Items        []PendingOrderItemResponse `json:"items"`
 }
 
 func init() {
-	ioc.Registry(
-		listPendingOrdersHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetPendingOrders,
-		supabaserepo.NewGetUserMenuIds,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(listPendingOrdersHandler)
 }
 
 func listPendingOrdersHandler(

@@ -7,10 +7,10 @@ import (
 )
 
 type CreemSubscriptionPausedWebhook struct {
-	ID        string                            `json:"id" example:"evt_5veN2cn5N9Grz8u7w3yJuL"`
-	EventType string                            `json:"eventType" example:"subscription.paused"`
-	CreatedAt int64                             `json:"created_at" example:"1754041946898"`
-	Object    CreemSubscriptionPausedObject     `json:"object"`
+	ID        string                        `json:"id" example:"evt_5veN2cn5N9Grz8u7w3yJuL"`
+	EventType string                        `json:"eventType" example:"subscription.paused"`
+	CreatedAt int64                         `json:"created_at" example:"1754041946898"`
+	Object    CreemSubscriptionPausedObject `json:"object"`
 }
 
 type CreemSubscriptionPausedProduct struct {
@@ -55,19 +55,19 @@ type CreemSubscriptionPausedItems struct {
 }
 
 type CreemSubscriptionPausedObject struct {
-	ID                     string                              `json:"id" example:"sub_3ZT1iYMeDBpiUpRTqq4veE"`
-	Object                 string                              `json:"object" example:"subscription"`
-	Product                CreemSubscriptionPausedProduct      `json:"product"`
-	Customer               CreemSubscriptionPausedCustomer     `json:"customer"`
-	Items                  []CreemSubscriptionPausedItems       `json:"items"`
-	CollectionMethod       string                              `json:"collection_method" example:"charge_automatically"`
-	Status                 string                              `json:"status" example:"paused"`
-	CurrentPeriodStartDate string                              `json:"current_period_start_date" example:"2025-08-01T09:51:47.000Z"`
-	CurrentPeriodEndDate   string                              `json:"current_period_end_date" example:"2025-09-01T09:51:47.000Z"`
-	CanceledAt             any                                 `json:"canceled_at" example:"null"`
-	CreatedAt              string                              `json:"created_at" example:"2025-08-01T09:51:50.488Z"`
-	UpdatedAt              string                              `json:"updated_at" example:"2025-08-01T09:52:26.822Z"`
-	Mode                   string                              `json:"mode" example:"test"`
+	ID                     string                          `json:"id" example:"sub_3ZT1iYMeDBpiUpRTqq4veE"`
+	Object                 string                          `json:"object" example:"subscription"`
+	Product                CreemSubscriptionPausedProduct  `json:"product"`
+	Customer               CreemSubscriptionPausedCustomer `json:"customer"`
+	Items                  []CreemSubscriptionPausedItems  `json:"items"`
+	CollectionMethod       string                          `json:"collection_method" example:"charge_automatically"`
+	Status                 string                          `json:"status" example:"paused"`
+	CurrentPeriodStartDate string                          `json:"current_period_start_date" example:"2025-08-01T09:51:47.000Z"`
+	CurrentPeriodEndDate   string                          `json:"current_period_end_date" example:"2025-09-01T09:51:47.000Z"`
+	CanceledAt             any                             `json:"canceled_at" example:"null"`
+	CreatedAt              string                          `json:"created_at" example:"2025-08-01T09:51:50.488Z"`
+	UpdatedAt              string                          `json:"updated_at" example:"2025-08-01T09:52:26.822Z"`
+	Mode                   string                          `json:"mode" example:"test"`
 }
 
 func (c CreemSubscriptionPausedWebhook) ToCloudEvent(source string) cloudevents.Event {

@@ -10,17 +10,13 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 func init() {
-	ioc.Registry(creemSubscriptionWebhook, httpserver.New,
-		observability.NewObservability,
-		eventprocessing.NewPublisherStrategy,
-		apimiddleware.NewValidateCreemWebhookSecretMiddleware,
-	)
+	ioc.Register(creemSubscriptionWebhook)
 }
 
 type CreemSubscriptionWebhookPayload struct {

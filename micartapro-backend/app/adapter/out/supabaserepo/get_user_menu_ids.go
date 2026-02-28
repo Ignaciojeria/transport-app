@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -15,7 +13,7 @@ import (
 type GetUserMenuIds func(ctx context.Context, userID string) ([]string, error)
 
 func init() {
-	ioc.Registry(NewGetUserMenuIds, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetUserMenuIds)
 }
 
 func NewGetUserMenuIds(sb *supabase.Client) GetUserMenuIds {

@@ -4,13 +4,13 @@ import (
 	"micartapro/app/shared/configuration"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type ValidateSupabaseWebhookSecretMiddleware func(http.Handler) http.Handler
 
 func init() {
-	ioc.Registry(NewValidateSupabaseWebhookSecretMiddleware, configuration.NewConf)
+	ioc.Register(NewValidateSupabaseWebhookSecretMiddleware)
 }
 
 func NewValidateSupabaseWebhookSecretMiddleware(conf configuration.Conf) ValidateSupabaseWebhookSecretMiddleware {

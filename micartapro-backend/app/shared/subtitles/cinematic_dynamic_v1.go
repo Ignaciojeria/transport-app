@@ -17,8 +17,8 @@ func pseudoRandV1(seed int, text string) float64 {
 
 // Fases narrativas (porcentaje de duración total).
 const (
-	phaseHookPctEnd    = 0.12  // 0% – 12%
-	phaseBodyPctEnd    = 0.70  // 12% – 70%
+	phaseHookPctEnd     = 0.12 // 0% – 12%
+	phaseBodyPctEnd     = 0.70 // 12% – 70%
 	phaseEmphasisPctEnd = 0.90 // 70% – 90%
 	// 90% – 100% = CTA
 )

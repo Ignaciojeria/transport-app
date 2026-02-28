@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
@@ -12,31 +11,24 @@ import (
 	"time"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 type GenerateUploadURLRequest struct {
-	FileName   string `json:"fileName"`   // Nombre del archivo (ej: "photo.jpg")
+	FileName    string `json:"fileName"`    // Nombre del archivo (ej: "photo.jpg")
 	ContentType string `json:"contentType"` // Tipo MIME (ej: "image/jpeg")
 }
 
 type GenerateUploadURLResponse struct {
 	UploadURL  string `json:"uploadUrl"`  // URL firmada para subir
-	PublicURL  string `json:"publicUrl"`   // URL pública de la imagen (bucket público)
-	ObjectPath string `json:"objectPath"`  // Ruta del objeto en GCS
+	PublicURL  string `json:"publicUrl"`  // URL pública de la imagen (bucket público)
+	ObjectPath string `json:"objectPath"` // Ruta del objeto en GCS
 }
 
 func init() {
-	ioc.Registry(
-		generateImageUploadURL,
-		httpserver.New,
-		observability.NewObservability,
-		configuration.NewConf,
-		apimiddleware.NewJWTAuthMiddleware,
-		gcs.NewClient,
-	)
+	ioc.Register(generateImageUploadURL)
 }
 
 func generateImageUploadURL(
@@ -112,8 +104,8 @@ func generateImageUploadURL(
 			// Formato: https://storage.googleapis.com/<bucket>/<object-path>
 			publicURL := fmt.Sprintf("https://storage.googleapis.com/%s/%s", bucketName, objectPath)
 
-			obs.Logger.InfoContext(spanCtx, "signed_url_generated", 
-				"objectPath", objectPath, 
+			obs.Logger.InfoContext(spanCtx, "signed_url_generated",
+				"objectPath", objectPath,
 				"userID", userID,
 				"contentType", req.ContentType)
 

@@ -10,13 +10,13 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type ValidateCreemWebhookSecretMiddleware func(http.Handler) http.Handler
 
 func init() {
-	ioc.Registry(NewValidateCreemWebhookSecretMiddleware, configuration.NewConf, observability.NewObservability)
+	ioc.Register(NewValidateCreemWebhookSecretMiddleware)
 }
 
 func NewValidateCreemWebhookSecretMiddleware(conf configuration.Conf, obs observability.Observability) ValidateCreemWebhookSecretMiddleware {

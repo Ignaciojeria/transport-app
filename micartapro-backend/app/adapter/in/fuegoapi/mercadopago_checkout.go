@@ -9,20 +9,14 @@ import (
 	"micartapro/app/usecase/mercadopago"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
 )
 
 func init() {
-	ioc.Registry(
-		mercadopagoCheckout,
-		httpserver.New,
-		observability.NewObservability,
-		mercadopago.NewCreateMercadoPagoCheckout,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(mercadopagoCheckout)
 }
 
 func mercadopagoCheckout(
@@ -91,11 +85,11 @@ func mercadopagoCheckout(
 				}
 			}
 
-			obs.Logger.InfoContext(spanCtx, "mercadopago checkout created successfully", 
+			obs.Logger.InfoContext(spanCtx, "mercadopago checkout created successfully",
 				"userID", userID,
 				"preferenceID", result.PreferenceID,
 				"checkoutURL", result.CheckoutURL)
-			
+
 			return result, nil
 		},
 		option.Summary("mercadopagoCheckout"),

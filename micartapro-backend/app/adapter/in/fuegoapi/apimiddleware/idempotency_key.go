@@ -4,14 +4,14 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 )
 
 type IdempotencyKeyMiddleware func(http.Handler) http.Handler
 
 func init() {
-	ioc.Registry(NewIdempotencyKeyMiddleware)
+	ioc.Register(NewIdempotencyKeyMiddleware)
 }
 
 func NewIdempotencyKeyMiddleware() IdempotencyKeyMiddleware {

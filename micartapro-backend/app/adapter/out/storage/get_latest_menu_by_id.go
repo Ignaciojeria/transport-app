@@ -7,12 +7,11 @@ import (
 	"strings"
 
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/api/iterator"
 )
 
@@ -21,9 +20,7 @@ var ErrMenuNotFound = errors.New("menu not found")
 type GetLatestMenuById func(ctx context.Context, menuID string) (events.MenuCreateRequest, error)
 
 func init() {
-	ioc.Registry(NewGetLatestMenuById,
-		observability.NewObservability,
-		gcs.NewClient)
+	ioc.Register(NewGetLatestMenuById)
 }
 
 func NewGetLatestMenuById(obs observability.Observability, gcs *storage.Client) GetLatestMenuById {

@@ -7,10 +7,10 @@ import (
 )
 
 type CreemSubscriptionCanceledWebhook struct {
-	ID        string                           `json:"id" example:"evt_2iGTc600qGW6FBzloh2Nr7"`
-	EventType string                           `json:"eventType" example:"subscription.canceled"`
-	CreatedAt int64                            `json:"created_at" example:"1728734337932"`
-	Object    CreemSubscriptionCanceledObject   `json:"object"`
+	ID        string                          `json:"id" example:"evt_2iGTc600qGW6FBzloh2Nr7"`
+	EventType string                          `json:"eventType" example:"subscription.canceled"`
+	CreatedAt int64                           `json:"created_at" example:"1728734337932"`
+	Object    CreemSubscriptionCanceledObject `json:"object"`
 }
 
 type CreemSubscriptionCanceledProduct struct {
@@ -43,21 +43,21 @@ type CreemSubscriptionCanceledCustomer struct {
 }
 
 type CreemSubscriptionCanceledObject struct {
-	ID                      string                            `json:"id" example:"sub_6pC2lNB6joCRQIZ1aMrTpi"`
-	Object                  string                            `json:"object" example:"subscription"`
-	Product                 CreemSubscriptionCanceledProduct  `json:"product"`
-	Customer                CreemSubscriptionCanceledCustomer `json:"customer"`
-	CollectionMethod        string                            `json:"collection_method" example:"charge_automatically"`
-	Status                  string                            `json:"status" example:"canceled"`
-	LastTransactionID       string                            `json:"last_transaction_id" example:"tran_5yMaWzAl3jxuGJMCOrYWwk"`
-	LastTransactionDate     string                            `json:"last_transaction_date" example:"2024-10-12T11:58:47.109Z"`
-	CurrentPeriodStartDate  string                            `json:"current_period_start_date" example:"2024-10-12T11:58:38.000Z"`
-	CurrentPeriodEndDate    string                            `json:"current_period_end_date" example:"2024-11-12T11:58:38.000Z"`
-	CanceledAt              string                            `json:"canceled_at" example:"2024-10-12T11:58:57.813Z"`
-	CreatedAt               string                            `json:"created_at" example:"2024-10-12T11:58:45.425Z"`
-	UpdatedAt               string                            `json:"updated_at" example:"2024-10-12T11:58:57.827Z"`
-	Metadata                CreemSubscriptionTrialingMetadata `json:"metadata"`
-	Mode                    string                            `json:"mode" example:"local"`
+	ID                     string                            `json:"id" example:"sub_6pC2lNB6joCRQIZ1aMrTpi"`
+	Object                 string                            `json:"object" example:"subscription"`
+	Product                CreemSubscriptionCanceledProduct  `json:"product"`
+	Customer               CreemSubscriptionCanceledCustomer `json:"customer"`
+	CollectionMethod       string                            `json:"collection_method" example:"charge_automatically"`
+	Status                 string                            `json:"status" example:"canceled"`
+	LastTransactionID      string                            `json:"last_transaction_id" example:"tran_5yMaWzAl3jxuGJMCOrYWwk"`
+	LastTransactionDate    string                            `json:"last_transaction_date" example:"2024-10-12T11:58:47.109Z"`
+	CurrentPeriodStartDate string                            `json:"current_period_start_date" example:"2024-10-12T11:58:38.000Z"`
+	CurrentPeriodEndDate   string                            `json:"current_period_end_date" example:"2024-11-12T11:58:38.000Z"`
+	CanceledAt             string                            `json:"canceled_at" example:"2024-10-12T11:58:57.813Z"`
+	CreatedAt              string                            `json:"created_at" example:"2024-10-12T11:58:45.425Z"`
+	UpdatedAt              string                            `json:"updated_at" example:"2024-10-12T11:58:57.827Z"`
+	Metadata               CreemSubscriptionTrialingMetadata `json:"metadata"`
+	Mode                   string                            `json:"mode" example:"local"`
 }
 
 func (c CreemSubscriptionCanceledWebhook) ToCloudEvent(source string) cloudevents.Event {

@@ -3,29 +3,25 @@ package mercadopago
 import (
 	"context"
 	"fmt"
-	"strings"
 	"micartapro/app/adapter/out/mercadopago"
 	"micartapro/app/events"
 	"micartapro/app/shared/configuration"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
+	"strings"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type CreateMercadoPagoCheckoutResult struct {
-	CheckoutURL string `json:"checkout_url"`
+	CheckoutURL  string `json:"checkout_url"`
 	PreferenceID string `json:"preference_id"`
 }
 
 type CreateMercadoPagoCheckout func(ctx context.Context, checkoutRequest events.MercadoPagoCheckoutRequest, externalReference string) (CreateMercadoPagoCheckoutResult, error)
 
 func init() {
-	ioc.Registry(NewCreateMercadoPagoCheckout,
-		observability.NewObservability,
-		mercadopago.NewCreateMercadoPagoOrder,
-		configuration.NewConf,
-	)
+	ioc.Register(NewCreateMercadoPagoCheckout)
 }
 
 func NewCreateMercadoPagoCheckout(
@@ -65,17 +61,17 @@ func NewCreateMercadoPagoCheckout(
 
 		// Construir metadata: combinar metadata del request con metadata por defecto
 		metadata := make(map[string]interface{})
-		
+
 		// Agregar metadata por defecto
 		metadata["business_name"] = checkoutRequest.BusinessInfo.BusinessName
 		metadata["whatsapp"] = checkoutRequest.BusinessInfo.Whatsapp
 		metadata["fulfillment_type"] = checkoutRequest.Fulfillment.Type
-		
+
 		// Agregar user_id al metadata si está disponible
 		if userID != "" {
 			metadata["user_id"] = userID
 		}
-		
+
 		// Agregar metadata personalizado del request (sobrescribe los valores por defecto si hay conflictos)
 		if checkoutRequest.Metadata != nil {
 			for k, v := range checkoutRequest.Metadata {
@@ -102,16 +98,16 @@ func NewCreateMercadoPagoCheckout(
 		// Determinar qué URL usar (init_point o sandbox_init_point)
 		// Si el token es de prueba, FORZAR el uso de sandbox_init_point
 		isTestToken := strings.HasPrefix(conf.MERCADOPAGO_ACCESS_TOKEN, "TEST-")
-		
+
 		var checkoutURL string
 		var isSandbox bool
-		
+
 		if isTestToken {
 			// Con token de prueba, SOLO usar sandbox_init_point
 			checkoutURL = result.SandboxInitPoint
 			isSandbox = true
 			if checkoutURL == "" {
-				obs.Logger.ErrorContext(spanCtx, "test_token_but_no_sandbox_url", 
+				obs.Logger.ErrorContext(spanCtx, "test_token_but_no_sandbox_url",
 					"preferenceID", result.PreferenceID,
 					"initPoint", result.InitPoint,
 					"sandboxInitPoint", result.SandboxInitPoint)
@@ -128,7 +124,7 @@ func NewCreateMercadoPagoCheckout(
 		}
 
 		if checkoutURL == "" {
-			obs.Logger.ErrorContext(spanCtx, "no_checkout_url_returned", 
+			obs.Logger.ErrorContext(spanCtx, "no_checkout_url_returned",
 				"preferenceID", result.PreferenceID,
 				"initPoint", result.InitPoint,
 				"sandboxInitPoint", result.SandboxInitPoint,
@@ -136,8 +132,8 @@ func NewCreateMercadoPagoCheckout(
 			return CreateMercadoPagoCheckoutResult{}, fmt.Errorf("no checkout URL returned from Mercado Pago")
 		}
 
-		obs.Logger.InfoContext(spanCtx, "mercadopago_checkout_created_successfully", 
-			"preferenceID", result.PreferenceID, 
+		obs.Logger.InfoContext(spanCtx, "mercadopago_checkout_created_successfully",
+			"preferenceID", result.PreferenceID,
 			"checkoutURL", checkoutURL,
 			"isSandbox", isSandbox,
 			"initPoint", result.InitPoint,

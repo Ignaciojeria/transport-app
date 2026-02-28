@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -25,21 +25,7 @@ type CloseJourneyRequest struct {
 }
 
 func init() {
-	ioc.Registry(
-		closeJourneyHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetActiveJourneyByMenuID,
-		supabaserepo.NewCloseJourney,
-		supabaserepo.NewUserHasMenu,
-		supabaserepo.NewGetOrderItemsForJourney,
-		supabaserepo.NewGetJourneyStats,
-		supabaserepo.NewReleaseOrdersFromJourney,
-		storage.NewUploadJourneyReport,
-		supabaserepo.NewUpdateJourneyReportURL,
-		order.NewCancelOrder,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(closeJourneyHandler)
 }
 
 func closeJourneyHandler(

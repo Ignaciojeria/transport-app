@@ -9,9 +9,8 @@ import (
 	"net/http"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -20,7 +19,7 @@ import (
 type ReleaseOrdersFromJourney func(ctx context.Context, journeyID string) error
 
 func init() {
-	ioc.Registry(NewReleaseOrdersFromJourney, supabasecli.NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewReleaseOrdersFromJourney)
 }
 
 func NewReleaseOrdersFromJourney(_ *supabase.Client, conf configuration.Conf) ReleaseOrdersFromJourney {

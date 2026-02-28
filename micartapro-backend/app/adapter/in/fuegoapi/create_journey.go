@@ -9,7 +9,7 @@ import (
 	"micartapro/app/usecase/journey"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -22,24 +22,16 @@ type CreateJourneyRequest struct {
 
 // CreateJourneyResponse es la respuesta 201 con la jornada creada (campos en camelCase para la API).
 type CreateJourneyResponse struct {
-	ID        string  `json:"id"`
-	MenuID    string  `json:"menuId"`
-	Status    string  `json:"status"`
-	OpenedAt  string  `json:"openedAt"`  // RFC3339
-	OpenedBy  string  `json:"openedBy"`
-	Reason    *string `json:"reason,omitempty"`
+	ID       string  `json:"id"`
+	MenuID   string  `json:"menuId"`
+	Status   string  `json:"status"`
+	OpenedAt string  `json:"openedAt"` // RFC3339
+	OpenedBy string  `json:"openedBy"`
+	Reason   *string `json:"reason,omitempty"`
 }
 
 func init() {
-	ioc.Registry(
-		createJourneyHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetActiveJourneyByMenuID,
-		supabaserepo.NewInsertJourney,
-		supabaserepo.NewUserHasMenu,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(createJourneyHandler)
 }
 
 func createJourneyHandler(

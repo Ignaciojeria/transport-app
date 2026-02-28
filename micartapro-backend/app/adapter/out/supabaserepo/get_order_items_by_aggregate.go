@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -25,7 +23,7 @@ type OrderItemByAggregateRow struct {
 type GetOrderItemsByAggregateID func(ctx context.Context, menuID string, aggregateID int64) ([]OrderItemByAggregateRow, error)
 
 func init() {
-	ioc.Registry(NewGetOrderItemsByAggregateID, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetOrderItemsByAggregateID)
 }
 
 func NewGetOrderItemsByAggregateID(sb *supabase.Client) GetOrderItemsByAggregateID {

@@ -38,8 +38,8 @@ const (
 // Sizes para emphasis y presets.
 const (
 	SizeNormal = "NORMAL"
-	SizeM      = "M"   // Preset: BODY
-	SizeL      = "L"   // Preset: HOOK, CONTRAST
+	SizeM      = "M" // Preset: BODY
+	SizeL      = "L" // Preset: HOOK, CONTRAST
 	SizeBig    = "BIG"
 	SizeXL     = "XL"
 	SizeXXL    = "XXL" // TRAILER: emphasis máximo
@@ -49,7 +49,7 @@ const (
 const (
 	DirectionPresetCinematicDynamicV1 = "CINEMATIC_DYNAMIC_V1"
 	DirectionPresetTrailerV1          = "TRAILER_V1"
-	DirectionPresetDocumentary       = "DOCUMENTARY" // BOTTOM fijo, minimalista
+	DirectionPresetDocumentary        = "DOCUMENTARY" // BOTTOM fijo, minimalista
 )
 
 // DefaultStyle estilo por defecto.
@@ -67,10 +67,10 @@ var ValidPlacements = map[string]bool{
 
 // OverflowStrategy define qué hacer cuando lines excede maxLines.
 const (
-	OverflowAllow            = "ALLOW"                 // No hacer nada (legacy)
-	OverflowRebalance        = "REBALANCE"             // Re-optimizar cortes
-	OverflowShrink           = "SHRINK"                // Fusionar/truncar
-	OverflowRebalanceShrink  = "REBALANCE_THEN_SHRINK"  // Rebalance primero, si no alcanza: shrink
+	OverflowAllow           = "ALLOW"                 // No hacer nada (legacy)
+	OverflowRebalance       = "REBALANCE"             // Re-optimizar cortes
+	OverflowShrink          = "SHRINK"                // Fusionar/truncar
+	OverflowRebalanceShrink = "REBALANCE_THEN_SHRINK" // Rebalance primero, si no alcanza: shrink
 )
 
 // LayoutConstraints restricciones para placement dinámico.
@@ -95,19 +95,19 @@ type DynamicRules struct {
 
 // SubtitleLayout intención de layout (fallback cuando placementStrategy=FIXED).
 type SubtitleLayout struct {
-	PlacementStrategy string            `json:"placementStrategy"` // FIXED | DYNAMIC
-	DefaultPlacement  string            `json:"defaultPlacement"`    // Fallback
-	MaxLines          int               `json:"maxLines"`
-	MaxCharsPerLine   int               `json:"maxCharsPerLine"`
-	OverflowStrategy  string            `json:"overflowStrategy,omitempty"` // REBALANCE | SHRINK | REBALANCE_THEN_SHRINK
+	PlacementStrategy string             `json:"placementStrategy"` // FIXED | DYNAMIC
+	DefaultPlacement  string             `json:"defaultPlacement"`  // Fallback
+	MaxLines          int                `json:"maxLines"`
+	MaxCharsPerLine   int                `json:"maxCharsPerLine"`
+	OverflowStrategy  string             `json:"overflowStrategy,omitempty"` // REBALANCE | SHRINK | REBALANCE_THEN_SHRINK
 	Constraints       *LayoutConstraints `json:"constraints,omitempty"`
-	SafeArea          *SafeArea         `json:"safeArea,omitempty"`
-	DynamicRules      *DynamicRules     `json:"dynamicRules,omitempty"`
+	SafeArea          *SafeArea          `json:"safeArea,omitempty"`
+	DynamicRules      *DynamicRules      `json:"dynamicRules,omitempty"`
 }
 
 // RenderHints hints para el renderer.
 type RenderHints struct {
-	ExtendEndSeconds   float64 `json:"extendEndSeconds,omitempty"`
+	ExtendEndSeconds    float64 `json:"extendEndSeconds,omitempty"`
 	TimingOffsetSeconds float64 `json:"timingOffsetSeconds,omitempty"` // + = subtítulos aparecen antes, - = después (corrige desfase con audio)
 }
 
@@ -122,10 +122,10 @@ type EmphasisObject struct {
 // Regla: máximo 2 fuentes, 2 colores + blanco. Primary=impacto, Secondary=soporte.
 type SubtitleTheme struct {
 	PrimaryFont    string `json:"primaryFont,omitempty"`    // Bebas Neue para CENTER/énfasis
-	SecondaryFont  string `json:"secondaryFont,omitempty"`   // Montserrat para BOTTOM
-	PrimaryColor   string `json:"primaryColor,omitempty"`    // #FFFFFF texto principal
-	AccentColor    string `json:"accentColor,omitempty"`     // #7C3AED palabras clave
-	SecondaryColor string `json:"secondaryColor,omitempty"`  // #D1D5DB texto secundario (opcional)
+	SecondaryFont  string `json:"secondaryFont,omitempty"`  // Montserrat para BOTTOM
+	PrimaryColor   string `json:"primaryColor,omitempty"`   // #FFFFFF texto principal
+	AccentColor    string `json:"accentColor,omitempty"`    // #7C3AED palabras clave
+	SecondaryColor string `json:"secondaryColor,omitempty"` // #D1D5DB texto secundario (opcional)
 }
 
 // SubtitleWord palabra con timing para estilos karaoke/ALEX_HORMOZI.
@@ -137,27 +137,27 @@ type SubtitleWord struct {
 
 // SubtitleLine representa una línea con timing propio. Hereda placement/animation del padre; solo overrides.
 type SubtitleLine struct {
-	Text     string          `json:"text"`
-	Start    float64         `json:"start"`
-	End      float64         `json:"end"`
-	Placement string         `json:"placement,omitempty"`
-	Animation string         `json:"animation,omitempty"`
-	Emphasis *EmphasisObject `json:"emphasis,omitempty"`
-	Size     string          `json:"size,omitempty"`
-	Words    []SubtitleWord  `json:"words,omitempty"` // Para ALEX_HORMOZI: palabra activa amarilla + scale
+	Text      string          `json:"text"`
+	Start     float64         `json:"start"`
+	End       float64         `json:"end"`
+	Placement string          `json:"placement,omitempty"`
+	Animation string          `json:"animation,omitempty"`
+	Emphasis  *EmphasisObject `json:"emphasis,omitempty"`
+	Size      string          `json:"size,omitempty"`
+	Words     []SubtitleWord  `json:"words,omitempty"` // Para ALEX_HORMOZI: palabra activa amarilla + scale
 }
 
 // SubtitleSegment representa un segmento con placement/animation por bloque.
 type SubtitleSegment struct {
-	Text      string            `json:"text"`
-	Start     float64           `json:"start"`
-	End       float64           `json:"end"`
-	Placement string            `json:"placement,omitempty"`
-	Animation string            `json:"animation,omitempty"`
-	Emphasis  *EmphasisObject   `json:"emphasis,omitempty"` // { phrases: [...], level: "BIG" }
-	Size      string            `json:"size,omitempty"`
-	Style     *string           `json:"style,omitempty"`
-	Lines     []SubtitleLine    `json:"lines,omitempty"`
+	Text      string          `json:"text"`
+	Start     float64         `json:"start"`
+	End       float64         `json:"end"`
+	Placement string          `json:"placement,omitempty"`
+	Animation string          `json:"animation,omitempty"`
+	Emphasis  *EmphasisObject `json:"emphasis,omitempty"` // { phrases: [...], level: "BIG" }
+	Size      string          `json:"size,omitempty"`
+	Style     *string         `json:"style,omitempty"`
+	Lines     []SubtitleLine  `json:"lines,omitempty"`
 	// ImageURL imagen asociada al segmento (ej. frame de video en ese timestamp). Requiere includeImagesPerSegment.
 	ImageURL string `json:"imageUrl,omitempty"`
 	// VideoURL video asociado al segmento. Requiere includeImagesPerSegment con outputMediaType=video.
@@ -169,12 +169,12 @@ type SubtitleResponse struct {
 	SubtitleSchemaVersion int               `json:"subtitleSchemaVersion"`
 	SubtitleStyle         string            `json:"subtitleStyle"`
 	DirectionPreset       string            `json:"directionPreset,omitempty"` // ej. CINEMATIC_DYNAMIC_V1
-	SubtitleLayout       SubtitleLayout    `json:"subtitleLayout"`
-	Theme                *SubtitleTheme    `json:"theme,omitempty"` // Fuentes y colores (TRAILER_DEFAULT, etc.)
-	RenderHints          *RenderHints     `json:"renderHints,omitempty"`
-	AudioURL             string            `json:"audioUrl"`
-	Subtitles            []SubtitleSegment `json:"subtitles"`
-	DurationSeconds      float64           `json:"durationSeconds"`
+	SubtitleLayout        SubtitleLayout    `json:"subtitleLayout"`
+	Theme                 *SubtitleTheme    `json:"theme,omitempty"` // Fuentes y colores (TRAILER_DEFAULT, etc.)
+	RenderHints           *RenderHints      `json:"renderHints,omitempty"`
+	AudioURL              string            `json:"audioUrl"`
+	Subtitles             []SubtitleSegment `json:"subtitles"`
+	DurationSeconds       float64           `json:"durationSeconds"`
 }
 
 // ─── TimelineResponse (formato scenes, consumido por ai-editor) ───
@@ -187,46 +187,46 @@ type SceneVoice struct {
 
 // SceneSubtitleLine línea con timing para el renderer.
 type SceneSubtitleLine struct {
-	Text     string  `json:"text"`
-	Start    float64 `json:"start"`
-	End      float64 `json:"end"`
-	Size     string  `json:"size"`
+	Text     string          `json:"text"`
+	Start    float64         `json:"start"`
+	End      float64         `json:"end"`
+	Size     string          `json:"size"`
 	Emphasis *EmphasisObject `json:"emphasis,omitempty"`
 }
 
 // SceneSubtitle bloque de subtítulo de la escena.
 type SceneSubtitle struct {
-	Placement  string              `json:"placement"`
-	Animation  string              `json:"animation"`
-	Size       string              `json:"size"`
-	Lines      []SceneSubtitleLine `json:"lines"`
-	Emphasis   *EmphasisObject     `json:"emphasis,omitempty"`
+	Placement string              `json:"placement"`
+	Animation string              `json:"animation"`
+	Size      string              `json:"size"`
+	Lines     []SceneSubtitleLine `json:"lines"`
+	Emphasis  *EmphasisObject     `json:"emphasis,omitempty"`
 }
 
 // SceneVisual imagen/video de la escena.
 type SceneVisual struct {
-	ImageURL   string `json:"imageUrl"`
-	Animation  string `json:"animation"`
-	VideoURL   string `json:"videoUrl,omitempty"`
+	ImageURL  string `json:"imageUrl"`
+	Animation string `json:"animation"`
+	VideoURL  string `json:"videoUrl,omitempty"`
 }
 
 // SceneLayout placement y safeArea de la escena.
 type SceneLayout struct {
-	Placement string    `json:"placement"`
+	Placement string   `json:"placement"`
 	SafeArea  SafeArea `json:"safeArea"`
 }
 
 // Scene representa una escena del timeline (1 imagen + subtítulos).
 type Scene struct {
-	SceneID  string         `json:"sceneId"`
-	Index    int            `json:"index"`
-	Start    float64        `json:"start"`
-	End      float64        `json:"end"`
-	Duration float64        `json:"duration"`
-	Voice    SceneVoice     `json:"voice"`
-	Subtitle SceneSubtitle  `json:"subtitle"`
-	Visual   SceneVisual    `json:"visual"`
-	Layout   SceneLayout    `json:"layout"`
+	SceneID  string        `json:"sceneId"`
+	Index    int           `json:"index"`
+	Start    float64       `json:"start"`
+	End      float64       `json:"end"`
+	Duration float64       `json:"duration"`
+	Voice    SceneVoice    `json:"voice"`
+	Subtitle SceneSubtitle `json:"subtitle"`
+	Visual   SceneVisual   `json:"visual"`
+	Layout   SceneLayout   `json:"layout"`
 }
 
 // AudioInfo info del audio para el timeline.
@@ -237,15 +237,15 @@ type AudioInfo struct {
 
 // TimelineResponse contrato de respuesta con scenes (ai-editor).
 type TimelineResponse struct {
-	SubtitleSchemaVersion int             `json:"subtitleSchemaVersion"`
-	TimelineID            string          `json:"timelineId"`
-	Version               int             `json:"version"`
-	SubtitleStyle         string          `json:"subtitleStyle"`
-	DirectionPreset       string          `json:"directionPreset,omitempty"`
-	SubtitleLayout       SubtitleLayout  `json:"subtitleLayout"`
+	SubtitleSchemaVersion int            `json:"subtitleSchemaVersion"`
+	TimelineID            string         `json:"timelineId"`
+	Version               int            `json:"version"`
+	SubtitleStyle         string         `json:"subtitleStyle"`
+	DirectionPreset       string         `json:"directionPreset,omitempty"`
+	SubtitleLayout        SubtitleLayout `json:"subtitleLayout"`
 	Theme                 *SubtitleTheme `json:"theme,omitempty"`
 	RenderHints           *RenderHints   `json:"renderHints,omitempty"`
 	Audio                 AudioInfo      `json:"audio"`
-	Scenes                []Scene         `json:"scenes"`
-	DurationSeconds       float64         `json:"durationSeconds"`
+	Scenes                []Scene        `json:"scenes"`
+	DurationSeconds       float64        `json:"durationSeconds"`
 }

@@ -1,9 +1,9 @@
 package strategy
 
 import (
-	"micartapro/app/shared/configuration"
 	"context"
 	"log/slog"
+	"micartapro/app/shared/configuration"
 	"os"
 	"strconv"
 

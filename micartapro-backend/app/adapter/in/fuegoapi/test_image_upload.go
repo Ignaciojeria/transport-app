@@ -9,19 +9,13 @@ import (
 	"net/http"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 func init() {
-	ioc.Registry(
-		testImageUpload,
-		httpserver.New,
-		imageuploader.NewImageUploader,
-		observability.NewObservability,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(testImageUpload)
 }
 
 func testImageUpload(

@@ -1,11 +1,11 @@
 package configuration
 
 import (
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 func init() {
-	ioc.Registry(NewConf)
+	ioc.Register(NewConf)
 }
 
 type Conf struct {

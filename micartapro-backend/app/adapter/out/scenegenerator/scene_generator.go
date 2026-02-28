@@ -10,14 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
 	"micartapro/app/adapter/out/imagegenerator"
-	"micartapro/app/shared/infrastructure/ai"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"cloud.google.com/go/storage"
+
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/genai"
 )
 
@@ -59,7 +58,7 @@ type SceneGenerator struct {
 }
 
 func init() {
-	ioc.Registry(NewSceneGenerator, ai.NewClient, observability.NewObservability, gcs.NewClient)
+	ioc.Register(NewSceneGenerator)
 }
 
 func NewSceneGenerator(client *genai.Client, obs observability.Observability, gcsClient *storage.Client) (*SceneGenerator, error) {
@@ -141,9 +140,9 @@ func generateSceneImage(ctx context.Context, client *genai.Client, gcsClient *st
 
 func generateSceneVideo(ctx context.Context, client *genai.Client, gcsClient *storage.Client, obs observability.Observability, userID string, sceneIndex int, prompt string, aspectRatio string) (string, error) {
 	videoConfig := &genai.GenerateVideosConfig{
-		AspectRatio:      aspectRatio,
+		AspectRatio:     aspectRatio,
 		NumberOfVideos:  1,
-		Resolution:       "720p",
+		Resolution:      "720p",
 		DurationSeconds: ptr(int32(6)),
 		GenerateAudio:   ptr(false), // Sin audio: los clips se combinan con el TTS/subtítulos existentes
 	}

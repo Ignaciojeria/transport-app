@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 
 	"micartapro/app/adapter/out/imagegenerator"
@@ -19,26 +19,7 @@ import (
 )
 
 func init() {
-	ioc.Registry(
-		newPullAllEvents,
-		eventprocessing.NewSubscriberStrategy,
-		observability.NewObservability,
-		menu.NewOnMenuInteractionRequest,
-		menu.NewOnMenuCreateRequest,
-		menu.NewOnUserMenusInsertedWebhook,
-		menu.NewOnImageGenerationRequest,
-		menu.NewOnImageEditionRequest,
-		creem.NewOnCreemSubscriptionTrialingWebhook,
-		creem.NewOnCreemCheckoutCompletedWebhook,
-		creem.NewOnCreemSubscriptionActiveWebhook,
-		creem.NewOnCreemSubscriptionPaidWebhook,
-		creem.NewOnCreemSubscriptionCanceledWebhook,
-		creem.NewOnCreemSubscriptionExpiredWebhook,
-		creem.NewOnCreemSubscriptionUpdateWebhook,
-		creem.NewOnCreemSubscriptionPausedWebhook,
-		creem.NewOnCreemRefundCreatedWebhook,
-		creem.NewOnCreemDisputeCreatedWebhook,
-	)
+	ioc.Register(newPullAllEvents)
 }
 
 // Pull all events from the event bus

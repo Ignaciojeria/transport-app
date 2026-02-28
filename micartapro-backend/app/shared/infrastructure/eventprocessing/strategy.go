@@ -2,11 +2,10 @@ package eventprocessing
 
 import (
 	"context"
-	"micartapro/app/shared/infrastructure/eventprocessing/gcp"
 	"micartapro/app/shared/infrastructure/httpserver"
 
 	"cloud.google.com/go/pubsub/v2"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	cloudevents "github.com/cloudevents/sdk-go/v2"
 )
 
@@ -57,10 +56,7 @@ type Subscriber interface {
 }
 
 func init() {
-	ioc.Registry(
-		NewSubscriberStrategy,
-		gcp.NewClient,
-		httpserver.New)
+	ioc.Register(NewSubscriberStrategy)
 }
 
 func NewSubscriberStrategy(c *pubsub.Client, s httpserver.Server) Subscriber {
@@ -89,10 +85,7 @@ type PublisherManager interface {
 }
 
 func init() {
-	ioc.Registry(
-		NewPublisherStrategy,
-		gcp.NewClient,
-	)
+	ioc.Register(NewPublisherStrategy)
 }
 func NewPublisherStrategy(c *pubsub.Client) PublisherManager {
 	return NewGcpPublisherManager(c)

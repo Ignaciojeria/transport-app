@@ -13,9 +13,9 @@ type ImageGenerationRequestEvent struct {
 	Prompt      string `json:"prompt"`
 	AspectRatio string `json:"aspectRatio"`
 	ImageCount  int    `json:"imageCount"`
-	UploadURL   string `json:"uploadUrl"`   // URL pre-firmada para subir
-	PublicURL   string `json:"publicUrl"`   // URL pública donde se guardará la imagen
-	ImageType   string `json:"imageType"`   // "cover", "footer", o "item"
+	UploadURL   string `json:"uploadUrl"` // URL pre-firmada para subir
+	PublicURL   string `json:"publicUrl"` // URL pública donde se guardará la imagen
+	ImageType   string `json:"imageType"` // "cover", "footer", o "item"
 }
 
 func (e ImageGenerationRequestEvent) ToCloudEvent(source string) cloudevents.Event {
@@ -30,15 +30,15 @@ func (e ImageGenerationRequestEvent) ToCloudEvent(source string) cloudevents.Eve
 
 // ImageEditionRequestEvent representa un evento para editar una imagen individual
 type ImageEditionRequestEvent struct {
-	MenuID           string `json:"menuId"`
-	MenuItemID       string `json:"menuItemId,omitempty"` // Vacío para cover image
-	Prompt           string `json:"prompt"`
+	MenuID            string `json:"menuId"`
+	MenuItemID        string `json:"menuItemId,omitempty"` // Vacío para cover image
+	Prompt            string `json:"prompt"`
 	ReferenceImageUrl string `json:"referenceImageUrl"`
-	AspectRatio      string `json:"aspectRatio"`
-	ImageCount       int    `json:"imageCount"`
-	UploadURL        string `json:"uploadUrl"` // URL pre-firmada para subir
-	PublicURL        string `json:"publicUrl"` // URL pública donde se guardará la imagen
-	ImageType        string `json:"imageType"` // "cover", "footer", o "item"
+	AspectRatio       string `json:"aspectRatio"`
+	ImageCount        int    `json:"imageCount"`
+	UploadURL         string `json:"uploadUrl"` // URL pre-firmada para subir
+	PublicURL         string `json:"publicUrl"` // URL pública donde se guardará la imagen
+	ImageType         string `json:"imageType"` // "cover", "footer", o "item"
 }
 
 func (e ImageEditionRequestEvent) ToCloudEvent(source string) cloudevents.Event {

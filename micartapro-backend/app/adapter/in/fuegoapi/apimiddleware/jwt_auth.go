@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type JWTAuthMiddleware func(http.Handler) http.Handler
 
 func init() {
-	ioc.Registry(NewJWTAuthMiddleware, auth.NewSupabaseTokenValidator)
+	ioc.Register(NewJWTAuthMiddleware)
 }
 func NewJWTAuthMiddleware(tokenValidator auth.SupabaseTokenValidator) JWTAuthMiddleware {
 	return func(next http.Handler) http.Handler {

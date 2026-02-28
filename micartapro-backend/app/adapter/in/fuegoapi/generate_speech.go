@@ -14,7 +14,7 @@ import (
 	"micartapro/app/usecase/billing"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
@@ -32,11 +32,11 @@ type OutputConfig struct {
 }
 
 type GenerateSpeechRequest struct {
-	Scenes      []SpeechScene `json:"scenes"`
-	Output      *OutputConfig `json:"output,omitempty"`
-	VoiceName   string       `json:"voiceName,omitempty"`
-	LanguageCode string      `json:"languageCode,omitempty"`
-	StylePrompt string       `json:"stylePrompt,omitempty"`
+	Scenes       []SpeechScene `json:"scenes"`
+	Output       *OutputConfig `json:"output,omitempty"`
+	VoiceName    string        `json:"voiceName,omitempty"`
+	LanguageCode string        `json:"languageCode,omitempty"`
+	StylePrompt  string        `json:"stylePrompt,omitempty"`
 }
 
 type SceneSegment struct {
@@ -48,23 +48,13 @@ type SceneSegment struct {
 }
 
 type GenerateSpeechResponse struct {
-	AudioURL        string          `json:"audioUrl"`        // URL pública del audio generado (WAV)
-	DurationSeconds float64         `json:"durationSeconds"` // Duración del audio en segundos
-	Subtitles      []SceneSegment   `json:"subtitles"`       // Segmentos con timing; imageUrl si output.type es "image"
+	AudioURL        string         `json:"audioUrl"`        // URL pública del audio generado (WAV)
+	DurationSeconds float64        `json:"durationSeconds"` // Duración del audio en segundos
+	Subtitles       []SceneSegment `json:"subtitles"`       // Segmentos con timing; imageUrl si output.type es "image"
 }
 
 func init() {
-	ioc.Registry(
-		generateSpeechHandler,
-		httpserver.New,
-		observability.NewObservability,
-		apimiddleware.NewJWTAuthMiddleware,
-		texttospeech.NewTextToSpeech,
-		texttospeech.NewTextToSpeechForLines,
-		scenegenerator.NewSceneGenerator,
-		supabaserepo.NewGetUserCredits,
-		supabaserepo.NewConsumeCredits,
-	)
+	ioc.Register(generateSpeechHandler)
 }
 
 func generateSpeechHandler(

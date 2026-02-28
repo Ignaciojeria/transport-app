@@ -7,7 +7,7 @@ import (
 
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 // GenerateSubtitleTiming genera segmentos de subtítulos con timing estimado.
@@ -24,7 +24,7 @@ type SubtitleSegment struct {
 }
 
 func init() {
-	ioc.Registry(NewSubtitleTimingAgent, observability.NewObservability)
+	ioc.Register(NewSubtitleTimingAgent)
 }
 
 func NewSubtitleTimingAgent(obs observability.Observability) (GenerateSubtitleTiming, error) {

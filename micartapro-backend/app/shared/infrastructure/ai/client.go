@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"micartapro/app/shared/configuration"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/genai"
 )
 
 func init() {
-	ioc.Registry(NewClient, configuration.NewConf)
+	ioc.Register(NewClient)
 }
 
 func NewClient(conf configuration.Conf) (*genai.Client, error) {

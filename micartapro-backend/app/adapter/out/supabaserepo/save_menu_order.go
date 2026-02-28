@@ -10,9 +10,8 @@ import (
 	"net/http"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -26,7 +25,7 @@ type SaveMenuOrderResult struct {
 type SaveMenuOrder func(ctx context.Context, menuID string, eventPayload interface{}, eventType string) (SaveMenuOrderResult, error)
 
 func init() {
-	ioc.Registry(NewSaveMenuOrder, supabasecli.NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewSaveMenuOrder)
 }
 
 func NewSaveMenuOrder(supabase *supabase.Client, conf configuration.Conf) SaveMenuOrder {

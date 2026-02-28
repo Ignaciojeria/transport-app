@@ -1,6 +1,6 @@
-# Guía de Uso de Einar IOC
+# Guía de Uso de IOC
 
-Esta documentación describe cómo usar el sistema de inyección de dependencias **einar-ioc** en el proyecto micartapro-backend, basado en los patrones establecidos en el código.
+Esta documentación describe cómo usar el sistema de inyección de dependencias **github.com/Ignaciojeria/ioc** en el proyecto micartapro-backend, basado en los patrones establecidos en el código.
 
 ## Tabla de Contenidos
 
@@ -17,11 +17,11 @@ Esta documentación describe cómo usar el sistema de inyección de dependencias
 
 ## Conceptos Básicos
 
-### ¿Qué es einar-ioc?
+### ¿Qué es ioc?
 
-Einar-ioc es un contenedor de inyección de dependencias para Go que:
-- Resuelve automáticamente las dependencias basándose en los tipos de los parámetros
-- Registra constructores y sus dependencias en la función `init()`
+IOC es un contenedor de inyección de dependencias minimalista para Go que:
+- **Infiere dependencias automáticamente** por tipos (parámetros → retornos)
+- Registra constructores sin declarar dependencias manualmente
 - Construye el grafo de dependencias al llamar `ioc.LoadDependencies()`
 
 ### Flujo de Trabajo
@@ -38,12 +38,7 @@ Einar-ioc es un contenedor de inyección de dependencias para Go que:
 
 ```go
 func init() {
-    ioc.Registry(
-        ConstructorFunction,      // Función que se va a construir
-        Dependency1Constructor,   // Dependencia 1
-        Dependency2Constructor,    // Dependencia 2
-        // ... más dependencias
-    )
+    ioc.Register(ConstructorFunction)  // Las dependencias se infieren por tipo
 }
 ```
 
@@ -53,11 +48,11 @@ func init() {
 package configuration
 
 import (
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
 )
 
 func init() {
-    ioc.Registry(NewConf)
+    ioc.Register(NewConf)
 }
 
 func NewConf() (Conf, error) {
@@ -72,12 +67,12 @@ package supabasecli
 
 import (
     "micartapro/app/shared/configuration"
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
     supabase "github.com/supabase-community/supabase-go"
 )
 
 func init() {
-    ioc.Registry(NewSupabaseClient, configuration.NewConf)
+    ioc.Register(NewSupabaseClient)  // configuration.Conf se infiere del parámetro
 }
 
 func NewSupabaseClient(conf configuration.Conf) (*supabase.Client, error) {
@@ -98,18 +93,14 @@ import (
     "micartapro/app/events"
     "micartapro/app/shared/infrastructure/gcs"
     "micartapro/app/shared/infrastructure/observability"
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
     "cloud.google.com/go/storage"
 )
 
 type GetLatestMenuById func(ctx context.Context, menuID string) (events.MenuCreateRequest, error)
 
 func init() {
-    ioc.Registry(
-        NewGetLatestMenuById,
-        observability.NewObservability,
-        gcs.NewClient,
-    )
+    ioc.Register(NewGetLatestMenuById)
 }
 
 func NewGetLatestMenuById(
@@ -132,18 +123,12 @@ import (
     "micartapro/app/adapter/out/supabaserepo"
     "micartapro/app/shared/infrastructure/httpserver"
     "micartapro/app/shared/infrastructure/observability"
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
     "github.com/go-fuego/fuego"
 )
 
 func init() {
-    ioc.Registry(
-        searchMenuById,                      // Función del endpoint
-        httpserver.New,                      // Servidor HTTP
-        observability.NewObservability,      // Observabilidad
-        supabaserepo.NewGetMenuSlugBySlug,   // Repositorio
-        storage.NewGetLatestMenuById,        // Storage
-    )
+    ioc.Register(searchMenuById)  // Dependencias inferidas por tipo
 }
 
 func searchMenuById(
@@ -252,8 +237,8 @@ Usa `ioc.RegistryAtEnd` cuando necesitas que una función se ejecute **después*
 package httpserver
 
 func init() {
-    ioc.Registry(New, configuration.NewConf, NewRequestLoggerMiddleware)
-    ioc.RegistryAtEnd(startAtEnd, New, observability.NewObservability)
+    ioc.Register(New)
+    ioc.RegisterAtEnd(startAtEnd)
 }
 
 func New(conf configuration.Conf, requestLoggerMiddleware RequestLoggerMiddleware) Server {
@@ -274,7 +259,7 @@ func startAtEnd(e Server, obs observability.Observability) error {
 
 **Sintaxis**:
 ```go
-ioc.RegistryAtEnd(
+ioc.RegisterAtEnd(
     FunctionToExecute,      // Función que se ejecutará al final
     Dependency1,           // Dependencia 1
     Dependency2,           // Dependencia 2
@@ -298,7 +283,7 @@ import (
     _ "micartapro/app/usecase/menu"
     // ... más imports
 
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
     "log"
 )
 
@@ -330,7 +315,7 @@ import (
     "micartapro/app/adapter/out/storage"
     "micartapro/app/events"
     "micartapro/app/shared/infrastructure/observability"
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
 )
 
 // 1. Definir el tipo funcional
@@ -338,11 +323,7 @@ type OnMenuCreateRequest func(ctx context.Context, input events.MenuCreateReques
 
 // 2. Registrar en init()
 func init() {
-    ioc.Registry(
-        NewOnMenuCreateRequest,        // Constructor
-        observability.NewObservability, // Dependencia 1
-        storage.NewSaveMenu,           // Dependencia 2
-    )
+    ioc.Register(NewOnMenuCreateRequest)
 }
 
 // 3. Implementar el constructor
@@ -368,17 +349,14 @@ package supabaserepo
 import (
     "context"
     "micartapro/app/shared/infrastructure/supabasecli"
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
     "github.com/supabase-community/supabase-go"
 )
 
 type GetMenuSlugBySlug func(ctx context.Context, slug string) (MenuSlugInfo, error)
 
 func init() {
-    ioc.Registry(
-        NewGetMenuSlugBySlug,
-        supabasecli.NewSupabaseClient, // Cliente de Supabase
-    )
+    ioc.Register(NewGetMenuSlugBySlug)
 }
 
 func NewGetMenuSlugBySlug(supabase *supabase.Client) GetMenuSlugBySlug {
@@ -400,17 +378,12 @@ import (
     "micartapro/app/events"
     "micartapro/app/shared/infrastructure/httpserver"
     "micartapro/app/shared/infrastructure/observability"
-    ioc "github.com/Ignaciojeria/einar-ioc/v2"
+    ioc "github.com/Ignaciojeria/ioc"
     "github.com/go-fuego/fuego"
 )
 
 func init() {
-    ioc.Registry(
-        searchMenuById,
-        httpserver.New,
-        observability.NewObservability,
-        supabaserepo.NewGetMenuSlugBySlug,
-        storage.NewGetLatestMenuById,
+    ioc.Register(searchMenuById)
     )
 }
 
@@ -440,30 +413,19 @@ func searchMenuById(
 - **Siempre** usa el prefijo `New` para constructores: `NewService`, `NewRepository`, etc.
 - El nombre debe reflejar qué construye: `NewSupabaseClient`, `NewGetLatestMenuById`
 
-### 2. Orden de Dependencias
+### 2. Inferencia de Dependencias
 
-- El **primer parámetro** en `ioc.Registry` es siempre el constructor que se está registrando
-- Los siguientes son las dependencias que necesita ese constructor
-- El orden de las dependencias debe coincidir con el orden de los parámetros del constructor
+- Solo registra el constructor: `ioc.Register(NewService)`
+- Las dependencias se infieren automáticamente por los tipos de los parámetros
+- El orden de los parámetros del constructor define qué se inyecta
 
 ```go
-// ✅ Correcto
-ioc.Registry(
-    NewService,           // Constructor
-    NewDependency1,       // Parámetro 1
-    NewDependency2,       // Parámetro 2
-)
+// ✅ Correcto - las dependencias se infieren por tipo
+ioc.Register(NewService)
 
 func NewService(dep1 Dependency1, dep2 Dependency2) Service {
     // ...
 }
-
-// ❌ Incorrecto - orden incorrecto
-ioc.Registry(
-    NewService,
-    NewDependency2,       // Debería ser Dependency1 primero
-    NewDependency1,
-)
 ```
 
 ### 3. Tipos Funcionales vs Interfaces
@@ -526,8 +488,8 @@ app/
 
 | Comando | Descripción | Ejemplo |
 |---------|-------------|---------|
-| `ioc.Registry(...)` | Registra un constructor con sus dependencias | `ioc.Registry(NewService, NewDep1, NewDep2)` |
-| `ioc.RegistryAtEnd(...)` | Registra una función que se ejecuta al final | `ioc.RegistryAtEnd(startServer, NewServer)` |
+| `ioc.Register(ctor)` | Registra un constructor (dependencias inferidas por tipo) | `ioc.Register(NewService)` |
+| `ioc.RegisterAtEnd(ctor)` | Registra una función que se ejecuta al final | `ioc.RegisterAtEnd(startServer)` |
 | `ioc.LoadDependencies()` | Construye todo el grafo de dependencias | Llamar en `main()` |
 
 ---

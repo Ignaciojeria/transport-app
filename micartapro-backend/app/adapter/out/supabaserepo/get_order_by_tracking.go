@@ -7,9 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -37,8 +35,8 @@ type OrderByTrackingResult struct {
 	Items           []OrderTrackingItem `json:"items"`
 	RequestedAt     *string             `json:"requestedAt,omitempty"`
 	CreatedAt       string              `json:"createdAt"`
-		CustomerName    string              `json:"customerName,omitempty"`
-		DeliveryAddress string              `json:"deliveryAddress,omitempty"`
+	CustomerName    string              `json:"customerName,omitempty"`
+	DeliveryAddress string              `json:"deliveryAddress,omitempty"`
 	DeliveryUnit    string              `json:"deliveryUnit,omitempty"`
 	DeliveryNotes   string              `json:"deliveryNotes,omitempty"`
 }
@@ -71,7 +69,7 @@ type orderItemProjectionRow struct {
 type GetOrderByTrackingID func(ctx context.Context, trackingID string) (*OrderByTrackingResult, error)
 
 func init() {
-	ioc.Registry(NewGetOrderByTrackingID, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetOrderByTrackingID)
 }
 
 func NewGetOrderByTrackingID(sb *supabase.Client) GetOrderByTrackingID {

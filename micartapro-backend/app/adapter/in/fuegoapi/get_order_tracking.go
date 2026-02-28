@@ -8,19 +8,14 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
-	ioc.Registry(
-		getOrderTracking,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetOrderByTrackingID,
-	)
+	ioc.Register(getOrderTracking)
 }
 
 func getOrderTracking(

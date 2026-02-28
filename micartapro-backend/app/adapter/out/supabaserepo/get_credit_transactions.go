@@ -6,31 +6,30 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
 
 func init() {
-	ioc.Registry(NewGetCreditTransactions, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetCreditTransactions)
 }
 
 func NewGetCreditTransactions(supabase *supabase.Client) GetCreditTransactions {
 	return func(ctx context.Context, userID uuid.UUID, limit int) ([]billing.CreditTransaction, error) {
 		var result []struct {
-			ID             int64     `json:"id"`
-			UserID         string    `json:"user_id"`
-			Amount         int       `json:"amount"`
-			TransactionType string   `json:"transaction_type"`
-			Source         string    `json:"source"`
-			SourceID       *string   `json:"source_id"`
-			Description    *string   `json:"description"`
-			BalanceBefore  int       `json:"balance_before"`
-			BalanceAfter   int       `json:"balance_after"`
-			CreatedAt      time.Time `json:"created_at"`
+			ID              int64     `json:"id"`
+			UserID          string    `json:"user_id"`
+			Amount          int       `json:"amount"`
+			TransactionType string    `json:"transaction_type"`
+			Source          string    `json:"source"`
+			SourceID        *string   `json:"source_id"`
+			Description     *string   `json:"description"`
+			BalanceBefore   int       `json:"balance_before"`
+			BalanceAfter    int       `json:"balance_after"`
+			CreatedAt       time.Time `json:"created_at"`
 		}
 
 		query := supabase.From("credit_transactions").

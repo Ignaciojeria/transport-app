@@ -6,16 +6,15 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
 
 func init() {
-	ioc.Registry(NewGetUserCredits, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetUserCredits)
 }
 
 func NewGetUserCredits(supabase *supabase.Client) GetUserCredits {

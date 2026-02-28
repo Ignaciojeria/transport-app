@@ -8,19 +8,14 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
 )
 
 func init() {
-	ioc.Registry(
-		creemCustomerPortal, httpserver.New,
-		restyclient.NewGetCreemCustomerPortal,
-		supabaserepo.NewGetCustomerID,
-		observability.NewObservability,
-		apimiddleware.NewJWTAuthMiddleware)
+	ioc.Register(creemCustomerPortal)
 }
 
 func creemCustomerPortal(

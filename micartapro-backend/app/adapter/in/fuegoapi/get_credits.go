@@ -8,21 +8,14 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
 )
 
 func init() {
-	ioc.Registry(
-		getCredits,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetUserCredits,
-		supabaserepo.NewGetCreditTransactions,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(getCredits)
 }
 
 func getCredits(
@@ -74,7 +67,7 @@ func getCredits(
 
 			// Devolver respuesta
 			return map[string]interface{}{
-				"balance":     userCredits.Balance,
+				"balance":      userCredits.Balance,
 				"transactions": transactions,
 			}, nil
 		}, option.Summary("getCredits"), option.Middleware(jwtAuthMiddleware))

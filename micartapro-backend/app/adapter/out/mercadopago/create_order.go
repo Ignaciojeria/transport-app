@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/httpresty"
+	"strings"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -31,24 +30,24 @@ type OrderItem struct {
 }
 
 type CreateOrderResponse struct {
-	ID              string `json:"id"`
-	Status          string `json:"status"`
-	StatusDetail    string `json:"status_detail"`
-	PreferenceID    string `json:"preference_id,omitempty"`
-	InitPoint       string `json:"init_point,omitempty"`
-	SandboxInitPoint string `json:"sandbox_init_point,omitempty"`
+	ID                string `json:"id"`
+	Status            string `json:"status"`
+	StatusDetail      string `json:"status_detail"`
+	PreferenceID      string `json:"preference_id,omitempty"`
+	InitPoint         string `json:"init_point,omitempty"`
+	SandboxInitPoint  string `json:"sandbox_init_point,omitempty"`
 	ExternalReference string `json:"external_reference,omitempty"`
 }
 
 func init() {
-	ioc.Registry(NewCreateMercadoPagoOrder, httpresty.NewClient, configuration.NewConf)
+	ioc.Register(NewCreateMercadoPagoOrder)
 }
 
 func NewCreateMercadoPagoOrder(cli *resty.Client, conf configuration.Conf) CreateMercadoPagoOrder {
 	return func(ctx context.Context, request CreateOrderRequest) (CreateOrderResponse, error) {
 		// Detectar si el token es de prueba
 		isTestToken := strings.HasPrefix(conf.MERCADOPAGO_ACCESS_TOKEN, "TEST-")
-		
+
 		// Usar la API de Orders de Mercado Pago
 		url := "https://api.mercadopago.com/checkout/preferences"
 

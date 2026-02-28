@@ -7,7 +7,7 @@ import (
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 var (
@@ -20,12 +20,7 @@ var (
 type AssignOrdersToJourney func(ctx context.Context, menuID string, aggregateIDs []int64) ([]supabaserepo.AssignOrdersResult, error)
 
 func init() {
-	ioc.Registry(
-		NewAssignOrdersToJourney,
-		supabaserepo.NewAssignOrdersToJourney,
-		supabaserepo.NewGetActiveJourneyByMenuID,
-		supabaserepo.NewUserHasMenu,
-	)
+	ioc.Register(NewAssignOrdersToJourney)
 }
 
 func NewAssignOrdersToJourney(

@@ -8,18 +8,17 @@ import (
 	"strconv"
 
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/shared/sharedcontext"
 
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	"github.com/supabase-community/supabase-go"
 )
 
 type SaveMenu func(ctx context.Context, menu events.MenuCreateRequest) error
 
 func init() {
-	ioc.Registry(NewSaveMenu, supabasecli.NewSupabaseClient)
+	ioc.Register(NewSaveMenu)
 }
 
 func NewSaveMenu(supabase *supabase.Client) SaveMenu {
@@ -59,7 +58,7 @@ func NewSaveMenu(supabase *supabase.Client) SaveMenu {
 		// Verificar si el menú ya existe consultando si tiene versiones
 		isNewMenu := len(data) == 0
 		nextVersionNumber := 1
-		
+
 		if !isNewMenu {
 			if err := json.Unmarshal(data, &existingVersions); err == nil {
 				// Encontrar la versión máxima
@@ -133,7 +132,7 @@ func NewSaveMenu(supabase *supabase.Client) SaveMenu {
 				versionID = uuid.New()
 			}
 		}
-		
+
 		versionRecord := map[string]interface{}{
 			"id":             versionID.String(),
 			"menu_id":        menuID.String(),

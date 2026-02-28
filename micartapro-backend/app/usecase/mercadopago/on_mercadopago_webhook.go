@@ -4,14 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
-	"time"
 	"micartapro/app/adapter/out/mercadopago"
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/usecase/billing"
+	"strings"
+	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 )
 
@@ -28,12 +28,7 @@ type MercadoPagoWebhookData struct {
 }
 
 func init() {
-	ioc.Registry(NewProcessMercadoPagoWebhook,
-		observability.NewObservability,
-		mercadopago.NewGetMercadoPagoPayment,
-		supabaserepo.NewSaveBillingEvent,
-		supabaserepo.NewGrantCredits,
-	)
+	ioc.Register(NewProcessMercadoPagoWebhook)
 }
 
 func NewProcessMercadoPagoWebhook(
@@ -84,34 +79,34 @@ func NewProcessMercadoPagoWebhook(
 			var err error
 			maxRetries := 3
 			retryDelay := time.Second * 2
-			
+
 			for attempt := 0; attempt < maxRetries; attempt++ {
 				if attempt > 0 {
-					obs.Logger.InfoContext(spanCtx, "retrying_get_payment", 
+					obs.Logger.InfoContext(spanCtx, "retrying_get_payment",
 						"paymentID", paymentID,
 						"attempt", attempt+1,
 						"maxRetries", maxRetries)
 					time.Sleep(retryDelay)
 					retryDelay *= 2 // Exponential backoff
 				}
-				
+
 				payment, err = getPayment(spanCtx, paymentID)
 				if err == nil {
 					// Pago encontrado exitosamente
 					break
 				}
-				
+
 				// Si es un error 404, puede ser que el pago aún no esté disponible
 				// Continuar con el retry
 				if attempt < maxRetries-1 {
-					obs.Logger.WarnContext(spanCtx, "payment_not_available_yet", 
+					obs.Logger.WarnContext(spanCtx, "payment_not_available_yet",
 						"paymentID", paymentID,
 						"attempt", attempt+1,
 						"error", err,
 						"will_retry", true)
 				}
 			}
-			
+
 			var eventPayload json.RawMessage
 			var eventType string
 			var providerEventID string
@@ -122,11 +117,11 @@ func NewProcessMercadoPagoWebhook(
 			if err != nil {
 				// Si el pago no se encuentra (404), puede ser un webhook de prueba o un pago aún no disponible
 				// Guardamos el webhook completo para tener registro
-				obs.Logger.WarnContext(spanCtx, "payment_not_found_or_error", 
-					"paymentID", paymentID, 
+				obs.Logger.WarnContext(spanCtx, "payment_not_found_or_error",
+					"paymentID", paymentID,
 					"error", err,
 					"note", "saving webhook data instead of payment details")
-				
+
 				// Usar el webhook completo como payload
 				webhookPayload, marshalErr := json.Marshal(webhookData)
 				if marshalErr != nil {
@@ -134,14 +129,14 @@ func NewProcessMercadoPagoWebhook(
 					return fmt.Errorf("failed to marshal webhook data: %w", marshalErr)
 				}
 				eventPayload = json.RawMessage(webhookPayload)
-				
+
 				// Extraer action si existe, sino usar type
 				if action, ok := webhookData["action"].(string); ok && action != "" {
 					eventType = action
 				} else {
 					eventType = "payment.unknown"
 				}
-				
+
 				// Usar el ID del webhook como provider event ID
 				if webhookID, ok := webhookData["id"].(string); ok {
 					providerEventID = webhookID
@@ -150,14 +145,14 @@ func NewProcessMercadoPagoWebhook(
 				} else {
 					providerEventID = paymentID // Fallback al payment ID
 				}
-				
+
 				// Intentar extraer external_reference del metadata si existe
 				if metadata, ok := webhookData["metadata"].(map[string]interface{}); ok {
 					if extRef, ok := metadata["external_reference"].(string); ok {
 						subscriptionID = extRef
 					}
 				}
-				
+
 				// Parsear fecha del webhook
 				if dateStr, ok := webhookData["date_created"].(string); ok {
 					if parsed, err := time.Parse(time.RFC3339, dateStr); err == nil {
@@ -170,13 +165,13 @@ func NewProcessMercadoPagoWebhook(
 				}
 			} else {
 				// Pago encontrado exitosamente
-				obs.Logger.InfoContext(spanCtx, "payment_received", 
+				obs.Logger.InfoContext(spanCtx, "payment_received",
 					"paymentID", paymentID,
 					"status", payment.Status,
 					"externalReference", payment.ExternalReference,
 					"transactionAmount", payment.TransactionAmount,
 					"hasTransactionDetails", payment.TransactionDetails != nil)
-				
+
 				// Log detallado de transaction_details si está disponible
 				if payment.TransactionDetails != nil {
 					obs.Logger.InfoContext(spanCtx, "payment_transaction_details",
@@ -187,7 +182,7 @@ func NewProcessMercadoPagoWebhook(
 						"paymentID", paymentID,
 						"note", "TransactionDetails is nil, may need to check JSON parsing")
 				}
-				
+
 				// Log detallado de transaction_details si está disponible
 				if payment.TransactionDetails != nil {
 					obs.Logger.InfoContext(spanCtx, "payment_transaction_details",
@@ -231,18 +226,18 @@ func NewProcessMercadoPagoWebhook(
 			// Extraer user_id del metadata o del external_reference
 			// Prioridad: 1) metadata.user_id, 2) parsear external_reference
 			var userID *uuid.UUID
-			
+
 			// Intentar extraer del metadata del pago primero (más confiable)
 			if paymentMetadata != nil {
 				if userIDStr, ok := paymentMetadata["user_id"].(string); ok && userIDStr != "" {
 					if parsedUserID, err := uuid.Parse(userIDStr); err == nil {
 						userID = &parsedUserID
-						obs.Logger.InfoContext(spanCtx, "extracted_user_id_from_payment_metadata", 
+						obs.Logger.InfoContext(spanCtx, "extracted_user_id_from_payment_metadata",
 							"userID", parsedUserID.String())
 					}
 				}
 			}
-			
+
 			// Si no se encontró en metadata, intentar parsear del external_reference
 			// El formato es: {user_id}_{uuid}
 			if userID == nil && subscriptionID != "" {
@@ -251,11 +246,11 @@ func NewProcessMercadoPagoWebhook(
 					// La primera parte es el user_id
 					if parsedUserID, err := uuid.Parse(parts[0]); err == nil {
 						userID = &parsedUserID
-						obs.Logger.InfoContext(spanCtx, "extracted_user_id_from_external_reference", 
+						obs.Logger.InfoContext(spanCtx, "extracted_user_id_from_external_reference",
 							"userID", parsedUserID.String(),
 							"externalReference", subscriptionID)
 					} else {
-						obs.Logger.WarnContext(spanCtx, "failed_to_parse_user_id_from_external_reference", 
+						obs.Logger.WarnContext(spanCtx, "failed_to_parse_user_id_from_external_reference",
 							"externalReference", subscriptionID,
 							"error", err)
 					}
@@ -299,23 +294,23 @@ func NewProcessMercadoPagoWebhook(
 					} else {
 						amountToUse = payment.TransactionAmount
 					}
-					
+
 					// Log del monto recibido para debugging
 					obs.Logger.InfoContext(spanCtx, "calculating_credits_from_payment",
 						"paymentID", paymentID,
 						"transactionAmount", payment.TransactionAmount,
 						"amountToUse", amountToUse,
 						"currencyID", payment.CurrencyID)
-					
+
 					// 1 crédito por cada $140 CLP pagados
 					creditsAmount = int(amountToUse / 140)
-					
+
 					// Log del cálculo
 					obs.Logger.InfoContext(spanCtx, "credits_calculation",
 						"amountToUse", amountToUse,
 						"creditsAmount", creditsAmount,
 						"formula", fmt.Sprintf("%.2f / 140 = %d", amountToUse, creditsAmount))
-					
+
 					// Mínimo 1 crédito si el pago es menor a $140
 					if creditsAmount < 1 {
 						creditsAmount = 1
@@ -347,7 +342,7 @@ func NewProcessMercadoPagoWebhook(
 				})
 
 				if grantErr != nil {
-					obs.Logger.ErrorContext(spanCtx, "error_granting_credits", 
+					obs.Logger.ErrorContext(spanCtx, "error_granting_credits",
 						"error", grantErr,
 						"userID", userID.String(),
 						"amount", creditsAmount,
@@ -362,7 +357,7 @@ func NewProcessMercadoPagoWebhook(
 				}
 			}
 
-			obs.Logger.InfoContext(spanCtx, "mercadopago_webhook_processed_successfully", 
+			obs.Logger.InfoContext(spanCtx, "mercadopago_webhook_processed_successfully",
 				"paymentID", paymentID,
 				"eventType", eventType)
 		} else {

@@ -10,7 +10,7 @@ import (
 
 	"micartapro/app/shared/configuration"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 // GetJourneyStats obtiene las estadísticas de productos para una jornada.
@@ -69,20 +69,20 @@ type rpcStatsResponse struct {
 		Pending    int `json:"pending"`
 		Cancelled  int `json:"cancelled"`
 	} `json:"ordersByStatus"`
-	Products      []struct {
+	Products []struct {
 		ProductName  string  `json:"productName"`
 		QuantitySold int     `json:"quantitySold"`
 		TotalRevenue float64 `json:"totalRevenue"`
 		TotalCost    float64 `json:"totalCost"`
 	} `json:"products"`
-	TotalRevenue  float64 `json:"totalRevenue"`
-	TotalCost     float64 `json:"totalCost"`
-	TotalOrders   int     `json:"totalOrders"`
-	ItemsOrdered  int     `json:"itemsOrdered"`
+	TotalRevenue float64 `json:"totalRevenue"`
+	TotalCost    float64 `json:"totalCost"`
+	TotalOrders  int     `json:"totalOrders"`
+	ItemsOrdered int     `json:"itemsOrdered"`
 }
 
 func init() {
-	ioc.Registry(NewGetJourneyStats, configuration.NewConf)
+	ioc.Register(NewGetJourneyStats)
 }
 
 func NewGetJourneyStats(conf configuration.Conf) GetJourneyStats {
@@ -160,11 +160,11 @@ func NewGetJourneyStats(conf configuration.Conf) GetJourneyStats {
 		}
 
 		return &JourneyStatsResult{
-			TotalRevenue:   rpc.TotalRevenue,
-			TotalCost:     rpc.TotalCost,
-			TotalOrders:    rpc.TotalOrders,
-			ItemsOrdered:   rpc.ItemsOrdered,
-			Products:       products,
+			TotalRevenue: rpc.TotalRevenue,
+			TotalCost:    rpc.TotalCost,
+			TotalOrders:  rpc.TotalOrders,
+			ItemsOrdered: rpc.ItemsOrdered,
+			Products:     products,
 			RevenueByStatus: RevenueByStatus{
 				Delivered:  rpc.RevenueByStatus.Delivered,
 				Dispatched: rpc.RevenueByStatus.Dispatched,

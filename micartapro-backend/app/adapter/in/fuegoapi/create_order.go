@@ -8,19 +8,14 @@ import (
 	"net/http"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
 )
 
 func init() {
-	ioc.Registry(
-		createOrder,
-		httpserver.New,
-		observability.NewObservability,
-		order.NewCreateOrder,
-	)
+	ioc.Register(createOrder)
 }
 
 func createOrder(

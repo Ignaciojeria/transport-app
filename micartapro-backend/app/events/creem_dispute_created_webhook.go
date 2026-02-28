@@ -7,31 +7,31 @@ import (
 )
 
 type CreemDisputeCreatedWebhook struct {
-	ID        string                      `json:"id" example:"evt_6mfLDL7P0NYwYQqCrICvDH"`
-	EventType string                      `json:"eventType" example:"dispute.created"`
-	CreatedAt int64                       `json:"created_at" example:"1750941264812"`
-	Object    CreemDisputeCreatedObject   `json:"object"`
+	ID        string                    `json:"id" example:"evt_6mfLDL7P0NYwYQqCrICvDH"`
+	EventType string                    `json:"eventType" example:"dispute.created"`
+	CreatedAt int64                     `json:"created_at" example:"1750941264812"`
+	Object    CreemDisputeCreatedObject `json:"object"`
 }
 
 type CreemDisputeCreatedTransaction struct {
-	ID            string `json:"id" example:"tran_4Dk8CxWFdceRUQgMFhCCXX"`
-	Object        string `json:"object" example:"transaction"`
-	Amount        int    `json:"amount" example:"1100"`
-	AmountPaid    int    `json:"amount_paid" example:"1331"`
-	Currency      string `json:"currency" example:"EUR"`
-	Type          string `json:"type" example:"invoice"`
-	TaxCountry    string `json:"tax_country" example:"NL"`
-	TaxAmount     int    `json:"tax_amount" example:"231"`
-	Status        string `json:"status" example:"chargeback"`
-	RefundedAmount int   `json:"refunded_amount" example:"1331"`
-	Order         string `json:"order" example:"ord_57bf8042UmG8fFypxZrfnj"`
-	Subscription  string `json:"subscription" example:"sub_5sD6zM482uwOaEoyEUDDJs"`
-	Customer      string `json:"customer" example:"cust_OJPZd2GMxgo1MGPNXXBSN"`
-	Description   string `json:"description" example:"Subscription payment"`
-	PeriodStart   int64  `json:"period_start" example:"1750941201000"`
-	PeriodEnd     int64  `json:"period_end" example:"1753533201000"`
-	CreatedAt     int64  `json:"created_at" example:"1750941205659"`
-	Mode          string `json:"mode" example:"sandbox"`
+	ID             string `json:"id" example:"tran_4Dk8CxWFdceRUQgMFhCCXX"`
+	Object         string `json:"object" example:"transaction"`
+	Amount         int    `json:"amount" example:"1100"`
+	AmountPaid     int    `json:"amount_paid" example:"1331"`
+	Currency       string `json:"currency" example:"EUR"`
+	Type           string `json:"type" example:"invoice"`
+	TaxCountry     string `json:"tax_country" example:"NL"`
+	TaxAmount      int    `json:"tax_amount" example:"231"`
+	Status         string `json:"status" example:"chargeback"`
+	RefundedAmount int    `json:"refunded_amount" example:"1331"`
+	Order          string `json:"order" example:"ord_57bf8042UmG8fFypxZrfnj"`
+	Subscription   string `json:"subscription" example:"sub_5sD6zM482uwOaEoyEUDDJs"`
+	Customer       string `json:"customer" example:"cust_OJPZd2GMxgo1MGPNXXBSN"`
+	Description    string `json:"description" example:"Subscription payment"`
+	PeriodStart    int64  `json:"period_start" example:"1750941201000"`
+	PeriodEnd      int64  `json:"period_end" example:"1753533201000"`
+	CreatedAt      int64  `json:"created_at" example:"1750941205659"`
+	Mode           string `json:"mode" example:"sandbox"`
 }
 
 type CreemDisputeCreatedSubscription struct {
@@ -50,21 +50,21 @@ type CreemDisputeCreatedSubscription struct {
 }
 
 type CreemDisputeCreatedCheckoutCustomField struct {
-	Key       string `json:"key" example:"testing"`
-	Text      map[string]interface{} `json:"text"`
-	Type      string `json:"type" example:"text"`
-	Label     string `json:"label" example:"Testing"`
-	Optional  bool   `json:"optional" example:"false"`
+	Key      string                 `json:"key" example:"testing"`
+	Text     map[string]interface{} `json:"text"`
+	Type     string                 `json:"type" example:"text"`
+	Label    string                 `json:"label" example:"Testing"`
+	Optional bool                   `json:"optional" example:"false"`
 }
 
 type CreemDisputeCreatedCheckout struct {
-	ID           string                              `json:"id" example:"ch_1bJMvqGGzHIftf4ewLXJeq"`
-	Object       string                              `json:"object" example:"checkout"`
-	Product      string                              `json:"product" example:"prod_3EFtQRQ9SNIizK3xwfxZHu"`
-	Units        int                                 `json:"units" example:"1"`
+	ID           string                                   `json:"id" example:"ch_1bJMvqGGzHIftf4ewLXJeq"`
+	Object       string                                   `json:"object" example:"checkout"`
+	Product      string                                   `json:"product" example:"prod_3EFtQRQ9SNIizK3xwfxZHu"`
+	Units        int                                      `json:"units" example:"1"`
 	CustomFields []CreemDisputeCreatedCheckoutCustomField `json:"custom_fields"`
-	Status       string                              `json:"status" example:"completed"`
-	Mode         string                              `json:"mode" example:"sandbox"`
+	Status       string                                   `json:"status" example:"completed"`
+	Mode         string                                   `json:"mode" example:"sandbox"`
 }
 
 type CreemDisputeCreatedOrder struct {
@@ -98,17 +98,17 @@ type CreemDisputeCreatedCustomer struct {
 }
 
 type CreemDisputeCreatedObject struct {
-	ID           string                        `json:"id" example:"disp_6vSsOdTANP5PhOzuDlUuXE"`
-	Object       string                        `json:"object" example:"dispute"`
-	Amount       int                           `json:"amount" example:"1331"`
-	Currency     string                        `json:"currency" example:"EUR"`
-	Transaction  CreemDisputeCreatedTransaction `json:"transaction"`
+	ID           string                          `json:"id" example:"disp_6vSsOdTANP5PhOzuDlUuXE"`
+	Object       string                          `json:"object" example:"dispute"`
+	Amount       int                             `json:"amount" example:"1331"`
+	Currency     string                          `json:"currency" example:"EUR"`
+	Transaction  CreemDisputeCreatedTransaction  `json:"transaction"`
 	Subscription CreemDisputeCreatedSubscription `json:"subscription"`
-	Checkout     CreemDisputeCreatedCheckout    `json:"checkout"`
-	Order        CreemDisputeCreatedOrder       `json:"order"`
-	Customer     CreemDisputeCreatedCustomer    `json:"customer"`
-	CreatedAt    int64                         `json:"created_at" example:"1750941264728"`
-	Mode         string                         `json:"mode" example:"local"`
+	Checkout     CreemDisputeCreatedCheckout     `json:"checkout"`
+	Order        CreemDisputeCreatedOrder        `json:"order"`
+	Customer     CreemDisputeCreatedCustomer     `json:"customer"`
+	CreatedAt    int64                           `json:"created_at" example:"1750941264728"`
+	Mode         string                          `json:"mode" example:"local"`
 }
 
 func (c CreemDisputeCreatedWebhook) ToCloudEvent(source string) cloudevents.Event {

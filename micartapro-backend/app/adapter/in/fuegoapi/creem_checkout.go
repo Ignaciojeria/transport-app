@@ -7,17 +7,13 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 func init() {
-	ioc.Registry(
-		creemCheckout, httpserver.New,
-		restyclient.NewGetCreemCheckoutUrl,
-		observability.NewObservability,
-		apimiddleware.NewJWTAuthMiddleware)
+	ioc.Register(creemCheckout)
 }
 func creemCheckout(s httpserver.Server, getCreemCheckoutUrl restyclient.GetCreemCheckoutUrl, obs observability.Observability, jwtAuthMiddleware apimiddleware.JWTAuthMiddleware) {
 	fuego.Get(s.Manager, "/checkout",

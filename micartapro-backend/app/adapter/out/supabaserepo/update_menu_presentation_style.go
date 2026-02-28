@@ -7,16 +7,15 @@ import (
 
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
 type UpdateMenuPresentationStyle func(ctx context.Context, menuID string, style events.MenuPresentationStyle) error
 
 func init() {
-	ioc.Registry(NewUpdateMenuPresentationStyle, supabasecli.NewSupabaseClient, observability.NewObservability)
+	ioc.Register(NewUpdateMenuPresentationStyle)
 }
 
 func NewUpdateMenuPresentationStyle(supabaseClient *supabase.Client, obs observability.Observability) UpdateMenuPresentationStyle {

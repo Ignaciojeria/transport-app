@@ -22,15 +22,15 @@ type DescriptionSelection struct {
 }
 
 type OrderItem struct {
-	Unit                 string                 `json:"unit"`
-	Quantity             float64                `json:"quantity"`
-	UnitPrice            float64                `json:"unitPrice"`
-	TotalPrice           float64                `json:"totalPrice"`
-	UnitCost             float64                `json:"unitCost,omitempty"`   // Costo por unidad (opcional)
-	TotalCost            float64                `json:"totalCost,omitempty"` // Costo total del ítem (opcional)
-	PricingMode          string                 `json:"pricingMode"`
-	ProductName          string                 `json:"productName"`
-	Station              string                 `json:"station,omitempty"`               // KITCHEN | BAR, opcional
+	Unit                  string                 `json:"unit"`
+	Quantity              float64                `json:"quantity"`
+	UnitPrice             float64                `json:"unitPrice"`
+	TotalPrice            float64                `json:"totalPrice"`
+	UnitCost              float64                `json:"unitCost,omitempty"`  // Costo por unidad (opcional)
+	TotalCost             float64                `json:"totalCost,omitempty"` // Costo total del ítem (opcional)
+	PricingMode           string                 `json:"pricingMode"`
+	ProductName           string                 `json:"productName"`
+	Station               string                 `json:"station,omitempty"`               // KITCHEN | BAR, opcional
 	DescriptionSelections []DescriptionSelection `json:"descriptionSelections,omitempty"` // Preferencias de description.selectables
 }
 

@@ -10,10 +10,9 @@ import (
 	"net/http"
 	"strings"
 
-	"micartapro/app/shared/infrastructure/ai"
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/genai"
 )
 
@@ -47,7 +46,7 @@ type geminiTranscriptionResponse struct {
 }
 
 func init() {
-	ioc.Registry(NewSpeechToTextGemini, ai.NewClient, observability.NewObservability)
+	ioc.Register(NewSpeechToTextGemini)
 }
 
 // NewSpeechToTextGemini transcribe audio usando Gemini Audio Understanding.

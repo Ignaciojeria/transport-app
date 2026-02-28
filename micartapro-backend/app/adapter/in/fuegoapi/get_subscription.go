@@ -7,36 +7,31 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
 )
 
 func init() {
-	ioc.Registry(
-		getSubscription,
-		httpserver.New,
-		supabaserepo.NewGetSubscription,
-		observability.NewObservability,
-		apimiddleware.NewJWTAuthMiddleware)
+	ioc.Register(getSubscription)
 }
 
 type SubscriptionResponse struct {
-	UserID             string                 `json:"user_id"`
-	Provider           string                 `json:"provider"`
-	SubscriptionID     string                 `json:"subscription_id"`
-	CustomerID         string                 `json:"customer_id"`
-	ProductID          string                 `json:"product_id"`
-	Status             string                 `json:"status"`
-	CurrentPeriodStart *string                `json:"current_period_start,omitempty"`
-	CurrentPeriodEnd   *string                `json:"current_period_end,omitempty"`
-	CancelAt           *string                `json:"cancel_at,omitempty"`
-	CanceledAt         *string                `json:"canceled_at,omitempty"`
-	Metadata           map[string]interface{} `json:"metadata,omitempty"`
-	CreatedAt          string                 `json:"created_at"`
-	UpdatedAt          string                 `json:"updated_at"`
-	HasActiveSubscription bool                `json:"has_active_subscription"`
+	UserID                string                 `json:"user_id"`
+	Provider              string                 `json:"provider"`
+	SubscriptionID        string                 `json:"subscription_id"`
+	CustomerID            string                 `json:"customer_id"`
+	ProductID             string                 `json:"product_id"`
+	Status                string                 `json:"status"`
+	CurrentPeriodStart    *string                `json:"current_period_start,omitempty"`
+	CurrentPeriodEnd      *string                `json:"current_period_end,omitempty"`
+	CancelAt              *string                `json:"cancel_at,omitempty"`
+	CanceledAt            *string                `json:"canceled_at,omitempty"`
+	Metadata              map[string]interface{} `json:"metadata,omitempty"`
+	CreatedAt             string                 `json:"created_at"`
+	UpdatedAt             string                 `json:"updated_at"`
+	HasActiveSubscription bool                   `json:"has_active_subscription"`
 }
 
 func getSubscription(
@@ -88,15 +83,15 @@ func getSubscription(
 
 			// Construir la respuesta
 			response := SubscriptionResponse{
-				UserID:             subscription.UserID.String(),
-				Provider:           subscription.Provider,
-				SubscriptionID:     subscription.SubscriptionID,
-				CustomerID:         subscription.CustomerID,
-				ProductID:          subscription.ProductID,
-				Status:             subscription.Status,
-				Metadata:           subscription.Metadata,
-				CreatedAt:          subscription.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
-				UpdatedAt:          subscription.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+				UserID:                subscription.UserID.String(),
+				Provider:              subscription.Provider,
+				SubscriptionID:        subscription.SubscriptionID,
+				CustomerID:            subscription.CustomerID,
+				ProductID:             subscription.ProductID,
+				Status:                subscription.Status,
+				Metadata:              subscription.Metadata,
+				CreatedAt:             subscription.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+				UpdatedAt:             subscription.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 				HasActiveSubscription: subscription.Status == "active" || subscription.Status == "trialing",
 			}
 

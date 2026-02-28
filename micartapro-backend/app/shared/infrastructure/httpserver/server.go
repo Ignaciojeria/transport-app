@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/hellofresh/health-go/v5"
@@ -21,8 +21,8 @@ import (
 )
 
 func init() {
-	ioc.Registry(New, configuration.NewConf, NewRequestLoggerMiddleware)
-	ioc.RegistryAtEnd(startAtEnd, New, observability.NewObservability)
+	ioc.Register(New)
+	ioc.RegisterAtEnd(startAtEnd)
 }
 
 type Server struct {
@@ -107,7 +107,7 @@ func WrapPostStd(s Server, path string, f func(w http.ResponseWriter, r *http.Re
 type RequestLoggerMiddleware func(http.Handler) http.Handler
 
 func init() {
-	ioc.Registry(NewRequestLoggerMiddleware, observability.NewObservability)
+	ioc.Register(NewRequestLoggerMiddleware)
 }
 
 type statusWriter struct {

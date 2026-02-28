@@ -8,7 +8,7 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/tracking"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 const maxTrackingIDRetries = 5
@@ -22,11 +22,7 @@ type CreateOrderResult struct {
 type CreateOrder func(ctx context.Context, menuID string, request events.CreateOrderRequest) (CreateOrderResult, error)
 
 func init() {
-	ioc.Registry(NewCreateOrder,
-		observability.NewObservability,
-		supabaserepo.NewSaveMenuOrder,
-		supabaserepo.NewInsertOrderTracking,
-	)
+	ioc.Register(NewCreateOrder)
 }
 
 func NewCreateOrder(

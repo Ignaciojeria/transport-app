@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/httpresty"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-resty/resty/v2"
 )
 
@@ -31,7 +30,7 @@ type creemCheckoutResponse struct {
 }
 
 func init() {
-	ioc.Registry(NewGetCreemCheckoutUrl, httpresty.NewClient, configuration.NewConf)
+	ioc.Register(NewGetCreemCheckoutUrl)
 }
 func NewGetCreemCheckoutUrl(cli *resty.Client, conf configuration.Conf) GetCreemCheckoutUrl {
 	return func(ctx context.Context, userID string) (creemCheckoutResponse, error) {

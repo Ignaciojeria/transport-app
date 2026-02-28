@@ -8,16 +8,15 @@ import (
 	"micartapro/app/adapter/out/agents/prompt"
 	"micartapro/app/adapter/out/agents/tools"
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/ai"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/genai"
 )
 
 type MenuInteractionAgent func(ctx context.Context, req events.MenuInteractionRequest) (AgentResponse, error)
 
 func init() {
-	ioc.Registry(NewMenuInteractionAgent, ai.NewClient)
+	ioc.Register(NewMenuInteractionAgent)
 }
 
 func NewMenuInteractionAgent(client *genai.Client) MenuInteractionAgent {

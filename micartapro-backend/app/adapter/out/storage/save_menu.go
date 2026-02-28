@@ -5,20 +5,17 @@ import (
 	"encoding/json"
 
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type SaveMenu func(ctx context.Context, menu events.MenuCreateRequest) error
 
 func init() {
-	ioc.Registry(NewSaveMenu,
-		observability.NewObservability,
-		gcs.NewClient)
+	ioc.Register(NewSaveMenu)
 }
 
 func NewSaveMenu(obs observability.Observability, gcs *storage.Client) SaveMenu {

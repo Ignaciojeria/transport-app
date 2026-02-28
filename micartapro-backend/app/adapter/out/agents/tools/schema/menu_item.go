@@ -54,15 +54,15 @@ func GetMenuItemSchema() *genai.Schema {
 							},
 						},
 						"selectables": {
-							Type: genai.TypeObject,
+							Type:        genai.TypeObject,
 							Description: "Preferencias sin precio dentro de este bloque (ej. 'envuelto en sésamo o ciboulette'). Solo cuando el texto indica opciones elegibles que NO cambian precio.",
 							Properties: map[string]*genai.Schema{
 								"selection": {
 									Type: genai.TypeObject,
 									Properties: map[string]*genai.Schema{
-										"mode":  {Type: genai.TypeString, Enum: []string{"SINGLE", "MULTIPLE"}, Description: "SINGLE: elegir una. MULTIPLE: elegir varias."},
-										"min":   {Type: genai.TypeInteger, Description: "Mínimo a elegir (0 = opcional)."},
-										"max":   {Type: genai.TypeInteger, Description: "Máximo a elegir."},
+										"mode": {Type: genai.TypeString, Enum: []string{"SINGLE", "MULTIPLE"}, Description: "SINGLE: elegir una. MULTIPLE: elegir varias."},
+										"min":  {Type: genai.TypeInteger, Description: "Mínimo a elegir (0 = opcional)."},
+										"max":  {Type: genai.TypeInteger, Description: "Máximo a elegir."},
 									},
 								},
 								"options": {

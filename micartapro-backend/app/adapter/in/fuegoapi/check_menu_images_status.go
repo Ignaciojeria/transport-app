@@ -5,14 +5,13 @@ import (
 	"micartapro/app/adapter/in/fuegoapi/apimiddleware"
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 	"net/http"
 	"strings"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -23,22 +22,15 @@ type ImageStatus struct {
 }
 
 type MenuImagesStatusResponse struct {
-	MenuID        string        `json:"menuId"`
+	MenuID       string        `json:"menuId"`
 	VersionID    string        `json:"versionId,omitempty"`
 	AllReady     bool          `json:"allReady"`     // true si todas las imágenes están disponibles
 	PendingCount int           `json:"pendingCount"` // número de imágenes pendientes
-	Images       []ImageStatus `json:"images"`      // estado de cada imagen
+	Images       []ImageStatus `json:"images"`       // estado de cada imagen
 }
 
 func init() {
-	ioc.Registry(
-		checkMenuImagesStatus,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetMenuById,
-		apimiddleware.NewJWTAuthMiddleware,
-		gcs.NewClient,
-	)
+	ioc.Register(checkMenuImagesStatus)
 }
 
 func checkMenuImagesStatus(
@@ -131,10 +123,10 @@ func checkMenuImagesStatus(
 
 			return MenuImagesStatusResponse{
 				MenuID:       menuID,
-				VersionID:   versionID,
-				AllReady:    allReady,
+				VersionID:    versionID,
+				AllReady:     allReady,
 				PendingCount: pendingCount,
-				Images:      imageStatuses,
+				Images:       imageStatuses,
 			}, nil
 		},
 		option.Summary("Check menu images status"),
@@ -181,12 +173,12 @@ func normalizeGCSURL(url string) string {
 	if url == "" {
 		return url
 	}
-	
+
 	// Verificar si la URL ya está correctamente formateada
 	if strings.HasPrefix(url, "https://storage.googleapis.com") || strings.HasPrefix(url, "http://storage.googleapis.com") {
 		return url
 	}
-	
+
 	// Corregir "https.storage.googleapis.com" → "https://storage.googleapis.com"
 	// Solo aplicar si el patrón incorrecto está presente
 	if strings.Contains(url, "https.storage.googleapis.com") {
@@ -195,11 +187,11 @@ func normalizeGCSURL(url string) string {
 	if strings.Contains(url, "http.storage.googleapis.com") {
 		url = strings.ReplaceAll(url, "http.storage.googleapis.com", "http://storage.googleapis.com")
 	}
-	
+
 	// Manejar casos donde se duplicó "https" (httpshttps://storage...)
 	url = strings.ReplaceAll(url, "httpshttps://", "https://")
 	url = strings.ReplaceAll(url, "httphttp://", "http://")
-	
+
 	return url
 }
 

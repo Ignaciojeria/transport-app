@@ -4,9 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
@@ -14,7 +13,7 @@ import (
 type HasActiveSubscription func(ctx context.Context, userID uuid.UUID) (bool, error)
 
 func init() {
-	ioc.Registry(NewHasActiveSubscription, supabasecli.NewSupabaseClient)
+	ioc.Register(NewHasActiveSubscription)
 }
 
 func NewHasActiveSubscription(supabase *supabase.Client) HasActiveSubscription {

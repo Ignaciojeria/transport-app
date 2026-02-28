@@ -6,17 +6,13 @@ import (
 	"micartapro/app/shared/infrastructure/httpserver"
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"golang.ngrok.com/ngrok"
 	"golang.ngrok.com/ngrok/config"
 )
 
 func init() {
-	ioc.Registry(
-		newTunnel,
-		httpserver.New,
-		configuration.NewConf,
-		observability.NewObservability)
+	ioc.Register(newTunnel)
 }
 func newTunnel(s httpserver.Server, conf configuration.Conf, obs observability.Observability) error {
 	if conf.NGROK_AUTHTOKEN == "" {

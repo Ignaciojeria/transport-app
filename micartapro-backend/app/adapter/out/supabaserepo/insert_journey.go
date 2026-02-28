@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/journey"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
@@ -17,7 +16,7 @@ import (
 type InsertJourney func(ctx context.Context, menuID string, openedBy journey.OpenedBy, reason *string) (*journey.Journey, error)
 
 func init() {
-	ioc.Registry(NewInsertJourney, supabasecli.NewSupabaseClient)
+	ioc.Register(NewInsertJourney)
 }
 
 func NewInsertJourney(supabase *supabase.Client) InsertJourney {

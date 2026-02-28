@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strconv"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -17,22 +17,15 @@ import (
 
 // OrderItemResponse representa un ítem de orden en la respuesta API.
 type OrderItemResponse struct {
-	ItemName   string   `json:"itemName"`
-	Quantity   int      `json:"quantity"`
-	Unit       string   `json:"unit"`
-	TotalPrice float64  `json:"totalPrice"`
-	Station    *string  `json:"station,omitempty"`
+	ItemName   string  `json:"itemName"`
+	Quantity   int     `json:"quantity"`
+	Unit       string  `json:"unit"`
+	TotalPrice float64 `json:"totalPrice"`
+	Station    *string `json:"station,omitempty"`
 }
 
 func init() {
-	ioc.Registry(
-		getOrderItemsHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetOrderItemsByAggregateID,
-		supabaserepo.NewUserHasMenu,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(getOrderItemsHandler)
 }
 
 func getOrderItemsHandler(

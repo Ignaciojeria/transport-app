@@ -7,9 +7,7 @@ import (
 	"sort"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
-
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -28,7 +26,7 @@ type JourneyListItem struct {
 type GetJourneysByMenuID func(ctx context.Context, menuID string, limit int) ([]JourneyListItem, error)
 
 func init() {
-	ioc.Registry(NewGetJourneysByMenuID, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetJourneysByMenuID)
 }
 
 func NewGetJourneysByMenuID(supabase *supabase.Client) GetJourneysByMenuID {

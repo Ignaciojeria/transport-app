@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/journey"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -31,7 +30,7 @@ type journeyRow struct {
 type GetActiveJourneyByMenuID func(ctx context.Context, menuID string) (*journey.Journey, error)
 
 func init() {
-	ioc.Registry(NewGetActiveJourneyByMenuID, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetActiveJourneyByMenuID)
 }
 
 func NewGetActiveJourneyByMenuID(supabase *supabase.Client) GetActiveJourneyByMenuID {
@@ -78,14 +77,14 @@ func mapRowToJourney(r journeyRow) (*journey.Journey, error) {
 		closedAt = &t
 	}
 	j := &journey.Journey{
-		ID:           r.ID,
-		MenuID:       r.MenuID,
-		Status:       journey.Status(r.Status),
-		OpenedAt:     openedAt,
-		ClosedAt:     closedAt,
-		OpenedBy:     journey.OpenedBy(r.OpenedBy),
-		OpenedReason: r.OpenedReason,
-		ReportPDFURL: r.ReportPDFURL,
+		ID:            r.ID,
+		MenuID:        r.MenuID,
+		Status:        journey.Status(r.Status),
+		OpenedAt:      openedAt,
+		ClosedAt:      closedAt,
+		OpenedBy:      journey.OpenedBy(r.OpenedBy),
+		OpenedReason:  r.OpenedReason,
+		ReportPDFURL:  r.ReportPDFURL,
 		ReportXLSXURL: r.ReportXLSXURL,
 	}
 	if len(r.TotalsSnapshot) > 0 {

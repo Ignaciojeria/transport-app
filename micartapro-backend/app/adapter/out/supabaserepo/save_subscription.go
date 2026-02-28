@@ -4,17 +4,16 @@ import (
 	"context"
 	"encoding/json"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
 type SaveSubscription func(ctx context.Context, subscription billing.Subscription) error
 
 func init() {
-	ioc.Registry(NewSaveSubscription, supabasecli.NewSupabaseClient)
+	ioc.Register(NewSaveSubscription)
 }
 
 func NewSaveSubscription(supabase *supabase.Client) SaveSubscription {

@@ -5,17 +5,14 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"micartapro/app/shared/infrastructure/ai"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	supabase "github.com/supabase-community/supabase-go"
 	"google.golang.org/genai"
@@ -24,7 +21,7 @@ import (
 type EditImage func(ctx context.Context, prompt string, referenceImageUrl string, aspectRatio string, imageCount int, menuItemId string, uploadURL string, publicURL string) (string, error)
 
 func init() {
-	ioc.Registry(NewImageEditor, ai.NewClient, observability.NewObservability, supabasecli.NewSupabaseClient, gcs.NewClient)
+	ioc.Register(NewImageEditor)
 }
 
 func NewImageEditor(genaiClient *genai.Client, obs observability.Observability, supabaseClient *supabase.Client, gcsClient *storage.Client) (EditImage, error) {

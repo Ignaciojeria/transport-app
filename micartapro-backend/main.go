@@ -8,12 +8,14 @@ import (
 	"os"
 
 	_ "micartapro/app/adapter/in/fuegoapi"
+	_ "micartapro/app/shared/infrastructure/gcs"
 	_ "micartapro/app/shared/infrastructure/httpserver"
 	_ "micartapro/app/shared/infrastructure/ngrok"
 
 	_ "micartapro/app/adapter/in/subscriber"
 	_ "micartapro/app/shared/infrastructure/ai"
 	_ "micartapro/app/shared/infrastructure/eventprocessing"
+	_ "micartapro/app/shared/infrastructure/eventprocessing/gcp"
 	_ "micartapro/app/shared/infrastructure/observability"
 	_ "micartapro/app/shared/infrastructure/observability/strategy"
 
@@ -32,7 +34,7 @@ import (
 	_ "micartapro/app/shared/infrastructure/httpresty"
 	_ "micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 //go:embed .version

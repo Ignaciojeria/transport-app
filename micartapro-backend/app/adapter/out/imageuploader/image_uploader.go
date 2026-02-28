@@ -5,21 +5,19 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/shared/sharedcontext"
 
 	"cloud.google.com/go/storage"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
 	supabase "github.com/supabase-community/supabase-go"
 )
 
 type UploadImage func(ctx context.Context, imageBytes []byte, fileName string) (string, error)
 
 func init() {
-	ioc.Registry(NewImageUploader, observability.NewObservability, gcs.NewClient, supabasecli.NewSupabaseClient)
+	ioc.Register(NewImageUploader)
 }
 
 func NewImageUploader(obs observability.Observability, gcsClient *storage.Client, supabaseClient *supabase.Client) (UploadImage, error) {
@@ -46,7 +44,7 @@ func NewImageUploader(obs observability.Observability, gcsClient *storage.Client
 
 		// Crear writer para subir la imagen
 		writer := object.NewWriter(spanCtx)
-		writer.ContentType = "image/jpeg" // Default, se puede mejorar detectando el tipo real
+		writer.ContentType = "image/jpeg"                // Default, se puede mejorar detectando el tipo real
 		writer.CacheControl = "public, max-age=31536000" // Cache por 1 año
 
 		// Escribir los bytes de la imagen

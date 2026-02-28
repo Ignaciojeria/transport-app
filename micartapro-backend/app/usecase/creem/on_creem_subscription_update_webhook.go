@@ -8,16 +8,14 @@ import (
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 )
 
 type OnCreemSubscriptionUpdateWebhook func(ctx context.Context, input events.CreemSubscriptionUpdateWebhook) error
 
 func init() {
-	ioc.Registry(NewOnCreemSubscriptionUpdateWebhook,
-		observability.NewObservability,
-		supabaserepo.NewSaveBillingEvent)
+	ioc.Register(NewOnCreemSubscriptionUpdateWebhook)
 }
 
 func NewOnCreemSubscriptionUpdateWebhook(

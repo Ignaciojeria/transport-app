@@ -10,13 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"cloud.google.com/go/storage"
-	"micartapro/app/shared/infrastructure/ai"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	"cloud.google.com/go/storage"
+
+	ioc "github.com/Ignaciojeria/ioc"
 	"google.golang.org/genai"
 )
 
@@ -55,14 +54,14 @@ type GenerateSpeechForLines func(ctx context.Context, lines []string, opts *Gene
 
 // GenerateSpeechOptions opciones para la síntesis de voz.
 type GenerateSpeechOptions struct {
-	VoiceName   string // nombre de la voz (ej. Kore, Puck, Aoede). Default: Kore
+	VoiceName    string // nombre de la voz (ej. Kore, Puck, Aoede). Default: Kore
 	LanguageCode string // BCP-47 (ej. "es", "en"). Default: "es" (español)
-	StylePrompt string // instrucciones de estilo (ej. "Say cheerfully:", "Say in a spooky whisper:")
+	StylePrompt  string // instrucciones de estilo (ej. "Say cheerfully:", "Say in a spooky whisper:")
 }
 
 func init() {
-	ioc.Registry(NewTextToSpeech, ai.NewClient, observability.NewObservability, gcs.NewClient)
-	ioc.Registry(NewTextToSpeechForLines, ai.NewClient, observability.NewObservability, gcs.NewClient)
+	ioc.Register(NewTextToSpeech)
+	ioc.Register(NewTextToSpeechForLines)
 }
 
 func NewTextToSpeech(

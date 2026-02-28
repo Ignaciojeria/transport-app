@@ -17,7 +17,7 @@ import (
 	"micartapro/app/usecase/billing"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/google/uuid"
@@ -27,14 +27,14 @@ import (
 // Modo 1: audioUrl → transcribe (Speech-to-Text) y genera subtítulos + imágenes.
 // Modo 2: scriptText (sin audioUrl) → genera audio con TTS, subtítulos con timing exacto, e imágenes.
 type SubtitleAudioRequest struct {
-	AudioURL         string   `json:"audioUrl"`
+	AudioURL string `json:"audioUrl"`
 	// ScriptText: guion en texto. Si audioUrl está vacío, se usa TTS para generar el audio.
 	// Cada línea (separada por \n) se convierte en un segmento con timing exacto.
-	ScriptText       string   `json:"scriptText,omitempty"`
-	LanguageCode     string   `json:"languageCode,omitempty"`
-	SubtitleStyle    string   `json:"subtitleStyle,omitempty"`
-	MaxCharsPerLine  int      `json:"maxCharsPerLine,omitempty"`
-	MaxLines         int      `json:"maxLines,omitempty"`
+	ScriptText      string `json:"scriptText,omitempty"`
+	LanguageCode    string `json:"languageCode,omitempty"`
+	SubtitleStyle   string `json:"subtitleStyle,omitempty"`
+	MaxCharsPerLine int    `json:"maxCharsPerLine,omitempty"`
+	MaxLines        int    `json:"maxLines,omitempty"`
 	// Placement fijo (cuando placementStrategy=FIXED)
 	Placement string `json:"placement,omitempty"`
 	// Estrategia creativa: FIXED = todo igual; DYNAMIC = placement por segmento
@@ -80,17 +80,7 @@ type FrameImage struct {
 }
 
 func init() {
-	ioc.Registry(
-		subtitleAudioHandler,
-		httpserver.New,
-		observability.NewObservability,
-		apimiddleware.NewJWTAuthMiddleware,
-		speechtotext.NewTranscribeAudioProvider,
-		texttospeech.NewTextToSpeechForLines,
-		scenegenerator.NewSceneGenerator,
-		supabaserepo.NewGetUserCredits,
-		supabaserepo.NewConsumeCredits,
-	)
+	ioc.Register(subtitleAudioHandler)
 }
 
 func subtitleAudioHandler(
@@ -356,8 +346,8 @@ func subtitleAudioHandler(
 					AvoidCenterLongSentences: req.AvoidCenterLongSentences,
 					PreferCenterForEmphasis:  req.PreferCenterForEmphasis,
 				},
-				DynamicRules:  dynRules,
-				SegmentWords:  segmentWords,
+				DynamicRules: dynRules,
+				SegmentWords: segmentWords,
 			})
 
 			// Generar imágenes o videos automáticamente por segmento cuando includeImagesPerSegment y no hay frameImages
@@ -551,11 +541,11 @@ func subtitleAudioHandler(
 						LanguageCode: languageCode,
 					},
 					Subtitle: subtitles.SceneSubtitle{
-						Placement:  placement,
-						Animation:  animation,
-						Size:       size,
-						Lines:      lines,
-						Emphasis:   seg.Emphasis,
+						Placement: placement,
+						Animation: animation,
+						Size:      size,
+						Lines:     lines,
+						Emphasis:  seg.Emphasis,
 					},
 					Visual: subtitles.SceneVisual{
 						ImageURL:  imageURL,

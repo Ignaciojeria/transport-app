@@ -7,18 +7,13 @@ import (
 	"micartapro/app/usecase/mercadopago"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 func init() {
-	ioc.Registry(
-		mercadopagoWebhook,
-		httpserver.New,
-		observability.NewObservability,
-		mercadopago.NewProcessMercadoPagoWebhook,
-	)
+	ioc.Register(mercadopagoWebhook)
 }
 
 func mercadopagoWebhook(
@@ -74,7 +69,7 @@ func mercadopagoWebhook(
 			}
 
 			obs.Logger.InfoContext(spanCtx, "mercadopago webhook processed successfully")
-			
+
 			// Mercado Pago espera un 200 OK como respuesta
 			return map[string]interface{}{
 				"status": "ok",

@@ -8,31 +8,24 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
 
 // JourneyListItemResponse es la respuesta de una jornada en el listado.
 type JourneyListItemResponse struct {
-	ID            string   `json:"id"`
-	MenuID        string   `json:"menuId"`
-	Status        string   `json:"status"`
-	OpenedAt      string   `json:"openedAt"`
-	ClosedAt      *string  `json:"closedAt,omitempty"`
-	ReportPDFURL  *string  `json:"reportPdfUrl,omitempty"`
-	ReportXLSXURL *string  `json:"reportXlsxUrl,omitempty"`
+	ID            string  `json:"id"`
+	MenuID        string  `json:"menuId"`
+	Status        string  `json:"status"`
+	OpenedAt      string  `json:"openedAt"`
+	ClosedAt      *string `json:"closedAt,omitempty"`
+	ReportPDFURL  *string `json:"reportPdfUrl,omitempty"`
+	ReportXLSXURL *string `json:"reportXlsxUrl,omitempty"`
 }
 
 func init() {
-	ioc.Registry(
-		listJourneysHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetJourneysByMenuID,
-		supabaserepo.NewUserHasMenu,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(listJourneysHandler)
 }
 
 func listJourneysHandler(
@@ -92,10 +85,10 @@ func listJourneysHandler(
 					closedAt = j.ClosedAt.Format("2006-01-02T15:04:05Z07:00")
 				}
 				resp := JourneyListItemResponse{
-					ID:       j.ID,
-					MenuID:   j.MenuID,
-					Status:   j.Status,
-					OpenedAt: j.OpenedAt.Format("2006-01-02T15:04:05Z07:00"),
+					ID:            j.ID,
+					MenuID:        j.MenuID,
+					Status:        j.Status,
+					OpenedAt:      j.OpenedAt.Format("2006-01-02T15:04:05Z07:00"),
 					ReportPDFURL:  j.ReportPDFURL,
 					ReportXLSXURL: j.ReportXLSXURL,
 				}

@@ -4,15 +4,12 @@ import (
 	"micartapro/app/shared/configuration"
 	"micartapro/app/shared/infrastructure/observability/strategy"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	otelmeter "go.opentelemetry.io/otel/metric"
 )
 
 func init() {
-	ioc.Registry(
-		newMeterProvider,
-		configuration.NewConf,
-	)
+	ioc.Register(newMeterProvider)
 }
 
 func newMeterProvider(conf configuration.Conf) (otelmeter.Meter, error) {

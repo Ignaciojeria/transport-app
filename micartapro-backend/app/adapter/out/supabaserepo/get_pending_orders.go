@@ -10,9 +10,8 @@ import (
 	"sort"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -51,8 +50,8 @@ type PendingOrder struct {
 	CreatedAt    string             `json:"created_at"`
 	ScheduledFor *string            `json:"scheduled_for,omitempty"`
 	TotalAmount  int64              `json:"total_amount"` // suma de total_price
-	Status       string             `json:"status"`     // "PENDING"
-	Items        []PendingOrderItem `json:"items"`      // ítems agrupados por agregado
+	Status       string             `json:"status"`       // "PENDING"
+	Items        []PendingOrderItem `json:"items"`        // ítems agrupados por agregado
 }
 
 // GetPendingOrdersFilter filtros opcionales para órdenes pendientes.
@@ -66,7 +65,7 @@ type GetPendingOrdersFilter struct {
 type GetPendingOrders func(ctx context.Context, menuID string, filter *GetPendingOrdersFilter) ([]PendingOrder, error)
 
 func init() {
-	ioc.Registry(NewGetPendingOrders, supabasecli.NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewGetPendingOrders)
 }
 
 func NewGetPendingOrders(sb *supabase.Client, conf configuration.Conf) GetPendingOrders {

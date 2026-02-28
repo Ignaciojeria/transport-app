@@ -7,9 +7,8 @@ import (
 	"fmt"
 
 	"micartapro/app/events"
-	"micartapro/app/shared/infrastructure/supabasecli"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/supabase-community/supabase-go"
 )
 
@@ -18,7 +17,7 @@ var ErrMenuNotFound = errors.New("menu not found")
 type GetMenuBySlug func(ctx context.Context, slug string, versionID string) (events.MenuCreateRequest, error)
 
 func init() {
-	ioc.Registry(NewGetMenuBySlug, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetMenuBySlug)
 }
 
 func NewGetMenuBySlug(supabase *supabase.Client) GetMenuBySlug {

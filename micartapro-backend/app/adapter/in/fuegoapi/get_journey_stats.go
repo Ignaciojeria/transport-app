@@ -8,7 +8,7 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 )
@@ -42,24 +42,16 @@ type OrdersByStatusResp struct {
 
 // ProductStatResponse es un producto con sus estadísticas.
 type ProductStatResponse struct {
-	ProductName           string  `json:"productName"`
-	QuantitySold          int     `json:"quantitySold"`
-	TotalRevenue          float64 `json:"totalRevenue"`
-	TotalCost             float64 `json:"totalCost"`
-	Percentage            float64 `json:"percentage"`
-	PercentageByQuantity  float64 `json:"percentageByQuantity"`
+	ProductName          string  `json:"productName"`
+	QuantitySold         int     `json:"quantitySold"`
+	TotalRevenue         float64 `json:"totalRevenue"`
+	TotalCost            float64 `json:"totalCost"`
+	Percentage           float64 `json:"percentage"`
+	PercentageByQuantity float64 `json:"percentageByQuantity"`
 }
 
 func init() {
-	ioc.Registry(
-		getJourneyStatsHandler,
-		httpserver.New,
-		observability.NewObservability,
-		supabaserepo.NewGetJourneyStats,
-		supabaserepo.NewUserHasMenu,
-		supabaserepo.NewGetJourneysByMenuID,
-		apimiddleware.NewJWTAuthMiddleware,
-	)
+	ioc.Register(getJourneyStatsHandler)
 }
 
 func getJourneyStatsHandler(
@@ -142,11 +134,11 @@ func getJourneyStatsHandler(
 			products := make([]ProductStatResponse, 0, len(stats.Products))
 			for _, p := range stats.Products {
 				products = append(products, ProductStatResponse{
-					ProductName:         p.ProductName,
-					QuantitySold:        p.QuantitySold,
-					TotalRevenue:        p.TotalRevenue,
-					TotalCost:           p.TotalCost,
-					Percentage:          p.Percentage,
+					ProductName:          p.ProductName,
+					QuantitySold:         p.QuantitySold,
+					TotalRevenue:         p.TotalRevenue,
+					TotalCost:            p.TotalCost,
+					Percentage:           p.Percentage,
 					PercentageByQuantity: p.PercentageByQuantity,
 				})
 			}

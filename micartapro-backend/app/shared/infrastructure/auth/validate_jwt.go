@@ -6,7 +6,7 @@ import (
 	"micartapro/app/shared/configuration"
 	"time"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	keyfunc "github.com/MicahParks/keyfunc/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -16,10 +16,7 @@ type SupabaseTokenValidator struct {
 }
 
 func init() {
-	ioc.Registry(
-		NewSupabaseTokenValidator,
-		configuration.NewConf,
-	)
+	ioc.Register(NewSupabaseTokenValidator)
 }
 
 func NewSupabaseTokenValidator(conf configuration.Conf) (SupabaseTokenValidator, error) {

@@ -11,7 +11,6 @@ import (
 	"micartapro/app/adapter/out/supabaserepo"
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/eventprocessing"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 	"micartapro/app/shared/sharedcontext"
 	"micartapro/app/usecase/billing"
@@ -19,24 +18,14 @@ import (
 
 	"cloud.google.com/go/storage"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 )
 
 type OnMenuInteractionRequest func(ctx context.Context, input events.MenuInteractionRequest) (string, error)
 
 func init() {
-	ioc.Registry(
-		NewOnMenuInteractionRequest,
-		observability.NewObservability,
-		agents.NewMenuInteractionAgent,
-		eventprocessing.NewPublisherStrategy,
-		supabaserepo.NewGetMenuById,
-		supabaserepo.NewGetUserCredits,
-		supabaserepo.NewConsumeCredits,
-		imagegenerator.NewImageGenerator,
-		imagegenerator.NewImageEditor,
-		gcs.NewClient)
+	ioc.Register(NewOnMenuInteractionRequest)
 }
 
 func NewOnMenuInteractionRequest(

@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"micartapro/app/shared/infrastructure/gcs"
-
 	"cloud.google.com/go/storage"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 const journeyReportsBucket = "micartapro-journey-reports"
@@ -17,7 +15,7 @@ const journeyReportsBucket = "micartapro-journey-reports"
 type UploadJourneyReport func(ctx context.Context, journeyID string, xlsxBytes []byte) (publicURL string, err error)
 
 func init() {
-	ioc.Registry(NewUploadJourneyReport, gcs.NewClient)
+	ioc.Register(NewUploadJourneyReport)
 }
 
 func NewUploadJourneyReport(gcsClient *storage.Client) UploadJourneyReport {

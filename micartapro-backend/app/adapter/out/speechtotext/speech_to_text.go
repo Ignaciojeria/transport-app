@@ -9,14 +9,13 @@ import (
 	"time"
 
 	"micartapro/app/shared/configuration"
-	"micartapro/app/shared/infrastructure/gcs"
 	"micartapro/app/shared/infrastructure/observability"
 
 	"cloud.google.com/go/storage"
 
 	speechv2 "cloud.google.com/go/speech/apiv2"
 	speechpbv2 "cloud.google.com/go/speech/apiv2/speechpb"
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"google.golang.org/api/option"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -60,7 +59,7 @@ type GeminiTranscribe struct {
 }
 
 func init() {
-	ioc.Registry(NewSpeechToText, observability.NewObservability, gcs.NewClient, configuration.NewConf)
+	ioc.Register(NewSpeechToText)
 }
 
 func NewSpeechToText(obs observability.Observability, gcsClient *storage.Client, conf configuration.Conf) (ChirpTranscribe, error) {

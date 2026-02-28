@@ -6,16 +6,13 @@ import (
 	"micartapro/app/events"
 	"micartapro/app/shared/infrastructure/observability"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 type DispatchOrder func(ctx context.Context, aggregateID int64, request events.OrderDeliveredRequest) error
 
 func init() {
-	ioc.Registry(NewDispatchOrder,
-		observability.NewObservability,
-		supabaserepo.NewUpdateOrderStatus,
-	)
+	ioc.Register(NewDispatchOrder)
 }
 
 func NewDispatchOrder(

@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"micartapro/app/shared/constants"
-	"micartapro/app/shared/infrastructure/eventprocessing/gcp"
 	"micartapro/app/shared/sharedcontext"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"go.opentelemetry.io/otel/trace"
 
 	"cloud.google.com/go/pubsub/v2"
@@ -23,10 +22,7 @@ type GcpPublisherManager struct {
 
 // IoC: register this manager + the GCP client
 func init() {
-	ioc.Registry(
-		NewGcpPublisherManager,
-		gcp.NewClient,
-	)
+	ioc.Register(NewGcpPublisherManager)
 }
 
 // Constructor for the GCP Publisher (no topic defined here)

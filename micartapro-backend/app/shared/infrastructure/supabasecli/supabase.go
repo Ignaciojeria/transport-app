@@ -3,12 +3,12 @@ package supabasecli
 import (
 	"micartapro/app/shared/configuration"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	supabase "github.com/supabase-community/supabase-go"
 )
 
 func init() {
-	ioc.Registry(NewSupabaseClient, configuration.NewConf)
+	ioc.Register(NewSupabaseClient)
 }
 
 func NewSupabaseClient(conf configuration.Conf) (*supabase.Client, error) {

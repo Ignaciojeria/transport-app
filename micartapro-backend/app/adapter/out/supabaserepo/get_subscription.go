@@ -7,10 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"micartapro/app/shared/infrastructure/supabasecli"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 	"github.com/supabase-community/supabase-go"
 )
@@ -20,26 +19,26 @@ var ErrSubscriptionNotFound = errors.New("subscription not found")
 type GetSubscription func(ctx context.Context, userID uuid.UUID) (*billing.Subscription, error)
 
 func init() {
-	ioc.Registry(NewGetSubscription, supabasecli.NewSupabaseClient)
+	ioc.Register(NewGetSubscription)
 }
 
 func NewGetSubscription(supabase *supabase.Client) GetSubscription {
 	return func(ctx context.Context, userID uuid.UUID) (*billing.Subscription, error) {
 		var result []struct {
-			ID                 int64     `json:"id"`
-			UserID             string    `json:"user_id"`
-			Provider           string    `json:"provider"`
-			SubscriptionID     string    `json:"subscription_id"`
-			CustomerID         string    `json:"customer_id"`
-			ProductID          string    `json:"product_id"`
-			Status             string    `json:"status"`
-			CurrentPeriodStart *string   `json:"current_period_start"`
-			CurrentPeriodEnd   *string   `json:"current_period_end"`
-			CancelAt           *string   `json:"cancel_at"`
-			CanceledAt         *string   `json:"canceled_at"`
+			ID                 int64           `json:"id"`
+			UserID             string          `json:"user_id"`
+			Provider           string          `json:"provider"`
+			SubscriptionID     string          `json:"subscription_id"`
+			CustomerID         string          `json:"customer_id"`
+			ProductID          string          `json:"product_id"`
+			Status             string          `json:"status"`
+			CurrentPeriodStart *string         `json:"current_period_start"`
+			CurrentPeriodEnd   *string         `json:"current_period_end"`
+			CancelAt           *string         `json:"cancel_at"`
+			CanceledAt         *string         `json:"canceled_at"`
 			Metadata           json.RawMessage `json:"metadata"`
-			CreatedAt          time.Time `json:"created_at"`
-			UpdatedAt          time.Time `json:"updated_at"`
+			CreatedAt          time.Time       `json:"created_at"`
+			UpdatedAt          time.Time       `json:"updated_at"`
 		}
 
 		data, _, err := supabase.From("subscriptions").

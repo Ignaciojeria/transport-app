@@ -4,15 +4,12 @@ import (
 	"micartapro/app/shared/configuration"
 	"micartapro/app/shared/infrastructure/observability/strategy"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"go.opentelemetry.io/otel/trace"
 )
 
 func init() {
-	ioc.Registry(
-		newTraceProvider,
-		configuration.NewConf,
-	)
+	ioc.Register(newTraceProvider)
 }
 
 // RegisterTraceProvider determines whether to use OpenObserve, Datadog or non provider based on the existing environment variables.

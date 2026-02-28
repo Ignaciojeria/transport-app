@@ -10,14 +10,14 @@ import (
 	"micartapro/app/shared/sharedcontext"
 	"micartapro/app/usecase/billing"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/google/uuid"
 )
 
 type OnUserMenusInsertedWebhook func(ctx context.Context, input events.UserMenusInsertedWebhook) error
 
 func init() {
-	ioc.Registry(NewOnUserMenusInsertedWebhook, eventprocessing.NewPublisherStrategy, supabaserepo.NewGetUserCredits, supabaserepo.NewGrantCredits, observability.NewObservability)
+	ioc.Register(NewOnUserMenusInsertedWebhook)
 }
 
 func NewOnUserMenusInsertedWebhook(

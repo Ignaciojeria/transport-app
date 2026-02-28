@@ -11,7 +11,7 @@ import (
 	"micartapro/app/usecase/billing"
 	"net/http"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 	"github.com/go-fuego/fuego"
 	"github.com/go-fuego/fuego/option"
 	"github.com/go-fuego/fuego/param"
@@ -19,15 +19,7 @@ import (
 )
 
 func init() {
-	ioc.Registry(
-		menuInteractionHandler,
-		httpserver.New,
-		observability.NewObservability,
-		eventprocessing.NewPublisherStrategy,
-		apimiddleware.NewIdempotencyKeyMiddleware,
-		apimiddleware.NewJWTAuthMiddleware,
-		supabaserepo.NewGetUserCredits,
-	)
+	ioc.Register(menuInteractionHandler)
 }
 func menuInteractionHandler(
 	s httpserver.Server,

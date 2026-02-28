@@ -5,14 +5,11 @@ import (
 	"micartapro/app/shared/configuration"
 	"micartapro/app/shared/infrastructure/observability/strategy"
 
-	ioc "github.com/Ignaciojeria/einar-ioc/v2"
+	ioc "github.com/Ignaciojeria/ioc"
 )
 
 func init() {
-	ioc.Registry(
-		newLoggerProvider,
-		configuration.NewConf,
-	)
+	ioc.Register(newLoggerProvider)
 }
 
 func newLoggerProvider(conf configuration.Conf) (*slog.Logger, error) {

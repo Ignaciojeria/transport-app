@@ -1,8 +1,8 @@
 package strategy
 
 import (
-	"micartapro/app/shared/configuration"
 	"log/slog"
+	"micartapro/app/shared/configuration"
 	"os"
 
 	otelslogjson "github.com/go-slog/otelslog"
